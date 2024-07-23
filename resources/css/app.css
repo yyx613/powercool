@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+@layer components {
+    .show-snackbar-network {
+        @apply bottom-0 !important;
+    }
+}
+
+.select2-container {
+    width: 100%!important;
+    padding: 5px;
+}
+.select2-selection--single {
+    border: none!important;
+    display: flex!important;
+    align-items: center!important;
+}
+.select2-selection--multiple {
+    border: none!important;
+}
+.select2-selection__rendered {
+    font-size: 0.875rem;
+    line-height: 1!important;
+    white-space: normal!important;
+    overflow: visible!important;
+}
+.select2-selection__arrow {
+    top: 6px!important;
+}
+
+/* Datatable */
+.dataTable {
+    background-color: white;
+}
+.dataTables_paginate .paginate_button {
+    border: none!important;
+    border-radius: 100px!important;
+}
+.dataTables_paginate .paginate_button:hover {
+    background: transparent!important;
+}
+.dataTables_wrapper .dataTables_paginate a:hover {
+    color: black!important;
+}
+.dataTables_paginate .current,
+.dataTables_paginate .current:hover {
+    background: rgb(241 245 249)!important;
+}
+.dataTables_scroll {
+    border: solid 1px rgb(209 213 219);
+    border-radius: .5rem;
+    overflow: hidden;
+}
+.dataTables_scroll .dataTables_scrollHead {
+    border-bottom: solid 1px rgb(209 213 219)!important;
+}
+.dataTables_scrollBody,
+.dataTables_scroll thead tr th {
+    border: none!important;
+}
+
+.show-modal {
+    opacity: 1;
+    z-index: 2;
+}
+.show-modal #modal-inner {
+    opacity: 1;
+    z-index: 2;
+    transform: scale(1);
+}
