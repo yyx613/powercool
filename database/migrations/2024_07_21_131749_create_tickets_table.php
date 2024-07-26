@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
+            $table->string('sku')->unique();
+            $table->string('subject');
+            $table->unsignedBigInteger('customer_id');
+            $table->boolean('is_active');
+            $table->longText('body');
+            $table->unsignedBigInteger('last_touch_by');
+            $table->softDeletes();
             $table->timestamps();
+
+            $table->foreign('customer_id')->on('customers')->references('id');
+            $table->foreign('last_touch_by')->on('users')->references('id');
         });
     }
 

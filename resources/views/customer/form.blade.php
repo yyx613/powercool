@@ -104,7 +104,7 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2">
                     <x-app.input.label id="remark" class="mb-1">Remark</x-app.input.label>
                     <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ old('remark', isset($customer) ? $customer->remark : null) }}" />
                     <x-input-error :messages="$errors->get('remark')" class="mt-1" />
@@ -119,26 +119,6 @@
 
 @push('scripts')
     <script>
-        TASK = @json($customer ?? null);
-        INIT_EDIT = true;
-
-        $(document).ready(function() {
-           
-        })
-
-        var param = {
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            locale: {
-                format: 'YYYY-MM-DD'
-            }
-        }
-        $('input[name="start_date"]').daterangepicker(param)
-        $('input[name="start_date"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-
         $('input[name="picture[]"]').on('change', function() {
             let files = $(this).prop('files');
 

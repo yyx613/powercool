@@ -21,11 +21,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -48,6 +44,7 @@ class User extends Authenticatable
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
+    protected $appends = ['latest_picture'];
 
     protected function serializeDate(DateTimeInterface $date) {
         return $date;
@@ -55,6 +52,14 @@ class User extends Authenticatable
 
     public function tasks() {
         return $this->belongsToMany(Task::class, 'user_task', 'user_id', 'task_id');
+    }
+
+    public function pictures() {
+        return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
+    }
+
+    public function getLatestPictureAttribute() {
+        return $this->pictures()->first();
     }
 
     public function isDeleted(): bool {

@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('milestones', function (Blueprint $table) {
+        Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('type');
-            $table->string('name');
-            $table->boolean('is_custom')->default(false);
+            $table->morphs('object');
+            $table->string('desc');
+            $table->longText('data')->nullable();
+            $table->unsignedBigInteger('done_by');
             $table->timestamps();
+
+            $table->foreign('done_by')->on('users')->references('id');
         });
     }
 
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('milestones');
+        Schema::dropIfExists('activity_logs');
     }
 };

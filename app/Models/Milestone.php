@@ -19,7 +19,7 @@ class Milestone extends Model
     const LIST = [
         self::TYPE_SERVICE_TASK => [
             'Check In',
-            'Photo of equipment',
+            'Photo of Equipment',
             'Before Service',
             'After Service',
             'Service From Cop Sign',
@@ -29,8 +29,8 @@ class Milestone extends Model
         ],
         self::TYPE_DRIVER_TASK => [
             'Pick Up at Warehouse',
-            'Check in',
-            'Unloaded at customer',
+            'Check In',
+            'Unloaded at Customer',
             'Installed & Briefing Customer',
             'Revise Inspection & Feedback from Customer',
             'DO Cop sign',
@@ -38,26 +38,26 @@ class Milestone extends Model
             'Check Out',
         ],
         self::TYPE_DRIVER_RETURN_TASK => [
-            'Check in',
+            'Check In',
             'Take Photo of defect',
-            'Uninstalled the product',
-            'Loaded to lorry',
-            'Feedback From Customer',
-            'Customer sign',
+            'Uninstalled the Product',
+            'Loaded to Lorry',
+            'Feedback from Customer',
+            'Customer Sign',
             'Check Out'
         ],
         self::TYPE_INSTALLER_TASK => [
-            'Check in',
-            'Before installation',
-            'After installation',
+            'Check In',
+            'Before Installation',
+            'After Installation',
             'Testing & Commission Form Cop Sign',
-            'Check out',
+            'Check Out',
         ],
         self::TYPE_SITE_VISIT => [
-            'Check in',
+            'Check In',
             'Measurement Remark (Attach Photo)',
-            'Survey feedback',
-            'Check out',
+            'Survey Feedback',
+            'Check Out',
         ]
     ];
 
@@ -72,6 +72,8 @@ class Milestone extends Model
     }
 
     public function tasks() {
-        return $this->belongsToMany(Task::class, 'task_milestone', 'milestone_id', 'task_id');
+        return $this->belongsToMany(Task::class, 'task_milestone', 'milestone_id', 'task_id')
+            ->withPivot('address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
+            ->using(TaskMilestone::class);
     }
 }

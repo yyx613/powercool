@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Customer;
 use App\Models\Milestone;
 use App\Models\Role;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -47,25 +48,38 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             if (str_contains(Route::currentRouteName(), '.technician.')) {
-                $milestones = Milestone::where('type', Milestone::TYPE_SERVICE_TASK)->orWhere('type', Milestone::TYPE_INSTALLER_TASK)->get();
+                $milestones = Milestone::where(function($q) {
+                    $q->where('type', Milestone::TYPE_SERVICE_TASK)->orWhere('type', Milestone::TYPE_INSTALLER_TASK);
+                });
+                
                 $form_route_name = 'task.technician.store';
                 if ($is_edit) {
                     $form_route_name = 'task.technician.update';
+                } else {
+                    $milestones->where('is_custom', false);
                 }
             } else if (str_contains(Route::currentRouteName(), '.sale.')) {
-                $milestones = Milestone::where('type', Milestone::TYPE_SITE_VISIT)->get();
+                $milestones = Milestone::where('type', Milestone::TYPE_SITE_VISIT);
+
                 $form_route_name = 'task.sale.store';
                 if ($is_edit) {
                     $form_route_name = 'task.sale.update';
+                } else {
+                    $milestones->where('is_custom', false);
                 }
             } else if (str_contains(Route::currentRouteName(), '.driver.')) {
-                $milestones = Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->get();
+                $milestones = Milestone::where('type', Milestone::TYPE_DRIVER_TASK);
+
                 $form_route_name = 'task.driver.store';
                 if ($is_edit) {
                     $form_route_name = 'task.driver.update';
+                } else {
+                    $milestones->where('is_custom', false);
                 }
             } 
+            $milestones = $milestones->get();
 
+            $tickets = Ticket::orderBy('id', 'desc')->get();
             $customers = Customer::orderBy('id', 'desc')->get();
 
             $users = User::whereHas('roles', function($q) {
@@ -82,10 +96,17 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'form_route_name' => $form_route_name,
+                'tickets' => $tickets,
                 'milestones' => $milestones,
                 'users' => $users,
                 'customers' => $customers,
             ]);
+        });
+
+        View::composer(['ticket.form'], function(ViewView $view) {
+            $customers = Customer::orderBy('id', 'desc')->get();
+
+            $view->with('customers', $customers);
         });
 
         View::composer(['customer.form'], function(ViewView $view) {
@@ -98,6 +119,14 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'prefix' => $prefix
+            ]);
+        });
+
+        View::composer(['user_management.form'], function(ViewView $view) {
+            $roles = Role::whereNot('id', Role::SUPERADMIN)->get();
+
+            $view->with([
+                'roles' => $roles
             ]);
         });
     }

@@ -6,6 +6,8 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Task extends Model
 {
@@ -26,6 +28,7 @@ class Task extends Model
 
     protected $guarded = [];
     protected $casts = [
+        'collect_payment' => 'boolean',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
@@ -39,10 +42,70 @@ class Task extends Model
     }
 
     public function milestones() {
-        return $this->belongsToMany(Milestone::class, 'task_milestone', 'task_id', 'milestone_id');
+        return $this->belongsToMany(Milestone::class, 'task_milestone', 'task_id', 'milestone_id')
+            ->withPivot('address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
+            ->using(TaskMilestone::class);
     }
 
     public function attachments() {
         return $this->morphMany(Attachment::class, 'object');
+    }
+
+    public function logs() {
+        return $this->morphMany(ActivityLog::class, 'object');
+    }
+
+    public function customer() {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function generateSku(): string {
+        $sku = null;
+        
+        while (true) {
+            $sku = 'TASK_' . now()->format('Ymd') . '_' . generateRandomAlphabet();
+
+            $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
+
+            if (!$exists) {
+                break;
+            }
+        }
+
+        return $sku;
+    }
+
+    public function priorityToHumanRead($val): string {
+        switch ($val) {
+            case self::PRIORITY_LOW:
+                return 'low';
+            case self::PRIORITY_MEDIUM:
+                return 'medium';
+            case self::PRIORITY_HIGH:
+                return 'high';
+        }
+    }
+
+    public function statusToHumanRead($val): string {
+        switch ($val) {
+            case self::STATUS_TO_DO:
+                return 'to do';
+            case self::STATUS_DOING:
+                return 'doing';
+            case self::STATUS_IN_REVIEW:
+                return 'in review';
+            case self::STATUS_COMPLETED:
+                return 'completed';
+        }
+    }
+
+    /**
+     * Return in percentage
+     */
+    public function getProgress(Task $task) {
+        $milestone_all_count = TaskMilestone::where('task_id', $task->id)->count();
+        $milestone_completed_count = TaskMilestone::where('task_id', $task->id)->count();
+
+        return ($milestone_completed_count / $milestone_all_count) * 100;
     }
 }

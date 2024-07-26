@@ -12,15 +12,18 @@ class Attachment extends Model
 
     const TASK_PATH = 'public/attachments/task';
     const CUSTOMER_PATH = 'public/attachments/customer';
+    const USER_PATH = 'public/attachments/user';
+    const TICKET_PATH = 'public/attachments/ticket';
+    const TASK_MILESTONE_PATH = 'public/attachments/task_milestone';
 
     protected $guarded = [];
     protected $hidden = ['deleted_at', 'created_at', 'updated_at'];
     protected $appends = ['url'];
 
     public function getUrlAttribute() {
-        $path = 'public/storage';
+        $path = '/public/storage';
         if (config('app.env') == 'local') {
-            $path = 'storage';
+            $path = '/storage';
         }
 
         switch ($this->object_type) {
@@ -28,6 +31,12 @@ class Attachment extends Model
                 return config('app.url') . str_replace('public', $path, self::TASK_PATH) . '/' . $this->src;
             case Customer::class:
                 return config('app.url') . str_replace('public', $path, self::CUSTOMER_PATH) . '/' . $this->src;
+            case User::class:
+                return config('app.url') . str_replace('public', $path, self::USER_PATH) . '/' . $this->src;
+            case Ticket::class:
+                return config('app.url') . str_replace('public', $path, self::TICKET_PATH) . '/' . $this->src;
+            case TaskMilestone::class:
+                return config('app.url') . str_replace('public', $path, self::TASK_MILESTONE_PATH) . '/' . $this->src;
         }
     }
 }

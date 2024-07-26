@@ -14,8 +14,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class RoleController extends Controller
 {
-    const ACTIVITY_LOG_NAME = 'roles';
-
     public function index() {
         return view('role_management.list');
     }
@@ -55,7 +53,6 @@ class RoleController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-        // Create role
         try {
             DB::beginTransaction();
 
@@ -66,24 +63,13 @@ class RoleController extends Controller
             $selected_permissions = $request->except(['_token', 'name']);
             $role->syncPermissions(array_keys($selected_permissions));
 
-            // Activity Log
-            $log_event = 'create';
-            $log_properties = [
-                'new_data' => $role,
-            ];
-
-            activity(self::ACTIVITY_LOG_NAME)
-            ->by(auth()->user())
-            ->withProperties($log_properties)
-            ->event($log_event)
-            ->log($log_event);
-
             DB::commit();
 
-            return redirect()->route('role_management.index')->with('success', 'Role created.');
+            return redirect()->route('role_management.index')->with('success', 'Role created');
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::info($th->getMessage());
+            report($th);
+
             return back()->with('error', 'Failed to create the role.');
         }
     }

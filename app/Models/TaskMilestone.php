@@ -12,6 +12,7 @@ class TaskMilestone extends Pivot
 
     protected $guarded = [];
     protected $casts = [
+        'submitted_at' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
