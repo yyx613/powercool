@@ -54,7 +54,7 @@
 }
 .dataTables_paginate .current,
 .dataTables_paginate .current:hover {
-    background: rgb(241 245 249)!important;
+    background: rgb(250 204 21)!important;
 }
 .dataTables_scroll {
     border: solid 1px rgb(209 213 219);

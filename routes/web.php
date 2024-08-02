@@ -3,7 +3,10 @@
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleOrderController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -30,6 +33,33 @@ Route::middleware('auth')->group(function() {
     Route::get('/view-log/{log}', function(ActivityLog $log) {
         return $log->data ?? 'No Data Found';
     })->name('view_log');
+    // Sale - Quotation/Sale Order
+    Route::controller(SaleController::class)->group(function() {
+        // Quotation
+        Route::prefix('quotation')->name('quotation.')->group(function() {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::get('/edit/{sale}', 'edit')->name('edit');
+            Route::get('/delete/{sale}', 'delete')->name('delete');
+        });
+        // Sale Order
+        Route::prefix('sale-order')->name('sale_order.')->group(function() {
+            Route::get('/', 'indexSaleOrder')->name('index');
+            Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
+            Route::get('/create', 'createSaleOrder')->name('create');
+            Route::get('/edit/{sale}', 'editSaleOrder')->name('edit');
+            Route::get('/delete/{sale}', 'delete')->name('delete');
+        });
+
+        Route::prefix('sale')->name('sale.')->group(function() {
+            Route::post('/upsert-quotation-details', 'upsertQuoDetails')->name('upsert_quo_details');
+            Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
+            Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
+            Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
+            Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
+        });
+    });
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function() {
         Route::get('/get-data', 'getData')->name('get_data');

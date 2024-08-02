@@ -23,8 +23,8 @@ class Milestone extends Model
             'Before Service',
             'After Service',
             'Service From Cop Sign',
-            'Bill Payment',
             'Part Replacement',
+            'Payment Collection',
             'Check Out'
         ],
         self::TYPE_DRIVER_TASK => [
@@ -44,6 +44,7 @@ class Milestone extends Model
             'Loaded to Lorry',
             'Feedback from Customer',
             'Customer Sign',
+            'Payment Collection',
             'Check Out'
         ],
         self::TYPE_INSTALLER_TASK => [
@@ -52,6 +53,7 @@ class Milestone extends Model
             'After Installation',
             'Testing & Commission Form Cop Sign',
             'Check Out',
+            'Payment Collection',
         ],
         self::TYPE_SITE_VISIT => [
             'Check In',

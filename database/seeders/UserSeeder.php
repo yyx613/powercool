@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
             'name' => 'Admin',
             'email' => 'ad@gmail.com',
             'password' => Hash::make('password'),
+            'sku' => (new User)->generateSku(),
         ]);
         $user->assignRole('Super Admin');
 
@@ -30,6 +31,11 @@ class UserSeeder extends Seeder
                     'name' => 'Driver'. ($i + 1),
                     'email' => 'dr' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
+                    'sku' => (new User)->generateSku(),
+                    'gender' => fake()->randomElement(['male', 'female']),
+                    'address' => fake()->address(),
+                    'phone_number' => fake()->phoneNumber(),
+                    'is_active' => true,
                 ]);
                 $user->assignRole('Driver');
             }
@@ -39,6 +45,11 @@ class UserSeeder extends Seeder
                     'name' => 'Sale'. ($i + 1),
                     'email' => 'sa' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
+                    'sku' => (new User)->generateSku(),
+                    'gender' => fake()->randomElement(['male', 'female']),
+                    'address' => fake()->address(),
+                    'phone_number' => fake()->phoneNumber(),
+                    'is_active' => true,
                 ]);
                 $user->assignRole('Sale');
             }
@@ -48,6 +59,11 @@ class UserSeeder extends Seeder
                     'name' => 'Technician'. ($i + 1),
                     'email' => 'te' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
+                    'sku' => (new User)->generateSku(),
+                    'gender' => fake()->randomElement(['male', 'female']),
+                    'address' => fake()->address(),
+                    'phone_number' => fake()->phoneNumber(),
+                    'is_active' => true,
                 ]);
                 $user->assignRole('Technician');
             }

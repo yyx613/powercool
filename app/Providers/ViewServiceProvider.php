@@ -40,7 +40,6 @@ class ViewServiceProvider extends ServiceProvider
                 'for_role' => $for_role,
             ]);
         });
-
         View::composer(['task.form'], function(ViewView $view) {
             $is_edit = false;
             if (str_contains(Route::currentRouteName(), '.edit')) {
@@ -48,6 +47,9 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             if (str_contains(Route::currentRouteName(), '.technician.')) {
+                $users = User::whereHas('roles', function($q) {
+                    $q->where('id', Role::TECHNICIAN);
+                })->orderBy('id', 'desc')->get();
                 $milestones = Milestone::where(function($q) {
                     $q->where('type', Milestone::TYPE_SERVICE_TASK)->orWhere('type', Milestone::TYPE_INSTALLER_TASK);
                 });
@@ -59,6 +61,9 @@ class ViewServiceProvider extends ServiceProvider
                     $milestones->where('is_custom', false);
                 }
             } else if (str_contains(Route::currentRouteName(), '.sale.')) {
+                $users = User::whereHas('roles', function($q) {
+                    $q->where('id', Role::SALE);
+                })->orderBy('id', 'desc')->get();
                 $milestones = Milestone::where('type', Milestone::TYPE_SITE_VISIT);
 
                 $form_route_name = 'task.sale.store';
@@ -68,6 +73,9 @@ class ViewServiceProvider extends ServiceProvider
                     $milestones->where('is_custom', false);
                 }
             } else if (str_contains(Route::currentRouteName(), '.driver.')) {
+                $users = User::whereHas('roles', function($q) {
+                    $q->where('id', Role::DRIVER);
+                })->orderBy('id', 'desc')->get();
                 $milestones = Milestone::where('type', Milestone::TYPE_DRIVER_TASK);
 
                 $form_route_name = 'task.driver.store';
@@ -82,11 +90,7 @@ class ViewServiceProvider extends ServiceProvider
             $tickets = Ticket::orderBy('id', 'desc')->get();
             $customers = Customer::orderBy('id', 'desc')->get();
 
-            $users = User::whereHas('roles', function($q) {
-                $q->whereIn('id', [Role::DRIVER, Role::TECHNICIAN, Role::SALE]);
-            })->orderBy('id', 'desc')->get();
-
-
+            // Return data
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $view->with('task_types', [
                     Milestone::TYPE_SERVICE_TASK => 'Service',
@@ -102,14 +106,19 @@ class ViewServiceProvider extends ServiceProvider
                 'customers' => $customers,
             ]);
         });
-
-        View::composer(['ticket.form'], function(ViewView $view) {
+        View::composer(['ticket.form', 'quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function(ViewView $view) {
             $customers = Customer::orderBy('id', 'desc')->get();
 
             $view->with('customers', $customers);
         });
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'sale_order.form_step.delivery_schedule'], function(ViewView $view) {
+            $sales = User::whereHas('roles', function($q) {
+                $q->where('id', Role::SALE);
+            })->orderBy('id', 'desc')->get();
 
-        View::composer(['customer.form'], function(ViewView $view) {
+            $view->with('sales', $sales);
+        });
+        View::composer(['customer.form', 'quotation.form_step.customer_details'], function(ViewView $view) {
             $prefix = [
                 'mr' => 'Mr',
                 'mrs' => 'Mrs',
@@ -121,8 +130,7 @@ class ViewServiceProvider extends ServiceProvider
                 'prefix' => $prefix
             ]);
         });
-
-        View::composer(['user_management.form'], function(ViewView $view) {
+        View::composer(['user_management.form', 'components.app.modal.convert-ticket-modal'], function(ViewView $view) {
             $roles = Role::whereNot('id', Role::SUPERADMIN)->get();
 
             $view->with([

@@ -21,7 +21,7 @@
 
 @push('scripts')
 <script>
-    $('#no-btn').on('click', function() {
+    $('#delete-modal #no-btn').on('click', function() {
         $('#delete-modal').removeClass('show-modal')
     })
 </script>

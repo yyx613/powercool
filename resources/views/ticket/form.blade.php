@@ -14,7 +14,7 @@
                     <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a customer">
                         <option value="">Select a customer</option>
                         @foreach ($customers as $cu)
-                            <option value="{{ $cu->id }}" @selected(old('customer', isset($task) ? $task->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
+                            <option value="{{ $cu->id }}" @selected(old('customer', isset($ticket) ? $ticket->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('customer')" class="mt-1" />

@@ -3,12 +3,11 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 if (!function_exists('generateRandomAlphabet')) {
     function generateRandomAlphabet($length = 5) {
-        $pool = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-        return substr(str_shuffle(str_repeat($pool, 5)), 0, $length);
+        return Str::random($length);
     }
 
     function getUserRole(User $user) {

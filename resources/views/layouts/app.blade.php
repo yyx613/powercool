@@ -30,6 +30,9 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
+        <!-- Big Decimal -->
+        <script src="https://unpkg.com/js-big-decimal@1.3.1/dist/web/js-big-decimal.min.js"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">
@@ -43,8 +46,17 @@
     </body>
 
     <script>
-        moment.tz.setDefault("Asia/Kuala_Lumpur");
+        moment.tz.setDefault("Asia/Kuala_Lumpur")
         
+        var datepickerParam = {
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            locale: {
+                format: 'YYYY-MM-DD'
+            }
+        }
+
         $('body').on('keydown', '.phone-input', function(e) {
             let allowedKeys = ['backspace', 'arrowleft', 'arrowright', 'tab', '+', '-', ' ']
             let val = $(this).find('input').val()
@@ -95,17 +107,13 @@
             let val = selector.val()
             selector.val(val.toUpperCase())
         })
-        
-        function hasOnlyDigits(value) {
-            return /^\d+$/.test(value);
+
+        function priceFormat(val) {
+            return new bigDecimal(val).round(2).getPrettyValue()
         }
 
-        function priceFormat(amount) {
-            return parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
-        }
-
-        function cleanPrice(amount) {
-            return Number(numeral(amount).format('0.00'))
+        function decimalPlace2(val) {
+            return new bigDecimal(val).round(2).getValue()
         }
     </script>
 

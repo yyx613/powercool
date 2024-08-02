@@ -9,11 +9,17 @@ use App\Models\Milestone;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\TaskMilestone;
+use App\Models\Ticket;
+use App\Models\User;
 use App\Models\UserTask;
+use App\Notifications\SystemNotification;
 use Carbon\Carbon;
+use Illuminate\Http\File;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -27,13 +33,12 @@ class TaskController extends Controller
         'start_date' => 'required',
         'due_date' => 'required',
         'remark' => 'nullable|max:250',
-        'priority' => 'required',
         'status' => 'required',
         'assign' => 'required',
         'assign.*' => 'exists:users,id',
         'milestone' => 'required_without:custom_milestone',
         'custom_milestone' => 'required_without:milestone',
-        'collect_payment' => 'required',
+        'amount_to_collect' => 'nullable',
         'attachment' => 'nullable',
         'attachment.*' => 'file'
     ];
@@ -46,13 +51,12 @@ class TaskController extends Controller
         'start_date' => 'required',
         'due_date' => 'required',
         'remark' => 'nullable|max:250',
-        'priority' => 'required',
         'status' => 'required',
         'assign' => 'required',
         'assign.*' => 'exists:users,id',
         'milestone' => 'required_without:custom_milestone',
         'custom_milestone' => 'required_without:milestone',
-        'collect_payment' => 'required',
+        'amount_to_collect' => 'nullable',
         'attachment' => 'nullable',
         'attachment.*' => 'file'
     ];
@@ -106,15 +110,22 @@ class TaskController extends Controller
                 'name' => $record->name,
                 'due_date' => $record->due_date,
                 'status' => $record->status,
-                'priority' => $record->priority
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create() {
-        return view('task.form');
+    public function create(Request $req) {
+        $data = [];
+
+        if ($req->has('tic_id')) {
+            $ticket = Ticket::findOrFail($req->tic_id);
+
+            $data['from_ticket'] = $ticket;
+        }
+
+        return view('task.form', $data);
     }
 
     public function driverStore(Request $req) {
@@ -137,10 +148,13 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect ?? 0,
             ]);
+
+            if ($req->ticket != null) {
+                Ticket::where('id', $req->ticket)->delete();
+            }
 
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
@@ -179,9 +193,39 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            } else if ($req->ticket != null) {
+                $atts = Attachment::where([
+                    'object_type' => Ticket::class,
+                    'object_id' => $req->ticket,
+                ])->get();
+
+                for ($i=0; $i < count($atts); $i++) { 
+                    $extension = explode('.', $atts[$i]->src)[1];
+
+                    while (true) {
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+    
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
+                        if (!$exists) {
+                            break;
+                        }
+                    }
+                    Attachment::create([
+                        'object_type' => Task::class,
+                        'object_id' => $task->id,
+                        'src' => $filename,
+                    ]);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                }
             }
 
             $this->createLog($task, 'Task created');
+
+            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+                'type' => 'task_created',
+                'assigned_by' => Auth::user()->id,
+                'task_id' => $task->id
+            ]));
 
             DB::commit();
 
@@ -215,10 +259,13 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect ?? 0,
             ]);
+
+            if ($req->ticket != null) {
+                Ticket::where('id', $req->ticket)->delete();
+            }
 
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
@@ -257,9 +304,39 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            } else if ($req->ticket != null) {
+                $atts = Attachment::where([
+                    'object_type' => Ticket::class,
+                    'object_id' => $req->ticket,
+                ])->get();
+
+                for ($i=0; $i < count($atts); $i++) { 
+                    $extension = explode('.', $atts[$i]->src)[1];
+
+                    while (true) {
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+    
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
+                        if (!$exists) {
+                            break;
+                        }
+                    }
+                    Attachment::create([
+                        'object_type' => Task::class,
+                        'object_id' => $task->id,
+                        'src' => $filename,
+                    ]);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                }
             }
 
             $this->createLog($task, 'Task created');
+
+            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+                'type' => 'task_created',
+                'assigned_by' => Auth::user()->id,
+                'task_id' => $task->id
+            ]));
 
             DB::commit();
 
@@ -292,10 +369,13 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect ?? 0,
             ]);
+
+            if ($req->ticket != null) {
+                Ticket::where('id', $req->ticket)->delete();
+            }
 
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
@@ -334,9 +414,39 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            } else if ($req->ticket != null) {
+                $atts = Attachment::where([
+                    'object_type' => Ticket::class,
+                    'object_id' => $req->ticket,
+                ])->get();
+
+                for ($i=0; $i < count($atts); $i++) { 
+                    $extension = explode('.', $atts[$i]->src)[1];
+
+                    while (true) {
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+    
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
+                        if (!$exists) {
+                            break;
+                        }
+                    }
+                    Attachment::create([
+                        'object_type' => Task::class,
+                        'object_id' => $task->id,
+                        'src' => $filename,
+                    ]);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                }
             }
 
             $this->createLog($task, 'Task created');
+
+            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+                'type' => 'task_created',
+                'assigned_by' => Auth::user()->id,
+                'task_id' => $task->id
+            ]));
 
             DB::commit();
 
@@ -355,7 +465,6 @@ class TaskController extends Controller
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');
         $task->start_date = Carbon::parse($task->start_date)->format('d M Y');
         $task->due_date = Carbon::parse($task->due_date)->format('d M Y');
-        $task->priority = (new Task)->priorityToHumanRead($task->priority);
         $task->status = (new Task)->statusToHumanRead($task->status);
         $task->progress = (new Task)->getProgress($task);
 
@@ -391,9 +500,8 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             UserTask::where('task_id', $task->id)->delete();
@@ -404,12 +512,15 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->delete();
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
-                TaskMilestone::create([
-                    'task_id' => $task->id,
-                    'milestone_id' => $ms_id,
-                ]);
+                $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
+                if ($ms == null) {
+                    TaskMilestone::create([
+                        'task_id' => $task->id,
+                        'milestone_id' => $ms_id,
+                    ]);
+                }
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
@@ -474,9 +585,8 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             UserTask::where('task_id', $task->id)->delete();
@@ -487,12 +597,15 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->delete();
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
-                TaskMilestone::create([
-                    'task_id' => $task->id,
-                    'milestone_id' => $ms_id,
-                ]);
+                $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
+                if ($ms == null) {
+                    TaskMilestone::create([
+                        'task_id' => $task->id,
+                        'milestone_id' => $ms_id,
+                    ]);
+                }
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
@@ -551,9 +664,8 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'priority' => $req->priority,
                 'status' => $req->status,
-                'collect_payment' => $req->boolean('collect_payment'),
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             UserTask::where('task_id', $task->id)->delete();
@@ -564,12 +676,15 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->delete();
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
-                TaskMilestone::create([
-                    'task_id' => $task->id,
-                    'milestone_id' => $ms_id,
-                ]);
+                $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
+                if ($ms == null) {
+                    TaskMilestone::create([
+                        'task_id' => $task->id,
+                        'milestone_id' => $ms_id,
+                    ]);
+                }
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
@@ -640,7 +755,6 @@ class TaskController extends Controller
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');
         $task->start_date = Carbon::parse($task->start_date)->format('d M Y');
         $task->due_date = Carbon::parse($task->due_date)->format('d M Y');
-        $task->priority = (new Task)->priorityToHumanRead($task->priority);
         $task->status = (new Task)->statusToHumanRead($task->status);
         $task->progress = (new Task)->getProgress($task);
 

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            $table->string('sku')->unique();
+            $table->string('sku');
             $table->string('subject');
             $table->unsignedBigInteger('customer_id');
             $table->boolean('is_active');

@@ -20,8 +20,8 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title>{{ $for_role == 'driver' ? 'Driver' : ($for_role == 'technician' ? 'Technician' : 'Sale') }} Tasks</x-app.page-title>
-        <a href="{{ $for_role == 'driver' ? route('task.driver.create') : ($for_role == 'technician' ? route('task.technician.create') : route('task.sale.create')) }}" class="bg-yellow-400 text-white shadow rounded-md py-2 px-4 flex items-center gap-x-2">
-            <svg class="h-4 w-4 fill-white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+        <a href="{{ $for_role == 'driver' ? route('task.driver.create') : ($for_role == 'technician' ? route('task.technician.create') : route('task.sale.create')) }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                 <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
             </svg>
             New
@@ -54,7 +54,6 @@
                 <tr>
                     <th>Task Name</th>
                     <th>Due Date</th>
-                    <th>Priority</th>
                     <th>Status</th>
                     <th></th>
                 </tr>
@@ -83,7 +82,6 @@
             columns: [
                 { data: 'name' },
                 { data: 'due_date' },
-                { data: 'priority' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -102,23 +100,9 @@
                         return data
                     }
                 },
-                { 
-                    "width": "10%",
-                    "targets": 2,
-                    render: function(data, type, row) {
-                        switch (data) {
-                            case 1:
-                                return '<span class="text-green-500">Low</span>'
-                            case 2:
-                                return '<span class="text-yellow-500">Medium</span>'
-                            case 3:
-                                return '<span class="text-red-500">High</span>'
-                        }
-                    }
-                },
                 {
                     "width": '10%',
-                    "targets": 3,
+                    "targets": 2,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
@@ -134,7 +118,7 @@
                 },
                 { 
                     "width": "5%",
-                    "targets": 4,
+                    "targets": 3,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

@@ -8,12 +8,15 @@ use App\Models\Attachment;
 use App\Models\Milestone;
 use App\Models\Task;
 use App\Models\TaskMilestone;
+use App\Models\User;
 use App\Models\UserTask;
+use App\Notifications\SystemNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
@@ -21,15 +24,81 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
+    public function getStatistic(Request $req) {
+        try {
+            $today_completed_task_count = 0;
+            $today_task_count = 0;
+            $cash_collected = 0;
+            $outstanding = 0;
+            
+            $tasks = Task::where('start_date', now()->format('Y-m-d'))->whereHas('users', function(Builder $q) use ($req) {
+                $q->where('user_id', $req->user()->id);
+            })->get();
+
+            $today_task_count = count($tasks);
+            for ($i=0; $i < count($tasks); $i++) { 
+                $not_completed = TaskMilestone::where('task_id', $tasks[$i]->id)->whereNull('submitted_at')->exists();
+
+                if (!$not_completed) {
+                    $today_completed_task_count++;
+                }
+
+                // Get cash collected
+                foreach ($tasks[$i]->milestones as $task_ms) {
+                    $cash_collected += $task_ms->pivot->amount_collected;
+                }
+                $outstanding += $tasks[$i]->amount_to_collect;
+            }
+            
+            return Response::json([
+                'cash_collected' => $cash_collected,
+                'outstanding' => $outstanding,
+                'today_task_count' => $today_task_count,
+                'today_completed_task_count' => $today_completed_task_count,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'msg' => 'something went wrong'
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function getAll(Request $req) {
         try {
-            $tasks = Task::with('customer', 'attachments')->whereHas('users', function(Builder $q) use ($req) {
+            $tasks = Task::whereHas('users', function(Builder $q) use ($req) {
                 $q->where('user_id', $req->user()->id);
             })->orderBy('id', 'desc');
 
-            if ($req->has('get_tdy')) {
-                $tasks->where('start_date', now()->format('Y-m-d'));
-            }            
+            // Filters
+            if ($req->has('category')) { // By category
+                if ($req->category == 'today') {
+                    $tasks->where(function($q) {
+                        $q->where('start_date', now()->format('Y-m-d'));
+                    });
+                }
+            }
+            if ($req->has('keyword') && $req->keyword != null && $req->keyword != '') { // By keyword
+                $tasks->where(function($q) use ($req) {
+                    $q->where('sku', 'like', '%' . $req->keyword . '%')
+                        ->orWhere('name', 'like', '%' . $req->keyword . '%')
+                        ->orWhere('desc', 'like', '%' . $req->keyword . '%')
+                        ->orWhere('remark', 'like', '%' . $req->keyword . '%')
+                        ->orWhereHas('customer', function($qq) use ($req) {
+                            $qq->where('name', 'like', '%' . $req->keyword . '%')
+                                ->orWhere('phone', 'like', '%' . $req->keyword . '%')
+                                ->orWhere('company_name', 'like', '%' . $req->keyword . '%')
+                                ->orWhere('company_address', 'like', '%' . $req->keyword . '%')
+                                ->orWhere('company_registration_number', 'like', '%' . $req->keyword . '%');
+                        });
+                });
+            }
+            if ($req->has('date')) { // By date
+                $tasks->where(function($q) use ($req) {
+                    $q->where('start_date', Carbon::parse($req->date)->format('Y-m-d'));
+                });
+            }
 
             $tasks = $tasks->simplePaginate();
 
@@ -47,6 +116,30 @@ class TaskController extends Controller
 
             return Response::json([
                 'tasks' => $tasks,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'msg' => 'something went wrong'
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getDetail(Task $task) {
+        try {
+            $task->load('customer', 'attachments', 'milestones');
+
+            $task->milestones->each(function($q) use ($task) {
+                $task_ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $q->id)->first();
+                $q->id = $task_ms->id;
+                $q->pivot->attachments = Attachment::where('object_type', TaskMilestone::class)
+                    ->where('object_id', $task_ms->id)
+                    ->get();
+            });
+
+            return Response::json([
+                'task' => $task,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             report($th);
@@ -109,6 +202,22 @@ class TaskController extends Controller
 
             $this->createLog($task_ms, $ms->name . ' submitted');
 
+            Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new SystemNotification([
+                'type' => 'milestone_completed',
+                'done_by' => $req->user()->id,
+                'task_id' => $task_ms->task_id,
+                'ms_id' => $ms->id,
+            ]));
+
+            $not_completed = TaskMilestone::where('task_id', $task_ms->task_id)->whereNull('submitted_at')->exists();
+            if (!$not_completed) { // If all milestones completed
+                Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new SystemNotification([
+                    'type' => 'task_completed',
+                    'done_by' => $req->user()->id,
+                    'task_id' => $task_ms->task_id,
+                ]));
+            }
+
             DB::commit();
 
             return Response::json([
@@ -132,7 +241,6 @@ class TaskController extends Controller
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');
         $task->start_date = Carbon::parse($task->start_date)->format('d M Y');
         $task->due_date = Carbon::parse($task->due_date)->format('d M Y');
-        $task->priority = (new Task)->priorityToHumanRead($task->priority);
         $task->status = (new Task)->statusToHumanRead($task->status);
         $task->progress = (new Task)->getProgress($task);
         $task->updated_milestone = $task_ms;

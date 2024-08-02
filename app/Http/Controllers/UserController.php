@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\UserExport;
 use App\Models\Attachment;
+use App\Models\Role as ModelsRole;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +20,6 @@ class UserController extends Controller
 {
     const FORM_RULES = [
         'department' => 'required|max:250',
-        'staff_id' => 'required|max:250|unique:users',
-        'role' => 'required',
         'name' => 'required|max:250',
         'gender' => 'required',
         'address' => 'required',
@@ -43,7 +42,9 @@ class UserController extends Controller
     }
 
     public function getData(Request $request) {
-        $records = User::with('roles')->orderBy('id', 'desc');
+        $records = User::with('roles')->whereHas('roles', function($q) {
+            $q->whereNot('id', ModelsRole::SUPERADMIN);
+        })->orderBy('id', 'desc');
 
         if ($request->has('keyword') && $request->input('keyword') != '') {
             $records = $records->where('name', 'like', '%'.$request->input('keyword').'%');
@@ -79,8 +80,7 @@ class UserController extends Controller
             DB::beginTransaction();
 
             $user = User::create([
-                'department' => $req->department,
-                'staff_id' => $req->staff_id,
+                'sku' => (new User)->generateSku(),
                 'gender' => $req->gender,
                 'address' => $req->address,
                 'state' => $req->state,
@@ -95,7 +95,7 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->role)->first();
+            $selected_role = Role::where('id', $req->department)->first();
             $user->assignRole($selected_role->id);
 
             if ($req->hasFile('picture')) {
@@ -131,7 +131,6 @@ class UserController extends Controller
 
     public function update(Request $req, User $user) {
         $rules = self::FORM_RULES;
-        $rules['staff_id'] = 'required|max:250|unique:users,staff_id,' . $user->id;
         $rules['password'] = 'nullable|confirmed';
         
         unset($rules['email']);
@@ -146,8 +145,6 @@ class UserController extends Controller
             DB::beginTransaction();
 
             $user->update([
-                'department' => $req->department,
-                'staff_id' => $req->staff_id,
                 'gender' => $req->gender,
                 'address' => $req->address,
                 'state' => $req->state,
@@ -161,7 +158,7 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => $req->password == null ? $user->password : Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->role)->first();
+            $selected_role = Role::where('id', $req->department)->first();
             $user->syncRoles([$selected_role->id]);
 
             if ($req->hasFile('picture')) {

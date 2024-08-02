@@ -59,7 +59,7 @@
                                     <div class="">
                                         <svg class="h-6 w-6" id="Layer_1" height="512" viewBox="0 0 24 24" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><path d="m17 14a1 1 0 0 1 -1 1h-8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1zm-4 3h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0-2zm9-6.515v8.515a5.006 5.006 0 0 1 -5 5h-10a5.006 5.006 0 0 1 -5-5v-14a5.006 5.006 0 0 1 5-5h4.515a6.958 6.958 0 0 1 4.95 2.05l3.484 3.486a6.951 6.951 0 0 1 2.051 4.949zm-6.949-7.021a5.01 5.01 0 0 0 -1.051-.78v4.316a1 1 0 0 0 1 1h4.316a4.983 4.983 0 0 0 -.781-1.05zm4.949 7.021c0-.165-.032-.323-.047-.485h-4.953a3 3 0 0 1 -3-3v-4.953c-.162-.015-.321-.047-.485-.047h-4.515a3 3 0 0 0 -3 3v14a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3z"/></svg>
                                     </div>
-                                    <div class="p-y.5 px-1.5 rounded bg-slate-100 inline">
+                                    <div class="p-y.5 px-1.5 rounded bg-slate-100 inline truncate">
                                         <span class="text-xs text-slate-500">{{ $att->src }}</span>
                                     </div>
                                 </a>
@@ -105,7 +105,7 @@
                             <div class="mb-1">
                                 <p class="text-sm leading-none">{{ $log->desc }}</p>
                             </div>
-                            <span class="text-sm text-slate-400 leading-none">23 Apr 2024 &#x2022; {{ $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">View Data</a></span>
+                            <span class="text-sm text-slate-400 leading-none">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }} &#x2022; {{ $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">View Data</a></span>
                         </li>
                     @endforeach
                 </ul>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\v1\NotificationController;
 use App\Http\Controllers\Api\v1\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,8 +33,15 @@ Route::prefix('v1')->group(function() {
     });
     // Task
     Route::controller(TaskController::class)->middleware('auth:sanctum')->prefix('task')->group(function() {
+        Route::get('get-statistic', 'getStatistic');
         Route::get('get-all', 'getAll');
+        Route::get('get-detail/{task}', 'getDetail');
         Route::post('update-milestone/{task_ms}', 'updateMilestone');
+    });
+    // Notification
+    Route::controller(NotificationController::class)->middleware('auth:sanctum')->prefix('notification')->group(function() {
+        Route::get('get-all', 'getAll');
+        Route::get('read/{noti}', 'read');
     });
 });
 

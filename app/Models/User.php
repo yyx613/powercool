@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -64,5 +65,21 @@ class User extends Authenticatable
 
     public function isDeleted(): bool {
         return $this->deleted_at != null;
+    }
+
+    public function generateSku(): string {
+        $sku = null;
+        
+        while (true) {
+            $sku = 'U' . now()->format('ym') . generateRandomAlphabet();
+
+            $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
+
+            if (!$exists) {
+                break;
+            }
+        }
+
+        return $sku;
     }
 }

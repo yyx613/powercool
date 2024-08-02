@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->string('sku')->unique();
+            $table->string('sku');
             $table->unsignedBigInteger('ticket_id')->nullable();
             $table->unsignedInteger('task_type')->nullable();
             $table->unsignedInteger('type');
@@ -23,9 +23,8 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('due_date');
             $table->string('remark')->nullable();
-            $table->unsignedInteger('priority');
             $table->unsignedInteger('status');
-            $table->boolean('collect_payment');
+            $table->decimal('amount_to_collect')->default(0);
             $table->softDeletes();
             $table->timestamps();
 

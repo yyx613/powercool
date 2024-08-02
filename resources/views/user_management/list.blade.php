@@ -20,8 +20,8 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title>User Management</x-app.page-title>
-        <a href="{{ route('user_management.create') }}" class="bg-yellow-400 text-white shadow rounded-md py-2 px-4 flex items-center gap-x-2">
-            <svg class="h-4 w-4 fill-white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+        <a href="{{ route('user_management.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                 <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
             </svg>
             New
@@ -47,7 +47,7 @@
                     <th>No</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Role</th>
+                    <th>Department</th>
                     <th></th>
                 </tr>
             </thead>

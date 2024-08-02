@@ -28,7 +28,7 @@ class Task extends Model
 
     protected $guarded = [];
     protected $casts = [
-        'collect_payment' => 'boolean',
+        'amount_to_collect' => 'double',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
@@ -52,7 +52,7 @@ class Task extends Model
     }
 
     public function logs() {
-        return $this->morphMany(ActivityLog::class, 'object');
+        return $this->morphMany(ActivityLog::class, 'object')->orderBy('id', 'desc');
     }
 
     public function customer() {
@@ -63,7 +63,7 @@ class Task extends Model
         $sku = null;
         
         while (true) {
-            $sku = 'TASK_' . now()->format('Ymd') . '_' . generateRandomAlphabet();
+            $sku = 'DT' . now()->format('ym') . generateRandomAlphabet();
 
             $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
 
@@ -73,17 +73,6 @@ class Task extends Model
         }
 
         return $sku;
-    }
-
-    public function priorityToHumanRead($val): string {
-        switch ($val) {
-            case self::PRIORITY_LOW:
-                return 'low';
-            case self::PRIORITY_MEDIUM:
-                return 'medium';
-            case self::PRIORITY_HIGH:
-                return 'high';
-        }
     }
 
     public function statusToHumanRead($val): string {
@@ -104,7 +93,7 @@ class Task extends Model
      */
     public function getProgress(Task $task) {
         $milestone_all_count = TaskMilestone::where('task_id', $task->id)->count();
-        $milestone_completed_count = TaskMilestone::where('task_id', $task->id)->count();
+        $milestone_completed_count = TaskMilestone::where('task_id', $task->id)->whereNotNull('submitted_at')->count();
 
         return ($milestone_completed_count / $milestone_all_count) * 100;
     }

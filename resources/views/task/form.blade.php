@@ -9,16 +9,7 @@
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
-                <div class="flex flex-col">
-                    <x-app.input.label id="ticket" class="mb-1">Ticket</x-app.input.label>
-                    <x-app.input.select2 name="ticket" id="ticket" :hasError="$errors->has('ticket')" placeholder="Select a ticket">
-                        <option value="">Select a ticket</option>
-                        @foreach ($tickets as $ticket)
-                            <option value="{{ $ticket->id }}" @selected(old('ticket', isset($task) ? $task->ticket_id : null) == $ticket->id)>{{ $ticket->sku }}</option>
-                        @endforeach
-                    </x-app.input.select2>
-                    <x-input-error :messages="$errors->get('ticket')" class="mt-1" />
-                </div>
+                <input type="hidden" name="ticket" value="{{ isset($from_ticket) ? $from_ticket->id : null }}">
                 @if ($for_role == 'technician')
                     <div class="flex flex-col">
                         <x-app.input.label id="task" class="mb-1">Task <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -36,19 +27,19 @@
                     <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a customer">
                         <option value="">Select a customer</option>
                         @foreach ($customers as $cu)
-                            <option value="{{ $cu->id }}" @selected(old('customer', isset($task) ? $task->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
+                            <option value="{{ $cu->id }}" @selected(old('customer', isset($from_ticket) ? $from_ticket->customer_id : (isset($task) ? $task->customer_id : null)) == $cu->id)>{{ $cu->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('customer')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">Name <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($task) ? $task->name : null) }}" />
+                    <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($from_ticket) ? $from_ticket->subject : (isset($task) ? $task->name : null)) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col col-span-2">
                     <x-app.input.label id="desc" class="mb-1">Description <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="desc" id="desc" :hasError="$errors->has('desc')" value="{{ old('desc', isset($task) ? $task->desc : null) }}" />
+                    <x-app.input.input name="desc" id="desc" :hasError="$errors->has('desc')" value="{{ old('desc', isset($from_ticket) ? $from_ticket->body : (isset($task) ? $task->desc : null)) }}" />
                     <x-input-error :messages="$errors->get('desc')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
@@ -67,16 +58,6 @@
                     <x-input-error :messages="$errors->get('due_date')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="priority" class="mb-1">Priority <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="priority" id="priority" :hasError="$errors->has('priority')">
-                        <option value="">Select a priority</option>
-                        <option value="1" @selected(old('priority', isset($task) ? $task->priority : null) == 1)>Low</option>
-                        <option value="2" @selected(old('priority', isset($task) ? $task->priority : null) == 2)>Medium</option>
-                        <option value="3" @selected(old('priority', isset($task) ? $task->priority : null) == 3)>High</option>
-                    </x-app.input.select>
-                    <x-input-error :messages="$errors->get('priority')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">Select a status</option>
@@ -88,13 +69,9 @@
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="collect_payment" class="mb-1">Collect Payment <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="collect_payment" id="collect_payment" :hasError="$errors->has('collect_payment')">
-                        <option value="">Select a Yes/No</option>
-                        <option value="false" @selected(old('collect_payment', isset($task) ? $task->collect_payment : null) == false)>No</option>
-                        <option value="true" @selected(old('collect_payment', isset($task) ? $task->collect_payment : null) == true)>Yes</option>
-                    </x-app.input.select>
-                    <x-input-error :messages="$errors->get('collect_payment')" class="mt-1" />
+                    <x-app.input.label id="amount_to_collect" class="mb-1">Amount to Collect</x-app.input.label>
+                    <x-app.input.input name="amount_to_collect" id="amount_to_collect" :hasError="$errors->has('amount_to_collect')" value="{{ old('amount_to_collect', isset($task) ? $task->amount_to_collect : null) }}" />
+                    <x-input-error :messages="$errors->get('amount_to_collect')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Attachments</x-app.input.label>
@@ -104,9 +81,15 @@
                         <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 hidden" id="uploaded-file-template">
                             <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                         </div>
-                        @if (isset($task))
+                        @if (isset($from_ticket))
+                            @foreach ($from_ticket->attachments as $att)
+                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview truncate">
+                                    <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
+                                </div>
+                            @endforeach
+                        @elseif (isset($task))
                             @foreach ($task->attachments as $att)
-                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
+                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview truncate">
                                     <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
                                 </div>
                             @endforeach
@@ -124,7 +107,7 @@
                 </div>
                 <div class="flex flex-col col-span-3">
                     <x-app.input.label class="mb-2">Service Task Milestones <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="custom_milestone" class="mb-2" />
+                    <x-app.input.input name="custom_milestone" class="mb-2" placeholder="Enter custom milestone here" />
                     @foreach($milestones as $stone)
                         <div class="flex items-center gap-x-2 mb-2 {{ $for_role == 'technician' ? 'hidden' : '' }} milestone-selection" data-type="{{ $stone->type }}">
                             <input type="checkbox" name="milestone[]" id="{{ $stone->id }}" value="{{ $stone->id }}" class="rounded-sm" @checked(in_array($stone->id, old('milestone', isset($task) ? $task->milestones()->pluck('milestone_id')->toArray() : [])))>
