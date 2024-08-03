@@ -65,10 +65,12 @@
 
         // Datatable
         var dt = new DataTable('#data-table', {
-            bFilter: false,
             dom: 'rtip',
             pagingType: 'numbers',
             pageLength: 10,
+            processing: true,
+            serverSide: true,
+            order: [],
             columns: [
                 { data: 'sku' },
                 { data: 'open_until' },
@@ -93,6 +95,7 @@
                 {
                     "width": '10%',
                     "targets": 2,
+                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
@@ -105,7 +108,7 @@
                 { 
                     "width": "5%",
                     "targets": 3,
-                    "orderable": false,
+                    orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
                             <a href="{{ config('app.url') }}/sale-order/create?qid=${row.id}" class="rounded-full p-2 bg-green-200 inline-block" data-id="${row.id}">
@@ -130,9 +133,10 @@
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
-            processing: true,
-            serverSide: true,
         });
+        $('#filter_search').on('keyup', function() {
+            dt.search($(this).val()).draw()
+        })
 
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')

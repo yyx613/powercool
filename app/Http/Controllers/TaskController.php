@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -62,15 +63,26 @@ class TaskController extends Controller
     ];
 
     public function index() {
-        $task_model = new Task;
+        if (str_contains(Route::currentRouteName(), '.technician.')) {
+            $for_role = 'technician';
+            $role_id = Task::TYPE_TECHNICIAN;
+        } else if (str_contains(Route::currentRouteName(), '.sale.')) {
+            $for_role = 'sale';
+            $role_id = Task::TYPE_SALE;
+        } else if (str_contains(Route::currentRouteName(), '.driver.')) {
+            $for_role = 'driver';
+            $role_id = Task::TYPE_DRIVER;
+        }
 
-        return view('task.list', [
-            'due_today' => $task_model->where('due_date', now()->format('Y-m-d'))->count(),
-            'to_do' => $task_model->where('status', Task::STATUS_TO_DO)->count(), 
-            'doing' => $task_model->where('status', Task::STATUS_DOING)->count(),
-            'in_review' => $task_model->where('status', Task::STATUS_IN_REVIEW)->count(),
-            'completed' => $task_model->where('status', Task::STATUS_COMPLETED)->count(),
-        ]);
+        $data = [
+            'for_role' => $for_role,
+            'due_today' => Task::where('type', $role_id)->where('due_date', now()->format('Y-m-d'))->count(),
+            'to_do' => Task::where('type', $role_id)->where('status', Task::STATUS_TO_DO)->count(), 
+            'doing' => Task::where('type', $role_id)->where('status', Task::STATUS_DOING)->count(),
+            'in_review' => Task::where('type', $role_id)->where('status', Task::STATUS_IN_REVIEW)->count(),
+            'completed' => Task::where('type', $role_id)->where('status', Task::STATUS_COMPLETED)->count(),
+        ];
+        return view('task.list', $data);
     }
 
     public function getData(Request $req) {
@@ -92,7 +104,34 @@ class TaskController extends Controller
             return response()->json([]);
         }
 
-        $records = Task::where('type', $role)->orderBy('id', 'desc');
+        $records = Task::where('type', $role);
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records->where(function($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('desc', 'like', '%' . $keyword . '%')
+                    ->orWhere('remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('amount_to_collect', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+                1 => 'name',
+                2 => 'due_date',
+                3 => 'amount_to_collect',
+            ];
+            foreach ($req->order as $order) {
+                $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -107,8 +146,10 @@ class TaskController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
+                'sku' => $record->sku,
                 'name' => $record->name,
                 'due_date' => $record->due_date,
+                'amount_to_collect' => $record->amount_to_collect == 0 ? null : $record->amount_to_collect,
                 'status' => $record->status,
             ];
         }
@@ -129,6 +170,9 @@ class TaskController extends Controller
     }
 
     public function driverStore(Request $req) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
         if ($validator->fails()) {
@@ -149,7 +193,7 @@ class TaskController extends Controller
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
                 'status' => $req->status,
-                'amount_to_collect' => $req->amount_to_collect ?? 0,
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             if ($req->ticket != null) {
@@ -169,6 +213,14 @@ class TaskController extends Controller
                     'milestone_id' => $ms_id,
                 ]);
             }
+            // Force to have Payment Collection milestone whenever amount to collect is greater than 0
+            if ($req->amount_to_collect > 0 && !array_intersect($req->milestone, getPaymentCollectionIds())) {
+                TaskMilestone::create([
+                    'task_id' => $task->id,
+                    'milestone_id' => Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->where('name', 'Payment Collection')->value('id'),
+                ]);
+            }
+            
             // Create custom milestones
             if ($req->custom_milestone != null) {
                 foreach ($req->custom_milestone as $ms) {
@@ -239,6 +291,9 @@ class TaskController extends Controller
     }
 
     public function technicianStore(Request $req) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES);
         if ($validator->fails()) {
@@ -260,7 +315,7 @@ class TaskController extends Controller
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
                 'status' => $req->status,
-                'amount_to_collect' => $req->amount_to_collect ?? 0,
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             if ($req->ticket != null) {
@@ -278,6 +333,13 @@ class TaskController extends Controller
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => $ms_id,
+                ]);
+            }
+            // Force to have Payment Collection milestone whenever amount to collect is greater than 0
+            if ($req->amount_to_collect > 0 && !array_intersect($req->milestone, getPaymentCollectionIds())) {
+                TaskMilestone::create([
+                    'task_id' => $task->id,
+                    'milestone_id' => Milestone::where('type', $req->task)->where('name', 'Payment Collection')->value('id'),
                 ]);
             }
             // Create custom milestones
@@ -350,6 +412,9 @@ class TaskController extends Controller
     }
 
     public function saleStore(Request $req) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
         if ($validator->fails()) {
@@ -370,7 +435,7 @@ class TaskController extends Controller
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
                 'status' => $req->status,
-                'amount_to_collect' => $req->amount_to_collect ?? 0,
+                'amount_to_collect' => $req->amount_to_collect,
             ]);
 
             if ($req->ticket != null) {
@@ -483,6 +548,9 @@ class TaskController extends Controller
     }
 
     public function driverUpdate(Request $req, Task $task) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
         if ($validator->fails()) {
@@ -512,7 +580,7 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
                 $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
                 if ($ms == null) {
@@ -521,6 +589,13 @@ class TaskController extends Controller
                         'milestone_id' => $ms_id,
                     ]);
                 }
+            }
+            // Force to have Payment Collection milestone whenever amount to collect is greater than 0
+            if ($req->amount_to_collect > 0 && !TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
+                TaskMilestone::create([
+                    'task_id' => $task->id,
+                    'milestone_id' => Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->where('name', 'Payment Collection')->value('id'),
+                ]);
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
@@ -567,6 +642,9 @@ class TaskController extends Controller
     }
 
     public function technicianUpdate(Request $req, Task $task) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES);
         if ($validator->fails()) {
@@ -597,7 +675,7 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
                 $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
                 if ($ms == null) {
@@ -606,6 +684,13 @@ class TaskController extends Controller
                         'milestone_id' => $ms_id,
                     ]);
                 }
+            }
+            // Force to have Payment Collection milestone whenever amount to collect is greater than 0
+            if ($req->amount_to_collect > 0 && !TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
+                TaskMilestone::create([
+                    'task_id' => $task->id,
+                    'milestone_id' => Milestone::where('type', $req->task)->where('name', 'Payment Collection')->value('id'),
+                ]);
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
@@ -647,6 +732,9 @@ class TaskController extends Controller
     }
 
     public function saleUpdate(Request $req, Task $task) {
+        if ($req->amount_to_collect == null) {
+            $req->merge(['amount_to_collect' => 0]);
+        }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
         if ($validator->fails()) {

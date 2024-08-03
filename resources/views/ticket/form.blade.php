@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($ticket) ? 'Edit Ticket' : 'Create Ticket' }}</x-app.page-title>
+        <x-app.page-title>{{ isset($ticket) ? 'Edit Ticket - ' . $ticket->sku : 'Create Ticket' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($ticket) ? route('ticket.update', ['ticket' => $ticket]) : route('ticket.store') }}" method="POST" enctype="multipart/form-data">

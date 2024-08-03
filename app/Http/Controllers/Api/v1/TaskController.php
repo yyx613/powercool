@@ -45,7 +45,9 @@ class TaskController extends Controller
 
                 // Get cash collected
                 foreach ($tasks[$i]->milestones as $task_ms) {
-                    $cash_collected += $task_ms->pivot->amount_collected;
+                    if (in_array($task_ms->pivot->milestone_id, getPaymentCollectionIds())) {
+                        $cash_collected += $task_ms->pivot->amount_collected;
+                    }
                 }
                 $outstanding += $tasks[$i]->amount_to_collect;
             }
@@ -206,7 +208,7 @@ class TaskController extends Controller
                 'type' => 'milestone_completed',
                 'done_by' => $req->user()->id,
                 'task_id' => $task_ms->task_id,
-                'ms_id' => $ms->id,
+                'ms_id' =>  Milestone::where('id', $task_ms->milestone_id)->value('id'),
             ]));
 
             $not_completed = TaskMilestone::where('task_id', $task_ms->task_id)->whereNull('submitted_at')->exists();

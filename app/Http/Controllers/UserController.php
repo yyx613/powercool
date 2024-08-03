@@ -41,29 +41,54 @@ class UserController extends Controller
         return view('user_management.list');
     }
 
-    public function getData(Request $request) {
+    public function getData(Request $req) {
         $records = User::with('roles')->whereHas('roles', function($q) {
             $q->whereNot('id', ModelsRole::SUPERADMIN);
-        })->orderBy('id', 'desc');
+        });
 
-        if ($request->has('keyword') && $request->input('keyword') != '') {
-            $records = $records->where('name', 'like', '%'.$request->input('keyword').'%');
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'name',
+                1 => 'email',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
         }
 
-        $records = $records->get();
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
 
-        $data = [];
-        foreach ($records as $key => $record) {
-            $data[] = [
-                'no' => ($key + 1),
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
                 'name' => $record->name,
                 'email' => $record->email,
                 'role' => getUserRole($record),
-                'id' => $record->id
             ];
         }
 
-        return $data;
+        return response()->json($data);
     }
 
     public function create() {

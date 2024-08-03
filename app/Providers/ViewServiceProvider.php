@@ -27,7 +27,7 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer(['task.list', 'task.form'], function(ViewView $view) {
+        View::composer(['task.form'], function(ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $for_role = 'technician';
             } else if (str_contains(Route::currentRouteName(), '.sale.')) {

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('sku');
             $table->unsignedBigInteger('ticket_id')->nullable();
-            $table->unsignedInteger('task_type')->nullable();
-            $table->unsignedInteger('type');
+            $table->unsignedInteger('task_type')->nullable()->comment('technician service type - service/installer');
+            $table->unsignedInteger('type')->comment('type for either driver/sale/technician');
             $table->unsignedBigInteger('customer_id');
             $table->string('name');
             $table->string('desc');

@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -26,8 +27,32 @@ class TicketController extends Controller
         return view('ticket.list');
     }
 
-    public function getData() {
-        $records = Ticket::orderBy('id', 'desc');
+    public function getData(Request $req) {
+        $records = new Ticket;
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('subject', 'like', '%' . $keyword . '%')
+                    ->orWhere('body', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+                1 => 'subject',
+                2 => 'created_at',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -44,7 +69,7 @@ class TicketController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'subject' => $record->subject,
-                'created_at' => Carbon::parse($record->created_at)->format('d/m/Y H:i'),
+                'created_at' => Carbon::parse($record->created_at)->format('d M Y H:i'),
                 'status' => $record->is_active,
             ];
         }

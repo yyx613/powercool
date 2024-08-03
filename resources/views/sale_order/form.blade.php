@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($quo) ? 'Edit Sale Order - ' . $quo->sku : 'Create Sale Order' }}</x-app.page-title>
+        <x-app.page-title>{{ isset($sale) ? 'Edit Sale Order - ' . $sale->sku : 'Create Sale Order' }}</x-app.page-title>
     </div>
 
     <div class="grid gap-y-8">

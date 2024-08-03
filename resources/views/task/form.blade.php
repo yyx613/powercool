@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($task) ? 'Edit Task' : 'Create New Task' }}</x-app.page-title>
+        <x-app.page-title>{{ isset($task) ? 'Edit Task - ' . $task->sku : 'Create New Task' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($task) ? route($form_route_name, ['task' => $task]) : route($form_route_name) }}" method="POST" enctype="multipart/form-data">
@@ -68,11 +68,13 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="amount_to_collect" class="mb-1">Amount to Collect</x-app.input.label>
-                    <x-app.input.input name="amount_to_collect" id="amount_to_collect" :hasError="$errors->has('amount_to_collect')" value="{{ old('amount_to_collect', isset($task) ? $task->amount_to_collect : null) }}" />
-                    <x-input-error :messages="$errors->get('amount_to_collect')" class="mt-1" />
-                </div>
+                @if ($for_role != 'sale')
+                    <div class="flex flex-col">
+                        <x-app.input.label id="amount_to_collect" class="mb-1">Amount to Collect</x-app.input.label>
+                        <x-app.input.input name="amount_to_collect" id="amount_to_collect" :hasError="$errors->has('amount_to_collect')" value="{{ old('amount_to_collect', isset($task) ? $task->amount_to_collect : null) }}" />
+                        <x-input-error :messages="$errors->get('amount_to_collect')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Attachments</x-app.input.label>
                     <x-app.input.file id="attachment[]" :hasError="$errors->has('attachment')" multiple="true" />

@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 
@@ -16,7 +17,30 @@ class SaleController extends Controller
     }
 
     public function getData(Request $req) {
-        $records = Sale::where('type', Sale::TYPE_QUO)->orderBy('id', 'desc');
+        $records = Sale::where('type', Sale::TYPE_QUO);
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records->where(function($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('reference', 'like', '%' . $keyword . '%')
+                    ->orWhere('remark', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+                1 => 'open_until',
+            ];
+            foreach ($req->order as $order) {
+                $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -61,7 +85,36 @@ class SaleController extends Controller
     }
 
     public function getDataSaleOrder(Request $req) {
-        $records = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc');
+        $records = Sale::where('type', Sale::TYPE_SO);
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records->where(function($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('reference', 'like', '%' . $keyword . '%')
+                    ->orWhere('remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_method', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_amount', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%')
+                    ->orWhere('delivery_address', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'sku',
+                2 => 'open_until',
+                3 => 'payment_amount',
+            ];
+            foreach ($req->order as $order) {
+                $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -332,5 +385,9 @@ class SaleController extends Controller
                 'result' => false
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function convertToInv(Request $req) {
+        dd( $req->all() );
     }
 }

@@ -69,10 +69,12 @@
 
         // Datatable
         var dt = new DataTable('#data-table', {
-            bFilter: false,
             dom: 'rtip',
             pagingType: 'numbers',
             pageLength: 10,
+            processing: true,
+            serverSide: true,
+            order: [],
             columns: [
                 { data: 'sku' },
                 { data: 'subject' },
@@ -105,6 +107,7 @@
                 {
                     "width": '10%',
                     "targets": 3,
+                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
@@ -142,9 +145,10 @@
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
-            processing: true,
-            serverSide: true,
         });
+        $('#filter_search').on('keyup', function() {
+            dt.search($(this).val()).draw()
+        })
 
         $('#data-table').on('click', '.convert-btns', function() {
             id = $(this).data('id')

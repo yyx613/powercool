@@ -57,7 +57,8 @@ Route::middleware('auth')->group(function() {
             Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
             Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
             Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
-            Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
+            Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule'); 
+            Route::get('/convert-to-invoice', 'convertToInv')->name('convert_to_inv');
         });
     });
     // Task

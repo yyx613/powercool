@@ -67,10 +67,12 @@
 
         // Datatable
         var dt = new DataTable('#data-table', {
-            bFilter: false,
             dom: 'rtip',
             pagingType: 'numbers',
             pageLength: 10,
+            processing: true,
+            serverSide: true,
+            order: [],
             columns: [
                 { data: 'name' },
                 { data: 'phone_number' },
@@ -124,9 +126,10 @@
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
-            processing: true,
-            serverSide: true,
         });
+        $('#filter_search').on('keyup', function() {
+            dt.search($(this).val()).draw()
+        })
 
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
