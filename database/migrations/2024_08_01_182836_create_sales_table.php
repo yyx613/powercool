@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('sale_id');
             $table->date('open_until')->nullable();
+            $table->string('quo_from')->nullable();
+            $table->string('quo_cc')->nullable();
             $table->longText('reference');
             $table->boolean('is_active');
             $table->longText('remark')->nullable();

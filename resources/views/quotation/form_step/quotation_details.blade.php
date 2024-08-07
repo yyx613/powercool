@@ -18,6 +18,16 @@
                     <x-app.message.error id="reference_err"/>
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="from" class="mb-1">From</x-app.input.label>
+                    <x-app.input.input name="from" id="from" :hasError="$errors->has('from')" value="{{ isset($sale) ? $sale->quo_from : null }}" />
+                    <x-app.message.error id="from_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="cc" class="mb-1">C.C.</x-app.input.label>
+                    <x-app.input.input name="cc" id="cc" :hasError="$errors->has('cc')" value="{{ isset($sale) ? $sale->quo_cc : null }}" />
+                    <x-app.message.error id="cc_err"/>
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="sale" class="mb-1">Assigned To <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')" placeholder="Select a sale">
                         <option value="">Select a sale</option>
@@ -89,6 +99,8 @@
                     'customer': $('#quotation-form select[name="customer"]').val(),
                     'open_until': $('#quotation-form input[name="open_until"]').val(),
                     'reference': $('#quotation-form input[name="reference"]').val(),
+                    'from': $('#quotation-form input[name="from"]').val(),
+                    'cc': $('#quotation-form input[name="cc"]').val(),
                     'status': $('#quotation-form select[name="status"]').val(),
                 },
                 success: function(res) {

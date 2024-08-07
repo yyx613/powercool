@@ -80,6 +80,16 @@ Route::middleware('auth')->group(function() {
         });
         
         Route::get('/download', 'download')->name('download');
+
+        // Target
+        Route::prefix('target')->name('target.')->group(function() {
+            Route::get('/', 'indexTarget')->name('index');
+            Route::get('/get-data', 'getDataTarget')->name('get_data');
+            Route::get('/create', 'createTarget')->name('create');
+            Route::post('/store', 'storeTarget')->name('store');
+            Route::get('/edit/{target}', 'editTarget')->name('edit');
+            Route::post('/update/{target}', 'updateTarget')->name('update');
+        });
     });
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function() {

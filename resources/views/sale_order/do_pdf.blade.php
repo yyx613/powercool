@@ -39,7 +39,7 @@
                     <tr>
                         <td style="font-size: 14px;">Your S/O No.</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale_order_sku }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Terms</td>

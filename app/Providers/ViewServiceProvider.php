@@ -111,7 +111,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('customers', $customers);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function(ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'target.form'], function(ViewView $view) {
             $sales = User::whereHas('roles', function($q) {
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();

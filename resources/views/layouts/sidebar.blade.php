@@ -42,6 +42,11 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Invoice</span>
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Target</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -204,6 +209,11 @@
                 <li>
                     <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Invoice</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Target</span>
                     </a>
                 </li>
             </ul>

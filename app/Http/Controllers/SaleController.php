@@ -8,8 +8,11 @@ use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\Target;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class SaleController extends Controller
 {
@@ -315,6 +319,8 @@ class SaleController extends Controller
         if ($req->has('so')) {
             $step = 4;
 
+            Session::put('convert_sale_order_id', $req->so);
+
             $products = collect();
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
                 ->where('is_active', true)
@@ -386,12 +392,15 @@ class SaleController extends Controller
             }
             $sku = (new DeliveryOrder)->generateSku();
 
+            $sale_order_sku = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->pluck('sku')->toArray();
+
             $pdf = Pdf::loadView('sale_order.do_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
                 'products' => SaleProduct::whereIn('id', $product_ids)->get(),
+                'sale_order_sku' => join(', ', $sale_order_sku),
                 'prod_qty' => $prod_qty,
             ]);
             $pdf->setPaper('A4', 'letter');
@@ -439,6 +448,8 @@ class SaleController extends Controller
             'sale' => 'required',
             'customer' => 'required',
             'reference' => 'required',
+            'from' => 'nullable|max:250',
+            'cc' => 'nullable|max:250',
             'status' => 'required',
         ];
         if ($req->type == 'quo') {
@@ -457,6 +468,8 @@ class SaleController extends Controller
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
+                    'quo_from' => $req->from,
+                    'quo_cc' => $req->cc,
                     'is_active' => $req->boolean('status'),
                 ]);
             } else {
@@ -467,6 +480,8 @@ class SaleController extends Controller
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
+                    'quo_from' => $req->from,
+                    'quo_cc' => $req->cc,
                     'is_active' => $req->boolean('status'),
                 ]);
             }
@@ -771,9 +786,12 @@ class SaleController extends Controller
             ]);
 
             // Create PDF
+            $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
+
             $pdf = Pdf::loadView('delivery_order.inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
+                'do_sku' => $do_sku,
                 'dos' => $dos,
                 'do_products' => DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get(),
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
@@ -850,6 +868,153 @@ class SaleController extends Controller
             return Storage::download(self::DELIVERY_ORDER_PATH . '/' . $req->query('file'));
         } else if ($req->type == 'inv') {
             return Storage::download(self::INVOICE_PATH . '/' . $req->query('file'));
+        }
+    }
+
+    public function indexTarget() {
+        return view('target.list');
+    }
+
+    public function getDataTarget(Request $req) {
+        $records = Target::with('salesperson');
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function($q) use ($keyword) {
+                $q->where('amount', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('salesperson', function($q) use ($keyword) {
+                        return $q->where('name', 'like', '%'.$keyword.'%');
+                    });
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'salesperson',
+                1 => 'amount',
+                2 => 'date',
+            ];
+            foreach ($req->order as $order) {
+                if ($order['column'] == 0) {
+                    $records = $records->orderBy(User::select('name')->whereColumn('users.id', 'targets.sale_id'), $order['dir']);
+                } else {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'sales' => $record->salesperson->name,
+                'amount' => $record->amount,
+                'date' => Carbon::parse($record->date)->format('M Y'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function createTarget() {
+        $period = CarbonPeriod::create(now()->format('M Y'), '1 month', now()->addYear()->format('M Y'))->toArray();
+
+        return view('target.form', [
+            'period' => $period
+        ]);
+    }
+
+    public function storeTarget(Request $req) {
+        // Validate request
+        $validator = Validator::make($req->all(), [
+            'sale' => 'required',
+            'date' => 'required',
+            'amount' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $exists = Target::where('sale_id', $req->sale)->where('date', Carbon::parse($req->date)->format('Y-m-d'))->exists();
+        if ($exists) {
+            return back()->with('warning', 'Target has set for salesperson and date')->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            Target::create([
+                'sale_id' => $req->sale,
+                'date' => Carbon::parse($req->date)->format('Y-m-d'),
+                'amount' => $req->amount,
+            ]);
+
+            DB::commit();
+
+            return redirect(route('target.index'))->with('success', 'Target created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function editTarget(Target $target) {
+        $period = CarbonPeriod::create(now()->format('M Y'), '1 month', now()->addYear()->format('M Y'))->toArray();
+
+        return view('target.form', [
+            'target' => $target,
+            'period' => $period,
+        ]);
+    }
+
+    public function updateTarget(Request $req, Target $target) {
+        // Validate request
+        $validator = Validator::make($req->all(), [
+            'sale' => 'required',
+            'date' => 'required',
+            'amount' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $exists = Target::whereNot('id', $target->id)->where('sale_id', $req->sale)->where('date', Carbon::parse($req->date)->format('Y-m-d'))->exists();
+        if ($exists) {
+            return back()->with('warning', 'Target has set for salesperson and date')->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $target->update([
+                'sale_id' => $req->sale,
+                'date' => Carbon::parse($req->date)->format('Y-m-d'),
+                'amount' => $req->amount,
+            ]);
+
+            DB::commit();
+
+            return redirect(route('target.index'))->with('success', 'Target updated');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
 }

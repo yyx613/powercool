@@ -50,17 +50,17 @@
                     <tr>
                         <td style="font-size: 14px; width: 30%;">Your Ref</td>
                         <td style="font-size: 14px; width: 10%;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->reference }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">From</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->quo_from }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">C. C.</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->quo_cc }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Date</td>

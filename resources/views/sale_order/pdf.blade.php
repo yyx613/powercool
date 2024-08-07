@@ -48,19 +48,19 @@
             <td>
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="font-size: 14px; width: 30%;">Your Ref</td>
+                        <td style="font-size: 14px; width: 30%;">Your Ref No</td>
                         <td style="font-size: 14px; width: 10%;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->reference }}</td>
                     </tr>
                     <tr>
-                        <td style="font-size: 14px; width: 30%;">Our Ref</td>
+                        <td style="font-size: 14px; width: 30%;">Our Ref No</td>
                         <td style="font-size: 14px; width: 10%;">:</td>
                         <td style="font-size: 14px;"></td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px; width: 30%;">Terms</td>
                         <td style="font-size: 14px; width: 10%;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->paymentMethodHumanRead() }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Date</td>

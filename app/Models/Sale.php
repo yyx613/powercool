@@ -68,4 +68,21 @@ class Sale extends Model
 
         return $sku;
     }
+
+    public function paymentMethodHumanRead(): string {
+        switch ($this->payment_method) {
+            case 'cash':
+                return 'Cash';
+            case 'term':
+                return 'Term';
+            case 'banking':
+                return 'Banking';
+            case 'tng':
+                return 'T&G';
+            case 'cheque':
+                return 'Cheque';
+            default:
+                return '-';
+        }
+    }
 }

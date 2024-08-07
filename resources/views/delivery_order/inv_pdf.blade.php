@@ -34,7 +34,7 @@
                     <tr>
                         <td style="font-size: 14px;">D/O No.</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $do_sku }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
