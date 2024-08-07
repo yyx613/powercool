@@ -3,13 +3,13 @@
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M20,0H4A4,4,0,0,0,0,4V16a4,4,0,0,0,4,4H6.9l4.451,3.763a1,1,0,0,0,1.292,0L17.1,20H20a4,4,0,0,0,4-4V4A4,4,0,0,0,20,0Zm2,16a2,2,0,0,1-2,2H17.1a2,2,0,0,0-1.291.473L12,21.69,8.193,18.473h0A2,2,0,0,0,6.9,18H4a2,2,0,0,1-2-2V4A2,2,0,0,1,4,2H20a2,2,0,0,1,2,2Z"/><path d="M7,7h5a1,1,0,0,0,0-2H7A1,1,0,0,0,7,7Z"/><path d="M17,9H7a1,1,0,0,0,0,2H17a1,1,0,0,0,0-2Z"/><path d="M17,13H7a1,1,0,0,0,0,2H17a1,1,0,0,0,0-2Z"/></svg>
         <span class="text-md ml-3 font-bold">Remarks</span>
     </div>
-    <form action="" method="" enctype="multipart/form-data" id="remark-form">
+    <div id="remark-form">
         @csrf
         <div>
             <div class="grid grid-cols-3 gap-8 w-full mb-8">
                 <div class="flex flex-col col-span-3">
                     <x-app.input.label id="remark" class="mb-1">Additional Note</x-app.input.label>
-                    <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" text="{{ isset($quo) ? $quo->remark : (isset($sale) ? $sale->remark : null) }}" />
+                    <x-app.input.multi-input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ isset($sale) ? $sale->remark : null }}" />
                     <x-app.message.error id="remark_err"/>
                 </div>
             </div>
@@ -17,7 +17,7 @@
                 <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
             </div>
         </div>
-    </form>
+    </div>
 </div>
 
 
@@ -25,7 +25,7 @@
     <script>
         REMARK_FORM_CAN_SUBMIT = true
 
-        $('#remark-form').on('submit', function(e) {
+        $('#remark-form #submit-btn').on('click', function(e) {
             e.preventDefault()
 
             if (!REMARK_FORM_CAN_SUBMIT) return
@@ -47,7 +47,7 @@
                 type: 'POST',
                 data: {
                     'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
-                    'remark': $('#remark-form textarea[name="remark"]').val(),
+                    'remark': $('#remark-form input[name="remark"]').val(),
                 },
                 success: function(res) {
                     setTimeout(() => {

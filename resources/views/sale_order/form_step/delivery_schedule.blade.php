@@ -23,8 +23,8 @@
                     <x-app.input.label id="driver" class="mb-1">Driver <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="driver" id="driver" :hasError="$errors->has('driver')" placeholder="Select a driver">
                         <option value="">Select a driver</option>
-                        @foreach ($sales as $sa)
-                            <option value="{{ $sa->id }}" @selected(old('driver', isset($sale) ? $sale->driver_id : null) == $sa->id)>{{ $sa->name }}</option>
+                        @foreach ($drivers as $dr)
+                            <option value="{{ $dr->id }}" @selected(old('driver', isset($sale) ? $sale->driver_id : null) == $dr->id)>{{ $dr->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-app.message.error id="driver_err"/>
@@ -87,6 +87,7 @@
                 type: 'POST',
                 data: {
                     'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
+                    'driver': $('#delivery-form select[name="driver"]').val(),
                     'delivery_date': $('#delivery-form input[name="delivery_date"]').val(),
                     'delivery_time': $('#delivery-form input[name="delivery_time"]').val(),
                     'delivery_instruction': $('#delivery-form input[name="delivery_instruction"]').val(),

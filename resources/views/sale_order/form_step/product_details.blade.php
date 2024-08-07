@@ -10,6 +10,9 @@
                 <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns" title="Delete Product">
                     <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/></svg>
                 </button>
+                <div class="flex col-span-4 justify-end hidden attached-do-msg">
+                    <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">Product is attached to DO</p>
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="product_name" class="mb-1">Product Name <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="product_name" id="product_name" :hasError="$errors->has('product_name')" />
@@ -97,23 +100,23 @@
     ITEMS_COUNT = 0
 
     $(document).ready(function(){
-        if (
-            typeof SALE !== 'undefined' && SALE != null ||
-            typeof QUO !== 'undefined' && QUO != null
-        ) {
-            var prods = []
-            if (SALE != null) prods = SALE.products
-            else if (QUO != null) prods = QUO.products
+        if (SALE != null) {
+            var prods = SALE.products
 
             for (let i = 0; i < prods.length; i++) {
                 const prod = prods[i];
 
                 $('#add-item-btn').click()
 
+                $(`.items[data-id="${i+1}"]`).attr('data-product-id', prod.id)
                 $(`.items[data-id="${i+1}"] input[name="product_name"]`).val(prod.name)
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).val(prod.qty)
                 $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(prod.unit_price)
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(prod.desc)
+                if (prod.attached_to_do == true) {
+                    $(`.items[data-id="${i+1}"] .delete-item-btns`).remove()
+                    $(`.items[data-id="${i+1}"] .attached-do-msg`).removeClass('hidden')
+                }
                 
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).trigger('keyup')
             }
@@ -186,6 +189,7 @@
         let url = '{{ route("sale.upsert_pro_details") }}'
         url = `${url}`
 
+        let prodId = []
         let prodName = []
         let prodDesc = []
         let qty = []
@@ -193,6 +197,7 @@
         let prodSerialNo = []
         let warrantyPeriod = []
         $('#product-form .items').each(function(i, obj) {
+            prodId.push($(this).data('product-id') ?? null)
             prodName.push($(this).find('input[name="product_name"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
@@ -208,7 +213,8 @@
             url: url,
             type: 'POST',
             data: {
-                'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
+                'sale_id': SALE != null ? SALE.id : null,
+                'product_id': prodId,
                 'product_name': prodName,
                 'product_desc': prodDesc,
                 'qty': qty,

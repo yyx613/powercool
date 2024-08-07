@@ -5,11 +5,10 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SaleProduct extends Model
+class DeliveryOrderProduct extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $guarded = [];
     protected $casts = [
@@ -21,11 +20,7 @@ class SaleProduct extends Model
         return $date;
     }
 
-    public function remainingQty() {
-        return $this->qty - DeliveryOrderProduct::where('sale_product_id', $this->id)->sum('qty');
-    }
-
-    public function attachedToDO(): bool {
-        return DeliveryOrderProduct::where('sale_product_id', $this->id)->exists();
+    public function saleProduct() {
+        return $this->belongsTo(SaleProduct::class);
     }
 }

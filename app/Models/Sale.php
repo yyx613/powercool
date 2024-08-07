@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Sale extends Model
 {
@@ -27,6 +28,30 @@ class Sale extends Model
 
     public function products() {
         return $this->hasMany(SaleProduct::class);
+    }
+
+    public function saleperson() {
+        return $this->belongsTo(User::class, 'sale_id');
+    }
+    
+    public function customer() {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function getReferenceAttribute($val) {
+        if ($this->type == self::TYPE_QUO) {
+            return $val;
+        } else if ($this->type == self::TYPE_SO) {
+            return $val == null ? null : join(',', json_decode($val, true));
+        }
+    }
+
+    public function getRemarkAttribute($val) {
+        if ($this->type == self::TYPE_QUO) {
+            return $val;
+        } else if ($this->type == self::TYPE_SO) {
+            return $val == null ? null : join(',', json_decode($val, true));
+        }
     }
 
     public function generateSku($type): null|string {

@@ -42,6 +42,9 @@ Route::middleware('auth')->group(function() {
             Route::get('/create', 'create')->name('create');
             Route::get('/edit/{sale}', 'edit')->name('edit');
             Route::get('/delete/{sale}', 'delete')->name('delete');
+            Route::get('/pdf/{sale}', 'pdf')->name('pdf');
+            Route::get('/to-sale-order', 'toSaleOrder')->name('to_sale_order');
+            Route::get('/convert-to-sale-order', 'converToSaleOrder')->name('convert_to_sale_order');
         });
         // Sale Order
         Route::prefix('sale-order')->name('sale_order.')->group(function() {
@@ -50,6 +53,9 @@ Route::middleware('auth')->group(function() {
             Route::get('/create', 'createSaleOrder')->name('create');
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit');
             Route::get('/delete/{sale}', 'delete')->name('delete');
+            Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
+            Route::get('/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order');
+            Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
         });
 
         Route::prefix('sale')->name('sale.')->group(function() {
@@ -58,8 +64,22 @@ Route::middleware('auth')->group(function() {
             Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
             Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule'); 
-            Route::get('/convert-to-invoice', 'convertToInv')->name('convert_to_inv');
         });
+
+        // Delivery Order
+        Route::prefix('delivery-order')->name('delivery_order.')->group(function() {
+            Route::get('/', 'indexDeliveryOrder')->name('index');
+            Route::get('/get-data', 'getDataDeliveryOrder')->name('get_data');
+            Route::get('/to-invoice', 'toInvoice')->name('to_invoice');
+            Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
+        });
+        // Invoice
+        Route::prefix('invoice')->name('invoice.')->group(function() {
+            Route::get('/', 'indexInvoice')->name('index');
+            Route::get('/get-data', 'getDataInvoice')->name('get_data');
+        });
+        
+        Route::get('/download', 'download')->name('download');
     });
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function() {

@@ -37,7 +37,7 @@
             $('.err_msg').addClass('hidden') // Remove error messages
             // Submit
             let url = '{{ route("sale.upsert_remark") }}'
-            url = `${url}`
+            url = `${url}?type=quo`
 
             $.ajax({
                 headers: {

@@ -33,7 +33,12 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('task.sale.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('delivery_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'delivery_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Delivery Order</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Invoice</span>
                                     </a>
                                 </li>
@@ -124,7 +129,7 @@
     <div class="h-screen py-4 px-2 sticky top-0 z-50">
         <div class="relative flex flex-col h-full">
             <div class="flex items-center justify-center">
-                <button type="button" class="rounded-full p-2.5 hover:bg-gray-100" id="expand-sidebar-btn">
+                <button type="button" class="rounded-full p-2.5 hover:bg-blue-600" id="expand-sidebar-btn">
                     <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><rect y="11" width="24" height="2" rx="1"/><rect y="4" width="24" height="2" rx="1"/><rect y="18" width="24" height="2" rx="1"/></svg>
                 </button>
             </div>
@@ -192,7 +197,12 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('task.sale.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                    <a href="{{ route('delivery_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'delivery_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Delivery Order</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Invoice</span>
                     </a>
                 </li>

@@ -3,18 +3,13 @@
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>
         <span class="text-lg ml-3 font-bold">Quotation Details</span>
     </div>
-    <form action="" method="POST" enctype="multipart/form-data" id="quotation-form">
+    <div id="quotation-form">
         @csrf
         <div>
             <div class="grid grid-cols-3 gap-8 w-full mb-8">
                 <div class="flex flex-col">
-                    <x-app.input.label id="open_until" class="mb-1">Open Until <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="open_until" id="open_until" :hasError="$errors->has('open_until')" value="{{ isset($quo) ? $quo->open_until : (isset($sale) ? $sale->open_until : null) }}" />
-                    <x-app.message.error id="open_until_err"/>
-                </div>
-                <div class="flex flex-col">
                     <x-app.input.label id="reference" class="mb-1">Reference <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="reference" id="reference" :hasError="$errors->has('reference')" value="{{ isset($quo) ? $quo->reference : (isset($sale) ? $sale->reference : null) }}" />
+                    <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')" value="{{ isset($sale) ? $sale->reference : null }}" />
                     <x-app.message.error id="reference_err"/>
                 </div>
                 <div class="flex flex-col">
@@ -22,7 +17,7 @@
                     <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')" placeholder="Select a sale">
                         <option value="">Select a sale</option>
                         @foreach ($sales as $sa)
-                            <option value="{{ $sa->id }}" @selected(old('sale', isset($quo) ? $quo->sale_id : (isset($sale) ? $sale->sale_id : null)) == $sa->id)>{{ $sa->name }}</option>
+                            <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-app.message.error id="sale_err"/>
@@ -32,7 +27,7 @@
                     <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a customer">
                         <option value="">Select a customer</option>
                         @foreach ($customers as $cu)
-                            <option value="{{ $cu->id }}" @selected(old('customer', isset($quo) ? $quo->customer_id : (isset($sale) ? $sale->customer_id : null)) == $cu->id)>{{ $cu->name }}</option>
+                            <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-app.message.error id="customer_err"/>
@@ -41,8 +36,8 @@
                     <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">Select a Active/Inactive</option>
-                        <option value="1" @selected(old('status', isset($quo) ? $quo->is_active : (isset($sale) ? $sale->is_active : null)) == 1)>Active</option>
-                        <option value="0" @selected(old('status', isset($quo) ? $quo->is_active : (isset($sale) ? $sale->is_active : null)) === 0)>Inactive</option>
+                        <option value="1" @selected(old('status', isset($sale) ? $sale->is_active : null) == 1)>Active</option>
+                        <option value="0" @selected(old('status', isset($sale) ? $sale->is_active : null) === 0)>Inactive</option>
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
@@ -51,19 +46,14 @@
                 <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
             </div>
         </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')
     <script>
         QUOTATION_FORM_CAN_SUBMIT = true
 
-        $('input[name="open_until"]').daterangepicker(datepickerParam)
-        $('input[name="open_until"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-
-        $('#quotation-form').on('submit', function(e) {
+        $('#quotation-form #submit-btn').on('click', function(e) {
             e.preventDefault()
 
             if (!QUOTATION_FORM_CAN_SUBMIT) return
@@ -88,7 +78,6 @@
                     'quo_id': typeof QUO !== 'undefined' && QUO != null ? QUO.id : null,
                     'sale': $('#quotation-form select[name="sale"]').val(),
                     'customer': $('#quotation-form select[name="customer"]').val(),
-                    'open_until': $('#quotation-form input[name="open_until"]').val(),
                     'reference': $('#quotation-form input[name="reference"]').val(),
                     'status': $('#quotation-form select[name="status"]').val(),
                 },

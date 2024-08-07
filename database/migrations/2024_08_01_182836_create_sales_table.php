@@ -17,8 +17,8 @@ return new class extends Migration
             $table->unsignedInteger('type')->comment('1 - Quotation, 2 - Sale Order');
             $table->unsignedBigInteger('customer_id');
             $table->unsignedBigInteger('sale_id');
-            $table->date('open_until');
-            $table->string('reference');
+            $table->date('open_until')->nullable();
+            $table->longText('reference');
             $table->boolean('is_active');
             $table->longText('remark')->nullable();
             $table->string('payment_term')->nullable();

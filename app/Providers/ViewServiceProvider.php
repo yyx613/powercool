@@ -111,12 +111,19 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('customers', $customers);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'sale_order.form_step.delivery_schedule'], function(ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function(ViewView $view) {
             $sales = User::whereHas('roles', function($q) {
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();
 
             $view->with('sales', $sales);
+        });
+        View::composer(['sale_order.form_step.delivery_schedule'], function(ViewView $view) {
+            $drivers = User::whereHas('roles', function($q) {
+                $q->where('id', Role::DRIVER);
+            })->orderBy('id', 'desc')->get();
+
+            $view->with('drivers', $drivers);
         });
         View::composer(['customer.form', 'quotation.form_step.customer_details'], function(ViewView $view) {
             $prefix = [

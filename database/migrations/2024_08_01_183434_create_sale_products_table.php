@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('sale_id');
             $table->string('name');
+            $table->string('desc')->nullable();
             $table->unsignedInteger('qty');
             $table->decimal('unit_price');
             $table->string('warranty_period');
-            $table->string('desc')->nullable();
             $table->string('serial_no')->nullable();
             $table->softDeletes();
             $table->timestamps();
