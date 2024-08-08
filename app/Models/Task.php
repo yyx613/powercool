@@ -17,10 +17,6 @@ class Task extends Model
     const TYPE_TECHNICIAN = 2; 
     const TYPE_SALE = 3; 
 
-    const PRIORITY_LOW = 1;
-    const PRIORITY_MEDIUM = 2;
-    const PRIORITY_HIGH = 3;
-
     const STATUS_TO_DO = 1;
     const STATUS_DOING = 2;
     const STATUS_IN_REVIEW = 3;

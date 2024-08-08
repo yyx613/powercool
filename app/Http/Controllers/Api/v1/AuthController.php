@@ -20,26 +20,27 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class AuthController extends Controller
 {
-    public function autoLogin(Request $request) {
-        $user = $request->user();
-        
-        if ($user == null) {
+    public function autoLogin(Request $req) {
+        $token = $req->bearerToken();
+
+        if ($token == null) {
             return Response::json([
                 'msg' => 'token not found',
             ], HttpFoundationResponse::HTTP_UNAUTHORIZED);
         }
 
+        $pat = PersonalAccessToken::findToken($token);
+        $user = $pat->tokenable;
+
         $user->role = getUserRole($user);
-        // Create token
-        $token = $user->createToken($user->email);
 
         return Response::json([
             'user' => $user,
-            'token' => $token == null ? null : $token->plainTextToken,
         ], HttpFoundationResponse::HTTP_OK);
     }
 

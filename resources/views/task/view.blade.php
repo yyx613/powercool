@@ -23,12 +23,6 @@
             </div>
             <div class="flex">
                 <div class="flex-1 flex flex-col pt-4 px-2">
-                    <div class="bg-teal-300 rounded-lg p-1.5 flex flex-col">
-                        <span class="flex-1 uppercase text-lg text-center font-semibold">{{ $task->priority }}</span>
-                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Priority</span>
-                    </div>
-                </div>
-                <div class="flex-1 flex flex-col pt-4 px-2">
                     <div class="bg-blue-300 rounded-lg p-1.5 flex flex-col">
                         <span class="flex-1 uppercase text-lg text-center font-semibold">{{ $task->status }}</span>
                         <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Status</span>

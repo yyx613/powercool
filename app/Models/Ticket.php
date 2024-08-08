@@ -26,9 +26,6 @@ class Ticket extends Model
         return $this->morphMany(Attachment::class, 'object');
     }
 
-    public function getPriorityAttribute($val) {
-        return (int)$val;
-    }
 
     public function generateSku(): string {
         $sku = null;

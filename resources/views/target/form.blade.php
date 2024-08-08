@@ -17,7 +17,7 @@
                         <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')" placeholder="Select a sale">
                             <option value="">Select a sale</option>
                             @foreach ($sales as $sa)
-                                <option value="{{ $sa->id }}" @selected(old('sale', isset($target) ? $target->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
+                                <option value="{{ $sa->id }}" @selected(old('sale', isset($duplicate_target) ? $duplicate_target->sale_id : (isset($target) ? $target->sale_id : null)) == $sa->id)>{{ $sa->name }}</option>
                             @endforeach
                         </x-app.input.select2>
                         <x-input-error :messages="$errors->get('sale')" class="mt-2" />
@@ -27,14 +27,14 @@
                         <x-app.input.select name="date" id="date" :hasError="$errors->has('date')">
                             <option value="">Select a date</option>
                             @foreach($period as $p)
-                                <option value="{{ $p->format('M Y') }}" @selected(old('date', isset($target) ? $carbon::parse($target->date)->format('M Y') : null) == $p->format('M Y'))>{{ $p->format('M Y') }}</option>
+                                <option value="{{ $p->format('M Y') }}" @selected(old('date', isset($duplicate_target) ? $carbon::parse($duplicate_target->date)->format('M Y') : (isset($target) ? $carbon::parse($target->date)->format('M Y') : null)) == $p->format('M Y'))>{{ $p->format('M Y') }}</option>
                             @endforeach
                         </x-app.input.select>
                         <x-input-error :messages="$errors->get('date')" class="mt-2" />
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="amount" class="mb-1">Target Amount<span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" value="{{ isset($target) ? $target->amount : null }}" class="decimal-input" />
+                        <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" value="{{ isset($duplicate_target) ? $duplicate_target->amount : (isset($target) ? $target->amount : null) }}" class="decimal-input" />
                         <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                     </div>
                 </div>

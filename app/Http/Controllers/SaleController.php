@@ -929,12 +929,16 @@ class SaleController extends Controller
         return response()->json($data);
     }
 
-    public function createTarget() {
-        $period = CarbonPeriod::create(now()->format('M Y'), '1 month', now()->addYear()->format('M Y'))->toArray();
+    public function createTarget(Request $req) {
+        $data = [];
 
-        return view('target.form', [
-            'period' => $period
-        ]);
+        $data['period'] = CarbonPeriod::create(now()->format('M Y'), '1 month', now()->addYear()->format('M Y'))->toArray();
+
+        if ($req->has('t')) {
+            $data['duplicate_target'] = Target::where('id', $req->t)->first();
+        }
+
+        return view('target.form', $data);
     }
 
     public function storeTarget(Request $req) {

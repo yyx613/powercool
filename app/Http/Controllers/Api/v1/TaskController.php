@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
 use App\Models\Milestone;
+use App\Models\Role;
+use App\Models\Sale;
+use App\Models\Target;
 use App\Models\Task;
 use App\Models\TaskMilestone;
 use App\Models\User;
@@ -25,17 +28,22 @@ use Illuminate\Support\Facades\Storage;
 class TaskController extends Controller
 {
     public function getStatistic(Request $req) {
+        $user = $req->user();
+
         try {
             $today_completed_task_count = 0;
             $today_task_count = 0;
             $cash_collected = 0;
             $outstanding = 0;
+            $monthly_sales = 0;
+            $monthly_sales_target = 0;
             
             $tasks = Task::where('start_date', now()->format('Y-m-d'))->whereHas('users', function(Builder $q) use ($req) {
                 $q->where('user_id', $req->user()->id);
             })->get();
 
             $today_task_count = count($tasks);
+            
             for ($i=0; $i < count($tasks); $i++) { 
                 $not_completed = TaskMilestone::where('task_id', $tasks[$i]->id)->whereNull('submitted_at')->exists();
 
@@ -43,13 +51,20 @@ class TaskController extends Controller
                     $today_completed_task_count++;
                 }
 
-                // Get cash collected
-                foreach ($tasks[$i]->milestones as $task_ms) {
-                    if (in_array($task_ms->pivot->milestone_id, getPaymentCollectionIds())) {
-                        $cash_collected += $task_ms->pivot->amount_collected;
+                if (in_array(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN])) {
+                    // Get cash collected
+                    foreach ($tasks[$i]->milestones as $task_ms) {
+                        if (in_array($task_ms->pivot->milestone_id, getPaymentCollectionIds())) {
+                            $cash_collected += $task_ms->pivot->amount_collected;
+                        }
                     }
+                    $outstanding += $tasks[$i]->amount_to_collect;
                 }
-                $outstanding += $tasks[$i]->amount_to_collect;
+            }
+
+            if (getUserRoleId($user) == Role::SALE) {
+                $monthly_sales_target = Target::where('sale_id', $user->id)->where('date', now()->format('Y-m-01'))->value('amount');
+                $monthly_sales = Sale::where('type', Sale::TYPE_SO)->where('sale_id', $user->id)->where('created_at', 'like', '%'.now()->format('Y-m').'%')->sum('payment_amount');
             }
             
             return Response::json([
@@ -57,6 +72,8 @@ class TaskController extends Controller
                 'outstanding' => $outstanding,
                 'today_task_count' => $today_task_count,
                 'today_completed_task_count' => $today_completed_task_count,
+                'monthly_sales' => $monthly_sales ?? 0,
+                'monthly_sales_target' => $monthly_sales_target ?? 0,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             report($th);
@@ -179,6 +196,9 @@ class TaskController extends Controller
                 'remark' => $req->remark,
                 'submitted_at' => now(),
             ]);
+            Task::where('id', $task_ms->task_id)->where('status', Task::STATUS_TO_DO)->update([
+                'status' => Task::STATUS_DOING
+            ]);
 
             if ($req->hasFile('attachment')) {
                 Attachment::where([
@@ -218,6 +238,9 @@ class TaskController extends Controller
                     'done_by' => $req->user()->id,
                     'task_id' => $task_ms->task_id,
                 ]));
+                Task::where('id', $task_ms->task_id)->where('status', Task::STATUS_DOING)->update([
+                    'status' => Task::STATUS_COMPLETED
+                ]);
             }
 
             DB::commit();

@@ -88,7 +88,12 @@ class ViewServiceProvider extends ServiceProvider
             $milestones = $milestones->get();
 
             $tickets = Ticket::orderBy('id', 'desc')->get();
-            $customers = Customer::orderBy('id', 'desc')->get();
+
+            if ($is_edit) {
+                $customers = Customer::orderBy('id', 'desc')->get();
+            } else {
+                $customers = Customer::orderBy('id', 'desc')->where('is_active', true)->get();
+            }
 
             // Return data
             if (str_contains(Route::currentRouteName(), '.technician.')) {
@@ -107,7 +112,15 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['ticket.form', 'quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function(ViewView $view) {
-            $customers = Customer::orderBy('id', 'desc')->get();
+            $is_edit = false;
+            if (str_contains(Route::currentRouteName(), '.edit')) {
+                $is_edit = true;
+            }
+            if ($is_edit) {
+                $customers = Customer::orderBy('id', 'desc')->get();
+            } else {
+                $customers = Customer::orderBy('id', 'desc')->where('is_active', true)->get();
+            }
 
             $view->with('customers', $customers);
         });

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\NotificationController;
+use App\Http\Controllers\Api\v1\SaleController;
 use App\Http\Controllers\Api\v1\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,9 +22,9 @@ Route::prefix('v1')->group(function() {
     // Auth
     Route::controller(AuthController::class)->prefix('auth')->group(function() {
         Route::middleware('auth:sanctum')->group(function() {
-            Route::get('auto-login', 'autoLogin');
             Route::post('update', 'update');
         });
+        Route::get('auto-login', 'autoLogin');
         Route::post('login', 'login');
         Route::post('login/third-party', 'loginThirdParty');
         Route::post('forget-password', 'forgetPassword');
@@ -43,8 +44,10 @@ Route::prefix('v1')->group(function() {
         Route::get('get-all', 'getAll');
         Route::get('read/{noti}', 'read');
     });
-});
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    // Target
+    Route::controller(SaleController::class)->middleware('auth:sanctum')->group(function() {
+        Route::prefix('sales-target')->group(function() {
+            Route::get('get-all', 'getAllSalesTarget');
+        });
+    });
 });
