@@ -28,12 +28,11 @@ return new class extends Migration
             $table->date('payment_due_date')->nullable();
             $table->decimal('payment_amount')->nullable();
             $table->string('payment_remark')->nullable();
-
             $table->date('delivery_date')->nullable();
             $table->time('delivery_time')->nullable();
             $table->unsignedBigInteger('driver_id')->nullable();
             $table->string('delivery_instruction')->nullable();
-            $table->string('delivery_address')->nullable();
+            $table->unsignedBigInteger('delivery_address_id')->nullable();
             $table->boolean('delivery_is_active')->nullable();
 
             $table->softDeletes();
@@ -42,6 +41,7 @@ return new class extends Migration
             $table->foreign('customer_id')->on('customers')->references('id');
             $table->foreign('sale_id')->on('users')->references('id');
             $table->foreign('driver_id')->on('users')->references('id');
+            $table->foreign('delivery_address_id')->on('customer_locations')->references('id');
         });
     }
 

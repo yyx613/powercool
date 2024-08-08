@@ -18,10 +18,6 @@ return new class extends Migration
             $table->boolean('under_warranty');
             $table->boolean('is_active');
             $table->string('company_name')->nullable();
-            $table->string('company_address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->string('zip_code')->nullable();
             $table->string('company_registration_number')->nullable();
             $table->string('website')->nullable();
             $table->string('prefix')->nullable();

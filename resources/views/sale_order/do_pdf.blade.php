@@ -39,7 +39,15 @@
                     <tr>
                         <td style="font-size: 14px;">Your S/O No.</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;">{{ $sale_order_sku }}</td>
+                        <td style="font-size: 14px;">
+                            @php
+                                $skus = [];
+                                for ($i=0; $i < count($sale_orders) ;$i++) {
+                                    $skus[] = $sale_orders[$i]->sku;
+                                }
+                            @endphp
+                            {{ join(', ', $skus) }}
+                        </td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
@@ -68,10 +76,10 @@
                     <tr>
                         <td style="font-size: 14px;" colspan="2">
                             {{ $customer->company_name }}<br>
-                            {{ $customer->company_address }}<br>
-                            {{ $customer->city }}<br>
-                            {{ $customer->zip_code }}<br>
-                            {{ $customer->state }}<br>
+                            {{ $billing_address->address }}<br>
+                            {{ $billing_address->city }}<br>
+                            {{ $billing_address->zip_code }}<br>
+                            {{ $billing_address->state }}<br>
                         </td>
                     </tr>
                     <tr>
@@ -87,11 +95,11 @@
                     </tr>
                     <tr>
                         <td style="font-size: 14px;" colspan="2">
-                            {{ $customer->company_name }}<br>
-                            {{ $customer->company_address }}<br>
-                            {{ $customer->city }}<br>
-                            {{ $customer->zip_code }}<br>
-                            {{ $customer->state }}<br>
+                            {{ $customer->company_name ?? '' }}<br>
+                            {{ $delivery_address->address ?? '' }}<br>
+                            {{ $delivery_address->city ?? '' }}<br>
+                            {{ $delivery_address->zip_code ?? '' }}<br>
+                            {{ $delivery_address->state ?? '' }}<br>
                         </td>
                     </tr>
                     <tr>
@@ -114,17 +122,32 @@
         @php
             $total = 0;
         @endphp
-        @foreach ($products as $key => $prod)
-            <tr>
-                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->desc }}</td>
-                <td style="font-size: 14px; text-align: right;"></td>
-                <td style="font-size: 14px; text-align: right;">{{ $prod_qty[$prod->id] }}</td>
-            </tr>
-            @php
-                $total += $prod_qty[$prod->id];
-            @endphp
+        @foreach ($sale_orders as $key => $so)
+            @foreach ($products as $key => $prod)
+                @php
+                    if ($prod->sale_id != $so->id) {
+                        continue;
+                    }
+                @endphpf
+                <tr>
+                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left;"></td>
+                    <td style="font-size: 14px; text-align: left;">{{ $prod->desc }}</td>
+                    <td style="font-size: 14px; text-align: right;"></td>
+                    <td style="font-size: 14px; text-align: right;">{{ $prod_qty[$prod->id] }}</td>
+                </tr>
+                @php
+                    $total += $prod_qty[$prod->id];
+                @endphp
+            @endforeach
+            <!-- Remark -->
+            @if ($so->remark != null)
+                <tr>
+                    <td colspan="2"></td>
+                    <td colspan="2" style="font-size: 14px; padding: 15px 0;"><span style="font-weight: 700;">REMARK:</span><br>{{ $so->remark }}</td>
+                    <td></td>
+                </tr>
+            @endif
         @endforeach
     </table>
     <!-- Item Summary -->

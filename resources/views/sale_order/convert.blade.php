@@ -201,11 +201,11 @@
         if (index > -1) {
             SELECTED_SOS.splice(index, 1)
 
-            $(`.sale-order-selections[data-id="${id}"]`).removeClass('border-black')
+            $(`.sale-order-selections[data-id="${id}"]`).removeClass('!border-black')
         } else {
             SELECTED_SOS.push(id)
 
-            $(`.sale-order-selections[data-id="${id}"]`).addClass('border-black')
+            $(`.sale-order-selections[data-id="${id}"]`).addClass('!border-black')
         }
 
         if (SELECTED_SOS.length <= 0) {
@@ -228,9 +228,9 @@
         let val = $(this).val()
 
         if ($(this).is(':checked')) {
-            $(`.products[data-id="${val}"]`).addClass('border-black')
+            $(`.products[data-id="${val}"]`).addClass('!border-black')
         } else {
-            $(`.products[data-id="${val}"]`).removeClass('border-black')
+            $(`.products[data-id="${val}"]`).removeClass('!border-black')
         }
 
         let canConvert = false

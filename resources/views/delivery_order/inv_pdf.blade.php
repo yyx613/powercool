@@ -58,10 +58,10 @@
                     <tr>
                         <td style="font-size: 14px;" colspan="2">
                             {{ $customer->company_name }}<br>
-                            {{ $customer->company_address }}<br>
-                            {{ $customer->city }}<br>
-                            {{ $customer->zip_code }}<br>
-                            {{ $customer->state }}<br>
+                            {{ $billing_address->address }}<br>
+                            {{ $billing_address->city }}<br>
+                            {{ $billing_address->zip_code }}<br>
+                            {{ $billing_address->state }}<br>
                         </td>
                     </tr>
                     <tr>

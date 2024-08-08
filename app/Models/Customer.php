@@ -25,4 +25,8 @@ class Customer extends Model
     public function pictures() {
         return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
     }
+
+    public function locations() {
+        return $this->hasMany(CustomerLocation::class);
+    }
 }

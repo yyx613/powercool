@@ -101,11 +101,11 @@
         if (index > -1) {
             SELECTED_DOS.splice(index, 1)
 
-            $(`.do-selections[data-id="${id}"]`).removeClass('border-black')
+            $(`.do-selections[data-id="${id}"]`).removeClass('!border-black')
         } else {
             SELECTED_DOS.push(id)
 
-            $(`.do-selections[data-id="${id}"]`).addClass('border-black')
+            $(`.do-selections[data-id="${id}"]`).addClass('!border-black')
         }
 
         if (SELECTED_DOS.length <= 0) {

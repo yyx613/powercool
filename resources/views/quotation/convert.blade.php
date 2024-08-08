@@ -147,11 +147,11 @@
         if (index > -1) {
             SELECTED_QUOS.splice(index, 1)
 
-            $(`.quotation-selections[data-id="${id}"]`).removeClass('border-black')
+            $(`.quotation-selections[data-id="${id}"]`).removeClass('!border-black')
         } else {
             SELECTED_QUOS.push(id)
 
-            $(`.quotation-selections[data-id="${id}"]`).addClass('border-black')
+            $(`.quotation-selections[data-id="${id}"]`).addClass('!border-black')
         }
 
         if (SELECTED_QUOS.length <= 0) {

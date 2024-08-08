@@ -45,7 +45,8 @@
                 </div>
                 <div class="flex flex-col col-span-2">
                     <x-app.input.label id="delivery_address" class="mb-1">Delivery Address</x-app.input.label>
-                    <x-app.input.input name="delivery_address" id="delivery_address" :hasError="$errors->has('delivery_address')" value="{{ isset($sale) ? $sale->delivery_address : null }}" />
+                    <x-app.input.select id="delivery_address" name="delivery_address">
+                    </x-app.input.select>
                     <x-app.message.error id="delivery_address_err"/>
                 </div>
             </div>
@@ -91,7 +92,7 @@
                     'delivery_date': $('#delivery-form input[name="delivery_date"]').val(),
                     'delivery_time': $('#delivery-form input[name="delivery_time"]').val(),
                     'delivery_instruction': $('#delivery-form input[name="delivery_instruction"]').val(),
-                    'delivery_address': $('#delivery-form input[name="delivery_address"]').val(),
+                    'delivery_address': $('#delivery-form select[name="delivery_address"]').val() === 'null' ? null : $('#delivery-form select[name="delivery_address"]').val(),
                     'status': $('#delivery-form select[name="status"]').val(),
                 },
                 success: function(res) {

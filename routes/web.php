@@ -136,10 +136,11 @@ Route::middleware('auth')->group(function() {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
         Route::get('/edit/{customer}', 'edit')->name('edit');
-        Route::post('/update/{customer}', 'update')->name('update');
         Route::get('/delete/{customer}', 'delete')->name('delete');
+        Route::post('/upsert-info', 'upsertInfo')->name('upsert_info');
+        Route::post('/upsert-location', 'upsertLocation')->name('upsert_location');
+        Route::get('/get-location', 'getLocation')->name('get_location');
     });
     // User Management
     Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {

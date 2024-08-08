@@ -108,7 +108,6 @@ class TaskController extends Controller
                             $qq->where('name', 'like', '%' . $req->keyword . '%')
                                 ->orWhere('phone', 'like', '%' . $req->keyword . '%')
                                 ->orWhere('company_name', 'like', '%' . $req->keyword . '%')
-                                ->orWhere('company_address', 'like', '%' . $req->keyword . '%')
                                 ->orWhere('company_registration_number', 'like', '%' . $req->keyword . '%');
                         });
                 });

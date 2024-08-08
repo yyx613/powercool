@@ -227,6 +227,11 @@
                     $('#product-form #submit-btn').text('Updated')
                     $('#product-form #submit-btn').addClass('bg-green-400 shadow')
 
+                    let product_ids = res.product_ids
+                    $('#product-form .items').each(function(i, obj) {
+                        $(this).attr('data-product-id', product_ids[i])
+                    })
+
                     setTimeout(() => {
                         $('#product-form #submit-btn').text('Save and Update')
                         $('#product-form #submit-btn').removeClass('bg-green-400')

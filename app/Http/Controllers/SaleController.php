@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
@@ -102,6 +103,7 @@ class SaleController extends Controller
             'sale' => $sale,
             'products' => $sale->products,
             'customer' => $sale->customer,
+            'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -307,6 +309,7 @@ class SaleController extends Controller
             'products' => $sale->products,
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
+            'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -392,7 +395,22 @@ class SaleController extends Controller
             }
             $sku = (new DeliveryOrder)->generateSku();
 
-            $sale_order_sku = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->pluck('sku')->toArray();
+            $sale_orders = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->get();
+
+            $deli_addresses = [];
+            $deli_address_not_same = false;
+            for ($i=0; $i < count($sale_orders); $i++) { 
+                if ($sale_orders[$i]->delivery_address_id != null) {
+                    if (in_array($sale_orders[$i]->delivery_address_id, $deli_addresses)) {
+                        $deli_address_not_same = true;
+                    }
+                    $deli_addresses[] = $sale_orders[$i]->delivery_address_id;
+                }
+
+                if ($deli_address_not_same) {
+                    break;
+                }
+            }
 
             $pdf = Pdf::loadView('sale_order.do_pdf', [
                 'date' => now()->format('d/m/Y'),
@@ -400,12 +418,13 @@ class SaleController extends Controller
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
                 'products' => SaleProduct::whereIn('id', $product_ids)->get(),
-                'sale_order_sku' => join(', ', $sale_order_sku),
+                'sale_orders' => $sale_orders,
                 'prod_qty' => $prod_qty,
+                'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
+                'delivery_address' => !$deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
-
             $filename = $sku . '.pdf';
             Storage::put(self::DELIVERY_ORDER_PATH . $filename, $content);
 
@@ -570,10 +589,15 @@ class SaleController extends Controller
 
             SaleProduct::insert($data);
 
+            $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
+                ->pluck('id')
+                ->toArray();
+
             DB::commit();
 
             return Response::json([
-                'result' => true
+                'result' => true,
+                'product_ids' => $new_prod_ids
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -661,7 +685,7 @@ class SaleController extends Controller
             'delivery_date' => 'required',
             'delivery_time' => 'required',
             'delivery_instruction' => 'required|max:250',
-            'delivery_address' => 'required|max:250',
+            'delivery_address' => 'nullable',
             'status' => 'required',
         ];
         $req->validate($rules);
@@ -674,7 +698,7 @@ class SaleController extends Controller
                 'delivery_date' => $req->delivery_date,
                 'delivery_time' => $req->delivery_time,
                 'delivery_instruction' => $req->delivery_instruction,
-                'delivery_address' => $req->delivery_address,
+                'delivery_address_id' => $req->delivery_address,
                 'delivery_is_active' => $req->boolean('status'),
             ]);
 
@@ -795,6 +819,7 @@ class SaleController extends Controller
                 'dos' => $dos,
                 'do_products' => DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get(),
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
+                'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
