@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('sku');
             $table->unsignedBigInteger('invoice_id')->nullable();
             $table->unsignedBigInteger('customer_id');
-            $table->unsignedBigInteger('sale_id');
+            $table->unsignedBigInteger('sale_id')->comment('Salesperson id');
+            $table->string('payment_terms');
             $table->string('filename');
             $table->softDeletes();
             $table->timestamps();

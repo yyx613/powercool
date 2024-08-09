@@ -26,12 +26,19 @@
                 <div class="bg-yellow-300 p-2">
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-8c0,2.206-1.794,4-4,4h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.103,0,2-.897,2-2s-.897-2-2-2h-2c-.552,0-1-.447-1-1s.448-1,1-1h2c.551,0,1-.448,1-1s-.449-1-1-1h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.654,0,3,1.346,3,3,0,.68-.236,1.301-.619,1.805,.977,.73,1.619,1.885,1.619,3.195Z"/></svg>
                 </div>
-                <h6 class="font-semibold mx-4">Sale Order Selection</h6>
+                <h6 class="font-semibold mx-4">Term Selection</h6>
             </div>
-            <!-- Step 3 -->
+            <!-- Step 4 -->
             <div class="flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 4 ? 'opacity-25' : ''  }}">
                 <div class="bg-yellow-300 p-2">
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-15v10c0,.553-.447,1-1,1s-1-.447-1-1v-3h-3c-1.654,0-3-1.346-3-3V7c0-.553,.447-1,1-1s1,.447,1,1v4c0,.552,.448,1,1,1h3V7c0-.553,.447-1,1-1s1,.447,1,1Z"/></svg>
+                </div>
+                <h6 class="font-semibold mx-4">Sale Order Selection</h6>
+            </div>
+            <!-- Step 5 -->
+            <div class="flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 5 ? 'opacity-25' : ''  }}">
+                <div class="bg-yellow-300 p-2">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm2.901,14.754c.763-.804,1.151-1.857,1.094-2.968-.111-2.123-1.941-3.786-4.165-3.786h-1.83v-2h4c.553,0,1-.447,1-1s-.447-1-1-1h-4c-1.103,0-2,.897-2,2v3c0,.553,.447,1,1,1h2.83c1.141,0,2.112,.849,2.167,1.891,.029,.557-.165,1.084-.547,1.486-.382,.401-.896,.623-1.45,.623h-3c-.553,0-1,.447-1,1s.447,1,1,1h3c1.092,0,2.149-.454,2.901-1.246Z"/></svg>
                 </div>
                 <h6 class="font-semibold mx-4">Product Selection</h6>
             </div>
@@ -92,7 +99,29 @@
             @if ($step == 3)
                 <div>
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select quotation to proceed</h5>
+                        <h5 class="text-md font-semibold">Select term to proceed</h5>
+                    </div>
+                    @if (count($terms) > 0)
+                        <ul>
+                            @foreach ($terms as $term)
+                                <li class="mb-4 rounded-md cursor-pointer transition duration-300 border border-slate-100 hover:border-black">
+                                    <a href="{{ route('sale_order.to_delivery_order') }}?term={{ $term }}" class="text-sm flex items-center justify-between p-2 font-semibold">
+                                        {{ $term == 'cod' ? 'C.O.D' : $term . ' Days' }}
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm22,0A10,10,0,1,1,12,2,10.011,10.011,0,0,1,22,12Z"/><path d="M16,12a2.993,2.993,0,0,1-.752,1.987c-.291.327-.574.637-.777.84L11.647,17.7a1,1,0,1,1-1.426-1.4L13.05,13.42c.187-.188.441-.468.7-.759a1,1,0,0,0,0-1.323c-.258-.29-.512-.57-.693-.752L10.221,7.7a1,1,0,1,1,1.426-1.4l2.829,2.879c.2.2.48.507.769.833A2.99,2.99,0,0,1,16,12Z"/></svg>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        @include('components.app.no-data')
+                    @endif
+                </div>
+            @endif
+            <!-- Step 4 -->
+            @if ($step == 4)
+                <div>
+                    <div class="mb-4">
+                        <h5 class="text-md font-semibold">Select sale order to proceed</h5>
                     </div>
                     @if (count($sale_orders) > 0)
                         <ul class="flex flex-wrap gap-4">
@@ -111,8 +140,8 @@
                     @endif
                 </div>
             @endif
-            <!-- Step 4 -->
-            @if ($step == 4)
+            <!-- Step 5 -->
+            @if ($step == 5)
                 <div>
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">Select product to convert</h5>

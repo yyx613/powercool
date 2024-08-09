@@ -11,9 +11,13 @@
                     <x-app.input.label id="payment_term" class="mb-1">Payment Term</x-app.input.label>
                     <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')" placeholder="Select or enter new term" can_add="true">
                         <option value=""></option>
+                        <option value="cod" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == 'cod')>C.O.D</option>
                         <option value="30" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == 30)>30 Days</option>
                         <option value="60" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == 60)>60 Days</option>
                         <option value="100" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == 100)>100 Days</option>
+                        @if (isset($sale) && !in_array($sale->payment_term, ['cod', 30, 60, 100]))
+                            <option value="{{ $sale->payment_term }}" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == $sale->payment_term)>{{ $sale->payment_term }} Days</option>
+                        @endif
                     </x-app.input.select2>
                     <x-app.message.error id="payment_term_err"/>
                 </div>

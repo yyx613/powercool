@@ -320,7 +320,7 @@ class SaleController extends Controller
         $step = 1;
 
         if ($req->has('so')) {
-            $step = 4;
+            $step = 5;
 
             Session::put('convert_sale_order_id', $req->so);
 
@@ -333,16 +333,29 @@ class SaleController extends Controller
             for ($i=0; $i < count($sale_orders); $i++) { 
                 $products = $products->merge($sale_orders[$i]->products);
             }
-        } else if ($req->has('sp')) {
-            $step = 3;
+        } else if ($req->has('term')) {
+            $step = 4;
 
-            Session::put('convert_salesperson_id', $req->sp);
+            Session::put('convert_terms', $req->term);
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
                 ->where('is_active', true)
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
+                ->where('payment_term', Session::get('convert_terms'))
                 ->get();
+        } else if ($req->has('sp')) {
+            $step = 3;
+
+            Session::put('convert_salesperson_id', $req->sp);
+
+            $terms = Sale::where('type', Sale::TYPE_SO)
+                ->where('is_active', true)
+                ->where('customer_id', Session::get('convert_customer_id'))
+                ->where('sale_id', Session::get('convert_salesperson_id'))
+                ->whereNotNull('payment_term')
+                ->distinct()
+                ->pluck('payment_term');
         } else if ($req->has('cus')) {
             $step = 2;
 
@@ -380,6 +393,7 @@ class SaleController extends Controller
             'salespersons' => $salespersons ?? [],
             'sale_orders' => $sale_orders ?? [],
             'products' => $products ?? [],
+            'terms' => $terms ?? [],
         ]);
     }
 
@@ -422,6 +436,7 @@ class SaleController extends Controller
                 'prod_qty' => $prod_qty,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => !$deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
+                'terms' => Session::get('convert_terms'),
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
@@ -432,6 +447,7 @@ class SaleController extends Controller
             $do = DeliveryOrder::create([
                 'customer_id' => Session::get('convert_customer_id'),
                 'sale_id' => Session::get('convert_salesperson_id'),
+                'payment_terms' => Session::get('convert_terms'),
                 'sku' => $sku,
                 'filename' => $filename
             ]);
@@ -643,13 +659,20 @@ class SaleController extends Controller
         // Validate form
         $rules = [
             'sale_id' => 'required',
-            'payment_term' => 'required|integer',
+            'payment_term' => 'required',
             'payment_method' => 'required',
             'payment_due_date' => 'required',
             'payment_amount' => 'required',
             'payment_remark' => 'nullable|max:250',
         ];
         $req->validate($rules);
+
+        // Validate payment term
+        if ($req->payment_term != 'cod' && is_int($req->payment_term)) {
+            return Response::json([
+                'payment_term' => 'The payment term field must be an integer.'
+            ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         try {
             DB::beginTransaction();
@@ -774,12 +797,21 @@ class SaleController extends Controller
     public function toInvoice(Request $req) {
         $step = 1;
 
-        if ($req->has('cus')) {
+        if ($req->has('term')) {
+            $step = 3;
+
+            Session::put('convert_terms', $req->term);
+
+            $delivery_orders = DeliveryOrder::whereNull('invoice_id')->where('customer_id', Session::get('convert_customer_id'))->where('payment_terms', $req->term)->get();
+        } else if ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
 
-            $delivery_orders = DeliveryOrder::where('customer_id', $req->cus)->get();
+            $terms = DeliveryOrder::where('customer_id', $req->cus)
+                ->whereNotNull('payment_terms')
+                ->distinct()
+                ->pluck('payment_terms');
         } else {
             $customer_ids = DeliveryOrder::distinct()->pluck('customer_id');
 
@@ -788,6 +820,7 @@ class SaleController extends Controller
 
         return view('delivery_order.convert', [
             'step' => $step, 
+            'terms' => $terms ?? [],
             'customers' => $customers ?? [],
             'delivery_orders' => $delivery_orders ?? [],
         ]);
@@ -796,7 +829,7 @@ class SaleController extends Controller
     public function convertToInvoice(Request $req) {
         $do_ids = explode(',', $req->do);
         $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
-        
+
         try {
             DB::beginTransaction();
 
@@ -815,11 +848,12 @@ class SaleController extends Controller
             $pdf = Pdf::loadView('delivery_order.inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
-                'do_sku' => $do_sku,
+                'do_sku' => join(', ', $do_sku),
                 'dos' => $dos,
                 'do_products' => DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get(),
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
+                'terms' => Session::get('convert_terms'),
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();

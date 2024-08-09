@@ -39,7 +39,7 @@
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $terms == 'cod' ? 'C.O.D' : $terms . ' Days' }}</td>
                     </tr>
                 </table>
             </td>

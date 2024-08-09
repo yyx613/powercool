@@ -52,12 +52,12 @@
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $terms == 'cod' ? 'C.O.D' : $terms . ' Days' }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Salesperson</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $salesperson->name }}</td>
                     </tr>
                 </table>
             </td>
