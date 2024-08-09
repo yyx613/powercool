@@ -1,0 +1,18 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-DZZNFdmm.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/jquery.dataTables.min.css": {
+    "file": "assets/jquery.dataTables-DJfssf6i.css",
+    "src": "resources/css/jquery.dataTables.min.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-D9ilVZ53.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}
