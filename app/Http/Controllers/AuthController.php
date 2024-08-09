@@ -44,7 +44,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard'))->with('info', 'Welcome Back!');
+        return redirect(route('ticket.index'))->with('info', 'Welcome Back!');
     }
 
     public function logout() {
