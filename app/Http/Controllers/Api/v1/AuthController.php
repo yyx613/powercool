@@ -35,13 +35,18 @@ class AuthController extends Controller
         }
 
         $pat = PersonalAccessToken::findToken($token);
-        $user = $pat->tokenable;
 
-        $user->role = getUserRole($user);
+        if ($pat != null) {
+            $user = $pat->tokenable;
+    
+            $user->role = getUserRole($user);
+    
+            return Response::json([
+                'user' => $user,
+            ], HttpFoundationResponse::HTTP_OK);
+        }
 
-        return Response::json([
-            'user' => $user,
-        ], HttpFoundationResponse::HTTP_OK);
+        return Response::json([], HttpFoundationResponse::HTTP_BAD_REQUEST);
     }
 
     public function login(Request $request) {
