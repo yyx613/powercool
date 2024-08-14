@@ -28,4 +28,16 @@ class SaleProduct extends Model
     public function attachedToDO(): bool {
         return DeliveryOrderProduct::where('sale_product_id', $this->id)->exists();
     }
+
+    public function sale() {
+        return $this->belongsTo(Sale::class);
+    }
+
+    public function product() {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function children() {
+        return $this->hasMany(SaleProductChild::class);
+    }
 }

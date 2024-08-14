@@ -38,7 +38,7 @@
                         <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                     </div>
                 </div>
-                <div class="mt-4 flex justify-end">
+                <div class="mt-8 flex justify-end">
                     <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
                 </div>
             </div>

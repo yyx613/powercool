@@ -19,6 +19,7 @@
 .select2-container {
     width: 100%!important;
     padding: 5px;
+    background-color: white;
 }
 .select2-selection--single {
     border: none!important;

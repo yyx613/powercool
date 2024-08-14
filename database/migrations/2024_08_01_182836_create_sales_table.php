@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('quo_from')->nullable();
             $table->string('quo_cc')->nullable();
             $table->longText('reference');
-            $table->boolean('is_active');
+            $table->unsignedInteger('status');
             $table->longText('remark')->nullable();
             $table->string('payment_term')->nullable();
             $table->string('payment_method')->nullable();

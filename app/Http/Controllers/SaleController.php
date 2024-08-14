@@ -9,6 +9,7 @@ use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
 use App\Models\Target;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -74,7 +75,7 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'open_until' => $record->open_until,
-                'status' => $record->is_active,
+                'status' => $record->status,
             ];
         }
 
@@ -87,14 +88,28 @@ class SaleController extends Controller
 
     public function edit(Sale $sale) {
         return view('quotation.form', [
-            'sale' => $sale->load('products')
+            'sale' => $sale->load('products.product.children', 'products.children')
         ]);
     }
 
     public function delete(Sale $sale) {
-        $sale->delete();
+        try {
+            DB::beginTransaction();
 
-        return back()->with('success', 'Quotation deleted');
+            $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
+            SaleProductChild::whereIn('sale_product_id', $sp_ids)->delete();
+            SaleProduct::whereIn('id', $sp_ids)->delete();
+            $sale->delete();
+
+            DB::commit();
+
+            return back()->with('success', 'Quotation deleted');
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 
     public function pdf(Sale $sale) {
@@ -118,17 +133,17 @@ class SaleController extends Controller
             
             Session::put('convert_salesperson_id', $req->sp);
 
-            $quotations = Sale::where('type', Sale::TYPE_QUO)->where('is_active', true)->where('customer_id', Session::get('convert_customer_id'))->where('sale_id', Session::get('convert_salesperson_id'))->get();
+            $quotations = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->where('customer_id', Session::get('convert_customer_id'))->where('sale_id', Session::get('convert_salesperson_id'))->get();
         } else if ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
 
-            $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)->where('is_active', true)->where('customer_id', $req->cus)->distinct()->pluck('sale_id');
+            $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->where('customer_id', $req->cus)->distinct()->pluck('sale_id');
 
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
-            $customer_ids = Sale::where('type', Sale::TYPE_QUO)->where('is_active', true)->distinct()->pluck('customer_id');
+            $customer_ids = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->distinct()->pluck('customer_id');
 
             $customers = Customer::whereIn('id', $customer_ids)->get();
         }
@@ -175,8 +190,8 @@ class SaleController extends Controller
             // Create product details
             $request = new Request([
                 'sale_id' => $sale_id,
-                'product_name' => $products->map(function($q) {
-                    return $q->name;
+                'product_id' => $products->map(function($q) {
+                    return $q->product_id;
                 })->toArray(),
                 'product_desc' => $products->map(function($q) {
                     return $q->desc;
@@ -188,7 +203,7 @@ class SaleController extends Controller
                     return $q->unit_price;
                 })->toArray(),
                 'product_serial_no' => $products->map(function($q) {
-                    return $q->serial_no;
+                    return $q->children->pluck('product_children_id')->toArray();
                 })->toArray(),
                 'warranty_period' => $products->map(function($q) {
                     return $q->warranty_period;
@@ -208,6 +223,10 @@ class SaleController extends Controller
             if ($res->result != true) {
                 throw new Exception("Failed to create remark");
             }
+
+            // Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->update([
+            //     'status' => Sale::STATUS_CONVERTED
+            // ]);
 
             DB::commit();
 
@@ -270,7 +289,7 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
-                'status' => $record->is_active,
+                'status' => $record->status,
             ];
         }
 
@@ -291,7 +310,7 @@ class SaleController extends Controller
     }
 
     public function editSaleOrder(Sale $sale) {
-        $sale->load('products');
+        $sale->load('products.product.children', 'products.children');
 
         $sale->products->each(function($q) {
             $q->attached_to_do = $q->attachedToDo();
@@ -326,7 +345,8 @@ class SaleController extends Controller
 
             $products = collect();
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
-                ->where('is_active', true)
+                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereHas('products')
                 ->whereIn('id', explode(',', $req->so))
                 ->get();
 
@@ -339,7 +359,8 @@ class SaleController extends Controller
             Session::put('convert_terms', $req->term);
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
-                ->where('is_active', true)
+                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereHas('products')
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where('payment_term', Session::get('convert_terms'))
@@ -350,9 +371,10 @@ class SaleController extends Controller
             Session::put('convert_salesperson_id', $req->sp);
 
             $terms = Sale::where('type', Sale::TYPE_SO)
-                ->where('is_active', true)
+                ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
+                ->whereHas('products')
                 ->whereNotNull('payment_term')
                 ->distinct()
                 ->pluck('payment_term');
@@ -362,7 +384,7 @@ class SaleController extends Controller
             Session::put('convert_customer_id', $req->cus);
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
-                ->where('is_active', true)
+                ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', $req->cus)
                 ->distinct()
                 ->pluck('sale_id');
@@ -370,7 +392,7 @@ class SaleController extends Controller
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
             $sales = Sale::where('type', Sale::TYPE_SO)
-                ->where('is_active', true)
+                ->where('status', Sale::STATUS_ACTIVE)
                 ->whereHas('products')
                 ->distinct()
                 ->get();
@@ -505,7 +527,7 @@ class SaleController extends Controller
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
-                    'is_active' => $req->boolean('status'),
+                    'status' => $req->status,
                 ]);
             } else {
                 $sale = Sale::where('id', $req->sale_id)->first();
@@ -517,7 +539,7 @@ class SaleController extends Controller
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
-                    'is_active' => $req->boolean('status'),
+                    'status' => $req->status,
                 ]);
             }
 
@@ -545,10 +567,10 @@ class SaleController extends Controller
         // Validate form
         $rules = [
             'sale_id' => 'required',
-            'product_id' => 'nullable',
-            'product_id.*' => 'nullable',
-            'product_name' => 'required',
-            'product_name.*' => 'required|max:250',
+            'product_order_id' => 'nullable',
+            'product_order_id.*' => 'nullable',
+            'product_id' => 'required',
+            'product_id.*' => 'required',
             'product_desc' => 'required',
             'product_desc.*' => 'nullable|max:250',
             'qty' => 'required',
@@ -556,12 +578,12 @@ class SaleController extends Controller
             'unit_price' => 'required',
             'unit_price.*' => 'required',
             'product_serial_no' => 'required',
-            'product_serial_no.*' => 'nullable|max:250',
+            'product_serial_no.*' => 'nullable|array',
             'warranty_period' => 'required',
             'warranty_period.*' => 'nullable|max:250',
         ];
         $req->validate($rules, [], [
-            'product_name.*' => 'product name',
+            'product_id.*' => 'product',
             'product_desc.*' => 'product description',
             'qty.*' => 'quantity',
             'unit_price.*' => 'unit price',
@@ -572,39 +594,53 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $req->product_id ?? [])->delete();
+            SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $req->product_order_id ?? [])->delete();
 
             $now = now();
-            $data = [];
-            for ($i=0; $i < count($req->product_name); $i++) { 
-                if ($req->product_id != null && $req->product_id[$i] != null) {
-                    SaleProduct::where('id', $req->product_id[$i])->update([
-                        'name' => $req->product_name[$i],
+            for ($i=0; $i < count($req->product_id); $i++) { 
+                if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
+                    $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
+
+                    $sp->update([
+                        'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
-                        'serial_no' => $req->product_serial_no[$i],
                         'warranty_period' => $req->warranty_period[$i],
                     ]);
                 } else {
-                    $data[] = [
+                    $sp = SaleProduct::create([
                         'sale_id' => $req->sale_id,
-                        'name' => $req->product_name[$i],
+                        'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
-                        'serial_no' => $req->product_serial_no[$i],
                         'warranty_period' => $req->warranty_period[$i],
+                    ]);
+                }
+
+                // Sale product children
+                SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->delete();
+                $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
+
+                $data = [];
+                for ($j=0; $j < count($req->product_serial_no[$i]); $j++) { 
+                    if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
+                        continue;
+                    }
+
+                    $data[] = [
+                        'sale_product_id' => $sp->id,
+                        'product_children_id' => $req->product_serial_no[$i][$j],
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
                 }
+                SaleProductChild::insert($data);
             }
-
-            SaleProduct::insert($data);
-
+            
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
                 ->pluck('id')
                 ->toArray();

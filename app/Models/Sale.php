@@ -16,6 +16,10 @@ class Sale extends Model
     const TYPE_QUO = 1; // QUOTATION id
     const TYPE_SO = 2; // SALE ORDER id
 
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_CONVERTED = 2;
+
     protected $guarded = [];
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
@@ -27,7 +31,7 @@ class Sale extends Model
     }
 
     public function products() {
-        return $this->hasMany(SaleProduct::class);
+        return $this->hasMany(SaleProduct::class, 'sale_id');
     }
 
     public function saleperson() {

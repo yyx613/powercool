@@ -56,7 +56,7 @@
                     <x-input-error :messages="$errors->get('body')" class="mt-1" />
                 </div>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-8 flex justify-end">
                 <x-app.button.submit>{{ isset($ticket) ? 'Update Ticket' : 'Create New Ticket' }}</x-app.button.submit>
             </div>
         </div>

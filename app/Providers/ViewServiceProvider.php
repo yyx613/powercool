@@ -3,10 +3,15 @@
 namespace App\Providers;
 
 use App\Models\Customer;
+use App\Models\InventoryCategory;
 use App\Models\Milestone;
+use App\Models\Product;
 use App\Models\Role;
+use App\Models\SaleProductChild;
+use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -155,6 +160,50 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'roles' => $roles
+            ]);
+        });
+        View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function(ViewView $view) {
+            $exclude_ids = [];
+            if (str_contains(Route::currentRouteName(), '.edit')) {
+                $sale = request()->route()->parameter('sale');
+                $sp_ids = $sale->products()->pluck('id')->toArray();
+                $exclude_ids = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
+            }
+
+            $assigned_pc_ids = SaleProductChild::whereNotIn('product_children_id', $exclude_ids)->distinct()->pluck('product_children_id')->toArray();
+
+            $products = Product::with(['children' => function($q) use ($assigned_pc_ids) {
+                    $q->whereNotIn('id', $assigned_pc_ids);
+                }])
+                ->withCount(['children' => function($q) use ($assigned_pc_ids) {
+                    $q->whereNotIn('id', $assigned_pc_ids);
+                }])
+                ->where('is_active', true)
+                ->having('children_count', '>', 0)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $view->with([
+                'products' => $products,
+            ]);
+        });
+        View::composer(['inventory.form'], function(ViewView $view) {
+            $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
+            $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            $view->with([
+                'inv_cats' => $inv_cats,
+                'suppliers' => $suppliers,
+            ]);
+        });
+        View::composer(['inventory.list', 'inventory.form', 'inventory.view'], function(ViewView $view) {
+            $is_product = true;
+            if (str_contains(Route::currentRouteName(), 'raw_material.')) {
+                $is_product = false;
+            }
+
+            $view->with([
+                'is_product' => $is_product,
             ]);
         });
     }

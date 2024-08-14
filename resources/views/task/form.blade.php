@@ -125,7 +125,7 @@
                     <x-input-error :messages="$errors->get('milestone')" class="mt-1" />
                 </div>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-8 flex justify-end">
                 <x-app.button.submit id="submit-btn">{{ isset($task) ? 'Update Task' : 'Create New Task' }}</x-app.button.submit>
             </div>
         </div>

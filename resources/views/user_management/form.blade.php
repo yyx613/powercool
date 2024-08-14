@@ -121,7 +121,7 @@
                     <x-input-error :messages="$errors->get('remark')" class="mt-1" />
                 </div>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-8 flex justify-end">
                 <x-app.button.submit>{{ isset($user) ? 'Update User' : 'Create New User' }}</x-app.button.submit>
             </div>
         </div>

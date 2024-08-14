@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Customer;
+use App\Models\Supplier;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class CustomerSeeder extends Seeder
+class SupplierSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -15,10 +15,9 @@ class CustomerSeeder extends Seeder
     {
         if (config('app.env') == 'local') {
             for ($i=0; $i < 3; $i++) {
-                Customer::create([
-                    'name' => 'Customer'. ($i + 1),
+                Supplier::create([
+                    'name' => 'Supplier'. ($i + 1),
                     'phone' => fake()->phoneNumber(),
-                    'under_warranty' => fake()->boolean(),
                     'is_active' => true,
                 ]);
             }

@@ -1,12 +1,11 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\InventoryCategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RawMaterialController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
-use App\Http\Controllers\SaleOrderController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -28,16 +27,40 @@ Route::get('/', function() {
     return redirect(route('login'));
 });
 
-
 Route::middleware('auth')->group(function() {
-    // Dashboard
-    // Route::controller(HomeController::class)->group(function() {
-    //     Route::get('/', 'index')->name('dashboard');
-    // });
     // View activty log data    
     Route::get('/view-log/{log}', function(ActivityLog $log) {
         return $log->data ?? 'No Data Found';
     })->name('view_log');
+    // Inventory
+    Route::controller(InventoryCategoryController::class)->prefix('inventory-category')->name('inventory_category.')->group(function() { // Inventory Category
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{cat}', 'edit')->name('edit');
+        Route::post('/upsert', 'upsert')->name('upsert');
+        Route::get('/delete/{cat}', 'delete')->name('delete');
+    });
+    Route::controller(ProductController::class)->prefix('product')->name('product.')->group(function() { // Product
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{product}', 'edit')->name('edit');
+        Route::post('/upsert', 'upsert')->name('upsert');
+        Route::post('/upsert-serial-no', 'upsertSerialNo')->name('upsert_serial_no');
+        Route::get('/delete/{product}', 'delete')->name('delete');
+        Route::get('/view/{product}', 'view')->name('view');
+        Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+    });
+    Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->group(function() { // Raw Material
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{product}', 'edit')->name('edit');
+        Route::get('/delete/{product}', 'delete')->name('delete');
+        Route::get('/view/{product}', 'view')->name('view');
+        Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+    });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function() {
         // Quotation

@@ -35,14 +35,15 @@
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">Select a Active/Inactive</option>
-                        <option value="1" @selected(old('status', isset($sale) ? $sale->is_active : null) == 1)>Active</option>
-                        <option value="0" @selected(old('status', isset($sale) ? $sale->is_active : null) === 0)>Inactive</option>
+                        <option value="">Select a status</option>
+                        <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>Active</option>
+                        <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>Inactive</option>
+                        <option value="2" @selected(old('status', isset($sale) ? $sale->status : null) === 2)>Converted</option>
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-8 flex justify-end">
                 <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
             </div>
         </div>

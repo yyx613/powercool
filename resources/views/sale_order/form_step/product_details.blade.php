@@ -14,9 +14,11 @@
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">Product is attached to DO</p>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="product_name" class="mb-1">Product Name <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="product_name" id="product_name" :hasError="$errors->has('product_name')" />
-                    <x-app.message.error id="product_name_err"/>
+                    <x-app.input.label class="mb-1">Product Name <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="product_id[]">
+                        <option value=""></option>
+                    </x-app.input.select>
+                    <x-app.message.error id="product_id_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="qty" class="mb-1">Quantity <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -33,21 +35,22 @@
                     <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" disabled="true" />
                     <x-app.message.error id="amount_err"/>
                 </div>
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col col-span-3">
                     <x-app.input.label id="product_desc" class="mb-1">Product Description</x-app.input.label>
                     <x-app.input.input name="product_desc" id="product_desc" :hasError="$errors->has('product_desc')" />
                     <x-app.message.error id="product_desc_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="product_serial_no" class="mb-1">Product Serial No</x-app.input.label>
-                    <x-app.input.input name="product_serial_no" id="product_serial_no" :hasError="$errors->has('product_serial_no')" value="dummy text" />
-                    <x-app.message.error id="product_serial_no_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="warranty_period" class="mb-1">Warranty Period <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="warranty_period" id="warranty_period" :hasError="$errors->has('warranty_period')" value="dummy text" />
                     <x-app.message.error id="warranty_period_err"/>
                 </div>
+                <div class="flex flex-col col-span-4">
+                    <x-app.input.label id="product_serial_no" class="mb-1">Product Serial No</x-app.input.label>
+                    <x-app.input.select name="product_serial_no[]" multiple class="h-36">
+                    </x-app.input.select>
+                    <x-app.message.error id="product_serial_no_err"/>
+                </div> 
             </div>
             <div id="items-container"></div>
             <!-- Add Items -->
@@ -87,7 +90,7 @@
                 </table>
             </div>
         </div>
-        <div class="mt-4 flex justify-end">
+        <div class="mt-8 flex justify-end">
             <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
         </div>
     </form>
@@ -96,32 +99,31 @@
 
 @push('scripts')
 <script>
+    PRODUCTS = @json($products ?? []);
     PRODUCT_FORM_CAN_SUBMIT = true
     ITEMS_COUNT = 0
 
     $(document).ready(function(){
         if (SALE != null) {
-            var prods = SALE.products
-
-            for (let i = 0; i < prods.length; i++) {
-                const prod = prods[i];
+            for (let i = 0; i < SALE.products.length; i++) {
+                const sp = SALE.products[i];
 
                 $('#add-item-btn').click()
 
-                $(`.items[data-id="${i+1}"]`).attr('data-product-id', prod.id)
-                $(`.items[data-id="${i+1}"] input[name="product_name"]`).val(prod.name)
-                $(`.items[data-id="${i+1}"] input[name="qty"]`).val(prod.qty)
-                $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(prod.unit_price)
-                $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(prod.desc)
-                if (prod.attached_to_do == true) {
+                $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
+                $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id)
+                $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
+                $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(sp.unit_price)
+                $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
+                $(`.items[data-id="${i+1}"] input[name="qty"]`).trigger('keyup')
+                if (sp.attached_to_do == true) {
                     $(`.items[data-id="${i+1}"] .delete-item-btns`).remove()
                     $(`.items[data-id="${i+1}"] .attached-do-msg`).removeClass('hidden')
                 }
                 
-                $(`.items[data-id="${i+1}"] input[name="qty"]`).trigger('keyup')
+                buildSerialNoOptions(sp.product_id, i+1, sp.id)
             }
-
-            if (prods.length <= 0) $('#add-item-btn').click()
+            if (SALE.products.length <= 0) $('#add-item-btn').click()
         } else {
             $('#add-item-btn').click()
         }
@@ -137,6 +139,18 @@
         $(clone).removeAttr('id')
         
         $('#items-container').append(clone)
+
+        $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
+            placeholder: 'Select a product'
+        })
+        $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+
+        for (let i = 0; i < PRODUCTS.length; i++) {
+            const element = PRODUCTS[i];
+            
+            let opt = new Option(element.model_name, element.id)
+            $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
+        }
     })
     $('body').on('click', '.delete-item-btns', function() {
         let id = $(this).data('id')
@@ -175,6 +189,22 @@
 
         calItemTotal(idx, qty, unitPrice)
     })
+    $('body').on('change', 'select[name="product_id[]"]', function() {
+        let id = $(this).parent().parent().attr('data-id')
+        let val = $(this).val()
+
+        for (let i = 0; i < PRODUCTS.length; i++) {
+            const prod = PRODUCTS[i];
+         
+            if (prod.id == val) {
+                $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
+                $(`.items[data-id="${id}"] input[name="unit_price"]`).val(prod.price)
+                $(`.items[data-id="${id}"] input[name="unit_price"]`).trigger('keyup')
+                break
+            }
+        }
+        buildSerialNoOptions(val, id)
+    })
     $('#product-form').on('submit', function(e) {
         e.preventDefault()
 
@@ -189,20 +219,20 @@
         let url = '{{ route("sale.upsert_pro_details") }}'
         url = `${url}`
 
+        let prodOrderId = []
         let prodId = []
-        let prodName = []
         let prodDesc = []
         let qty = []
         let unitPrice = []
         let prodSerialNo = []
         let warrantyPeriod = []
         $('#product-form .items').each(function(i, obj) {
-            prodId.push($(this).data('product-id') ?? null)
-            prodName.push($(this).find('input[name="product_name"]').val())
+            prodOrderId.push($(this).data('product-id') ?? null)
+            prodId.push($(this).find('select[name="product_id[]"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
-            prodSerialNo.push($(this).find('input[name="product_serial_no"]').val())
+            prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
             warrantyPeriod.push($(this).find('input[name="warranty_period"]').val())
         })
 
@@ -214,8 +244,8 @@
             type: 'POST',
             data: {
                 'sale_id': SALE != null ? SALE.id : null,
+                'product_order_id': prodOrderId,
                 'product_id': prodId,
-                'product_name': prodName,
                 'product_desc': prodDesc,
                 'qty': qty,
                 'unit_price': unitPrice,
@@ -280,6 +310,42 @@
 
         $('#subtotal').text(priceFormat(subtotal))
         $('#total').text(priceFormat(subtotal))
+    }
+    function buildSerialNoOptions(product_id, item_id, sale_product_id=null) {
+        for (let i = 0; i < PRODUCTS.length; i++) {
+            const prod = PRODUCTS[i];
+         
+            if (prod.id == product_id) {
+                $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
+
+                for (let j = 0; j < prod.children.length; j++) {
+                    const child = prod.children[j];
+                    let selected = selectedSerialNo(child.id, sale_product_id)
+                   
+                    let opt = new Option(child.sku, child.id, selected, selected)
+                    opt.selected = selected
+                    opt.value = child.id
+                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
+                }
+                break
+            }
+        }
+    }
+    function selectedSerialNo($product_child_id, sale_product_id=null) {
+        if (SALE != null && SALE.products != null) {
+            for (let i = 0; i < SALE.products.length; i++) {
+                const prod = SALE.products[i];
+
+                for (let k = 0; k < prod.children.length; k++) {
+                    const elem = prod.children[k];
+
+                    if (prod.id == sale_product_id && elem.product_children_id == $product_child_id) {
+                        return true
+                    }
+                }
+            }            
+        }
+        return false
     }
 </script>
 @endpush
