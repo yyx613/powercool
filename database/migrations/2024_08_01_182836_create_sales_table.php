@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->string('sku');
-            $table->unsignedInteger('type')->comment('1 - Quotation, 2 - Sale Order');
+            $table->unsignedInteger('type')->comment('1 - QUO, 2 - SO');
             $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('convert_to')->nullable()->comment('QUO convert to which SO, SO convert to which DO');
             $table->unsignedBigInteger('sale_id');
             $table->date('open_until')->nullable();
             $table->string('quo_from')->nullable();

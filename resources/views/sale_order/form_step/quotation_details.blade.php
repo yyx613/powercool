@@ -38,14 +38,19 @@
                         <option value="">Select a status</option>
                         <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>Active</option>
                         <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>Inactive</option>
-                        <option value="2" @selected(old('status', isset($sale) ? $sale->status : null) === 2)>Converted</option>
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
             </div>
-            <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
-            </div>
+            @if (isset($sale) && $sale->status == 2)
+                <div class="mt-8 flex justify-end">
+                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">Converted</span>
+                </div>
+            @else
+                <div class="mt-8 flex justify-end">
+                    <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                </div>
+            @endif
         </div>
     </div>
 </div>

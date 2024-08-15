@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Product extends Model
 {
@@ -44,7 +45,17 @@ class Product extends Model
     public function reservedStockCount($product_id) {
         $ids = ProductChild::where('product_id', $product_id)->pluck('id');
         
-        return SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->count();
+        $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
+
+        $count = 0;
+        for ($i=0; $i < count($spc); $i++) { 
+            $sale = $spc[$i]->saleProduct->sale;
+
+            if ($sale->status != Sale::STATUS_CONVERTED || ($sale->type == Sale::TYPE_SO && $sale->convert_to != null)) {
+                $count++;
+            }
+        }
+        return $count;
     }
 
     public function generateSku(): string {

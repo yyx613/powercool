@@ -223,10 +223,11 @@ class SaleController extends Controller
             if ($res->result != true) {
                 throw new Exception("Failed to create remark");
             }
-
-            // Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->update([
-            //     'status' => Sale::STATUS_CONVERTED
-            // ]);
+            // Change QUO's status to converted
+            Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->update([
+                'status' => Sale::STATUS_CONVERTED,
+                'convert_to' => $sale_id,
+            ]);
 
             DB::commit();
 
@@ -486,6 +487,12 @@ class SaleController extends Controller
             }
             DeliveryOrderProduct::insert($dop);
 
+            // Change SO's status to converted
+            Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->update([
+                'status' => Sale::STATUS_CONVERTED,
+                'convert_to' => $do->id,
+            ]);
+
             DB::commit();
 
             return redirect(route('delivery_order.index'))->with('success', 'Sale Order has converted');
@@ -577,10 +584,10 @@ class SaleController extends Controller
             'qty.*' => 'required',
             'unit_price' => 'required',
             'unit_price.*' => 'required',
-            'product_serial_no' => 'required',
+            'product_serial_no' => 'nullable',
             'product_serial_no.*' => 'nullable|array',
             'warranty_period' => 'required',
-            'warranty_period.*' => 'nullable|max:250',
+            'warranty_period.*' => 'required',
         ];
         $req->validate($rules, [], [
             'product_id.*' => 'product',
@@ -590,6 +597,19 @@ class SaleController extends Controller
             'product_serial_no.*' => 'product serial no',
             'warranty_period.*' => 'warranty period',
         ]);
+        // Check duplicate serial no is selected
+        if (isset($req->product_serial_no)) {
+            $serial_no = [];
+            for ($i=0; $i < count($req->product_serial_no); $i++) { 
+                $match = array_intersect($serial_no, $req->product_serial_no[$i]);
+                if (count($match) > 0) {
+                    return Response::json([
+                        'product_serial_no' => 'Please make sure no duplicate serial no is selected',
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST); 
+                }
+                $serial_no = array_merge($serial_no, $req->product_serial_no[$i]);
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -607,7 +627,7 @@ class SaleController extends Controller
                         'qty' => $req->qty[$i],
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
-                        'warranty_period' => $req->warranty_period[$i],
+                        'warranty_period_id' => $req->warranty_period[$i],
                     ]);
                 } else {
                     $sp = SaleProduct::create([
@@ -617,7 +637,7 @@ class SaleController extends Controller
                         'qty' => $req->qty[$i],
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
-                        'warranty_period' => $req->warranty_period[$i],
+                        'warranty_period_id' => $req->warranty_period[$i],
                     ]);
                 }
 
@@ -625,20 +645,22 @@ class SaleController extends Controller
                 SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->delete();
                 $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
 
-                $data = [];
-                for ($j=0; $j < count($req->product_serial_no[$i]); $j++) { 
-                    if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
-                        continue;
+                if (isset($req->product_serial_no)) {
+                    $data = [];
+                    for ($j=0; $j < count($req->product_serial_no[$i]); $j++) { 
+                        if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
+                            continue;
+                        }
+    
+                        $data[] = [
+                            'sale_product_id' => $sp->id,
+                            'product_children_id' => $req->product_serial_no[$i][$j],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
                     }
-
-                    $data[] = [
-                        'sale_product_id' => $sp->id,
-                        'product_children_id' => $req->product_serial_no[$i][$j],
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
+                    SaleProductChild::insert($data);
                 }
-                SaleProductChild::insert($data);
             }
             
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)

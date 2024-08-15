@@ -39,7 +39,9 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="warranty_period" class="mb-1">Warranty Period <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="warranty_period" id="warranty_period" :hasError="$errors->has('warranty_period')" value="dummy text" />
+                    <x-app.input.select name="warranty_period[]">
+                        <option value=""></option>
+                    </x-app.input.select>
                     <x-app.message.error id="warranty_period_err"/>
                 </div>
                 <div class="flex flex-col col-span-4">
@@ -87,9 +89,15 @@
                 </table>
             </div>
         </div>
-        <div class="mt-8 flex justify-end">
-            <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
-        </div>
+        @if (isset($sale) && $sale->status == 2)
+            <div class="mt-8 flex justify-end">
+                <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">Converted</span>
+            </div>
+        @else
+            <div class="mt-8 flex justify-end">
+                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+            </div>
+        @endif
     </form>
 </div>
 
@@ -97,6 +105,7 @@
 @push('scripts')
 <script>
     PRODUCTS = @json($products ?? []);
+    WARRANTY_PERIODS = @json($warranty_periods ?? []);
     PRODUCT_FORM_CAN_SUBMIT = true
     ITEMS_COUNT = 0
 
@@ -112,6 +121,7 @@
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
                 $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(sp.unit_price)
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
+                $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).trigger('keyup')
 
                 buildSerialNoOptions(sp.product_id, i+1, sp.id)
@@ -132,18 +142,20 @@
         $(clone).removeAttr('id')
         
         $('#items-container').append(clone)
-
+        // Build product select2
         $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
             placeholder: 'Select a product'
         })
-        $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
-
         for (let i = 0; i < PRODUCTS.length; i++) {
             const element = PRODUCTS[i];
             
             let opt = new Option(element.model_name, element.id)
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
         }
+        // Build warranty period select2
+        buildWarrantyPeriodSelect2(ITEMS_COUNT)
+
+        $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
     })
     $('body').on('click', '.delete-item-btns', function() {
         let id = $(this).data('id')
@@ -226,7 +238,7 @@
             qty.push($(this).find('input[name="qty"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
             prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
-            warrantyPeriod.push($(this).find('input[name="warranty_period"]').val())
+            warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
         })
 
         $.ajax({
@@ -276,6 +288,9 @@
                             $(`#product-form .items[data-id="${idx}"] #${field}_err`).find('p').text(errors[key])
                             $(`#product-form .items[data-id="${idx}"] #${field}_err`).removeClass('hidden')
                         }
+                    } else if (err.status == StatusCodes.BAD_REQUEST) {
+                        $(`#product-form .items #product_serial_no_err`).find('p').text(err.responseJSON.product_serial_no)
+                        $(`#product-form .items #product_serial_no_err`).removeClass('hidden')
                     }
                     $('#product-form #submit-btn').text('Save and Update')
                     $('#product-form #submit-btn').addClass('bg-yellow-400 shadow')
@@ -303,6 +318,18 @@
 
         $('#subtotal').text(priceFormat(subtotal))
         $('#total').text(priceFormat(subtotal))
+    }
+    function buildWarrantyPeriodSelect2(item_id) {
+        $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).select2({
+            placeholder: 'Select a warranty'
+        })
+
+        for (let i = 0; i < WARRANTY_PERIODS.length; i++) {
+            const wp = WARRANTY_PERIODS[i];
+         
+            let opt = new Option(wp.name, wp.id)
+            $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).append(opt)
+        }
     }
     function buildSerialNoOptions(product_id, item_id, sale_product_id=null) {
         for (let i = 0; i < PRODUCTS.length; i++) {

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             SupplierSeeder::class,
             InventoryCategorySeeder::class,
+            WarrantyPeriodSeeder::class,
         ]);
     }
 }

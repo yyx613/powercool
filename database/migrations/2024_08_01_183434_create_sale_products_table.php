@@ -18,12 +18,13 @@ return new class extends Migration
             $table->string('desc')->nullable();
             $table->unsignedInteger('qty');
             $table->decimal('unit_price');
-            $table->string('warranty_period');
+            $table->unsignedBigInteger('warranty_period_id');
             $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('sale_id')->on('sales')->references('id');
             $table->foreign('product_id')->on('products')->references('id');
+            $table->foreign('warranty_period_id')->on('warranty_periods')->references('id');
         });
     }
 

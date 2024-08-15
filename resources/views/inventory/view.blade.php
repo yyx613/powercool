@@ -128,7 +128,8 @@
                     render: function(data, type, row) {
                         if (data != null) {
                             if (data.type == 1) return `<a href="{{ config('app.url') }}/quotation/edit/${data.id}" class="text-blue-700">${data.sku}</a>`
-                            else return `<a href="{{ config('app.url') }}/sale-order/edit/${data.id}" class="text-blue-700">${data.sku}</a>`
+                            else if (data.type == 2) return `<a href="{{ config('app.url') }}/sale-order/edit/${data.id}" class="text-blue-700">${data.sku}</a>`
+                            else return data.sku
                         }
                         return data
                     }

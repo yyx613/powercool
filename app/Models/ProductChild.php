@@ -33,7 +33,15 @@ class ProductChild extends Model
         $sp_child = $this->saleProductChild()->orderBy('id', 'desc')->first();
 
         if ($sp_child != null) {
-            return $sp_child->saleProduct->sale;
+            $sale = $sp_child->saleProduct->sale;
+
+            if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
+                $do = DeliveryOrder::where('id', $sale->convert_to)->first();
+                
+                return $do;
+            } else if ($sale->status != Sale::STATUS_CONVERTED) {
+                return $sale;
+            }
         }
         return null;
     }

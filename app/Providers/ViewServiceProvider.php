@@ -7,10 +7,13 @@ use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -163,14 +166,23 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function(ViewView $view) {
+            // Products
             $exclude_ids = [];
+            // Exclude converted sale
+            $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
+            $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
+            // Exclude current sale, if edit
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $sale = request()->route()->parameter('sale');
                 $sp_ids = $sale->products()->pluck('id')->toArray();
                 $exclude_ids = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
             }
 
-            $assigned_pc_ids = SaleProductChild::whereNotIn('product_children_id', $exclude_ids)->distinct()->pluck('product_children_id')->toArray();
+            $assigned_pc_ids = SaleProductChild::distinct()
+                ->whereNotIn('sale_product_id', $converted_sp_ids)
+                ->whereNotIn('product_children_id', $exclude_ids)
+                ->pluck('product_children_id')
+                ->toArray();
 
             $products = Product::with(['children' => function($q) use ($assigned_pc_ids) {
                     $q->whereNotIn('id', $assigned_pc_ids);
@@ -183,8 +195,12 @@ class ViewServiceProvider extends ServiceProvider
                 ->orderBy('id', 'desc')
                 ->get();
 
+            // Warranty Periods
+            $wps = WarrantyPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
+
             $view->with([
                 'products' => $products,
+                'warranty_periods' => $wps,
             ]);
         });
         View::composer(['inventory.form'], function(ViewView $view) {
