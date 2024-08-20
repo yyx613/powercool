@@ -15,7 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone');
+            $table->boolean('under_warranty');
             $table->boolean('is_active');
+            $table->string('company_name')->nullable();
+            $table->string('company_registration_number')->nullable();
+            $table->string('website')->nullable();
+            $table->string('prefix')->nullable();
+            $table->string('email')->nullable();
+            $table->string('remark')->nullable();
+            $table->longText('location')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

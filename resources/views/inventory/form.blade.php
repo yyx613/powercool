@@ -31,10 +31,17 @@
                         </x-app.input.select>
                         <x-app.message.error id="category_id_err"/>
                     </div>
+                    @if ($is_product == false)
+                        <div class="flex flex-col" id="qty-container">
+                            <x-app.input.label id="qty" class="mb-1">Quantity <span class="text-sm text-red-500">*</span></x-app.input.label>
+                            <x-app.input.input name="qty" id="qty" class="int-input" value="{{ isset($prod) ? $prod->qty : null }}" />
+                            <x-app.message.error id="qty_err"/>
+                        </div>
+                    @endif
                     <div class="flex flex-col">
-                        <x-app.input.label id="qty" class="mb-1">Quantity <span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.input name="qty" id="qty" class="int-input" value="{{ isset($prod) ? $prod->qty : null }}" />
-                        <x-app.message.error id="qty_err"/>
+                        <x-app.input.label id="low_stock_threshold" class="mb-1">Low Stock Threshold</x-app.input.label>
+                        <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ isset($prod) ? $prod->low_stock_threshold : null }}" />
+                        <x-app.message.error id="low_stock_threshold_err"/>
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="price" class="mb-1">Price <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -205,8 +212,13 @@
     $('select[name="is_sparepart"]').on('change', function() {
         let val = $(this).val()
 
-        if (val == true) $('#serial-no-container').removeClass('hidden')
-        else $('#serial-no-container').addClass('hidden')
+        if (val == true) {
+            $('#serial-no-container').removeClass('hidden')
+            $('#qty-container').addClass('hidden')
+        } else {
+            $('#serial-no-container').addClass('hidden')
+            $('#qty-container').removeClass('hidden')
+        }
     })
     $('#form').on('submit', function(e) {
         e.preventDefault()

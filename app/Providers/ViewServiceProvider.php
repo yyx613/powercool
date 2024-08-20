@@ -146,7 +146,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('drivers', $drivers);
         });
-        View::composer(['customer.form', 'quotation.form_step.customer_details'], function(ViewView $view) {
+        View::composer(['customer.form', 'supplier.form', 'quotation.form_step.customer_details'], function(ViewView $view) {
             $prefix = [
                 'mr' => 'Mr',
                 'mrs' => 'Mrs',
@@ -212,7 +212,7 @@ class ViewServiceProvider extends ServiceProvider
                 'suppliers' => $suppliers,
             ]);
         });
-        View::composer(['inventory.list', 'inventory.form', 'inventory.view'], function(ViewView $view) {
+        View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function(ViewView $view) {
             $is_product = true;
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
                 $is_product = false;
@@ -221,6 +221,22 @@ class ViewServiceProvider extends ServiceProvider
             $view->with([
                 'is_product' => $is_product,
             ]);
+        });
+        View::composer(['production.form'], function(ViewView $view) {
+            $users = User::whereHas('roles', function($q) {
+                $q->where('id', Role::SALE);
+            })->orderBy('id', 'desc')->get();
+
+            $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->orderBy('id', 'desc')->get();
+
+            $products = Product::orderBy('id', 'desc')->get();
+
+            $sales = Sale::orderBy('id', 'desc')->get();
+
+            $view->with('users', $users);
+            $view->with('milestones', $milestones);
+            $view->with('products', $products);
+            $view->with('sales', $sales);
         });
     }
 }

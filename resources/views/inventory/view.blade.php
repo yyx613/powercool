@@ -82,6 +82,9 @@
             <tbody></tbody>
         </table>
     </div>
+
+    <x-app.modal.stock-in-modal/>
+    <x-app.modal.stock-out-modal/>
 @endsection
 
 @push('scripts')
@@ -140,11 +143,11 @@
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
-                            <button class="rounded-full p-2 bg-purple-200 flex items-center gap-x-2 stock-in-btns" data-id="${row.id}">
+                            <button class="rounded-full p-2 bg-purple-200 flex items-center gap-x-2 stock-in-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row != null && row.order_id != null ? row.order_id.sku : row.order_id}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,7.121c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l2.293,2.293V1c0-.553,.447-1,1-1s1,.447,1,1v7l2.293-2.293c.391-.391,1.023-.391,1.414,0s.391,1.023,0,1.414l-3.293,3.293c-.387,.387-.896,.582-1.405,.584l-.009,.002-.009-.002c-.509-.002-1.018-.197-1.405-.584l-3.293-3.293Z"/></svg>
                                 <span class="text-xs font-medium">Stock In</span>
                             </button>
-                            <button class="rounded-full p-2 bg-orange-200 flex items-center gap-x-2 stock-out-btns" data-id="${row.id}">
+                            <button class="rounded-full p-2 bg-orange-200 flex items-center gap-x-2 stock-out-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row != null && row.order_id != null ? row.order_id.sku : row.order_id}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,5.293c-.391-.391-.391-1.023,0-1.414L10.586,.586C10.972,.2,11.479,.006,11.986,.003l.014-.003,.014,.003c.508,.003,1.014,.197,1.4,.583l3.293,3.293c.391,.391,.391,1.023,0,1.414-.195,.195-.451,.293-.707,.293s-.512-.098-.707-.293l-2.293-2.293v7c0,.553-.447,1-1,1s-1-.447-1-1V3l-2.293,2.293c-.391,.391-1.023,.391-1.414,0Z"/></svg>
                                 <span class="text-xs font-medium">Stock Out</span>
                             </button>
@@ -164,6 +167,25 @@
         });
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
+        })
+
+        $('body').on('click', '.stock-in-btns', function() {
+            let serialNo = $(this).data('serial-no')
+            let orderId = $(this).data('order-id')
+
+            $('#stock-in-modal').addClass('show-modal')
+            $('#stock-in-modal #date').text(moment().format('D MMM YYYY HH:mm'))
+            $('#stock-in-modal #serial-no').text(serialNo)
+            $('#stock-in-modal #order-id').text(orderId ?? '-')
+        })
+        $('body').on('click', '.stock-out-btns', function() {
+            let serialNo = $(this).data('serial-no')
+            let orderId = $(this).data('order-id')
+
+            $('#stock-out-modal').addClass('show-modal')
+            $('#stock-out-modal #date').text(moment().format('D MMM YYYY HH:mm'))
+            $('#stock-out-modal #serial-no').text(serialNo)
+            $('#stock-out-modal #order-id').text(orderId ?? '-')
         })
     </script>
 @endpush

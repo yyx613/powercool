@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Supplier extends Model
+class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -24,5 +24,9 @@ class Supplier extends Model
 
     public function pictures() {
         return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
+    }
+
+    public function locations() {
+        return $this->hasMany(CustomerLocation::class);
     }
 }

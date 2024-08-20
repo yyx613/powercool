@@ -15,6 +15,7 @@ class Milestone extends Model
     const TYPE_DRIVER_RETURN_TASK = 3;
     const TYPE_INSTALLER_TASK = 4;
     const TYPE_SITE_VISIT = 5;
+    const TYPE_PRODUCTION = 6;
 
     const LIST = [
         self::TYPE_SERVICE_TASK => [

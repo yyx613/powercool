@@ -23,6 +23,11 @@
                         <div class="overflow-hidden">
                             <ul>
                                 <li>
+                                    <a href="{{ route('inventory_summary.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_summary.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Summary</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Category</span>
                                     </a>
@@ -110,6 +115,14 @@
                     </div>
                 </li>
                 <li>
+                    <a href="{{ route('production.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Production</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('ticket.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'ticket.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Ticket</span>
@@ -119,6 +132,14 @@
                     <a href="{{ route('customer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Customer</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('supplier.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'supplier.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Supplier</span>
                     </a>
                 </li>
                 <li>
@@ -189,6 +210,17 @@
                         </button>
                     </li>
                     <li>
+                        <a href="{{ route('production.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">Production</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('ticket.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
                             <!-- Tooltip -->
@@ -203,6 +235,17 @@
                             <!-- Tooltip -->
                             <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
                                 <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap ">Customer</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('supplier.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z"/>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap ">Supplier</span>
                             </div>
                         </a>
                     </li>
@@ -228,6 +271,11 @@
                 <h6 class="text-lg font-semibold whitespace-nowrap text-white">Inventory</h6>
             </div>
             <ul>
+                <li>
+                    <a href="{{ route('inventory_summary.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_summary.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Summary</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Category</span>
@@ -309,7 +357,7 @@
             <ul>
                 <li>
                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Warranty Period</span>
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Warranty Period</span>
                     </a>
                 </li>
                 <li>

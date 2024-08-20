@@ -38,6 +38,13 @@ class Product extends Model
         return $this->hasMany(ProductChild::class);
     }
 
+    public function getQtyAttribute($val) {
+        if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool)$this->is_sparepart == true)) {
+            return ProductChild::where('product_id', $this->id)->count();
+        }
+        return $val;
+    }
+
     public function totalStockCount($product_id) {
         return ProductChild::where('product_id', $product_id)->count();
     }

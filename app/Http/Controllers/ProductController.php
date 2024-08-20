@@ -175,7 +175,8 @@ class ProductController extends Controller
             'model_desc' => 'required|max:250',
             'category_id' => 'required',
             'supplier_id' => 'required',
-            'qty' => 'required',
+            'qty' => 'nullable',
+            'low_stock_threshold' => 'nullable',
             'price' => 'required',
             'weight' => 'nullable',
             'dimension_length' => 'nullable',
@@ -211,6 +212,7 @@ class ProductController extends Controller
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
+                    'low_stock_threshold' => $req->low_stock_threshold,
                     'price' => $req->price,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
@@ -228,6 +230,7 @@ class ProductController extends Controller
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
+                    'low_stock_threshold' => $req->low_stock_threshold,
                     'price' => $req->price,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
@@ -256,20 +259,22 @@ class ProductController extends Controller
                 }
             }
 
-            $data = [];
-            $existing_skus = [];
-            for ($i=0; $i < $req->qty; $i++) { 
-                $sku = ($this->prodChild)->generateSku($prod->sku, $existing_skus);
-                $data[] = [
-                    'product_id' => $prod->id,
-                    'sku' => $sku,
-                    'location' => $this->prodChild::LOCATION_WAREHOUSE,
-                    'created_at' => $prod->created_at,
-                    'updated_at' => $prod->updated_at,
-                ];
-                $existing_skus[] = $sku;
+            if ($req->qty != null) {
+                $data = [];
+                $existing_skus = [];
+                for ($i=0; $i < $req->qty; $i++) { 
+                    $sku = ($this->prodChild)->generateSku($prod->sku, $existing_skus);
+                    $data[] = [
+                        'product_id' => $prod->id,
+                        'sku' => $sku,
+                        'location' => $this->prodChild::LOCATION_WAREHOUSE,
+                        'created_at' => $prod->created_at,
+                        'updated_at' => $prod->updated_at,
+                    ];
+                    $existing_skus[] = $sku;
+                }
+                $this->prodChild->insert($data);
             }
-            $this->prodChild->insert($data);
 
             DB::commit();
 
@@ -296,13 +301,6 @@ class ProductController extends Controller
         ];
         // Validate request
         $req->validate($rules);
-
-        $prod = $this->prod::where('id', $req->product_id)->first();
-        if ($prod->qty != count($req->serial_no)) {
-            return Response::json([
-                'serial_no' => 'Please make sure the qty of serial no and product qty is tally',
-            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
-        }
 
         try {
             DB::beginTransaction();

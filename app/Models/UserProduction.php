@@ -4,25 +4,19 @@ namespace App\Models;
 
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class Supplier extends Model
+class UserProduction extends Pivot
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $guarded = [];
     protected $casts = [
-        'under_warranty' => 'boolean',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
     protected function serializeDate(DateTimeInterface $date) {
         return $date;
-    }
-
-    public function pictures() {
-        return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
     }
 }

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('sku');
             $table->string('model_name');
             $table->string('model_desc');
-            $table->unsignedInteger('qty');
+            $table->unsignedInteger('qty')->nullable();
+            $table->unsignedInteger('low_stock_threshold')->nullable();
             $table->decimal('price');
             $table->decimal('weight')->nullable()->comment('In KG');
             $table->decimal('length')->nullable()->comment('In cm');

@@ -12,6 +12,7 @@ class Attachment extends Model
 
     const TASK_PATH = 'public/attachments/task';
     const CUSTOMER_PATH = 'public/attachments/customer';
+    const SUPPLIER_PATH = 'public/attachments/supplier';
     const USER_PATH = 'public/attachments/user';
     const TICKET_PATH = 'public/attachments/ticket';
     const TASK_MILESTONE_PATH = 'public/attachments/task_milestone';
@@ -32,6 +33,8 @@ class Attachment extends Model
                 return config('app.url') . str_replace('public', $path, self::TASK_PATH) . '/' . $this->src;
             case Customer::class:
                 return config('app.url') . str_replace('public', $path, self::CUSTOMER_PATH) . '/' . $this->src;
+            case Supplier::class:
+                return config('app.url') . str_replace('public', $path, self::SUPPLIER_PATH) . '/' . $this->src;
             case User::class:
                 return config('app.url') . str_replace('public', $path, self::USER_PATH) . '/' . $this->src;
             case Ticket::class:

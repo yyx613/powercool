@@ -3,22 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryCategory;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 
-class InventoryCategoryController extends Controller
+class InventoryController extends Controller
 {
-    const FORM_RULES = [
-        'category_id' => 'nullable',
-        'name' => 'required|max:250',
-        'status' => 'required',
-    ];
-
+    protected $prod;
     protected $invCat;
 
     public function __construct() {
+        $this->prod = new Product;
         $this->invCat = new InventoryCategory;
     }
 
@@ -82,7 +79,11 @@ class InventoryCategoryController extends Controller
 
     public function upsert(Request $req) {
         // Validate request
-        $req->validate(self::FORM_RULES);
+        $req->validate([
+            'category_id' => 'nullable',
+            'name' => 'required|max:250',
+            'status' => 'required',
+        ]);
 
         try {
             DB::beginTransaction();
@@ -121,5 +122,40 @@ class InventoryCategoryController extends Controller
         $cat->delete();
 
         return back()->with('success', 'Category deleted');
+    }
+
+    public function indexSummary() {
+        // Low stock
+        $products = $this->prod->with('image')->where('type', Product::TYPE_PRODUCT)->get();
+        $raw_materials = $this->prod->with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
+        // Summary
+        $active_product_count = $this->prod->where('is_active', true)->count();
+        $inactive_product_count = $this->prod->where('is_active', false)->count();
+        // Category
+        $categories = $this->invCat->get();
+        for ($i=0; $i < count($categories); $i++) { 
+            $category['label'][] = $categories[$i]->name;
+            $category['data'][] = $this->prod->where('inventory_category_id', $categories[$i]->id)->count();
+        }
+        // Stock summary
+        $total_stock = 0;
+        $reserved_stock = 0;
+        for ($i=0; $i < count($products); $i++) { 
+            $total_stock += $products[$i]->totalStockCount($products[$i]->id);
+            $reserved_stock += $products[$i]->reservedStockCount($products[$i]->id);
+        }
+        for ($i=0; $i < count($raw_materials); $i++) { 
+            $total_stock += $raw_materials[$i]->totalStockCount($raw_materials[$i]->id);
+            $reserved_stock += $raw_materials[$i]->reservedStockCount($raw_materials[$i]->id);
+        }
+        return view('inventory.summary', [
+            'total_stock' => $total_stock,
+            'reserved_stock' => $reserved_stock,
+            'products' => $products,
+            'raw_materials' => $raw_materials,
+            'active_product_count' => $active_product_count,
+            'inactive_product_count' => $inactive_product_count,
+            'categories' => $category,
+        ]);
     }
 }

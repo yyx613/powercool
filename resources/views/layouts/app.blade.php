@@ -33,6 +33,9 @@
         <!-- Big Decimal -->
         <script src="https://unpkg.com/js-big-decimal@1.3.1/dist/web/js-big-decimal.min.js"></script>
 
+        <!-- Chartjs -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">

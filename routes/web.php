@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\InventoryCategoryController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RawMaterialController;
+use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -34,7 +35,11 @@ Route::middleware('auth')->group(function() {
         return $log->data ?? 'No Data Found';
     })->name('view_log');
     // Inventory
-    Route::controller(InventoryCategoryController::class)->prefix('inventory-category')->name('inventory_category.')->group(function() { // Inventory Category
+    Route::controller(InventoryController::class)->prefix('inventory-summary')->name('inventory_summary.')->group(function() { // Inventory Category
+        Route::get('/', 'indexSummary')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+    });
+    Route::controller(InventoryController::class)->prefix('inventory-category')->name('inventory_category.')->group(function() { // Inventory Category
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create');
@@ -150,6 +155,17 @@ Route::middleware('auth')->group(function() {
             Route::post('/update/{task}', 'saleUpdate')->name('update');
         });
     });
+    // Production
+    Route::controller(ProductionController::class)->prefix('production')->name('production.')->group(function() {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{production}', 'edit')->name('edit');
+        Route::get('/view/{production}', 'view')->name('view');
+        Route::get('/delete/{production}', 'delete')->name('delete');
+        Route::post('/upsert/{production?}', 'upsert')->name('upsert');
+        Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+    });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->group(function() {
         Route::get('/', 'index')->name('index');
@@ -170,6 +186,15 @@ Route::middleware('auth')->group(function() {
         Route::post('/upsert-info', 'upsertInfo')->name('upsert_info');
         Route::post('/upsert-location', 'upsertLocation')->name('upsert_location');
         Route::get('/get-location', 'getLocation')->name('get_location');
+    });
+    // Supplier
+    Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->group(function() {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{supplier}', 'edit')->name('edit');
+        Route::get('/delete/{supplier}', 'delete')->name('delete');
+        Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
     });
     // Warranty Period
     Route::controller(WarrantyPeriodController::class)->prefix('warranty-period')->name('warranty_period.')->group(function() {
