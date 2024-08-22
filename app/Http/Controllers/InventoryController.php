@@ -140,17 +140,21 @@ class InventoryController extends Controller
         // Stock summary
         $total_stock = 0;
         $reserved_stock = 0;
+        $production_stock = 0;
         for ($i=0; $i < count($products); $i++) { 
             $total_stock += $products[$i]->totalStockCount($products[$i]->id);
             $reserved_stock += $products[$i]->reservedStockCount($products[$i]->id);
+            $production_stock += $products[$i]->productionStockCount($products[$i]->id);
         }
         for ($i=0; $i < count($raw_materials); $i++) { 
             $total_stock += $raw_materials[$i]->totalStockCount($raw_materials[$i]->id);
             $reserved_stock += $raw_materials[$i]->reservedStockCount($raw_materials[$i]->id);
+            $production_stock += $raw_materials[$i]->productionStockCount($raw_materials[$i]->id);
         }
         return view('inventory.summary', [
             'total_stock' => $total_stock,
             'reserved_stock' => $reserved_stock,
+            'production_stock' => $production_stock,
             'products' => $products,
             'raw_materials' => $raw_materials,
             'active_product_count' => $active_product_count,

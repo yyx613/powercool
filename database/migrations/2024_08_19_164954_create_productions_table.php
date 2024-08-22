@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('sku');
             $table->unsignedBigInteger('product_id');
+            $table->unsignedBigInteger('product_child_id');
             $table->unsignedBigInteger('sale_id');
             $table->string('name');
             $table->string('desc');
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('product_id')->on('products')->references('id');
+            $table->foreign('product_child_id')->on('product_children')->references('id');
             $table->foreign('sale_id')->on('sales')->references('id');
         });
     }

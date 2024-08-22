@@ -614,7 +614,10 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $req->product_order_id ?? [])->delete();
+            if ($req->product_order_id != null) {
+                $order_idx = array_filter($req->product_order_id, function($val) { return $val != null; });
+                SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->delete();
+            }
 
             $now = now();
             for ($i=0; $i < count($req->product_id); $i++) { 

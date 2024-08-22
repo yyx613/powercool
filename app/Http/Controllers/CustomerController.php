@@ -223,7 +223,10 @@ class CustomerController extends Controller
         try {
             DB::beginTransaction();
 
-            CustomerLocation::where('customer_id', $req->customer_id)->whereNotIn('id', $req->location_id ?? [])->delete();
+            if ($req->location_id != null) {
+                $order_idx = array_filter($req->location_id, function($val) { return $val != null; });
+                CustomerLocation::where('customer_id', $req->customer_id)->whereNotIn('id', $order_idx ?? [])->delete();
+            }
 
             $now = now();
             $data = [];

@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Product;
+use App\Models\ProductionMilestoneMaterial;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -168,6 +169,8 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function(ViewView $view) {
             // Products
             $exclude_ids = [];
+            // Not in production
+            $pmm_ids = ProductionMilestoneMaterial::pluck('product_child_id')->toArray();
             // Exclude converted sale
             $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
             $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
@@ -184,11 +187,11 @@ class ViewServiceProvider extends ServiceProvider
                 ->pluck('product_children_id')
                 ->toArray();
 
-            $products = Product::with(['children' => function($q) use ($assigned_pc_ids) {
-                    $q->whereNotIn('id', $assigned_pc_ids);
+            $products = Product::with(['children' => function($q) use ($assigned_pc_ids, $pmm_ids) {
+                    $q->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
                 }])
-                ->withCount(['children' => function($q) use ($assigned_pc_ids) {
-                    $q->whereNotIn('id', $assigned_pc_ids);
+                ->withCount(['children' => function($q) use ($assigned_pc_ids, $pmm_ids) {
+                    $q->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
                 }])
                 ->where('is_active', true)
                 ->having('children_count', '>', 0)
@@ -237,6 +240,13 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('milestones', $milestones);
             $view->with('products', $products);
             $view->with('sales', $sales);
+        });
+        View::composer(['material_use.form'], function(ViewView $view) {
+            $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('id', 'desc')->get();
+            $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('id', 'desc')->get();
+
+            $view->with('products', $products);
+            $view->with('materials', $materials);
         });
     }
 }

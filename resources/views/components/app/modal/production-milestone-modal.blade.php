@@ -11,10 +11,30 @@
                         <p id="date" class="text-sm"></p>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <span class="font-medium text-sm mb-1 block">Serial No</span>
-                    <div class="border px-2 py-1.5 rounded">
-                        <p id="serial-no" class="text-sm"></p>
+                <div id="serial-no-container">
+                    <span class="font-medium text-sm mb-1 block mb-2">Materials</span>
+                    <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64">
+                        @foreach($product->materialUse->materials as $key => $material)
+                            <div class="mb-4 {{ ($key + 1) < count($product->materialUse->materials) ? 'pb-4 border-b' : '' }}">
+                                <div class="mb-2 flex flex-col">
+                                    <span class="font-medium text-sm">{{ $material->material->model_name }}</span>
+                                    <span class="font-medium text-xs text-slate-400">Quantity Needed: x{{ $material->qty }}</span>
+                                </div>
+                                @if ($material->material->is_sparepart)
+                                    <div class="grid grid-cols-2 gap-2">
+                                        @foreach($material->material->childrenWithoutAssigned as $m)
+                                            <div class="flex items-center gap-x-2">
+                                                <input type="checkbox" name="serial_no[]" id="{{ $m->id }}" class="border-slate-500 rounded" data-mu-id="{{ $material->id }}">
+                                                <label for="{{ $m->id }}" class="text-sm">{{ $m->sku }}</label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <x-app.message.error id="materials_err" class="mt-2" data-material-id="{{ $material->id }}" />
+                                @else
+                                    <p class="text-sm text-blue-600">Not spare part, selection is not required</p>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -48,6 +68,17 @@
         // Submit
         let url = '{{ route("production.check_in_milestone") }}'
 
+        let materials = {}
+        $('#serial-no-container input[name="serial_no[]"]').each(function(i, obj) {
+            if ($(this).is(':checked')) {
+                if (materials[$(this).data('mu-id')] === undefined) materials[$(this).data('mu-id')] = []
+
+                let vals = materials[$(this).data('mu-id')]
+                vals.push($(this).attr('id'))
+                materials[$(this).data('mu-id')] = vals
+            }
+        })
+
         $.ajax({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -56,7 +87,8 @@
             type: 'POST',
             data: {
                 'production_milestone_id': $('#production-milestone-modal #yes-btn').attr('data-id'),
-                'datetime': $('#production-milestone-modal #date').text()
+                'datetime': $('#production-milestone-modal #date').text(),
+                'materials': materials,
             },  
             success: function(res) {
                 $('#production-milestone-modal').removeClass('show-modal')
@@ -73,10 +105,19 @@
                 setTimeout(() => {
                     if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
                         let errors = err.responseJSON.errors
+                        console.debug(errors)
 
                         for (const key in errors) {
-                            $(`#production-milestone-modal #${key}_err`).find('p').text(errors[key])
-                            $(`#production-milestone-modal #${key}_err`).removeClass('hidden')
+                            if (!key.includes('.')) {
+                                $(`#production-milestone-modal #${key}_err`).find('p').text(errors[key])
+                                $(`#production-milestone-modal #${key}_err`).removeClass('hidden')
+                            } else {
+                                let field = key.split('.')[0]
+                                let idx = key.split('.')[1]
+    
+                                $(`#production-milestone-modal #${field}_err[data-material-id="${idx}"]`).find('p').text(errors[key])
+                                $(`#production-milestone-modal #${field}_err[data-material-id="${idx}"]`).removeClass('hidden') 
+                            }
                         }
                     }
                     FORM_CAN_SUBMIT = true

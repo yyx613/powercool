@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\RoleController;
@@ -165,6 +166,7 @@ Route::middleware('auth')->group(function() {
         Route::get('/delete/{production}', 'delete')->name('delete');
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+        Route::get('/move-to-warehouse/{production}', 'moveToWarehouse')->name('move_to_warehouse');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->group(function() {
@@ -205,6 +207,15 @@ Route::middleware('auth')->group(function() {
         Route::get('/edit/{warranty}', 'edit')->name('edit');
         Route::post('/update/{warranty}', 'update')->name('update');
         Route::get('/delete/{warranty}', 'delete')->name('delete');
+    });
+    // Material Use 
+    Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function() {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{material}', 'edit')->name('edit');
+        Route::get('/delete/{material}', 'delete')->name('delete');
+        Route::post('/upsert', 'upsert')->name('upsert');
     });
     // User Management
     Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {

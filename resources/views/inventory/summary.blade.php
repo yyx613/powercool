@@ -12,7 +12,7 @@
                 [
                     'label' => 'Total Stock',
                     'value' => $total_stock,
-                    'bgColor' => 'bg-slate-300',
+                    'bgColor' => 'bg-slate-200',
                 ],
                 [
                     'label' => 'Reserved Stock',
@@ -22,7 +22,12 @@
                 [
                     'label' => 'Available Stock',
                     'value' => $total_stock - $reserved_stock,
-                    'bgColor' => 'bg-slate-400',
+                    'bgColor' => 'bg-slate-300',
+                ],
+                [
+                    'label' => 'Production Stock',
+                    'value' => $production_stock,
+                    'bgColor' => 'bg-sky-200',
                 ],
             ];
         @endphp
@@ -41,26 +46,30 @@
             <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">Low Quantity Stock (Products)</h6>
                 @foreach ($products as $pro)
-                    <div class="mb-4 flex items-center gap-4">
-                        <div class="h-8 w-8">
-                            <img src="{{ $pro->image->url }}" alt="">
+                    @if ($pro->isLowStock())
+                        <div class="mb-2 flex items-center gap-4">
+                            <div class="h-8 w-8">
+                                <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                            </div>
+                            <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
                         </div>
-                        <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                        <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
-                    </div>
+                    @endif
                 @endforeach
             </div>
             <!-- Low Quantity Stock (Raw Materials) -->
             <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">Low Quantity Stock (Raw Materials)</h6>
                 @foreach ($raw_materials as $pro)
-                    <div class="mb-4 flex items-center gap-4">
-                        <div class="h-8 w-8">
-                            <img src="{{ $pro->image->url }}" alt="">
+                    @if ($pro->isLowStock())
+                        <div class="mb-2 flex items-center gap-4">
+                            <div class="h-8 w-8">
+                                <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                            </div>
+                            <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
                         </div>
-                        <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                        <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
-                    </div>
+                    @endif
                 @endforeach
             </div>
         </div>

@@ -38,6 +38,25 @@ class Product extends Model
         return $this->hasMany(ProductChild::class);
     }
 
+    public function childrenWithoutAssigned() {
+        // Not in production
+        $pmm_ids = ProductionMilestoneMaterial::pluck('product_child_id')->toArray();
+        // Exclude converted sale
+        $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
+        $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
+
+        $assigned_pc_ids = SaleProductChild::distinct()
+                ->whereNotIn('sale_product_id', $converted_sp_ids)
+                ->pluck('product_children_id')
+                ->toArray();
+        
+        return $this->children()->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
+    }
+
+    public function materialUse() {
+        return $this->hasOne(MaterialUse::class);
+    }
+
     public function getQtyAttribute($val) {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool)$this->is_sparepart == true)) {
             return ProductChild::where('product_id', $this->id)->count();
@@ -51,7 +70,7 @@ class Product extends Model
 
     public function reservedStockCount($product_id) {
         $ids = ProductChild::where('product_id', $product_id)->pluck('id');
-        
+        // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
 
         $count = 0;
@@ -62,7 +81,15 @@ class Product extends Model
                 $count++;
             }
         }
+        // Check in Production
+        $pmm_count = ProductionMilestoneMaterial::whereIn('product_child_id', $ids)->count();
+        $count += $pmm_count;
+
         return $count;
+    }
+
+    public function productionStockCount($product_id) {
+        return ProductChild::where('product_id', $product_id)->where('location', ProductChild::LOCATION_FACTORY)->count();
     }
 
     public function generateSku(): string {
@@ -79,5 +106,12 @@ class Product extends Model
         }
 
         return $sku;
+    }
+
+    public function isLowStock(): bool {
+        if ($this->low_stock_threshold != null && $this->qty <= $this->low_stock_threshold) {
+            return true;
+        }
+        return false;
     }
 }

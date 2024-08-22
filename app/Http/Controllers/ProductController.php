@@ -118,6 +118,7 @@ class ProductController extends Controller
             'prod' => $product,
             'total_stock_count' => $this->prod->totalStockCount($product->id),
             'reserved_stock_count' => $this->prod->reservedStockCount($product->id),
+            'productionStockCount' => $this->prod->productionStockCount($product->id),
         ]);
     }
 
@@ -259,23 +260,6 @@ class ProductController extends Controller
                 }
             }
 
-            if ($req->qty != null) {
-                $data = [];
-                $existing_skus = [];
-                for ($i=0; $i < $req->qty; $i++) { 
-                    $sku = ($this->prodChild)->generateSku($prod->sku, $existing_skus);
-                    $data[] = [
-                        'product_id' => $prod->id,
-                        'sku' => $sku,
-                        'location' => $this->prodChild::LOCATION_WAREHOUSE,
-                        'created_at' => $prod->created_at,
-                        'updated_at' => $prod->updated_at,
-                    ];
-                    $existing_skus[] = $sku;
-                }
-                $this->prodChild->insert($data);
-            }
-
             DB::commit();
 
             return Response::json([
@@ -305,7 +289,10 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $req->order_idx ?? [])->delete();
+            if ($req->order_idx != null) {
+                $order_idx = array_filter($req->order_idx, function($val) { return $val != null; });
+                $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $order_idx ?? [])->delete();
+            }
             
             $now = now();
             $data = [];

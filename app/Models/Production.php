@@ -31,12 +31,13 @@ class Production extends Model
     }
 
     public function product() {
-        return $this->hasOne(Product::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function milestones() {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
-            ->withPivot('id', 'submitted_at')
+            ->withPivot('id', 'required_serial_no', 'submitted_at')
+            ->orderByPivot('id', 'desc')
             ->using(ProductionMilestone::class);
     }
 

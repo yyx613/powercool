@@ -29,19 +29,27 @@
                 [
                     'label' => 'Total Stock',
                     'value' => $total_stock_count,
+                    'bgColor' => 'bg-slate-200',
                 ],
                 [
                     'label' => 'Reserved Stock',
                     'value' => $reserved_stock_count,
+                    'bgColor' => 'bg-sky-100',
                 ],
                 [
                     'label' => 'Available Stock',
                     'value' => $total_stock_count - $reserved_stock_count,
+                    'bgColor' => 'bg-slate-300',
+                ],
+                [
+                    'label' => 'Production Stock',
+                    'value' => $productionStockCount,
+                    'bgColor' => 'bg-sky-200',
                 ],
             ];
         @endphp
         @foreach ($stocks as $stock)
-            <div class="py-3 px-6 flex-1 flex justify-between items-center bg-slate-300 rounded-lg">
+            <div class="py-3 px-6 flex-1 flex justify-between items-center rounded-lg {{ $stock['bgColor'] }}">
                 <span class="text-md font-black">{{ $stock['label'] }}</span>
                 <span class="text-2xl font-black">{{ $stock['value'] }}</span>
             </div>

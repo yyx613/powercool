@@ -153,6 +153,11 @@
                         <div class="overflow-hidden">
                             <ul>
                                 <li>
+                                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Material Use</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Warranty Period</span>
                                     </a>
@@ -355,6 +360,11 @@
                 <h6 class="text-lg font-semibold whitespace-nowrap text-white">Setting</h6>
             </div>
             <ul>
+                <li>
+                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Material Use</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Warranty Period</span>

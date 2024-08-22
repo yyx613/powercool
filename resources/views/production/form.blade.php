@@ -5,7 +5,7 @@
         <x-app.page-title>{{ isset($production) ? 'Edit Production - ' . $production->sku : 'Create Production' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form action="{{ isset($production) ? route('production.upsert', ['production' => $production->id]) : route('production.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">
+    <form action="{{ isset($production) && !isset($is_duplicate) ? route('production.upsert', ['production' => $production->id]) : route('production.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
@@ -77,15 +77,35 @@
                     <x-app.input.label class="mb-2">Milestones <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="custom_milestone" class="mb-2" placeholder="Enter milestone here" />
                     @foreach($milestones as $stone)
-                        <div class="flex items-center gap-x-2 mb-2 milestone-selection">
-                            <input type="checkbox" name="milestone[]" id="{{ $stone->id }}" value="{{ $stone->id }}" class="rounded-sm" @checked(in_array($stone->id, old('milestone', isset($production) ? $production->milestones()->pluck('milestone_id')->toArray() : [])))>
-                            <label for="{{ $stone->id }}" class="text-sm">{{ $stone->name }}</label>
+                        <div class="flex justify-between mb-2 milestone-selection">
+                            <div class="flex items-center gap-x-2">
+                                <input type="checkbox" name="milestone[]" id="{{ $stone->id }}" value="{{ $stone->id }}" class="rounded-sm" @checked(in_array($stone->id, old('milestone', isset($production) ? $production->milestones()->pluck('milestone_id')->toArray() : [])))>
+                                <label for="{{ $stone->id }}" class="text-sm">{{ $stone->name }}</label>
+                            </div>
+                            <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
+                                <input type="checkbox" class="hidden peer" name="required_serial_no[]" @checked(isset($production) ? $production->milestones()->where('milestone_id', $stone->id)->value('required_serial_no') : null) />
+                                <div class="flex items-center w-full">
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">No</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">Yes</span>
+                                </div>
+                                <span class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
+                            </label>
                         </div>
                     @endforeach
                     <div id="custom-milestones-container">
-                        <div class="flex items-center gap-x-2 mb-2 hidden" id="custom-milestone-template">
-                            <input type="checkbox" name="custom_milestone[]" id="" value="" class="rounded-sm">
-                            <label for="" class="text-sm"></label>
+                        <div class="flex justify-between mb-2 hidden" id="custom-milestone-template">
+                            <div class="flex items-center gap-x-2 mb-2 first-part">
+                                <input type="checkbox" name="custom_milestone[]" id="" value="" class="rounded-sm">
+                                <label for="" class="text-sm"></label>
+                            </div>
+                            <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
+                                <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
+                                <div class="flex items-center w-full">
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">No</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">Yes</span>
+                                </div>
+                                <span class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
+                            </label>
                         </div>
                     </div>
                     @if ($errors->has('milestone'))
@@ -93,6 +113,8 @@
                     @else
                         <x-input-error :messages="$errors->get('custom_milestone')" class="mt-2" />
                     @endif
+                    <input type="hidden" name="milestone_required_serial_no">
+                    <input type="hidden" name="custom_milestone_required_serial_no">
                 </div>
             </div>
             <div class="mt-8 flex justify-end">
@@ -138,15 +160,37 @@
 
                 $(clone).addClass('custom-milestone')
                 $(clone).removeAttr('id')
-                $(clone).find('label').text(val)
-                $(clone).find('label').attr('for', `custom_milestone_${customMilestoneCount}`)
-                $(clone).find('input').attr('id', `custom_milestone_${customMilestoneCount}`)
-                $(clone).find('input').attr('value', val)
+                $(clone).find('.first-part label').text(val)
+                $(clone).find('.first-part label').attr('for', `custom_milestone_${customMilestoneCount}`)
+                $(clone).find('.first-part input').attr('id', `custom_milestone_${customMilestoneCount}`)
+                $(clone).find('.first-part input').attr('value', val)
                 $(clone).removeClass('hidden')
                 $('#custom-milestones-container').append(clone)
 
                 $(this).val(null)
             }
+        })
+
+        $('form').one('submit', function(e) {
+            e.preventDefault()
+
+            let msRequiredSerialNo = []
+            $('.milestone-selection').each(function(i, obj) {
+                if ($(this).find('input[name="milestone[]"]').is(':checked')) {
+                    msRequiredSerialNo.push($(this).find('input[name="required_serial_no[]"]').is(':checked'))
+                }
+            })
+            $('input[name="milestone_required_serial_no"]').val(msRequiredSerialNo)
+
+            let customMsRequiredSerialNo = []
+            $('.custom-milestone').each(function(i, obj) {
+                if ($(this).find('input[name="custom_milestone[]"]').is(':checked')) {
+                    customMsRequiredSerialNo.push($(this).find('input[name="required_serial_no[]"]').is(':checked'))
+                }
+            })
+            $('input[name="custom_milestone_required_serial_no"]').val(customMsRequiredSerialNo)
+
+            $(this).submit()
         })
     </script>
 @endpush

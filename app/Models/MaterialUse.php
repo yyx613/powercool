@@ -5,11 +5,11 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductionMilestone extends Pivot
+class MaterialUse extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = [];
     protected $casts = [
@@ -21,11 +21,11 @@ class ProductionMilestone extends Pivot
         return $date;
     }
 
-    public function production() {
-        return $this->belongsTo(Production::class);
+    public function materials() {
+        return $this->hasMany(MaterialUseProduct::class);
     }
 
-    public function materials() {
-        return $this->hasMany(ProductionMilestoneMaterial::class);
+    public function product() {
+        return $this->belongsTo(Product::class);
     }
 }
