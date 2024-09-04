@@ -256,5 +256,13 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('products', $products);
             $view->with('materials', $materials);
         });
+        View::composer(['layouts.superadmin_nav', 'user_management.form'], function(ViewView $view) {
+            $branches = [
+                1 => 'Kuala Lumpur',
+                2 => 'Penang',
+            ];
+
+            $view->with('branches', $branches);
+        });
     }
 }

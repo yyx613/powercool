@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class Branch extends Model
 {
@@ -29,7 +30,7 @@ class Branch extends Model
         self::create([
             'object_type' => $type,
             'object_id' => $id,
-            'location' => $location != null ? $location : Auth::user()->branch->location,
+            'location' => $location != null ? $location : (isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location),
         ]);
     }
 }

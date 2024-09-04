@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -44,7 +45,7 @@ class UserController extends Controller
     }
 
     public function getData(Request $req) {
-        $records = User::with('roles')->whereHas('roles', function($q) {
+        $records = User::sameBranch()->with('roles')->whereHas('roles', function($q) {
             $q->whereNot('id', ModelsRole::SUPERADMIN);
         });
 
@@ -149,7 +150,12 @@ class UserController extends Controller
         }
     }
 
-    public function edit(User $user) {
+    public function edit($user) {
+        if ($user == 1) {
+            abort(404);
+        }
+        $user = User::sameBranch()->where('id', $user)->firstOrFail();
+
         $user->load('pictures');
 
         return view('user_management.form', [
@@ -240,5 +246,9 @@ class UserController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    public function asBranch(Request $req) {
+        Session::put('as_branch', $req->branch);
     }
 }

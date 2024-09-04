@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Milestone;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -20,6 +22,12 @@ if (!function_exists('getUserRole')) {
 if (!function_exists('getUserRoleId')) {
     function getUserRoleId(User $user) {
         return $user->roles->pluck('id')[0] ?? null;
+    }
+}
+
+if (!function_exists('isSuperAdmin')) {
+    function isSuperAdmin() {
+        return getUserRoleId(Auth::user()) == Role::SUPERADMIN;
     }
 }
 

@@ -230,6 +230,8 @@ Route::middleware('auth')->group(function() {
         Route::get('/edit/{user}', 'edit')->name('edit');
         Route::post('/update/{user}', 'update')->name('update');
         Route::get('/delete/{user}', 'delete')->name('delete');
+
+        Route::get('as-branch', 'asBranch')->name('as_branch');
     });
     // Role Management
     Route::controller(RoleController::class)->prefix('role-management')->name('role_management.')->group(function () {

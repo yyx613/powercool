@@ -17,7 +17,6 @@ class BranchScope implements Scope
     {
         $user_branch = Auth::user()->branch;
 
-        Log::info('123');
         if ($user_branch != null) {
             $builder->whereHas('branch', function($q) use ($user_branch) {
                 $q->where('location', $user_branch->location);

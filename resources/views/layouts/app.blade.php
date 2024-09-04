@@ -42,8 +42,13 @@
         <div class="min-h-screen flex">
             @include('layouts.sidebar')
     
-            <main class="p-4 w-full bg-gray-50 flex-1 overflow-hidden">
-                @yield('content')
+            <main class="flex-1 overflow-hidden bg-gray-50">
+                @if (isSuperAdmin())
+                    @include('layouts.superadmin_nav')
+                @endif
+                <div class="p-4 h-full">
+                    @yield('content')
+                </div>
             </main>
         </div>
     </body>
