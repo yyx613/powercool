@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -38,6 +39,12 @@ class UserSeeder extends Seeder
                     'is_active' => true,
                 ]);
                 $user->assignRole('Driver');
+
+                Branch::create([
+                    'object_type' => User::class,
+                    'object_id' => $user->id,
+                    'location' => fake()->randomElement([Branch::LOCATION_KL, Branch::LOCATION_PENANG]),
+                ]);
             }
             // Create 3 sales
             for ($i=0; $i < 3; $i++) {
@@ -52,6 +59,12 @@ class UserSeeder extends Seeder
                     'is_active' => true,
                 ]);
                 $user->assignRole('Sale');
+
+                Branch::create([
+                    'object_type' => User::class,
+                    'object_id' => $user->id,
+                    'location' => fake()->randomElement([Branch::LOCATION_KL, Branch::LOCATION_PENANG]),
+                ]);
             }
             for ($i=0; $i < 3; $i++) {
                 // Create 3 technician
@@ -66,6 +79,12 @@ class UserSeeder extends Seeder
                     'is_active' => true,
                 ]);
                 $user->assignRole('Technician');
+
+                Branch::create([
+                    'object_type' => User::class,
+                    'object_id' => $user->id,
+                    'location' => fake()->randomElement([Branch::LOCATION_KL, Branch::LOCATION_PENANG]),
+                ]);
             }
         }
     }

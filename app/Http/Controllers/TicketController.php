@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -97,6 +98,7 @@ class TicketController extends Controller
                 'body' => $req->body,
                 'last_touch_by' => Auth::user()->id,
             ]);
+            (new Branch)->assign(Ticket::class, $ticket->id);
 
             if ($req->hasFile('attachment')) {
                 foreach ($req->file('attachment') as $key => $file) {

@@ -4,8 +4,8 @@
             <h6 class="text-lg font-black">Check In Milestone</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
-            <div class="mb-8">
-                <div class="mb-4">
+            <div class="flex-1 flex flex-col gap-4">
+                <div>
                     <span class="font-medium text-sm mb-1 block">Date</span>
                     <div class="border px-2 py-1.5 rounded">
                         <p id="date" class="text-sm"></p>
@@ -22,7 +22,7 @@
                                 </div>
                                 @if ($material->material->is_sparepart)
                                     <div class="grid grid-cols-2 gap-2">
-                                        @foreach($material->material->childrenWithoutAssigned as $m)
+                                        @foreach($material->material->childrenWithoutAssigned($production->id) as $m)
                                             <div class="flex items-center gap-x-2">
                                                 <input type="checkbox" name="serial_no[]" id="{{ $m->id }}" class="border-slate-500 rounded" data-mu-id="{{ $material->id }}">
                                                 <label for="{{ $m->id }}" class="text-sm">{{ $m->sku }}</label>
@@ -38,14 +38,13 @@
                     </div>
                 </div>
             </div>
-            <div class="flex gap-x-6">
-                <div class="flex-1">
-                    <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">No</button>
-                </div>
-                <div class="flex-1 flex">
-                    <button class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">Confirm</button>
-                </div>
+            <div class="flex gap-x-6 mt-6">
+                <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">No</button>
+                <button type="button" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">Confirm</button>
             </div>
+        </div>
+        <div class="border-t px-2 py-3 hidden" id="last-milestone-msg">
+            <p class="text-sm text-blue-500 leading-tight font-medium text-center">Checking in this milestone will complete the production. Please make sure the materials used are correct (if there is any).</p>
         </div>
     </div>
 </x-app.modal.base-modal>
@@ -76,6 +75,7 @@
                 let vals = materials[$(this).data('mu-id')]
                 vals.push($(this).attr('id'))
                 materials[$(this).data('mu-id')] = vals
+                MATERIALS_NEEDED.push($(this).attr('id'))
             }
         })
 
@@ -89,6 +89,7 @@
                 'production_milestone_id': $('#production-milestone-modal #yes-btn').attr('data-id'),
                 'datetime': $('#production-milestone-modal #date').text(),
                 'materials': materials,
+                'last_milestone': !($('#production-milestone-modal #last-milestone-msg').hasClass('hidden'))
             },  
             success: function(res) {
                 $('#production-milestone-modal').removeClass('show-modal')
@@ -105,7 +106,6 @@
                 setTimeout(() => {
                     if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
                         let errors = err.responseJSON.errors
-                        console.debug(errors)
 
                         for (const key in errors) {
                             if (!key.includes('.')) {

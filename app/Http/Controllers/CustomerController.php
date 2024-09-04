@@ -3,16 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Validation\ValidationException;
 
 class CustomerController extends Controller
 {
@@ -122,6 +120,8 @@ class CustomerController extends Controller
                     'email' => $req->email,
                     'remark' => $req->remark,
                 ]);
+                
+                (new Branch)->assign(Customer::class, $customer->id);
             } else {
                 $customer = Customer::where('id', $req->customer_id)->first();
                 $customer->update([

@@ -73,11 +73,12 @@ class ProductChild extends Model
             if (!in_array($sku, $existing_skus)) {
                 break;
             }
-            $init_idx++;
 
             if (strlen(str_replace('9', '', $str_init_idx)) == 0) { // When idx is only have character '9'
                 $min_char++;
             }
+
+            $init_idx++;
         }
 
         return $sku;

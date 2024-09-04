@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ScopedBy([BranchScope::class])]
 class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
@@ -24,5 +27,9 @@ class Supplier extends Model
 
     public function pictures() {
         return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
+    }
+
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
     }
 }

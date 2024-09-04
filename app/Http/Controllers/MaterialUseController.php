@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
 use App\Models\Product;
@@ -121,6 +122,7 @@ class MaterialUseController extends Controller
                 $mu = $this->mu::create([
                     'product_id' => $req->product,
                 ]);
+                (new Branch)->assign(MaterialUse::class, $mu->id);
             } else {
                 $mu = $this->mu::where('id', $req->material_use_id)->first();
 

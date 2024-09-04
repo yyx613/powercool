@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function() {
         Route::get('/edit/{cat}', 'edit')->name('edit');
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{cat}', 'delete')->name('delete');
+        
+        Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in');
+        // Route::get('/stock-out/{product}', 'stockOut')->name('stock_out');
     });
     Route::controller(ProductController::class)->prefix('product')->name('product.')->group(function() { // Product
         Route::get('/', 'index')->name('index');
@@ -99,6 +102,8 @@ Route::middleware('auth')->group(function() {
             Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
             Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule'); 
+            Route::get('/get-products/{sale}', 'getProducts')->name('get_products'); 
+            Route::get('/to-production/{sale}', 'toProduction')->name('to_production'); 
         });
 
         // Delivery Order
@@ -166,7 +171,6 @@ Route::middleware('auth')->group(function() {
         Route::get('/delete/{production}', 'delete')->name('delete');
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
-        Route::get('/move-to-warehouse/{production}', 'moveToWarehouse')->name('move_to_warehouse');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->group(function() {

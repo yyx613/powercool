@@ -6,37 +6,39 @@
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
-    <div class="mb-6 flex gap-x-4">
-        @php
-            $stocks = [
-                [
-                    'label' => 'Total Stock',
-                    'value' => $total_stock,
-                    'bgColor' => 'bg-slate-200',
-                ],
-                [
-                    'label' => 'Reserved Stock',
-                    'value' => $reserved_stock,
-                    'bgColor' => 'bg-sky-100',
-                ],
-                [
-                    'label' => 'Available Stock',
-                    'value' => $total_stock - $reserved_stock,
-                    'bgColor' => 'bg-slate-300',
-                ],
-                [
-                    'label' => 'Production Stock',
-                    'value' => $production_stock,
-                    'bgColor' => 'bg-sky-200',
-                ],
-            ];
-        @endphp
-        @foreach ($stocks as $stock)
-            <div class="p-3 flex-1 flex flex-col rounded-lg {{ $stock['bgColor'] }}">
-                <span class="text-2xl font-black">{{ $stock['label'] }}</span>
-                <span class="text-4xl font-black text-center mt-8">{{ $stock['value'] }}</span>
+    <div class="mb-6">
+        <div class="flex gap-4">
+            <div class="flex-1 bg-slate-200 p-2 rounded">
+                <div>
+                    <span class="text-lg font-black">Warehouse</span>
+                </div>
+                <div class="flex border-t border-slate-300 mt-4">
+                    <div class="flex-1 flex items-center justify-between pt-2 border-r border-slate-300 pr-3 mr-3">
+                        <span class="text-md">Available Stock</span>
+                        <span class="text-lg font-black">{{ $warehouse_available_stock }}</span>
+                    </div>
+                    <div class="flex-1 flex items-center justify-between pt-2">
+                        <span class="text-md">Reserved Stock</span>
+                        <span class="text-lg font-black">{{ $warehouse_reserved_stock }}</span>
+                    </div>
+                </div>
             </div>
-        @endforeach
+            <div class="flex-1 bg-slate-200 p-2 rounded">
+                <div>
+                    <span class="text-lg font-black">Factory</span>
+                </div>
+                <div class="flex border-t border-slate-300 mt-4">
+                    <div class="flex-1 flex items-center justify-between pt-2 border-r border-slate-300 pr-3 mr-3">
+                        <span class="text-md">Production Stock</span>
+                        <span class="text-lg font-black">{{ $production_stock }}</span>
+                    </div>
+                    <div class="flex-1 flex items-center justify-between pt-2">
+                        <span class="text-md">Reserved Stock</span>
+                        <span class="text-lg font-black">{{ $production_reserved_stock }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <!-- Content -->
     <div class="flex gap-4">
@@ -52,7 +54,7 @@
                                 <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>
                         </div>
                     @endif
                 @endforeach
@@ -67,7 +69,7 @@
                                 <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->totalStockCount($pro->id) - $pro->reservedStockCount($pro->id) }}</span></span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>
                         </div>
                     @endif
                 @endforeach
@@ -90,11 +92,11 @@
                         ],
                         [
                             'label' => 'Quantity In Hand',
-                            'value' => 10 - 3,
+                            'value' => $warehouse_available_stock,
                         ],
                         [
                             'label' => 'Quantity To Be Received',
-                            'value' => 10 - 3,
+                            'value' => $production_stock,
                         ],
                     ];
                 @endphp

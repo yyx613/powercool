@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\Product;
+use App\Models\ProductChild;
+use App\Models\Production;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -12,11 +15,15 @@ use Illuminate\Support\Facades\Response;
 class InventoryController extends Controller
 {
     protected $prod;
+    protected $prodChild;
     protected $invCat;
+    protected $production;
 
     public function __construct() {
         $this->prod = new Product;
+        $this->prodChild = new ProductChild;
         $this->invCat = new InventoryCategory;
+        $this->production = new Production;
     }
 
     public function index() {
@@ -93,6 +100,8 @@ class InventoryController extends Controller
                     'name' => $req->name,
                     'is_active' => $req->boolean('status'),
                 ]);
+
+                (new Branch)->assign(InventoryCategory::class, $cat->id);
             } else {
                 $cat = $this->invCat->where('id', $req->category_id)->first();
 
@@ -138,28 +147,54 @@ class InventoryController extends Controller
             $category['data'][] = $this->prod->where('inventory_category_id', $categories[$i]->id)->count();
         }
         // Stock summary
-        $total_stock = 0;
-        $reserved_stock = 0;
+        $warehouse_stock = 0;
+        $warehouse_reserved_stock = 0;
         $production_stock = 0;
+        $production_reserved_stock = 0;
         for ($i=0; $i < count($products); $i++) { 
-            $total_stock += $products[$i]->totalStockCount($products[$i]->id);
-            $reserved_stock += $products[$i]->reservedStockCount($products[$i]->id);
-            $production_stock += $products[$i]->productionStockCount($products[$i]->id);
+            $warehouse_stock += $products[$i]->warehouseAvailableStock($products[$i]->id);
+            $warehouse_reserved_stock += $products[$i]->warehouseReservedStock($products[$i]->id);
+            $production_stock += $products[$i]->productionStock($products[$i]->id);
+            $production_reserved_stock += $products[$i]->productionReservedStock($products[$i]->id);
         }
         for ($i=0; $i < count($raw_materials); $i++) { 
-            $total_stock += $raw_materials[$i]->totalStockCount($raw_materials[$i]->id);
-            $reserved_stock += $raw_materials[$i]->reservedStockCount($raw_materials[$i]->id);
-            $production_stock += $raw_materials[$i]->productionStockCount($raw_materials[$i]->id);
+            $warehouse_stock += $raw_materials[$i]->warehouseAvailableStock($raw_materials[$i]->id);
+            $warehouse_reserved_stock += $raw_materials[$i]->warehouseReservedStock($raw_materials[$i]->id);
+            $production_stock += $raw_materials[$i]->productionStock($raw_materials[$i]->id);
+            $production_reserved_stock += $raw_materials[$i]->productionReservedStock($raw_materials[$i]->id);
         }
         return view('inventory.summary', [
-            'total_stock' => $total_stock,
-            'reserved_stock' => $reserved_stock,
+            'warehouse_available_stock' => $warehouse_stock,
+            'warehouse_reserved_stock' => $warehouse_reserved_stock,
             'production_stock' => $production_stock,
+            'production_reserved_stock' => $production_reserved_stock,
             'products' => $products,
             'raw_materials' => $raw_materials,
             'active_product_count' => $active_product_count,
             'inactive_product_count' => $inactive_product_count,
             'categories' => $category,
         ]);
+    }
+
+    public function stockIn(ProductChild $product_child) {
+        try {
+            DB::beginTransaction();
+
+            $product_child->location = $this->prodChild::LOCATION_WAREHOUSE;
+            $product_child->save();
+
+            $this->production->where('product_child_id', $product_child->id)->update([
+                'status' => $this->production::STATUS_TRANSFERRED,
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Stocked In');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
+use App\Models\ProductChild;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
@@ -133,17 +135,34 @@ class SaleController extends Controller
             
             Session::put('convert_salesperson_id', $req->sp);
 
-            $quotations = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->where('customer_id', Session::get('convert_customer_id'))->where('sale_id', Session::get('convert_salesperson_id'))->get();
+            $quotations = Sale::where('type', Sale::TYPE_QUO)
+                ->whereNotIn('id', $this->getSaleInProduction())
+                ->whereHas('products')
+                ->where('status', Sale::STATUS_ACTIVE)
+                ->where('customer_id', Session::get('convert_customer_id'))
+                ->where('sale_id', Session::get('convert_salesperson_id'))
+                ->get();
         } else if ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
 
-            $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->where('customer_id', $req->cus)->distinct()->pluck('sale_id');
+            $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->whereNotIn('id', $this->getSaleInProduction())
+                ->whereHas('products')
+                ->where('status', Sale::STATUS_ACTIVE)
+                ->where('customer_id', $req->cus)
+                ->distinct()
+                ->pluck('sale_id');
 
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
-            $customer_ids = Sale::where('type', Sale::TYPE_QUO)->whereHas('products')->where('status', Sale::STATUS_ACTIVE)->distinct()->pluck('customer_id');
+            $customer_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->whereNotIn('id', $this->getSaleInProduction())
+                ->whereHas('products')
+                ->where('status', Sale::STATUS_ACTIVE)
+                ->distinct()
+                ->pluck('customer_id');
 
             $customers = Customer::whereIn('id', $customer_ids)->get();
         }
@@ -346,6 +365,7 @@ class SaleController extends Controller
 
             $products = collect();
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->whereHas('products')
                 ->whereIn('id', explode(',', $req->so))
@@ -360,6 +380,7 @@ class SaleController extends Controller
             Session::put('convert_terms', $req->term);
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->whereHas('products')
                 ->where('customer_id', Session::get('convert_customer_id'))
@@ -372,6 +393,7 @@ class SaleController extends Controller
             Session::put('convert_salesperson_id', $req->sp);
 
             $terms = Sale::where('type', Sale::TYPE_SO)
+                ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
@@ -385,6 +407,7 @@ class SaleController extends Controller
             Session::put('convert_customer_id', $req->cus);
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
+                ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', $req->cus)
                 ->distinct()
@@ -393,6 +416,7 @@ class SaleController extends Controller
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
             $sales = Sale::where('type', Sale::TYPE_SO)
+                ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->whereHas('products')
                 ->distinct()
@@ -474,6 +498,7 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'filename' => $filename
             ]);
+            (new Branch)->assign(DeliveryOrder::class, $do->id);
 
             $dop = [];
             foreach ($prod_qty as $prod_id => $qty) {
@@ -536,6 +561,8 @@ class SaleController extends Controller
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
                 ]);
+
+                (new Branch)->assign(Sale::class, $sale->id);
             } else {
                 $sale = Sale::where('id', $req->sale_id)->first();
                 
@@ -801,6 +828,16 @@ class SaleController extends Controller
         }
     }
 
+    public function getProducts(Sale $sale) {
+        return Response::json([
+            'products' => $sale->products->load('product'),
+        ], HttpFoundationResponse::HTTP_OK);
+    }
+
+    public function toProduction(Request $req, Sale $sale) {
+        dd('123', $req->all(), $sale);
+    }
+
     public function indexDeliveryOrder() {
         return view('delivery_order.list');
     }
@@ -902,6 +939,7 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'filename' => $filename
             ]);
+            (new Branch)->assign(Invoice::class, $inv->id);
 
             // Create PDF
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
@@ -1080,11 +1118,12 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            Target::create([
+            $target = Target::create([
                 'sale_id' => $req->sale,
                 'date' => Carbon::parse($req->date)->format('Y-m-d'),
                 'amount' => $req->amount,
             ]);
+            (new Branch)->assign(Target::class, $target->id);
 
             DB::commit();
 
@@ -1140,5 +1179,16 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    /**
+     * Get Sale ids which has no serial number in production
+     */
+    private function getSaleInProduction(): array {
+        $pc_in_factory = ProductChild::where('location', ProductChild::LOCATION_FACTORY)->distinct()->pluck('id');
+        $spc_in_factory = SaleProductChild::whereIn('product_children_id', $pc_in_factory)->pluck('sale_product_id');
+        $sale_ids = SaleProduct::whereIn('id', $spc_in_factory)->pluck('sale_id')->toArray();
+
+        return $sale_ids;
     }
 }

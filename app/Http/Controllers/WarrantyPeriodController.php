@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\WarrantyPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -82,10 +83,12 @@ class WarrantyPeriodController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->wp::create([
+            $wp = $this->wp::create([
                 'name' => $req->name,
                 'is_active' => $req->boolean('status'),
             ]);
+
+            (new Branch)->assign(WarrantyPeriod::class, $wp->id);
 
             DB::commit();
 

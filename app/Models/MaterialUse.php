@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ScopedBy([BranchScope::class])]
 class MaterialUse extends Model
 {
     use HasFactory, SoftDeletes;
@@ -27,5 +30,9 @@ class MaterialUse extends Model
 
     public function product() {
         return $this->belongsTo(Product::class);
+    }
+
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
     }
 }

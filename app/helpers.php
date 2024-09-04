@@ -3,8 +3,6 @@
 use App\Models\Milestone;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 if (!function_exists('generateRandomAlphabet')) {

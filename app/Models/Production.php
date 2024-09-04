@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
+#[ScopedBy([BranchScope::class])]
 class Production extends Model
 {
     use HasFactory, SoftDeletes;
@@ -15,6 +18,7 @@ class Production extends Model
     const STATUS_TO_DO = 1;
     const STATUS_DOING = 2;
     const STATUS_COMPLETED = 3;
+    const STATUS_TRANSFERRED = 4;
     
     protected $guarded = [];
     protected $casts = [
@@ -41,13 +45,17 @@ class Production extends Model
             ->using(ProductionMilestone::class);
     }
 
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
+    }
+
     public function generateSku(): string {
         $sku = null;
         
         while (true) {
             $sku = 'PO' . now()->format('ym') . generateRandomAlphabet();
 
-            $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
+            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 
             if (!$exists) {
                 break;
@@ -65,6 +73,8 @@ class Production extends Model
                 return 'doing';
             case self::STATUS_COMPLETED:
                 return 'completed';
+            case self::STATUS_TRANSFERRED:
+                return 'transferred';
         }
     }
 

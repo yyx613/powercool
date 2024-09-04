@@ -194,6 +194,10 @@ class ViewServiceProvider extends ServiceProvider
                     $q->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
                 }])
                 ->where('is_active', true)
+                ->where('type', Product::TYPE_PRODUCT)
+                ->orWhere(function($q) {
+                    $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+                })
                 ->having('children_count', '>', 0)
                 ->orderBy('id', 'desc')
                 ->get();
@@ -232,7 +236,9 @@ class ViewServiceProvider extends ServiceProvider
 
             $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->orderBy('id', 'desc')->get();
 
-            $products = Product::orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function($q) {
+                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+            })->orderBy('id', 'desc')->get();
 
             $sales = Sale::orderBy('id', 'desc')->get();
 
@@ -242,7 +248,9 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('sales', $sales);
         });
         View::composer(['material_use.form'], function(ViewView $view) {
-            $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function($q) {
+                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+            })->orderBy('id', 'desc')->get();
             $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('id', 'desc')->get();
 
             $view->with('products', $products);

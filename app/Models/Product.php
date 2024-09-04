@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+#[ScopedBy([BranchScope::class])]
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
@@ -38,9 +41,14 @@ class Product extends Model
         return $this->hasMany(ProductChild::class);
     }
 
-    public function childrenWithoutAssigned() {
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
+    }
+
+    public function childrenWithoutAssigned($production_id) {
         // Not in production
-        $pmm_ids = ProductionMilestoneMaterial::pluck('product_child_id')->toArray();
+        $pm_ids = ProductionMilestone::where('production_id', $production_id)->pluck('id');
+        $pmm_ids = ProductionMilestoneMaterial::whereNotIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray();
         // Exclude converted sale
         $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
         $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
@@ -49,8 +57,8 @@ class Product extends Model
                 ->whereNotIn('sale_product_id', $converted_sp_ids)
                 ->pluck('product_children_id')
                 ->toArray();
-        
-        return $this->children()->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
+
+        return $this->children()->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids)->get();
     }
 
     public function materialUse() {
@@ -63,13 +71,17 @@ class Product extends Model
         }
         return $val;
     }
-
-    public function totalStockCount($product_id) {
-        return ProductChild::where('product_id', $product_id)->count();
+    
+    public function warehouseAvailableStock($product_id) {
+        return $this->warehouseStock($product_id) - $this->warehouseReservedStock($product_id) - $this->warehouseOnHoldStock($product_id);
     }
 
-    public function reservedStockCount($product_id) {
-        $ids = ProductChild::where('product_id', $product_id)->pluck('id');
+    public function warehouseStock($product_id) {
+        return ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->count();
+    }
+
+    public function warehouseReservedStock($product_id) {
+        $ids = ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
         // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
 
@@ -81,15 +93,43 @@ class Product extends Model
                 $count++;
             }
         }
+        
         // Check in Production
-        $pmm_count = ProductionMilestoneMaterial::whereIn('product_child_id', $ids)->count();
-        $count += $pmm_count;
+        $count += ProductionMilestoneMaterial::where('on_hold', false)->whereIn('product_child_id', $ids)->count();
 
         return $count;
     }
 
-    public function productionStockCount($product_id) {
-        return ProductChild::where('product_id', $product_id)->where('location', ProductChild::LOCATION_FACTORY)->count();
+    public function warehouseOnHoldStock($product_id) {
+        $ids = ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
+        
+        // Check in Production
+        return ProductionMilestoneMaterial::where('on_hold', true)->whereIn('product_child_id', $ids)->count();
+    }
+
+    public function productionStock($product_id) {
+        return ProductChild::where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->count();
+    }
+    
+    public function productionReservedStock($product_id) {
+        $ids = ProductChild::where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->pluck('id');
+
+        // Check in QUO/SO/DO
+        $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
+
+        $count = 0;
+        for ($i=0; $i < count($spc); $i++) { 
+            $sale = $spc[$i]->saleProduct->sale;
+
+            if ($sale->status != Sale::STATUS_CONVERTED || ($sale->type == Sale::TYPE_SO && $sale->convert_to != null)) {
+                $count++;
+            }
+        }
+        
+        // Check in Production
+        $count += ProductionMilestoneMaterial::whereIn('product_child_id', $ids)->count();
+
+        return $count;
     }
 
     public function generateSku(): string {
@@ -98,7 +138,7 @@ class Product extends Model
         while (true) {
             $sku = 'P' . now()->format('ym') . generateRandomAlphabet();
 
-            $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
+            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 
             if (!$exists) {
                 break;

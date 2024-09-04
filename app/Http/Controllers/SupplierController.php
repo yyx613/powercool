@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Supplier;
 use App\Models\CustomerLocation;
 use Illuminate\Http\Request;
@@ -123,6 +124,8 @@ class SupplierController extends Controller
                     'remark' => $req->remark,
                     'location' => $req->location,
                 ]);
+
+                (new Branch)->assign(Supplier::class, $supplier->id);
             } else {
                 $supplier->update([
                     'name' => $req->customer_name,

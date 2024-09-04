@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ScopedBy([BranchScope::class])]
 class Customer extends Model
 {
     use HasFactory, SoftDeletes;
@@ -28,5 +31,9 @@ class Customer extends Model
 
     public function locations() {
         return $this->hasMany(CustomerLocation::class);
+    }
+
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
     }
 }

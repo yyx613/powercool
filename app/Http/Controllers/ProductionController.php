@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\ProductChild;
@@ -118,6 +119,10 @@ class ProductionController extends Controller
     }
 
     public function edit(Production $production) {
+        if ($production->status == $this->prod::STATUS_TRANSFERRED) {
+            return redirect(route('production.index'))->with('warning', 'Not allow to edit.');
+        }
+
         $production->load('users', 'milestones');
 
         return view('production.form', [
@@ -130,13 +135,21 @@ class ProductionController extends Controller
         $production->formatted_created_at = Carbon::parse($production->created_at)->format('d M Y');
         $production->status = ($this->prod)->statusToHumanRead($production->status);
         $production->progress = ($this->prod)->getProgress($production);
+
+        $pm_ids = $this->prodMs::where('production_id', $production->id)->pluck('id');
+        $materials_needed = $this->prodMsMaterial::whereIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray(); 
         
         return view('production.view', [
             'production' => $production,
+            'materials_needed' => $materials_needed,
         ]);
     }
 
     public function delete(Production $production) {
+        if ($production->status == $this->prod::STATUS_TRANSFERRED) {
+            return redirect(route('production.index'))->with('warning', 'Not allow to delete.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -201,6 +214,7 @@ class ProductionController extends Controller
                     'due_date' => $req->due_date,
                     'status' => $req->status,
                 ]);
+                (new Branch)->assign(Production::class, $production->id);
             } else {
                 $production->update([
                     'product_id' => $req->product,
@@ -277,6 +291,7 @@ class ProductionController extends Controller
             'datetime' => 'required',
             'materials' => 'nullable',
             'materials.*' => 'nullable',
+            'last_milestone' => 'required',
         ];
         // Validate request
         $req->validate($rules);
@@ -343,18 +358,50 @@ class ProductionController extends Controller
                 foreach ($pm->production->product->materialUse->materials as $key => $material) {
                     $data = [];
                     if ($material->material->is_sparepart == true && isset($req->materials[$material->id])) {
+                        $this->prodMsMaterial::where('production_milestone_id', $pm->id)
+                            ->whereNull('product_id')
+                            ->whereNotIn('product_child_id', $req->materials[$material->id])
+                            ->delete();
+                        
                         for ($i=0; $i < count($req->materials[$material->id]); $i++) { 
+                            $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)->where('product_child_id', $req->materials[$material->id][$i])->first();
+                            if ($pmm == null) {
+                                $data[] = [
+                                    'production_milestone_id' => $pm->id,
+                                    'product_child_id' => $req->materials[$material->id][$i],
+                                    'created_at' => $now,
+                                    'updated_at' => $now,
+                                ];
+                            }
+                        } 
+                    } else if ($material->material->is_sparepart == false) {
+                        $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)
+                            ->where('product_id', $material->product_id)
+                            ->first();
+
+                        if ($pmm == null) {
                             $data[] = [
                                 'production_milestone_id' => $pm->id,
-                                'product_child_id' => $req->materials[$material->id][$i],
+                                'product_id' => $material->product_id,
+                                'qty' => $material->qty,
                                 'created_at' => $now,
                                 'updated_at' => $now,
                             ];
                         }
-                    
+                    }
+
+                    if (count($data) > 0) {
                         $this->prodMsMaterial::insert($data);
                     }
                 }
+            }
+            // Remove on hold if it's last milestone 
+            if ($req->boolean('last_milestone') == true) {
+                $production_ms_ids = $this->prodMs::where('production_id', $pm->production->id)->pluck('id');
+
+                $this->prodMsMaterial::whereIn('production_milestone_id', $production_ms_ids)->update([
+                    'on_hold' => false,
+                ]);
             }
 
             DB::commit();
@@ -371,23 +418,6 @@ class ProductionController extends Controller
             return Response::json([
                 'result' => false
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public function moveToWarehouse(Production $production) {        
-        try {
-            $this->productChild::where('id', $production->product_child_id)->update([
-                'location' => $this->productChild::LOCATION_WAREHOUSE
-            ]);
-
-            $production->delete();
-
-            return redirect(route('production.index'))->with('success', 'Product moved to warehouse');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            report($th);
-
-            return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
 }

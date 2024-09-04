@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\Production;
+use App\Models\ProductionMilestoneMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,11 +21,15 @@ class ProductController extends Controller
     protected $prod;
     protected $prodChild;
     protected $invCat;
+    protected $production;
+    protected $productionMsMaterial;
 
     public function __construct() {
         $this->prod = new Product;
         $this->prodChild = new ProductChild;
-        $this->invCat = new InventoryCategory();
+        $this->invCat = new InventoryCategory;
+        $this->production = new Production;
+        $this->productionMsMaterial = new ProductionMilestoneMaterial;
     }
 
     public function index() {
@@ -114,11 +121,21 @@ class ProductController extends Controller
     public function view(Product $product) {
         $product->load('image');
 
+        $is_raw_material = $product->is_sparepart !== null && $product->is_sparepart == false;
+
+        if ($is_raw_material) {
+            $reserved_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', false)->sum('qty');
+            $on_hold_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', true)->sum('qty');
+            $available_stock = $product->qty - $reserved_stock - $on_hold_stock;
+        }
+
         return view('inventory.view', [
             'prod' => $product,
-            'total_stock_count' => $this->prod->totalStockCount($product->id),
-            'reserved_stock_count' => $this->prod->reservedStockCount($product->id),
-            'productionStockCount' => $this->prod->productionStockCount($product->id),
+            'warehouse_available_stock' => $is_raw_material ? $available_stock : $this->prod->warehouseAvailableStock($product->id),
+            'warehouse_reserved_stock' => $is_raw_material ? $reserved_stock : $this->prod->warehouseReservedStock($product->id),
+            'warehouse_on_hold_stock' => $is_raw_material ? $on_hold_stock : $this->prod->warehouseOnHoldStock($product->id),
+            'production_stock' => $is_raw_material ? 0 : $this->prod->productionStock($product->id),
+            'production_reserved_stock' => $is_raw_material ? 0 : $this->prod->productionReservedStock($product->id),
         ]);
     }
 
@@ -158,11 +175,15 @@ class ProductController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            if ($record->location == 'factory') {
+                $production = $this->production->where('product_child_id', $record->id)->first();
+            }
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'location' => $record->location,
                 'order_id' => $record->assignedTo(),
+                'progress' => $record->location != 'factory' ? null : $production->getProgress($production),
             ];
         }
 
@@ -222,6 +243,8 @@ class ProductController extends Controller
                     'is_active' => $req->boolean('status'),
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
                 ]);
+
+                (new Branch)->assign(Product::class, $prod->id);
             } else {
                 $prod = $this->prod->where('id', $req->product_id)->first();
 

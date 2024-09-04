@@ -34,7 +34,7 @@
                 @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="department" class="mb-1">Department <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="department" id="department" :hasError="$errors->has('status')">
+                    <x-app.input.select name="department" id="department" :hasError="$errors->has('department')">
                         <option value="">Select a department</option>
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}" @selected(old('department', isset($user) ? $user_role_id : null) === $role->id)>{{ $role->name }}</option>
@@ -119,6 +119,22 @@
                     <x-app.input.label id="remark" class="mb-1">Remark</x-app.input.label>
                     <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ old('remark', isset($user) ? $user->remark : null) }}" />
                     <x-input-error :messages="$errors->get('remark')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="branch" class="mb-1">Branch <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="branch" id="branch" :hasError="$errors->has('branch')">
+                        <option value="">Select a branch</option>
+                        @php
+                            $branches = [
+                                1 => 'Kuala Lumpur',
+                                2 => 'Penang',
+                            ];
+                        @endphp
+                        @foreach ($branches as $key => $val)
+                            <option value="{{ $key }}" @selected(old('branch', isset($user) && isset($user->branch) ? $user->branch->location : null) === $key)>{{ $val }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('branch')" class="mt-1" />
                 </div>
             </div>
             <div class="mt-8 flex justify-end">

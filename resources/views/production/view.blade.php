@@ -91,26 +91,59 @@
         </div>
     </div>
 
-    <x-app.modal.production-milestone-modal :product="$production->product"/>
+    <x-app.modal.production-milestone-modal :product="$production->product" :production="$production"/>
 @endsection
 
 @push('scripts')
 <script>
+    PRODUCTION = @json($production);
+    MATERIALS_NEEDED = @json($materials_needed);
+
     $('.ms-row').on('click', function(e) {
         e.preventDefault()
 
+        let id = $(this).data('id')
+        let requiredSerialNo = $(this).data('required-serial-no')
         let completed = $(this).data('completed')
+        let milestoneCount = PRODUCTION.milestones.length
+        $('.ms-row').each(function() {
+            if ($(this).data('completed') == true) {
+                milestoneCount--
+            }
+        })
 
-        if (!completed) {
-            let id = $(this).data('id')
-            let requiredSerialNo = $(this).data('required-serial-no')
-
-            $('#production-milestone-modal #date').text(moment().format('D MMM YYYY HH:mm'))
-            $('#production-milestone-modal #yes-btn').attr('data-id', id)
-            if (requiredSerialNo) $('#production-milestone-modal #serial-no-container').removeClass('hidden')
-            else $('#production-milestone-modal #serial-no-container').addClass('hidden')
-            $('#production-milestone-modal').addClass('show-modal')
+        $('#production-milestone-modal #date').text(moment().format('D MMM YYYY HH:mm'))
+        $('#production-milestone-modal #yes-btn').attr('data-id', id)
+        if (requiredSerialNo) $('#production-milestone-modal #serial-no-container').removeClass('hidden')
+        else $('#production-milestone-modal #serial-no-container').addClass('hidden')
+        // Auto select materials needed
+        for (let i = 0; i < MATERIALS_NEEDED.length; i++) {
+            const element = MATERIALS_NEEDED[i];
+            
+            $(`#production-milestone-modal #serial-no-container input[name="serial_no[]"][id="${element}"]`).attr('checked', true)
         }
+        // Completed
+        if (completed) {
+            if (requiredSerialNo && milestoneCount > 0) {
+                $('#production-milestone-modal #yes-btn').text('Update')
+                $('#production-milestone-modal #yes-btn').removeClass('hidden')
+            } else {
+                $('#production-milestone-modal #yes-btn').addClass('hidden')
+            }
+            $('#production-milestone-modal #no-btn').text('Close')
+        } else {
+            $('#production-milestone-modal #yes-btn').text('Confirm')
+            $('#production-milestone-modal #yes-btn').removeClass('hidden')
+            $('#production-milestone-modal #no-btn').text('No')
+        }
+        // Last milestone confirmation
+        if (!completed && milestoneCount == 1) {
+            $('#production-milestone-modal #last-milestone-msg').removeClass('hidden')
+        } else {
+            $('#production-milestone-modal #last-milestone-msg').addClass('hidden')
+        }
+
+        $('#production-milestone-modal').addClass('show-modal')
     })
 </script>
 @endpush

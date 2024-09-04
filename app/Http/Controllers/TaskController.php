@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Milestone;
 use App\Models\Role;
 use App\Models\Task;
@@ -195,6 +196,7 @@ class TaskController extends Controller
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
+            (new Branch)->assign(Task::class, $task->id);
 
             if ($req->ticket != null) {
                 Ticket::where('id', $req->ticket)->delete();
@@ -437,6 +439,7 @@ class TaskController extends Controller
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
+            (new Branch)->assign(Task::class, $task->id);
 
             if ($req->ticket != null) {
                 Ticket::where('id', $req->ticket)->delete();

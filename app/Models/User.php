@@ -4,7 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -53,6 +55,10 @@ class User extends Authenticatable
 
     public function tasks() {
         return $this->belongsToMany(Task::class, 'user_task', 'user_id', 'task_id');
+    }
+
+    public function branch() {
+        return $this->morphOne(Branch::class, 'object');
     }
 
     public function pictures() {

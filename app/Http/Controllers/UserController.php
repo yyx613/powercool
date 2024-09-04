@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\UserExport;
 use App\Models\Attachment;
+use App\Models\Branch;
 use App\Models\Role as ModelsRole;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class UserController extends Controller
         'status' => 'required',
         'remark' => 'nullable|max:250',
         'password' => 'required|confirmed',
+        'branch' => 'required',
         'picture' => 'nullable',
         'picture.*' => 'file|extensions:jpg,png,jpeg'
     ];
@@ -134,6 +136,8 @@ class UserController extends Controller
                 }
             }
 
+            (new Branch)->assign(User::class, $user->id, $req->branch);
+
             DB::commit();
 
             return redirect()->route('user_management.index')->with('success', 'User created');
@@ -201,6 +205,13 @@ class UserController extends Controller
                     ]);
                 }
             }
+
+            Branch::where([
+                ['object_type', User::class],
+                ['object_id', $user->id],
+            ])->update([
+                'location' => $req->branch,
+            ]);
 
             DB::commit();
 
