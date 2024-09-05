@@ -11,7 +11,6 @@ use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
@@ -183,6 +182,7 @@ class ProductController extends Controller
                 'sku' => $record->sku,
                 'location' => $record->location,
                 'order_id' => $record->assignedTo(),
+                'status' => $record->status,
                 'progress' => $record->location != 'factory' ? null : $production->getProgress($production),
             ];
         }

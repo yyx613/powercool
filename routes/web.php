@@ -49,7 +49,8 @@ Route::middleware('auth')->group(function() {
         Route::get('/delete/{cat}', 'delete')->name('delete');
         
         Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in');
-        // Route::get('/stock-out/{product}', 'stockOut')->name('stock_out');
+        Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
+        Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
     });
     Route::controller(ProductController::class)->prefix('product')->name('product.')->group(function() { // Product
         Route::get('/', 'index')->name('index');
@@ -237,11 +238,8 @@ Route::middleware('auth')->group(function() {
     Route::controller(RoleController::class)->prefix('role-management')->name('role_management.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
         Route::get('/edit/{role}', 'edit')->name('edit');
         Route::post('/update/{role}', 'update')->name('update');
-        Route::get('/delete/{role}', 'delete')->name('delete');
     });
 });
 

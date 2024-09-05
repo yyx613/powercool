@@ -7,6 +7,7 @@ use App\Models\InventoryCategory;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -180,16 +181,101 @@ class InventoryController extends Controller
         try {
             DB::beginTransaction();
 
-            $product_child->location = $this->prodChild::LOCATION_WAREHOUSE;
-            $product_child->save();
-
-            $this->production->where('product_child_id', $product_child->id)->update([
-                'status' => $this->production::STATUS_TRANSFERRED,
-            ]);
+            if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) {
+                // Update status from transferred child
+                $this->prodChild::where('id', $product_child->transferred_from)->update([
+                    'status' => $this->prodChild::STATUS_RECEIVED,
+                ]);
+                // Remove self status
+                $product_child->status = null;
+                $product_child->save();
+            } else {
+                $product_child->location = $this->prodChild::LOCATION_WAREHOUSE;
+                $product_child->save();
+                
+                $this->production->where('product_child_id', $product_child->id)->update([
+                    'status' => $this->production::STATUS_TRANSFERRED,
+                ]);
+            }
 
             DB::commit();
 
             return back()->with('success', 'Stocked In');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function stockOut(ProductChild $product_child) {
+        try {
+            DB::beginTransaction();
+
+            $product_child->status = $this->prodChild::STATUS_STOCK_OUT;
+            $product_child->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Stocked Out');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function transfer(Request $req, ProductChild $product_child) {
+        try {
+            DB::beginTransaction();
+
+            $product = Product::where('id', $product_child->product_id)->first();
+            // Create inventory category for branch to transfer
+            $cat = InventoryCategory::where('id', $product->inventory_category_id)->first();
+            $cloned_cat = $cat->replicate();
+            $cloned_cat->save();
+            
+            (new Branch)->assign(InventoryCategory::class, $cloned_cat->id, $req->branch);
+            // Create supplier for branch to transfer
+            if ($product->supplier_id != null) {
+                $supp = Supplier::where('id', $product->supplier_id)->first();
+                $cloned_supp = $supp->replicate();
+                $cloned_supp->save();
+                
+                (new Branch)->assign(Supplier::class, $cloned_supp->id, $req->branch);
+                // Create supplier image for branch to transfer
+                for ($i=0; $i < count($supp->pictures); $i++) { 
+                    $cloned_product_image = $supp->pictures[$i]->replicate();
+                    $cloned_product_image->object_id = $cloned_supp->id;
+                    $cloned_product_image->save();
+                }
+            }
+            // Create product for branch to transfer
+            $cloned_product = $product->replicate();
+            $cloned_product->inventory_category_id = $cloned_cat->id;
+            $cloned_product->save();
+
+            (new Branch)->assign(Product::class, $cloned_product->id, $req->branch);
+            // Create child for cloned product
+            $cloned_child = $product_child->replicate();
+            $cloned_child->product_id = $cloned_product->id;
+            $cloned_child->status = $this->prodChild::STATUS_TO_BE_RECEIVED;
+            $cloned_child->transferred_from = $product_child->id;
+            $cloned_child->save();
+            // Create product image for branch to transfer
+            $cloned_product_image = $product->image->replicate();
+            $cloned_product_image->object_id = $cloned_product->id;
+            $cloned_product_image->save();
+
+            // Update status on current product child
+            $product_child->status = $this->prodChild::STATUS_IN_TRANSIT;
+            $product_child->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Product is in transit');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

@@ -18,18 +18,6 @@
                         <p id="serial-no" class="text-sm"></p>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <span class="font-medium text-sm mb-1 block">Assigned Order ID</span>
-                    <div class="border px-2 py-1.5 rounded">
-                        <p id="order-id" class="text-sm"></p>
-                    </div>
-                </div>
-                <div>
-                    <span class="font-medium text-sm mb-1 block">Assigned Driver</span>
-                    <div class="border px-2 py-1.5 rounded">
-                        <p id="order-id" class="text-sm"></p>
-                    </div>
-                </div>
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">

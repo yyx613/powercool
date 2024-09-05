@@ -15,6 +15,11 @@ class ProductChild extends Model
     const LOCATION_WAREHOUSE = 'warehouse';
     const LOCATION_FACTORY = 'factory';
 
+    const STATUS_STOCK_OUT = 1;
+    const STATUS_IN_TRANSIT = 2;
+    const STATUS_TO_BE_RECEIVED = 3;
+    const STATUS_RECEIVED = 4;
+
     protected $guarded = [];
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',

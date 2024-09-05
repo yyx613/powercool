@@ -15,11 +15,14 @@ use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\WarrantyPeriod;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View as ViewView;
+use Spatie\Permission\Models\Permission;
 
 class ViewServiceProvider extends ServiceProvider
 {
@@ -36,6 +39,36 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('role_management.form', function(ViewView $view) {
+            $permissions = Permission::get();
+            // Format permissions into group
+            $permissions_group = [
+                'logsheet' => [],
+                'quotation' => [],
+                'consignment_note' => [],
+                'warehouse' => [],
+                'master_data' => [],
+                'others' => []
+            ];
+
+            for ($i=0; $i < count($permissions); $i++) { 
+                if (str_contains($permissions[$i], 'logsheet.')) {
+                    array_push($permissions_group['logsheet'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'quotation.')) {
+                    array_push($permissions_group['quotation'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'consignment_note.')) {
+                    array_push($permissions_group['consignment_note'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'warehouse.')) {
+                    array_push($permissions_group['warehouse'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'master_data.')) {
+                    array_push($permissions_group['master_data'], $permissions[$i]);
+                } else {
+                    array_push($permissions_group['others'], $permissions[$i]);
+                }
+            }
+
+            $view->with('permissions_group', $permissions_group);
+        });
         View::composer(['task.form'], function(ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $for_role = 'technician';
@@ -140,7 +173,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('sales', $sales);
         });
-        View::composer(['sale_order.form_step.delivery_schedule'], function(ViewView $view) {
+        View::composer(['sale_order.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function(ViewView $view) {
             $drivers = User::whereHas('roles', function($q) {
                 $q->where('id', Role::DRIVER);
             })->orderBy('id', 'desc')->get();
@@ -188,10 +221,10 @@ class ViewServiceProvider extends ServiceProvider
                 ->toArray();
 
             $products = Product::with(['children' => function($q) use ($assigned_pc_ids, $pmm_ids) {
-                    $q->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
+                    $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
                 }])
                 ->withCount(['children' => function($q) use ($assigned_pc_ids, $pmm_ids) {
-                    $q->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
+                    $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
                 }])
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
@@ -236,9 +269,14 @@ class ViewServiceProvider extends ServiceProvider
 
             $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->orderBy('id', 'desc')->get();
 
-            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function($q) {
-                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-            })->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)
+                ->orWhere(function($q) {
+                    $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+                })
+                ->withCount('materialUse')
+                ->having('material_use_count', '>', 0)
+                ->orderBy('id', 'desc')
+                ->get();
 
             $sales = Sale::orderBy('id', 'desc')->get();
 
@@ -261,6 +299,15 @@ class ViewServiceProvider extends ServiceProvider
                 1 => 'Kuala Lumpur',
                 2 => 'Penang',
             ];
+
+            $view->with('branches', $branches);
+        });
+        View::composer(['components.app.modal.transfer-modal'], function(ViewView $view) {
+            $branches = [
+                1 => 'Kuala Lumpur',
+                2 => 'Penang',
+            ];
+            unset($branches[isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location]);
 
             $view->with('branches', $branches);
         });

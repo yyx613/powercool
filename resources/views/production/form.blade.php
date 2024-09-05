@@ -55,7 +55,7 @@
                     <x-input-error :messages="$errors->get('product')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Assigned Order ID <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label class="mb-1">Assigned Order ID</x-app.input.label>
                     <x-app.input.select2 name="order" id="order" placeholder="Select a order" :hasError="$errors->has('order')">
                         <option value="">Select a product</option>
                         @foreach ($sales as $sale)

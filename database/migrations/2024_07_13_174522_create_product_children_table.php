@@ -16,10 +16,13 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id');
             $table->string('sku');
             $table->string('location');
+            $table->unsignedInteger('status')->nullable();
+            $table->unsignedBigInteger('transferred_from')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('product_id')->on('products')->references('id');
+            $table->foreign('transferred_from')->on('product_children')->references('id');
         });
     }
 

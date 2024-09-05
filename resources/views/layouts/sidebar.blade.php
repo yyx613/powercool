@@ -167,6 +167,11 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">User Management</span>
                                     </a>
                                 </li>
+                                <!-- <li>
+                                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Role Management</span>
+                                    </a>
+                                </li> -->
                             </ul>
                         </div>
                     </div>
@@ -375,6 +380,11 @@
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">User Management</span>
                     </a>
                 </li>
+                <!-- <li>
+                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Role Management</span>
+                    </a>
+                </li> -->
             </ul>
         </div>
     </div>

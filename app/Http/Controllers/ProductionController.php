@@ -177,7 +177,7 @@ class ProductionController extends Controller
             'due_date' => 'required',
             'status' => 'required',
             'product' => 'required',
-            'order' => 'required',
+            'order' => 'nullable',
             'assign' => 'required',
             'assign.*' => 'exists:users,id',
             'milestone' => 'required_without:custom_milestone',

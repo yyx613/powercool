@@ -2,22 +2,21 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($role) ? 'Edit Role - ' . $role->name : 'Create Role' }}</x-app.page-title>
+        <x-app.page-title>{{ 'Edit Role - ' . $role->name }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="p-6 rounded-md shadow bg-white">
-        <form action="{{ isset($role) ? route('role_management.update', ['role' => $role->id]) : route('role_management.store') }}" method="POST">
+        <form action="{{ route('role_management.update', ['role' => $role->id]) }}" method="POST">
             @csrf
             <div class="flex flex-col">
                 <x-app.input.label id="name" class="mb-1">Name</x-app.input.label>
-                <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($role) ? $role->name : null) }}" />
-                <x-input-error :messages="$errors->get('department')" class="mt-1" />
+                <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($role) ? $role->name : null) }}" disabled="true" />
             </div>
 
             <div class="border-t border-gray-300 mt-6 pt-4">
                 <div class="mb-5">
                     <h3 class="text-lg font-bold">Permissions</h3>
-                    <p class="text-sm text-slate-500">By selecting create, edit, attach loghsheet, and generate invoice permission will automatically select view permission (if there is).</p>
+                    <p class="text-sm text-slate-500">By selecting create, edit, and delete permission will automatically select view permission.</p>
                 </div>
                 @foreach($permissions_group as $group => $children)
                     <div class="mb-4">
@@ -46,7 +45,7 @@
                 @endforeach
             </div>
             <div class="mt-6 flex justify-end">
-                <x-app.button.submit>{{ isset($role) ? 'Save and Update Role' : 'Create Role' }}</x-app.button.submit>
+                <x-app.button.submit>Save and Update</x-app.button.submit>
             </div>
         </form>
     </div>
@@ -59,7 +58,7 @@
             let group = $(this).data('group')
 
             // Automatically select view permission if create/edit permission is selected
-            if (permissionName.includes('.create') || permissionName.includes('.edit') || permissionName.includes('.attach_logsheet') || permissionName.includes('.delete') || permissionName.includes('.check_in') || permissionName.includes('.check_out') || permissionName.includes('.generate_invoice')) {
+            if (permissionName.includes('.create') || permissionName.includes('.edit') || permissionName.includes('.delete')) {
                 $(`input[name="${ group }.view"]`).prop('checked', true)
             } else if (permissionName.includes('.view') && (
                 $(`input[name="${ group }.create"]`).is(':checked') || 

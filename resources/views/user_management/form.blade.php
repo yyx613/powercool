@@ -33,14 +33,14 @@
                     </div>
                 @endif
                 <div class="flex flex-col">
-                    <x-app.input.label id="department" class="mb-1">Department <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="department" id="department" :hasError="$errors->has('department')">
-                        <option value="">Select a department</option>
+                    <x-app.input.label id="role" class="mb-1">Role <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="role" id="role" :hasError="$errors->has('role')">
+                        <option value="">Select a role</option>
                         @foreach ($roles as $role)
-                            <option value="{{ $role->id }}" @selected(old('department', isset($user) ? $user_role_id : null) === $role->id)>{{ $role->name }}</option>
+                            <option value="{{ $role->id }}" @selected(old('role', isset($user) ? $user_role_id : null) === $role->id)>{{ $role->name }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('department')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('role')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">Name <span class="text-sm text-red-500">*</span></x-app.input.label>

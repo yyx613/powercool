@@ -4,8 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+#[ScopedBy([BranchScope::class])]
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
@@ -51,16 +53,6 @@ class User extends Authenticatable
 
     protected function serializeDate(DateTimeInterface $date) {
         return $date;
-    }
-
-    public function scopeSameBranch(Builder $builder) {
-        $user_branch = Auth::user()->branch;
-
-        if ($user_branch != null) {
-            return $builder->whereHas('branch', function($q) use ($user_branch) {
-                $q->where('location', $user_branch->location);
-            });
-        }
     }
 
     public function tasks() {

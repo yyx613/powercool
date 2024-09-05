@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('sku');
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('product_child_id');
-            $table->unsignedBigInteger('sale_id');
+            $table->unsignedBigInteger('sale_id')->nullable();
             $table->string('name');
             $table->string('desc');
             $table->date('start_date');

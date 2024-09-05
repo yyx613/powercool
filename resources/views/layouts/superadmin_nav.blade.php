@@ -1,4 +1,4 @@
-<div class="p-2 border-b" id="superadmin-nav">
+<div class="py-2 px-4 border-b" id="superadmin-nav">
     <select name="as_branch" id="as_branch" class="border border-slate-200 rounded-full text-xs">
         @foreach ($branches as $key => $val)
             <option value="{{ $key }}" @selected(session('as_branch') == $key)>As {{ $val }} Branch</option>

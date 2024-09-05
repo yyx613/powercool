@@ -15,12 +15,14 @@ class BranchScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        $user_branch = Auth::user()->branch;
-
-        if ($user_branch != null) {
-            $builder->whereHas('branch', function($q) use ($user_branch) {
-                $q->where('location', $user_branch->location);
-            });
+        if (Auth::hasUser()) {
+            $user_branch = Auth::user()->branch;
+    
+            if ($user_branch != null) {
+                $builder->whereHas('branch', function($q) use ($user_branch) {
+                    $q->where('location', $user_branch->location);
+                });
+            }
         }
     }
 }

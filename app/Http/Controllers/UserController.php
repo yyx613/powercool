@@ -21,7 +21,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class UserController extends Controller
 {
     const FORM_RULES = [
-        'department' => 'required|max:250',
+        'role' => 'required',
         'name' => 'required|max:250',
         'gender' => 'required',
         'address' => 'required',
@@ -45,7 +45,7 @@ class UserController extends Controller
     }
 
     public function getData(Request $req) {
-        $records = User::sameBranch()->with('roles')->whereHas('roles', function($q) {
+        $records = User::with('roles')->whereHas('roles', function($q) {
             $q->whereNot('id', ModelsRole::SUPERADMIN);
         });
 
@@ -123,7 +123,7 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->department)->first();
+            $selected_role = Role::where('id', $req->role)->first();
             $user->assignRole($selected_role->id);
 
             if ($req->hasFile('picture')) {
@@ -154,7 +154,7 @@ class UserController extends Controller
         if ($user == 1) {
             abort(404);
         }
-        $user = User::sameBranch()->where('id', $user)->firstOrFail();
+        $user = User::where('id', $user)->firstOrFail();
 
         $user->load('pictures');
 
@@ -193,7 +193,7 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => $req->password == null ? $user->password : Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->department)->first();
+            $selected_role = Role::where('id', $req->role)->first();
             $user->syncRoles([$selected_role->id]);
 
             if ($req->hasFile('picture')) {

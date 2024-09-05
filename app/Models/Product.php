@@ -58,7 +58,7 @@ class Product extends Model
                 ->pluck('product_children_id')
                 ->toArray();
 
-        return $this->children()->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids)->get();
+        return $this->children()->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids)->get();
     }
 
     public function materialUse() {
@@ -77,11 +77,11 @@ class Product extends Model
     }
 
     public function warehouseStock($product_id) {
-        return ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->count();
+        return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->count();
     }
 
     public function warehouseReservedStock($product_id) {
-        $ids = ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
+        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
         // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
 
@@ -101,18 +101,18 @@ class Product extends Model
     }
 
     public function warehouseOnHoldStock($product_id) {
-        $ids = ProductChild::where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
+        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
         
         // Check in Production
         return ProductionMilestoneMaterial::where('on_hold', true)->whereIn('product_child_id', $ids)->count();
     }
 
     public function productionStock($product_id) {
-        return ProductChild::where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->count();
+        return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->count();
     }
     
     public function productionReservedStock($product_id) {
-        $ids = ProductChild::where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->pluck('id');
+        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->pluck('id');
 
         // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
