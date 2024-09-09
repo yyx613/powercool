@@ -7,6 +7,7 @@ use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\ProductionMilestoneMaterial;
+use App\Models\Report;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -310,6 +311,16 @@ class ViewServiceProvider extends ServiceProvider
             unset($branches[isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location]);
 
             $view->with('branches', $branches);
+        });
+        View::composer(['quotation.form_step.quotation_details', 'quotation.convert', 'sale_order.form_step.quotation_details'], function(ViewView $view) {
+            $report_types = [
+                Report::TYPE_EITHER => 'Either',
+                Report::TYPE_NORMAL => 'Normal',
+                Report::TYPE_PROJECT => 'Project',
+                Report::TYPE_FRANCHISE => 'Franchise',
+            ];
+
+            $view->with('report_types', $report_types);
         });
     }
 }

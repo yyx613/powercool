@@ -56,6 +56,16 @@
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="report_type" class="mb-1">Report Type <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
+                        <option value="">Select a report type</option>
+                        @foreach ($report_types as $key => $val)
+                            <option value="{{ $key }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $key)>{{ $val }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="report_type_err"/>
+                </div>
             </div>
             @if (isset($sale) && $sale->status == 2)
                 <div class="mt-8 flex justify-end">
@@ -108,6 +118,7 @@
                     'from': $('#quotation-form input[name="from"]').val(),
                     'cc': $('#quotation-form input[name="cc"]').val(),
                     'status': $('#quotation-form select[name="status"]').val(),
+                    'report_type': $('#quotation-form select[name="report_type"]').val(),
                 },
                 success: function(res) {
                     if (typeof SALE !== 'undefined') {

@@ -5,6 +5,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
@@ -182,6 +183,10 @@ Route::middleware('auth')->group(function() {
         Route::get('/edit/{ticket}', 'edit')->name('edit');
         Route::post('/update/{ticket}', 'update')->name('update');
         Route::get('/delete/{ticket}', 'delete')->name('delete');
+    });
+    // Report
+    Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function() {
+        Route::get('/', 'index')->name('index');
     });
     // Customer
     Route::controller(CustomerController::class)->prefix('customer')->name('customer.')->group(function() {

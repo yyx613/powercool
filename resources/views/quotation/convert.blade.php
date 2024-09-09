@@ -93,11 +93,21 @@
                                 <li class="w-1/6 p-2 rounded-md cursor-pointer border border-slate-100 text-center quotation-selections" data-id="{{ $quo->id }}">{{ $quo->sku }}</li>
                             @endforeach
                         </ul>
-                        <div class="flex justify-end mt-8">
-                            <a href="{{ route('quotation.convert_to_sale_order') }}" class="w-1/6 bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="convert-btn">
-                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                                <span class="text-sm font-semibold">Convert</span>
-                            </a>
+                        <div class="flex justify-between mt-8">
+                            <div class="flex-1">
+                                <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')" class="w-1/2">
+                                    <option value="">Select a report type</option>
+                                    @foreach ($report_types as $key => $val)
+                                        <option value="{{ $key }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $key)>{{ $val }}</option>
+                                    @endforeach
+                                </x-app.input.select>
+                            </div>
+                            <div class="flex-1 flex justify-end">
+                                <a href="{{ route('quotation.convert_to_sale_order') }}" class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="convert-btn">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
+                                    <span class="text-sm font-semibold">Convert</span>
+                                </a>
+                            </div>
                         </div>
                     @else
                         @include('components.app.no-data')
@@ -154,21 +164,33 @@
             $(`.quotation-selections[data-id="${id}"]`).addClass('!border-black')
         }
 
-        if (SELECTED_QUOS.length <= 0) {
-            $('#convert-btn').removeClass('bg-green-200')
-            $('#convert-btn').addClass('bg-slate-100')
-        } else {
-            $('#convert-btn').addClass('bg-green-200')
-            $('#convert-btn').removeClass('bg-slate-100')
-        }
+        canConvert()
+    })
+    $('select[name="report_type"]').on('change', function() {
+        canConvert()
     })
     $('#convert-btn').on('click', function(e) {
         e.preventDefault()
 
+        if (!canConvert()) return
+
         let url = $(this).attr('href')
-        url = `${url}?quo=${SELECTED_QUOS}`
+        url = `${url}?quo=${SELECTED_QUOS}&report_type=${ $('select[name="report_type"]').val() }`
 
         window.location.href = url
     })
+
+    function canConvert() {
+        if (SELECTED_QUOS.length <= 0 || $('select[name="report_type"]').val() == '') {
+            $('#convert-btn').removeClass('bg-green-200')
+            $('#convert-btn').addClass('bg-slate-100')
+
+            return false
+        }
+        $('#convert-btn').addClass('bg-green-200')
+        $('#convert-btn').removeClass('bg-slate-100')
+
+        return true
+    }
 </script>
 @endpush

@@ -201,6 +201,7 @@ class SaleController extends Controller
                 'reference' => join(',', $references->toArray()),
                 'status' => true,
                 'type' => 'so',
+                'report_type' => $req->report_type, 
             ]);
             $res = $this->upsertQuoDetails($request)->getData();
             if ($res->result != true) {
@@ -544,6 +545,7 @@ class SaleController extends Controller
             'from' => 'nullable|max:250',
             'cc' => 'nullable|max:250',
             'status' => 'required',
+            'report_type' => 'required',
         ];
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
@@ -564,6 +566,7 @@ class SaleController extends Controller
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
+                    'report_type' => $req->report_type,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);
@@ -578,6 +581,7 @@ class SaleController extends Controller
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
+                    'report_type' => $req->report_type,
                 ]);
             }
 

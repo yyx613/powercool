@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('quo_cc')->nullable();
             $table->longText('reference');
             $table->unsignedInteger('status');
+            $table->unsignedInteger('report_type');
             $table->longText('remark')->nullable();
             $table->string('payment_term')->nullable();
             $table->string('payment_method')->nullable();
