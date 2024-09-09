@@ -156,6 +156,8 @@
         buildWarrantyPeriodSelect2(ITEMS_COUNT)
 
         $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+
+        hideDeleteBtnWhenOnlyOneItem()
     })
     $('body').on('click', '.delete-item-btns', function() {
         let id = $(this).data('id')
@@ -168,6 +170,8 @@
             $(this).attr('data-id', ITEMS_COUNT)
             $(this).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
         })
+        hideDeleteBtnWhenOnlyOneItem()
+        calSummary()
     })
     $('body').on('keydown', 'input[name="unit_price"]', function(e) {
         let val = $(this).val()
@@ -237,7 +241,11 @@
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
-            prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
+            if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
+                prodSerialNo.push(null)
+            } else {
+                prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
+            }
             warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
         })
 
@@ -366,6 +374,13 @@
             }            
         }
         return false
+    }
+    function hideDeleteBtnWhenOnlyOneItem() {
+        if ($('.items').length == 1) {
+            $('.items:first .delete-item-btns').removeClass('group-hover:block')
+        } else {
+            $('.items:first .delete-item-btns').addClass('group-hover:block')
+        }
     }
 </script>
 @endpush

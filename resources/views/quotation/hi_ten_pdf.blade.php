@@ -97,7 +97,7 @@
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->desc }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->qty * $prod->unit_price, 2) }}</td>

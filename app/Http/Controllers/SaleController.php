@@ -8,6 +8,7 @@ use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -19,6 +20,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -115,7 +117,7 @@ class SaleController extends Controller
     }
 
     public function pdf(Sale $sale) {
-        $pdf = Pdf::loadView('quotation.pdf', [
+        $pdf = Pdf::loadView('quotation.' . $this->getPdfType($sale->products) . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -205,7 +207,7 @@ class SaleController extends Controller
                 throw new Exception("Failed to create quotation");
             }
             $sale_id = $res->sale->id;
-            
+
             // Create product details
             $request = new Request([
                 'sale_id' => $sale_id,
@@ -225,7 +227,7 @@ class SaleController extends Controller
                     return $q->children->pluck('product_children_id')->toArray();
                 })->toArray(),
                 'warranty_period' => $products->map(function($q) {
-                    return $q->warranty_period;
+                    return $q->warranty_period_id;
                 })->toArray(),
             ]);
             $res = $this->upsertProDetails($request)->getData();
@@ -342,7 +344,7 @@ class SaleController extends Controller
     }
 
     public function pdfSaleOrder(Sale $sale) {
-        $pdf = Pdf::loadView('sale_order.pdf', [
+        $pdf = Pdf::loadView('sale_order.' . $this->getPdfType($sale->products) . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -458,6 +460,8 @@ class SaleController extends Controller
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->get();
 
+            $products = SaleProduct::whereIn('id', $product_ids)->get();
+            
             $deli_addresses = [];
             $deli_address_not_same = false;
             for ($i=0; $i < count($sale_orders); $i++) { 
@@ -473,12 +477,12 @@ class SaleController extends Controller
                 }
             }
 
-            $pdf = Pdf::loadView('sale_order.do_pdf', [
+            $pdf = Pdf::loadView('sale_order.' . $this->getPdfType($products) . '_do_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
-                'products' => SaleProduct::whereIn('id', $product_ids)->get(),
+                'products' => $products,
                 'sale_orders' => $sale_orders,
                 'prod_qty' => $prod_qty,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
@@ -612,7 +616,7 @@ class SaleController extends Controller
             'unit_price' => 'required',
             'unit_price.*' => 'required',
             'product_serial_no' => 'nullable',
-            'product_serial_no.*' => 'nullable|array',
+            'product_serial_no.*' => 'nullable',
             'warranty_period' => 'required',
             'warranty_period.*' => 'required',
         ];
@@ -628,6 +632,10 @@ class SaleController extends Controller
         if (isset($req->product_serial_no)) {
             $serial_no = [];
             for ($i=0; $i < count($req->product_serial_no); $i++) { 
+                if ($req->product_serial_no[$i] == null) {
+                    continue;
+                }
+
                 $match = array_intersect($serial_no, $req->product_serial_no[$i]);
                 if (count($match) > 0) {
                     return Response::json([
@@ -644,6 +652,7 @@ class SaleController extends Controller
             if ($req->product_order_id != null) {
                 $order_idx = array_filter($req->product_order_id, function($val) { return $val != null; });
                 SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->delete();
+                SaleProductChild::whereNotIn('sale_product_id', $order_idx ?? [])->delete();
             }
 
             $now = now();
@@ -675,7 +684,7 @@ class SaleController extends Controller
                 SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->delete();
                 $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
 
-                if (isset($req->product_serial_no)) {
+                if (isset($req->product_serial_no) && $req->product_serial_no[$i] != null) {
                     $data = [];
                     for ($j=0; $j < count($req->product_serial_no[$i]); $j++) { 
                         if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
@@ -944,12 +953,15 @@ class SaleController extends Controller
             // Create PDF
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
 
-            $pdf = Pdf::loadView('delivery_order.inv_pdf', [
+            $do_products = DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get();
+            $sale_products = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
+
+            $pdf = Pdf::loadView('delivery_order.' . $this->getPdfType($sale_products) . '_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'do_sku' => join(', ', $do_sku),
                 'dos' => $dos,
-                'do_products' => DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get(),
+                'do_products' => $do_products,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'terms' => Session::get('convert_terms'),
@@ -1190,5 +1202,19 @@ class SaleController extends Controller
         $sale_ids = SaleProduct::whereIn('id', $spc_in_factory)->pluck('sale_id')->toArray();
 
         return $sale_ids;
+    }
+
+    private function getPdfType(Collection $sale_products): string {
+        $is_hi_ten = false;
+
+        for ($i=0; $i < count($sale_products); $i++) { 
+            $product = $sale_products[$i]->product;
+
+            if ($product->type == Product::TYPE_PRODUCT) {
+                $is_hi_ten = true;
+                break;
+            }
+        }
+        return $is_hi_ten ? 'hi_ten' : 'powercool';
     }
 }
