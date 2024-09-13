@@ -11,6 +11,7 @@ use App\Models\Production;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductionProduct;
+use App\Models\Sale;
 use App\Models\UserProduction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -106,12 +107,22 @@ class ProductionController extends Controller
 
     public function create(Request $req) {
         $data = [];
+        // Duplicate
         if ($req->id != null) {
             $production = $this->prod::where('id', $req->id)->first();
 
             $data = [
                 'production' => $production,
                 'is_duplicate' => true,
+            ];
+        }
+        if ($req->sale_id != null && $req->product_id != null) {
+            $sale = Sale::where('id', $req->sale_id)->first();
+            $product = $this->product::where('id', $req->product_id)->first();
+
+            $data = [
+                'default_product' => $product,
+                'default_sale' => $sale,
             ];
         }
 

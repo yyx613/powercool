@@ -49,7 +49,7 @@
                     <x-app.input.select2 name="product" id="product" placeholder="Select a product" :hasError="$errors->has('product')">
                         <option value="">Select a product</option>
                         @foreach ($products as $pro)
-                            <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : null) == $pro->id)>{{ $pro->model_name }}</option>
+                            <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : (isset($default_product) ? $default_product->id : null)) == $pro->id)>{{ $pro->model_name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('product')" class="mt-2" />
@@ -59,7 +59,7 @@
                     <x-app.input.select2 name="order" id="order" placeholder="Select a order" :hasError="$errors->has('order')">
                         <option value="">Select a product</option>
                         @foreach ($sales as $sale)
-                            <option value="{{ $sale->id }}" @selected(old('order', isset($production) ? $production->sale_id : null) == $sale->id)>{{ $sale->sku }}</option>
+                            <option value="{{ $sale->id }}" @selected(old('order', isset($production) ? $production->sale_id : (isset($default_sale) ? $default_sale->id : null)) == $sale->id)>{{ $sale->sku }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('order')" class="mt-2" />

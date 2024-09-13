@@ -15,7 +15,7 @@
                     <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">No</button>
                 </div>
                 <div class="flex-1 flex">
-                    <button class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">Yes</button>
+                    <button class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hidden hover:bg-blue-700" id="yes-btn">Yes</button>
                 </div>
             </div>
         </div>
@@ -38,6 +38,15 @@
         url = `${url}/sale/to-production/${id}?product=${productId}`
 
         window.location.href = url
+    })
+    $('#to-production-modal select[name="product"]').change(function() {
+        let val = $(this).val()
+
+        if (val != 'null') {
+            $('#to-production-modal #yes-btn').removeClass('hidden')
+        } else {
+            $('#to-production-modal #yes-btn').addClass('hidden')
+        }
     })
 </script>
 @endpush

@@ -848,7 +848,10 @@ class SaleController extends Controller
     }
 
     public function toProduction(Request $req, Sale $sale) {
-        dd('123', $req->all(), $sale);
+        return redirect(route('production.create', [
+            'sale_id' => $sale->id,
+            'product_id' => $req->product
+        ]));
     }
 
     public function indexDeliveryOrder() {
