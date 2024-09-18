@@ -23,7 +23,8 @@ class ProductController extends Controller
     protected $production;
     protected $productionMsMaterial;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->prod = new Product;
         $this->prodChild = new ProductChild;
         $this->invCat = new InventoryCategory;
@@ -31,11 +32,13 @@ class ProductController extends Controller
         $this->productionMsMaterial = new ProductionMilestoneMaterial;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('inventory.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->prod->with('category');
 
         if ($req->boolean('is_product') == true) {
@@ -48,13 +51,13 @@ class ProductController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('model_name', 'like', '%' . $keyword . '%')
                     ->orWhere('model_desc', 'like', '%' . $keyword . '%')
                     ->orWhere('price', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('category', function($qq) use ($keyword) {
-                        $qq->where('name', 'like', '%'.$keyword.'%');
+                    ->orWhereHas('category', function ($qq) use ($keyword) {
+                        $qq->where('name', 'like', '%' . $keyword . '%');
                     });
             });
         }
@@ -99,17 +102,21 @@ class ProductController extends Controller
                 'price' => $record->price,
                 'is_sparepart' => $record->is_sparepart,
                 'status' => $record->is_active,
+                'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
+                'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('inventory.form');
     }
 
-    public function edit(Product $product) {
+    public function edit(Product $product)
+    {
         $product->load('image', 'children');
 
         return view('inventory.form', [
@@ -117,7 +124,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function view(Product $product) {
+    public function view(Product $product)
+    {
         $product->load('image');
 
         $is_raw_material = $product->is_sparepart !== null && $product->is_sparepart == false;
@@ -138,14 +146,15 @@ class ProductController extends Controller
         ]);
     }
 
-    public function viewGetData(Request $req) {
+    public function viewGetData(Request $req)
+    {
         $records = $this->prodChild::where('product_id', $req->product_id);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('location', 'like', '%' . $keyword . '%');
             });
@@ -190,7 +199,8 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function upsert(Request $req) {
+    public function upsert(Request $req)
+    {
         $rules = [
             'product_id' => 'nullable',
             'model_name' => 'required|max:250',
@@ -210,7 +220,7 @@ class ProductController extends Controller
             'image.*' => 'file|mimes:jpg,png,jpeg',
         ];
         if ($req->product_id != null) {
-            $rules['image'] = 'nullable';            
+            $rules['image'] = 'nullable';
         }
         if ($req->boolean('is_product') == true) {
             $rules['supplier_id'] = 'nullable';
@@ -299,7 +309,8 @@ class ProductController extends Controller
         }
     }
 
-    public function upsertSerialNo(Request $req) {
+    public function upsertSerialNo(Request $req)
+    {
         $rules = [
             'product_id' => 'required',
             'order_idx' => 'nullable',
@@ -313,13 +324,15 @@ class ProductController extends Controller
             DB::beginTransaction();
 
             if ($req->order_idx != null) {
-                $order_idx = array_filter($req->order_idx, function($val) { return $val != null; });
+                $order_idx = array_filter($req->order_idx, function ($val) {
+                    return $val != null;
+                });
                 $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $order_idx ?? [])->delete();
             }
-            
+
             $now = now();
             $data = [];
-            for ($i=0; $i < count($req->serial_no); $i++) { 
+            for ($i = 0; $i < count($req->serial_no); $i++) {
                 if ($req->order_idx != null && $req->order_idx[$i] != null) {
                     $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
 
@@ -361,7 +374,8 @@ class ProductController extends Controller
         }
     }
 
-    public function delete(Product $product) {
+    public function delete(Product $product)
+    {
         $product->delete();
 
         return back()->with('success', 'Product deleted');

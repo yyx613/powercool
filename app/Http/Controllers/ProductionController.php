@@ -44,7 +44,7 @@ class ProductionController extends Controller
     public function index() {
         return view('production.list', [
             'productin_left' => $this->prod::where('due_date', now()->format('Y-m-d'))->count(),
-            'to_do' => $this->prod::where('status', $this->prod::STATUS_TO_DO)->count(), 
+            'to_do' => $this->prod::where('status', $this->prod::STATUS_TO_DO)->count(),
             'doing' => $this->prod::where('status', $this->prod::STATUS_DOING)->count(),
             'completed' => $this->prod::where('status', $this->prod::STATUS_COMPLETED)->count(),
         ]);
@@ -99,6 +99,8 @@ class ProductionController extends Controller
                 'days_left' => Carbon::parse($record->due_date)->addDay()->diffInDays(now()),
                 'progress' => $record->getProgress($record),
                 'status' => $record->status,
+                'can_edit' => hasPermission('production.edit'),
+                'can_delete' => hasPermission('production.delete'),
             ];
         }
 
@@ -140,7 +142,7 @@ class ProductionController extends Controller
             'production' => $production,
         ]);
     }
-    
+
     public function view(Production $production) {
         $production->load('users', 'milestones', 'product');
         $production->formatted_created_at = Carbon::parse($production->created_at)->format('d M Y');
@@ -148,8 +150,8 @@ class ProductionController extends Controller
         $production->progress = ($this->prod)->getProgress($production);
 
         $pm_ids = $this->prodMs::where('production_id', $production->id)->pluck('id');
-        $materials_needed = $this->prodMsMaterial::whereIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray(); 
-        
+        $materials_needed = $this->prodMsMaterial::whereIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray();
+
         return view('production.view', [
             'production' => $production,
             'materials_needed' => $materials_needed,
@@ -169,7 +171,7 @@ class ProductionController extends Controller
             $production->delete();
 
             DB::commit();
-            
+
             return back()->with('success', 'Production deleted');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -373,8 +375,8 @@ class ProductionController extends Controller
                             ->whereNull('product_id')
                             ->whereNotIn('product_child_id', $req->materials[$material->id])
                             ->delete();
-                        
-                        for ($i=0; $i < count($req->materials[$material->id]); $i++) { 
+
+                        for ($i=0; $i < count($req->materials[$material->id]); $i++) {
                             $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)->where('product_child_id', $req->materials[$material->id][$i])->first();
                             if ($pmm == null) {
                                 $data[] = [
@@ -384,7 +386,7 @@ class ProductionController extends Controller
                                     'updated_at' => $now,
                                 ];
                             }
-                        } 
+                        }
                     } else if ($material->material->is_sparepart == false) {
                         $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)
                             ->where('product_id', $material->product_id)
@@ -406,7 +408,7 @@ class ProductionController extends Controller
                     }
                 }
             }
-            // Remove on hold if it's last milestone 
+            // Remove on hold if it's last milestone
             if ($req->boolean('last_milestone') == true) {
                 $production_ms_ids = $this->prodMs::where('production_id', $pm->production->id)->pluck('id');
 

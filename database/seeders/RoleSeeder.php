@@ -6,6 +6,8 @@ use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role as ModelsRole;
 
 class RoleSeeder extends Seeder
 {
@@ -32,11 +34,19 @@ class RoleSeeder extends Seeder
                 'name' => 'Driver',
             ],
         ];
+        $permissions = Permission::get();
 
-        for ($i=0; $i < count($roles); $i++) { 
+        for ($i = 0; $i < count($roles); $i++) {
             $roles[$i]['guard_name'] = 'web';
-            
-            Role::create($roles[$i]);
+
+            $role = ModelsRole::create($roles[$i]);
+
+            // Assign permissions for Super Admin
+            if ($i == 0) {
+                for ($j = 0; $j < count($permissions); $j++) {
+                    $role->givePermissionTo($permissions[$j]);
+                }
+            }
         }
     }
 }

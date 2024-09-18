@@ -21,7 +21,7 @@ class TicketController extends Controller
         'attachment' => 'nullable',
         'attachment.*' => 'file'
     ];
-    
+
     public function index() {
         return view('ticket.list');
     }
@@ -70,9 +70,11 @@ class TicketController extends Controller
                 'subject' => $record->subject,
                 'created_at' => Carbon::parse($record->created_at)->format('d M Y H:i'),
                 'status' => $record->is_active,
+                'can_edit' => hasPermission('ticket.edit'),
+                'can_delet' => hasPermission('ticket.delete')
             ];
         }
-                
+
         return response()->json($data);
     }
 

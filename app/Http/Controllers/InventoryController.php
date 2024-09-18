@@ -20,25 +20,28 @@ class InventoryController extends Controller
     protected $invCat;
     protected $production;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->prod = new Product;
         $this->prodChild = new ProductChild;
         $this->invCat = new InventoryCategory;
         $this->production = new Production;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('inventory_category.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->invCat;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%');
             });
         }
@@ -69,23 +72,28 @@ class InventoryController extends Controller
                 'id' => $record->id,
                 'name' => $record->name,
                 'status' => $record->is_active,
+                'can_edit' => hasPermission('inventory.category.edit'),
+                'can_delete' => hasPermission('inventory.category.delete'),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('inventory_category.form');
     }
 
-    public function edit(InventoryCategory $cat) {
+    public function edit(InventoryCategory $cat)
+    {
         return view('inventory_category.form', [
             'cat' => $cat,
         ]);
     }
 
-    public function upsert(Request $req) {
+    public function upsert(Request $req)
+    {
         // Validate request
         $req->validate([
             'category_id' => 'nullable',
@@ -128,13 +136,15 @@ class InventoryController extends Controller
         }
     }
 
-    public function delete(InventoryCategory $cat) {
+    public function delete(InventoryCategory $cat)
+    {
         $cat->delete();
 
         return back()->with('success', 'Category deleted');
     }
 
-    public function indexSummary() {
+    public function indexSummary()
+    {
         // Low stock
         $products = $this->prod->with('image')->where('type', Product::TYPE_PRODUCT)->get();
         $raw_materials = $this->prod->with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
@@ -143,7 +153,7 @@ class InventoryController extends Controller
         $inactive_product_count = $this->prod->where('is_active', false)->count();
         // Category
         $categories = $this->invCat->get();
-        for ($i=0; $i < count($categories); $i++) { 
+        for ($i = 0; $i < count($categories); $i++) {
             $category['label'][] = $categories[$i]->name;
             $category['data'][] = $this->prod->where('inventory_category_id', $categories[$i]->id)->count();
         }
@@ -152,13 +162,13 @@ class InventoryController extends Controller
         $warehouse_reserved_stock = 0;
         $production_stock = 0;
         $production_reserved_stock = 0;
-        for ($i=0; $i < count($products); $i++) { 
+        for ($i = 0; $i < count($products); $i++) {
             $warehouse_stock += $products[$i]->warehouseAvailableStock($products[$i]->id);
             $warehouse_reserved_stock += $products[$i]->warehouseReservedStock($products[$i]->id);
             $production_stock += $products[$i]->productionStock($products[$i]->id);
             $production_reserved_stock += $products[$i]->productionReservedStock($products[$i]->id);
         }
-        for ($i=0; $i < count($raw_materials); $i++) { 
+        for ($i = 0; $i < count($raw_materials); $i++) {
             $warehouse_stock += $raw_materials[$i]->warehouseAvailableStock($raw_materials[$i]->id);
             $warehouse_reserved_stock += $raw_materials[$i]->warehouseReservedStock($raw_materials[$i]->id);
             $production_stock += $raw_materials[$i]->productionStock($raw_materials[$i]->id);
@@ -177,7 +187,8 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function stockIn(ProductChild $product_child) {
+    public function stockIn(ProductChild $product_child)
+    {
         try {
             DB::beginTransaction();
 
@@ -192,7 +203,7 @@ class InventoryController extends Controller
             } else {
                 $product_child->location = $this->prodChild::LOCATION_WAREHOUSE;
                 $product_child->save();
-                
+
                 $this->production->where('product_child_id', $product_child->id)->update([
                     'status' => $this->production::STATUS_TRANSFERRED,
                 ]);
@@ -209,7 +220,8 @@ class InventoryController extends Controller
         }
     }
 
-    public function stockOut(ProductChild $product_child) {
+    public function stockOut(ProductChild $product_child)
+    {
         try {
             DB::beginTransaction();
 
@@ -227,7 +239,8 @@ class InventoryController extends Controller
         }
     }
 
-    public function transfer(Request $req, ProductChild $product_child) {
+    public function transfer(Request $req, ProductChild $product_child)
+    {
         try {
             DB::beginTransaction();
 
@@ -236,17 +249,17 @@ class InventoryController extends Controller
             $cat = InventoryCategory::where('id', $product->inventory_category_id)->first();
             $cloned_cat = $cat->replicate();
             $cloned_cat->save();
-            
+
             (new Branch)->assign(InventoryCategory::class, $cloned_cat->id, $req->branch);
             // Create supplier for branch to transfer
             if ($product->supplier_id != null) {
                 $supp = Supplier::where('id', $product->supplier_id)->first();
                 $cloned_supp = $supp->replicate();
                 $cloned_supp->save();
-                
+
                 (new Branch)->assign(Supplier::class, $cloned_supp->id, $req->branch);
                 // Create supplier image for branch to transfer
-                for ($i=0; $i < count($supp->pictures); $i++) { 
+                for ($i = 0; $i < count($supp->pictures); $i++) {
                     $cloned_product_image = $supp->pictures[$i]->replicate();
                     $cloned_product_image->object_id = $cloned_supp->id;
                     $cloned_product_image->save();

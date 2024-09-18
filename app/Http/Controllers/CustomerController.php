@@ -61,6 +61,8 @@ class CustomerController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
+                'can_edit' => hasPermission('customer.edit'),
+                'can_delete' => hasPermission('customer.delete'),
             ];
         }
 
@@ -73,7 +75,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer) {
         $customer->load('pictures', 'locations');
-        
+
         return view('customer.form', [
             'customer' => $customer
         ]);
@@ -120,7 +122,7 @@ class CustomerController extends Controller
                     'email' => $req->email,
                     'remark' => $req->remark,
                 ]);
-                
+
                 (new Branch)->assign(Customer::class, $customer->id);
             } else {
                 $customer = Customer::where('id', $req->customer_id)->first();
@@ -202,7 +204,7 @@ class CustomerController extends Controller
         // Validate only 1 billing address is default or 1 delivery address is default
         $bill_has_default = false;
         $deli_has_default = false;
-        for ($i=0; $i < count($req->address); $i++) { 
+        for ($i=0; $i < count($req->address); $i++) {
             if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING) {
                 if ($bill_has_default == true) {
                     return Response::json([
@@ -230,7 +232,7 @@ class CustomerController extends Controller
 
             $now = now();
             $data = [];
-            for ($i=0; $i < count($req->address); $i++) { 
+            for ($i=0; $i < count($req->address); $i++) {
                 if ($req->location_id != null && $req->location_id[$i] != null) {
                     CustomerLocation::where('id', $req->location_id[$i])->update([
                         'address' => $req->address[$i],

@@ -78,7 +78,7 @@ class TaskController extends Controller
         $data = [
             'for_role' => $for_role,
             'due_today' => Task::where('type', $role_id)->where('due_date', now()->format('Y-m-d'))->count(),
-            'to_do' => Task::where('type', $role_id)->where('status', Task::STATUS_TO_DO)->count(), 
+            'to_do' => Task::where('type', $role_id)->where('status', Task::STATUS_TO_DO)->count(),
             'doing' => Task::where('type', $role_id)->where('status', Task::STATUS_DOING)->count(),
             'in_review' => Task::where('type', $role_id)->where('status', Task::STATUS_IN_REVIEW)->count(),
             'completed' => Task::where('type', $role_id)->where('status', Task::STATUS_COMPLETED)->count(),
@@ -152,6 +152,8 @@ class TaskController extends Controller
                 'due_date' => $record->due_date,
                 'amount_to_collect' => $record->amount_to_collect == 0 ? null : $record->amount_to_collect,
                 'status' => $record->status,
+                'can_edit' => hasPermission('task.edit'),
+                'can_delete' => hasPermission('task.delete'),
             ];
         }
 
@@ -222,7 +224,7 @@ class TaskController extends Controller
                     'milestone_id' => Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->where('name', 'Payment Collection')->value('id'),
                 ]);
             }
-            
+
             // Create custom milestones
             if ($req->custom_milestone != null) {
                 foreach ($req->custom_milestone as $ms) {
@@ -253,12 +255,12 @@ class TaskController extends Controller
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) { 
+                for ($i=0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
                         $filename = generateRandomAlphabet(40) . '.' . $extension;
-    
+
                         $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (!$exists) {
                             break;
@@ -374,12 +376,12 @@ class TaskController extends Controller
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) { 
+                for ($i=0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
                         $filename = generateRandomAlphabet(40) . '.' . $extension;
-    
+
                         $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (!$exists) {
                             break;
@@ -488,12 +490,12 @@ class TaskController extends Controller
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) { 
+                for ($i=0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
                         $filename = generateRandomAlphabet(40) . '.' . $extension;
-    
+
                         $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (!$exists) {
                             break;
@@ -613,7 +615,7 @@ class TaskController extends Controller
                         'milestone_id' => $custom_ms->id,
                     ]);
                 }
-            } 
+            }
 
             if ($req->hasFile('attachment')) {
                 Attachment::where([
@@ -826,9 +828,9 @@ class TaskController extends Controller
             DB::beginTransaction();
 
             $task->delete();
-    
+
             $this->createLog($task, 'Task deleted');
-    
+
             DB::commit();
 
             return back()->with('success', 'Task deleted');

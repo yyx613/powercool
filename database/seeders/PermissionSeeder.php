@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -13,54 +12,82 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $roles = [
-            'logsheet.view',
-            'logsheet.create',
-            'logsheet.edit',
-            'quotation.view',
-            'quotation.create',
-            'quotation.edit',
-            'quotation.delete',
-            'consignment_note.view',
-            'consignment_note.create',
-            'consignment_note.edit',
-            'consignment_note.delete',
-            'consignment_note.attach_logsheet',
-            'warehouse.view',
-            'warehouse.check_in',
-            'warehouse.check_out',
-            'warehouse.generate_invoice',
-        ];
-        
-        $master_data_sub = [
-            'customers', 'delivery_special_prices', 'miscellaneous_special_prices', 'cargoes', 'lorries',
-            'lorry_services', 'drivers', 'helpers', 'measurements', 'sgd_to_myr_rate', 'warehouse_locations',
-            'warehouse_charges', 'warehouse_optional_services', 'others'
-        ];
-        for ($i=0; $i < count($master_data_sub); $i++) { 
-            $permissions = [
-                'master_data.'.$master_data_sub[$i].'.view',
-                'master_data.'.$master_data_sub[$i].'.create',
-                'master_data.'.$master_data_sub[$i].'.edit',
-                'master_data.'.$master_data_sub[$i].'.delete',
-            ];
-            if (in_array($master_data_sub[$i], ['delivery_special_prices', 'miscellaneous_special_prices'])) {
-                unset($permissions[2]);
-            } else if ($master_data_sub[$i] == 'others') {
-                unset($permissions[1], $permissions[3]);
-            }
-            $roles = array_merge($roles, $permissions);
-        }
-        $roles = array_merge($roles, [
-            'finance',
-            'invoice',
-            'activity_logs',
-            'user_management',
-            'role_management',
-        ]);
+        $permissions = [
+            'inventory.summary.view',
 
-        for ($i=0; $i < count($roles); $i++) { 
-            Permission::create(['name' => $roles[$i]]);
+            'inventory.category.view',
+            'inventory.category.create',
+            'inventory.category.edit',
+            'inventory.category.delete',
+
+            'inventory.product.view',
+            'inventory.product.create',
+            'inventory.product.edit',
+            'inventory.product.delete',
+
+            'inventory.raw_material.view',
+            'inventory.raw_material.create',
+            'inventory.raw_material.edit',
+            'inventory.raw_material.delete',
+
+            'sale.quotation.view',
+            'sale.quotation.create',
+            'sale.quotation.edit',
+            'sale.quotation.delete',
+            'sale.quotation.convert',
+
+            'sale.sale_order.view',
+            'sale.sale_order.create',
+            'sale.sale_order.edit',
+            'sale.sale_order.delete',
+            'sale.sale_order.convert',
+
+            'sale.delivery_order.view',
+            'sale.delivery_order.convert',
+
+            'sale.invoice.view',
+
+            'sale.target.view',
+            'sale.target.create',
+            'sale.target.edit',
+
+            'task.view',
+            'task.create',
+            'task.edit',
+            'task.delete',
+
+            'production.view',
+            'production.create',
+            'production.edit',
+            'production.delete',
+
+            'ticket.view',
+            'ticket.create',
+            'ticket.edit',
+            'ticket.delete',
+
+            'customer.view',
+            'customer.create',
+            'customer.edit',
+            'customer.delete',
+
+            'supplier.view',
+            'supplier.create',
+            'supplier.edit',
+            'supplier.delete',
+
+            'setting.view'
+        ];
+        $now = now();
+
+        for ($i = 0; $i < count($permissions); $i++) {
+            $permissions_to_insert[] = [
+                'name' => $permissions[$i],
+                'guard_name' => 'web',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+        Permission::insert($permissions_to_insert);
     }
 }

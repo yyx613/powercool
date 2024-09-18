@@ -64,6 +64,8 @@ class SupplierController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
+                'can_edit' => hasPermission('supplier.edit'),
+                'can_delete' => hasPermission('supplier.delete'),
             ];
         }
 
@@ -76,7 +78,7 @@ class SupplierController extends Controller
 
     public function edit(Supplier $supplier) {
         $supplier->load('pictures');
-        
+
         return view('supplier.form', [
             'supplier' => $supplier
         ]);

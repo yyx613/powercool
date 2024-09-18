@@ -9,6 +9,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Permission;
 
 class UserSeeder extends Seeder
 {
@@ -27,9 +28,9 @@ class UserSeeder extends Seeder
 
         if (config('app.env') == 'local') {
             // Create 3 drivers
-            for ($i=0; $i < 3; $i++) { 
+            for ($i = 0; $i < 3; $i++) {
                 $user = User::create([
-                    'name' => 'Driver'. ($i + 1),
+                    'name' => 'Driver' . ($i + 1),
                     'email' => 'dr' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
                     'sku' => (new User)->generateSku(),
@@ -47,9 +48,9 @@ class UserSeeder extends Seeder
                 ]);
             }
             // Create 3 sales
-            for ($i=0; $i < 3; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 $user = User::create([
-                    'name' => 'Sale'. ($i + 1),
+                    'name' => 'Sale' . ($i + 1),
                     'email' => 'sa' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
                     'sku' => (new User)->generateSku(),
@@ -66,10 +67,10 @@ class UserSeeder extends Seeder
                     'location' => fake()->randomElement([Branch::LOCATION_KL, Branch::LOCATION_PENANG]),
                 ]);
             }
-            for ($i=0; $i < 3; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 // Create 3 technician
                 $user = User::create([
-                    'name' => 'Technician'. ($i + 1),
+                    'name' => 'Technician' . ($i + 1),
                     'email' => 'te' . ($i + 1) . '@gmail.com',
                     'password' => Hash::make('password'),
                     'sku' => (new User)->generateSku(),
