@@ -568,7 +568,9 @@ class SaleController extends Controller
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
         }
-        $req->validate($rules);
+        $req->validate($rules, [], [
+            'report_type' => 'type'
+        ]);
 
         try {
             DB::beginTransaction();

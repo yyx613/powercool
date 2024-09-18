@@ -341,7 +341,6 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['quotation.form_step.quotation_details', 'quotation.convert', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
             $report_types = [
-                Report::TYPE_EITHER => 'Either',
                 Report::TYPE_NORMAL => 'Normal',
                 Report::TYPE_PROJECT => 'Project',
                 Report::TYPE_FRANCHISE => 'Franchise',

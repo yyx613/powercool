@@ -42,9 +42,9 @@
                     <x-app.message.error id="status_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="report_type" class="mb-1">Report Type <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="report_type" class="mb-1">Type <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
-                        <option value="">Select a report type</option>
+                        <option value="">Select a type</option>
                         @foreach ($report_types as $key => $val)
                             <option value="{{ $key }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $key)>{{ $val }}</option>
                         @endforeach

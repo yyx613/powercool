@@ -11,7 +11,6 @@ class Report extends Model
 {
     use HasFactory, SoftDeletes;
     
-    const TYPE_EITHER = 1;
     const TYPE_NORMAL = 2;
     const TYPE_PROJECT = 3;
     const TYPE_FRANCHISE = 4;
