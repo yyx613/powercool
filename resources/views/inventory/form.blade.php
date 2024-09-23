@@ -75,20 +75,20 @@
                         <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="status" id="status">
                             <option value="">Select a Active/Inactive</option>
-                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : null) == '1')>Active</option>
-                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : null) === '0')>Inactive</option>
+                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : null) == 1)>Active</option>
+                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : null) === 0)>Inactive</option>
                         </x-app.input.select>
                         <x-app.message.error id="status_err"/>
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label class="mb-1">Image <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label class="mb-1">Image</x-app.input.label>
                         <x-app.input.file id="image[]" :hasError="$errors->has('image')"/>
                         <x-app.message.error id="image_err"/>
                         <div class="uploaded-file-preview-container" data-id="image">
                             <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 hidden" id="uploaded-file-template">
                                 <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                             </div>
-                            @if (isset($prod))
+                            @if (isset($prod) && $prod->image != null)
                                 <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
                                     <a href="{{ $prod->image->url }}" target="_blank" class="text-blue-700 text-xs">{{ $prod->image->src }}</a>
                                 </div>

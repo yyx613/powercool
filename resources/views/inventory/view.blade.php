@@ -64,9 +64,11 @@
 
     <!-- Product -->
     <div class="mb-6 flex items-center gap-x-4">
-        <div class="h-12 w-12 rounded overflow-hidden">
-            <img src="{{ $prod->image->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
-        </div>
+        @if ($prod->image != null)
+            <div class="h-12 w-12 rounded overflow-hidden">
+                <img src="{{ $prod->image->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
+            </div>
+        @endif
         <div>
             <h1 class="text-lg font-semibold">{{ $prod->model_name }}</h1>
             <span class="text-xs font-semibold text-slate-400 leading-none">{{ $prod->sku }}</span>
@@ -109,7 +111,7 @@
 @push('scripts')
     <script>
         PRODUCT = @json($prod ?? null);
-            
+
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -126,21 +128,21 @@
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 1,
                     render: function(data, type, row) {
                         return `<span class="capitalize">${data}</span>`
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 2,
                     orderable: false,
@@ -151,7 +153,7 @@
                         return data ?? '-'
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 3,
                     orderable: false,
@@ -169,7 +171,7 @@
                         return data ?? '-'
                     }
                 },
-                { 
+                {
                     "width": "5%",
                     "targets": 4,
                     orderable: false,
@@ -204,7 +206,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('product.view_get_data') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
@@ -223,7 +225,7 @@
             $('#stock-in-modal #serial-no').text(serialNo)
             $('#stock-in-modal #order-id').text(orderId ?? '-')
             $('#stock-in-modal').addClass('show-modal')
-            
+
             let url = "{{ config('app.url') }}"
             url = `${url}/inventory-category/stock-in/${productChildId}`
             $('#stock-in-modal #yes-btn').attr('href', url)

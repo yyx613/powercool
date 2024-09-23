@@ -25,11 +25,11 @@ class ProductController extends Controller
 
     public function __construct()
     {
-        $this->prod = new Product;
-        $this->prodChild = new ProductChild;
-        $this->invCat = new InventoryCategory;
-        $this->production = new Production;
-        $this->productionMsMaterial = new ProductionMilestoneMaterial;
+        $this->prod = new Product();
+        $this->prodChild = new ProductChild();
+        $this->invCat = new InventoryCategory();
+        $this->production = new Production();
+        $this->productionMsMaterial = new ProductionMilestoneMaterial();
     }
 
     public function index()
@@ -95,7 +95,7 @@ class ProductController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'image' => $record->image,
+                'image' => $record->image ?? null,
                 'model_name' => $record->model_name,
                 'category' => $record->category->name,
                 'qty' => $record->qty,
@@ -216,7 +216,7 @@ class ProductController extends Controller
             'dimension_height' => 'nullable',
             'status' => 'required',
             'is_sparepart' => 'required',
-            'image' => 'required',
+            'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
         ];
         if ($req->product_id != null) {
@@ -254,7 +254,7 @@ class ProductController extends Controller
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
                 ]);
 
-                (new Branch)->assign(Product::class, $prod->id);
+                (new Branch())->assign(Product::class, $prod->id);
             } else {
                 $prod = $this->prod->where('id', $req->product_id)->first();
 

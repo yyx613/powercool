@@ -105,7 +105,10 @@
                     return `
                         <div class="flex items-center gap-x-2">
                             <div class="h-10 w-10">
-                                <img src="${row.image.url}" class="h-full w-full object-contain" />
+                                ${
+                                    row.image != null ? `
+                                        <img src="${ row.image.url }" class="h-full w-full object-contain" />` : ''
+                                }
                             </div>
                             <span>${data}</span>
                         </div>
@@ -154,9 +157,9 @@
                 orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
-                        case '0':
+                        case 0:
                             return 'Inactive'
-                        case '1':
+                        case 1:
                             return 'Active'
                     }
                 }
