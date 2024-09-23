@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('Auth.login');
     }
 
-    public function login(Request $req) {
+    public function login(Request $req)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'email' => 'required|email|exists:users',
@@ -26,7 +28,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-        
+
         $user = User::withTrashed()->where('email', $req->email)->first();
 
         // Check user is deleted
@@ -47,13 +49,15 @@ class AuthController extends Controller
         return redirect(route('ticket.index'))->with('info', 'Welcome Back!');
     }
 
-    public function logout() {
+    public function logout()
+    {
         Session::flush();
 
         return redirect('/login');
     }
 
-    public function viewProfile() {
+    public function viewProfile()
+    {
         return view('Auth.profile');
     }
 }

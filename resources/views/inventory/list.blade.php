@@ -154,9 +154,9 @@
                 orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
-                        case 0:
+                        case '0':
                             return 'Inactive'
-                        case 1:
+                        case '1':
                             return 'Active'
                     }
                 }

@@ -75,8 +75,8 @@
                         <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="status" id="status">
                             <option value="">Select a Active/Inactive</option>
-                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : null) == 1)>Active</option>
-                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : null) === 0)>Inactive</option>
+                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : null) == '1')>Active</option>
+                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : null) === '0')>Inactive</option>
                         </x-app.input.select>
                         <x-app.message.error id="status_err"/>
                     </div>
@@ -110,8 +110,8 @@
                             <x-app.input.label id="is_sparepart" class="mb-1">Is Spare part <span class="text-sm text-red-500">*</span></x-app.input.label>
                             <x-app.input.select name="is_sparepart" id="is_sparepart">
                                 <option value="">Select a Yes/No</option>
-                                <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == 1)>Yes</option>
-                                <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) === 0)>No</option>
+                                <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>Yes</option>
+                                <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>No</option>
                             </x-app.input.select>
                             <x-app.message.error id="is_sparepart_err"/>
                         </div>
@@ -176,10 +176,10 @@
         let files = $(this).prop('files');
 
         $('.uploaded-file-preview-container[data-id="image"]').find('.old-preview').remove()
-    
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            
+
             let clone = $('#uploaded-file-template')[0].cloneNode(true);
             $(clone).find('a').text(file.name)
             $(clone).find('a').attr('href', URL.createObjectURL(file))
@@ -199,7 +199,7 @@
         if (val != '' && e.key.toLowerCase() == 'enter') {
             addSerialNo(val)
 
-            $(this).val(null) // Reset 
+            $(this).val(null) // Reset
         }
     })
     $('body').on('click', '.delete-serial-no-btns', function() {
@@ -263,7 +263,7 @@
                         $('#form #submit-btn').text('Save and Update')
                         $('#form #submit-btn').removeClass('bg-green-400')
                         $('#form #submit-btn').addClass('bg-yellow-400 shadow')
-                        
+
                         FORM_CAN_SUBMIT = true
                     }, 2000);
                 }, 300);
@@ -320,7 +320,7 @@
             data: {
                 'product_id': PRODUCT != null ? PRODUCT.id : null,
                 'order_idx': orderId,
-                'serial_no': serialNo 
+                'serial_no': serialNo
             },
             success: function(res) {
                 if (res.product_children_ids.length > 0) {
@@ -338,7 +338,7 @@
                         $('#serial-no-form #submit-btn').text('Save and Update')
                         $('#serial-no-form #submit-btn').removeClass('bg-green-400')
                         $('#serial-no-form #submit-btn').addClass('bg-yellow-400 shadow')
-                        
+
                         SERIAL_NO_FORM_CAN_SUBMIT = true
                     }, 2000);
                 }, 300);
