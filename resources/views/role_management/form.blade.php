@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ 'Edit Role - ' . $role->name }}</x-app.page-title>
+        <x-app.page-title url="{{ route('role_management.index') }}">{{ 'Edit Role - ' . $role->name }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="p-6 rounded-md shadow bg-white">

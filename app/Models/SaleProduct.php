@@ -25,6 +25,20 @@ class SaleProduct extends Model
         return $this->qty - DeliveryOrderProduct::where('sale_product_id', $this->id)->sum('qty');
     }
 
+    public function discountAmount() {
+        if ($this->promotion_id != null) {
+            $promo = Promotion::where('id', $this->promotion_id)->first();
+
+            if ($promo->type == 'val') {
+                return $promo->amount;
+            } else if ($promo->type == 'perc') {
+                return ($this->qty * $this->amount) * $promo->amount / 100;
+            }
+        }
+
+        return null;
+    }
+
     public function attachedToDO(): bool {
         return DeliveryOrderProduct::where('sale_product_id', $this->id)->exists();
     }

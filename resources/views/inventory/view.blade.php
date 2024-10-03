@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title>View {{ $is_product ? 'Product' : 'Raw Material' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('product.index') }}">View {{ $is_product ? 'Product' : 'Raw Material' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
@@ -63,15 +63,40 @@
     </div>
 
     <!-- Product -->
-    <div class="mb-6 flex items-center gap-x-4">
+    <div class="mb-6 flex gap-x-4">
         @if ($prod->image != null)
             <div class="h-12 w-12 rounded overflow-hidden">
                 <img src="{{ $prod->image->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
             </div>
         @endif
-        <div>
-            <h1 class="text-lg font-semibold">{{ $prod->model_name }}</h1>
-            <span class="text-xs font-semibold text-slate-400 leading-none">{{ $prod->sku }}</span>
+        <div class="flex flex-col flex-1">
+            <div class="flex items-center mb-2 gap-x-4">
+                <h1 class="text-lg font-semibold leading-none">{{ $prod->model_name }}</h1>
+                <span class="text-xs font-semibold py-1 px-3 rounded-full {{ $prod->is_active ? 'bg-green-300' : 'bg-red-300' }}">{{ $prod->is_active ? 'Active' : 'Inactive' }}</span>
+            </div>
+            <div class="flex gap-x-4 mb-1">
+                <span class="text-xs font-semibold text-slate-500">Code: {{ $prod->sku }}</span>
+                <span class="text-xs font-semibold text-slate-500">Category: {{ $prod->category->name }}</span>
+            </div>
+            @if ($prod->length != null || $prod->width != null || $prod->height != null || $prod->weight != null)
+                <div class="flex gap-x-4 mb-1">
+                    @if ($prod->length != null)
+                        <span class="text-xs font-semibold text-slate-500">Length: {{ $prod->length }} CM</span>
+                    @endif
+                    @if ($prod->width != null)
+                        <span class="text-xs font-semibold text-slate-500">Width: {{ $prod->width }} CM</span>
+                    @endif
+                    @if ($prod->height != null)
+                        <span class="text-xs font-semibold text-slate-500">Height: {{ $prod->height }} CM</span>
+                    @endif
+                    @if ($prod->weight != null)
+                        <span class="text-xs font-semibold text-slate-500">Weight: {{ $prod->weight }} KG</span>
+                    @endif
+                </div>
+            @endif
+            <div class="border-t mt-2.5 pt-2.5">
+                <span class="text-xs text-slate-500">{{ $prod->model_desc }}</span>
+            </div>
         </div>
     </div>
     @if ($is_product || $prod->is_sparepart == true)
@@ -95,6 +120,7 @@
                         <th>Location</th>
                         <th>Assigned Order ID</th>
                         <th>Status</th>
+                        <th>Done By</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -125,6 +151,7 @@
                 { data: 'location' },
                 { data: 'order_id' },
                 { data: 'status' },
+                { data: 'done_by' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -154,7 +181,7 @@
                     }
                 },
                 {
-                    "width": "10%",
+                    "width": "5%",
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
@@ -174,6 +201,15 @@
                 {
                     "width": "5%",
                     "targets": 4,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        if (data != null) return `<span class="text-sm font-semibold">${data.name}</span><br><span class="text-xs">${row.done_at}</span>`
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 5,
                     orderable: false,
                     render: function (data, type, row) {
                         return  `<div class="flex items-center justify-end gap-x-2 px-2">

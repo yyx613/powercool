@@ -38,6 +38,14 @@ class ProductChild extends Model
         return $this->hasOne(ProductionMilestoneMaterial::class, 'product_child_id');
     }
 
+    public function stockOutBy() {
+        return $this->belongsTo(User::class, 'stock_out_by');
+    }
+
+    public function transferredBy() {
+        return $this->belongsTo(User::class, 'transfer_by');
+    }
+
     public function assignedTo() {
         $sp_child = $this->saleProductChild()->orderBy('id', 'desc')->first();
 

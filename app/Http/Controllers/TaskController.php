@@ -150,7 +150,7 @@ class TaskController extends Controller
                 'sku' => $record->sku,
                 'name' => $record->name,
                 'due_date' => $record->due_date,
-                'amount_to_collect' => $record->amount_to_collect == 0 ? null : $record->amount_to_collect,
+                'amount_to_collect' => $record->amount_to_collect == 0 ? null : number_format($record->amount_to_collect, 2),
                 'status' => $record->status,
                 'can_edit' => hasPermission('task.edit'),
                 'can_delete' => hasPermission('task.delete'),

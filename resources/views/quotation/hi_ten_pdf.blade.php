@@ -87,8 +87,9 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Item Code</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 45%;">Description</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">U/Price (RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Total (RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">U/Price<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Discount<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Total<br>(RM)</td>
         </tr>
         @php
             $total = 0;
@@ -100,10 +101,11 @@
                 <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->qty * $prod->unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>
             </tr>
             @php
-                $total += $prod->qty * $prod->unit_price;
+                $total += ($prod->qty * $prod->unit_price) - $prod->discountAmount();
             @endphp
         @endforeach
         <!-- Remark -->

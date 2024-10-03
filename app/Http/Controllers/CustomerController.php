@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\ObjectCreditTerm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,7 @@ class CustomerController extends Controller
 
             $records = $records->where(function($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
                     ->orWhere('company_name', 'like', '%' . $keyword . '%');
             });
@@ -34,9 +36,10 @@ class CustomerController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'name',
-                1 => 'phone',
-                2 => 'company_name',
+                0 => 'sku',
+                1 => 'name',
+                2 => 'phone',
+                3 => 'company_name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -58,6 +61,7 @@ class CustomerController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
+                'code' => $record->sku,
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
@@ -91,17 +95,24 @@ class CustomerController extends Controller
         // Validate request
         $req->validate([
             'customer_id' => 'nullable',
+            'code' => 'required|max:250',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
+            'mobile_number' => 'nullable|max:250',
             'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
-            'under_warranty' => 'required',
+            'currency' => 'required',
+            'tin_number' => 'nullable|max:250',
             'status' => 'required',
             'picture' => 'nullable',
-            'picture.*' => 'file|extensions:jpg,png,jpeg'
+            'picture.*' => 'file|extensions:jpg,png,jpeg',
+            'credit_term' => 'nullable',
+            'sale_agent' => 'nullable',
+            'area' => 'nullable',
+            'debtor_type' => 'nullable',
         ], [], [
             'picture.*' => 'picture'
         ]);
@@ -111,9 +122,11 @@ class CustomerController extends Controller
 
             if ($req->customer_id == null) {
                 $customer = Customer::create([
+                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'under_warranty' => $req->boolean('under_warranty'),
+                    'mobile_number' => $req->mobile_number,
+                    'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
@@ -121,15 +134,21 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
+                    'tin_number' => $req->tin_number,
+                    'sale_agent' => $req->sale_agent,
+                    'area_id' => $req->area,
+                    'debtor_type_id' => $req->debtor_type,
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id);
             } else {
                 $customer = Customer::where('id', $req->customer_id)->first();
                 $customer->update([
+                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'under_warranty' => $req->boolean('under_warranty'),
+                    'mobile_number' => $req->mobile_number,
+                    'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
@@ -137,6 +156,10 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
+                    'tin_number' => $req->tin_number,
+                    'sale_agent' => $req->sale_agent,
+                    'area_id' => $req->area,
+                    'debtor_type_id' => $req->debtor_type,
                 ]);
             }
 
@@ -156,6 +179,23 @@ class CustomerController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            }
+
+            // Credit Terms
+            if ($req->credit_term != null) {
+                ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->delete();
+
+                $terms = [];
+                for ($i=0; $i < count($req->credit_term); $i++) { 
+                    $terms[] = [
+                        'object_type' => Customer::class,
+                        'object_id' => $customer->id,
+                        'credit_term_id' => $req->credit_term[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                ObjectCreditTerm::insert($terms);
             }
 
             DB::commit();

@@ -148,23 +148,6 @@ class Product extends Model
         return $count;
     }
 
-    public function generateSku(): string
-    {
-        $sku = null;
-
-        while (true) {
-            $sku = 'P' . now()->format('ym') . generateRandomAlphabet();
-
-            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
-
-            if (!$exists) {
-                break;
-            }
-        }
-
-        return $sku;
-    }
-
     public function isLowStock(): bool
     {
         if ($this->low_stock_threshold != null && $this->qty <= $this->low_stock_threshold) {

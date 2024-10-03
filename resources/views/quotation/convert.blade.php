@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title>Convert Quotation to Sale Order</x-app.page-title>
+        <x-app.page-title url="{{ route('quotation.index') }}">Convert Quotation to Sale Order</x-app.page-title>
     </div>
     <div class="bg-white p-4 border rounded-md flex gap-x-14">
         <!-- Steps -->
@@ -97,8 +97,8 @@
                             <div class="flex-1">
                                 <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')" class="w-1/2">
                                     <option value="">Select a report type</option>
-                                    @foreach ($report_types as $key => $val)
-                                        <option value="{{ $key }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $key)>{{ $val }}</option>
+                                    @foreach ($report_types as $type)
+                                        <option value="{{ $type->id }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $type->id)>{{ $type->name }}</option>
                                     @endforeach
                                 </x-app.input.select>
                             </div>

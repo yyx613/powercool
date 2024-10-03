@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($warranty) ? 'Edit Warranty' : 'Create Warranty' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('warranty_period.index') }}">{{ isset($warranty) ? 'Edit Warranty' : 'Create Warranty' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($warranty) ? route('warranty_period.update', ['warranty' => $warranty]) : route('warranty_period.store') }}" method="POST" enctype="multipart/form-data">

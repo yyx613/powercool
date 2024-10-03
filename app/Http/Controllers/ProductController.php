@@ -9,10 +9,14 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -55,7 +59,8 @@ class ProductController extends Controller
                 $q->where('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('model_name', 'like', '%' . $keyword . '%')
                     ->orWhere('model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('price', 'like', '%' . $keyword . '%')
+                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
+                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
                         $qq->where('name', 'like', '%' . $keyword . '%');
                     });
@@ -68,7 +73,6 @@ class ProductController extends Controller
                 1 => 'model_name',
                 2 => 'category',
                 3 => 'qty',
-                4 => 'price',
             ];
             foreach ($req->order as $order) {
                 if ($order['column'] == 2) {
@@ -99,7 +103,8 @@ class ProductController extends Controller
                 'model_name' => $record->model_name,
                 'category' => $record->category->name,
                 'qty' => $record->qty,
-                'price' => $record->price,
+                'min_price' => number_format($record->min_price, 2),
+                'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
                 'status' => $record->is_active,
                 'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
@@ -110,9 +115,15 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function create()
+    public function create(Request $req)
     {
-        return view('inventory.form');
+        if ($req->has('id')) {
+            $dup_prod = Product::where('id', $req->id)->first();
+        }
+
+        return view('inventory.form', [
+            'dup_prod' => $dup_prod ?? null
+        ]);
     }
 
     public function edit(Product $product)
@@ -192,6 +203,8 @@ class ProductController extends Controller
                 'location' => $record->location,
                 'order_id' => $record->assignedTo(),
                 'status' => $record->status,
+                'done_by' => $record->status == ProductChild::STATUS_STOCK_OUT ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
+                'done_at' => $record->status == ProductChild::STATUS_STOCK_OUT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
                 'progress' => $record->location != 'factory' ? null : $production->getProgress($production),
             ];
         }
@@ -203,13 +216,16 @@ class ProductController extends Controller
     {
         $rules = [
             'product_id' => 'nullable',
+            'model_code' => 'required|max:250',
             'model_name' => 'required|max:250',
             'model_desc' => 'required|max:250',
+            'barcode' => 'nullable|max:250',
             'category_id' => 'required',
             'supplier_id' => 'required',
             'qty' => 'nullable',
             'low_stock_threshold' => 'nullable',
-            'price' => 'required',
+            'min_price' => 'required',
+            'max_price' => 'required|gt:min_price',
             'weight' => 'nullable',
             'dimension_length' => 'nullable',
             'dimension_width' => 'nullable',
@@ -231,21 +247,39 @@ class ProductController extends Controller
             'model_desc' => 'model description',
             'category_id' => 'category'
         ]);
+        // Validate model code is unique in the branch
+        $current_branch = Auth::user()->branch;
+
+        $branch_product = Product::where(DB::raw('BINARY `sku`'), $req->model_code)
+            ->whereHas('branch', function ($q) use ($current_branch) {
+                $q->where('location', isSuperAdmin() ? Session::get('as_branch') : $current_branch->location);
+            })
+            ->first();
+
+        if ($branch_product != null && $req->product_id != null && $branch_product->id != $req->product_id && $branch_product->sku == $req->model_code) {
+            return Response::json([
+                'errors' => [
+                    'model_code' => "The model code has already taken"
+                ],
+            ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         try {
             DB::beginTransaction();
 
             if ($req->product_id == null) {
                 $prod = $this->prod::create([
-                    'sku' => $this->prod->generateSku(),
+                    'sku' => $req->model_code,
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
+                    'barcode' => $req->barcode,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
                     'low_stock_threshold' => $req->low_stock_threshold,
-                    'price' => $req->price,
+                    'min_price' => $req->min_price,
+                    'max_price' => $req->max_price,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,
@@ -259,13 +293,16 @@ class ProductController extends Controller
                 $prod = $this->prod->where('id', $req->product_id)->first();
 
                 $prod->update([
+                    'sku' => $req->model_code,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
+                    'barcode' => $req->barcode,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
                     'low_stock_threshold' => $req->low_stock_threshold,
-                    'price' => $req->price,
+                    'min_price' => $req->min_price,
+                    'max_price' => $req->max_price,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,
@@ -314,7 +351,7 @@ class ProductController extends Controller
         $rules = [
             'product_id' => 'required',
             'order_idx' => 'nullable',
-            'serial_no' => 'required',
+            'serial_no' => 'nullable',
             'serial_no.*' => 'required|max:250',
         ];
         // Validate request
@@ -323,46 +360,49 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->order_idx != null) {
-                $order_idx = array_filter($req->order_idx, function ($val) {
-                    return $val != null;
-                });
-                $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $order_idx ?? [])->delete();
-            }
-
-            $now = now();
-            $data = [];
-            for ($i = 0; $i < count($req->serial_no); $i++) {
-                if ($req->order_idx != null && $req->order_idx[$i] != null) {
-                    $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
-
-                    $pc->update([
-                        'sku' => $req->serial_no[$i],
-                    ]);
-                } else {
-                    $data[] = [
-                        'product_id' => $req->product_id,
-                        'sku' => $req->serial_no[$i],
-                        'location' => $this->prodChild::LOCATION_WAREHOUSE,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
+            if ($req->serial_no != null) {
+                if ($req->order_idx != null) {
+                    $order_idx = array_filter($req->order_idx, function ($val) {
+                        return $val != null;
+                    });
+                    $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $order_idx ?? [])->delete();
                 }
-            }
-            if (count($data) > 0) {
-                $this->prodChild->insert($data);
+    
+                $now = now();
+                $data = [];
+                for ($i = 0; $i < count($req->serial_no); $i++) {
+                    if ($req->order_idx != null && $req->order_idx[$i] != null) {
+                        $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
+    
+                        $pc->update([
+                            'sku' => $req->serial_no[$i],
+                        ]);
+                    } else {
+                        $data[] = [
+                            'product_id' => $req->product_id,
+                            'sku' => $req->serial_no[$i],
+                            'location' => $this->prodChild::LOCATION_WAREHOUSE,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    }
+                }
+                if (count($data) > 0) {
+                    $this->prodChild->insert($data);
+                }
+
+                $pc_ids = $this->prodChild::where('product_id', $req->product_id)
+                    ->orderBy('id', 'desc')
+                    ->pluck('id')
+                    ->toArray();
             }
 
-            $pc_ids = $this->prodChild::where('product_id', $req->product_id)
-                ->orderBy('id', 'desc')
-                ->pluck('id')
-                ->toArray();
 
             DB::commit();
 
             return Response::json([
                 'result' => true,
-                'product_children_ids' => $pc_ids
+                'product_children_ids' => $pc_ids ?? []
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();

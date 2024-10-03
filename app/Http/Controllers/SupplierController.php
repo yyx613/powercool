@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Supplier;
 use App\Models\CustomerLocation;
+use App\Models\ObjectCreditTerm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,6 +31,7 @@ class SupplierController extends Controller
 
             $records = $records->where(function($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
                     ->orWhere('company_name', 'like', '%' . $keyword . '%');
             });
@@ -37,9 +39,10 @@ class SupplierController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'name',
-                1 => 'phone',
-                2 => 'company_name',
+                0 => 'sku',
+                1 => 'name',
+                2 => 'phone',
+                3 => 'company_name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -61,6 +64,7 @@ class SupplierController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
+                'sku' => $record->sku,
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
@@ -93,18 +97,26 @@ class SupplierController extends Controller
     public function upsert(Request $req, Supplier $supplier) {
         // Validate request
         $req->validate([
+            'code' => 'required|max:250',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
+            'mobile_number' => 'nullable|max:250',
             'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
-            'under_warranty' => 'required',
+            'currency' => 'required',
+            'tin_number' => 'nullable|max:250',
             'status' => 'required',
+            'type' => 'nullable',
             'picture' => 'nullable',
             'picture.*' => 'file|extensions:jpg,png,jpeg',
             'location' => 'required',
+            'credit_term' => 'nullable',
+            'sale_agent' => 'nullable',
+            'area' => 'nullable',
+            'debtor_type' => 'nullable',
         ], [], [
             'picture.*' => 'picture'
         ]);
@@ -114,33 +126,47 @@ class SupplierController extends Controller
 
             if ($supplier->id == null) {
                 $supplier = Supplier::create([
+                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'under_warranty' => $req->boolean('under_warranty'),
+                    'mobile_number' => $req->mobile_number,
+                    'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
+                    'type' => $req->type,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
+                    'tin_number' => $req->tin_number,
                     'location' => $req->location,
+                    'sale_agent' => $req->sale_agent,
+                    'area_id' => $req->area,
+                    'debtor_type_id' => $req->debtor_type,
                 ]);
 
                 (new Branch)->assign(Supplier::class, $supplier->id);
             } else {
                 $supplier->update([
+                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'under_warranty' => $req->boolean('under_warranty'),
+                    'mobile_number' => $req->mobile_number,
+                    'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
+                    'type' => $req->type,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
+                    'tin_number' => $req->tin_number,
                     'location' => $req->location,
+                    'sale_agent' => $req->sale_agent,
+                    'area_id' => $req->area,
+                    'debtor_type_id' => $req->debtor_type,
                 ]);
             }
 
@@ -160,6 +186,23 @@ class SupplierController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            }
+
+            // Credit Terms
+            if ($req->credit_term != null) {
+                ObjectCreditTerm::where('object_type', Supplier::class)->where('object_id', $supplier->id)->delete();
+
+                $terms = [];
+                for ($i=0; $i < count($req->credit_term); $i++) { 
+                    $terms[] = [
+                        'object_type' => Supplier::class,
+                        'object_id' => $supplier->id,
+                        'credit_term_id' => $req->credit_term[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                ObjectCreditTerm::insert($terms);
             }
 
             DB::commit();

@@ -95,9 +95,9 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">FOC Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">UOM</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price (RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Disc</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Total (RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Discount<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Total<br>(RM)</td>
         </tr>
         @php
             $total = 0;
@@ -111,11 +111,11 @@
                 <td style="font-size: 14px; text-align: center;"></td>
                 <td style="font-size: 14px; text-align: right;">UNIT</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;"></td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->qty * $prod->unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>
             </tr>
             @php
-                $total += $prod->qty * $prod->unit_price;
+                $total += ($prod->qty * $prod->unit_price) - $prod->discountAmount();
             @endphp
         @endforeach
         <!-- Remark -->

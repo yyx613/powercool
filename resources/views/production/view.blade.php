@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>View Production</x-app.page-title>
+        <x-app.page-title url="{{ route('production.index') }}">View Production</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow flex">

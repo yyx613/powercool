@@ -14,6 +14,9 @@ class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const TYPE_LOCAL = 1;
+    const TYPE_OVERSEA = 2;
+
     protected $guarded = [];
     protected $casts = [
         'under_warranty' => 'boolean',
@@ -31,5 +34,9 @@ class Supplier extends Model
 
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
+    }
+
+    public function creditTerms() {
+        return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
     }
 }

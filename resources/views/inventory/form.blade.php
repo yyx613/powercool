@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>
+    <div class="mb-6">
+        <x-app.page-title url="{{ route('product.index') }}">
             {{ $is_product ? (isset($prod) ? 'Edit Product - ' . $prod->sku : 'Create Product') : (isset($prod) ? 'Edit Raw Material - ' . $prod->sku : 'Create Raw Material') }}
         </x-app.page-title>
     </div>
@@ -12,21 +12,31 @@
             <div>
                 <div class="grid grid-cols-3 gap-8 w-full">
                     <div class="flex flex-col">
+                        <x-app.input.label id="model_code" class="mb-1">Model Code <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.input name="model_code" id="model_code" value="{{ isset($prod) ? $prod->sku : null }}" />
+                        <x-app.message.error id="model_code_err"/>
+                    </div>
+                    <div class="flex flex-col">
                         <x-app.input.label id="model_name" class="mb-1">Model Name <span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.input name="model_name" id="model_name" value="{{ isset($prod) ? $prod->model_name : null }}" />
+                        <x-app.input.input name="model_name" id="model_name" value="{{ isset($prod) ? $prod->model_name : ($dup_prod != null ? $dup_prod->model_name : null) }}" />
                         <x-app.message.error id="model_name_err"/>
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="model_desc" class="mb-1">Model Description <span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.input name="model_desc" id="model_desc" value="{{ isset($prod) ? $prod->model_desc : null }}" />
+                        <x-app.input.input name="model_desc" id="model_desc" value="{{ isset($prod) ? $prod->model_desc : ($dup_prod != null ? $dup_prod->model_desc : null) }}" />
                         <x-app.message.error id="model_desc_err"/>
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="barcode" class="mb-1">Barcode</x-app.input.label>
+                        <x-app.input.input name="barcode" id="barcode" value="{{ isset($prod) ? $prod->barcode : ($dup_prod != null ? $dup_prod->barcode : null) }}" />
+                        <x-app.message.error id="barcode_err"/>
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="category_id" class="mb-1">Category <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="category_id" id="category_id">
                             <option value="">Select a category</option>
                             @foreach ($inv_cats as $cat)
-                                <option value="{{ $cat->id }}" @selected(old('category_id', isset($prod) ? $prod->inventory_category_id : null) == $cat->id)>{{ $cat->name }}</option>
+                                <option value="{{ $cat->id }}" @selected(old('category_id', isset($prod) ? $prod->inventory_category_id : ($dup_prod != null ? $dup_prod->inventory_category_id : null)) == $cat->id)>{{ $cat->name }}</option>
                             @endforeach
                         </x-app.input.select>
                         <x-app.message.error id="category_id_err"/>
@@ -34,23 +44,27 @@
                     @if ($is_product == false)
                         <div class="flex flex-col" id="qty-container">
                             <x-app.input.label id="qty" class="mb-1">Quantity <span class="text-sm text-red-500">*</span></x-app.input.label>
-                            <x-app.input.input name="qty" id="qty" class="int-input" value="{{ isset($prod) ? $prod->qty : null }}" />
+                            <x-app.input.input name="qty" id="qty" class="int-input" value="{{ isset($prod) ? $prod->qty : ($dup_prod != null ? $dup_prod->qty : null) }}" />
                             <x-app.message.error id="qty_err"/>
                         </div>
                     @endif
                     <div class="flex flex-col">
                         <x-app.input.label id="low_stock_threshold" class="mb-1">Low Stock Threshold</x-app.input.label>
-                        <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ isset($prod) ? $prod->low_stock_threshold : null }}" />
+                        <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ isset($prod) ? $prod->low_stock_threshold : ($dup_prod != null ? $dup_prod->low_stock_threshold : null) }}" />
                         <x-app.message.error id="low_stock_threshold_err"/>
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="price" class="mb-1">Price <span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.input name="price" id="price" class="decimal-input" value="{{ isset($prod) ? $prod->price : null }}"/>
-                        <x-app.message.error id="price_err"/>
+                        <x-app.input.label id="min_price" class="mb-1">Selling Price <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <div class="flex gap-x-4">
+                            <x-app.input.input name="min_price" id="min_price" class="decimal-input flex-1" value="{{ isset($prod) ? $prod->min_price : ($dup_prod != null ? $dup_prod->min_price : null) }}"/>
+                            <x-app.input.input name="max_price" id="max_price" class="decimal-input flex-1" value="{{ isset($prod) ? $prod->max_price : ($dup_prod != null ? $dup_prod->max_price : null) }}"/>
+                        </div>
+                        <x-app.message.error id="min_price_err"/>
+                        <x-app.message.error id="max_price_err"/>
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="weight" class="mb-1">Weight (In KG)</x-app.input.label>
-                        <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ isset($prod) ? $prod->weight : null }}"/>
+                        <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ isset($prod) ? $prod->weight : ($dup_prod != null ? $dup_prod->weight : null) }}"/>
                         <x-app.message.error id="weight_err"/>
                     </div>
                     <div class="flex flex-col">
@@ -58,15 +72,15 @@
                         <div class="flex gap-x-2">
                             <div class="bg-gray-100 flex items-center">
                                 <span class="font-black p-2">L</span>
-                                <x-app.input.input name="dimension_length" id="dimension_length" class="decimal-input" value="{{ isset($prod) ? $prod->length : null }}"/>
+                                <x-app.input.input name="dimension_length" id="dimension_length" class="decimal-input" value="{{ isset($prod) ? $prod->length : ($dup_prod != null ? $dup_prod->length : null) }}"/>
                             </div>
                             <div class="bg-gray-100 flex items-center">
                                 <span class="font-black p-2">W</span>
-                                <x-app.input.input name="dimension_width" id="dimension_width" class="decimal-input" value="{{ isset($prod) ? $prod->width : null }}"/>
+                                <x-app.input.input name="dimension_width" id="dimension_width" class="decimal-input" value="{{ isset($prod) ? $prod->width : ($dup_prod != null ? $dup_prod->width : null) }}"/>
                             </div>
                             <div class="bg-gray-100 flex items-center">
                                 <span class="font-black p-2">H</span>
-                                <x-app.input.input name="dimension_height" id="dimension_height" class="decimal-input" value="{{ isset($prod) ? $prod->height : null }}"/>
+                                <x-app.input.input name="dimension_height" id="dimension_height" class="decimal-input" value="{{ isset($prod) ? $prod->height : ($dup_prod != null ? $dup_prod->height : null) }}"/>
                             </div>
                         </div>
                         <x-app.message.error id="dimension_err"/>
@@ -75,8 +89,8 @@
                         <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="status" id="status">
                             <option value="">Select a Active/Inactive</option>
-                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : null) == 1)>Active</option>
-                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : null) === 0)>Inactive</option>
+                            <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) == 1)>Active</option>
+                            <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) === 0)>Inactive</option>
                         </x-app.input.select>
                         <x-app.message.error id="status_err"/>
                     </div>
@@ -119,7 +133,7 @@
                 </div>
             </div>
             <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                <x-app.button.submit id="submit-btn" class="hidden">Save and Update</x-app.button.submit>
             </div>
         </form>
     </div>
@@ -215,9 +229,13 @@
         if (val == true) {
             $('#serial-no-container').removeClass('hidden')
             $('#qty-container').addClass('hidden')
+            $('#form #submit-btn').addClass('hidden')
+            $('#form #submit-btn').removeClass('block')
         } else {
             $('#serial-no-container').addClass('hidden')
             $('#qty-container').removeClass('hidden')
+            $('#form #submit-btn').addClass('block')
+            $('#form #submit-btn').removeClass('hidden')
         }
     })
     $('#form').on('submit', function(e) {
@@ -226,6 +244,7 @@
         if (!FORM_CAN_SUBMIT) return
 
         FORM_CAN_SUBMIT = false
+        SERIAL_NO_FORM_CAN_SUBMIT = true
 
         $('#form #submit-btn').text('Updating')
         $('#form #submit-btn').removeClass('bg-yellow-400 shadow')
@@ -250,6 +269,7 @@
             data: formData,
             contentType: false,
             processData: false,
+            async: false,
             success: function(res) {
                 if (PRODUCT == null) {
                     PRODUCT = res.product
@@ -269,6 +289,8 @@
                 }, 300);
             },
             error: function(err) {
+                SERIAL_NO_FORM_CAN_SUBMIT = false
+
                 setTimeout(() => {
                     if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
                         let errors = err.responseJSON.errors
@@ -294,7 +316,9 @@
     $('#serial-no-form').on('submit', function(e) {
         e.preventDefault()
 
-        if (!SERIAL_NO_FORM_CAN_SUBMIT) return
+        $('#form').submit()
+
+        if (PRODUCT == null || !SERIAL_NO_FORM_CAN_SUBMIT) return
 
         SERIAL_NO_FORM_CAN_SUBMIT = false
 
@@ -334,13 +358,15 @@
                     $('#serial-no-form #submit-btn').text('Updated')
                     $('#serial-no-form #submit-btn').addClass('bg-green-400 shadow')
 
-                    setTimeout(() => {
-                        $('#serial-no-form #submit-btn').text('Save and Update')
-                        $('#serial-no-form #submit-btn').removeClass('bg-green-400')
-                        $('#serial-no-form #submit-btn').addClass('bg-yellow-400 shadow')
+                    window.location.href = IS_PRODUCT ? "{{ route('product.index') }}" : "{{ route('raw_material.index') }}"
 
-                        SERIAL_NO_FORM_CAN_SUBMIT = true
-                    }, 2000);
+                    // setTimeout(() => {
+                    //     $('#serial-no-form #submit-btn').text('Save and Update')
+                    //     $('#serial-no-form #submit-btn').removeClass('bg-green-400')
+                    //     $('#serial-no-form #submit-btn').addClass('bg-yellow-400 shadow')
+
+                    //     SERIAL_NO_FORM_CAN_SUBMIT = true
+                    // }, 2000);
                 }, 300);
             },
             error: function(err) {

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($task) ? 'Edit Task - ' . $task->sku : 'Create New Task' }}</x-app.page-title>
+        <x-app.page-title url="{{ $for_role == 'driver' ? route('task.driver.index') : ($for_role == 'technician' ? route('task.technician.index') : route('task.sale.index')) }}">{{ isset($task) ? 'Edit Task - ' . $task->sku : 'Create New Task' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($task) ? route($form_route_name, ['task' => $task]) : route($form_route_name) }}" method="POST" enctype="multipart/form-data">

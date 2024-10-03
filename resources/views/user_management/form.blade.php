@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($user) ? 'Edit User' : 'Create User' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('user_management.index') }}">{{ isset($user) ? 'Edit User' : 'Create User' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($user) ? route('user_management.update', ['user' => $user]) : route('user_management.store') }}" method="POST" enctype="multipart/form-data">

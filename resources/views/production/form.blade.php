@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($production) ? 'Edit Production - ' . $production->sku : 'Create Production' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('production.index') }}">{{ isset($production) ? 'Edit Production - ' . $production->sku : 'Create Production' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($production) && !isset($is_duplicate) ? route('production.upsert', ['production' => $production->id]) : route('production.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">

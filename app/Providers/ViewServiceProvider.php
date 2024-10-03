@@ -2,11 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Area;
+use App\Models\CreditTerm;
+use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\CustomerCredit;
+use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\ProductionMilestoneMaterial;
+use App\Models\ProjectType;
+use App\Models\Promotion;
 use App\Models\Report;
 use App\Models\Role;
 use App\Models\Sale;
@@ -97,7 +104,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('permissions_group', $permissions_group);
         });
-        View::composer(['task.form'], function (ViewView $view) {
+        View::composer(['task.form', 'task.view'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $for_role = 'technician';
             } else if (str_contains(Route::currentRouteName(), '.sale.')) {
@@ -187,14 +194,14 @@ class ViewServiceProvider extends ServiceProvider
                 $is_edit = true;
             }
             if ($is_edit) {
-                $customers = Customer::orderBy('id', 'desc')->get();
+                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->get();
             } else {
-                $customers = Customer::orderBy('id', 'desc')->where('is_active', true)->get();
+                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->where('is_active', true)->get();
             }
 
             $view->with('customers', $customers);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'target.form'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'target.form', 'supplier.form', 'customer.form_step.info'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();
@@ -265,10 +272,19 @@ class ViewServiceProvider extends ServiceProvider
 
             // Warranty Periods
             $wps = WarrantyPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
+            // Promotions
+            $promotions = Promotion::orderBy('id', 'desc')
+                ->where('status', 1)
+                ->where(function($q) {
+                    $q->orWhereNull('valid_till')
+                    ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
+                }) 
+                ->get();
 
             $view->with([
                 'products' => $products,
                 'warranty_periods' => $wps,
+                'promotions' => $promotions,
             ]);
         });
         View::composer(['inventory.form'], function (ViewView $view) {
@@ -340,13 +356,25 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('branches', $branches);
         });
         View::composer(['quotation.form_step.quotation_details', 'quotation.convert', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
-            $report_types = [
-                Report::TYPE_NORMAL => 'Normal',
-                Report::TYPE_PROJECT => 'Project',
-                Report::TYPE_FRANCHISE => 'Franchise',
-            ];
+            $report_types = ProjectType::orderBy('id', 'desc')->get();
 
             $view->with('report_types', $report_types);
+        });
+        View::composer(['promotion.form'], function (ViewView $view) {
+            $products = Product::orderBy('id', 'desc')->get();
+
+            $view->with('products', $products);
+        });
+        View::composer(['supplier.form', 'customer.form_step.info'], function (ViewView $view) {
+            $currencies = Currency::where('is_active', true)->orderBy('id', 'desc')->get();
+            $credit_terms = CreditTerm::where('is_active', true)->orderBy('id', 'desc')->get();
+            $areas = Area::where('is_active', true)->orderBy('id', 'desc')->get();
+            $debtor_types = DebtorType::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            $view->with('currencies', $currencies);
+            $view->with('credit_terms', $credit_terms);
+            $view->with('areas', $areas);
+            $view->with('debtor_types', $debtor_types);
         });
     }
 }

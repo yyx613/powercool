@@ -36,4 +36,8 @@ class Customer extends Model
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
+
+    public function creditTerms() {
+        return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
+    }
 }

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($cat) ? 'Edit Category' : 'Create Category' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('inventory_category.index') }}">{{ isset($cat) ? 'Edit Category' : 'Create Category' }}</x-app.page-title>
     </div>
 
     <div class="bg-white p-4 border rounded-md">
@@ -64,22 +64,24 @@
             contentType: false,
             processData: false,
             success: function(res) {
+                $('#form #submit-btn').text('Updated')
+                $('#form #submit-btn').addClass('bg-green-400 shadow')
+
                 if (CATEGORY == null) {
                     CATEGORY = res.category
                 }
 
-                setTimeout(() => {
-                    $('#form #submit-btn').text('Updated')
-                    $('#form #submit-btn').addClass('bg-green-400 shadow')
 
-                    setTimeout(() => {
-                        $('#form #submit-btn').text('Save and Update')
-                        $('#form #submit-btn').removeClass('bg-green-400')
-                        $('#form #submit-btn').addClass('bg-yellow-400 shadow')
+                setTimeout(() => {
+                    window.location.href = "{{ route('inventory_category.index') }}"
+                    // setTimeout(() => {
+                    //     $('#form #submit-btn').text('Save and Update')
+                    //     $('#form #submit-btn').removeClass('bg-green-400')
+                    //     $('#form #submit-btn').addClass('bg-yellow-400 shadow')
                         
-                        FORM_CAN_SUBMIT = true
-                    }, 2000);
-                }, 300);
+                    //     FORM_CAN_SUBMIT = true
+                    // }, 2000);
+                }, 300)
             },
             error: function(err) {
                 setTimeout(() => {

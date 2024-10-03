@@ -9,6 +9,7 @@ use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
@@ -192,7 +193,7 @@ class InventoryController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) {
+            if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
                 // Update status from transferred child
                 $this->prodChild::where('id', $product_child->transferred_from)->update([
                     'status' => $this->prodChild::STATUS_RECEIVED,
@@ -200,7 +201,7 @@ class InventoryController extends Controller
                 // Remove self status
                 $product_child->status = null;
                 $product_child->save();
-            } else {
+            } else { // Stock in from same branch, from produciton
                 $product_child->location = $this->prodChild::LOCATION_WAREHOUSE;
                 $product_child->save();
 
@@ -226,6 +227,8 @@ class InventoryController extends Controller
             DB::beginTransaction();
 
             $product_child->status = $this->prodChild::STATUS_STOCK_OUT;
+            $product_child->stock_out_by = Auth::user()->id;
+            $product_child->stock_out_at = now();
             $product_child->save();
 
             DB::commit();
@@ -247,43 +250,72 @@ class InventoryController extends Controller
             $product = Product::where('id', $product_child->product_id)->first();
             // Create inventory category for branch to transfer
             $cat = InventoryCategory::where('id', $product->inventory_category_id)->first();
-            $cloned_cat = $cat->replicate();
-            $cloned_cat->save();
 
-            (new Branch)->assign(InventoryCategory::class, $cloned_cat->id, $req->branch);
+            $cloned_cat = InventoryCategory::where(DB::raw('BINARY `name`'), $cat->name)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->first();
+
+            if ($cloned_cat == null) {
+                $cloned_cat = $cat->replicate();
+                $cloned_cat->save();
+    
+                (new Branch)->assign(InventoryCategory::class, $cloned_cat->id, $req->branch);
+            }
             // Create supplier for branch to transfer
             if ($product->supplier_id != null) {
                 $supp = Supplier::where('id', $product->supplier_id)->first();
-                $cloned_supp = $supp->replicate();
-                $cloned_supp->save();
 
-                (new Branch)->assign(Supplier::class, $cloned_supp->id, $req->branch);
-                // Create supplier image for branch to transfer
-                for ($i = 0; $i < count($supp->pictures); $i++) {
-                    $cloned_product_image = $supp->pictures[$i]->replicate();
-                    $cloned_product_image->object_id = $cloned_supp->id;
-                    $cloned_product_image->save();
+                $cloned_supp = Supplier::where(DB::raw('BINARY `sku`'), $supp->sku)
+                    ->whereHas('branch', function ($q) use ($req) {
+                        $q->where('location', $req->branch);
+                    })
+                    ->first();
+
+                if ($cloned_supp == null) {
+                    $cloned_supp = $supp->replicate();
+                    $cloned_supp->save();
+    
+                    (new Branch)->assign(Supplier::class, $cloned_supp->id, $req->branch);
+                    // Create supplier image for branch to transfer
+                    for ($i = 0; $i < count($supp->pictures); $i++) {
+                        $cloned_product_image = $supp->pictures[$i]->replicate();
+                        $cloned_product_image->object_id = $cloned_supp->id;
+                        $cloned_product_image->save();
+                    }
                 }
             }
             // Create product for branch to transfer
-            $cloned_product = $product->replicate();
-            $cloned_product->inventory_category_id = $cloned_cat->id;
-            $cloned_product->save();
+            $cloned_product = Product::where(DB::raw('BINARY `sku`'), $product->sku)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->first();
 
-            (new Branch)->assign(Product::class, $cloned_product->id, $req->branch);
+            if ($cloned_product == null) {
+                $cloned_product = $product->replicate();
+                $cloned_product->inventory_category_id = $cloned_cat->id;
+                $cloned_product->save();
+                // Create product image for branch to transfer
+                $cloned_product_image = $product->image->replicate();
+                $cloned_product_image->object_id = $cloned_product->id;
+                $cloned_product_image->save();
+                
+                (new Branch)->assign(Product::class, $cloned_product->id, $req->branch);
+            }
+
             // Create child for cloned product
             $cloned_child = $product_child->replicate();
             $cloned_child->product_id = $cloned_product->id;
             $cloned_child->status = $this->prodChild::STATUS_TO_BE_RECEIVED;
             $cloned_child->transferred_from = $product_child->id;
             $cloned_child->save();
-            // Create product image for branch to transfer
-            $cloned_product_image = $product->image->replicate();
-            $cloned_product_image->object_id = $cloned_product->id;
-            $cloned_product_image->save();
 
             // Update status on current product child
             $product_child->status = $this->prodChild::STATUS_IN_TRANSIT;
+            $product_child->transfer_by = Auth::user()->id;
+            $product_child->transfer_at = now();
             $product_child->save();
 
             DB::commit();

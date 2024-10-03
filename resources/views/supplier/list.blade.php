@@ -46,6 +46,7 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>Code</th>
                     <th>Name</th>
                     <th>Phone Number</th>
                     <th>Company Name</th>
@@ -76,6 +77,7 @@
             serverSide: true,
             order: [],
             columns: [
+                { data: 'sku' },
                 { data: 'name' },
                 { data: 'phone_number' },
                 { data: 'company_name' },
@@ -104,8 +106,15 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 3,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 4,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

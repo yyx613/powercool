@@ -51,7 +51,9 @@
                     @if ($pro->isLowStock())
                         <div class="mb-2 flex items-center gap-4">
                             <div class="h-8 w-8">
-                                <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @if ($pro->image != null)
+                                    <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
                             <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>
@@ -66,7 +68,9 @@
                     @if ($pro->isLowStock())
                         <div class="mb-2 flex items-center gap-4">
                             <div class="h-8 w-8">
-                                <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @if ($pro->image != null)
+                                    <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
                             <span class="flex-1 text-slate-500 text-center flex justify-center items-center">Remaining Qty: <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>View Task</x-app.page-title>
+        <x-app.page-title url="{{ $for_role == 'driver' ? route('task.driver.index') : ($for_role == 'technician' ? route('task.technician.index') : route('task.sale.index')) }}">View Task</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow flex">

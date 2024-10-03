@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($sale) ? 'Edit Sale Order - ' . $sale->sku : 'Create Sale Order' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('sale_order.index') }}">{{ isset($sale) ? 'Edit Sale Order - ' . $sale->sku : 'Create Sale Order' }}</x-app.page-title>
     </div>
 
     <div class="grid gap-y-8">
@@ -28,6 +28,7 @@
         $('#quotation-form select[name="customer"]').trigger('change')
 
         if (SALE != null) {
+            $('select[name="payment_term"]').val(SALE.payment_term)
             INIT_EDIT = false
         }
     })

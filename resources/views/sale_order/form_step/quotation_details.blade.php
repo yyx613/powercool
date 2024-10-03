@@ -23,14 +23,29 @@
                     <x-app.message.error id="sale_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="customer" class="mb-1">Customer <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a customer">
+                    <x-app.input.label id="report_type" class="mb-1">Type <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
+                        <option value="">Select a type</option>
+                        @foreach ($report_types as $type)
+                            <option value="{{ $type->id }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $type->id)>{{ $type->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="report_type_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="customer" class="mb-1">Company <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a company">
                         <option value="">Select a customer</option>
                         @foreach ($customers as $cu)
-                            <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
+                            <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-app.message.error id="customer_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="attention_to" class="mb-1">Attention To</x-app.input.label>
+                    <x-app.input.input name="attention_to" id="attention_to" :hasError="$errors->has('attention_to')" value="{{ isset($sale) ? $sale->quo_cc : null }}" disabled="true" />
+                    <x-app.message.error id="attention_to_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -40,16 +55,6 @@
                         <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>Inactive</option>
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="report_type" class="mb-1">Type <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
-                        <option value="">Select a type</option>
-                        @foreach ($report_types as $key => $val)
-                            <option value="{{ $key }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $key)>{{ $val }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="report_type_err"/>
                 </div>
             </div>
             @if (isset($sale) && $sale->status == 2)
@@ -68,6 +73,36 @@
 @push('scripts')
     <script>
         QUOTATION_FORM_CAN_SUBMIT = true
+        CUSTOMERS = @json($customers ?? []);
+
+        $('select[name="customer"]').on('change', function() {
+            let val = $(this).val()
+
+            for (let i = 0; i < CUSTOMERS.length; i++) {
+                const element = CUSTOMERS[i];
+                
+                if (element.id == val) {
+                    $('input[name="attention_to"]').val(element.name)
+                    $('select[name="sale"]').val(element.sale_agent).trigger('change')
+                    // Update payment term
+
+                    $(`select[name="payment_term"]`).find('option').not(':first').remove();
+
+                    $(`select[name="payment_term"]`).select2({
+                        placeholder: 'Select a term'
+                    })
+
+                    for (let i = 0; i < element.credit_terms.length; i++) {
+                        const term = element.credit_terms[i];
+                    
+                        let opt = new Option(term.credit_term.name, term.credit_term.id)
+                        $(`select[name="payment_term"]`).append(opt)
+                    }
+
+                    break
+                }
+            }
+        })
 
         $('#quotation-form #submit-btn').on('click', function(e) {
             e.preventDefault()

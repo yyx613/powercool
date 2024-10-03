@@ -1,10 +1,18 @@
 <?php
 
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\CreditTermController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerCreditController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProjectTypeController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
@@ -36,6 +44,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';
     })->name('view_log');
+    // Dashboard
+    Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/', 'index')->name('index');
+    });
     // Inventory
     Route::controller(InventoryController::class)->prefix('inventory-summary')->name('inventory_summary.')->middleware(['can:inventory.summary.view'])->group(function () { // Inventory Category
         Route::get('/', 'indexSummary')->name('index');
@@ -80,8 +92,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
             Route::get('/create', 'create')->name('create')->middleware(['can:sale.quotation.create']);
-            Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['can:sale
-                .quotation.edit']);
+            Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['can:sale.quotation.edit']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.quotation.delete']);
             Route::get('/pdf/{sale}', 'pdf')->name('pdf');
             Route::get('/to-sale-order', 'toSaleOrder')->name('to_sale_order')->middleware(['can:sale.quotation.convert']);
@@ -211,6 +222,15 @@ Route::middleware('auth')->group(function () {
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function() {
+        // Material Use
+        Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::get('/edit/{material}', 'edit')->name('edit');
+            Route::get('/delete/{material}', 'delete')->name('delete');
+            Route::post('/upsert', 'upsert')->name('upsert');
+        });
         // Warranty Period
         Route::controller(WarrantyPeriodController::class)->prefix('warranty-period')->name('warranty_period.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -221,14 +241,65 @@ Route::middleware('auth')->group(function () {
             Route::post('/update/{warranty}', 'update')->name('update');
             Route::get('/delete/{warranty}', 'delete')->name('delete');
         });
-        // Material Use
-        Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function () {
+        // Promotion
+        Route::controller(PromotionController::class)->prefix('promotion')->name('promotion.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
             Route::get('/create', 'create')->name('create');
-            Route::get('/edit/{material}', 'edit')->name('edit');
-            Route::get('/delete/{material}', 'delete')->name('delete');
-            Route::post('/upsert', 'upsert')->name('upsert');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{promotion}', 'edit')->name('edit');
+            Route::post('/update/{promotion}', 'update')->name('update');
+            Route::get('/delete/{promotion}', 'delete')->name('delete');
+        });
+        // Project Type
+        Route::controller(ProjectTypeController::class)->prefix('project-type')->name('project_type.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{type}', 'edit')->name('edit');
+            Route::post('/update/{type}', 'update')->name('update');
+            Route::get('/delete/{type}', 'delete')->name('delete');
+        });
+        // Currency
+        Route::controller(CurrencyController::class)->prefix('currency')->name('currency.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{currency}', 'edit')->name('edit');
+            Route::post('/update/{currency}', 'update')->name('update');
+            Route::get('/delete/{currency}', 'delete')->name('delete');
+        });
+        // Credit Term
+        Route::controller(CreditTermController::class)->prefix('credit-term')->name('credit_term.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{credit}', 'edit')->name('edit');
+            Route::post('/update/{credit}', 'update')->name('update');
+            Route::get('/delete/{credit}', 'delete')->name('delete');
+        });
+        // Area 
+        Route::controller(AreaController::class)->prefix('area')->name('area.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{area}', 'edit')->name('edit');
+            Route::post('/update/{area}', 'update')->name('update');
+            Route::get('/delete/{area}', 'delete')->name('delete');
+        });
+        // Debtor Type 
+        Route::controller(DebtorTypeController::class)->prefix('debtor-type')->name('debtor_type.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{debtor}', 'edit')->name('edit');
+            Route::post('/update/{debtor}', 'update')->name('update');
+            Route::get('/delete/{debtor}', 'delete')->name('delete');
         });
         // User Management
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {

@@ -13,6 +13,14 @@
         <div class="flex-1 overflow-y-auto px-2 my-4">
             <ul>
                 <li>
+                    <a href="{{ route('dashboard.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dashboard.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="M14,12c0,1.019-.308,1.964-.832,2.754l-2.875-2.875c-.188-.188-.293-.442-.293-.707V7.101c2.282,.463,4,2.48,4,4.899Zm-6-.414V7.101c-2.55,.518-4.396,2.976-3.927,5.767,.325,1.934,1.82,3.543,3.729,3.992,1.47,.345,2.86,.033,3.952-.691l-3.169-3.169c-.375-.375-.586-.884-.586-1.414Zm11-4.586h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm0,4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm0,4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm5-7v8c0,2.757-2.243,5-5,5H5c-2.757,0-5-2.243-5-5V8C0,5.243,2.243,3,5,3h14c2.757,0,5,2.243,5,5Zm-2,0c0-1.654-1.346-3-3-3H5c-1.654,0-3,1.346-3,3v8c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V8Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Dashboard</span>
+                    </a>
+                </li>
+                <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="4">
                         <button class="p-2 flex items-center rounded-md w-full">
                             <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
@@ -200,6 +208,36 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Promotion</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Project Type</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Currency</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Credit Term</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Area</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('debtor_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Debtor Type</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">User Management</span>
                                     </a>
@@ -242,6 +280,17 @@
             </div>
             <div class="flex-1 my-4">
                 <ul>
+                    <li>
+                        <a href="{{ route('dashboard.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="M14,12c0,1.019-.308,1.964-.832,2.754l-2.875-2.875c-.188-.188-.293-.442-.293-.707V7.101c2.282,.463,4,2.48,4,4.899Zm-6-.414V7.101c-2.55,.518-4.396,2.976-3.927,5.767,.325,1.934,1.82,3.543,3.729,3.992,1.47,.345,2.86,.033,3.952-.691l-3.169-3.169c-.375-.375-.586-.884-.586-1.414Zm11-4.586h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm0,4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm0,4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c.553,0,1-.448,1-1s-.447-1-1-1Zm5-7v8c0,2.757-2.243,5-5,5H5c-2.757,0-5-2.243-5-5V8C0,5.243,2.243,3,5,3h14c2.757,0,5,2.243,5,5Zm-2,0c0-1.654-1.346-3-3-3H5c-1.654,0-3,1.346-3,3v8c0,1.654,1.346,3,3,3h14c1.654,0,3-1.346,3-3V8Z"/>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">Dashboard</span>
+                            </div>
+                        </a>
+                    </li>
                     <li class="expand-sub-menu-triggers" data-type="inventory">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
@@ -452,6 +501,36 @@
                 <li>
                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Warranty Period</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Promotion</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Project Type</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Currency</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Credit Term</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Area</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('debtor_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Debtor Type</span>
                     </a>
                 </li>
                 <li>

@@ -23,7 +23,7 @@
                     <x-app.message.error id="qty_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="unit_price" class="mb-1">Unit Price <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="unit_price" class="mb-1">Unit Price <span class="text-xs mt-1 hidden" id="price-hint">(<span id="min_price"></span> - <span id="max_price"></span>)</span> <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="unit_price" id="unit_price" :hasError="$errors->has('unit_price')" class="decimal-input" step=".01"/>
                     <x-app.message.error id="unit_price_err"/>
                 </div>
@@ -32,10 +32,17 @@
                     <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" disabled="true" />
                     <x-app.message.error id="amount_err"/>
                 </div>
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2">
                     <x-app.input.label id="product_desc" class="mb-1">Product Description</x-app.input.label>
                     <x-app.input.input name="product_desc" id="product_desc" :hasError="$errors->has('product_desc')" />
                     <x-app.message.error id="product_desc_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="promotion" class="mb-1">Promotion <span class="text-xs text-red-400 font-semibold mt-1 hidden" id="promo-hint"></span></x-app.input.label>
+                    <x-app.input.select name="promotion[]">
+                        <option value="">Select a promotion</option>
+                    </x-app.input.select>
+                    <x-app.message.error id="promotion_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="warranty_period" class="mb-1">Warranty Period <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -73,7 +80,7 @@
                         <tr>
                             <td>Promo</td>
                             <td class="w-4 text-center">:</td>
-                            <td>0.00</td>
+                            <td id="promo-amount">0.00</td>
                         </tr>
                         <tr>
                             <td>Tax</td>
@@ -101,13 +108,14 @@
     </form>
 </div>
 
-
 @push('scripts')
 <script>
     PRODUCTS = @json($products ?? []);
     WARRANTY_PERIODS = @json($warranty_periods ?? []);
+    PROMOTIONS = @json($promotions ?? []);
     PRODUCT_FORM_CAN_SUBMIT = true
     ITEMS_COUNT = 0
+    INIT_EDIT = true
 
     $(document).ready(function(){
         if (SALE != null) {
@@ -117,19 +125,28 @@
                 $('#add-item-btn').click()
 
                 $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
-                $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id)
+                $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
                 $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(sp.unit_price)
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
                 $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
+                setTimeout(() => {
+                    $(`.items[data-id="${i+1}"] select[name="promotion[]"]`).val(sp.promotion_id).trigger('change')
+                }, 1);
+
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).trigger('keyup')
 
                 buildSerialNoOptions(sp.product_id, i+1, sp.id)
+                buildPromotionSelect(i+1, sp.product_id)
             }
             if (SALE.products.length <= 0) $('#add-item-btn').click()
+
+            $('select[name="promotion_id"]').trigger('change')
         } else {
             $('#add-item-btn').click()
         }
+
+        INIT_EDIT = false
     })
     $('#add-item-btn').on('click', function() {
         let clone = $('#item-template')[0].cloneNode(true);
@@ -152,8 +169,11 @@
             let opt = new Option(element.model_name, element.id)
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
         }
-        // Build warranty period select2
-        buildWarrantyPeriodSelect2(ITEMS_COUNT)
+        
+        buildWarrantyPeriodSelect2(ITEMS_COUNT) // Build warranty period select2
+        if (!INIT_EDIT) {
+            buildPromotionSelect(ITEMS_COUNT) // Build promotion select
+        }
 
         $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
 
@@ -193,10 +213,13 @@
     });
     $('body').on('keyup', 'input[name="qty"], input[name="unit_price"]', function() {
         let idx = $(this).parent().parent().parent().data('id')
-        let qty = $(`.items[data-id="${idx}"] input[name="qty"]`).val()
-        let unitPrice = $(`.items[data-id="${idx}"] input[name="unit_price"]`).val()
 
-        calItemTotal(idx, qty, unitPrice)
+        calItemTotal(idx)
+    })
+    $('body').on('change', 'select[name="promotion[]"]', function() {
+        let idx = $(this).parent().parent().data('id')
+
+        calItemTotal(idx)
     })
     $('body').on('change', 'select[name="product_id[]"]', function() {
         let id = $(this).parent().parent().attr('data-id')
@@ -207,12 +230,15 @@
          
             if (prod.id == val) {
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
-                $(`.items[data-id="${id}"] input[name="unit_price"]`).val(prod.price)
-                $(`.items[data-id="${id}"] input[name="qty"]`).trigger('keyup')
+                $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
+                $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
+                $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
                 break
             }
         }
         buildSerialNoOptions(val, id)
+        buildPromotionSelect(id, val)
+        $(`.items[data-id="${id}"] #promo-hint`).addClass('hidden')
     })
     $('#product-form').on('submit', function(e) {
         e.preventDefault()
@@ -233,6 +259,7 @@
         let prodDesc = []
         let qty = []
         let unitPrice = []
+        let promo = []
         let prodSerialNo = []
         let warrantyPeriod = []
         $('#product-form .items').each(function(i, obj) {
@@ -241,6 +268,7 @@
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
+            promo.push($(this).find('select[name="promotion[]"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
             } else {
@@ -262,6 +290,7 @@
                 'product_desc': prodDesc,
                 'qty': qty,
                 'unit_price': unitPrice,
+                'promotion_id': promo,
                 'product_serial_no': prodSerialNo,
                 'warranty_period': warrantyPeriod,
             },
@@ -309,23 +338,71 @@
         });
     })
 
-    function calItemTotal(idx, qty, unit_price) {
-        $(`.items[data-id="${idx}"] input[name="amount"]`).val(decimalPlace2(qty * unit_price))
+    function calItemTotal(idx) {
+        let qty = $(`.items[data-id="${idx}"] input[name="qty"]`).val()
+        let unitPrice = $(`.items[data-id="${idx}"] input[name="unit_price"]`).val()
+        let promo = $(`.items[data-id="${idx}"] select[name="promotion[]"]`).val()
+        let subtotal = (qty * unitPrice)
+        
+        // Apply Promotion
+        let discountAmount = 0
+        if (promo != '') {
+            for (let i = 0; i < PROMOTIONS.length; i++) {
+                const element = PROMOTIONS[i];
+                
+                if (element.id == promo) {
+                    if (element.type == 'val') {
+                        discountAmount = element.amount
+                    } else if (element.type == 'perc') {
+                        discountAmount = subtotal * element.amount / 100
+                    }
+                    $(`.items[data-id="${idx}"] #promo-hint`).text(`( -${priceFormat(discountAmount)} )`)
+                    $(`.items[data-id="${idx}"] #promo-hint`).removeClass('hidden')
+                    break
+                }
+            }
+        } else {
+            $(`.items[data-id="${idx}"] #promo-hint`).addClass('hidden')
+        }
+        
+        $(`.items[data-id="${idx}"] input[name="amount"]`).val(priceFormat(subtotal - discountAmount))
 
         calSummary()
     }
     function calSummary() {
-        let subtotal = 0
+        let overallSubtotal = 0
+        let overallDiscountAmount = 0
 
         $('.items').each(function(i, obj) {
             let qty = $(this).find('input[name="qty"]').val()
             let unitPrice = $(this).find('input[name="unit_price"]').val()
+            let promo = $(this).find('select[name="promotion[]"]').val()
+            let subtotal = (qty * unitPrice)
+
+            // Apply Promotion
+            let discountAmount = 0
+            if (promo != '') {
+                for (let i = 0; i < PROMOTIONS.length; i++) {
+                    const element = PROMOTIONS[i];
+                    
+                    if (element.id == promo) {
+                        if (element.type == 'val') {
+                            discountAmount = element.amount
+                        } else if (element.type == 'perc') {
+                            discountAmount = subtotal * element.amount / 100
+                        }
+                        break
+                    }
+                }
+            }
             
-            subtotal += (qty * unitPrice)
+            overallSubtotal += (subtotal * 1)
+            overallDiscountAmount += (discountAmount * 1)
         })
 
-        $('#subtotal').text(priceFormat(subtotal))
-        $('#total').text(priceFormat(subtotal))
+        $('#subtotal').text(priceFormat(overallSubtotal))
+        $('#promo-amount').text(priceFormat(overallDiscountAmount))
+        $('#total').text(priceFormat(overallSubtotal - overallDiscountAmount))
     }
     function buildWarrantyPeriodSelect2(item_id) {
         $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).select2({
@@ -337,6 +414,20 @@
          
             let opt = new Option(wp.name, wp.id)
             $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).append(opt)
+        }
+    }
+    function buildPromotionSelect(item_id, product_id=null) {
+        $(`.items[data-id="${item_id}"] select[name="promotion[]"]`).find('option').not(':first').remove();
+
+        for (let i = 0; i < PROMOTIONS.length; i++) {
+            const promo = PROMOTIONS[i];
+         
+            if (product_id != null && product_id != promo.product_id) {
+                continue;
+            }
+
+            let opt = new Option(promo.sku, promo.id)
+            $(`.items[data-id="${item_id}"] select[name="promotion[]"]`).append(opt)
         }
     }
     function buildSerialNoOptions(product_id, item_id, sale_product_id=null) {

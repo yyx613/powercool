@@ -16,6 +16,7 @@ class TicketController extends Controller
 {
     const FORM_RULES = [
         'subject' => 'required|max:250',
+        'body' => 'required',
         'customer' => 'required',
         'status' => 'required',
         'attachment' => 'nullable',

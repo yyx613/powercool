@@ -7,7 +7,7 @@
         @csrf
         <div id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
-                <div class="flex flex-col">
+                <!-- <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Picture</x-app.input.label>
                     <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>
                     <x-app.message.error id="picture_err"/>
@@ -23,6 +23,11 @@
                             @endforeach
                         @endif
                     </div>
+                </div> -->
+                <div class="flex flex-col">
+                    <x-app.input.label id="code" class="mb-1">Code <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($customer) ? $customer->sku : null) }}" />
+                    <x-app.message.error id="code_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="prefix" class="mb-1">Prefix</x-app.input.label>
@@ -55,6 +60,11 @@
                     <x-app.message.error id="phone_number_err"/>
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="mobile_number" class="mb-1">Mobile Number</x-app.input.label>
+                    <x-app.input.input name="mobile_number" id="mobile_number" :hasError="$errors->has('mobile_number')" value="{{ old('mobile_number', isset($customer) ? $customer->mobile_number : null) }}"/>
+                    <x-app.message.error id="mobile_number_err"/>
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="email" class="mb-1">Email</x-app.input.label>
                     <x-app.input.input name="email" id="email" type="email" :hasError="$errors->has('email')" value="{{ old('email', isset($customer) ? $customer->email : null) }}"/>
                     <x-app.message.error id="email_err"/>
@@ -65,13 +75,58 @@
                     <x-app.message.error id="website_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="under_warranty" class="mb-1">Under Warranty <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="under_warranty" id="under_warranty" :hasError="$errors->has('under_warranty')">
-                        <option value="">Select a Yes/No</option>
-                        <option value="1" @selected(old('under_warranty', isset($customer) ? $customer->under_warranty : null) == 1)>Yes</option>
-                        <option value="0" @selected(old('under_warranty', isset($customer) ? $customer->under_warranty : null) === 0)>No</option>
+                    <x-app.input.label id="currency" class="mb-1">Currency <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="currency" id="currency" :hasError="$errors->has('currency')">
+                        <option value="">Select a currency</option>
+                        @foreach ($currencies as $curr)
+                            <option value="{{ $curr->id }}" @selected(old('currency', isset($customer) ? $customer->currency_id : null) == $curr->id)>{{ $curr->name }}</option>
+                        @endforeach
                     </x-app.input.select>
-                    <x-app.message.error id="under_warranty_err"/>
+                    <x-input-error :messages="$errors->get('currency')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="area" class="mb-1">Area</x-app.input.label>
+                    <x-app.input.select name="area" id="area" :hasError="$errors->has('area')">
+                        <option value="">Select a area</option>
+                        @foreach ($areas as $area)
+                            <option value="{{ $area->id }}" @selected(old('area', isset($customer) ? $customer->area_id : null) == $area->id)>{{ $area->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('area')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="debtor_type" class="mb-1">Debtor Type</x-app.input.label>
+                    <x-app.input.select name="debtor_type" id="debtor_type" :hasError="$errors->has('debtor_type')">
+                        <option value="">Select a debtor_type</option>
+                        @foreach ($debtor_types as $debtor_type)
+                            <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>{{ $debtor_type->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('area')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="tin_number" class="mb-1">TIN Number</x-app.input.label>
+                    <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')" value="{{ old('tin_number', isset($customer) ? $customer->tin_number : null) }}" />
+                    <x-app.message.error id="tin_number_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="sale_agent" class="mb-1">Sale Agent</x-app.input.label>
+                    <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')" placeholder="Select a sale agent">
+                        <option value="">Select a sale</option>
+                        @foreach ($sales as $sa)
+                            <option value="{{ $sa->id }}" @selected(old('sale', isset($customer) ? $customer->sale_agent : null) == $sa->id)>{{ $sa->name }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-app.message.error id="sale_agent_err"/>
+                </div>
+                <div class="flex flex-col col-span">
+                    <x-app.input.label id="credit_term" class="mb-1">Credit Terms</x-app.input.label>
+                    <x-app.input.select name="credit_term[]" multiple>
+                        @foreach ($credit_terms as $ct)
+                            <option value="{{ $ct->id }}" @selected(old('credit_term', isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null))>{{ $ct->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="credit_term_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -135,8 +190,8 @@
             var formData = new FormData(this);
             formData.append('customer_id', CUSTOMER != null ? CUSTOMER.id : null)
 
-            let picture = $('input[name="picture[]"]').prop('files')
-            if (picture.length > 0) formData.append('picture[]', picture)
+            // let picture = $('input[name="picture[]"]').prop('files')
+            // if (picture.length > 0) formData.append('picture[]', picture)
 
             $.ajax({
                 headers: {

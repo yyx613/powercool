@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
@@ -217,6 +218,7 @@ class SaleController extends Controller
             if ($res->result != true) {
                 throw new Exception("Failed to create quotation");
             }
+
             $sale_id = $res->sale->id;
 
             // Create product details
@@ -233,6 +235,9 @@ class SaleController extends Controller
                 })->toArray(),
                 'unit_price' => $products->map(function ($q) {
                     return $q->unit_price;
+                })->toArray(),
+                'promotion_id' => $products->map(function ($q) {
+                    return $q->promotion_id;
                 })->toArray(),
                 'product_serial_no' => $products->map(function ($q) {
                     return $q->children->pluck('product_children_id')->toArray();
@@ -325,6 +330,8 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
+                'can_edit' => hasPermission('sale.sale_order.edit'),
+                'can_delete' => hasPermission('sale.sale_order.delete'),
             ];
         }
 
@@ -411,7 +418,7 @@ class SaleController extends Controller
 
             Session::put('convert_salesperson_id', $req->sp);
 
-            $terms = Sale::where('type', Sale::TYPE_SO)
+            $term_ids = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', Session::get('convert_customer_id'))
@@ -420,6 +427,8 @@ class SaleController extends Controller
                 ->whereNotNull('payment_term')
                 ->distinct()
                 ->pluck('payment_term');
+
+            $terms = CreditTerm::whereIn('id', $term_ids)->get();
         } else if ($req->has('cus')) {
             $step = 2;
 
@@ -569,7 +578,8 @@ class SaleController extends Controller
             $rules['open_until'] = 'required';
         }
         $req->validate($rules, [], [
-            'report_type' => 'type'
+            'report_type' => 'type',
+            'customer' => 'company',
         ]);
 
         try {
@@ -640,6 +650,8 @@ class SaleController extends Controller
             'qty.*' => 'required',
             'unit_price' => 'required',
             'unit_price.*' => 'required',
+            'promotion_id' => 'required',
+            'promotion_id.*' => 'nullable',
             'product_serial_no' => 'nullable',
             'product_serial_no.*' => 'nullable',
             'warranty_period' => 'required',
@@ -694,6 +706,7 @@ class SaleController extends Controller
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
+                        'promotion_id' => $req->promotion_id[$i],
                     ]);
                 } else {
                     $sp = SaleProduct::create([
@@ -704,6 +717,7 @@ class SaleController extends Controller
                         'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
+                        'promotion_id' => $req->promotion_id[$i],
                     ]);
                 }
 
@@ -792,13 +806,6 @@ class SaleController extends Controller
             'payment_remark' => 'nullable|max:250',
         ];
         $req->validate($rules);
-
-        // Validate payment term
-        if ($req->payment_term != 'cod' && is_int($req->payment_term)) {
-            return Response::json([
-                'payment_term' => 'The payment term field must be an integer.'
-            ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
-        }
 
         try {
             DB::beginTransaction();
@@ -953,10 +960,12 @@ class SaleController extends Controller
 
             Session::put('convert_customer_id', $req->cus);
 
-            $terms = DeliveryOrder::where('customer_id', $req->cus)
+            $term_ids = DeliveryOrder::where('customer_id', $req->cus)
                 ->whereNotNull('payment_terms')
                 ->distinct()
                 ->pluck('payment_terms');
+            
+            $terms = CreditTerm::whereIn('id', $term_ids)->get();
         } else {
             $customer_ids = DeliveryOrder::distinct()->pluck('customer_id');
 
@@ -1135,7 +1144,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sales' => $record->salesperson->name,
-                'amount' => $record->amount,
+                'amount' => number_format($record->amount, 2),
                 'date' => Carbon::parse($record->date)->format('M Y'),
                 'can_create' => hasPermission('sale.target.create'),
                 'can_edit' => hasPermission('sale.target.edit')

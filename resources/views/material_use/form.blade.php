@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ isset($material) ? 'Edit Material Use' : 'Create Material Use' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('material_use.index') }}">{{ isset($material) ? 'Edit Material Use' : 'Create Material Use' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="" method="POST" enctype="multipart/form-data">
@@ -151,24 +151,26 @@
                 'qty': qty,
             },
             success: function(res) {
+                MATERIAL = res.material
+
+                let material_use_ids = res.material_use_ids
+                $('form .items').each(function(i, obj) {
+                    $(this).attr('data-order-idx', material_use_ids[i])
+                })
+
                 setTimeout(() => {
                     $('form #submit-btn').text('Updated')
-                    $('form #submit-btn').addClass('bg-green-400 shadow')
+                    $('form #submit-btn').addClass('bg-green-400 shadow')  
 
-                    MATERIAL = res.material
-
-                    let material_use_ids = res.material_use_ids
-                    $('form .items').each(function(i, obj) {
-                        $(this).attr('data-order-idx', material_use_ids[i])
-                    })
+                    window.location.href = '{{ route("material_use.index") }}'
                     
-                    setTimeout(() => {
-                        $('form #submit-btn').text('Save and Update')
-                        $('form #submit-btn').removeClass('bg-green-400')
-                        $('form #submit-btn').addClass('bg-yellow-400 shadow')
+                    // setTimeout(() => {
+                    //     $('form #submit-btn').text('Save and Update')
+                    //     $('form #submit-btn').removeClass('bg-green-400')
+                    //     $('form #submit-btn').addClass('bg-yellow-400 shadow')
                         
-                        FORM_CAN_SUBMIT = true
-                    }, 2000);
+                    //     FORM_CAN_SUBMIT = true
+                    // }, 2000);
                 }, 300);
             },
             error: function(err) {
