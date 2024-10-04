@@ -89,6 +89,9 @@ class ProjectTypeController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('project_type.create'))->with('success', 'Project Type created');
+            }
             return redirect(route('project_type.index'))->with('success', 'Project Type created');
         } catch (\Throwable $th) {
             DB::rollBack();

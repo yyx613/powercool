@@ -92,6 +92,9 @@ class WarrantyPeriodController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('warranty_period.create'))->with('success', 'Warranty created');
+            }
             return redirect(route('warranty_period.index'))->with('success', 'Warranty created');
         } catch (\Throwable $th) {
             DB::rollBack();

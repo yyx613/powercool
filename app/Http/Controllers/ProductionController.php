@@ -367,7 +367,7 @@ class ProductionController extends Controller
 
             // Materials
             $now = now();
-            if ($pm->required_serial_no == true && $req->materials != null) {
+            if ($pm->required_serial_no == true) {
                 foreach ($pm->production->product->materialUse->materials as $key => $material) {
                     $data = [];
                     if ($material->material->is_sparepart == true && isset($req->materials[$material->id])) {

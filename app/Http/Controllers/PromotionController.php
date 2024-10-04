@@ -6,7 +6,10 @@ use App\Models\Branch;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class PromotionController extends Controller
 {
@@ -90,6 +93,12 @@ class PromotionController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
+        // Make sure either val/perc amount is entered
+        if ($req->amount_val == null && $req->amount_perc == null) {
+            throw ValidationException::withMessages([
+                'amount_val' => 'Please enter either discount in amount or discount in percentage'
+            ]);
+        }
 
         try {
             DB::beginTransaction();
@@ -107,6 +116,9 @@ class PromotionController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('promotion.create'))->with('success', 'Promotion created');
+            }
             return redirect(route('promotion.index'))->with('success', 'Promotion created');
         } catch (\Throwable $th) {
             DB::rollBack();

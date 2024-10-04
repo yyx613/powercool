@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Milestone;
+use App\Models\Scopes\BranchScope;
 use App\Models\Task;
 use Illuminate\Support\Facades\Log;
 
@@ -30,16 +31,19 @@ class NotificationController extends Controller
                     switch ($data['type']) {
                         case 'task_created':
                             $data['task'] = Task::withTrashed()->with('customer')->where('id', $data['task_id'])->first();
-                            $data['assigned_by'] = User::withTrashed()->where('id', $data['assigned_by'])->first();
+                            $data['assigned_by'] = User::withoutGlobalScope(BranchScope::class)->withTrashed()->where('id', $data['assigned_by'])->first();
                             break;
                         case 'milestone_completed':
                             $data['task'] = Task::withTrashed()->with('customer')->where('id', $data['task_id'])->first();
-                            $data['done_by'] = User::withTrashed()->where('id', $data['done_by'])->first();
+                            $data['done_by'] = User::withoutGlobalScope(BranchScope::class)->withTrashed()->where('id', $data['done_by'])->first();
                             $data['milestone'] = Milestone::where('id', $data['ms_id'])->first();
                             break;
                         case 'task_completed':
                             $data['task'] = Task::withTrashed()->with('customer')->where('id', $data['task_id'])->first();
-                            $data['done_by'] = User::withTrashed()->where('id', $data['done_by'])->first();
+                            $data['done_by'] = User::withoutGlobalScope(BranchScope::class)->withTrashed()->where('id', $data['done_by'])->first();
+                            break;
+                        case 'task_prompt':
+                            $data['task'] = Task::withTrashed()->with('customer')->where('id', $data['task_id'])->first();
                             break;
                     }
                 }

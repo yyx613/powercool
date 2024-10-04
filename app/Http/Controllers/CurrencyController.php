@@ -89,6 +89,9 @@ class CurrencyController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('currency.create'))->with('success', 'Currency created');
+            }
             return redirect(route('currency.index'))->with('success', 'Currency created');
         } catch (\Throwable $th) {
             DB::rollBack();

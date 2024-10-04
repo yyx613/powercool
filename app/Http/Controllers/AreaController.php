@@ -89,6 +89,9 @@ class AreaController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('area.create'))->with('success', 'Area created');
+            }
             return redirect(route('area.index'))->with('success', 'Area created');
         } catch (\Throwable $th) {
             DB::rollBack();

@@ -123,10 +123,10 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return Response::json([
-                'result' => true,
-                'category' => $cat,
-            ], HttpFoundationResponse::HTTP_OK);
+            if ($req->create_again == true) {
+                return redirect(route('inventory_category.create'))->with('success', 'Inventory Category created');
+            }
+            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category ' . ($req->category_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

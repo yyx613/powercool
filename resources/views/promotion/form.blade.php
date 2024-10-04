@@ -5,11 +5,10 @@
         <x-app.page-title url="{{ route('promotion.index') }}">{{ isset($promo) ? 'Edit Promotion' : 'Create Promotion' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form action="{{ isset($promo) ? route('promotion.update', ['promotion' => $promo]) : route('promotion.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ isset($promo) ? route('promotion.update', ['promotion' => $promo]) : route('promotion.store') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
-
                 <div class="flex flex-col">
                     <x-app.input.label id="promo_code" class="mb-1">Promo Code <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="promo_code" id="promo_code" value="{{ old('promo_code') ?? (isset($promo) ? $promo->sku : null) }}" />
@@ -40,7 +39,7 @@
                     <x-app.input.select name="product" id="product" :hasError="$errors->has('product')">
                         <option value="">Select a product</option>
                         @foreach ($products as $prod)
-                            <option value="{{ $prod->id }}" @selected((isset($promo) ? $promo->product_id : null) == $prod->id)>{{ $prod->model_name }}</option>
+                            <option value="{{ $prod->id }}" @selected(old('product', isset($promo) ? $promo->product_id : null) == $prod->id)>{{ $prod->model_name }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('product')" class="mt-1" />
@@ -55,8 +54,11 @@
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>    
             </div>
-            <div class="mt-8 flex justify-end">
-                <x-app.button.submit>{{ isset($promo) ? 'Update Promotion' : 'Create Promotion' }}</x-app.button.submit>
+            <div class="mt-8 flex justify-end gap-x-4">
+                @if (!isset($promo))
+                    <x-app.button.submit id="submit-create-btn">Save and Create</x-app.button.submit>
+                @endif
+                <x-app.button.submit>Save and Update</x-app.button.submit>
             </div>
         </div>
     </form>
@@ -74,6 +76,13 @@
         })
         $('input[name="amount_perc"]').on('keyup', function() {
             $('input[name="amount_val"]').val(null)
+        })
+
+        $('#submit-create-btn').on('click', function(e) {
+            let url = $('#form').attr('action')
+            url = `${url}?create_again=true`
+
+            $('#form').attr('action', url)
         })
     </script>
 @endpush

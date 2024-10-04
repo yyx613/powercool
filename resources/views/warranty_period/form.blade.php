@@ -5,7 +5,7 @@
         <x-app.page-title url="{{ route('warranty_period.index') }}">{{ isset($warranty) ? 'Edit Warranty' : 'Create Warranty' }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form action="{{ isset($warranty) ? route('warranty_period.update', ['warranty' => $warranty]) : route('warranty_period.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ isset($warranty) ? route('warranty_period.update', ['warranty' => $warranty]) : route('warranty_period.store') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
@@ -24,9 +24,23 @@
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>    
             </div>
-            <div class="mt-8 flex justify-end">
-                <x-app.button.submit>{{ isset($warranty) ? 'Update Warranty' : 'Create Warranty' }}</x-app.button.submit>
+            <div class="mt-8 flex justify-end gap-x-4">
+                @if (!isset($warranty))
+                    <x-app.button.submit id="submit-create-btn">Save and Create</x-app.button.submit>
+                @endif
+                <x-app.button.submit>Save and Update</x-app.button.submit>
             </div>
         </div>
     </form>
 @endsection
+
+@push('scripts')
+    <script>
+        $('#submit-create-btn').on('click', function(e) {
+            let url = $('#form').attr('action')
+            url = `${url}?create_again=true`
+
+            $('#form').attr('action', url)
+        })
+    </script>
+@endpush

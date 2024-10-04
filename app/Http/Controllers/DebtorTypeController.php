@@ -89,6 +89,9 @@ class DebtorTypeController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('debtor_type.create'))->with('success', 'Debtor Type created');
+            }
             return redirect(route('debtor_type.index'))->with('success', 'Debtor Type created');
         } catch (\Throwable $th) {
             DB::rollBack();

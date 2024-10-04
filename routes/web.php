@@ -22,6 +22,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,6 +36,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/migrate', function () {
+    Artisan::call('migrate');
+    dd('done');
+});
 Route::get('/', function () {
     return redirect(route('login'));
 });
@@ -71,19 +76,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', 'create')->name('create')->middleware(['can:inventory.product.create']);
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit']);
         Route::post('/upsert', 'upsert')->name('upsert');
-        Route::post('/upsert-serial-no', 'upsertSerialNo')->name('upsert_serial_no');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.product.delete']);
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create')->middleware(['can:inventory.raw_material.create']);
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.raw_material.edit']);
+        Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.raw_material.delete']);
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {

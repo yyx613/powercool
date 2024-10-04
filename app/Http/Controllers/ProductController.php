@@ -212,8 +212,45 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
+    public function viewGetDataRawMaterial(Request $req)
+    {
+        $records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'order_id' => $record->productionMilestone->production->sku,
+                'qty' => $record->qty,
+                'on_hold' => $record->on_hold,
+                'at' => Carbon::parse($record->updated_at)->format('d M Y, h:i A'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
     public function upsert(Request $req)
     {
+        if ($req->order_idx != null) {
+            $req->merge(['order_idx' => json_decode($req->order_idx)]);
+        }
+        if ($req->serial_no != null) {
+            $serial_no = array_filter($req->serial_no, function ($val) {
+                return $val != null;
+            });
+            $req->merge(['serial_no' => $serial_no]);
+        }
+        
         $rules = [
             'product_id' => 'nullable',
             'model_code' => 'required|max:250',
@@ -222,7 +259,6 @@ class ProductController extends Controller
             'barcode' => 'nullable|max:250',
             'category_id' => 'required',
             'supplier_id' => 'required',
-            'qty' => 'nullable',
             'low_stock_threshold' => 'nullable',
             'min_price' => 'required',
             'max_price' => 'required|gt:min_price',
@@ -234,6 +270,10 @@ class ProductController extends Controller
             'is_sparepart' => 'required',
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
+
+            'order_idx' => 'nullable',
+            'serial_no' => 'nullable',
+            'serial_no.*' => 'nullable|max:250',
         ];
         if ($req->product_id != null) {
             $rules['image'] = 'nullable';
@@ -241,11 +281,14 @@ class ProductController extends Controller
         if ($req->boolean('is_product') == true) {
             $rules['supplier_id'] = 'nullable';
             $rules['is_sparepart'] = 'nullable';
+        } else if (!$req->boolean('is_sparepart')) {
+            $rules['qty'] = 'required';
         }
         // Validate request
         $req->validate($rules, [], [
             'model_desc' => 'model description',
-            'category_id' => 'category'
+            'category_id' => 'category',
+            'qty' => 'quantity',
         ]);
         // Validate model code is unique in the branch
         $current_branch = Auth::user()->branch;
@@ -330,47 +373,22 @@ class ProductController extends Controller
                 }
             }
 
-            DB::commit();
-
-            return Response::json([
-                'result' => true,
-                'product' => $prod,
-            ], HttpFoundationResponse::HTTP_OK);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            report($th);
-
-            return Response::json([
-                'result' => false
-            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public function upsertSerialNo(Request $req)
-    {
-        $rules = [
-            'product_id' => 'required',
-            'order_idx' => 'nullable',
-            'serial_no' => 'nullable',
-            'serial_no.*' => 'required|max:250',
-        ];
-        // Validate request
-        $req->validate($rules);
-
-        try {
-            DB::beginTransaction();
-
+            // Serial No
             if ($req->serial_no != null) {
                 if ($req->order_idx != null) {
                     $order_idx = array_filter($req->order_idx, function ($val) {
                         return $val != null;
                     });
-                    $this->prodChild::where('product_id', $req->product_id)->whereNotIn('id', $order_idx ?? [])->delete();
+                    $this->prodChild::where('product_id', $prod->id)->whereNotIn('id', $order_idx ?? [])->delete();
                 }
     
                 $now = now();
                 $data = [];
                 for ($i = 0; $i < count($req->serial_no); $i++) {
+                    if ($req->serial_no[$i] == null) {
+                        continue;
+                    }
+
                     if ($req->order_idx != null && $req->order_idx[$i] != null) {
                         $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
     
@@ -379,7 +397,7 @@ class ProductController extends Controller
                         ]);
                     } else {
                         $data[] = [
-                            'product_id' => $req->product_id,
+                            'product_id' => $prod->id,
                             'sku' => $req->serial_no[$i],
                             'location' => $this->prodChild::LOCATION_WAREHOUSE,
                             'created_at' => $now,
@@ -390,27 +408,27 @@ class ProductController extends Controller
                 if (count($data) > 0) {
                     $this->prodChild->insert($data);
                 }
-
-                $pc_ids = $this->prodChild::where('product_id', $req->product_id)
-                    ->orderBy('id', 'desc')
-                    ->pluck('id')
-                    ->toArray();
+            } else {
+                $this->prodChild::where('product_id', $prod->id)->delete();
             }
-
 
             DB::commit();
 
-            return Response::json([
-                'result' => true,
-                'product_children_ids' => $pc_ids ?? []
-            ], HttpFoundationResponse::HTTP_OK);
+            if ($req->boolean('is_product') == true) {
+                if ($req->create_again == true) {
+                    return redirect(route('product.create'))->with('success', 'Product created');
+                }
+                return redirect(route('product.index'))->with('success', 'Product ' . ($req->product_id == null ? 'created' : 'updated'));
+            }
+            if ($req->create_again == true) {
+                return redirect(route('raw_material.create'))->with('success', 'Raw Material created');
+            }
+            return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return Response::json([
-                'result' => false
-            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
 

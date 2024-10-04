@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div id="serial-no-container">
-                    <span class="font-medium text-sm mb-1 block mb-2">Materials</span>
+                    <span class="font-medium text-sm block mb-2">Materials</span>
                     <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64">
                         @foreach($product->materialUse->materials as $key => $material)
                             <div class="mb-4 {{ ($key + 1) < count($product->materialUse->materials) ? 'pb-4 border-b' : '' }}">
@@ -23,10 +23,12 @@
                                 @if ($material->material->is_sparepart)
                                     <div class="grid grid-cols-2 gap-2">
                                         @foreach($material->material->childrenWithoutAssigned($production->id) as $m)
-                                            <div class="flex items-center gap-x-2">
-                                                <input type="checkbox" name="serial_no[]" id="{{ $m->id }}" class="border-slate-500 rounded" data-mu-id="{{ $material->id }}">
-                                                <label for="{{ $m->id }}" class="text-sm">{{ $m->sku }}</label>
-                                            </div>
+                                            @if ($m->location == 'warehouse')
+                                                <div class="flex items-center gap-x-2">
+                                                    <input type="checkbox" name="serial_no[]" id="{{ $m->id }}" class="border-slate-500 rounded" data-mu-id="{{ $material->id }}">
+                                                    <label for="{{ $m->id }}" class="text-sm">{{ $m->sku }}</label>
+                                                </div>
+                                            @endif
                                         @endforeach
                                     </div>
                                     <x-app.message.error id="materials_err" class="mt-2" data-material-id="{{ $material->id }}" />

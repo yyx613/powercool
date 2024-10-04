@@ -89,6 +89,9 @@ class CreditTermController extends Controller
 
             DB::commit();
 
+            if ($req->create_again == true) {
+                return redirect(route('credit_term.create'))->with('success', 'Credit Term created');
+            }
             return redirect(route('credit_term.index'))->with('success', 'Credit Term created');
         } catch (\Throwable $th) {
             DB::rollBack();
