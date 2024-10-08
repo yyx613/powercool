@@ -97,10 +97,9 @@ class SupplierController extends Controller
     public function upsert(Request $req, Supplier $supplier) {
         // Validate request
         $req->validate([
-            'code' => 'required|max:250',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
-            'company_name' => 'nullable|max:250',
+            'company_name' => 'required|max:250',
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
@@ -126,7 +125,7 @@ class SupplierController extends Controller
 
             if ($supplier->id == null) {
                 $supplier = Supplier::create([
-                    'sku' => $req->code,
+                    'sku' => (new Supplier)->generateSku($req->company_name[0]),
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,
@@ -149,7 +148,6 @@ class SupplierController extends Controller
                 (new Branch)->assign(Supplier::class, $supplier->id);
             } else {
                 $supplier->update([
-                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,

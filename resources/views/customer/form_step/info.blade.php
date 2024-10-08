@@ -25,8 +25,8 @@
                     </div>
                 </div> -->
                 <div class="flex flex-col">
-                    <x-app.input.label id="code" class="mb-1">Code <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($customer) ? $customer->sku : null) }}" />
+                    <x-app.input.label id="code" class="mb-1">Code</x-app.input.label>
+                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($customer) ? $customer->sku : null) }}" disabled="true"/>
                     <x-app.message.error id="code_err"/>
                 </div>
                 <div class="flex flex-col">
@@ -45,7 +45,7 @@
                     <x-app.message.error id="customer_name_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="company_name" class="mb-1">Company Name</x-app.input.label>
+                    <x-app.input.label id="company_name" class="mb-1">Company Name <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')" value="{{ old('company_name', isset($customer) ? $customer->company_name : null) }}" />
                     <x-app.message.error id="company_name_err"/>
                 </div>
@@ -82,7 +82,7 @@
                             <option value="{{ $curr->id }}" @selected(old('currency', isset($customer) ? $customer->currency_id : null) == $curr->id)>{{ $curr->name }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('currency')" class="mt-2" />
+                    <x-app.message.error id="currency_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="area" class="mb-1">Area</x-app.input.label>
@@ -92,7 +92,7 @@
                             <option value="{{ $area->id }}" @selected(old('area', isset($customer) ? $customer->area_id : null) == $area->id)>{{ $area->name }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('area')" class="mt-2" />
+                    <x-app.message.error id="area_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="debtor_type" class="mb-1">Debtor Type</x-app.input.label>
@@ -102,7 +102,7 @@
                             <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>{{ $debtor_type->name }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('area')" class="mt-2" />
+                    <x-app.message.error id="debtor_type_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="tin_number" class="mb-1">TIN Number</x-app.input.label>

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\ProductCost;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
 use Carbon\Carbon;
@@ -26,6 +27,7 @@ class ProductController extends Controller
     protected $invCat;
     protected $production;
     protected $productionMsMaterial;
+    protected $prodCost;
 
     public function __construct()
     {
@@ -34,6 +36,7 @@ class ProductController extends Controller
         $this->invCat = new InventoryCategory();
         $this->production = new Production();
         $this->productionMsMaterial = new ProductionMilestoneMaterial();
+        $this->prodCost = new ProductCost();
     }
 
     public function index()
@@ -239,6 +242,33 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
+    public function viewGetDataCost(Request $req)
+    {
+        $records = $this->prodCost::where('product_id', $req->product_id)->orderBy('id', 'desc');
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'qty_sku' => $record->qty ?? $record->sku,
+                'unit_price' => number_format($record->unit_price, 2),
+                'total_price' => number_format($record->total_price, 2),
+                'at' => Carbon::parse($record->created)->format('d M Y, h:i A'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
     public function upsert(Request $req)
     {
         if ($req->order_idx != null) {
@@ -257,6 +287,7 @@ class ProductController extends Controller
             'model_name' => 'required|max:250',
             'model_desc' => 'required|max:250',
             'barcode' => 'nullable|max:250',
+            'uom' => 'required|max:250',
             'category_id' => 'required',
             'supplier_id' => 'required',
             'low_stock_threshold' => 'nullable',
@@ -317,6 +348,7 @@ class ProductController extends Controller
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
                     'barcode' => $req->barcode,
+                    'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
@@ -340,6 +372,7 @@ class ProductController extends Controller
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
                     'barcode' => $req->barcode,
+                    'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,

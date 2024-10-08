@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Order | {{ $sku }}</title>
+</head>
+<body>
+    <!-- Header -->
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <tr>
+            <td style="width: 60%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
+                <span style="font-size: 18px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span style="font-size: 14px; font-weight: 100;">(383045-D)</span></span><br>
+                <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
+                <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
+                <span style="font-size: 14px;">48200 SERENDAH,SELANGOR.</span><br>
+                <span style="font-size: 14px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
+                <span style="font-size: 14px;">Email : enquiry@powercool.com.my</span><br>
+                <span style="font-size: 14px;">Sales Tax ID No : B16-1809-22000036</span><br>
+            </td>
+            <td style="width: 40%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="font-size: 14px; width: 45%; font-weight: 700;">Delivery Order No.</td>
+                        <td style="font-size: 14px; width: 10%;">:</td>
+                        <td style="font-size: 14px; font-weight: 700;">{{ $sku }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;">Date</td>
+                        <td style="font-size: 14px;">:</td>
+                        <td style="font-size: 14px;">{{ $date }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;">Your P/O No.</td>
+                        <td style="font-size: 14px;">:</td>
+                        <td style="font-size: 14px;">{{ $your_po_no }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;">Your S/O No.</td>
+                        <td style="font-size: 14px;">:</td>
+                        <td style="font-size: 14px;">{{ $your_so_no }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;">Terms</td>
+                        <td style="font-size: 14px;">:</td>
+                        <td style="font-size: 14px;">{{ $term }}</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;">Salesperson</td>
+                        <td style="font-size: 14px;">:</td>
+                        <td style="font-size: 14px;">{{ $salesperson }}</td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
+        <tr>
+            <td colspan="2" style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">DELIVERY ORDER</td>
+        </tr>
+        <tr>
+            <td style="padding: 0 35px 0 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="font-size: 16px; font-weight: 700;">Billing Address</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px;" colspan="2">
+                            HI-TEN TRADING SDN BHD<br>
+                            NO 22, RCI PARK JALAN KESIDANG 2<br>
+                            KAWASAN PERINDUSTRIAN SG CHOH<br>
+                            48200 SERENDAH SELANGOR<br>
+                            <br>
+                            MS.LIM
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: 012-2632919</td>
+                        <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
+                    </tr>
+                </table>
+            </td>
+            <td style="padding: 0 35px 0 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="font-size: 16px; font-weight: 700;">Delivery Address</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; height: 100px;" colspan="2">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: </td>
+                        <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Item -->
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <tr>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">Description</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">FOC Qty</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
+        </tr>
+        @php
+            $total = 0;
+        @endphp
+        @foreach ($products as $key => $pro)
+            <tr>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; text-align: left;"></td>
+                <td style="font-size: 14px; text-align: left;">{{ $pro->desc }}</td>
+                <td style="font-size: 14px; text-align: right;"></td>
+                <td style="font-size: 14px; text-align: right;">{{ $pro->qty }}</td>
+            </tr>
+            @php
+                $total += $pro->qty;
+            @endphp
+        @endforeach
+    </table>
+    <!-- Item Summary -->
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <tr>
+            <td style="font-size: 12px; padding: 10px 0 0 0; border-top: solid 1px black; width: 60%;">Goods sold are neither returnable nor refundable. Otherwise a cancellation fee of 20% on purchase price will be imposed.</td>
+            <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; vertical-align: text-top;">Total <span style="border: solid 1px black; padding: 2.5px 10px;">{{ $total }}</span></td>
+        </tr>
+    </table>
+    <!-- Footer -->
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <tr>
+            <td style="font-size: 14px; padding: 25px 0 75px 0;" colspan="4">For : POWER COOL EQUIPMENTS (M) SDN BHD</td>
+            <td style="font-size: 14px; padding: 25px 0 75px 0; text-align: center;" colspan="3">GOODS RECEIVED IN GOOD ORDER & CONDITION.</td>
+        </tr>
+        <tr>
+            <td style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">Authorised Signature</td>
+            <td style="width: 10px;"></td>
+            <td style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">Goods Prepared Signature</td>
+            <td style="width: 10px;"></td>
+            <td style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">Recipient's Chop & Signature<br>Name:<br>IC:</td>
+            <td style="width: 10px;"></td>
+            <td style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">Driver Signature</td>
+        </tr>
+    </table>
+    
+</body>
+</html>

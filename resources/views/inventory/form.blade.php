@@ -36,6 +36,11 @@
                     <x-input-error :messages="$errors->get('barcode')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="uom" class="mb-1">UOM <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="uom" id="uom" value="{{ old('uom', isset($prod) ? $prod->uom : ($dup_prod != null ? $dup_prod->uom : null)) }}" />
+                    <x-input-error :messages="$errors->get('uom')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="category_id" class="mb-1">Category <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="category_id" id="category_id">
                         <option value="">Select a category</option>

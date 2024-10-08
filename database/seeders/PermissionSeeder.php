@@ -48,8 +48,11 @@ class PermissionSeeder extends Seeder
             'sale.invoice.view',
 
             'sale.target.view',
-            'sale.target.create',
-            'sale.target.edit',
+            'sale.target.convert',
+
+            'sale.billing.view',
+            'sale.billing.create',
+            'sale.billing.edit',
 
             'task.view',
             'task.create',

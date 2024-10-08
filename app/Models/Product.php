@@ -47,6 +47,10 @@ class Product extends Model
         return $this->hasMany(ProductChild::class);
     }
 
+    public function costs() {
+        return $this->hasMany(ProductCost::class);
+    }
+
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');

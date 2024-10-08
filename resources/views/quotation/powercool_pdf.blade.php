@@ -100,7 +100,7 @@
                 <td style="font-size: 14px; text-align: left;"></td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
-                <td style="font-size: 14px; text-align: center;">PCS</td>
+                <td style="font-size: 14px; text-align: center;">{{ $prod->product->uom }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>

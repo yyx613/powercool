@@ -28,8 +28,8 @@
                     </div>
                 </div> -->
                 <div class="flex flex-col">
-                    <x-app.input.label id="code" class="mb-1">Code <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($supplier) ? $supplier->sku : null) }}" />
+                    <x-app.input.label id="code" class="mb-1">Code</x-app.input.label>
+                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($supplier) ? $supplier->sku : null) }}" disabled="true"/>
                     <x-input-error :messages="$errors->get('code')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
@@ -48,7 +48,7 @@
                     <x-input-error :messages="$errors->get('customer_name')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="company_name" class="mb-1">Company Name</x-app.input.label>
+                    <x-app.input.label id="company_name" class="mb-1">Company Name <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')" value="{{ old('company_name', isset($supplier) ? $supplier->company_name : null) }}" />
                     <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
                 </div>

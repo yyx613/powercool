@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerCreditController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtorTypeController;
+use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\ProductController;
@@ -70,6 +71,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
         Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
     });
+    // GRN
+    Route::controller(GRNController::class)->prefix('grn')->name('grn.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{sku}', 'edit')->name('edit');
+        Route::post('/upsert', 'upsert')->name('upsert');
+        Route::get('/pdf/{sku}', 'pdf')->name('pdf');
+        Route::post('/stock-in', 'stockIn')->name('stock_in');
+    });
+    // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
@@ -80,6 +92,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
+        Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -91,6 +104,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
+        Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
@@ -150,6 +164,15 @@ Route::middleware('auth')->group(function () {
             Route::post('/store', 'storeTarget')->name('store');
             Route::get('/edit/{target}', 'editTarget')->name('edit');
             Route::post('/update/{target}', 'updateTarget')->name('update');
+        });
+        // Billing
+        Route::prefix('billing')->name('billing.')->middleware(['can:sale.billing.view'])->group(function () {
+            Route::get('/', 'indexBilling')->name('index');
+            Route::get('/get-data', 'getDataBilling')->name('get_data');
+            Route::get('/to-delivery-order-billing', 'toDeliveryOrderBilling')->name('to_delivery_order_billing');
+            Route::get('/convert-to-delivery-order-billing', 'convertToDeliveryOrderBilling')->name('convert_to_delivery_order_billing');
+            Route::get('/to-invoice-billing', 'toInvoiceBilling')->name('to_invoice_billing');
+            Route::get('/convert-to-invoice-billing', 'convertToInvoiceBilling')->name('convert_to_invoice_billing');
         });
     });
     // Task

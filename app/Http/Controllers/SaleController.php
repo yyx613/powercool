@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Billing;
 use App\Models\Branch;
 use App\Models\CreditTerm;
 use App\Models\Customer;
@@ -29,11 +30,13 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
     const DELIVERY_ORDER_PATH = '/public/delivery_order/';
     const INVOICE_PATH = '/public/invoice/';
+    const BILLING_PATH = '/public/billing/';
 
     public function index()
     {
@@ -704,7 +707,6 @@ class SaleController extends Controller
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
                         'unit_price' => $req->unit_price[$i],
-                        'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
@@ -714,7 +716,6 @@ class SaleController extends Controller
                         'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
-                        'unit_price' => $req->unit_price[$i],
                         'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
@@ -972,7 +973,7 @@ class SaleController extends Controller
             $customers = Customer::whereIn('id', $customer_ids)->get();
         }
 
-        return view('delivery_order.convert', [
+        return view('delivery_order.convert_to_invoice', [
             'step' => $step,
             'terms' => $terms ?? [],
             'customers' => $customers ?? [],
@@ -1089,6 +1090,8 @@ class SaleController extends Controller
             return Storage::download(self::DELIVERY_ORDER_PATH . '/' . $req->query('file'));
         } else if ($req->type == 'inv') {
             return Storage::download(self::INVOICE_PATH . '/' . $req->query('file'));
+        } else if ($req->type == 'billing') {
+            return Storage::download(self::BILLING_PATH . '/' . $req->query('file'));
         }
     }
 
@@ -1249,6 +1252,234 @@ class SaleController extends Controller
             report($th);
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function indexBilling() {
+        return view('billing.list');
+    }
+
+    public function getDataBilling(Request $req)
+    {
+        $records = new Billing;
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'sku' => $record->sku,
+                'filename' => $record->filename,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function toDeliveryOrderBilling(Request $req)
+    {
+        $step = 1;
+
+        if ($req->has('info')) {
+            $errors = [];
+            if ($req->sale == null) {
+                $errors['sale'] = 'Please select a salesperson';
+            }
+            if ($req->term == null) {
+                $errors['term'] = 'Please select a term';
+            }
+            if ($req->your_po_no == null) {
+                $errors['your_po_no'] = 'Please enter a Your P/O No';
+            }
+            if ($req->your_so_no == null) {
+                $errors['your_so_no'] = 'Please enter a Your S/O No';
+            }
+            if (count($errors) > 0) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $step = 3;
+
+            Session::put('billing_saleperson', $req->sale);
+            Session::put('billing_term', $req->term);
+            Session::put('billing_your_po_no', $req->your_po_no);
+            Session::put('billing_your_so_no', $req->your_so_no);
+
+            $sale_ids = Sale::where('type', Sale::TYPE_SO)
+                ->whereIn('convert_to', explode(', ', Session::get('delivery_order_ids')))
+                ->pluck('id');
+
+            $products = SaleProduct::whereIn('sale_id', $sale_ids)->get();
+        } else if ($req->has('do')) {
+            $step = 2;
+
+            Session::put('delivery_order_ids', $req->do);
+        } else {
+            $delivery_orders = DeliveryOrder::orderBy('id', 'desc')->get();
+        }
+
+        return view('billing.do_convert', [
+            'step' => $step,
+            'dos' => $dos ?? [],
+            'delivery_orders' => $delivery_orders ?? [],
+            'products' => $products ?? [],
+        ]);
+    }
+
+    public function convertToDeliveryOrderBilling(Request $req)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Create record
+            $sku = (new Billing)->generateSku();
+            $filename = $sku . '.pdf';
+
+            $bill = Billing::create([
+                'sku' => $sku,
+                'filename' => $filename
+            ]);
+            (new Branch)->assign(Billing::class, $bill->id);
+
+            // Create PDF
+            $pdf = Pdf::loadView('billing.do_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'sku' => $sku,
+                'your_po_no' => Session::get('billing_your_po_no'),
+                'your_so_no' => Session::get('billing_your_so_no'),
+                'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
+                'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
+                'products' => SaleProduct::whereIn('id', $req->sale_product_id)->get(),
+            ]);
+            $pdf->setPaper('A4', 'letter');
+            $content = $pdf->download()->getOriginalContent();
+            Storage::put(self::BILLING_PATH . $filename, $content);
+
+            DB::commit();
+
+            return redirect(route('billing.index'))->with('success', 'Billing converted');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function toInvoiceBilling(Request $req)
+    {
+        $step = 1;
+
+        if ($req->has('info')) {
+            $errors = [];
+            if ($req->sale == null) {
+                $errors['sale'] = 'Please select a salesperson';
+            }
+            if ($req->term == null) {
+                $errors['term'] = 'Please select a term';
+            }
+            if ($req->our_do_no == null) {
+                $errors['our_do_no'] = 'Please enter a Our D/O No';
+            }
+            if (count($errors) > 0) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $step = 3;
+            
+            Session::put('billing_saleperson', $req->sale);
+            Session::put('billing_term', $req->term);
+            Session::put('billing_our_do_no', $req->our_do_no);
+
+            $inv_ids = Session::get('invoice_ids');
+            $do_ids = DeliveryOrder::whereIn('invoice_id', explode(',', $inv_ids))->pluck('id');
+
+            $sale_ids = Sale::where('type', Sale::TYPE_SO)
+                ->whereIn('convert_to', $do_ids)
+                ->pluck('id');
+
+            $products = SaleProduct::whereIn('sale_id', $sale_ids)->get();
+        } else if ($req->has('inv')) {
+            $step = 2;
+
+            Session::put('invoice_ids', $req->inv);
+        } else {
+            $invoices = Invoice::orderBy('id', 'desc')->get();
+        }
+
+        return view('billing.inv_convert', [
+            'step' => $step,
+            'dos' => $dos ?? [],
+            'invoices' => $invoices ?? [],
+            'products' => $products ?? [],
+        ]);
+    }
+
+    public function convertToInvoiceBilling(Request $req)
+    {
+        // dd($req->all());
+        try {
+            DB::beginTransaction();
+
+            // Create record
+            $sku = (new Billing)->generateSku();
+            $filename = $sku . '.pdf';
+
+            $bill = Billing::create([
+                'sku' => $sku,
+                'filename' => $filename
+            ]);
+            (new Branch)->assign(Billing::class, $bill->id);
+            // Create PDF
+            $pdf = Pdf::loadView('billing.inv_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'sku' => $sku,
+                'our_do_no' => Session::get('billing_our_do_no'),
+                'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
+                'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
+                'products' => SaleProduct::whereIn('id', $req->sale_product_id)->get(),
+                'custom_unit_price' => $req->all(),
+            ]);
+            $pdf->setPaper('A4', 'letter');
+            $content = $pdf->download()->getOriginalContent();
+            Storage::put(self::BILLING_PATH . $filename, $content);
+
+            DB::commit();
+
+            return redirect(route('billing.index'))->with('success', 'Billing converted');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
 

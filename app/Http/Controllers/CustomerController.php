@@ -95,10 +95,9 @@ class CustomerController extends Controller
         // Validate request
         $req->validate([
             'customer_id' => 'nullable',
-            'code' => 'required|max:250',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
-            'company_name' => 'nullable|max:250',
+            'company_name' => 'required|max:250',
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
@@ -122,7 +121,7 @@ class CustomerController extends Controller
 
             if ($req->customer_id == null) {
                 $customer = Customer::create([
-                    'sku' => $req->code,
+                    'sku' => (new Customer)->generateSku($req->company_name[0]),
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,
@@ -144,7 +143,6 @@ class CustomerController extends Controller
             } else {
                 $customer = Customer::where('id', $req->customer_id)->first();
                 $customer->update([
-                    'sku' => $req->code,
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,

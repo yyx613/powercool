@@ -58,6 +58,11 @@
                                     </a>
                                 </li>
                                 @endcan
+                                <li>
+                                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">GRN</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -104,6 +109,13 @@
                                 <li>
                                     <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Target</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('sale.billing.view')
+                                <li>
+                                    <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Billing</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -419,6 +431,11 @@
                     </a>
                 </li>
                 @endcan
+                <li>
+                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">GRN</span>
+                    </a>
+                </li>
             </ul>
         </div>
         <!-- Sale -->
@@ -459,6 +476,13 @@
                 <li>
                     <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Target</span>
+                    </a>
+                </li>
+                @endcan
+                @can('sale.billing.view')
+                <li>
+                    <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Billing</span>
                     </a>
                 </li>
                 @endcan

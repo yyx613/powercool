@@ -155,7 +155,7 @@
                                             <input type="checkbox" name="product" value="{{ $pro->id }}" class="rounded-full border-slate-300 cursor-pointer">
                                         </div>
                                         <div class="flex-1">
-                                            <h6 class="leading-none">{{ $pro->name }}</h6>
+                                            <h6 class="leading-none">{{ $pro->product->model_name }}</h6>
                                             <p class="text-sm text-slate-400">{{ $pro->desc }}</p>
                                             <p class="text-sm text-slate-600 mt-2">Remaining Qty: {{ $pro->remainingQty() }}</p>
                                         </div>

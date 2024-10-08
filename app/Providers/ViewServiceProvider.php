@@ -60,6 +60,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.delivery_order' => [],
                 'sale.invoice' => [],
                 'sale.target' => [],
+                'sale.billing' => [],
                 'task' => [],
                 'production' => [],
                 'ticket' => [],
@@ -87,6 +88,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.invoice'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'sale.target')) {
                     array_push($permissions_group['sale.target'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'sale.billing')) {
+                    array_push($permissions_group['sale.billing'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'task')) {
                     array_push($permissions_group['task'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'production')) {
@@ -360,10 +363,15 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('report_types', $report_types);
         });
-        View::composer(['promotion.form'], function (ViewView $view) {
+        View::composer(['promotion.form', 'grn.form'], function (ViewView $view) {
             $products = Product::orderBy('id', 'desc')->get();
 
             $view->with('products', $products);
+        });
+        View::composer(['grn.form'], function (ViewView $view) {
+            $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            $view->with('suppliers', $suppliers);
         });
         View::composer(['supplier.form', 'customer.form_step.info'], function (ViewView $view) {
             $currencies = Currency::where('is_active', true)->orderBy('id', 'desc')->get();
@@ -375,6 +383,15 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('credit_terms', $credit_terms);
             $view->with('areas', $areas);
             $view->with('debtor_types', $debtor_types);
+        });
+        View::composer(['billing.do_convert', 'billing.inv_convert'], function (ViewView $view) {
+            $sales = User::whereHas('roles', function ($q) {
+                $q->where('id', Role::SALE);
+            })->orderBy('id', 'desc')->get();
+            $terms = CreditTerm::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            $view->with('sales', $sales);
+            $view->with('terms', $terms);
         });
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 #[ScopedBy([BranchScope::class])]
 class Customer extends Model
@@ -40,4 +42,27 @@ class Customer extends Model
     public function creditTerms() {
         return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
     }
+
+    public function generateSku(string $company_first_alphabet): string {
+        $sku = null;
+        $staring_num = 1;
+
+        while (true) {
+            $digits = (string)$staring_num;
+            
+            while (strlen($digits) < 3) { // Make 3 digits
+                $digits = '0' . $digits;
+            }
+            $sku = '300-' . $company_first_alphabet . $digits;
+
+            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
+
+            if (!$exists) {
+                break;
+            }
+            $staring_num++;
+        }
+
+        return $sku;
+    } 
 }

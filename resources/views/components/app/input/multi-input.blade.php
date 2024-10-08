@@ -69,7 +69,7 @@
 
             let val = $(this).val()
 
-            if (val != '' && e.key.toLowerCase() == 'enter') {
+            if (val != '' && e.keyCode == 13) {
                 let clone = $('.{{ $id }}_values')[0].cloneNode(true);
                 let totalCount = $('.{{ $id }}_values').length - 1
                 let lastValuesId = $($('.{{ $id }}_values')[totalCount]).attr('data-id')
@@ -95,6 +95,8 @@
                 $('input[name="{{ $name }}"]').val(actualValues)
 
                 $(this).val(null) // Reset 
+
+                return false
             }
 
             if ($('.{{ $id }}_values').length > 1) {

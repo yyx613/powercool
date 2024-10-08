@@ -11,16 +11,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
 #[ScopedBy([BranchScope::class])]
-class Supplier extends Model
+class Billing extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const TYPE_LOCAL = 1;
-    const TYPE_OVERSEA = 2;
-
     protected $guarded = [];
     protected $casts = [
-        'under_warranty' => 'boolean',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
@@ -29,38 +25,23 @@ class Supplier extends Model
         return $date;
     }
 
-    public function pictures() {
-        return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
-    }
-
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function creditTerms() {
-        return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
-    }
-
-    public function generateSku(string $company_first_alphabet): string {
+    public function generateSku(): string {
         $sku = null;
-        $staring_num = 1;
-
+        
         while (true) {
-            $digits = (string)$staring_num;
-            
-            while (strlen($digits) < 3) { // Make 3 digits
-                $digits = '0' . $digits;
-            }
-            $sku = '400-' . $company_first_alphabet . $digits;
+            $sku = 'Bill' . now()->format('ym') . generateRandomAlphabet();
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 
             if (!$exists) {
                 break;
             }
-            $staring_num++;
         }
 
         return $sku;
-    } 
+    }
 }

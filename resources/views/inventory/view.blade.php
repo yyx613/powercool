@@ -4,14 +4,18 @@
 
 @push('styles')
     <style>
-        #data-table {
+        #data-table,
+        #cost-table {
             border: solid 1px rgb(209 213 219);
         }
         #data-table thead th,
-        #data-table tbody tr td {
+        #data-table tbody tr td,
+        #cost-table thead th,
+        #cost-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
-        #data-table tbody tr:last-of-type td {
+        #data-table tbody tr:last-of-type td,
+        #cost-table tbody tr:last-of-type td {
             border-bottom: none;
         }
     </style>
@@ -99,52 +103,81 @@
             </div>
         </div>
     </div>
-    @if ($is_product || $prod->is_sparepart == true)
-        <div>
-            <!-- Filters -->
-            <div class="flex max-w-xs w-full mb-4">
-                <div class="flex-1">
-                    <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="Search">
-                        <div class="rounded-md border border-transparent p-1 ml-1">
-                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
-                        </div>
-                    </x-app.input.input>
-                </div>
-            </div>
 
+    <div class="flex justify-end mb-4">
+        <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
+            <button type="button" class="text-sm p-2 font-medium bg-emerald-200" id="view-list-btn">View List</button>
+            <button type="button" class="text-sm p-2 font-medium bg-slate-200" id="view-cost-btn">View Cost</button>
+        </div>
+    </div>
+    
+    <div id="data-table-container">
+        @if ($is_product || $prod->is_sparepart == true)
+            <div>
+                <!-- Filters -->
+                <div class="flex max-w-xs w-full mb-4">
+                    <div class="flex-1">
+                        <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="Search">
+                            <div class="rounded-md border border-transparent p-1 ml-1">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
+                            </div>
+                        </x-app.input.input>
+                    </div>
+                </div>
+    
+                <!-- Table -->
+                <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Location</th>
+                            <th>Assigned Order ID</th>
+                            <th>Status</th>
+                            <th>Done By</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+    
+            <x-app.modal.stock-in-modal/>
+            <x-app.modal.stock-out-modal/>
+            <x-app.modal.transfer-modal/>
+        @else
             <!-- Table -->
             <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>Serial Number</th>
-                        <th>Location</th>
                         <th>Assigned Order ID</th>
-                        <th>Status</th>
-                        <th>Done By</th>
-                        <th></th>
+                        <th>Qty</th>
+                        <th>On Hold</th>
+                        <th>At</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-        </div>
+        @endif
+    </div>
 
-        <x-app.modal.stock-in-modal/>
-        <x-app.modal.stock-out-modal/>
-        <x-app.modal.transfer-modal/>
-    @else
-        <!-- Table -->
-        <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+    <!-- Cost Table -->
+    <div id="cost-table-container" class="hidden">
+        <table id="cost-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>Assigned Order ID</th>
-                    <th>Qty</th>
-                    <th>On Hold</th>
+                    @if ($is_product || $prod->is_sparepart == true)
+                        <th>SKU</th>
+                    @else
+                        <th>Qty</th>
+                    @endif
+                    <th>Unit Price</th>
+                    <th>Total Price</th>
                     <th>At</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
-    @endif
+    </div>
 @endsection
 
 @push('scripts')
@@ -211,7 +244,7 @@
                 },
             });
         } else {
-             // Datatable
+            // Datatable
             var dt = new DataTable('#data-table', {
                 dom: 'rtip',
                 pagingType: 'numbers',
@@ -368,6 +401,72 @@
             let url = "{{ config('app.url') }}"
             url = `${url}/inventory-category/transfer/${productChildId}`
             $('#transfer-modal #yes-btn').attr('href', url)
+        })
+
+        // Cost Table
+        var dt = new DataTable('#cost-table', {
+            dom: 'rtip',
+            pagingType: 'numbers',
+            pageLength: 10,
+            processing: true,
+            serverSide: true,
+            order: [],
+            columns: [
+                { data: 'qty_sku' },
+                { data: 'unit_price' },
+                { data: 'total_price' },
+                { data: 'at' },
+            ],
+            columnDefs: [
+                {
+                    "width": "10%",
+                    "targets": 0,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 2,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 3,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+            ],
+            ajax: {
+                data: function(){
+                    var info = $('#cost-table').DataTable().page.info();
+                    var url = "{{ route('product.view_get_data_cost') }}"
+
+                    url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
+                    $('#cost-table').DataTable().ajax.url(url);
+                },
+            },
+        });
+
+        $('#switch-view-btn').on('click', function() {
+            $('#view-list-btn, #view-cost-btn').toggleClass('bg-emerald-200 bg-slate-200')
+
+            $('#data-table-container').toggleClass('hidden')
+            $('#cost-table-container').toggleClass('hidden')
         })
     </script>
 @endpush
