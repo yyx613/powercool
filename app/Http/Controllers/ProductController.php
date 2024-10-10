@@ -293,6 +293,7 @@ class ProductController extends Controller
             'low_stock_threshold' => 'nullable',
             'min_price' => 'required',
             'max_price' => 'required|gt:min_price',
+            'cost' => 'required',
             'weight' => 'nullable',
             'dimension_length' => 'nullable',
             'dimension_width' => 'nullable',
@@ -314,6 +315,7 @@ class ProductController extends Controller
             $rules['is_sparepart'] = 'nullable';
         } else if (!$req->boolean('is_sparepart')) {
             $rules['qty'] = 'required';
+            $rules['cost'] = 'nullable';
         }
         // Validate request
         $req->validate($rules, [], [
@@ -355,6 +357,7 @@ class ProductController extends Controller
                     'low_stock_threshold' => $req->low_stock_threshold,
                     'min_price' => $req->min_price,
                     'max_price' => $req->max_price,
+                    'cost' => $req->cost == null ? 0 : $req->cost,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,
@@ -379,6 +382,7 @@ class ProductController extends Controller
                     'low_stock_threshold' => $req->low_stock_threshold,
                     'min_price' => $req->min_price,
                     'max_price' => $req->max_price,
+                    'cost' => $req->cost == null ? 0 : $req->cost,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,

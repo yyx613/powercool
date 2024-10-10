@@ -236,6 +236,9 @@ class SaleController extends Controller
                 'qty' => $products->map(function ($q) {
                     return $q->qty;
                 })->toArray(),
+                'uom' => $products->map(function ($q) {
+                    return $q->uom;
+                })->toArray(),
                 'unit_price' => $products->map(function ($q) {
                     return $q->unit_price;
                 })->toArray(),
@@ -651,6 +654,8 @@ class SaleController extends Controller
             'product_desc.*' => 'nullable|max:250',
             'qty' => 'required',
             'qty.*' => 'required',
+            'uom' => 'required',
+            'uom.*' => 'required',
             'unit_price' => 'required',
             'unit_price.*' => 'required',
             'promotion_id' => 'required',
@@ -664,6 +669,7 @@ class SaleController extends Controller
             'product_id.*' => 'product',
             'product_desc.*' => 'product description',
             'qty.*' => 'quantity',
+            'uom.*' => 'UOM',
             'unit_price.*' => 'unit price',
             'product_serial_no.*' => 'product serial no',
             'warranty_period.*' => 'warranty period',
@@ -706,6 +712,7 @@ class SaleController extends Controller
                         'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
+                        'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
@@ -716,6 +723,7 @@ class SaleController extends Controller
                         'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
                         'qty' => $req->qty[$i],
+                        'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],

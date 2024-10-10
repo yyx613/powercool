@@ -72,8 +72,15 @@
 
 @push('scripts')
     <script>
+        INIT_EDIT = true
         QUOTATION_FORM_CAN_SUBMIT = true
         CUSTOMERS = @json($customers ?? []);
+
+        $(document).ready(function() {
+            $('select[name="customer"]').trigger('change')
+
+            INIT_EDIT = false
+        })
 
         $('select[name="customer"]').on('change', function() {
             let val = $(this).val()
@@ -83,7 +90,9 @@
                 
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
-                    $('select[name="sale"]').val(element.sale_agent).trigger('change')
+                    if (!INIT_EDIT) {
+                        $('select[name="sale"]').val(element.sale_agent).trigger('change')
+                    }
                     // Update payment term
 
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
@@ -102,6 +111,32 @@
                     break
                 }
             }
+
+            let url = '{{ route("customer.get_location") }}'
+            url = `${url}?customer_id=${val}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    $('#delivery-form select[name="delivery_address"] option').remove()
+
+                    // Default option
+                    let opt = new Option('Select an address', null)
+                    $('#delivery-form select[name="delivery_address"]').append(opt)
+
+                    for (let i = 0; i < res.locations.length; i++) {
+                        const loc = res.locations[i];
+                        
+                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id == SALE.delivery_address_id)
+                        $('#delivery-form select[name="delivery_address"]').append(opt)
+                    }
+                },
+            });
         })
 
         $('#quotation-form #submit-btn').on('click', function(e) {

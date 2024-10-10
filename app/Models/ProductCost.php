@@ -19,4 +19,8 @@ class ProductCost extends Model
     protected function serializeDate(DateTimeInterface $date) {
         return $date;
     }
+
+    public function product() {
+        return $this->belongsTo(Product::class);
+    }
 }

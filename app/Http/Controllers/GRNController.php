@@ -180,6 +180,7 @@ class GRNController extends Controller
                         $data[] = [
                             'product_id' => $req->product[$i],
                             'sku' => $serial_no[$j],
+                            'qty' => null,
                             'unit_price' => $grn->unit_price,
                             'total_price' => $grn->total_price,
                             'created_at' => $now,
@@ -196,13 +197,13 @@ class GRNController extends Controller
 
                     $data[] = [
                         'product_id' => $req->product[$i],
+                        'sku' => null,
                         'qty' => $req->{'qty_' . $req->product[$i]},
                         'unit_price' => $grn->unit_price,
                         'total_price' => $grn->total_price,
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
-
                     $this->prod::where('id', $req->product[$i])->increment('qty', $req->{'qty_' . $req->product[$i]});
                 }
             }

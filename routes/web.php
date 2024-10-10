@@ -228,7 +228,22 @@ Route::middleware('auth')->group(function () {
     });
     // Report
     Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function () {
-        Route::get('/', 'index')->name('index');
+        Route::prefix('production-report')->name('production_report.')->group(function() {
+            Route::get('/', 'indexProduction')->name('index');
+            Route::get('/get-data', 'getDataProduction')->name('get_data');
+        });
+        Route::prefix('sales-report')->name('sales_report.')->group(function() {
+            Route::get('/', 'indexSales')->name('index');
+            Route::get('/get-data', 'getDataSales')->name('get_data');
+        });
+        Route::prefix('stock-report')->name('stock_report.')->group(function() {
+            Route::get('/', 'indexStock')->name('index');
+            Route::get('/get-data', 'getDataStock')->name('get_data');
+        });
+        Route::prefix('earning-report')->name('earning_report.')->group(function() {
+            Route::get('/', 'indexEarning')->name('index');
+            Route::get('/get-data', 'getDataEarning')->name('get_data');
+        });
     });
     // Customer
     Route::controller(CustomerController::class)->prefix('customer')->name('customer.')->middleware(['can:customer.view'])->group(function () {

@@ -173,12 +173,40 @@
                 </li>
                 @endcan
                 <li>
-                    <a href="{{ route('report.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                            <path d="m22.204,1.162c-1.141-.952-2.634-1.343-4.098-1.081l-3.822.695c-.913.167-1.706.634-2.284,1.289-.578-.655-1.371-1.123-2.285-1.289L5.894.082C4.433-.181,2.938.21,1.796,1.162c-1.142.953-1.796,2.352-1.796,3.839v12.792c0,2.417,1.727,4.486,4.106,4.919l6.284,1.143c.534.097,1.072.146,1.61.146s1.076-.048,1.61-.146l6.285-1.143c2.379-.433,4.105-2.502,4.105-4.919V5.001c0-1.487-.655-2.886-1.796-3.839Zm-11.204,20.766c-.084-.012-6.536-1.184-6.536-1.184-1.428-.26-2.464-1.501-2.464-2.952V5.001c0-.892.393-1.731,1.078-2.303.545-.455,1.223-.697,1.919-.697.179,0,.36.016.54.049l3.821.695c.952.173,1.643,1.001,1.643,1.968v17.216Zm11-4.135c0,1.451-1.036,2.692-2.463,2.952,0,0-6.452,1.171-6.537,1.184V4.712c0-.967.691-1.794,1.642-1.968l3.821-.695c.878-.161,1.773.076,2.459.648.685.572,1.078,1.411,1.078,2.303v12.792ZM8.984,6.224c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.901,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,3.955c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.903,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,4c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.902,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm11-8.857c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm0,3.955c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.098,1.064.262,1.163.805Zm0,4c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm-2,4.364c.099.543-.262,1.064-.805,1.163,0,0-1.121.198-1.18.198-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l1-.182c.549-.098,1.064.262,1.163.805Zm-11,.221c-.088.483-.509.821-.983.821-.059,0-1.18-.198-1.18-.198-.543-.099-.904-.619-.805-1.163.099-.543.615-.906,1.163-.805l1,.182c.543.099.904.619.805,1.163Z"/>
-                        </svg>
-                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Report</span>
-                    </a>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="5">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m22.204,1.162c-1.141-.952-2.634-1.343-4.098-1.081l-3.822.695c-.913.167-1.706.634-2.284,1.289-.578-.655-1.371-1.123-2.285-1.289L5.894.082C4.433-.181,2.938.21,1.796,1.162c-1.142.953-1.796,2.352-1.796,3.839v12.792c0,2.417,1.727,4.486,4.106,4.919l6.284,1.143c.534.097,1.072.146,1.61.146s1.076-.048,1.61-.146l6.285-1.143c2.379-.433,4.105-2.502,4.105-4.919V5.001c0-1.487-.655-2.886-1.796-3.839Zm-11.204,20.766c-.084-.012-6.536-1.184-6.536-1.184-1.428-.26-2.464-1.501-2.464-2.952V5.001c0-.892.393-1.731,1.078-2.303.545-.455,1.223-.697,1.919-.697.179,0,.36.016.54.049l3.821.695c.952.173,1.643,1.001,1.643,1.968v17.216Zm11-4.135c0,1.451-1.036,2.692-2.463,2.952,0,0-6.452,1.171-6.537,1.184V4.712c0-.967.691-1.794,1.642-1.968l3.821-.695c.878-.161,1.773.076,2.459.648.685.572,1.078,1.411,1.078,2.303v12.792ZM8.984,6.224c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.901,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,3.955c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.903,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,4c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.902,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm11-8.857c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm0,3.955c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.098,1.064.262,1.163.805Zm0,4c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm-2,4.364c.099.543-.262,1.064-.805,1.163,0,0-1.121.198-1.18.198-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l1-.182c.549-.098,1.064.262,1.163.805Zm-11,.221c-.088.483-.509.821-.983.821-.059,0-1.18-.198-1.18-.198-.543-.099-.904-.619-.805-1.163.099-.543.615-.906,1.163-.805l1,.182c.543.099.904.619.805,1.163Z"/>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Report</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="5">
+                        <div class="overflow-hidden">
+                            <ul>
+                                <li>
+                                    <a href="{{ route('report.production_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Production Report</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('report.sales_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Sales Report</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('report.stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Stock Report</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('report.earning_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">Earning Report</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </li>
                 @can('customer.view')
                 <li>
@@ -344,16 +372,12 @@
                         </a>
                     </li>
                     @endcan
-                    <li>
-                        <a href="{{ route('report.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                    <li class="expand-sub-menu-triggers" data-type="report">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                 <path d="m22.204,1.162c-1.141-.952-2.634-1.343-4.098-1.081l-3.822.695c-.913.167-1.706.634-2.284,1.289-.578-.655-1.371-1.123-2.285-1.289L5.894.082C4.433-.181,2.938.21,1.796,1.162c-1.142.953-1.796,2.352-1.796,3.839v12.792c0,2.417,1.727,4.486,4.106,4.919l6.284,1.143c.534.097,1.072.146,1.61.146s1.076-.048,1.61-.146l6.285-1.143c2.379-.433,4.105-2.502,4.105-4.919V5.001c0-1.487-.655-2.886-1.796-3.839Zm-11.204,20.766c-.084-.012-6.536-1.184-6.536-1.184-1.428-.26-2.464-1.501-2.464-2.952V5.001c0-.892.393-1.731,1.078-2.303.545-.455,1.223-.697,1.919-.697.179,0,.36.016.54.049l3.821.695c.952.173,1.643,1.001,1.643,1.968v17.216Zm11-4.135c0,1.451-1.036,2.692-2.463,2.952,0,0-6.452,1.171-6.537,1.184V4.712c0-.967.691-1.794,1.642-1.968l3.821-.695c.878-.161,1.773.076,2.459.648.685.572,1.078,1.411,1.078,2.303v12.792ZM8.984,6.224c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.901,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,3.955c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.903,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,4c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.902,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm11-8.857c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm0,3.955c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.098,1.064.262,1.163.805Zm0,4c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm-2,4.364c.099.543-.262,1.064-.805,1.163,0,0-1.121.198-1.18.198-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l1-.182c.549-.098,1.064.262,1.163.805Zm-11,.221c-.088.483-.509.821-.983.821-.059,0-1.18-.198-1.18-.198-.543-.099-.904-.619-.805-1.163.099-.543.615-.906,1.163-.805l1,.182c.543.099.904.619.805,1.163Z"/>
                             </svg>
-                            <!-- Tooltip -->
-                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">Report</span>
-                            </div>
-                        </a>
+                        </button>
                     </li>
                     @can('customer.view')
                     <li>
@@ -569,6 +593,34 @@
                 </li>
             </ul>
         </div>
+        <!-- Report -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="report">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">Report</h6>
+            </div>
+            <ul>
+                <li>
+                    <a href="{{ route('report.production_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Production Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('report.sales_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Sales Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('report.stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Stock Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('report.earning_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">Earning Report</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 </aside>
 
@@ -581,13 +633,13 @@
             getTimeSection()
 
             if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
-                if (CURRENT_ROUTE_NAME.includes('finance.')) {
-                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="1"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('master_data.')) {
-                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('invoice.')) {
-                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
-                }
+                // if (CURRENT_ROUTE_NAME.includes('finance.')) {
+                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="1"]').click()
+                // } else if (CURRENT_ROUTE_NAME.includes('master_data.')) {
+                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
+                // } else if (CURRENT_ROUTE_NAME.includes('invoice.')) {
+                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
+                // }
             } else {
                 $('#expanded-sidebar').removeClass('max-w-[250px] transition-all duration-700 delay-700')
                 $('#expanded-sidebar').addClass('max-w-0 w-0 opacity-0 -z-10')

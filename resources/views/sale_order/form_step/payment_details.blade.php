@@ -64,6 +64,12 @@
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
 
+        $(document).ready(function() {
+            if (SALE != null) {
+                $('select[name="payment_term"]').val(SALE.payment_term)
+            }
+        })
+
         $('#payment-form').on('submit', function(e) {
             e.preventDefault()
 

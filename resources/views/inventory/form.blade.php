@@ -71,6 +71,11 @@
                     <x-input-error :messages="$errors->get('min_price')" class="mt-1" />
                     <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
                 </div>
+                <div class="flex flex-col" id="cost-container">
+                    <x-app.input.label id="cost" class="mb-1">Cost <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="cost" id="cost" class="decimal-input flex-1" value="{{ old('cost', isset($prod) ? $prod->cost : ($dup_prod != null ? $dup_prod->cost : null)) }}"/>
+                    <x-input-error :messages="$errors->get('cost')" class="mt-1" />
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="weight" class="mb-1">Weight (In KG)</x-app.input.label>
                     <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ old('weight', isset($prod) ? $prod->weight : ($dup_prod != null ? $dup_prod->weight : null)) }}"/>
@@ -252,12 +257,12 @@
         let val = $(this).val()
 
         if (val == true) {
-            $('#serial-no-container').removeClass('hidden')
+            $('#serial-no-container, #cost-container').removeClass('hidden')
             $('#qty-container').addClass('hidden')
             $('#form #info-submit-container').addClass('hidden')
             $('#form #info-submit-container').removeClass('block')
         } else {
-            $('#serial-no-container').addClass('hidden')
+            $('#serial-no-container, #cost-container').addClass('hidden')
             $('#qty-container').removeClass('hidden')
             $('#form #info-submit-container').addClass('block')
             $('#form #info-submit-container').removeClass('hidden')

@@ -35,7 +35,7 @@ class UserController extends Controller
         'status' => 'required',
         'remark' => 'nullable|max:250',
         'password' => 'required|confirmed',
-        'branch' => 'required',
+        'branch' => 'nullable',
         'picture' => 'nullable',
         'picture.*' => 'file|extensions:jpg,png,jpeg'
     ];
@@ -137,7 +137,14 @@ class UserController extends Controller
                 }
             }
 
-            (new Branch)->assign(User::class, $user->id, $req->branch);
+            if ($req->branch != null) {
+                (new Branch)->assign(User::class, $user->id, $req->branch);
+            } else {
+                Branch::where([
+                    ['object_type', User::class],
+                    ['object_id', $user->id],
+                ])->delete();
+            }
 
             DB::commit();
 
@@ -212,13 +219,26 @@ class UserController extends Controller
                 }
             }
 
-            Branch::where([
-                ['object_type', User::class],
-                ['object_id', $user->id],
-            ])->update([
-                'location' => $req->branch,
-            ]);
+            if ($req->branch != null) {
+                $branch = Branch::where([
+                    ['object_type', User::class],
+                    ['object_id', $user->id],
+                ])->first();
 
+                if ($branch == null) {
+                    (new Branch)->assign(User::class, $user->id, $req->branch);
+                } else {
+                    $branch->update([
+                        'location' => $req->branch,
+                    ]);
+                }
+            } else {
+                Branch::where([
+                    ['object_type', User::class],
+                    ['object_id', $user->id],
+                ])->delete();
+            }
+            
             DB::commit();
 
             return redirect()->route('user_management.index')->with('success', 'User updated');

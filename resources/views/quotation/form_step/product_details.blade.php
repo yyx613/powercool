@@ -6,6 +6,7 @@
     <form action="" method="POST" enctype="multipart/form-data" id="product-form">
         @csrf
         <div>
+            <!-- Template -->
             <div class="grid grid-cols-4 gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50" id="item-template">
                 <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns" title="Delete Product">
                     <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/></svg>
@@ -32,10 +33,15 @@
                     <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" disabled="true" />
                     <x-app.message.error id="amount_err"/>
                 </div>
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col">
                     <x-app.input.label id="product_desc" class="mb-1">Product Description</x-app.input.label>
                     <x-app.input.input name="product_desc" id="product_desc" :hasError="$errors->has('product_desc')" />
                     <x-app.message.error id="product_desc_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="uom" class="mb-1">UOM <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="uom" id="uom" :hasError="$errors->has('uom')" />
+                    <x-app.message.error id="uom_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="promotion" class="mb-1">Promotion <span class="text-xs text-red-400 font-semibold mt-1 hidden" id="promo-hint"></span></x-app.input.label>
@@ -127,6 +133,7 @@
                 $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                 $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
+                $(`.items[data-id="${i+1}"] input[name="uom"]`).val(sp.uom)
                 $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(sp.unit_price)
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
                 $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
@@ -258,6 +265,7 @@
         let prodId = []
         let prodDesc = []
         let qty = []
+        let uom = []
         let unitPrice = []
         let promo = []
         let prodSerialNo = []
@@ -267,6 +275,7 @@
             prodId.push($(this).find('select[name="product_id[]"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
+            uom.push($(this).find('input[name="uom"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
             promo.push($(this).find('select[name="promotion[]"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
@@ -289,6 +298,7 @@
                 'product_id': prodId,
                 'product_desc': prodDesc,
                 'qty': qty,
+                'uom': uom,
                 'unit_price': unitPrice,
                 'promotion_id': promo,
                 'product_serial_no': prodSerialNo,

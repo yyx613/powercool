@@ -35,10 +35,15 @@
                     <x-app.input.input name="amount" id="amount" :hasError="$errors->has('amount')" disabled="true" />
                     <x-app.message.error id="amount_err"/>
                 </div>
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col">
                     <x-app.input.label id="product_desc" class="mb-1">Product Description</x-app.input.label>
                     <x-app.input.input name="product_desc" id="product_desc" :hasError="$errors->has('product_desc')" />
                     <x-app.message.error id="product_desc_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="uom" class="mb-1">UOM <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="uom" id="uom" :hasError="$errors->has('uom')" />
+                    <x-app.message.error id="uom_err"/>
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="promotion" class="mb-1">Promotion <span class="text-xs text-red-400 font-semibold mt-1 hidden" id="promo-hint"></span></x-app.input.label>
@@ -131,6 +136,7 @@
                 $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                 $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                 $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
+                $(`.items[data-id="${i+1}"] input[name="uom"]`).val(sp.uom)
                 $(`.items[data-id="${i+1}"] input[name="unit_price"]`).val(sp.unit_price)
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
                 $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
@@ -284,6 +290,7 @@
         let prodId = []
         let prodDesc = []
         let qty = []
+        let uom = []
         let unitPrice = []
         let promo = []
         let prodSerialNo = []
@@ -293,6 +300,7 @@
             prodId.push($(this).find('select[name="product_id[]"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
+            uom.push($(this).find('input[name="uom"]').val())
             unitPrice.push($(this).find('input[name="unit_price"]').val())
             promo.push($(this).find('select[name="promotion[]"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
@@ -315,6 +323,7 @@
                 'product_id': prodId,
                 'product_desc': prodDesc,
                 'qty': qty,
+                'uom': uom,
                 'unit_price': unitPrice,
                 'promotion_id': promo,
                 'product_serial_no': prodSerialNo,

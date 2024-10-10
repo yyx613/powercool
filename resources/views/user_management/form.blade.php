@@ -121,7 +121,7 @@
                     <x-input-error :messages="$errors->get('remark')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="branch" class="mb-1">Branch <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="branch" class="mb-1">Branch</x-app.input.label>
                     <x-app.input.select name="branch" id="branch" :hasError="$errors->has('branch')">
                         <option value="">Select a branch</option>
                         @foreach ($branches as $key => $val)

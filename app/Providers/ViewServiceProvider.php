@@ -11,6 +11,7 @@ use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Product;
+use App\Models\ProductCost;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProjectType;
 use App\Models\Promotion;
@@ -241,7 +242,7 @@ class ViewServiceProvider extends ServiceProvider
             // Products
             $exclude_ids = [];
             // Not in production
-            $pmm_ids = ProductionMilestoneMaterial::pluck('product_child_id')->toArray();
+            $pmm_ids = ProductionMilestoneMaterial::distinct()->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
             // Exclude converted sale
             $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
             $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
@@ -261,15 +262,15 @@ class ViewServiceProvider extends ServiceProvider
             $products = Product::with(['children' => function ($q) use ($assigned_pc_ids, $pmm_ids) {
                 $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
             }])
-                ->withCount(['children' => function ($q) use ($assigned_pc_ids, $pmm_ids) {
-                    $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
-                }])
+                // ->withCount(['children' => function ($q) use ($assigned_pc_ids, $pmm_ids) {
+                //     $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
+                // }])
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
                 ->orWhere(function ($q) {
                     $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
                 })
-                ->having('children_count', '>', 0)
+                // ->having('children_count', '>', 0)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -389,9 +390,11 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();
             $terms = CreditTerm::where('is_active', true)->orderBy('id', 'desc')->get();
+            $costs = ProductCost::orderBy('id', 'desc')->get();
 
             $view->with('sales', $sales);
             $view->with('terms', $terms);
+            $view->with('costs', $costs);
         });
     }
 }
