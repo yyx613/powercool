@@ -72,11 +72,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
     });
     // GRN
-    Route::controller(GRNController::class)->prefix('grn')->name('grn.')->group(function () {
+    Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create');
-        Route::get('/edit/{sku}', 'edit')->name('edit');
+        Route::get('/create', 'create')->name('create')->middleware(['can:grn.create']);
+        Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf');
         Route::post('/stock-in', 'stockIn')->name('stock_in');

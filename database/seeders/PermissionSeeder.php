@@ -30,6 +30,10 @@ class PermissionSeeder extends Seeder
             'inventory.raw_material.edit',
             'inventory.raw_material.delete',
 
+            'grn.view',
+            'grn.create',
+            'grn.edit',
+
             'sale.quotation.view',
             'sale.quotation.create',
             'sale.quotation.edit',
@@ -51,8 +55,7 @@ class PermissionSeeder extends Seeder
             'sale.target.convert',
 
             'sale.billing.view',
-            'sale.billing.create',
-            'sale.billing.edit',
+            'sale.billing.convert',
 
             'task.view',
             'task.create',
