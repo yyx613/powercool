@@ -9,6 +9,7 @@ use App\Models\CustomerLocation;
 use App\Models\ObjectCreditTerm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
@@ -119,7 +120,7 @@ class CustomerController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->customer_id == null) {
+            if ($req->customer_id == null || $req->customer_id == 'null') {
                 $customer = Customer::create([
                     'sku' => (new Customer)->generateSku($req->company_name[0]),
                     'name' => $req->customer_name,

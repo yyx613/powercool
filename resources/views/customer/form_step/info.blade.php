@@ -97,7 +97,7 @@
                 <div class="flex flex-col">
                     <x-app.input.label id="debtor_type" class="mb-1">Debtor Type</x-app.input.label>
                     <x-app.input.select name="debtor_type" id="debtor_type" :hasError="$errors->has('debtor_type')">
-                        <option value="">Select a debtor_type</option>
+                        <option value="">Select a debtor type</option>
                         @foreach ($debtor_types as $debtor_type)
                             <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>{{ $debtor_type->name }}</option>
                         @endforeach

@@ -56,6 +56,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.category' => [],
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
+                'grn' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
                 'sale.delivery_order' => [],
@@ -79,6 +80,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.product'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'inventory.raw_material')) {
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'grn')) {
+                    array_push($permissions_group['grn'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'sale.quotation')) {
                     array_push($permissions_group['sale.quotation'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'sale.sale_order')) {
