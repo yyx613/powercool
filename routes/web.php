@@ -42,15 +42,16 @@ Route::get('/', function () {
     return redirect(route('login'));
 });
 
-Route::middleware('auth', 'select_lang')->group(function () {
-    // Change language
-    Route::get('/change-language/{lang}', function($locale) {
-        Session::put('selected_lang', $locale);
+// Change language
+Route::get('/change-language/{lang}', function($locale) {
+    Session::put('selected_lang', $locale);
 
-        App::setLocale($locale);
+    App::setLocale($locale);
 
-        return back();
-    })->name('change_language');
+    return back();
+})->name('change_language');
+
+Route::middleware('auth', 'select_lang')->group(function () { 
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';

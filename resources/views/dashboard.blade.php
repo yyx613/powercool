@@ -2,10 +2,10 @@
 
 @section('content')
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold">Dashboard</h1>
+        <h1 class="text-2xl font-semibold">{{ __('Dashboard') }}</h1>
         <div class="flex flex-col">
-            <span class="text-2xl font-semibold">{{ now()->format('l') }}</span>
-            <span class="text-lg leading-none">{{ now()->format('d F Y, H:i A') }}</span>
+            <span class="text-2xl font-semibold">{{ __(now()->format('l')) }}</span>
+            <span class="text-lg leading-none">{{ now()->format('d ') . __(now()->format('F')) . now()->format(' Y, H:i A') }}</span>
         </div>
     </div>
     <!-- Content -->
@@ -14,11 +14,11 @@
             <!-- Today Task -->
             <div class="bg-white rounded-lg p-3 border">
                 <div class="mb-4 flex items-center justify-between">
-                    <h6 class="text-lg font-semibold">Today Task</h6>
-                    <x-app.input.select name="task_status" id="" class="w-1/4 text-xs capitalize">
-                        <option value="">Select a status</option>
+                    <h6 class="text-lg font-semibold">{{ __('Today Task') }}</h6>
+                    <x-app.input.select name="task_status" id="" class="w-1/4 text-xs">
+                        <option value="">{{ __('Select a status') }}</option>
                         @foreach ($task_status as $key => $label)
-                            <option value="{{ $key }}" @selected($selected_task_status == $key)>{{ $label }}</option>
+                            <option value="{{ $key }}" @selected($selected_task_status == $key)>{{ __($label) }}</option>
                         @endforeach
                     </x-app.input.select>
                 </div>
@@ -26,10 +26,10 @@
                     <table class="w-full">
                         <thead>
                             <tr>
-                                <th class="px-1 py-2 border-b text-sm w-4/6 text-left">Task name</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Due date</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Status</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Progress</th>
+                                <th class="px-1 py-2 border-b text-sm w-4/6 text-left">{{ __('Task name') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Due date') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Status') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Progress') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -49,7 +49,7 @@
                                                 $color = 'bg-teal-400';
                                             }
                                         @endphp
-                                        <span class="rounded-full py-1 px-2 capitalize text-xs font-semibold text-white {{ $color }}">{{ $task->statusToHumanRead($task->status) }}</span>
+                                        <span class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($task->statusToHumanRead($task->status)) }}</span>
                                     </td>
                                     <td class="px-1 py-2 flex justify-center">
                                         <x-app.circular-progress perc="{{ $task->getProgress($task) }}" />
@@ -63,11 +63,11 @@
             <!-- Production Summary -->
             <div class="bg-white rounded-lg p-3 border">
                 <div class="mb-4 flex items-center justify-between">
-                    <h6 class="text-lg font-semibold">Production Summary</h6>
-                    <x-app.input.select name="production_status" id="" class="w-1/4 text-xs capitalize">
-                        <option value="">Select a status</option>
+                    <h6 class="text-lg font-semibold">{{ __('Production Summary') }}</h6>
+                    <x-app.input.select name="production_status" id="" class="w-1/4 text-xs">
+                        <option value="">{{ __('Select a status') }}</option>
                         @foreach ($production_status as $key => $label)
-                            <option value="{{ $key }}" @selected($selected_production_status == $key)>{{ $label }}</option>
+                            <option value="{{ $key }}" @selected($selected_production_status == $key)>{{ __($label) }}</option>
                         @endforeach
                     </x-app.input.select>
                 </div>
@@ -75,11 +75,11 @@
                     <table class="w-full">
                         <thead>
                             <tr>
-                                <th class="px-1 py-2 border-b text-sm w-3/6 text-left">Task name</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Assigned</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Due date</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Status</th>
-                                <th class="px-1 py-2 border-b text-sm w-1/6">Progress</th>
+                                <th class="px-1 py-2 border-b text-sm w-3/6 text-left">{{ __('Task name') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Assigned') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Due date') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Status') }}</th>
+                                <th class="px-1 py-2 border-b text-sm w-1/6">{{ __('Progress') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -110,7 +110,7 @@
                                                 $color = 'bg-teal-400';
                                             }
                                         @endphp
-                                        <span class="rounded-full py-1 px-2 capitalize text-xs font-semibold text-white {{ $color }}">{{ $ps->statusToHumanRead($ps->status) }}</span>
+                                        <span class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($ps->statusToHumanRead($ps->status)) }}</span>
                                     </td>
                                     <td class="px-1 py-2 flex justify-center">
                                         <x-app.circular-progress perc="{{ $ps->getProgress($ps) }}" />
@@ -123,7 +123,7 @@
             </div>
             <!-- Stock Alert (Product) -->
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">Stock Alert (Products)</h6>
+                <h6 class="text-lg font-semibold mb-4">{{ __('Stock Alert (Products)') }}</h6>
                 @foreach ($products as $pro)
                     @if ($pro->isLowStock())
                         <div class="mb-2 flex items-center gap-4">
@@ -133,14 +133,14 @@
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} Left</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach
             </div>
             <!-- Stock Alert (Raw Material) -->
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">Stock Alert (Raw Materials)</h6>
+                <h6 class="text-lg font-semibold mb-4">{{ __('Stock Alert (Raw Materials)') }}</h6>
                 @foreach ($raw_materials as $pro)
                     @if ($pro->isLowStock())
                         <div class="mb-2 flex items-center gap-4">
@@ -150,7 +150,7 @@
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} Left</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach
@@ -159,7 +159,7 @@
         <div class="flex-1 flex flex-col gap-4">
             <!-- Suppliers & Customers -->
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">Suppliers & Customers</h6>
+                <h6 class="text-lg font-semibold mb-4">{{ __('Suppliers & Customers') }}</h6>
                 <div class="flex">
                     <div class="flex-1 flex flex-col items-center">
                         <div class="p-2 rounded-full bg-sky-200">
@@ -168,20 +168,20 @@
                             </svg>
                         </div>
                         <span class="text-lg font-semibold mt-2">{{ $suppliers_count }}</span>
-                        <span class="text-sm">Number of Suppliers</span>
+                        <span class="text-sm">{{ __('Number of Suppliers') }}</span>
                     </div>
                     <div class="flex-1 flex flex-col items-center border-l">
                         <div class="p-2 rounded-full bg-emerald-200">
                             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
                         </div>
                         <span class="text-lg font-semibold mt-2">{{ $customers_count }}</span>
-                        <span class="text-sm">Number of Customers</span>
+                        <span class="text-sm">{{ __('Number of Customers') }}</span>
                     </div>
                 </div>
             </div>
             <!-- Best Selling Products -->
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">Best Selling Products</h6>
+                <h6 class="text-lg font-semibold mb-4">{{ __('Best Selling Products') }}</h6>
                 @foreach ($best_selling_products as $count => $pro)
                     <div class="mb-2 flex items-center gap-4 bg-slate-50 p-2 rounded-md">
                         <div class="h-8 w-8 bg-white rounded-md">

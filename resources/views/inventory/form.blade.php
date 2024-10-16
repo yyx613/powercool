@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-6">
         <x-app.page-title url="{{ route('product.index') }}">
-            {{ $is_product ? (isset($prod) ? 'Edit Product - ' . $prod->sku : 'Create Product') : (isset($prod) ? 'Edit Raw Material - ' . $prod->sku : 'Create Raw Material') }}
+            {{ __($is_product ? (isset($prod) ? 'Edit Product - ' . $prod->sku : 'Create Product') : (isset($prod) ? 'Edit Raw Material - ' . $prod->sku : 'Create Raw Material')) }}
         </x-app.page-title>
     </div>
     @include('components.app.alert.parent')
@@ -16,34 +16,34 @@
         <div class="bg-white p-4 border rounded-md">
             <div class="grid grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_code" class="mb-1">Model Code <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="model_code" class="mb-1">{{ __('Model Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_code" id="model_code" value="{{ old('model_code', isset($prod) ? $prod->sku : null) }}" />
                     <x-input-error :messages="$errors->get('model_code')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_name" class="mb-1">Model Name <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="model_name" class="mb-1">{{ __('Model Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_name" id="model_name" value="{{ old('model_name', isset($prod) ? $prod->model_name : ($dup_prod != null ? $dup_prod->model_name : null)) }}" />
                     <x-input-error :messages="$errors->get('model_name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_desc" class="mb-1">Model Description <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="model_desc" class="mb-1">{{ __('Model Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_desc" id="model_desc" value="{{ old('model_desc', isset($prod) ? $prod->model_desc : ($dup_prod != null ? $dup_prod->model_desc : null)) }}" />
                     <x-input-error :messages="$errors->get('model_desc')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="barcode" class="mb-1">Barcode</x-app.input.label>
+                    <x-app.input.label id="barcode" class="mb-1">{{ __('Barcode') }}</x-app.input.label>
                     <x-app.input.input name="barcode" id="barcode" value="{{ old('barcode', isset($prod) ? $prod->barcode : ($dup_prod != null ? $dup_prod->barcode : null)) }}" />
                     <x-input-error :messages="$errors->get('barcode')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="uom" class="mb-1">UOM <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="uom" id="uom" value="{{ old('uom', isset($prod) ? $prod->uom : ($dup_prod != null ? $dup_prod->uom : null)) }}" />
                     <x-input-error :messages="$errors->get('uom')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="category_id" class="mb-1">Category <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="category_id" class="mb-1">{{ __('Category') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="category_id" id="category_id">
-                        <option value="">Select a category</option>
+                        <option value="">{{ __('Select a category') }}</option>
                         @foreach ($inv_cats as $cat)
                             <option value="{{ $cat->id }}" @selected(old('category_id', isset($prod) ? $prod->inventory_category_id : ($dup_prod != null ? $dup_prod->inventory_category_id : null)) == $cat->id)>{{ $cat->name }}</option>
                         @endforeach
@@ -52,18 +52,18 @@
                 </div>
                 @if ($is_product == false)
                     <div class="flex flex-col" id="qty-container">
-                        <x-app.input.label id="qty" class="mb-1">Quantity <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="qty" id="qty" class="int-input" value="{{ old('qty', isset($prod) ? $prod->qty : ($dup_prod != null ? $dup_prod->qty : null)) }}" />
                         <x-input-error :messages="$errors->get('qty')" class="mt-1" />
                     </div>
                 @endif
                 <div class="flex flex-col">
-                    <x-app.input.label id="low_stock_threshold" class="mb-1">Low Stock Threshold</x-app.input.label>
+                    <x-app.input.label id="low_stock_threshold" class="mb-1">{{ __('Low Stock Threshold') }}</x-app.input.label>
                     <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ old('low_stock_threshold', isset($prod) ? $prod->low_stock_threshold : ($dup_prod != null ? $dup_prod->low_stock_threshold : null)) }}" />
                     <x-input-error :messages="$errors->get('low_stock_threshold')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="min_price" class="mb-1">Selling Price <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="min_price" class="mb-1">{{ __('Selling Price') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <div class="flex gap-x-4">
                         <x-app.input.input name="min_price" id="min_price" class="decimal-input flex-1" value="{{ old('min_price', isset($prod) ? $prod->min_price : ($dup_prod != null ? $dup_prod->min_price : null)) }}"/>
                         <x-app.input.input name="max_price" id="max_price" class="decimal-input flex-1" value="{{ old('max_price', isset($prod) ? $prod->max_price : ($dup_prod != null ? $dup_prod->max_price : null)) }}"/>
@@ -72,17 +72,17 @@
                     <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
                 </div>
                 <div class="flex flex-col" id="cost-container">
-                    <x-app.input.label id="cost" class="mb-1">Cost <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="cost" class="mb-1">{{ __('Cost') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="cost" id="cost" class="decimal-input flex-1" value="{{ old('cost', isset($prod) ? $prod->cost : ($dup_prod != null ? $dup_prod->cost : null)) }}"/>
                     <x-input-error :messages="$errors->get('cost')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="weight" class="mb-1">Weight (In KG)</x-app.input.label>
+                    <x-app.input.label id="weight" class="mb-1">{{ __('Weight (In KG)') }}</x-app.input.label>
                     <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ old('weight', isset($prod) ? $prod->weight : ($dup_prod != null ? $dup_prod->weight : null)) }}"/>
                     <x-input-error :messages="$errors->get('weight')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Dimension (L x W x H) (In CM)</x-app.input.label>
+                    <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In CM)') }}</x-app.input.label>
                     <div class="flex gap-x-2">
                         <div class="bg-gray-100 flex items-center">
                             <span class="font-black p-2">L</span>
@@ -102,16 +102,16 @@
                     <x-input-error :messages="$errors->get('dimension_height')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status">
-                        <option value="">Select a Active/Inactive</option>
+                        <option value="">{{ __('Select a Active/Inactive') }}</option>
                         <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) == 1)>Active</option>
                         <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) === 0)>Inactive</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Image</x-app.input.label>
+                    <x-app.input.label class="mb-1">{{ __('Image') }}</x-app.input.label>
                     <x-app.input.file id="image[]" :hasError="$errors->has('image')"/>
                     <x-input-error :messages="$errors->get('image')" class="mt-1" />
                     <div class="uploaded-file-preview-container" data-id="image">
@@ -127,9 +127,9 @@
                 </div>
                 @if ($is_product == false)
                     <div class="flex flex-col">
-                        <x-app.input.label id="supplier_id" class="mb-1">Supplier <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label id="supplier_id" class="mb-1">{{ __('Supplier') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="supplier_id" id="supplier_id">
-                            <option value="">Select a supplier</option>
+                            <option value="">{{ __('Select a supplier') }}</option>
                             @foreach ($suppliers as $sup)
                                 <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>{{ $sup->name }}</option>
                             @endforeach
@@ -137,9 +137,9 @@
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="is_sparepart" class="mb-1">Is Spare part <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label id="is_sparepart" class="mb-1">{{ __('Is Spare part') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="is_sparepart" id="is_sparepart">
-                            <option value="">Select a Yes/No</option>
+                            <option value="">{{ __('Select a Yes/No') }}</option>
                             <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>Yes</option>
                             <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>No</option>
                         </x-app.input.select>
@@ -150,19 +150,19 @@
             @if (!$is_product)
                 <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">
                     @if (!isset($prod))
-                        <x-app.button.submit id="submit-create-btn">Save and Create</x-app.button.submit>
+                        <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
                     @endif
-                    <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
             @endif
         </div>
         <!-- Serial No -->
         <div class="bg-white p-4 border rounded-md mt-6" id="serial-no-container">
             <div class="mb-2 flex items-center justify-between">
-                <h6 class="font-medium text-lg">Serial No</h6>
-                <span class="text-sm text-slate-500">Serial No Qty: <span id="serial-no-qty">0</span></span>
+                <h6 class="font-medium text-lg">{{ __('Serial No') }}</h6>
+                <span class="text-sm text-slate-500">{{ __('Serial No Qty:') }} <span id="serial-no-qty">0</span></span>
             </div>
-            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" placeholder="Enter Serial No" />
+            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" placeholder="{{ __('Enter Serial No') }}" />
             <x-app.input.input name="order_idx" id="order_idx" class="hidden"/>
             <ul class="my-2" id="serial_no_list">
                 <!-- Template -->
@@ -182,9 +182,9 @@
             <x-input-error :messages="$errors->get('serial_no')" class="mt-1" />
             <div class="mt-8 flex justify-end gap-x-4" id="info-serial-no-container">
                 @if (!isset($prod))
-                    <x-app.button.submit id="submit-create-btn">Save and Create</x-app.button.submit>
+                    <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
                 @endif
-                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
             </div>
         </div>
     </form>

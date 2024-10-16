@@ -19,12 +19,12 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>Sale Order</x-app.page-title>
+        <x-app.page-title>{{ __('Sale Order') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.sale_order.convert')
             <a href="{{ route('sale_order.to_delivery_order') }}" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>Convert to Delivery Order</span>
+                <span>{{ __('Convert to Delivery Order') }}</span>
             </a>
             @endcan
             @can('sale.sale_order.create')
@@ -32,7 +32,7 @@
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                     <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
                 </svg>
-                <span>New</span>
+                {{ __('New') }}
             </a>
             @endcan
         </div>
@@ -42,7 +42,7 @@
         <!-- Filters -->
         <div class="flex max-w-xs w-full mb-4">
             <div class="flex-1">
-                <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="Search">
+                <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                     <div class="rounded-md border border-transparent p-1 ml-1">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
                     </div>
@@ -54,9 +54,9 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>Sale Order ID</th>
-                    <th>Total Amount</th>
-                    <th>Status</th>
+                    <th>{{ __('Sale Order ID') }}</th>
+                    <th>{{ __('Total Amount') }}</th>
+                    <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
             </thead>

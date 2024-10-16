@@ -19,30 +19,30 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ $for_role == 'driver' ? 'Driver' : ($for_role == 'technician' ? 'Technician' : 'Sale') }} Task</x-app.page-title>
+        <x-app.page-title>{{ $for_role == 'driver' ? __('Driver Task') : ($for_role == 'technician' ? __('Technician Task') : __('Sale Task')) }}</x-app.page-title>
         @can('task.create')
         <a href="{{ $for_role == 'driver' ? route('task.driver.create') : ($for_role == 'technician' ? route('task.technician.create') : route('task.sale.create')) }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                 <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
             </svg>
-            New
+            {{ __('New') }}
         </a>
         @endcan
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
     <div class="mb-6 flex gap-x-3">
-        <x-app.task-summary-card value="{{ $due_today }}" label="Due Today" class="flex-1 bg-indigo-400" />
-        <x-app.task-summary-card value="{{ $to_do }}" label="New" class="flex-1 bg-red-400" />
-        <x-app.task-summary-card value="{{ $doing }}" label="Doing" class="flex-1 bg-orange-400" />
-        <x-app.task-summary-card value="{{ $in_review }}" label="In Review" class="flex-1 bg-blue-400" />
-        <x-app.task-summary-card value="{{ $completed }}" label="Done" class="flex-1 bg-teal-400" />
+        <x-app.task-summary-card value="{{ $due_today }}" label="{{ __('Due Today') }}" class="flex-1 bg-indigo-400" />
+        <x-app.task-summary-card value="{{ $to_do }}" label="{{ __('New') }}" class="flex-1 bg-red-400" />
+        <x-app.task-summary-card value="{{ $doing }}" label="{{ __('Doing') }}" class="flex-1 bg-orange-400" />
+        <x-app.task-summary-card value="{{ $in_review }}" label="{{ __('In Review') }}" class="flex-1 bg-blue-400" />
+        <x-app.task-summary-card value="{{ $completed }}" label="{{ __('Done') }}" class="flex-1 bg-teal-400" />
     </div>
     <div>
         <!-- Filters -->
         <div class="flex max-w-xs w-full mb-4">
             <div class="flex-1">
-                <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="Search">
+                <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                     <div class="rounded-md border border-transparent p-1 ml-1">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
                     </div>
@@ -54,11 +54,11 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>Task ID</th>
-                    <th>Task Name</th>
-                    <th>Due Date</th>
-                    <th>Amount to Collect</th>
-                    <th>Status</th>
+                    <th>{{ __('Task ID') }}</th>
+                    <th>{{ __('Task Name') }}</th>
+                    <th>{{ __('Due Date') }}</th>
+                    <th>{{ __('Amount to Collect') }}</th>
+                    <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -129,13 +129,13 @@
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
-                                return '<span class="text-red-500">To Do</span>'
+                                return `<span class="text-red-500">${ "{!! __('To Do') !!}" }</span>`
                             case 2:
-                                return '<span class="text-yellow-500">Doing</span>'
+                                return `<span class="text-yellow-500">${ "{!! __('Doing') !!}" }</span>`
                             case 3:
-                                return '<span class="text-blue-500">In Review</span>'
+                                return `<span class="text-blue-500">${ "{!! __('In Review') !!}" }</span>`
                             case 4:
-                                return '<span class="text-green-500">Completed</span>'
+                                return `<span class="text-green-500">${ "{!! __('Completed') !!}" }</span>`
                         }
                     }
                 },

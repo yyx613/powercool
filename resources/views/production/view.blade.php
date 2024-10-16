@@ -2,22 +2,22 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('production.index') }}">View Production</x-app.page-title>
+        <x-app.page-title url="{{ route('production.index') }}">{{ __('View Production') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow flex">
         <div class="flex-[2]">
             <div class="border rounded-md flex">
                 <div class="flex-1 flex flex-col p-3">
-                    <span class="text-md">Created</span>
+                    <span class="text-md">{{ __('Created') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $production->formatted_created_at }}</span>
                 </div>
                 <div class="flex-1 flex flex-col p-3 border-x">
-                    <span class="text-md">Start Date</span>
+                    <span class="text-md">{{ __('Start Date') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $production->start_date }}</span>
                 </div>
                 <div class="flex-1 flex flex-col p-3">
-                    <span class="text-md">Due Date</span>
+                    <span class="text-md">{{ __('Due Date') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $production->due_date }}</span>
                 </div>
             </div>
@@ -25,28 +25,28 @@
                 <div class="flex-1 flex flex-col pt-4">
                     <div class="bg-blue-300 rounded-lg p-1.5 flex flex-col">
                         <span class="flex-1 uppercase text-lg text-center font-semibold" id="status">{{ $production->status }}</span>
-                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Status</span>
+                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Status') }}</span>
                     </div>
                 </div>
                 <div class="flex-1 flex flex-col pt-4">
                     <div class="bg-slate-300 rounded-lg p-1.5 flex flex-col">
                         <span class="flex-1 uppercase text-lg text-center font-semibold" id="progress">{{ $production->progress }}%</span>
-                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Progress</span>
+                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Progress') }}</span>
                     </div>
                 </div>
             </div>
             <div class="border-t pt-4 mt-4">
                 <div class="mb-4">
-                    <h6 class="text-md font-semibold">Production Name</h6>
+                    <h6 class="text-md font-semibold">{{ __('Production Name') }}</h6>
                     <span class="text-md text-slate-500">{{ $production->name }}</span>
                 </div>
                 <div class="mb-4">
-                    <h6 class="text-md font-semibold">Production Description</h6>
+                    <h6 class="text-md font-semibold">{{ __('Production Description') }}</h6>
                     <span class="text-md text-slate-500">{{ $production->desc }}</span>
                 </div>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Milestone</h6>
+                <h6 class="text-md font-semibold">{{ __('Milestone') }}</h6>
                 <ul>
                     @foreach ($production->milestones as $ms)
                         <li class="flex items-center gap-x-2 py-1 ms-row transition duration-300 hover:bg-slate-50" data-id="{{ $ms->pivot->id }}" data-completed="{{ $ms->pivot->submitted_at != null }}" data-required-serial-no="{{ $ms->pivot->required_serial_no }}">
@@ -62,10 +62,10 @@
         </div>
         <div class="flex-1 pl-4 ml-4 border-l">
             <div class="bg-blue-900 rounded-lg p-2">
-                <h1 class="font-black text-xl text-white">PRODUCTION ID: {{ $production->sku }}</h1>
+                <h1 class="font-black text-xl text-white">{{ __('Production ID') }}: {{ $production->sku }}</h1>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Assigned</h6>
+                <h6 class="text-md font-semibold">{{ __('Assigned') }}</h6>
                 <ul>
                     @foreach ($production->users as $u)
                         <li class="flex items-center gap-x-4 my-2">
@@ -85,7 +85,7 @@
                 </ul>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Remark</h6>
+                <h6 class="text-md font-semibold">{{ __('Remark') }}</h6>
                 <p class="text-md text-slate-500">{{ $production->remark ?? 'No Remark' }}</p>
             </div>
         </div>

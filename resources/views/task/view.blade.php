@@ -2,22 +2,22 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ $for_role == 'driver' ? route('task.driver.index') : ($for_role == 'technician' ? route('task.technician.index') : route('task.sale.index')) }}">View Task</x-app.page-title>
+        <x-app.page-title url="{{ $for_role == 'driver' ? route('task.driver.index') : ($for_role == 'technician' ? route('task.technician.index') : route('task.sale.index')) }}">{{ __('View Task') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow flex">
         <div class="flex-[2]">
             <div class="border rounded-md flex">
                 <div class="flex-1 flex flex-col p-3">
-                    <span class="text-md">Created</span>
+                    <span class="text-md">{{ __('Created') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $task->formatted_created_at }}</span>
                 </div>
                 <div class="flex-1 flex flex-col p-3 border-x">
-                    <span class="text-md">Start Date</span>
+                    <span class="text-md">{{ __('Start Date') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $task->start_date }}</span>
                 </div>
                 <div class="flex-1 flex flex-col p-3">
-                    <span class="text-md">Due Date</span>
+                    <span class="text-md">{{ __('Due Date') }}</span>
                     <span class="text-lg mt-2 font-semibold">{{ $task->due_date }}</span>
                 </div>
             </div>
@@ -25,27 +25,27 @@
                 <div class="flex-1 flex flex-col pt-4">
                     <div class="bg-blue-300 rounded-lg p-1.5 flex flex-col">
                         <span class="flex-1 uppercase text-lg text-center font-semibold">{{ $task->status }}</span>
-                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Status</span>
+                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Status') }}</span>
                     </div>
                 </div>
                 <div class="flex-1 flex flex-col pt-4">
                     <div class="bg-slate-300 rounded-lg p-1.5 flex flex-col">
                         <span class="flex-1 uppercase text-lg text-center font-semibold">{{ $task->progress }} %</span>
-                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">Progress</span>
+                        <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Progress') }}</span>
                     </div>
                 </div>
             </div>
             <div class="border-t pt-4 mt-4">
                 <div class="mb-4">
-                    <h6 class="text-md font-semibold">Task Name</h6>
+                    <h6 class="text-md font-semibold">{{ __('Task Name') }}</h6>
                     <span class="text-md text-slate-500">{{ $task->name }}</span>
                 </div>
                 <div class="mb-4">
-                    <h6 class="text-md font-semibold">Task Description</h6>
+                    <h6 class="text-md font-semibold">{{ __('Task Description') }}</h6>
                     <span class="text-md text-slate-500">{{ $task->desc }}</span>
                 </div>
                 <div>
-                    <h6 class="text-md font-semibold">Attachments</h6>
+                    <h6 class="text-md font-semibold">{{ __('Attachments') }}</h6>
                     @if (count($task->attachments) > 0)
                         <div class="flex flex-wrap gap-y-2 mt-2">
                             @foreach ($task->attachments as $att)
@@ -65,10 +65,10 @@
         </div>
         <div class="flex-1 pl-4 ml-4 border-l">
             <div class="bg-blue-900 rounded-lg p-2">
-                <h1 class="font-black text-xl text-white">TASK ID: {{ $task->sku }}</h1>
+                <h1 class="font-black text-xl text-white">{{ __('Task ID') }}: {{ $task->sku }}</h1>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Assigned</h6>
+                <h6 class="text-md font-semibold">{{ __('Assigned') }}</h6>
                 <ul>
                     @foreach ($task->users as $u)
                         <li class="flex items-center gap-x-4 my-2">
@@ -88,11 +88,11 @@
                 </ul>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Remark</h6>
+                <h6 class="text-md font-semibold">{{ __('Remark') }}</h6>
                 <p class="text-md text-slate-500">{{ $task->remark ?? 'No Remark' }}</p>
             </div>
             <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">Last Activity</h6>
+                <h6 class="text-md font-semibold">{{ __('Last Activity') }}</h6>
                 <ul class="overflow-y-auto max-h-60">
                     @foreach ($task->logs as $log)
                         <li class="my-2">

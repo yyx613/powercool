@@ -80,13 +80,13 @@ class Task extends Model
     public function statusToHumanRead($val): string {
         switch ($val) {
             case self::STATUS_TO_DO:
-                return 'to do';
+                return 'To Do';
             case self::STATUS_DOING:
-                return 'doing';
+                return 'Doing';
             case self::STATUS_IN_REVIEW:
-                return 'in review';
+                return 'In Review';
             case self::STATUS_COMPLETED:
-                return 'completed';
+                return 'Completed';
         }
     }
 

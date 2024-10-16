@@ -14,6 +14,8 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     </head>
     <body>
         <div class="min-h-screen flex">
@@ -21,11 +23,22 @@
                 <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
                 <h1 class="text-white text-2xl text-center">POWER COOL EQUIPMENTS (M) SDN BHD</h1>
             </div>
-            <div class="flex-[2] bg-grey-[50] flex items-center justify-center">
-                <div class="max-w-sm w-full">
-                    {{ $slot }}
+            <div class="flex-[2] p-4">
+                <div class="flex flex-col h-full">
+                    <!-- Language -->
+                    <div class="flex justify-end">
+                        <x-app.language-selector/>
+                    </div>
+                    <!-- Auth  -->
+                    <div class="flex items-center justify-center h-full">
+                         <div class="max-w-sm w-full">
+                             {{ $slot }}
+                         </div>
+                    </div>
                 </div>
             </div>
         </div>
     </body>
+
+    @stack('scripts')
 </html>

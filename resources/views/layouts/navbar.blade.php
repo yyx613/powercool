@@ -2,17 +2,18 @@
     @if (isSuperAdmin())
         <select name="as_branch" id="as_branch" class="border border-slate-200 rounded-full text-xs">
             @foreach ($branches as $key => $val)
-                <option value="{{ $key }}" @selected(session('as_branch') == $key)>As {{ $val }} Branch</option>
+                <option value="{{ $key }}" @selected(session('as_branch') == $key)>
+                    @php
+                        $title = 'As ' . $val . ' Branch';
+                    @endphp
+                    {{ __($title) }}
+                </option>
             @endforeach
         </select>
     @endif
 
     <!-- Language -->
-    <select name="change_lang" id="change_lang" class="border border-slate-200 rounded-full text-xs">
-        @foreach ($languages as $key => $val)
-            <option value="{{ $key }}" @selected(session('selected_lang') == $key)>{{ $val }}</option>
-        @endforeach
-    </select>
+    <x-app.language-selector/>
 </div>
 
 @push('scripts')
@@ -31,13 +32,6 @@
                 window.location.reload()
             }
         });
-    })
-
-    $('#navbar #change_lang').on('change', function() {
-        let url = '{{ config("app.url") }}'
-        url = `${url}/change-language/${$(this).val()}`
-
-        window.location.href = url
     })
 </script>
 @endpush

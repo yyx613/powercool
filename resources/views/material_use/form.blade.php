@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('material_use.index') }}">{{ isset($material) ? 'Edit Material Use' : 'Create Material Use' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('material_use.index') }}">{{ isset($material) ? __('Edit Material Use') : __('Create Material Use') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="" method="POST" enctype="multipart/form-data">
@@ -11,9 +11,9 @@
             <div class="w-1/3">
                 <!-- Product -->
                 <div class="flex flex-col mb-4">
-                    <x-app.input.label id="product" class="mb-1">Product Name <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="product" id="product" :hasError="$errors->has('product')" placeholder="Select a product">
-                        <option value="">Select a product</option>
+                    <x-app.input.label id="product" class="mb-1">{{ __('Product Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="product" id="product" :hasError="$errors->has('product')" placeholder="{{ __('Select a product') }}">
+                        <option value="">{{ __('Select a product') }}</option>
                         @foreach ($products as $pro)
                             <option value="{{ $pro->id }}">{{ $pro->model_name }}</option>
                         @endforeach
@@ -24,18 +24,18 @@
             <div class="w-1/2">
                 <!-- Material -->
                 <div class="flex flex-col">
-                    <x-app.input.label id="material" class="mb-1">Raw Material Use <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="material" class="mb-1">{{ __('Raw Material Use') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <div id="material-container"></div>
                     <!-- Template -->
                     <div class="mb-4 hidden" id="material-template">
                         <div class="flex items-center gap-4 w-full rounded-md">
                             <div class="flex flex-col flex-1">
-                                <x-app.input.select name="material[]" placeholder="Select a material">
-                                    <option value="">Select a material</option>
+                                <x-app.input.select name="material[]" placeholder="{{ __('Select a material') }}">
+                                    <option value="">{{ __('Select a material') }}</option>
                                 </x-app.input.select>
                             </div>
                             <div class="flex flex-col flex-1">
-                                <x-app.input.input name="qty[]" id="qty" :hasError="$errors->has('qty')" class="int-input" placeholder="Enter quantity" />
+                                <x-app.input.input name="qty[]" id="qty" :hasError="$errors->has('qty')" class="int-input" placeholder="{{ __('Enter quantity') }}" />
                             </div>
                             <button type="button" class="bg-rose-400 p-2 rounded-full h-8 w-8 flex items-center justify-center delete-item-btns" title="Delete Product">
                                 <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/></svg>
@@ -50,13 +50,13 @@
                             <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                                 <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
                             </svg>
-                            <span class="text-sm">Add Material</span>
+                            <span class="text-sm">{{ __('Add Material') }}</span>
                         </button>
                     </div>
                 </div>
             </div>
             <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
             </div>
         </div>
     </form>
@@ -211,7 +211,7 @@
 
     function buildMaterialSelect2(item_id) {
         $(`.items[data-id="${item_id}"] select[name="material[]"]`).select2({
-            placeholder: 'Select a material'
+            placeholder: "{!! __('Select a material') !!}"
         })
 
         for (let i = 0; i < MATERIALS.length; i++) {

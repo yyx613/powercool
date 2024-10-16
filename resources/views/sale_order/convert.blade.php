@@ -130,7 +130,7 @@
                             @endforeach
                         </ul>
                         <div class="flex justify-end mt-8">
-                            <a href="{{ route('sale_order.to_delivery_order') }}" class="w-1/6 bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="confirm-btn">
+                            <a href="{{ route('sale_order.to_delivery_order') }}" class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="confirm-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/></svg>
                                 <span class="text-sm font-semibold">Confirm</span>
                             </a>
@@ -177,7 +177,7 @@
                             @endforeach
                         </div>
                         <div class="flex justify-end mt-8">
-                            <a href="{{ route('sale_order.convert_to_delivery_order') }}" class="w-1/6 bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="convert-btn">
+                            <a href="{{ route('sale_order.convert_to_delivery_order') }}" class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="convert-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
                                 <span class="text-sm font-semibold">Convert</span>
                             </a>

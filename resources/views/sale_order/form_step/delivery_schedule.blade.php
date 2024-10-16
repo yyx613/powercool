@@ -3,26 +3,26 @@
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
             <path d="m24,10c0-2.757-2.243-5-5-5h-2v-1c0-1.654-1.346-3-3-3h-2v2h2c.552,0,1,.449,1,1v13H2v-4H0v6h2.037c-.024.165-.037.331-.037.5,0,1.93,1.57,3.5,3.5,3.5s3.5-1.57,3.5-3.5c0-.169-.013-.335-.037-.5h6.074c-.024.165-.037.331-.037.5,0,1.93,1.57,3.5,3.5,3.5s3.5-1.57,3.5-3.5c0-.169-.013-.335-.037-.5h2.037v-9ZM7,19.5c0,.827-.673,1.5-1.5,1.5s-1.5-.673-1.5-1.5c0-.189.037-.356.091-.5h2.819c.054.144.091.311.091.5Zm12-12.5c1.654,0,3,1.346,3,3v1h-5v-4h2Zm1,12.5c0,.827-.673,1.5-1.5,1.5s-1.5-.673-1.5-1.5c0-.189.037-.356.091-.5h2.819c.054.144.091.311.091.5Zm-3-2.5v-4h5v4h-5ZM10,3H0V1h10v2Zm-2,4H0v-2h8v2Zm-2,4H0v-2h6v2Z"/>
         </svg>
-        <span class="text-lg ml-3 font-bold">Delivery Schedule</span>
+        <span class="text-lg ml-3 font-bold">{{ __('Delivery Schedule') }}</span>
     </div>
     <form action="" method="POST" enctype="multipart/form-data" id="delivery-form">
         @csrf
         <div>
             <div class="grid grid-cols-3 gap-8 w-full mb-8">
                 <div class="flex flex-col">
-                    <x-app.input.label id="delivery_date" class="mb-1">Delivery Date</x-app.input.label>
+                    <x-app.input.label id="delivery_date" class="mb-1">{{ __('Delivery Date') }}</x-app.input.label>
                     <x-app.input.input name="delivery_date" id="delivery_date" :hasError="$errors->has('delivery_date')" value="{{ isset($sale) ? $sale->delivery_date : null }}" />
                     <x-app.message.error id="delivery_date_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="delivery_time" class="mb-1">Delivery Time</x-app.input.label>
+                    <x-app.input.label id="delivery_time" class="mb-1">{{ __('Delivery Time') }}</x-app.input.label>
                     <x-app.input.input name="delivery_time" id="delivery_time" :hasError="$errors->has('delivery_time')" value="{{ isset($sale) ? $sale->delivery_time : null }}" type="time" />
                     <x-app.message.error id="delivery_time_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="driver" class="mb-1">Driver <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="driver" id="driver" :hasError="$errors->has('driver')" placeholder="Select a driver">
-                        <option value="">Select a driver</option>
+                    <x-app.input.label id="driver" class="mb-1">{{ __('Driver') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="driver" id="driver" :hasError="$errors->has('driver')" placeholder="{{ __('Select a driver') }}">
+                        <option value="">{{ __('Select a driver') }}</option>
                         @foreach ($drivers as $dr)
                             <option value="{{ $dr->id }}" @selected(old('driver', isset($sale) ? $sale->driver_id : null) == $dr->id)>{{ $dr->name }}</option>
                         @endforeach
@@ -30,21 +30,21 @@
                     <x-app.message.error id="driver_err"/>
                 </div>
                 <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="delivery_instruction" class="mb-1">Delivery Instructions</x-app.input.label>
+                    <x-app.input.label id="delivery_instruction" class="mb-1">{{ __('Delivery Instructions') }}</x-app.input.label>
                     <x-app.input.input name="delivery_instruction" id="delivery_instruction" :hasError="$errors->has('delivery_instruction')" value="{{ isset($sale) ? $sale->delivery_instruction : null }}" />
                     <x-app.message.error id="delivery_instruction_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">Select a Active/Inactive</option>
-                        <option value="1" @selected(old('status', isset($sale) ? $sale->is_active : null) == 1)>Active</option>
-                        <option value="0" @selected(old('status', isset($sale) ? $sale->is_active : null) === 0)>Inactive</option>
+                        <option value="">{{ __('Select a Active/Inactive') }}</option>
+                        <option value="1" @selected(old('status', isset($sale) ? $sale->is_active : null) == 1)>{{ __('Active') }}</option>
+                        <option value="0" @selected(old('status', isset($sale) ? $sale->is_active : null) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
                 <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="delivery_address" class="mb-1">Delivery Address</x-app.input.label>
+                    <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
                     <x-app.input.select id="delivery_address" name="delivery_address">
                     </x-app.input.select>
                     <x-app.message.error id="delivery_address_err"/>
@@ -52,11 +52,11 @@
             </div>
             @if (isset($sale) && $sale->status == 2)
                 <div class="mt-8 flex justify-end">
-                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">Converted</span>
+                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
                 </div>
             @else
                 <div class="mt-8 flex justify-end">
-                    <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
             @endif
         </div>

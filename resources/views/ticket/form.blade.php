@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('ticket.index') }}">{{ isset($ticket) ? 'Edit Ticket - ' . $ticket->sku : 'Create Ticket' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('ticket.index') }}">{{ isset($ticket) ? __('Edit Ticket - ') . $ticket->sku : __('Create Ticket') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($ticket) ? route('ticket.update', ['ticket' => $ticket]) : route('ticket.store') }}" method="POST" enctype="multipart/form-data">
@@ -10,9 +10,9 @@
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
-                    <x-app.input.label id="customer" class="mb-1">Customer <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="Select a customer">
-                        <option value="">Select a customer</option>
+                    <x-app.input.label id="customer" class="mb-1">{{ __('Customer') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="{{ __('Select a customer') }}">
+                        <option value="">{{ __('Select a customer') }}</option>
                         @foreach ($customers as $cu)
                             <option value="{{ $cu->id }}" @selected(old('customer', isset($ticket) ? $ticket->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
                         @endforeach
@@ -20,16 +20,16 @@
                     <x-input-error :messages="$errors->get('customer')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">Select a Active/Inactive</option>
-                        <option value="1" @selected(old('status', isset($ticket) ? $ticket->is_active : null) == 1)>Active</option>
-                        <option value="0" @selected(old('status', isset($ticket) ? $ticket->is_active : null) === 0)>Inactive</option>
+                        <option value="">{{ __('Select a Active/Inactive') }}</option>
+                        <option value="1" @selected(old('status', isset($ticket) ? $ticket->is_active : null) == 1)>{{ __('Active') }}</option>
+                        <option value="0" @selected(old('status', isset($ticket) ? $ticket->is_active : null) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Attachment</x-app.input.label>
+                    <x-app.input.label class="mb-1">{{ __('Attachment') }}</x-app.input.label>
                     <x-app.input.file id="attachment[]" :hasError="$errors->has('attachment')" multiple="true"/>
                     <x-input-error :messages="$errors->get('attachment')" class="mt-1" />
                     <div class="uploaded-file-preview-container" data-id="attachment">
@@ -46,18 +46,18 @@
                     </div>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="subject" class="mb-1">Subject <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="subject" class="mb-1">{{ __('Subject') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="subject" id="subject" :hasError="$errors->has('subject')" value="{{ old('subject', isset($ticket) ? $ticket->subject : null) }}" />
                     <x-input-error :messages="$errors->get('subject')" class="mt-1" />
                 </div>
                 <div class="flex flex-col col-span-3">
-                    <x-app.input.label id="body" class="mb-1">Body <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="body" class="mb-1">{{ __('Body') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.textarea name="body" id="body" :hasError="$errors->has('body')" text="{{ old('body', isset($ticket) ? $ticket->body : null) }}" />
                     <x-input-error :messages="$errors->get('body')" class="mt-1" />
                 </div>
             </div>
             <div class="mt-8 flex justify-end">
-                <x-app.button.submit>{{ isset($ticket) ? 'Update Ticket' : 'Create New Ticket' }}</x-app.button.submit>
+                <x-app.button.submit>{{ isset($ticket) ? __('Update Ticket') : __('Create New Ticket') }}</x-app.button.submit>
             </div>
         </div>
     </form>

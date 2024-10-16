@@ -68,13 +68,13 @@ class Production extends Model
     public function statusToHumanRead($val): string {
         switch ($val) {
             case self::STATUS_TO_DO:
-                return 'to do';
+                return 'To Do';
             case self::STATUS_DOING:
-                return 'doing';
+                return 'Doing';
             case self::STATUS_COMPLETED:
-                return 'completed';
+                return 'Completed';
             case self::STATUS_TRANSFERRED:
-                return 'transferred';
+                return 'Transferred';
         }
     }
 

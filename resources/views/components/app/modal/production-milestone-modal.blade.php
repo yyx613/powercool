@@ -1,24 +1,24 @@
 <x-app.modal.base-modal id="production-milestone-modal">
     <div class="aspect-[2/1] flex flex-col">
         <div class="border-b py-2 px-4 bg-slate-100 flex items-center">
-            <h6 class="text-lg font-black">Check In Milestone</h6>
+            <h6 class="text-lg font-black">{{ __('Check In Milestone') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
             <div class="flex-1 flex flex-col gap-4">
                 <div>
-                    <span class="font-medium text-sm mb-1 block">Date</span>
+                    <span class="font-medium text-sm mb-1 block">{{ __('Date') }}</span>
                     <div class="border px-2 py-1.5 rounded">
                         <p id="date" class="text-sm"></p>
                     </div>
                 </div>
                 <div id="serial-no-container">
-                    <span class="font-medium text-sm block mb-2">Materials</span>
+                    <span class="font-medium text-sm block mb-2">{{ __('Materials') }}</span>
                     <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64">
                         @foreach($product->materialUse->materials as $key => $material)
                             <div class="mb-4 {{ ($key + 1) < count($product->materialUse->materials) ? 'pb-4 border-b' : '' }}">
                                 <div class="mb-2 flex flex-col">
                                     <span class="font-medium text-sm">{{ $material->material->model_name }}</span>
-                                    <span class="font-medium text-xs text-slate-400">Quantity Needed: x{{ $material->qty }}</span>
+                                    <span class="font-medium text-xs text-slate-400">{{ __('Quantity Needed') }}: x{{ $material->qty }}</span>
                                 </div>
                                 @if ($material->material->is_sparepart)
                                     <div class="grid grid-cols-2 gap-2">
@@ -33,7 +33,7 @@
                                     </div>
                                     <x-app.message.error id="materials_err" class="mt-2" data-material-id="{{ $material->id }}" />
                                 @else
-                                    <p class="text-sm text-blue-600">Not spare part, selection is not required</p>
+                                    <p class="text-sm text-blue-600">{{ __('Not spare part, selection is not required') }}</p>
                                 @endif
                             </div>
                         @endforeach
@@ -41,12 +41,12 @@
                 </div>
             </div>
             <div class="flex gap-x-6 mt-6">
-                <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">No</button>
-                <button type="button" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">Confirm</button>
+                <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">{{ __('No') }}</button>
+                <button type="button" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">{{ __('Confirm') }}</button>
             </div>
         </div>
         <div class="border-t px-2 py-3 hidden" id="last-milestone-msg">
-            <p class="text-sm text-blue-500 leading-tight font-medium text-center">Checking in this milestone will complete the production. Please make sure the materials used are correct (if there is any).</p>
+            <p class="text-sm text-blue-500 leading-tight font-medium text-center">{{ __('Checking in this milestone will complete the production. Please make sure the materials used are correct (if there is any).') }}</p>
         </div>
     </div>
 </x-app.modal.base-modal>

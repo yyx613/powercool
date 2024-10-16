@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('production.index') }}">{{ isset($production) ? 'Edit Production - ' . $production->sku : 'Create Production' }}</x-app.page-title>
+        <x-app.page-title url="{{ route('production.index') }}">{{ isset($production) ? __('Edit Production - ') . $production->sku : __('Create Production') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($production) && !isset($is_duplicate) ? route('production.upsert', ['production' => $production->id]) : route('production.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">
@@ -10,44 +10,44 @@
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
-                    <x-app.input.label id="name" class="mb-1">Name <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($from_ticket) ? $from_ticket->subject : (isset($production) ? $production->name : null)) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="desc" class="mb-1">Description <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="desc" class="mb-1">{{ __('Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="desc" id="desc" :hasError="$errors->has('desc')" value="{{ old('desc', isset($from_ticket) ? $from_ticket->body : (isset($production) ? $production->desc : null)) }}" />
                     <x-input-error :messages="$errors->get('desc')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="start_date" class="mb-1">State Date <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="start_date" class="mb-1">{{ __('State Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="start_date" id="start_date" :hasError="$errors->has('start_date')" value="{{ old('start_date', isset($production) ? $production->start_date : null) }}" />
                     <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="remark" class="mb-1">Remark</x-app.input.label>
+                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                     <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ old('remark', isset($production) ? $production->remark : null) }}" />
                     <x-input-error :messages="$errors->get('remark')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="due_date" class="mb-1">Due Date <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="due_date" class="mb-1">{{ __('Due Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="due_date" id="due_date" :hasError="$errors->has('due_date')" value="{{ old('due_date', isset($production) ? $production->due_date : null) }}" />
                     <x-input-error :messages="$errors->get('due_date')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">Status <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">Select a status</option>
-                        <option value="1" @selected(old('status', isset($production) ? $production->status : null) == 1)>To Do</option>
-                        <option value="2" @selected(old('status', isset($production) ? $production->status : null) == 2)>Doing</option>
-                        <option value="3" @selected(old('status', isset($production) ? $production->status : null) == 3)>Completed</option>
+                        <option value="">{{ __('Select a status') }}</option>
+                        <option value="1" @selected(old('status', isset($production) ? $production->status : null) == 1)>{{ __('To Do') }}</option>
+                        <option value="2" @selected(old('status', isset($production) ? $production->status : null) == 2)>{{ __('Doing') }}</option>
+                        <option value="3" @selected(old('status', isset($production) ? $production->status : null) == 3)>{{ __('Completed') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Product <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="product" id="product" placeholder="Select a product" :hasError="$errors->has('product')">
-                        <option value="">Select a product</option>
+                    <x-app.input.label class="mb-1">{{ __('Product') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="product" id="product" placeholder="{{ __('Select a product') }}" :hasError="$errors->has('product')">
+                        <option value="">{{ __('Select a product') }}</option>
                         @foreach ($products as $pro)
                             <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : (isset($default_product) ? $default_product->id : null)) == $pro->id)>{{ $pro->model_name }}</option>
                         @endforeach
@@ -55,9 +55,9 @@
                     <x-input-error :messages="$errors->get('product')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">Assigned Order ID</x-app.input.label>
-                    <x-app.input.select2 name="order" id="order" placeholder="Select a order" :hasError="$errors->has('order')">
-                        <option value="">Select a product</option>
+                    <x-app.input.label class="mb-1">{{ __('Assigned Order ID') }}</x-app.input.label>
+                    <x-app.input.select2 name="order" id="order" placeholder="{{ __('Select a order') }}" :hasError="$errors->has('order')">
+                        <option value="">{{ __('Select a order') }}</option>
                         @foreach ($sales as $sale)
                             <option value="{{ $sale->id }}" @selected(old('order', isset($production) ? $production->sale_id : (isset($default_sale) ? $default_sale->id : null)) == $sale->id)>{{ $sale->sku }}</option>
                         @endforeach
@@ -65,7 +65,7 @@
                     <x-input-error :messages="$errors->get('order')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-3">
-                    <x-app.input.label id="assign" class="mb-1">Assigned Staff <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="assign" class="mb-1">{{ __('Assigned Staff') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}" @selected(in_array($user->id, old('assign', isset($production) ? $production->users()->pluck('user_id')->toArray() : [])))>{{ $user->name }}</option>
@@ -74,8 +74,8 @@
                     <x-input-error :messages="$errors->get('assign')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-3">
-                    <x-app.input.label class="mb-2">Milestones <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="custom_milestone" class="mb-2" placeholder="Enter milestone here" />
+                    <x-app.input.label class="mb-2">{{ __('Milestones') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="custom_milestone" class="mb-2" placeholder="{{ __('Enter custom milestone here') }}" />
                     @foreach($milestones as $stone)
                         <div class="flex justify-between mb-2 milestone-selection">
                             <div class="flex items-center gap-x-2">
@@ -85,8 +85,8 @@
                             <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
                                 <input type="checkbox" class="hidden peer" name="required_serial_no[]" @checked(isset($production) ? $production->milestones()->where('milestone_id', $stone->id)->value('required_serial_no') : null) />
                                 <div class="flex items-center w-full">
-                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">No</span>
-                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">Yes</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
                                 </div>
                                 <span class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
                             </label>
@@ -101,8 +101,8 @@
                             <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
                                 <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
                                 <div class="flex items-center w-full">
-                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">No</span>
-                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">Yes</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
+                                    <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
                                 </div>
                                 <span class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
                             </label>
@@ -118,7 +118,7 @@
                 </div>
             </div>
             <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">Save and Update</x-app.button.submit>
+                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
             </div>
         </div>
     </form>

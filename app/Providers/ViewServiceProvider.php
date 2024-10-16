@@ -346,19 +346,26 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('products', $products);
             $view->with('materials', $materials);
         });
+        View::composer(['components.app.language-selector'], function (ViewView $view) {
+            $languages = [
+                'English' => 'English',
+                'Chinese' => 'Chinese',
+                'Bangla' => 'Bangla',
+                'Malay' => 'Malay',
+                'Myanmar' => 'Myanmar',
+                'Nepali' => 'Nepali',
+            ];
+
+            $view->with('languages', $languages);
+        });
         View::composer(['layouts.navbar'], function (ViewView $view) {
             $branches = [
                 Branch::LOCATION_EVERY => (new Branch)->keyToLabel(Branch::LOCATION_EVERY),
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
-            $languages = [
-                'en' => 'English',
-                'cn' => 'Chinese',
-            ];
-
+            
             $view->with('branches', $branches);
-            $view->with('languages', $languages);
         });
         View::composer(['user_management.form'], function (ViewView $view) {
             $branches = [

@@ -1,14 +1,14 @@
 <x-app.modal.base-modal id="convert-ticket-modal">
     <div class="aspect-[2/1] flex flex-col">
         <div class="border-b py-2 px-4 bg-gray-100">
-            <h6 class="text-lg font-black" id="title">Convert Ticket</h6>
+            <h6 class="text-lg font-black" id="title">{{ __('Convert Ticket') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
             <div class="flex-1">
                 <div class="flex flex-col">
-                    <x-app.input.label id="department" class="mb-1">Department <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="department" class="mb-1">{{ __('Department') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="department" id="department" :hasError="$errors->has('status')">
-                        <option value="">Select a department</option>
+                        <option value="">{{ __('Select a department') }}</option>
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}">{{ $role->name }}</option>
                         @endforeach
@@ -17,10 +17,10 @@
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">
-                    <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">No</button>
+                    <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">{{ __('No') }}</button>
                 </div>
                 <div class="flex-1 flex">
-                    <a href="" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hidden hover:bg-blue-700" id="yes-btn">Yes</a>
+                    <a href="" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hidden hover:bg-blue-700" id="yes-btn">{{ __('Yes') }}</a>
                 </div>
             </div>
         </div>
