@@ -53,7 +53,7 @@ class Customer extends Model
             while (strlen($digits) < 3) { // Make 3 digits
                 $digits = '0' . $digits;
             }
-            $sku = '300-' . $company_first_alphabet . $digits;
+            $sku = strtoupper('300-' . $company_first_alphabet . $digits);
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 

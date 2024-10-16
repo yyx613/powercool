@@ -4,7 +4,6 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\CustomerCreditController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\GRNController;
@@ -23,8 +22,10 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,15 +38,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/migrate', function () {
-    Artisan::call('migrate');
-    dd('done');
-});
 Route::get('/', function () {
     return redirect(route('login'));
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth', 'select_lang')->group(function () {
+    // Change language
+    Route::get('/change-language/{lang}', function($locale) {
+        Session::put('selected_lang', $locale);
+
+        App::setLocale($locale);
+
+        return back();
+    })->name('change_language');
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';
@@ -169,10 +174,8 @@ Route::middleware('auth')->group(function () {
         Route::prefix('billing')->name('billing.')->middleware(['can:sale.billing.view'])->group(function () {
             Route::get('/', 'indexBilling')->name('index');
             Route::get('/get-data', 'getDataBilling')->name('get_data');
-            Route::get('/to-delivery-order-billing', 'toDeliveryOrderBilling')->name('to_delivery_order_billing');
-            Route::get('/convert-to-delivery-order-billing', 'convertToDeliveryOrderBilling')->name('convert_to_delivery_order_billing');
-            Route::get('/to-invoice-billing', 'toInvoiceBilling')->name('to_invoice_billing');
-            Route::get('/convert-to-invoice-billing', 'convertToInvoiceBilling')->name('convert_to_invoice_billing');
+            Route::get('/to-invoice-billing', 'toBilling')->name('to_billing');
+            Route::get('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
         });
     });
     // Task

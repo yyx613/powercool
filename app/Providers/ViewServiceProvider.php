@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Area;
+use App\Models\Branch;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
@@ -345,18 +346,31 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('products', $products);
             $view->with('materials', $materials);
         });
-        View::composer(['layouts.superadmin_nav', 'user_management.form'], function (ViewView $view) {
+        View::composer(['layouts.navbar'], function (ViewView $view) {
             $branches = [
-                1 => 'Kuala Lumpur',
-                2 => 'Penang',
+                Branch::LOCATION_EVERY => (new Branch)->keyToLabel(Branch::LOCATION_EVERY),
+                Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
+                Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
+            ];
+            $languages = [
+                'en' => 'English',
+                'cn' => 'Chinese',
             ];
 
+            $view->with('branches', $branches);
+            $view->with('languages', $languages);
+        });
+        View::composer(['user_management.form'], function (ViewView $view) {
+            $branches = [
+                Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
+                Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
+            ];
             $view->with('branches', $branches);
         });
         View::composer(['components.app.modal.transfer-modal'], function (ViewView $view) {
             $branches = [
-                1 => 'Kuala Lumpur',
-                2 => 'Penang',
+                Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
+                Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
             unset($branches[isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location]);
 
@@ -388,7 +402,7 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('areas', $areas);
             $view->with('debtor_types', $debtor_types);
         });
-        View::composer(['billing.do_convert', 'billing.inv_convert'], function (ViewView $view) {
+        View::composer(['billing.convert'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();

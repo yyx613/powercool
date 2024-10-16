@@ -51,7 +51,7 @@ class Supplier extends Model
             while (strlen($digits) < 3) { // Make 3 digits
                 $digits = '0' . $digits;
             }
-            $sku = '400-' . $company_first_alphabet . $digits;
+            $sku = strtoupper('400-' . $company_first_alphabet . $digits);
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 

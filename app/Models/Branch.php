@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use DateTimeInterface;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,6 +14,7 @@ class Branch extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const LOCATION_EVERY = 0;
     const LOCATION_KL = 1;
     const LOCATION_PENANG = 2;
 
@@ -27,10 +29,34 @@ class Branch extends Model
     }
 
     public function assign($type, $id, $location=null) {
+        $loc = null;
+        if ($location != null) {
+            $loc = $location;
+        } else if (isSuperAdmin()) {
+            $loc = Session::get('as_branch');
+        } else {
+            $loc = Auth::user()->branch->location;
+        }
+        
+        if ((int)$loc === Branch::LOCATION_EVERY) {
+            throw new Exception("Branch is not allow");
+        }
+
         self::create([
             'object_type' => $type,
             'object_id' => $id,
-            'location' => $location != null ? $location : (isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location),
+            'location' => $loc,
         ]);
+    }
+
+    public function keyToLabel(int $key) {
+        switch ($key) {
+            case self::LOCATION_EVERY:
+                return 'Every';
+            case self::LOCATION_KL:
+                return 'Kuala Lumpur';
+            case self::LOCATION_PENANG:
+                return 'Penang';
+        }
     }
 }

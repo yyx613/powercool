@@ -2,11 +2,13 @@
 
 namespace App\Models\Scopes;
 
+use App\Models\Branch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class BranchScope implements Scope
 {
@@ -17,10 +19,13 @@ class BranchScope implements Scope
     {
         if (Auth::hasUser()) {
             $user_branch = Auth::user()->branch;
-    
-            if ($user_branch != null) {
+
+            if (
+                (isSuperAdmin() && Session::get('as_branch') != Branch::LOCATION_EVERY) ||
+                $user_branch != null
+            ) {
                 $builder->whereHas('branch', function($q) use ($user_branch) {
-                    $q->where('location', $user_branch->location);
+                    $q->where('location', isSuperAdmin() ? Session::get('as_branch') : $user_branch->location);
                 });
             }
         }

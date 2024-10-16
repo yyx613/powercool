@@ -47,6 +47,7 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Department</th>
+                    <th>Branch</th>
                     <th></th>
                 </tr>
             </thead>
@@ -75,6 +76,7 @@
                 { data: 'name' },
                 { data: 'email' },
                 { data: 'role' },
+                { data: 'branch' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -100,9 +102,17 @@
                         return data
                     }
                 },
+                {
+                    "width": '10%',
+                    "targets": 3,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
                 { 
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 4,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

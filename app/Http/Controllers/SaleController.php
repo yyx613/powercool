@@ -1305,14 +1305,15 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'filename' => $record->filename,
+                'do_filename' => $record->do_filename,
+                'inv_filename' => $record->inv_filename,
             ];
         }
 
         return response()->json($data);
     }
 
-    public function toDeliveryOrderBilling(Request $req)
+    public function toBilling(Request $req)
     {
         $step = 1;
 
@@ -1330,90 +1331,6 @@ class SaleController extends Controller
             if ($req->your_so_no == null) {
                 $errors['your_so_no'] = 'Please enter a Your S/O No';
             }
-            if (count($errors) > 0) {
-                throw ValidationException::withMessages($errors);
-            }
-
-            $step = 3;
-
-            Session::put('billing_saleperson', $req->sale);
-            Session::put('billing_term', $req->term);
-            Session::put('billing_your_po_no', $req->your_po_no);
-            Session::put('billing_your_so_no', $req->your_so_no);
-
-            $sale_ids = Sale::where('type', Sale::TYPE_SO)
-                ->whereIn('convert_to', explode(', ', Session::get('delivery_order_ids')))
-                ->pluck('id');
-
-            $products = SaleProduct::whereIn('sale_id', $sale_ids)->get();
-        } else if ($req->has('do')) {
-            $step = 2;
-
-            Session::put('delivery_order_ids', $req->do);
-        } else {
-            $delivery_orders = DeliveryOrder::orderBy('id', 'desc')->get();
-        }
-
-        return view('billing.do_convert', [
-            'step' => $step,
-            'dos' => $dos ?? [],
-            'delivery_orders' => $delivery_orders ?? [],
-            'products' => $products ?? [],
-        ]);
-    }
-
-    public function convertToDeliveryOrderBilling(Request $req)
-    {
-        try {
-            DB::beginTransaction();
-
-            // Create record
-            $sku = (new Billing)->generateSku();
-            $filename = $sku . '.pdf';
-
-            $bill = Billing::create([
-                'sku' => $sku,
-                'filename' => $filename
-            ]);
-            (new Branch)->assign(Billing::class, $bill->id);
-
-            // Create PDF
-            $pdf = Pdf::loadView('billing.do_pdf', [
-                'date' => now()->format('d/m/Y'),
-                'sku' => $sku,
-                'your_po_no' => Session::get('billing_your_po_no'),
-                'your_so_no' => Session::get('billing_your_so_no'),
-                'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-                'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
-                'products' => SaleProduct::whereIn('id', $req->sale_product_id)->get(),
-            ]);
-            $pdf->setPaper('A4', 'letter');
-            $content = $pdf->download()->getOriginalContent();
-            Storage::put(self::BILLING_PATH . $filename, $content);
-
-            DB::commit();
-
-            return redirect(route('billing.index'))->with('success', 'Billing converted');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            report($th);
-
-            return back()->with('error', 'Something went wrong. Please contact administrator');
-        }
-    }
-
-    public function toInvoiceBilling(Request $req)
-    {
-        $step = 1;
-
-        if ($req->has('info')) {
-            $errors = [];
-            if ($req->sale == null) {
-                $errors['sale'] = 'Please select a salesperson';
-            }
-            if ($req->term == null) {
-                $errors['term'] = 'Please select a term';
-            }
             if ($req->our_do_no == null) {
                 $errors['our_do_no'] = 'Please enter a Our D/O No';
             }
@@ -1425,6 +1342,8 @@ class SaleController extends Controller
             
             Session::put('billing_saleperson', $req->sale);
             Session::put('billing_term', $req->term);
+            Session::put('billing_your_po_no', $req->your_po_no);
+            Session::put('billing_your_so_no', $req->your_so_no);
             Session::put('billing_our_do_no', $req->our_do_no);
 
             $inv_ids = Session::get('invoice_ids');
@@ -1443,7 +1362,7 @@ class SaleController extends Controller
             $invoices = Invoice::orderBy('id', 'desc')->get();
         }
 
-        return view('billing.inv_convert', [
+        return view('billing.convert', [
             'step' => $step,
             'dos' => $dos ?? [],
             'invoices' => $invoices ?? [],
@@ -1451,34 +1370,26 @@ class SaleController extends Controller
         ]);
     }
 
-    public function convertToInvoiceBilling(Request $req)
+    public function convertToBilling(Request $req)
     {
-        // dd($req->all());
         try {
             DB::beginTransaction();
 
             // Create record
             $sku = (new Billing)->generateSku();
-            $filename = $sku . '.pdf';
+            $do_filename = $sku . 'DO.pdf';
+            $inv_filename = $sku . 'INV.pdf';
 
             $bill = Billing::create([
                 'sku' => $sku,
-                'filename' => $filename
+                'do_filename' => $do_filename,
+                'inv_filename' => $inv_filename,
             ]);
             (new Branch)->assign(Billing::class, $bill->id);
-            // Create PDF
-            $pdf = Pdf::loadView('billing.inv_pdf', [
-                'date' => now()->format('d/m/Y'),
-                'sku' => $sku,
-                'our_do_no' => Session::get('billing_our_do_no'),
-                'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-                'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
-                'products' => SaleProduct::whereIn('id', $req->sale_product_id)->get(),
-                'custom_unit_price' => $req->all(),
-            ]);
-            $pdf->setPaper('A4', 'letter');
-            $content = $pdf->download()->getOriginalContent();
-            Storage::put(self::BILLING_PATH . $filename, $content);
+            // Generate DO PDF
+            $this->generateDeliveryOrderBillingPDF($sku, $do_filename, $req->sale_product_id);
+            // Generate INV PDF
+            $this->generateInvoiceBillingPDF($sku, $inv_filename, $req->sale_product_id, $req->all());
 
             DB::commit();
 
@@ -1489,6 +1400,36 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, array $sale_product_ids) {
+        $pdf = Pdf::loadView('billing.do_pdf', [
+            'date' => now()->format('d/m/Y'),
+            'sku' => $sku,
+            'your_po_no' => Session::get('billing_your_po_no'),
+            'your_so_no' => Session::get('billing_your_so_no'),
+            'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
+            'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
+            'products' => SaleProduct::whereIn('id', $sale_product_ids)->get(),
+        ]);
+        $pdf->setPaper('A4', 'letter');
+        $content = $pdf->download()->getOriginalContent();
+        Storage::put(self::BILLING_PATH . $filename, $content);
+    }
+
+    private function generateInvoiceBillingPDF(string $sku, string $filename, array $sale_product_ids, array $custom_unit_price) {
+        $pdf = Pdf::loadView('billing.inv_pdf', [
+            'date' => now()->format('d/m/Y'),
+            'sku' => $sku,
+            'our_do_no' => Session::get('billing_our_do_no'),
+            'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
+            'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
+            'products' => SaleProduct::whereIn('id', $sale_product_ids)->get(),
+            'custom_unit_price' => $custom_unit_price,
+        ]);
+        $pdf->setPaper('A4', 'letter');
+        $content = $pdf->download()->getOriginalContent();
+        Storage::put(self::BILLING_PATH . $filename, $content);
     }
 
     /**

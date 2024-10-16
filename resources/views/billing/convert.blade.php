@@ -46,7 +46,7 @@
                                 @endforeach
                             </ul>
                             <div class="flex justify-end mt-8">
-                                <a href="{{ route('billing.to_invoice_billing') }}" class="w-1/6 bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="confirm-btn">
+                                <a href="{{ route('billing.to_billing') }}" class="w-1/6 bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2" id="confirm-btn">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/></svg>
                                     <span class="text-sm font-semibold">Confirm</span>
                                 </a>
@@ -63,7 +63,7 @@
                             <h5 class="text-md font-semibold">Enter info to proceed</h5>
                         </div>
                         <div>
-                            <form action="{{ route('billing.to_invoice_billing') }}">
+                            <form action="{{ route('billing.to_billing') }}">
                                 @csrf
                                 <input type="text" name="info" class="hidden">
                                 <div class="grid grid-cols-3 gap-8 w-full mb-8">
@@ -92,6 +92,16 @@
                                         <x-app.input.input name="our_do_no" id="our_do_no" value="{{ old('our_do_no') }}" />
                                         <x-input-error :messages="$errors->get('our_do_no')" class="mt-1" />
                                     </div>
+                                    <div class="flex flex-col">
+                                        <x-app.input.label id="your_po_no" class="mb-1">Your P/O No</x-app.input.label>
+                                        <x-app.input.input name="your_po_no" id="your_po_no" value="{{ old('your_po_no') }}" />
+                                        <x-input-error :messages="$errors->get('your_po_no')" class="mt-1" />
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <x-app.input.label id="your_so_no" class="mb-1">Your S/O No</x-app.input.label>
+                                        <x-app.input.input name="your_so_no" id="your_so_no" value="{{ old('your_so_no') }}" />
+                                        <x-input-error :messages="$errors->get('your_so_no')" class="mt-1" />
+                                    </div>
                                 </div>
                                 <div class="flex justify-end mt-8">
                                     <x-app.button.submit>Submit</x-app.button.submit>
@@ -107,7 +117,7 @@
                             <h5 class="text-md font-semibold">Confirm products to convert</h5> 
                         </div>
                         @if (count($products) > 0)
-                            <form action="{{ route('billing.convert_to_invoice_billing') }}">
+                            <form action="{{ route('billing.convert_to_billing') }}">
                                 @csrf
                                 <div class="grid grid-cols-2 gap-4">
                                     @foreach ($products as $pro)
