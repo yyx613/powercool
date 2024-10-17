@@ -19,6 +19,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\UOMController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
@@ -353,6 +354,15 @@ Route::middleware('auth', 'select_lang')->group(function () {
             Route::get('/edit/{debtor}', 'edit')->name('edit');
             Route::post('/update/{debtor}', 'update')->name('update');
             Route::get('/delete/{debtor}', 'delete')->name('delete');
+        });
+        // UOM
+        Route::controller(UOMController::class)->prefix('uom')->name('uom.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{uom}', 'edit')->name('edit');
+            Route::post('/update/{uom}', 'update')->name('update');
         });
         // User Management
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {

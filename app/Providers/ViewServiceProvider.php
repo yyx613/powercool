@@ -23,6 +23,7 @@ use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Supplier;
 use App\Models\Ticket;
+use App\Models\UOM;
 use App\Models\User;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
@@ -288,20 +289,26 @@ class ViewServiceProvider extends ServiceProvider
                     ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
                 }) 
                 ->get();
+            
+            // UOM
+            $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
 
             $view->with([
                 'products' => $products,
                 'warranty_periods' => $wps,
                 'promotions' => $promotions,
+                'uoms' => $uoms,
             ]);
         });
         View::composer(['inventory.form'], function (ViewView $view) {
             $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
+            $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
 
             $view->with([
                 'inv_cats' => $inv_cats,
                 'suppliers' => $suppliers,
+                'uoms' => $uoms,
             ]);
         });
         View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function (ViewView $view) {
@@ -394,9 +401,11 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('products', $products);
         });
         View::composer(['grn.form'], function (ViewView $view) {
+            $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
             $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
 
             $view->with('suppliers', $suppliers);
+            $view->with('uoms', $uoms);
         });
         View::composer(['supplier.form', 'customer.form_step.info'], function (ViewView $view) {
             $currencies = Currency::where('is_active', true)->orderBy('id', 'desc')->get();

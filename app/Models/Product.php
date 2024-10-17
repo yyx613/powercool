@@ -51,6 +51,10 @@ class Product extends Model
         return $this->hasMany(ProductCost::class);
     }
 
+    public function uomUnit() {
+        return $this->belongsTo(UOM::class, 'uom');
+    }
+
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');

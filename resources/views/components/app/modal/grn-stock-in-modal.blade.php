@@ -14,7 +14,7 @@
                         <div class="mb-4">
                             <div class="mb-0.5 flex items-center justify-between">
                                 <h6>{{ $grn->product->model_name }}</h6>
-                                <span class="text-xs">{{ __('Stock In UOM') }}: {{ $grn->product->uom ?? '-' }}</span>
+                                <span class="text-xs">{{ __('Stock In UOM') }}: {{ $grn->product->uomUnit->name ?? '-' }}</span>
                             </div>
                             <div>
                                 <x-app.input.input name="product[]" id="product[]" value="{{ $grn->product_id }}" class="hidden" />

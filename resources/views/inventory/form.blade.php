@@ -37,7 +37,12 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="uom" id="uom" value="{{ old('uom', isset($prod) ? $prod->uom : ($dup_prod != null ? $dup_prod->uom : null)) }}" />
+                    <x-app.input.select name="uom" id="uom">
+                        <option value="">{{ __('Select a UOM') }}</option>
+                        @foreach ($uoms as $uom)
+                            <option value="{{ $uom->id }}" @selected(old('uom', isset($prod) ? $prod->uom : ($dup_prod != null ? $dup_prod->uom : null)) == $uom->id)>{{ $uom->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
                     <x-input-error :messages="$errors->get('uom')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">

@@ -42,7 +42,7 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="uom" id="uom" :hasError="$errors->has('uom')" />
+                    <x-app.input.input name="uom" id="uom" :hasError="$errors->has('uom')" disabled="true" />
                     <x-app.message.error id="uom_err"/>
                 </div>
                 <div class="flex flex-col">
@@ -122,6 +122,7 @@
     PRODUCTS = @json($products ?? []);
     WARRANTY_PERIODS = @json($warranty_periods ?? []);
     PROMOTIONS = @json($promotions ?? []);
+    UOMS = @json($uoms ?? []);
     PRODUCT_FORM_CAN_SUBMIT = true
     ITEMS_COUNT = 0
     INIT_EDIT = true
@@ -243,6 +244,14 @@
             const prod = PRODUCTS[i];
          
             if (prod.id == val) {
+                $(`.items[data-id="${id}"] input[name="uom"]`).val(null)
+
+                for (let j = 0; j < UOMS.length; j++) {
+                    if(UOMS[j].id == prod.uom) {
+                        $(`.items[data-id="${id}"] input[name="uom"]`).val(UOMS[j].name)
+                        break
+                    }
+                }
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
                 $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
                 $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
