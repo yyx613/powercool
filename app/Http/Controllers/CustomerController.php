@@ -31,7 +31,8 @@ class CustomerController extends Controller
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('platform', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -41,6 +42,7 @@ class CustomerController extends Controller
                 1 => 'name',
                 2 => 'phone',
                 3 => 'company_name',
+                4 => 'platform',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -66,6 +68,7 @@ class CustomerController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
+                'platform' => $record->platform,
                 'can_edit' => hasPermission('customer.edit'),
                 'can_delete' => hasPermission('customer.delete'),
             ];

@@ -26,7 +26,10 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
-
+use App\Http\Controllers\Platforms\LazadaController;
+use App\Http\Controllers\Platforms\ShopeeController;
+use App\Http\Controllers\Platforms\TiktokController;
+use App\Http\Controllers\Platforms\WooCommerceController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -376,6 +379,18 @@ Route::middleware('auth', 'select_lang')->group(function () {
     });
 });
 
+//Platforms
+Route::post('/lazada/webhook', [LazadaController::class, 'handleLazadaWebhook']);
+Route::get('/lazada/get-access-token', [LazadaController::class, 'getAccessTokenLazada']);
+Route::post('/shopee/webhook', [ShopeeController::class, 'handleShopeeWebhook']);
+Route::get('/shopee/generate-auth-link', [ShopeeController::class, 'generateAuthLinkShopee']);
+Route::get('/shopee/get-access-token', [ShopeeController::class, 'getAccessTokenShopee']);
+Route::post('/tiktok/webhook', [TiktokController::class, 'handleTiktokWebhook']);
+Route::get('/tiktok/get-access-token', [TiktokController::class, 'getAccessTokenTiktok']);
+Route::post('/woo-commerce/order-created/webhook', [WooCommerceController::class, 'handleWooCommerceOrderCreated']);
+Route::post('/woo-commerce/order-updated/webhook', [WooCommerceController::class, 'handleWooCommerceOrderUpdated']);
+Route::post('/woo-commerce/order-deleted/webhook', [WooCommerceController::class, 'handleWooCommerceOrderDeleted']);
+Route::post('/woo-commerce/order-restored/webhook', [WooCommerceController::class, 'handleWooCommerceOrderRestored']);
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');

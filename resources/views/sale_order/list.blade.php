@@ -56,6 +56,7 @@
                 <tr>
                     <th>{{ __('Sale Order ID') }}</th>
                     <th>{{ __('Total Amount') }}</th>
+                    <th>{{ __('Platform') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -85,6 +86,7 @@
             columns: [
                 { data: 'sku' },
                 { data: 'total_amount' },
+                { data: 'platform' }, 
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -104,8 +106,15 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": '10%', 
                     "targets": 2,
+                    render: function(data, type, row) {
+                        return data ?? '-';  
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -120,7 +129,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 4,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

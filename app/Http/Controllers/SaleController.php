@@ -298,6 +298,7 @@ class SaleController extends Controller
 
             $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('platform', 'like', '%' . $keyword . '%')
                     ->orWhere('reference', 'like', '%' . $keyword . '%')
                     ->orWhere('remark', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_method', 'like', '%' . $keyword . '%')
@@ -312,6 +313,7 @@ class SaleController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'payment_amount',
+                2  => 'platform'
             ];
             foreach ($req->order as $order) {
                 $records->orderBy($map[$order['column']], $order['dir']);
@@ -336,6 +338,7 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
+                'platform' => $record->platform,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
             ];

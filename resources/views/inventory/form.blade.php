@@ -102,6 +102,26 @@
                     <x-input-error :messages="$errors->get('dimension_height')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="lazada_sku" class="mb-1">{{ __('Lazada Sku') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="lazada_sku" id="lazada_sku" value="{{ old('lazada_sku', isset($prod) ? $prod->lazada_sku : ($dup_prod != null ? $dup_prod->lazada_sku : null)) }}" />
+                    <x-input-error :messages="$errors->get('lazada_sku')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="shopee_sku" class="mb-1">{{ __('Shopee Sku') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="shopee_sku" id="shopee_sku" value="{{ old('shopee_sku', isset($prod) ? $prod->shopee_sku : ($dup_prod != null ? $dup_prod->shopee_sku : null)) }}" />
+                    <x-input-error :messages="$errors->get('shopee_sku')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="tiktok_sku" class="mb-1">{{ __('Tiktok Sku') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="tiktok_sku" id="tiktok_sku" value="{{ old('tiktok_sku', isset($prod) ? $prod->tiktok_sku : ($dup_prod != null ? $dup_prod->tiktok_sku : null)) }}" />
+                    <x-input-error :messages="$errors->get('tiktok_sku')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="woo_commerce_sku" class="mb-1">{{ __('Woo Commerce Sku') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="woo_commerce_sku" id="woo_commerce_sku" value="{{ old('woo_commerce_sku', isset($prod) ? $prod->woo_commerce_sku : ($dup_prod != null ? $dup_prod->woo_commerce_sku : null)) }}" />
+                    <x-input-error :messages="$errors->get('woo_commerce_sku')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>

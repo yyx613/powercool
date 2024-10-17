@@ -19,7 +19,7 @@ class SupplierSeeder extends Seeder
                 $su = Supplier::create([
                     'name' => 'Supplier'. ($i + 1),
                     'phone' => fake()->phoneNumber(),
-                    'under_warranty' => fake()->boolean(),
+                    // 'under_warranty' => fake()->boolean(),
                     'is_active' => true,
                 ]);
 
