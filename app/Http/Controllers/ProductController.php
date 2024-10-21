@@ -10,6 +10,7 @@ use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,8 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\Renderers\HtmlRenderer;
+use Picqer\Barcode\Types\TypeCode128;
 
 class ProductController extends Controller
 {
@@ -269,6 +272,33 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
+    public function generateBarcode(Request $req) {
+        if ($req->has('is_rm')) {
+            $serial_nos = $this->prod::whereIn('id', [$req->id])->pluck('sku')->toArray();
+        } else {
+            $ids = explode(',', $req->ids);
+            $serial_nos = $this->prodChild::whereIn('id', $ids)->pluck('sku')->toArray();
+        }
+
+        $data = [
+            'barcode' => [],
+            'renderer' => [],
+        ];
+        for ($i=0; $i < count($serial_nos); $i++) { 
+            $barcode = (new TypeCode128)->getBarcode($serial_nos[$i]);
+    
+            // Output the barcode as HTML in the browser with a HTML Renderer
+            $renderer = new HtmlRenderer;
+
+            $data['barcode'][] = $serial_nos[$i];
+            $data['renderer'][] = $renderer->render($barcode);
+        }
+        $pdf = Pdf::loadView('inventory.barcode', $data);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->stream();
+    }
+
     public function upsert(Request $req)
     {
         if ($req->order_idx != null) {
@@ -349,7 +379,7 @@ class ProductController extends Controller
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
-                    'barcode' => $req->barcode,
+                    'barcode' => $req->barcode == null ? $req->model_code : $req->barcode,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
@@ -374,7 +404,7 @@ class ProductController extends Controller
                     'sku' => $req->model_code,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
-                    'barcode' => $req->barcode,
+                    'barcode' => $req->barcode == null ? $req->model_code : $req->barcode,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,

@@ -115,7 +115,7 @@
         @if ($is_product || $prod->is_sparepart == true)
             <div>
                 <!-- Filters -->
-                <div class="flex max-w-xs w-full mb-4">
+                <div class="flex items-center max-w-screen-sm gap-x-4 w-full mb-4">
                     <div class="flex-1">
                         <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                             <div class="rounded-md border border-transparent p-1 ml-1">
@@ -123,12 +123,19 @@
                             </div>
                         </x-app.input.input>
                     </div>
+                    <div class="flex-1">
+                        <a href="{{ $is_product ? route('product.generate_barcode') : route('raw_material.generate_barcode') }}" class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z"/></svg>
+                            <span class="font-medium">{{ __('Generate Barcode') }}</span>
+                        </a>
+                    </div>
                 </div>
     
                 <!-- Table -->
                 <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>{{ __('Serial Number') }}</th>
                             <th>{{ __('Location') }}</th>
                             <th>{{ __('Assigned Order ID') }}</th>
@@ -149,10 +156,10 @@
             <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>Assigned Order ID</th>
-                        <th>Qty</th>
-                        <th>On Hold</th>
-                        <th>At</th>
+                        <th>{{ __('Assigned Order ID') }}</th>
+                        <th>{{ __('Qty') }}</th>
+                        <th>{{ __('On Hold') }}</th>
+                        <th>{{ __('At') }}</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -166,13 +173,13 @@
             <thead>
                 <tr>
                     @if ($is_product || $prod->is_sparepart == true)
-                        <th>SKU</th>
+                        <th>{{ __('SKU') }}</th>
                     @else
-                        <th>Qty</th>
+                        <th>{{ __('Qty') }}</th>
                     @endif
-                    <th>Unit Price</th>
-                    <th>Total Price</th>
-                    <th>At</th>
+                    <th>{{ __('Unit Price') }}</th>
+                    <th>{{ __('Total Price') }}</th>
+                    <th>{{ __('At') }}</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -183,6 +190,7 @@
 @push('scripts')
     <script>
         PRODUCT = @json($prod ?? null);
+        CHECKED_CHECKBOXES = []
 
         if (PRODUCT.is_sparepart == false) {
             // Datatable
@@ -253,6 +261,7 @@
                 serverSide: true,
                 order: [],
                 columns: [
+                    { data: 'checkbox' },
                     { data: 'sku' },
                     { data: 'location' },
                     { data: 'order_id' },
@@ -262,22 +271,30 @@
                 ],
                 columnDefs: [
                     {
-                        "width": "10%",
+                        "width": "1%",
                         "targets": 0,
+                        orderable: false,
                         render: function(data, type, row) {
-                            return data
+                            return `<input type="checkbox" name="checkbox" class="border-slate-400 rounded checkboxes" data-id=${row.id}>`
                         }
                     },
                     {
                         "width": "10%",
                         "targets": 1,
                         render: function(data, type, row) {
-                            return `<span class="capitalize">${data}</span>`
+                            return data
                         }
                     },
                     {
                         "width": "10%",
                         "targets": 2,
+                        render: function(data, type, row) {
+                            return `<span class="capitalize">${data}</span>`
+                        }
+                    },
+                    {
+                        "width": "10%",
+                        "targets": 3,
                         orderable: false,
                         render: function(data, type, row) {
                             if (data != null) {
@@ -288,7 +305,7 @@
                     },
                     {
                         "width": "5%",
-                        "targets": 3,
+                        "targets": 4,
                         orderable: false,
                         render: function(data, type, row) {
                             switch (data) {
@@ -306,7 +323,7 @@
                     },
                     {
                         "width": "5%",
-                        "targets": 4,
+                        "targets": 5,
                         orderable: false,
                         render: function(data, type, row) {
                             if (data != null) return `<span class="text-sm font-semibold">${data.name}</span><br><span class="text-xs">${row.done_at}</span>`
@@ -315,7 +332,7 @@
                     },
                     {
                         "width": "5%",
-                        "targets": 5,
+                        "targets": 6,
                         orderable: false,
                         render: function (data, type, row) {
                             return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -352,6 +369,11 @@
                         url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
                         $('#data-table').DataTable().ajax.url(url);
                     },
+                },
+                fnCreatedRow: function( nRow, aData, iDataIndex ) {
+                    if (CHECKED_CHECKBOXES.includes(aData.id)) {
+                        dt.$(`.checkboxes[data-id="${ aData.id }"]`).prop('checked', true)
+                    }
                 },
             });
         }
@@ -402,9 +424,31 @@
             url = `${url}/inventory-category/transfer/${productChildId}`
             $('#transfer-modal #yes-btn').attr('href', url)
         })
+        $('body').on('click', '.checkboxes', function() {
+            let id = $(this).data('id')
+
+            if (CHECKED_CHECKBOXES.includes(id)) {
+                const index = CHECKED_CHECKBOXES.indexOf(id);
+                if (index > -1) {
+                    CHECKED_CHECKBOXES.splice(index, 1);
+                }
+            } else {
+                CHECKED_CHECKBOXES.push(id)
+            }
+        })
+        $('#generate-barcode-btn').on('click', function(e) {
+            e.preventDefault()
+
+            if (CHECKED_CHECKBOXES.length <= 0) return
+
+            let url = $(this).attr('href')
+            url = `${url}?ids=${CHECKED_CHECKBOXES}`
+
+            window.location.href = url
+        })
 
         // Cost Table
-        var dt = new DataTable('#cost-table', {
+        var costDT = new DataTable('#cost-table', {
             dom: 'rtip',
             pagingType: 'numbers',
             pageLength: 10,

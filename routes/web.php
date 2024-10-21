@@ -100,6 +100,7 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
+        Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -112,6 +113,7 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
+        Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
