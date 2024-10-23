@@ -12,6 +12,11 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'lazada/webhook',
+        'shopee/webhook',
+        'tiktok/webhook',
+        'woo-commerce/order-created/webhook',
+        'woo-commerce/order-updated/webhook',
+        'test'
     ];
 }

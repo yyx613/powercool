@@ -17,6 +17,7 @@ class Sale extends Model
 
     const TYPE_QUO = 1; // QUOTATION id
     const TYPE_SO = 2; // SALE ORDER id
+    const TYPE_PENDING = 3; // PENDING ASSIGN SALE PERSON
 
     const STATUS_INACTIVE = 0;
     const STATUS_ACTIVE = 1;
@@ -92,7 +93,7 @@ class Sale extends Model
             case 'cheque':
                 return 'Cheque';
             default:
-                return '-';
+                return $this->payment_method ?? '-';
         }
     }
 }

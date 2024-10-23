@@ -12,6 +12,7 @@ use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
@@ -290,14 +291,15 @@ class SaleController extends Controller
 
     public function getDataSaleOrder(Request $req)
     {
+        // dd(Sale::where('order_id','445710259310272')->first());
         $records = Sale::where('type', Sale::TYPE_SO);
-
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('platform', 'like', '%' . $keyword . '%')
                     ->orWhere('reference', 'like', '%' . $keyword . '%')
                     ->orWhere('remark', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_method', 'like', '%' . $keyword . '%')
@@ -312,6 +314,7 @@ class SaleController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'payment_amount',
+                2  => 'platform'
             ];
             foreach ($req->order as $order) {
                 $records->orderBy($map[$order['column']], $order['dir']);
@@ -336,6 +339,7 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
+                'platform' => $record->platform,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
             ];
@@ -1458,4 +1462,155 @@ class SaleController extends Controller
         }
         return $is_hi_ten ? 'hi_ten' : 'powercool';
     }
+
+    public function indexPendingOrder()
+    {
+        return view('sale_pending.list');
+    }
+
+    public function getDataPendingOrder(Request $req)
+    {
+        // dd(Sale::where('type', Sale::TYPE_PENDING)->get());
+        $records = Sale::where('type', Sale::TYPE_PENDING);
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('platform', 'like', '%' . $keyword . '%')
+                    ->orWhere('reference', 'like', '%' . $keyword . '%')
+                    ->orWhere('remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_method', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_amount', 'like', '%' . $keyword . '%')
+                    ->orWhere('payment_remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+                1 => 'payment_amount',
+                2  => 'platform'
+            ];
+            foreach ($req->order as $order) {
+                $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'sku' => $record->sku,
+                'total_amount' => $record->payment_amount,
+                'status' => $record->status,
+                'platform' => $record->platform,
+                'can_edit' => hasPermission('sale.sale_order.edit'),
+                'can_delete' => hasPermission('sale.sale_order.delete'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function createPendingOrder(Request $req)
+    {
+        $data = [];
+
+        if ($req->has('qid')) {
+            $quo = Sale::findOrFail($req->qid);
+            $quo->load('products');
+
+            $data['quo'] = $quo;
+        }
+
+        return view('sale_order.form', $data);
+    }
+
+    public function editPendingOrder(Sale $sale)
+    {
+        $sale->load('products.product.children', 'products.children');
+
+        $sale->products->each(function ($q) {
+            $q->attached_to_do = $q->attachedToDo();
+        });
+
+        return view('sale_order.form', [
+            'sale' => $sale
+        ]);
+    }
+
+    public function pdfPendingOrder(Sale $sale)
+    {
+        $pdf = Pdf::loadView('sale_order.' . $this->getPdfType($sale->products) . '_pdf', [
+            'date' => now()->format('d/m/Y'),
+            'sale' => $sale,
+            'products' => $sale->products,
+            'saleperson' => $sale->saleperson,
+            'customer' => $sale->customer,
+            'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->stream();
+    }
+
+    
+    public function getSalePerson(Request $request){
+        $salePersons = User::whereHas('roles', function ($q) {
+            $q->where('id', Role::SALE);
+        })->orderBy('id', 'desc')->get();
+        return response()->json(['salesPersons' => $salePersons]);
+    }
+    
+    public function assignSalePerson(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'salesPersonId' => 'required',
+                'sales' => 'required|array',
+                'sales.*.id' => 'required', 
+            ]);
+
+            $salesPersonId = $validated['salesPersonId'];
+    
+            $saleIds = collect($validated['sales'])->pluck('id'); 
+        
+            Sale::whereIn('id', $saleIds)->update([
+                'sale_id' => $salesPersonId,
+                'type' => Sale::TYPE_SO
+            ]);
+            
+            return response()->json(['message' => 'Orders successfully assigned to sales person']);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()]);
+
+        }
+    
+        
+    }
+
+    public function getPendingOrdersCount()
+    {
+        $pendingOrdersCount = Sale::where('type', Sale::TYPE_PENDING)->count();
+        return response()->json(['count' => $pendingOrdersCount]);
+    }
+
+
+    
+
 }

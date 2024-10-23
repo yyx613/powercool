@@ -19,7 +19,7 @@ class CustomerSeeder extends Seeder
                 $cu = Customer::create([
                     'name' => 'Customer'. ($i + 1),
                     'phone' => fake()->phoneNumber(),
-                    'under_warranty' => fake()->boolean(),
+                    // 'under_warranty' => fake()->boolean(),
                     'is_active' => true,
                 ]);
 

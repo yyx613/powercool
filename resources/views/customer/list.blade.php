@@ -50,6 +50,7 @@
                     <th>{{ __('Name') }}</th>
                     <th>{{ __('Phone Number') }}</th>
                     <th>{{ __('Company Name') }}</th>
+                    <th>{{ __('Platform') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -81,6 +82,7 @@
                 { data: 'name' },
                 { data: 'phone_number' },
                 { data: 'company_name' },
+                { data: 'platform' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -113,8 +115,15 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 5,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

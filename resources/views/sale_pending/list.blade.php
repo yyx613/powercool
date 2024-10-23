@@ -19,22 +19,15 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Sale Order') }}</x-app.page-title>
+        <x-app.page-title>{{ __('Pending Order') }}</x-app.page-title>
         <div class="flex gap-x-4">
-            @can('sale.sale_order.convert')
-            <a href="{{ route('sale_order.to_delivery_order') }}" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>{{ __('Convert to Delivery Order') }}</span>
+            <a href="#" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="assign-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-add" viewBox="0 0 16 16">
+                    <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+                    <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+                  </svg>
+                <span>{{ __('Assign to SalePerson') }}</span>
             </a>
-            @endcan
-            @can('sale.sale_order.create')
-            <a href="{{ route('sale_order.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
-                    <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
-                </svg>
-                {{ __('New') }}
-            </a>
-            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -54,7 +47,10 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('Sale Order ID') }}</th>
+                    <th>
+                        <input type="checkbox" id="select-all">
+                    </th>
+                    <th>{{ __('Pending Order ID') }}</th>
                     <th>{{ __('Total Amount') }}</th>
                     <th>{{ __('Platform') }}</th>
                     <th>{{ __('Status') }}</th>
@@ -64,7 +60,7 @@
             <tbody></tbody>
         </table>
     </div>
-
+    <x-app.modal.assign-sale-person-modal/>
     <x-app.modal.to-production-modal/>
     <x-app.modal.delete-modal/>
 @endsection
@@ -84,6 +80,7 @@
             serverSide: true,
             order: [],
             columns: [
+                { data: 'id' },
                 { data: 'sku' },
                 { data: 'total_amount' },
                 { data: 'platform' }, 
@@ -92,10 +89,11 @@
             ],
             columnDefs: [
                 {
-                    "width": "10%",
+                    "width": "5%",
                     "targets": 0,
+                    orderable: false,
                     render: function(data, type, row) {
-                        return data
+                        return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-sku="${row.sku}">`;
                     }
                 },
                 {
@@ -106,15 +104,22 @@
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": "10%",
                     "targets": 2,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": '10%', 
+                    "targets": 3,
                     render: function(data, type, row) {
                         return data ?? '-';  
                     }
                 },
                 {
                     "width": '10%',
-                    "targets": 3,
+                    "targets": 4,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -129,21 +134,10 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 4,
+                    "targets": 5,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
-                            ${
-                                row.status == 2 ? '' : `
-                                    <button class="rounded-full p-2 bg-purple-200 inline-block to-production-btns" data-id="${row.id}">
-                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                            <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
-                                        </svg>
-                                    </button>`
-                            }
-                            <a href="{{ config('app.url') }}/sale-order/pdf/${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" target="_blank">
-                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0H8A5.006,5.006,0,0,0,3,5V23a1,1,0,0,0,1.564.825L6.67,22.386l2.106,1.439a1,1,0,0,0,1.13,0l2.1-1.439,2.1,1.439a1,1,0,0,0,1.131,0l2.1-1.438,2.1,1.437A1,1,0,0,0,21,23V5A5.006,5.006,0,0,0,16,0Zm3,21.1-1.1-.752a1,1,0,0,0-1.132,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.131,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.129,0L5,21.1V5A3,3,0,0,1,8,2h8a3,3,0,0,1,3,3Z"/><rect x="7" y="8" width="10" height="2" rx="1"/><rect x="7" y="12" width="8" height="2" rx="1"/></svg>
-                            </a>
                             ${
                                 row.can_edit ? `
                                 <a href="{{ config('app.url') }}/sale-order/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block">
@@ -163,13 +157,14 @@
             ajax: {
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
-                    var url = "{{ route('sale_order.get_data') }}"
+                    var url = "{{ route('pending_order.get_data') }}"
 
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
         });
+        
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
         })
@@ -181,14 +176,61 @@
             $('#delete-modal').addClass('show-modal')
         })
 
-        $('#data-table').on('click', '.to-production-btns', function() {
-            $('#to-production-modal select').empty()
+        
+        let selectedOrders = [];
 
-            let id = $(this).data('id')
-            $('#to-production-modal #yes-btn').attr('data-id', id)
+        //assign
+        $('#select-all').on('click', function() {
+            let checked = this.checked;
+            $('.order-checkbox').each(function() {
+                $(this).prop('checked', checked).trigger('change');
+            });
+        });
 
-            let url = "{{ config('app.url') }}"
-            url = `${url}/sale/get-products/${id}`
+        // 处理单个复选框选择
+        $(document).on('change', '.order-checkbox', function() {
+            let orderId = $(this).data('id');
+            let orderSku = $(this).data('sku');
+
+            if (this.checked) {
+                // 检查是否已经存在，避免重复添加
+                if (!selectedOrders.some(order => order.id === orderId)) {
+                    selectedOrders.push({ id: orderId, sku: orderSku });
+                }
+            } else {
+                // 移除取消选择的订单
+                selectedOrders = selectedOrders.filter(order => order.id !== orderId);
+            }
+
+            checkSelectAllStatus();
+            toggleAssignButton();
+            console.log(selectedOrders);
+        });
+
+        function checkSelectAllStatus() {
+            let allChecked = $('.order-checkbox').length === $('.order-checkbox:checked').length;
+            $('#select-all').prop('checked', allChecked);
+        }
+
+
+        $('#assign-btn').on('click', function() {
+            if ($(this).prop('disabled')) {
+                e.preventDefault();
+            }
+
+            $('#selected-orders-list ul').empty();
+
+            selectedOrders.forEach(order => {
+                $('#selected-orders-list ul').append(`<li>Order ID:  ${order.sku}</li>`);
+            });
+
+            $('#assign-sale-person-modal select').empty();
+
+            let id = $(this).data('id');
+            $('#assign-sale-person-modal #yes-btn').attr('data-id', id);
+
+            let url = "{{ config('app.url') }}";
+            url = `${url}/pending-order/get-sale-person`;
 
             $.ajax({
                 headers: {
@@ -197,19 +239,64 @@
                 url: url,
                 type: 'GET',
                 success: function(res) {
-                    let opt = new Option('Select a product', null)
-                    $('#to-production-modal select').append(opt)
+                    let opt = new Option('Select a Sale Person', null);
+                    $('#assign-sale-person-modal select').append(opt);
 
-                    for (let i = 0; i < res.products.length; i++) {
-                        const elem = res.products[i];
+                    for (let i = 0; i < res.salesPersons.length; i++) {
+                        const salesperson = res.salesPersons[i];
 
-                        let opt = new Option(elem.product.model_name, elem.product.id)
-                        $('#to-production-modal select').append(opt)
+                        let opt = new Option(salesperson.name, salesperson.id);
+                        $('#assign-sale-person-modal select').append(opt);
                     }
 
-                    $('#to-production-modal').addClass('show-modal')
+                    $('#assign-sale-person-modal').addClass('show-modal');
                 },
             });
-        })
+        });
+
+        $('#assign-sale-person-modal #yes-btn').one('click', function(e) {
+            e.preventDefault();
+
+            let salesPersonId = $('#assign-sale-person-modal select').val();
+
+
+            if (!salesPersonId || selectedOrders.length === 0) {
+                alert('请选择销售人员并确保至少选择一个订单');
+                return;
+            }
+
+            let url = "{{ route('pending_order.assign_sale_person') }}";
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST',
+                data: {
+                    salesPersonId: salesPersonId === 'null' ? null : salesPersonId,
+                    sales: selectedOrders
+                },
+                success: function(response) {
+                    $('#assign-sale-person-modal').removeClass('show-modal');
+                    dt.ajax.reload();
+                    $(document).trigger('salePersonAssigned');
+                    alert(response.message);
+                },
+                error: function(error) {
+                    console.log(error)
+                    alert(response.message);
+                }
+            });
+        });
+
+        function toggleAssignButton() {
+            if (selectedOrders.length === 0) {
+                $('#assign-btn').addClass('bg-gray-200 cursor-not-allowed').removeClass('bg-green-200').prop('disabled', true);
+            } else {
+                $('#assign-btn').removeClass('bg-gray-200 cursor-not-allowed').addClass('bg-green-200').prop('disabled', false);
+            }
+        }
+
+        toggleAssignButton();
     </script>
 @endpush

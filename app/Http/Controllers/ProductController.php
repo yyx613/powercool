@@ -301,6 +301,7 @@ class ProductController extends Controller
 
     public function upsert(Request $req)
     {
+        // dd($req->input());
         if ($req->order_idx != null) {
             $req->merge(['order_idx' => json_decode($req->order_idx)]);
         }
@@ -336,6 +337,11 @@ class ProductController extends Controller
             'order_idx' => 'nullable',
             'serial_no' => 'nullable',
             'serial_no.*' => 'nullable|max:250',
+
+            'lazada_sku' => 'required',
+            'shopee_sku' => 'required',
+            'tiktok_sku' => 'required',
+            'woo_commerce_sku' => 'required',
         ];
         if ($req->product_id != null) {
             $rules['image'] = 'nullable';
@@ -394,6 +400,10 @@ class ProductController extends Controller
                     'height' => $req->dimension_height,
                     'is_active' => $req->boolean('status'),
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
+                    'lazada_sku' => $req->lazada_sku,
+                    'shopee_sku' => $req->shopee_sku,
+                    'tiktok_sku' => $req->tiktok_sku,
+                    'woo_commerce_sku' => $req->woo_commerce_sku
                 ]);
 
                 (new Branch())->assign(Product::class, $prod->id);
@@ -419,6 +429,10 @@ class ProductController extends Controller
                     'height' => $req->dimension_height,
                     'is_active' => $req->boolean('status'),
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
+                    'lazada_sku' => $req->lazada_sku,
+                    'shopee_sku' => $req->shopee_sku,
+                    'tiktok_sku' => $req->tiktok_sku,
+                    'woo_commerce_sku' => $req->woo_commerce_sku
                 ]);
             }
 
