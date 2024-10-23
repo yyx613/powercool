@@ -88,6 +88,16 @@
                                 @endcan
                                 @can('sale.sale_order.view')
                                 <li>
+                                    <a href="{{ route('pending_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Pending Order') }}</span>
+                                        <svg id="pending-orders-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ee6b6e" class="bi bi-exclamation-circle-fill ml-2" viewBox="0 0 16 16">
+                                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4m.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
+                                        </svg>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('sale.sale_order.view')
+                                <li>
                                     <a href="{{ route('sale_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sale_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sale Order') }}</span>
                                     </a>
@@ -719,5 +729,31 @@
             $(`.sub-menu-content`).removeClass('max-w-[250px]')
             $(`.sub-menu-content`).addClass('opacity-0 -z-50 invisible')
         })
+
+        function refreshPendingOrdersCount() {
+            $.ajax({
+                url: '{{ route('pending_order.count') }}',
+                method: 'GET',
+                success: function(response) {
+                    if (response.count > 0) {
+                        $('#pending-orders-icon').css('display', 'block');
+                    } else {
+                        $('#pending-orders-icon').css('display', 'none'); 
+                    }
+                },
+                error: function() {
+                    console.error('Error fetching pending orders count.');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            refreshPendingOrdersCount();
+        });
+
+        $(document).on('salePersonAssigned', function() {
+            refreshPendingOrdersCount();
+        });
+
     </script>
 @endpush

@@ -31,28 +31,52 @@ class WooCommerceController extends Controller
                         'sku' => $data['customer_id'],
                     ]);
                 }
-    
-                $billAddress = $data['billing']['address_1'].$data['billing']['address_2'];
-                $billingAddress = CustomerLocation::create([
-                    'customer_id' => $customer->id,
-                    'type' => 1, 
-                    'is_default' => 1,
-                    'address' => $billAddress,
-                    'city' => $data['billing']['city'],
-                    'state' => $data['billing']['state'], 
-                    'zip_code' => $data['billing']['postcode']
-                ]);
-    
+
                 $shipAddress = $data['shipping']['address_1'].$data['shipping']['address_2'];
-                $shippingAddress = CustomerLocation::create([
-                    'customer_id' => $customer->id,
-                    'type' => 1, 
-                    'is_default' => 2,
-                    'address' => $shipAddress,
-                    'city' => $data['shipping']['city'],
-                    'state' => $data['shipping']['state'], 
-                    'zip_code' => $data['shipping']['postcode']
-                ]);
+                $existingShippingAddress = CustomerLocation::where('customer_id', $customer->id)
+                    ->where('type', 2) 
+                    ->where('address', $shipAddress)
+                    ->where('city', $data['shipping']['city'])
+                    ->where('state', $data['shipping']['state']) 
+                    ->where('zip_code', $data['shipping']['postcode'])
+                    ->first();
+
+                if (!$existingShippingAddress) {
+                    $shippingAddress = CustomerLocation::create([
+                        'customer_id' => $customer->id,
+                        'type' => 1, 
+                        'is_default' => 2,
+                        'address' => $shipAddress,
+                        'city' => $data['shipping']['city'],
+                        'state' => $data['shipping']['state'], 
+                        'zip_code' => $data['shipping']['postcode']
+                    ]);
+                }else {
+                    $shippingAddress = $existingShippingAddress;
+                }
+
+                $billAddress = $data['billing']['address_1'].$data['billing']['address_2'];
+                $existingBillingAddress = CustomerLocation::where('customer_id', $customer->id)
+                    ->where('type', 1) 
+                    ->where('address', $billAddress)
+                    ->where('city', $data['billing']['city'])
+                    ->where('state', $data['billing']['state']) 
+                    ->where('zip_code', $data['billing']['postcode'])
+                    ->first();
+
+                if (!$existingBillingAddress) {
+                    $billingAddress = CustomerLocation::create([
+                        'customer_id' => $customer->id,
+                        'type' => 1, 
+                        'is_default' => 1,
+                        'address' => $billAddress,
+                        'city' => $data['billing']['city'],
+                        'state' => $data['billing']['state'], 
+                        'zip_code' => $data['billing']['postcode']
+                    ]);
+                }
+    
+                
     
                 $sale = Sale::create([
                     'order_id' => $data['id'],

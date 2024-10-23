@@ -11,6 +11,7 @@ use App\Models\ProductChild;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -21,6 +22,7 @@ class TiktokController extends Controller
     protected $appKey;
     protected $appSecret;
     protected $accessToken;
+    protected $platform = 'Tiktok';
 
 
     public function __construct()
@@ -28,7 +30,7 @@ class TiktokController extends Controller
         $this->appKey = config('platforms.tiktok.app_key');
         $this->appSecret = config('platforms.tiktok.app_secret');
         $this->endpoint = 'https://open-api.tiktokglobalshop.com';
-        $this->accessToken = PlatformTokens::where('platform','Tiktok')->first()->access_token;
+        $this->accessToken = PlatformTokens::where('platform',$this->platform)->first()->access_token;
     }
 
     public function handleTiktokWebhook(Request $request)
@@ -74,25 +76,84 @@ class TiktokController extends Controller
         return response()->json(['sign' => $signature]);
     }
 
-    public function getAccessTokenTiktok(Request $request){
+    public function getAccessTokenTiktok($code){
         $url = 'https://auth.tiktok-shops.com/api/v2/token/get';
+
         $params = [
             'query' => [
                 'app_key' => $this->appKey,
                 'app_secret' => $this->appSecret,
-                'auth_code' => '',
+                'auth_code' => $code,
                 'grant_type' => 'authorized_code',
             ],
         ];
 
         try {
             $response = Http::get($url, $params);
-            $body = json_decode($response->getBody(), true);
+            if ($response->successful()) {
+                DB::beginTransaction();
 
-            return response()->json($body);
-            
+                $responseData = $response->json()['data'];
+                PlatformTokens::updateOrCreate(
+                    ['platform' => $this->platform],
+                    [
+                        'access_token' => $responseData['access_token'],
+                        'refresh_token' => $responseData['refresh_token'],
+                        'access_token_expires_at' => Carbon::createFromTimestamp($responseData['access_token_expire_in']),
+                        'refresh_token_expires_at' => Carbon::createFromTimestamp($responseData['refresh_token_expire_in']),
+                    ]
+                );
+
+                DB::commit();
+                return 'success';
+            } else {
+                return response()->json([
+                    'error' => 'Failed to get token',
+                    'message' => $response->body()
+                ], $response->status());
+            }
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['error' => 'Failed to fetch access token'], 500);
+        }
+    }
+
+    public function refreshTiktokAccessToken()
+    {
+        $platformToken = PlatformTokens::where('platform', $this->platform)->first();
+
+        $url = 'https://auth.tiktok-shops.com/api/v2/token/refresh';
+        $queryParams = [
+            'app_key' => $this->appKey,
+            'app_secret' => $this->appSecret,
+            'refresh_token' => $platformToken->refresh_token,
+            'grant_type' => 'refresh_token'
+        ];
+
+        try {
+            $response = Http::get($url, $queryParams);
+
+            if ($response->successful()) {
+                DB::beginTransaction();
+
+                $responseData = $response->json()['data'];
+                $platformToken->access_token = $responseData['access_token'];
+                $platformToken->refresh_token = $responseData['refresh_token'];
+                $platformToken->access_token_expires_at = Carbon::createFromTimestamp($responseData['access_token_expire_in']);
+                $platformToken->refresh_token_expires_at = Carbon::createFromTimestamp($responseData['refresh_token_expire_in']);
+                $platformToken->save();
+
+                DB::commit();
+                return 'success';
+            } else {
+                return response()->json([
+                    'error' => 'Failed to refresh token',
+                    'message' => $response->body()
+                ], $response->status());
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -138,16 +199,27 @@ class TiktokController extends Controller
                             'platform' => 'Tiktok'
                         ]);
                     }
+                    $existingShippingAddress = CustomerLocation::where('customer_id', $customer->id)
+                        ->where('type', 2) 
+                        ->where('address', $item['recipient_address']['full_address'])
+                        ->where('city', $item['recipient_address']['city'])
+                        ->where('state', $item['recipient_address']['state']) 
+                        ->where('zip_code', $item['recipient_address']['zipcode'])
+                        ->first();
 
-                    $shippingAddress = CustomerLocation::create([
-                        'customer_id' => $customer->id,
-                        'type' => 2, 
-                        'is_default' => 1,
-                        'address' => $item['recipient_address']['full_address'],
-                        'city' => $item['recipient_address']['city'],
-                        'state' => $item['recipient_address']['state'], 
-                        'zip_code' => $item['recipient_address']['zipcode']
-                    ]);
+                    if (!$existingShippingAddress) {
+                        $shippingAddress = CustomerLocation::create([
+                            'customer_id' => $customer->id,
+                            'type' => 2, 
+                            'is_default' => 1,
+                            'address' => $item['recipient_address']['full_address'],
+                            'city' => $item['recipient_address']['city'],
+                            'state' => $item['recipient_address']['state'], 
+                            'zip_code' => $item['recipient_address']['zipcode']
+                        ]);
+                    }else {
+                        $shippingAddress = $existingShippingAddress;
+                    }
 
                     $sale = Sale::create([
                         'order_id' => $orderId,

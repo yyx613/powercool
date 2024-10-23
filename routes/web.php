@@ -128,6 +128,18 @@ Route::middleware('auth', 'select_lang')->group(function () {
             Route::get('/to-sale-order', 'toSaleOrder')->name('to_sale_order')->middleware(['can:sale.quotation.convert']);
             Route::get('/convert-to-sale-order', 'converToSaleOrder')->name('convert_to_sale_order');
         });
+
+        //Pending
+        Route::prefix('pending-order')->name('pending_order.')->group(function () {
+            Route::get('/', 'indexPendingOrder')->name('index');
+            Route::get('/get-data', 'getDataPendingOrder')->name('get_data');
+            Route::get('/edit/{sale}', 'editSaleOrder')->name('edit');
+            Route::get('/delete/{sale}', 'delete')->name('delete');
+            Route::get('/count','getPendingOrdersCount')->name('count');
+            Route::get('/get-sale-person', 'getSalePerson')->name('get_sale_person');
+            Route::post('/asssign-to-sale-person', 'assignSalePerson')->name('assign_sale_person');
+        });
+
         // Sale Order
         Route::prefix('sale-order')->name('sale_order.')->middleware(['can:sale.sale_order.view'])->group(function () {
             Route::get('/', 'indexSaleOrder')->name('index');
@@ -379,18 +391,36 @@ Route::middleware('auth', 'select_lang')->group(function () {
     });
 });
 
-//Platforms
-Route::post('/lazada/webhook', [LazadaController::class, 'handleLazadaWebhook']);
-Route::get('/lazada/get-access-token', [LazadaController::class, 'getAccessTokenLazada']);
-Route::post('/shopee/webhook', [ShopeeController::class, 'handleShopeeWebhook']);
-Route::get('/shopee/generate-auth-link', [ShopeeController::class, 'generateAuthLinkShopee']);
-Route::get('/shopee/get-access-token', [ShopeeController::class, 'getAccessTokenShopee']);
-Route::post('/tiktok/webhook', [TiktokController::class, 'handleTiktokWebhook']);
-Route::get('/tiktok/get-access-token', [TiktokController::class, 'getAccessTokenTiktok']);
-Route::post('/woo-commerce/order-created/webhook', [WooCommerceController::class, 'handleWooCommerceOrderCreated']);
-Route::post('/woo-commerce/order-updated/webhook', [WooCommerceController::class, 'handleWooCommerceOrderUpdated']);
-Route::post('/woo-commerce/order-deleted/webhook', [WooCommerceController::class, 'handleWooCommerceOrderDeleted']);
-Route::post('/woo-commerce/order-restored/webhook', [WooCommerceController::class, 'handleWooCommerceOrderRestored']);
+//Lazada
+Route::prefix('lazada')->group(function () {
+    Route::post('/webhook', [LazadaController::class, 'handleLazadaWebhook']);
+    Route::get('/get-access-token/{code}', [LazadaController::class, 'getAccessTokenLazada']);
+    Route::get('/refresh-access-token', [LazadaController::class, 'refreshAccessTokenLazada']);
+});
+
+//Shopee
+Route::prefix('shopee')->group(function () {
+    Route::post('/webhook', [ShopeeController::class, 'handleShopeeWebhook']);
+    Route::get('/generate-auth-link', [ShopeeController::class, 'generateAuthLinkShopee']);
+    Route::get('/get-access-token/{code}', [ShopeeController::class, 'getAccessTokenShopee']);
+    Route::get('/refresh-access-token', [ShopeeController::class, 'refreshAccessTokenShopee']);
+});
+
+//Tiktok
+Route::prefix('tiktok')->group(function () {
+    Route::post('/webhook', [TiktokController::class, 'handleTiktokWebhook']);
+    Route::get('/get-access-token/{code}', [TiktokController::class, 'getAccessTokenTiktok']);
+    Route::get('/refresh-access-token', [TiktokController::class, 'refreshAccessTokenTiktok']);
+});
+
+//WooCommerce
+Route::prefix('woo-commerce')->group(function () {
+    Route::post('/order-created/webhook', [WooCommerceController::class, 'handleWooCommerceOrderCreated']);
+    Route::post('/order-updated/webhook', [WooCommerceController::class, 'handleWooCommerceOrderUpdated']);
+    Route::post('/order-deleted/webhook', [WooCommerceController::class, 'handleWooCommerceOrderDeleted']);
+    Route::post('/order-restored/webhook', [WooCommerceController::class, 'handleWooCommerceOrderRestored']);
+});
+
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
