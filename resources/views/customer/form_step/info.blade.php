@@ -119,6 +119,16 @@
                     </x-app.input.select2>
                     <x-app.message.error id="sale_agent_err"/>
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="platform" class="mb-1">{{ __('Platform') }}</x-app.input.label>
+                    <x-app.input.select name="platform" id="platform" :hasError="$errors->has('platform')">
+                        <option value="">{{ __('Select a platform') }}</option>
+                        @foreach ($platforms as $platform)
+                            <option value="{{ $platform->id }}" @selected(old('platform', isset($customer) ? $customer->platform_id : null) == $platform->id)>{{ $platform->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="platform_err"/>
+                </div>
                 <div class="flex flex-col col-span">
                     <x-app.input.label id="credit_term" class="mb-1">{{ __('Credit Terms') }}</x-app.input.label>
                     <x-app.input.select name="credit_term[]" multiple>

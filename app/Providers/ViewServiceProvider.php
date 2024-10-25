@@ -11,6 +11,7 @@ use App\Models\CustomerCredit;
 use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
+use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductCost;
 use App\Models\ProductionMilestoneMaterial;
@@ -417,6 +418,11 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('credit_terms', $credit_terms);
             $view->with('areas', $areas);
             $view->with('debtor_types', $debtor_types);
+        });
+        View::composer(['customer.form_step.info'], function (ViewView $view) {
+            $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            $view->with('platforms', $platforms);
         });
         View::composer(['billing.convert'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {

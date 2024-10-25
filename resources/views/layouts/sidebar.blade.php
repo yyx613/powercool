@@ -290,6 +290,16 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('platform.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
                                     </a>
@@ -593,6 +603,16 @@
                 <li>
                     <a href="{{ route('debtor_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('platform.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
                     </a>
                 </li>
                 <li>

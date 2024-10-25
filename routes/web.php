@@ -9,6 +9,7 @@ use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialUseController;
+use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProjectTypeController;
@@ -380,6 +381,15 @@ Route::middleware('auth', 'select_lang')->group(function () {
             Route::post('/store', 'store')->name('store');
             Route::get('/edit/{uom}', 'edit')->name('edit');
             Route::post('/update/{uom}', 'update')->name('update');
+        });
+        // Platform
+        Route::controller(PlatformController::class)->prefix('platform')->name('platform.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{platform}', 'edit')->name('edit');
+            Route::post('/update/{platform}', 'update')->name('update');
         });
         // User Management
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {
