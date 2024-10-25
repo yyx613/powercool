@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use App\Models\Product;
 use App\Models\Sale;
@@ -22,14 +23,15 @@ class LazadaController extends Controller
     protected $appSecret; 
     protected $endpoint;
     protected $accessToken;
-    protected $platform = 'Lazada';
+    protected $platform;
 
     public function __construct()
     {
         $this->appKey = config('platforms.lazada.app_key');
         $this->appSecret = config('platforms.lazada.secret_key');
         $this->endpoint = 'https://api.lazada.com.my/rest';
-        $this->accessToken = PlatformTokens::where('platform',$this->platform)->first()->access_token;
+        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
+        $this->platform = Platform::where('name','Lazada')->first();
     }
 
     public function handleLazadaWebhook(Request $request)
@@ -62,7 +64,7 @@ class LazadaController extends Controller
         Log::info('Order ID and Status', ['orderId' => $orderId, 'status' => $status]);
 
         try {
-            $sale = Sale::where('order_id', $orderId)->first();
+            $sale = Sale::where('order_id', $orderId)->where('platform_id',$this->platform->id)->first();
             if ($sale) {
                 $sale->update(['status' => $status]);
                 Log::info('Order status updated', [
@@ -119,7 +121,7 @@ class LazadaController extends Controller
                 $refreshExpiresIn = $data['refresh_expires_in'];
                 DB::beginTransaction();
                 PlatformTokens::updateOrCreate(
-                    ['platform' => $this->platform],
+                    ['platform_id' => $this->platform->id],
                     [
                         'access_token' => $newAccessToken,
                         'refresh_token' => $newRefreshToken,
@@ -141,7 +143,7 @@ class LazadaController extends Controller
     {
         $appKey = $this->appKey;
         $appSecret = $this->appSecret;
-        $refreshToken = PlatformTokens::where('platform',$this->platform)->first()->refresh_token;
+        $refreshToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->refresh_token;
         $url = $this->endpoint.'/auth/token/refresh';
 
         $timestamp = now()->timestamp * 1000;
@@ -168,7 +170,7 @@ class LazadaController extends Controller
                 $refreshExpiresIn = $data['refresh_expires_in'];
 
                 DB::beginTransaction();
-                PlatformTokens::where('platform', 'Lazada')->update([
+                PlatformTokens::where('platform_id', $this->platform->id)->update([
                     'access_token' => $newAccessToken,
                     'refresh_token' => $newRefreshToken,
                     'access_token_expires_at' => Carbon::now()->addSeconds($expiresIn),
@@ -177,7 +179,7 @@ class LazadaController extends Controller
                 DB::commit();
 
                 Log::info('Updated platform token in database', [
-                    'platform' => $this->platform,
+                    'platform' => $this->platform->name,
                     'access_token' => $newAccessToken
                 ]);
 
@@ -343,19 +345,19 @@ class LazadaController extends Controller
                 $item = $skuData['item'];
                 $quantity = $skuData['qty'];
 
-                $customer = Customer::where('sku', $item['buyer_id'])->where('platform',$this->platform)->first();
+                $customer = Customer::where('sku', $item['buyer_id'])->where('platform_id',$this->platform->id)->first();
                 if (!$customer) {
                     $customer = Customer::create([
                         'sku' => $item['buyer_id'],
-                        'platform' => $this->platform
+                        'platform_id' => $this->platform->id
                     ]);
-                    Log::info('Created new customer', ['sku' => $item['buyer_id'], 'platform' => $this->platform]);
+                    Log::info('Created new customer', ['sku' => $item['buyer_id'], 'platform' => $this->platform->name]);
                 }
 
                 $sale = Sale::create([
                     'order_id' => $orderId,
                     'status' => $status,
-                    'platform' => $this->platform,
+                    'platform_id' => $this->platform->id,
                     'sku' => $orderId,
                     'type' => Sale::TYPE_PENDING,
                     'customer_id' => $customer->id,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platforms;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use App\Models\Product;
 use App\Models\Sale;
@@ -22,7 +23,7 @@ class ShopeeController extends Controller
     protected $partnerKey;
     protected $accessToken;
     protected $shopId;
-    protected $platform = 'Shopee';
+    protected $platform;
 
     public function __construct()
     {
@@ -31,6 +32,7 @@ class ShopeeController extends Controller
         $this->shopId = (int) config('platforms.shopee.shop_id');
         $this->endpoint = 'https://partner.test-stable.shopeemobile.com';
         $this->accessToken = PlatformTokens::where('platform',$this->platform)->first()->access_token;
+        $this->platform = Platform::where('name','Shopee')->first();
     }
 
     public function getAccessTokenShopee($code)
@@ -72,7 +74,7 @@ class ShopeeController extends Controller
 
             DB::beginTransaction();
             PlatformTokens::updateOrCreate(
-                ['platform' => $this->platform],
+                ['platform_id' => $this->platform->id],
                 [
                     'access_token' => $responseData['access_token'],
                     'refresh_token' => $responseData['refresh_token'],
@@ -93,7 +95,7 @@ class ShopeeController extends Controller
 
     public function refreshAccessTokenShopee()
     {
-        $platformToken = PlatformTokens::where('platform', $this->platform)->first();
+        $platformToken = PlatformTokens::where('platform_id', $this->platform->id)->first();
         if (!$platformToken) {
             return response()->json(['error' => 'Platform token not found'], 404);
         }
@@ -206,7 +208,7 @@ class ShopeeController extends Controller
         try {
             Log::info('Processing Shopee webhook', ['orderSN' => $orderSN, 'status' => $data['status'], 'shopId' => $shopId]);
     
-            $sale = Sale::where('order_id', $orderSN)->first();
+            $sale = Sale::where('order_id', $orderSN)->where('platform_id',$this->platform->id)->first();
             
             if ($sale) {
                 $sale->update(['status' => $status]);
@@ -257,12 +259,12 @@ class ShopeeController extends Controller
             foreach ($data['response']['order_list'] as $order) {
                 Log::info('Processing Shopee order', ['order_sn' => $order['order_sn']]);
 
-                $customer = Customer::where('sku', $order['buyer_user_id'])->where('platform',$this->platform)->first();
+                $customer = Customer::where('sku', $order['buyer_user_id'])->where('platform_id',$this->platform->id)->first();
                 if(!$customer){
                     $customer = Customer::create([
                         'sku' => $order['buyer_user_id'],
                         'name' => $order['buyer_username'],
-                        'platform' => $this->platform
+                        'platform_id' => $this->platform->id
                     ]);
                 }
 
@@ -294,7 +296,7 @@ class ShopeeController extends Controller
                 $sale = Sale::create([
                     'order_id' => $orderId,
                     'status' => $status,
-                    'platform' => $this->platform,
+                    'platform_id' => $this->platform->id,
                     'sku' => $orderId,
                     'type' => 2,
                     'customer_id' => $customer->id,

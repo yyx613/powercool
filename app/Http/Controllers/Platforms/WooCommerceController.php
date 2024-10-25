@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platforms;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Sale;
@@ -16,13 +17,20 @@ use Illuminate\Support\Facades\Log;
 
 class WooCommerceController extends Controller
 {
+    protected $platform;
+
+    public function __construct()
+    {
+        $this->platform = Platform::where('name','WooCommerce')->first();
+    }
+
     public function handleWooCommerceOrderCreated(Request $request){   
         $data = $request->input();
         Log::info('Received WooCommerce order', ['order_id' => $data['id'], 'status' => $data['status']]);
 
         try {
             DB::beginTransaction();
-            $sale = Sale::where('order_id',$data['id'])->first();
+            $sale = Sale::where('order_id',$data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  $data['status'] == 'cancelled' ?  Sale::STATUS_INACTIVE : Sale::STATUS_ACTIVE
@@ -33,6 +41,7 @@ class WooCommerceController extends Controller
                 if(!$customer){
                     $customer = Customer::create([
                         'sku' => $data['customer_id'],
+                        'platform_id' => $this->platform->id
                     ]);
                     Log::info('Created new customer', ['customer_id' => $customer->id]);
                 }
@@ -87,7 +96,7 @@ class WooCommerceController extends Controller
                 $sale = Sale::create([
                     'order_id' => $data['id'],
                     'status' => $data['status'],
-                    'platform' => 'WooCommerce',
+                    'platform_id' => $this->platform->id,
                     'sku' => $data['order_key'],
                     'type' => 2,
                     'customer_id' => $customer->id,
@@ -129,7 +138,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order update received', ['order_id' => $data['id']]);
             
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if ($sale) {
                 Log::info('Sale record found for order', ['order_id' => $data['id'], 'sale_id' => $sale->id]);
 
@@ -221,7 +230,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order deletion received', ['order_id' => $data['id']]);
 
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  Sale::STATUS_INACTIVE
@@ -252,7 +261,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order restoration received', ['order_id' => $data['id']]);
 
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  Sale::STATUS_ACTIVE
