@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TiktokController extends Controller
 {
@@ -38,18 +39,23 @@ class TiktokController extends Controller
         $data = $request->input('data');
 
         if (!$data) {
+            Log::warning('TikTok webhook received without data');
             return response()->json(['message' => 'No data provided'], 400);
         }
 
         $orderId = $data['order_id'] ?? null;
         $status = $data['order_status'] == 'CANCELLED' || $data['order_status'] == 'UNPAID' ?  Sale::STATUS_INACTIVE : Sale::STATUS_ACTIVE;
 
+        Log::info('TikTok webhook received', ['order_id' => $orderId, 'order_status' => $data['order_status']]);
+
         $sale = Sale::where('order_id',$orderId)->first();
         if($sale){
             $sale->update([
                 'status' =>  $status 
             ]);
+            Log::info('Updated sale status', ['order_id' => $orderId, 'status' => $status]);
         }else{
+            Log::info('Sale not found, fetching order details from TikTok API', ['order_id' => $orderId]);
             $this->getTiktokOrder($orderId,$status);
         }
 
@@ -89,8 +95,12 @@ class TiktokController extends Controller
         ];
 
         try {
+            Log::info('Requesting TikTok access token', ['url' => $url, 'params' => $params]);
+
             $response = Http::get($url, $params);
             if ($response->successful()) {
+                Log::info('TikTok token response successful');
+
                 DB::beginTransaction();
 
                 $responseData = $response->json()['data'];
@@ -105,8 +115,16 @@ class TiktokController extends Controller
                 );
 
                 DB::commit();
+
+                Log::info('Access token and refresh token saved successfully', ['platform' => $this->platform]);
+
                 return 'success';
             } else {
+                Log::error('Failed to get TikTok access token', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+
                 return response()->json([
                     'error' => 'Failed to get token',
                     'message' => $response->body()
@@ -114,6 +132,8 @@ class TiktokController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Exception during TikTok access token request', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Failed to fetch access token'], 500);
         }
     }
@@ -131,6 +151,8 @@ class TiktokController extends Controller
         ];
 
         try {
+            Log::info('Requesting TikTok token refresh', ['url' => $url, 'params' => $queryParams]);
+
             $response = Http::get($url, $queryParams);
 
             if ($response->successful()) {
@@ -144,8 +166,16 @@ class TiktokController extends Controller
                 $platformToken->save();
 
                 DB::commit();
+
+                Log::info('Access token and refresh token updated successfully', ['platform' => $this->platform]);
+
                 return 'success';
             } else {
+                Log::error('Failed to refresh TikTok token', [
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+
                 return response()->json([
                     'error' => 'Failed to refresh token',
                     'message' => $response->body()
@@ -153,6 +183,8 @@ class TiktokController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Exception during TikTok token refresh', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -170,15 +202,21 @@ class TiktokController extends Controller
         $params['sign'] = $this->generateSignature($params, $this->appSecret, '/api/orders/detail/query');
 
         try {
-            $response = Http::get($url,$params);
+            Log::info('Requesting TikTok order details', ['url' => $url, 'params' => $params]);
 
+            $response = Http::get($url,$params);
             $data = json_decode($response->getBody()->getContents(), true);
+
+            if (!isset($data['data']['order_list'])) {
+                Log::warning('Order list not found in response', ['response' => $data]);
+                return response()->json(['error' => 'Order data not found'], 404);
+            }
 
             DB::beginTransaction();
             foreach ($data['data']['order_list'] as $order) {
                 $skuMap = [];
             
-                foreach ($data['data'] as $item) {
+                foreach ($order as $item) {
                     if (isset($skuMap[$item['sku']])) {
                         $skuMap[$item['sku']]['qty'] += 1;
                     } else {
@@ -188,6 +226,7 @@ class TiktokController extends Controller
                         ];
                     }
                 }
+
                 foreach ($skuMap as $skuData) {
                     $item = $skuData['item'];
                     $quantity = $skuData['qty'];
@@ -198,6 +237,7 @@ class TiktokController extends Controller
                             'email' => $item['buyer_email'],
                             'platform' => 'Tiktok'
                         ]);
+                        Log::info('Created new customer', ['customer_id' => $customer->id]);
                     }
                     $existingShippingAddress = CustomerLocation::where('customer_id', $customer->id)
                         ->where('type', 2) 
@@ -217,6 +257,7 @@ class TiktokController extends Controller
                             'state' => $item['recipient_address']['state'], 
                             'zip_code' => $item['recipient_address']['zipcode']
                         ]);
+                        Log::info('Created new shipping address', ['address_id' => $shippingAddress->id]);
                     }else {
                         $shippingAddress = $existingShippingAddress;
                     }
@@ -231,20 +272,28 @@ class TiktokController extends Controller
                         'delivery_address_id'=> $shippingAddress->id,
                         'remark' => $item['buyer_message']
                     ]);
+                    Log::info('Created sale record', ['sale_id' => $sale->id]);
 
                     $product = product::where('tiktok_sku', $item['seller_sku'])->first();
-                    SaleProduct::create([
-                        'sale_id' => $sale->id,
-                        'product_id' => $product->id,
-                        'desc' => $item['product_name'] ?? null,
-                        'qty' => $quantity, 
-                        'unit_price' => $item['sale_price'] ?? 0,
-                    ]);
+                    if ($product) {
+                        SaleProduct::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $product->id,
+                            'desc' => $item['product_name'] ?? null,
+                            'qty' => $quantity,
+                            'unit_price' => $item['sale_price'] ?? 0,
+                        ]);
+                        Log::info('Added product to sale', ['product_id' => $product->id, 'sale_id' => $sale->id]);
+                    } else {
+                        Log::warning('Product not found for SKU', ['sku' => $item['seller_sku']]);
+                    }
                 }
             }
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to process TikTok order', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
         }
 
