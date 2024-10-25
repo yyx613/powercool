@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LazadaController extends Controller
 {
@@ -34,6 +35,7 @@ class LazadaController extends Controller
     public function handleLazadaWebhook(Request $request)
     {
         $messageBody = $request->getContent(); 
+        Log::info('Lazada Webhook received', ['messageBody' => $messageBody]);
 
         $appKey = $this->appKey; 
         $appSecret = $this->appSecret; 
@@ -41,33 +43,46 @@ class LazadaController extends Controller
         $receivedSignature = $request->header('Authorization');
 
         $base = $appKey . $messageBody;
-
         $expectedSignature = $this->generateWebhookSignature($base, $appSecret);
 
-        // if (!hash_equals($expectedSignature, $receivedSignature)) {
-        //     return response()->json(['message' => 'Invalid signature'], 401);
-        // }
+        if (!hash_equals($expectedSignature, $receivedSignature)) {
+            Log::warning('Signature mismatch', [
+                'expectedSignature' => $expectedSignature,
+                'receivedSignature' => $receivedSignature
+            ]);
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
 
         $data = json_decode($messageBody, true); 
         $orderId = $data['data']['trade_order_id'];
-        $status = ($data['data']['order_status'] == 'returned' || $data['data']['order_status'] == 'unpaid' || $data['data']['order_status'] == 'cancelled') ? Sale::STATUS_INACTIVE : Sale::STATUS_ACTIVE;
-        try {
-            $sale = Sale::where('order_id',$orderId)->first();
-            if($sale){
-                $sale->update([
-                    'status' =>  $status
-                ]);
-            }else{
+        $status = ($data['data']['order_status'] == 'returned' || $data['data']['order_status'] == 'unpaid' || $data['data']['order_status'] == 'cancelled') 
+                    ? Sale::STATUS_INACTIVE 
+                    : Sale::STATUS_ACTIVE;
 
-                $this->getLazadaOrderItems($orderId,$status);
-            }        
+        Log::info('Order ID and Status', ['orderId' => $orderId, 'status' => $status]);
+
+        try {
+            $sale = Sale::where('order_id', $orderId)->first();
+            if ($sale) {
+                $sale->update(['status' => $status]);
+                Log::info('Order status updated', [
+                    'orderId' => $orderId,
+                    'newStatus' => $status
+                ]);
+            } else {
+                Log::info('Order not found, fetching Lazada order items', ['orderId' => $orderId]);
+                $this->getLazadaOrderItems($orderId, $status);
+                return response()->json(['message' => 'Webhook received and processed successfully'], 200);
+            }
         } catch (\Throwable $th) {
+            Log::error('Error handling Lazada Webhook', [
+                'error' => $th->getMessage(),
+                'orderId' => $orderId,
+                'status' => $status
+            ]); 
             dd($th);
         }
-       
 
-
-        return response()->json(['message' => 'Webhook received and processed successfully'], 200);
     }
 
     private function generateWebhookSignature($base, $secret) {
@@ -146,11 +161,12 @@ class LazadaController extends Controller
 
             if ($response->successful()) {
                 $data = $response->json();
-    
+                Log::info('Received response from Lazada', ['data' => $data]);
                 $newAccessToken = $data['access_token'];
                 $newRefreshToken = $data['refresh_token'];
                 $expiresIn = $data['expires_in'];
                 $refreshExpiresIn = $data['refresh_expires_in'];
+
                 DB::beginTransaction();
                 PlatformTokens::where('platform', 'Lazada')->update([
                     'access_token' => $newAccessToken,
@@ -159,8 +175,21 @@ class LazadaController extends Controller
                     'refresh_token_expires_at' => Carbon::now()->addSeconds($refreshExpiresIn),
                 ]);
                 DB::commit();
+
+                Log::info('Updated platform token in database', [
+                    'platform' => $this->platform,
+                    'access_token' => $newAccessToken
+                ]);
+
                 return 'success';
-            } 
+            }else {
+                Log::warning('Failed to receive successful response from Lazada', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return response()->json(['error' => 'Failed to fetch data from Lazada API'], 500);
+            }
         }catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
@@ -182,6 +211,7 @@ class LazadaController extends Controller
         ];
 
         $params['sign'] = $this->generateSignature($params, $appSecret, '/order/get');
+        Log::info('Fetching Lazada order', ['order_id' => $orderId]);
 
         try {
             $response = Http::get($url,$params);
@@ -219,6 +249,7 @@ class LazadaController extends Controller
                     'state' => $data['data']['address_shipping']['country'], 
                     'zip_code' => $data['data']['address_shipping']['post_code']
                 ]);
+                Log::info('Created new shipping address', ['customer_id' => $customer->id, 'address' => $shipAddress]);
             } else {
                 $shippingAddress = $existingShippingAddress;
             }
@@ -247,6 +278,7 @@ class LazadaController extends Controller
                     'state' => $data['data']['address_billing']['address2'], 
                     'zip_code' => $data['data']['address_billing']['post_code']
                 ]);
+                Log::info('Created new billing address', ['customer_id' => $customer->id, 'address' => $billAddress]);
             }
 
 
@@ -257,11 +289,17 @@ class LazadaController extends Controller
                 'payment_amount'=> $data['data']['price'],
                 'delivery_address_id'=> $shippingAddress->id
             ]);
+
+            Log::info('Updated sale record', ['sale_id' => $sale->id, 'order_id' => $orderId]);
             
             DB::commit();
         } catch (\Exception $e) {
             dd($e);
             DB::rollBack();
+            Log::error('Failed to fetch order data from Lazada', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
         }
 
@@ -280,6 +318,8 @@ class LazadaController extends Controller
             'order_id' => $orderId,
         ];
         $params['sign'] = $this->generateSignature($params, $appSecret, '/order/items/get');
+
+        Log::info('Fetching Lazada order items', ['order_id' => $orderId]);
 
         try {
             $response = Http::get($url,$params);
@@ -309,6 +349,7 @@ class LazadaController extends Controller
                         'sku' => $item['buyer_id'],
                         'platform' => $this->platform
                     ]);
+                    Log::info('Created new customer', ['sku' => $item['buyer_id'], 'platform' => $this->platform]);
                 }
 
                 $sale = Sale::create([
@@ -319,6 +360,8 @@ class LazadaController extends Controller
                     'type' => Sale::TYPE_PENDING,
                     'customer_id' => $customer->id,
                 ]);
+
+                Log::info('Created new sale record', ['sale_id' => $sale->id, 'order_id' => $orderId]);
 
                 (new Branch())->assign(Sale::class, $sale->id, Branch::LOCATION_KL);
 
@@ -331,12 +374,20 @@ class LazadaController extends Controller
                     'qty' => $quantity, 
                     'unit_price' => $item['paid_price'] ?? 0
                 ]);
+
+                Log::info('Added sale product', ['sale_id' => $sale->id, 'product_id' => $product->id]);
             }
             DB::commit();
+            Log::info('Successfully processed Lazada order items', ['order_id' => $orderId]);
             $this->getLazadaOrder($orderId,$sale);
         }catch (\Exception $e) {
             dd($e);
             DB::rollBack();
+            Log::error('Failed to fetch Lazada order items', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+            
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
         }
     }
