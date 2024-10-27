@@ -26,4 +26,12 @@ class Platform extends Model
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
+
+    public function sales() {
+        return $this->hasMany(Sale::class, 'platform_id');
+    }
+
+    public function customers() {
+        return $this->hasMany(Customer::class, 'platform_id');
+    }
 }

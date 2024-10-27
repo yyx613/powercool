@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platforms;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\Platform;
@@ -30,9 +31,9 @@ class ShopeeController extends Controller
         $this->partnerId = (int) config('platforms.shopee.partner_id');
         $this->partnerKey = config('platforms.shopee.partner_key');
         $this->shopId = (int) config('platforms.shopee.shop_id');
-        $this->endpoint = 'https://partner.test-stable.shopeemobile.com';
-        $this->accessToken = PlatformTokens::where('platform',$this->platform)->first()->access_token;
+        $this->endpoint = 'https://partner.shopeemobile.com';
         $this->platform = Platform::where('name','Shopee')->first();
+        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
     }
 
     public function getAccessTokenShopee($code)
@@ -66,7 +67,6 @@ class ShopeeController extends Controller
             ])->post($url . '?' . http_build_query($queryParams), $bodyParams);
 
             $responseData = $response->json();
-
             if (!$response->successful() || !isset($responseData['access_token'])) {
                 Log::error('Failed to retrieve access token from Shopee API', ['response' => $responseData]);
                 return response()->json(['error' => 'Failed to retrieve access token'], 500);
@@ -213,12 +213,12 @@ class ShopeeController extends Controller
             if ($sale) {
                 $sale->update(['status' => $status]);
                 Log::info('Sale status updated', ['order_id' => $orderSN, 'status' => $status]);
+                return response()->json(['message' => 'Webhook processed with order updated successfully'], 200);
             } else {
-                $this->getShopeeOrder($orderSN, $status);
-                Log::info('Sale record created from Shopee order', ['order_id' => $orderSN, 'status' => $status]);
+                $msg = $this->getShopeeOrder($orderSN, $status);
+                return $msg;
             }
     
-            return response()->json(['message' => 'Webhook processed successfully'], 200);
         } catch (\Exception $e) {
             Log::error('Error processing Shopee webhook', [
                 'error' => $e->getMessage(),
@@ -229,7 +229,6 @@ class ShopeeController extends Controller
             return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
         }
 
-        return response()->json(['message' => 'Webhook received successfully'], 200);
     }
 
     private function getShopeeOrder($orderId,$status){
@@ -243,6 +242,12 @@ class ShopeeController extends Controller
             'access_token' => $this->accessToken,
             'shop_id' => $this->shopId,
             'order_sn_list' => $orderId, 
+            'response_optional_fields' => 'buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,
+            actual_shipping_fee ,goods_to_declare,note,note_update_time,item_list,pay_time,
+            dropshipper, dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,
+            actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,
+            package_list,shipping_carrier,payment_method,total_amount,buyer_username,
+            invoice_data,no_plastic_packing,order_chargeable_weight_gram,return_request_due_date'
         ];
 
         $baseString = sprintf("%s%s%s%s%s", $this->partnerId, $path, $timestamp, $this->accessToken, $this->shopId);
@@ -253,7 +258,7 @@ class ShopeeController extends Controller
 
             $response = Http::get($url,$params);
             $data = json_decode($response->getBody()->getContents(), true);
-
+            // dd($data);
             DB::beginTransaction();
 
             foreach ($data['response']['order_list'] as $order) {
@@ -266,6 +271,7 @@ class ShopeeController extends Controller
                         'name' => $order['buyer_username'],
                         'platform_id' => $this->platform->id
                     ]);
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
                 }
 
                 Log::info('Customer processed', ['customer_id' => $customer->id, 'sku' => $order['buyer_user_id']]);
@@ -288,6 +294,9 @@ class ShopeeController extends Controller
                         'state' => $order['recipient_address']['state'], 
                         'zip_code' => $order['recipient_address']['zipcode']
                     ]);
+
+                    (new Branch())->assign(CustomerLocation::class, $shippingAddress->id, Branch::LOCATION_KL);
+
                     Log::info('New shipping address created', ['shipping_address_id' => $shippingAddress->id]);
                 }else {
                     $shippingAddress = $existingShippingAddress;
@@ -298,7 +307,7 @@ class ShopeeController extends Controller
                     'status' => $status,
                     'platform_id' => $this->platform->id,
                     'sku' => $orderId,
-                    'type' => 2,
+                    'type' => Sale::TYPE_PENDING,
                     'customer_id' => $customer->id,
                     'payment_amount'=> $order['total_amount'],
                     'payment_method'=> $order['payment_method'],
@@ -307,18 +316,24 @@ class ShopeeController extends Controller
                     'reference' => json_encode([$order['note']])
                 ]);
 
+                (new Branch())->assign(Sale::class, $sale->id, Branch::LOCATION_KL);
+
                 Log::info('Sale record created', ['sale_id' => $sale->id, 'order_id' => $orderId]);
 
                 foreach ($order['item_list'] as $item) {
                     $product = Product::where('shopee_sku', $item['model_sku'])->first();
+                    // $product = Product::where('shopee_sku', $item['item_id'])->first();
                     if ($product) {
-                        SaleProduct::create([
+                        $saleProduct = SaleProduct::create([
                             'sale_id' => $sale->id,
                             'product_id' => $product->id,
                             'desc' => $item['item_name'] ?? null,
                             'qty' => $item['model_quantity_purchased'],
                             'unit_price' => $item['model_discounted_price'] ?? 0,
                         ]);
+
+                        (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
+
                         Log::info('SaleProduct created', [
                             'sale_id' => $sale->id,
                             'product_id' => $product->id,
@@ -326,12 +341,18 @@ class ShopeeController extends Controller
                         ]);
                     } else {
                         Log::warning('Product not found for item', ['model_sku' => $item['model_sku']]);
+                        throw new \Exception('Product not found for SKU: ' . $item['model_sku']);
                     }
                 }
             }
+
             DB::commit();
+            Log::info('Sale record created from Shopee order', ['order_id' => $orderId, 'status' => $status]);
+            return response()->json(['message' => 'Webhook processed successfully'], 200);
+
         } catch (\Exception $e) {
             DB::rollBack();
+            
             Log::error('Error in getShopeeOrder', ['error' => $e->getMessage(), 'order_id' => $orderId]);
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
         }

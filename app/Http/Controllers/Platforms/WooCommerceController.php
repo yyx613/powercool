@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platforms;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\Platform;
@@ -43,6 +44,9 @@ class WooCommerceController extends Controller
                         'sku' => $data['customer_id'],
                         'platform_id' => $this->platform->id
                     ]);
+
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                     Log::info('Created new customer', ['customer_id' => $customer->id]);
                 }
 
@@ -65,6 +69,9 @@ class WooCommerceController extends Controller
                         'state' => $data['shipping']['state'], 
                         'zip_code' => $data['shipping']['postcode']
                     ]);
+
+                    (new Branch())->assign(CustomerLocation::class, $shippingAddress->id, Branch::LOCATION_KL);
+
                     Log::info('Created new shipping address', ['address_id' => $shippingAddress->id]);
                 }else {
                     $shippingAddress = $existingShippingAddress;
@@ -90,6 +97,9 @@ class WooCommerceController extends Controller
                         'state' => $data['billing']['state'], 
                         'zip_code' => $data['billing']['postcode']
                     ]);
+
+                    (new Branch())->assign(CustomerLocation::class, $billingAddress->id, Branch::LOCATION_KL);
+
                     Log::info('Created new billing address', ['address_id' => $billingAddress->id]);
                 }
     
@@ -105,6 +115,8 @@ class WooCommerceController extends Controller
                     'delivery_address_id'=> $shippingAddress->id,
                 ]);
 
+                (new Branch())->assign(Sale::class, $sale->id, Branch::LOCATION_KL);
+
                 Log::info('Created new sale record', ['sale_id' => $sale->id, 'payment_amount' => $data['total']]);
                 
                 foreach ($data['line_items'] as $item) {
@@ -117,6 +129,9 @@ class WooCommerceController extends Controller
                         'unit_price' => $item['price'] ?? 0,
                         'warranty_period_id' => 1
                     ]);
+
+                    (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
+
                     Log::info('Created sale product', ['sale_id' => $sale->id, 'product_id' => $product->id, 'qty' => $item['quantity']]);
                 }
             }
@@ -147,6 +162,9 @@ class WooCommerceController extends Controller
                     $customer = Customer::create([
                         'sku' => $data['customer_id'],
                     ]);
+
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                     Log::info('Customer created', ['customer_id' => $customer->id]);
                 }
 
@@ -206,6 +224,8 @@ class WooCommerceController extends Controller
                         'unit_price' => $item['price'] ?? 0,
                         'warranty_period_id' => 1
                     ]);
+
+                    (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
 
                     Log::info('Sale product created', ['sale_product_id' => $saleProduct->id, 'product_id' => $product->id]);
                 }

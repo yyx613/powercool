@@ -32,7 +32,9 @@ class CustomerController extends Controller
                     ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
                     ->orWhere('company_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('platform', 'like', '%' . $keyword . '%');
+                    ->orWhereHas('platform', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
+                    });
             });
         }
         // Order
@@ -68,7 +70,7 @@ class CustomerController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
-                'platform' => $record->platform,
+                'platform' => $record->platform->name,
                 'can_edit' => hasPermission('customer.edit'),
                 'can_delete' => hasPermission('customer.delete'),
             ];

@@ -251,6 +251,9 @@ class LazadaController extends Controller
                     'state' => $data['data']['address_shipping']['country'], 
                     'zip_code' => $data['data']['address_shipping']['post_code']
                 ]);
+
+                (new Branch())->assign(CustomerLocation::class, $shippingAddress->id, Branch::LOCATION_KL);
+
                 Log::info('Created new shipping address', ['customer_id' => $customer->id, 'address' => $shipAddress]);
             } else {
                 $shippingAddress = $existingShippingAddress;
@@ -271,7 +274,7 @@ class LazadaController extends Controller
                 ->first();
 
             if (!$existingBillingAddress) {              
-                CustomerLocation::create([
+                $customerLocation = CustomerLocation::create([
                     'customer_id' => $customer->id,
                     'type' => 1, 
                     'is_default' => 1,
@@ -280,6 +283,9 @@ class LazadaController extends Controller
                     'state' => $data['data']['address_billing']['address2'], 
                     'zip_code' => $data['data']['address_billing']['post_code']
                 ]);
+
+                (new Branch())->assign(CustomerLocation::class, $customerLocation->id, Branch::LOCATION_KL);
+
                 Log::info('Created new billing address', ['customer_id' => $customer->id, 'address' => $billAddress]);
             }
 
@@ -351,6 +357,9 @@ class LazadaController extends Controller
                         'sku' => $item['buyer_id'],
                         'platform_id' => $this->platform->id
                     ]);
+
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                     Log::info('Created new customer', ['sku' => $item['buyer_id'], 'platform' => $this->platform->name]);
                 }
 
@@ -369,13 +378,15 @@ class LazadaController extends Controller
 
                 $product = Product::where('lazada_sku', $item['sku'])->first();
 
-                SaleProduct::create([
+                $saleProduct = SaleProduct::create([
                     'sale_id' => $sale->id,
                     'product_id' => $product->id,
                     'desc' => $item['name'] ?? null,
                     'qty' => $quantity, 
                     'unit_price' => $item['paid_price'] ?? 0
                 ]);
+
+                (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
 
                 Log::info('Added sale product', ['sale_id' => $sale->id, 'product_id' => $product->id]);
             }
