@@ -106,11 +106,11 @@
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
-                                return 'Inactive'
+                                return "{!! __('Inactive') !!}"
                             case 1:
-                                return 'Active'
+                                return "{!! __('Active') !!}"
                             case 2:
-                                return 'Converted'
+                                return "{!! __('Converted') !!}"
                         }
                     }
                 },
