@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Platforms;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use App\Models\Product;
 use App\Models\ProductChild;
@@ -23,15 +25,15 @@ class TiktokController extends Controller
     protected $appKey;
     protected $appSecret;
     protected $accessToken;
-    protected $platform = 'Tiktok';
-
+    protected $platform;
 
     public function __construct()
     {
         $this->appKey = config('platforms.tiktok.app_key');
         $this->appSecret = config('platforms.tiktok.app_secret');
         $this->endpoint = 'https://open-api.tiktokglobalshop.com';
-        $this->accessToken = PlatformTokens::where('platform',$this->platform)->first()->access_token;
+        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
+        $this->platform = Platform::where('name','Tiktok')->first();
     }
 
     public function handleTiktokWebhook(Request $request)
@@ -48,7 +50,7 @@ class TiktokController extends Controller
 
         Log::info('TikTok webhook received', ['order_id' => $orderId, 'order_status' => $data['order_status']]);
 
-        $sale = Sale::where('order_id',$orderId)->first();
+        $sale = Sale::where('order_id',$orderId)->where('platform_id',$this->platform->id)->first();
         if($sale){
             $sale->update([
                 'status' =>  $status 
@@ -105,7 +107,7 @@ class TiktokController extends Controller
 
                 $responseData = $response->json()['data'];
                 PlatformTokens::updateOrCreate(
-                    ['platform' => $this->platform],
+                    ['platform_id' => $this->platform->id],
                     [
                         'access_token' => $responseData['access_token'],
                         'refresh_token' => $responseData['refresh_token'],
@@ -116,7 +118,7 @@ class TiktokController extends Controller
 
                 DB::commit();
 
-                Log::info('Access token and refresh token saved successfully', ['platform' => $this->platform]);
+                Log::info('Access token and refresh token saved successfully', ['platform' => $this->platform->name]);
 
                 return 'success';
             } else {
@@ -140,7 +142,7 @@ class TiktokController extends Controller
 
     public function refreshTiktokAccessToken()
     {
-        $platformToken = PlatformTokens::where('platform', $this->platform)->first();
+        $platformToken = PlatformTokens::where('platform_id', $this->platform->id)->first();
 
         $url = 'https://auth.tiktok-shops.com/api/v2/token/refresh';
         $queryParams = [
@@ -167,7 +169,7 @@ class TiktokController extends Controller
 
                 DB::commit();
 
-                Log::info('Access token and refresh token updated successfully', ['platform' => $this->platform]);
+                Log::info('Access token and refresh token updated successfully', ['platform' => $this->platform->name]);
 
                 return 'success';
             } else {
@@ -230,13 +232,16 @@ class TiktokController extends Controller
                 foreach ($skuMap as $skuData) {
                     $item = $skuData['item'];
                     $quantity = $skuData['qty'];
-                    $customer = Customer::where('sku', $item['buyer_uid'])->where('platform','Tiktok')->first();
+                    $customer = Customer::where('sku', $item['buyer_uid'])->where('platform_id',$this->platform->id)->first();
                     if(!$customer){
                         $customer = Customer::create([
                             'sku' => $item['buyer_uid'],
                             'email' => $item['buyer_email'],
-                            'platform' => 'Tiktok'
+                            'platform_id' => $this->platform->id
                         ]);
+
+                        (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                         Log::info('Created new customer', ['customer_id' => $customer->id]);
                     }
                     $existingShippingAddress = CustomerLocation::where('customer_id', $customer->id)
@@ -257,6 +262,9 @@ class TiktokController extends Controller
                             'state' => $item['recipient_address']['state'], 
                             'zip_code' => $item['recipient_address']['zipcode']
                         ]);
+
+                        (new Branch())->assign(CustomerLocation::class, $shippingAddress->id, Branch::LOCATION_KL);
+
                         Log::info('Created new shipping address', ['address_id' => $shippingAddress->id]);
                     }else {
                         $shippingAddress = $existingShippingAddress;
@@ -265,24 +273,31 @@ class TiktokController extends Controller
                     $sale = Sale::create([
                         'order_id' => $orderId,
                         'status' => $status,
-                        'platform' => 'Tiktok',
+                        'platform_id' => $this->platform->id,
                         'sku' => $orderId,
                         'payment_amount'=> $item['total_amount'],
                         'payment_method'=> $item['payment_method_name'],
                         'delivery_address_id'=> $shippingAddress->id,
-                        'remark' => $item['buyer_message']
+                        'remark' => $item['buyer_message'],
+                        'type' => Sale::TYPE_PENDING
                     ]);
+
+                    (new Branch())->assign(Sale::class, $sale->id, Branch::LOCATION_KL);
+
                     Log::info('Created sale record', ['sale_id' => $sale->id]);
 
                     $product = product::where('tiktok_sku', $item['seller_sku'])->first();
                     if ($product) {
-                        SaleProduct::create([
+                        $saleProduct = SaleProduct::create([
                             'sale_id' => $sale->id,
                             'product_id' => $product->id,
                             'desc' => $item['product_name'] ?? null,
                             'qty' => $quantity,
                             'unit_price' => $item['sale_price'] ?? 0,
                         ]);
+
+                        (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
+
                         Log::info('Added product to sale', ['product_id' => $product->id, 'sale_id' => $sale->id]);
                     } else {
                         Log::warning('Product not found for SKU', ['sku' => $item['seller_sku']]);

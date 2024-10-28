@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Platforms;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Sale;
@@ -16,13 +18,20 @@ use Illuminate\Support\Facades\Log;
 
 class WooCommerceController extends Controller
 {
+    protected $platform;
+
+    public function __construct()
+    {
+        $this->platform = Platform::where('name','WooCommerce')->first();
+    }
+
     public function handleWooCommerceOrderCreated(Request $request){   
         $data = $request->input();
         Log::info('Received WooCommerce order', ['order_id' => $data['id'], 'status' => $data['status']]);
 
         try {
             DB::beginTransaction();
-            $sale = Sale::where('order_id',$data['id'])->first();
+            $sale = Sale::where('order_id',$data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  $data['status'] == 'cancelled' ?  Sale::STATUS_INACTIVE : Sale::STATUS_ACTIVE
@@ -33,7 +42,11 @@ class WooCommerceController extends Controller
                 if(!$customer){
                     $customer = Customer::create([
                         'sku' => $data['customer_id'],
+                        'platform_id' => $this->platform->id
                     ]);
+
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                     Log::info('Created new customer', ['customer_id' => $customer->id]);
                 }
 
@@ -56,6 +69,9 @@ class WooCommerceController extends Controller
                         'state' => $data['shipping']['state'], 
                         'zip_code' => $data['shipping']['postcode']
                     ]);
+
+                    (new Branch())->assign(CustomerLocation::class, $shippingAddress->id, Branch::LOCATION_KL);
+
                     Log::info('Created new shipping address', ['address_id' => $shippingAddress->id]);
                 }else {
                     $shippingAddress = $existingShippingAddress;
@@ -81,13 +97,16 @@ class WooCommerceController extends Controller
                         'state' => $data['billing']['state'], 
                         'zip_code' => $data['billing']['postcode']
                     ]);
+
+                    (new Branch())->assign(CustomerLocation::class, $billingAddress->id, Branch::LOCATION_KL);
+
                     Log::info('Created new billing address', ['address_id' => $billingAddress->id]);
                 }
     
                 $sale = Sale::create([
                     'order_id' => $data['id'],
                     'status' => $data['status'],
-                    'platform' => 'WooCommerce',
+                    'platform_id' => $this->platform->id,
                     'sku' => $data['order_key'],
                     'type' => 2,
                     'customer_id' => $customer->id,
@@ -95,6 +114,8 @@ class WooCommerceController extends Controller
                     'payment_method'=> $data['payment_method'],
                     'delivery_address_id'=> $shippingAddress->id,
                 ]);
+
+                (new Branch())->assign(Sale::class, $sale->id, Branch::LOCATION_KL);
 
                 Log::info('Created new sale record', ['sale_id' => $sale->id, 'payment_amount' => $data['total']]);
                 
@@ -108,6 +129,9 @@ class WooCommerceController extends Controller
                         'unit_price' => $item['price'] ?? 0,
                         'warranty_period_id' => 1
                     ]);
+
+                    (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
+
                     Log::info('Created sale product', ['sale_id' => $sale->id, 'product_id' => $product->id, 'qty' => $item['quantity']]);
                 }
             }
@@ -129,7 +153,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order update received', ['order_id' => $data['id']]);
             
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if ($sale) {
                 Log::info('Sale record found for order', ['order_id' => $data['id'], 'sale_id' => $sale->id]);
 
@@ -138,6 +162,9 @@ class WooCommerceController extends Controller
                     $customer = Customer::create([
                         'sku' => $data['customer_id'],
                     ]);
+
+                    (new Branch())->assign(Customer::class, $customer->id, Branch::LOCATION_KL);
+
                     Log::info('Customer created', ['customer_id' => $customer->id]);
                 }
 
@@ -198,6 +225,8 @@ class WooCommerceController extends Controller
                         'warranty_period_id' => 1
                     ]);
 
+                    (new Branch())->assign(SaleProduct::class, $saleProduct->id, Branch::LOCATION_KL);
+
                     Log::info('Sale product created', ['sale_product_id' => $saleProduct->id, 'product_id' => $product->id]);
                 }
             }
@@ -221,7 +250,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order deletion received', ['order_id' => $data['id']]);
 
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  Sale::STATUS_INACTIVE
@@ -252,7 +281,7 @@ class WooCommerceController extends Controller
 
             Log::info('WooCommerce order restoration received', ['order_id' => $data['id']]);
 
-            $sale = Sale::where('order_id', $data['id'])->first();
+            $sale = Sale::where('order_id', $data['id'])->where('platform_id',$this->platform->id)->first();
             if($sale){
                 $sale->update([
                     'status' =>  Sale::STATUS_ACTIVE

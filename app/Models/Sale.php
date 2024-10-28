@@ -45,6 +45,10 @@ class Sale extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function platform(){
+        return $this->belongsTo(Platform::class, 'platform_id');
+    }
+
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }

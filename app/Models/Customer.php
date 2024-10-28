@@ -35,6 +35,10 @@ class Customer extends Model
         return $this->hasMany(CustomerLocation::class);
     }
 
+    public function platform(){
+        return $this->belongsTo(Platform::class, 'platform_id');
+    }
+
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }

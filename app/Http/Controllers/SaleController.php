@@ -10,6 +10,7 @@ use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\Invoice;
+use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Role;
@@ -299,7 +300,9 @@ class SaleController extends Controller
 
             $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('platform', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('platform', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
+                    })
                     ->orWhere('reference', 'like', '%' . $keyword . '%')
                     ->orWhere('remark', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_method', 'like', '%' . $keyword . '%')
@@ -339,7 +342,7 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
-                'platform' => $record->platform,
+                'platform' => $record->platform->name ?? '-',
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
             ];
@@ -1470,7 +1473,6 @@ class SaleController extends Controller
 
     public function getDataPendingOrder(Request $req)
     {
-        // dd(Sale::where('type', Sale::TYPE_PENDING)->get());
         $records = Sale::where('type', Sale::TYPE_PENDING);
 
         // Search
@@ -1479,7 +1481,9 @@ class SaleController extends Controller
 
             $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('platform', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('platform', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
+                    })
                     ->orWhere('reference', 'like', '%' . $keyword . '%')
                     ->orWhere('remark', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_method', 'like', '%' . $keyword . '%')
@@ -1518,7 +1522,7 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
-                'platform' => $record->platform,
+                'platform' => $record->platform->name ?? '-',
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
             ];

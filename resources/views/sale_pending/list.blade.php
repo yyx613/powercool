@@ -179,7 +179,6 @@
         
         let selectedOrders = [];
 
-        //assign
         $('#select-all').on('click', function() {
             let checked = this.checked;
             $('.order-checkbox').each(function() {
@@ -187,18 +186,15 @@
             });
         });
 
-        // 处理单个复选框选择
         $(document).on('change', '.order-checkbox', function() {
             let orderId = $(this).data('id');
             let orderSku = $(this).data('sku');
 
             if (this.checked) {
-                // 检查是否已经存在，避免重复添加
                 if (!selectedOrders.some(order => order.id === orderId)) {
                     selectedOrders.push({ id: orderId, sku: orderSku });
                 }
             } else {
-                // 移除取消选择的订单
                 selectedOrders = selectedOrders.filter(order => order.id !== orderId);
             }
 
