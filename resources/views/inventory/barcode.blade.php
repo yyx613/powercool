@@ -18,8 +18,10 @@
         @for ($i = 0; $i < count($barcode); $i++)
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;">
-                    {!! $renderer[$i] !!}
-                    {{ $barcode[$i] }}
+                    <img src="{{ public_path('images/imax.jpg') }}" alt="" style="height: 35px; width: 75px; margin: 0 0 10px 0;">
+                    <div style="width: 150px; height: 100px">{!! $renderer[$i] !!}</div>
+                    <p style="margin: 0; font-size: 12px;">{{ $product_name[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">{{ $product_code[$i] }} [{{ $barcode[$i] }}]</p>
                 </td>
                 <td></td>
             </tr>

@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
 use Picqer\Barcode\Renderers\HtmlRenderer;
 use Picqer\Barcode\Types\TypeCode128;
 
@@ -274,24 +275,28 @@ class ProductController extends Controller
 
     public function generateBarcode(Request $req) {
         if ($req->has('is_rm')) {
-            $serial_nos = $this->prod::whereIn('id', [$req->id])->pluck('sku')->toArray();
+            $products = $this->prod::whereIn('id', [$req->id])->get();
         } else {
             $ids = explode(',', $req->ids);
-            $serial_nos = $this->prodChild::whereIn('id', $ids)->pluck('sku')->toArray();
+            $products = $this->prodChild::whereIn('id', $ids)->get();
         }
 
         $data = [
             'barcode' => [],
             'renderer' => [],
         ];
-        for ($i=0; $i < count($serial_nos); $i++) { 
-            $barcode = (new TypeCode128)->getBarcode($serial_nos[$i]);
+        for ($i=0; $i < count($products); $i++) { 
+            $prod = $req->has('is_rm') ? $products[$i] : $products[$i]->parent;
+
+            $barcode = (new TypeCode128)->getBarcode($products[$i]->sku);
     
             // Output the barcode as HTML in the browser with a HTML Renderer
-            $renderer = new HtmlRenderer;
-
-            $data['barcode'][] = $serial_nos[$i];
+            $renderer = new DynamicHtmlRenderer;
+            
             $data['renderer'][] = $renderer->render($barcode);
+            $data['product_name'][] = $prod->model_name;
+            $data['product_code'][] = $prod->sku;
+            $data['barcode'][] = $products[$i]->sku;
         }
         $pdf = Pdf::loadView('inventory.barcode', $data);
         $pdf->setPaper('A4', 'letter');

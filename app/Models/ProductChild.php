@@ -30,6 +30,10 @@ class ProductChild extends Model
         return $date;
     }
 
+    public function parent() {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
     public function saleProductChild() {
         return $this->hasMany(SaleProductChild::class, 'product_children_id');
     }
