@@ -68,6 +68,7 @@ class ProductController extends Controller
                     ->orWhere('model_desc', 'like', '%' . $keyword . '%')
                     ->orWhere('min_price', 'like', '%' . $keyword . '%')
                     ->orWhere('max_price', 'like', '%' . $keyword . '%')
+                    ->orWhere('barcode', 'like', '%' . $keyword . '%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
                         $qq->where('name', 'like', '%' . $keyword . '%');
                     });
