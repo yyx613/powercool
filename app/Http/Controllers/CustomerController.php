@@ -70,7 +70,7 @@ class CustomerController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
-                'platform' => $record->platform->name,
+                'platform' => $record->platform->name ?? '-',
                 'can_edit' => hasPermission('customer.edit'),
                 'can_delete' => hasPermission('customer.delete'),
             ];
