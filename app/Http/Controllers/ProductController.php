@@ -338,10 +338,10 @@ class ProductController extends Controller
             'serial_no' => 'nullable',
             'serial_no.*' => 'nullable|max:250',
 
-            'lazada_sku' => 'required',
-            'shopee_sku' => 'required',
-            'tiktok_sku' => 'required',
-            'woo_commerce_sku' => 'required',
+            'lazada_sku' => 'nullable',
+            'shopee_sku' => 'nullable',
+            'tiktok_sku' => 'nullable',
+            'woo_commerce_sku' => 'nullable',
         ];
         if ($req->product_id != null) {
             $rules['image'] = 'nullable';
