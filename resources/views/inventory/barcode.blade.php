@@ -9,22 +9,25 @@
 </head>
 <style>
     @page {
-        size: 21cm 29.7cm;
+        size: 10cm 15cm;
     }
 </style>
 <body>
-    
-    <table>
-        @for ($i = 0; $i < count($barcode); $i++)
+    @for ($i = 0; $i < count($barcode); $i++)
+        <table style="width: 100%;">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;">
-                    {!! $renderer[$i] !!}
-                    {{ $barcode[$i] }}
+                    <img src="{{ public_path('images/imax.jpg') }}" alt="" style="height: 35px; width: 75px; margin: 0 0 10px 0;">
+                    <div style="width: 150px; height: 100px; margin: auto;">{!! $renderer[$i] !!}</div>
+                    <p style="margin: 0; font-size: 12px;">{{ $product_name[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">{{ $product_code[$i] }} [{{ $barcode[$i] }}]</p>
                 </td>
                 <td></td>
             </tr>
-        @endfor
-    </table>
-
+        </table>
+        @if ($i != count($barcode) -1)
+            <div style="page-break-before:always">&nbsp;</div> 
+        @endif
+    @endfor
 </body>
 </html>
