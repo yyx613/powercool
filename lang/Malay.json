@@ -291,4 +291,17 @@
     "By selecting create, edit, and delete permission will automatically select view permission.": "Dengan memilih kebenaran untuk mencipta, menyunting, dan menghapuskan, kebenaran untuk melihat akan dipilih secara automatik.",
     "Convert": "Tukarkan",
     "Setting": "Tetapan"
+    "Inventory": "Inventori",
+    "Summary": "Ringkasan",
+    "Product": "Produk",
+    "Pending Order": "Pesanan Tertunda",
+    "Sale Order": "Pesanan Jualan",
+    "Target": "Sasaran",
+    "Billing": "Pengebilan",
+    "Task": "Tugas",
+    "Driver": "Pemandu",
+    "Start": "Mula",
+    "Date": "Tarikh",
+    "No data available in table": "Tiada data tersedia dalam jadual",
+    "Platform": "Platform"
 }

@@ -298,5 +298,18 @@
   "Permissions": "အခွင့်အရေး",
   "By selecting create, edit, and delete permission will automatically select view permission.": "ဖန်တီးခြင်း၊ ပြင်ဆင်ခြင်းနှင့် ဖျက်သိမ်းခြင်း အခွင့်အရေးကိုရွေးချယ်၍ သautomaticသော် ပြရန် အခွင့်အရေးကိုရွေးချယ်ပါ။",
   "Convert": "ပြောင်းလဲပါ",
-  "Setting": "ဆက်တင်များ"
+  "Setting": "ဆက်တင်များ",
+  "Inventory": "သိုလှောင်စာရင်း",
+  "Summary": "အကျဉ်းချုပ်",
+  "Product": "ထုတ်ကုန်",
+  "Pending Order": "ဆိုင်းငံ့ထားသော အော်ဒါ",
+  "Sale Order": "အရောင်းအော်ဒါ",
+  "Target": "ပစ်မှတ်",
+  "Billing": "ဘီလ်ဖြေရှင်းခြင်း",
+  "Task": "တာဝန်",
+  "Driver": "ယာဉ်မောင်း",
+  "Start": "စတင်ရန်",
+  "Date": "နေ့စွဲ",
+  "No data available in table": "ဇယားတွင် ဒေတာမရှိပါ",
+  "Platform": "ပလက်ဖောင်း"
 }

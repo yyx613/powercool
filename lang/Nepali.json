@@ -290,5 +290,18 @@
     "Permissions": "अनुमतिहरू",
     "By selecting create, edit, and delete permission will automatically select view permission.": "सिर्जना, सम्पादन, र मेटाउने अनुमति चयन गर्दा यसले स्वचालित रूपमा दृश्य अनुमतिलाई चयन गर्नेछ।",
     "Convert": "रूपान्तरण गर्नुहोस्",
-    "Setting": "सेटिङ"
+    "Setting": "सेटिङ",
+    "Inventory": "सूची",
+    "Summary": "सारांश",
+    "Product": "उत्पादन",
+    "Pending Order": "बाँकी अर्डर",
+    "Sale Order": "बिक्री अर्डर",
+    "Target": "लक्ष्य",
+    "Billing": "बिलिङ",
+    "Task": "कार्य",
+    "Driver": "चालक",
+    "Start": "सुरु",
+    "Date": "मिति",
+    "No data available in table": "तालिकामा डेटा उपलब्ध छैन",
+    "Platform": "मञ्च"
 }

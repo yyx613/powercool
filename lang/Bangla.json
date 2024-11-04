@@ -290,5 +290,18 @@
     "Permissions": "অনুমতি",
     "By selecting create, edit, and delete permission will automatically select view permission.": "তৈরি, সম্পাদনা এবং মুছে ফেলার অনুমতি নির্বাচন করে স্বয়ংক্রিয়ভাবে দেখার অনুমতি নির্বাচন করবে।",
     "Convert": "রূপান্তর করুন",
-    "Setting": "সেটিং"
+    "Setting": "সেটিং",
+    "Inventory": "জিনিসপত্রের তালিকা",
+    "Summary": "সারাংশ",
+    "Product": "পণ্য",
+    "Pending Order": "মুলতুবি অর্ডার",
+    "Sale Order": "বিক্রয় অর্ডার",
+    "Target": "লক্ষ্য",
+    "Billing": "বিলিং",
+    "Task": "কাজ",
+    "Driver": "চালক",
+    "Start": "শুরু",
+    "Date": "তারিখ",
+    "No data available in table": "সারণিতে কোনো ডেটা উপলব্ধ নেই",
+    "Platform": "প্ল্যাটফর্ম"
 }
