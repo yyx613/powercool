@@ -58,14 +58,14 @@ if (!function_exists('getPaymentCollectionIds')) {
 }
 
 if (!function_exists('getWhatsAppContent')) {
-    function getWhatsAppContent(string $driver_name, string $driver_contact, string $car_plate) {
+    function getWhatsAppContent(string $driver_name, string $driver_contact, string $car_plate, string $estimated_time, string $delivery_date) {
         return 'Dear Valued Customer/Mr/Mrs,
-            We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on 02/11/2024
+            We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on '.$delivery_date.'
 
             The details of delivery as below:
             Driver Name: '.$driver_name.'
             Contact Number: '.$driver_contact.'
-            Estimate Time Arrival: 3-5pm
+            Estimate Time Arrival: '.$estimated_time.'
             Car plate: '.$car_plate.'
 
             The delivery time may change due to circumstance beyond our control (heavy traffic, accident and etc.
@@ -73,12 +73,12 @@ if (!function_exists('getWhatsAppContent')) {
 
             中文:
             您好Mr/Ms/Mrs,
-            感谢您对HiTen 的支持! 很高兴让您知道我们已收到您的订单。您的送货期将会在 02/11/2024
+            感谢您对HiTen 的支持! 很高兴让您知道我们已收到您的订单。您的送货期将会在 '.$delivery_date.'
 
             以下是您的送货详情:
             司机姓名:  '.$driver_name.' 
             联系电话:  '.$driver_contact.'
-            抵达时间:  3-5pm
+            抵达时间:  '.$estimated_time.'
             车牌号码:  '.$car_plate.'
 
             送货时间可能因特殊情况而做出临时调整(比如：交通阻塞，车祸或其他特殊情况导致)。

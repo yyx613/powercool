@@ -35,6 +35,8 @@ class TaskController extends Controller
         'desc' => 'required|max:250',
         'start_date' => 'required',
         'due_date' => 'required',
+        'estimated_time' => 'required',
+        'customer' => 'required',
         'remark' => 'nullable|max:250',
         'status' => 'required',
         'assign' => 'required',
@@ -149,7 +151,7 @@ class TaskController extends Controller
             $whatsapp_url = null;
             if ($role == Task::TYPE_DRIVER && $record->sale_order_id != null) {
                 $driver = $record->users[0];
-                $whatsapp_url = 'wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->phone_number);
+                $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
             }
             
             $data['data'][] = [
@@ -205,6 +207,7 @@ class TaskController extends Controller
                 'desc' => $req->desc,
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
+                'estimated_time' => $req->estimated_time,
                 'remark' => $req->remark,
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
@@ -586,6 +589,7 @@ class TaskController extends Controller
                 'desc' => $req->desc,
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
+                'estimated_time' => $req->estimated_time,
                 'remark' => $req->remark,
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,

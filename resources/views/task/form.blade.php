@@ -69,6 +69,13 @@
                     <x-app.input.input name="due_date" id="due_date" :hasError="$errors->has('due_date')" value="{{ old('due_date', isset($task) ? $task->due_date : null) }}" />
                     <x-input-error :messages="$errors->get('due_date')" class="mt-1" />
                 </div>
+                @if ($for_role == 'driver')
+                    <div class="flex flex-col">
+                        <x-app.input.label id="estimated_time" class="mb-1">{{ __('Estimated Time') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.input name="estimated_time" id="estimated_time" :hasError="$errors->has('estimated_time')" value="{{ old('estimated_time', isset($task) ? $task->estimated_time : null) }}" />
+                        <x-input-error :messages="$errors->get('estimated_time')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
