@@ -29,6 +29,7 @@ class TaskController extends Controller
 {
     const DRIVER_SALE_FORM_RULES = [
         'ticket' => 'nullable',
+        'sale_order_id' => 'nullable',
         'customer' => 'required',
         'name' => 'required|max:250',
         'desc' => 'required|max:250',
@@ -145,6 +146,12 @@ class TaskController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            $whatsapp_url = null;
+            if ($role == Task::TYPE_DRIVER && $record->sale_order_id != null) {
+                $driver = $record->users[0];
+                $whatsapp_url = 'wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->phone_number);
+            }
+            
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
@@ -154,6 +161,7 @@ class TaskController extends Controller
                 'status' => $record->status,
                 'can_edit' => hasPermission('task.edit'),
                 'can_delete' => hasPermission('task.delete'),
+                'whatsapp_url' => $whatsapp_url
             ];
         }
 
@@ -177,7 +185,9 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
+        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
+            'sale_order_id' => 'sale order'
+        ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -189,6 +199,7 @@ class TaskController extends Controller
                 'sku' => (new Task)->generateSku(),
                 'type' => Task::TYPE_DRIVER,
                 'ticket_id' => $req->ticket,
+                'sale_order_id' => $req->sale_order_id,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,
@@ -557,7 +568,9 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
+        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
+            'sale_order_id' => 'sale order'
+        ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -567,6 +580,7 @@ class TaskController extends Controller
 
             $task->update([
                 'ticket_id' => $req->ticket,
+                'sale_order_id' => $req->sale_order_id,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,

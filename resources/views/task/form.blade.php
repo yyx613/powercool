@@ -37,6 +37,18 @@
                     <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($from_ticket) ? $from_ticket->subject : (isset($task) ? $task->name : null)) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
+                @if ($for_role == 'driver')
+                    <div class="flex flex-col">
+                        <x-app.input.label id="sale_order_id" class="mb-1">{{ __('Sale Order') }}</x-app.input.label>
+                        <x-app.input.select2 name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')" placeholder="{{ __('Select a sale order') }}">
+                            <option value="">{{ __('Select a sale order') }}</option>
+                            @foreach ($sales_orders as $sales_order)
+                                <option value="{{ $sales_order->id }}" @selected(old('sale_order_id', isset($task) ? $task->sale_order_id : null) == $sales_order->id)>{{ $sales_order->sku }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-input-error :messages="$errors->get('sale_order_id')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col col-span-2">
                     <x-app.input.label id="desc" class="mb-1">{{ __('Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="desc" id="desc" :hasError="$errors->has('desc')" value="{{ old('desc', isset($from_ticket) ? $from_ticket->body : (isset($task) ? $task->desc : null)) }}" />

@@ -57,6 +57,35 @@ if (!function_exists('getPaymentCollectionIds')) {
     }
 }
 
+if (!function_exists('getWhatsAppContent')) {
+    function getWhatsAppContent(string $driver_name, string $driver_contact, string $car_plate) {
+        return 'Dear Valued Customer/Mr/Mrs,
+            We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on 02/11/2024
+
+            The details of delivery as below:
+            Driver Name: '.$driver_name.'
+            Contact Number: '.$driver_contact.'
+            Estimate Time Arrival: 3-5pm
+            Car plate: '.$car_plate.'
+
+            The delivery time may change due to circumstance beyond our control (heavy traffic, accident and etc.
+            Appreciate your kind understanding and thanks for shopping with us. Have a nice day! 😊
+
+            中文:
+            您好Mr/Ms/Mrs,
+            感谢您对HiTen 的支持! 很高兴让您知道我们已收到您的订单。您的送货期将会在 02/11/2024
+
+            以下是您的送货详情:
+            司机姓名:  '.$driver_name.' 
+            联系电话:  '.$driver_contact.'
+            抵达时间:  3-5pm
+            车牌号码:  '.$car_plate.'
+
+            送货时间可能因特殊情况而做出临时调整(比如：交通阻塞，车祸或其他特殊情况导致)。
+            感谢您的谅解以及非常感谢您选择了HiTen 产品';
+    }
+}
+
 if (!function_exists('priceToWord')) {
     function priceToWord($num = false, $currency = 'myr')
     {

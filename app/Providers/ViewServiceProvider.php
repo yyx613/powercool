@@ -189,6 +189,11 @@ class ViewServiceProvider extends ServiceProvider
                     Milestone::TYPE_INSTALLER_TASK => 'Installer',
                 ]);
             }
+            if (str_contains(Route::currentRouteName(), '.driver.')) {
+                $sales_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
+                
+                $view->with('sales_orders', $sales_orders);   
+            }
 
             $view->with([
                 'form_route_name' => $form_route_name,

@@ -254,22 +254,28 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::prefix('production-report')->name('production_report.')->group(function() {
             Route::get('/', 'indexProduction')->name('index');
             Route::get('/get-data', 'getDataProduction')->name('get_data');
-            Route::get('/export', 'exportProduction')->name('export');
+            Route::get('/export-in-excel', 'exportInExelProduction')->name('export_in_excel');
+            Route::get('/export-in-pdf', 'exportInPdfProduction')->name('export_in_pdf');
         });
         Route::prefix('sales-report')->name('sales_report.')->group(function() {
             Route::get('/', 'indexSales')->name('index');
             Route::get('/get-data', 'getDataSales')->name('get_data');
-            Route::get('/export', 'exportSales')->name('export');
+            Route::get('/export-in-excel', 'exportInExelSales')->name('export_in_excel');
+            Route::get('/export-in-pdf', 'exportInPdfSales')->name('export_in_pdf');
         });
         Route::prefix('stock-report')->name('stock_report.')->group(function() {
             Route::get('/', 'indexStock')->name('index');
             Route::get('/get-data', 'getDataStock')->name('get_data');
             Route::get('/export', 'exportStock')->name('export');
+            Route::get('/export-in-excel', 'exportInExelStock')->name('export_in_excel');
+            Route::get('/export-in-pdf', 'exportInPdfStock')->name('export_in_pdf');
         });
         Route::prefix('earning-report')->name('earning_report.')->group(function() {
             Route::get('/', 'indexEarning')->name('index');
             Route::get('/get-data', 'getDataEarning')->name('get_data');
             Route::get('/export', 'exportEarning')->name('export');
+            Route::get('/export-in-excel', 'exportInExelEarning')->name('export_in_excel');
+            Route::get('/export-in-pdf', 'exportInPdfEarning')->name('export_in_pdf');
         });
     });
     // Customer

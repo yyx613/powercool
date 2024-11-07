@@ -11,6 +11,7 @@ use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -71,14 +72,26 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportProduction() {
+    public function exportInExelProduction() {
         $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new ProductionReportExport($records), 'production-report.xlsx');
     }
 
-    private function queryProduction(string $start_date, string $end_date, string | null $keyword) {
+    public function exportInPdfProduction() {
+        $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+        $records = $records->get();
+
+        $pdf = Pdf::loadView('report.production_list_pdf', [
+            'records' => $records
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->download('production-report.pdf');
+    }
+
+    private function queryProduction(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
         $records = $this->production;
 
         // Daterange
@@ -151,14 +164,26 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportSales() {
+    public function exportInExelSales() {
         $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new SalesReportExport($records), 'sales-report.xlsx');
     }
 
-    private function querySales(string $start_date, string $end_date, string | null $keyword) {
+    public function exportInPdfSales() {
+        $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+        $records = $records->get();
+
+        $pdf = Pdf::loadView('report.sales_list_pdf', [
+            'records' => $records
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->download('sales-report.pdf');
+    }
+
+    private function querySales(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
         $promo = DB::table('promotions')
             ->select('id', 'amount');
 
@@ -253,14 +278,26 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportStock() {
+    public function exportInExcelStock() {
         $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new StockReportExport($records), 'stock-report.xlsx');
     }
 
-    private function queryStock(string $start_date, string $end_date, string | null $keyword) {
+    public function exportInPdfStock() {
+        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+        $records = $records->get();
+
+        $pdf = Pdf::loadView('report.stock_list_pdf', [
+            'records' => $records
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->download('stock-report.pdf');
+    }
+
+    private function queryStock(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
         $records = $this->product;
 
         // Daterange
@@ -323,14 +360,26 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportEarning() {
+    public function exportInExcelEarning() {
         $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new EarningReportExport($records), 'earning-report.xlsx');
     }
 
-    private function queryEarning(string $start_date, string $end_date, string | null $keyword) {
+    public function exportInPdfEarning() {
+        $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+        $records = $records->get();
+
+        $pdf = Pdf::loadView('report.earning_list_pdf', [
+            'records' => $records
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->download('earning-report.pdf');
+    }
+
+    private function queryEarning(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
         $promo = DB::table('promotions')->select('id', 'amount');
 
         $sales = DB::table('sales')->where('type', Sale::TYPE_SO);
