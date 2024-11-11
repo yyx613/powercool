@@ -335,6 +335,7 @@ class TaskController extends Controller
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
+            (new Branch)->assign(Task::class, $task->id);
 
             if ($req->ticket != null) {
                 Ticket::where('id', $req->ticket)->delete();
