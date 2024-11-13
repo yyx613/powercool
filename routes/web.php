@@ -6,6 +6,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtorTypeController;
+use App\Http\Controllers\EInvoiceController;
 use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialUseController;
@@ -177,7 +178,10 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
             Route::get('/', 'indexInvoice')->name('index');
             Route::get('/get-data', 'getDataInvoice')->name('get_data');
+            Route::get('/credit-debit-note', 'indexNote')->name('note.index');
+            Route::get('/get-data-note', 'getDataNote')->name('get_data_note');
         });
+
 
         Route::get('/download', 'download')->name('download');
 
@@ -441,6 +445,14 @@ Route::prefix('woo-commerce')->group(function () {
     Route::post('/order-updated/webhook', [WooCommerceController::class, 'handleWooCommerceOrderUpdated']);
     Route::post('/order-deleted/webhook', [WooCommerceController::class, 'handleWooCommerceOrderDeleted']);
     Route::post('/order-restored/webhook', [WooCommerceController::class, 'handleWooCommerceOrderRestored']);
+});
+
+Route::prefix('e-invoice')->group(function () {
+    Route::get('/login', [EInvoiceController::class, 'login']);
+    Route::get('/generate', [EInvoiceController::class, 'generateXmlInvoice']);
+    Route::get('/submit', [EInvoiceController::class, 'submit']);
+    Route::post('/submit', [EInvoiceController::class, 'submit']);
+    Route::post('/send-to-customer', [EInvoiceController::class, 'sendEmail']);
 });
 
 

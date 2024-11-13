@@ -18,23 +18,19 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between">
-        <x-app.page-title>{{ __('Invoice') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-center">
+        <x-app.page-title>{{ __('Credit/Debit Note') }}</x-app.page-title>
         <div class="flex gap-x-4">
-            @can('sale.billing.convert')
-            <a href="{{ route('billing.to_billing') }}" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
+            <a href="{{ route('sale_order.to_delivery_order') }}" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>{{ __('Convert to Billing') }}</span>
+                <span>{{ __('Submit Credit Note') }}</span>
             </a>
-            <a href="{{ route('billing.to_billing') }}" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-btn">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>{{ __('Submit E-Invoice') }}</span>
+            <a href="{{ route('sale_order.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+            </svg>
+            {{ __('Submit Debit Note') }}
             </a>
-            <a href="{{ route('billing.to_billing') }}" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>{{ __('Submit Consolidated E-Invoice') }}</span>
-            </a>
-            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -128,7 +124,7 @@
             dt.search($(this).val()).draw()
         })
 
-        let selectedInvoices = [];
+        let selectedOrders = [];
 
         $('#select-all').on('click', function() {
             let checked = this.checked;
@@ -138,19 +134,20 @@
         });
 
         $(document).on('change', '.order-checkbox', function() {
-            let invoiceId = $(this).data('id');
+            let orderId = $(this).data('id');
+            let orderSku = $(this).data('sku');
 
             if (this.checked) {
-                if (!selectedInvoices.some(invoice => invoice.id === invoiceId)) {
-                    selectedInvoices.push({ id: invoiceId});
+                if (!selectedOrders.some(order => order.id === orderId)) {
+                    selectedOrders.push({ id: orderId, sku: orderSku });
                 }
             } else {
-                selectedInvoices = selectedInvoices.filter(invoice => invoice.id !== invoiceId);
+                selectedOrders = selectedOrders.filter(order => order.id !== orderId);
             }
 
             checkSelectAllStatus();
             toggleAssignButton();
-            console.log(selectedInvoices);
+            console.log(selectedOrders);
         });
 
         function checkSelectAllStatus() {
@@ -158,40 +155,43 @@
             $('#select-all').prop('checked', allChecked);
         }
 
-        $('#submit-btn').on('click', function(e) {
+        $('#assign-sale-person-modal #yes-btn').one('click', function(e) {
             e.preventDefault();
 
-            // 检查是否有选中的订单
-            if (selectedInvoices.length === 0) {
-                alert("Please select at least one order to submit.");
+            let salesPersonId = $('#assign-sale-person-modal select').val();
+
+
+            if (!salesPersonId || selectedOrders.length === 0) {
+                alert('请选择销售人员并确保至少选择一个订单');
                 return;
             }
 
-            // 构建请求 URL
-            let url = "{{ config('app.url') }}";
-            url = `${url}/e-invoice/submit`;
-
+            let url = "{{ route('pending_order.assign_sale_person') }}";
             $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'POST', // 改为 POST 请求
-                data: JSON.stringify({ invoices: selectedInvoices }), // 将 selectedOrders 传递到后端
-                contentType: 'application/json',
+                type: 'POST',
+                data: {
+                    salesPersonId: salesPersonId === 'null' ? null : salesPersonId,
+                    sales: selectedOrders
+                },
                 success: function(response) {
-                    alert(response.message || "Submit success");
+                    $('#assign-sale-person-modal').removeClass('show-modal');
+                    dt.ajax.reload();
+                    $(document).trigger('salePersonAssigned');
+                    alert(response.message);
                 },
                 error: function(error) {
-                    alert("Submit failed: " + (error.responseJSON.message || "Unknown error"));
+                    console.log(error)
+                    alert(response.message);
                 }
             });
-
-            
         });
 
         function toggleAssignButton() {
-            if (selectedInvoices.length === 0) {
+            if (selectedOrders.length === 0) {
                 $('#assign-btn').addClass('bg-gray-200 cursor-not-allowed').removeClass('bg-green-200').prop('disabled', true);
             } else {
                 $('#assign-btn').removeClass('bg-gray-200 cursor-not-allowed').addClass('bg-green-200').prop('disabled', false);

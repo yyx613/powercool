@@ -112,8 +112,13 @@
                                 @endcan
                                 @can('sale.invoice.view')
                                 <li>
-                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.index') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.note.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.note.index') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit/ Debit Note') }}</span>
                                     </a>
                                 </li>
                                 @endcan
