@@ -17,6 +17,7 @@ class VerifyCsrfToken extends Middleware
         'tiktok/webhook',
         'woo-commerce/order-created/webhook',
         'woo-commerce/order-updated/webhook',
-        'test'
+        'test',
+        '/mock/document-submission'
     ];
 }

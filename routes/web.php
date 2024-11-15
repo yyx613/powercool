@@ -452,9 +452,13 @@ Route::prefix('e-invoice')->group(function () {
     Route::get('/generate', [EInvoiceController::class, 'generateXmlInvoice']);
     Route::get('/submit', [EInvoiceController::class, 'submit']);
     Route::post('/submit', [EInvoiceController::class, 'submit']);
-    Route::post('/send-to-customer', [EInvoiceController::class, 'sendEmail']);
+    Route::get('/send-to-customer/{customerId}/{invoiceId}', [EInvoiceController::class, 'sendEmail']);
 });
+Route::post('/mock/document-submission', [EInvoiceController::class, 'testSubmitDocument'])->name('mock.document-submission');
 
+// Mock route to simulate getting submission details
+Route::get('/mock/get-submission/{submission_id}', [EInvoiceController::class, 'testGetSubmission']);
+Route::get('/test1', [EInvoiceController::class, 'test']);
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');

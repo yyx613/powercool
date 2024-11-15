@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EInvoiceEmail;
+use App\Models\Customer;
+use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\Invoice;
 use App\Models\Sale;
+use BaconQrCode\Encoder\QrCode as EncoderQrCode;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
 use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Str;
 
 class EInvoiceController extends Controller
 {
@@ -28,6 +35,43 @@ class EInvoiceController extends Controller
         // $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
     }
 
+    public function testSubmitDocument(Request $request)
+    {
+        $request->validate([
+            'documents' => 'required|array',
+        ]);
+
+        $documents = $request->input('documents');
+        $acceptedDocuments = [];
+
+        // Generate a dynamic list of accepted documents
+        foreach ($documents as $document) {
+            $acceptedDocuments[] = [
+                'uuid' => Str::random(26),  // Randomly generate UUID for each document
+                'invoiceCodeNumber' => $document['codeNumber'] ?? 'INV' . rand(10000, 99999),
+            ];
+        }
+
+        // Mock response data
+        $mockResponse = [
+            'submission_id' => Str::uuid(),
+            'acceptedDocuments' => $acceptedDocuments,
+            'rejectedDocuments' => [],
+        ];
+
+        return response()->json($mockResponse, 200);
+    }
+
+    public function testGetDocumentDetails($uuid)
+    {
+        $mockResponse = [
+            'uuid' => $uuid,
+            'longId' => 'LONG-' . strtoupper(Str::random(16)),
+            'details' => 'This is a mock document detail response.',
+        ];
+        return $mockResponse;
+    }
+
     public function login(){
         $path = "/connect/token";
         $url = $this->endpoint.$path;
@@ -41,7 +85,6 @@ class EInvoiceController extends Controller
             'grant_type' => 'client_credentials',
             'scope' => 'InvoicingAPI',
         ]);
-
         // 检查响应状态
         if ($response->successful()) {
             $accessToken = $response->json()['access_token'];
@@ -110,10 +153,11 @@ class EInvoiceController extends Controller
         $accessTokenResponse = $this->login();
         $accessToken = $accessTokenResponse->getData()->access_token ?? null;
 
-        if (!$accessToken) {
-            return response()->json(['error' => 'Failed to retrieve access token'], 500);
-        }
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        // if (!$accessToken) {
+        //     return response()->json(['error' => 'Failed to retrieve access token'], 500);
+        // }
+        // $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $url = route('mock.document-submission');
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
@@ -136,6 +180,26 @@ class EInvoiceController extends Controller
         ];
         $response = Http::withHeaders($headers)->post($url, $payload);
         if ($response->successful()) {
+            foreach ($response->json()['acceptedDocuments'] as $document) {
+                $uuid = $document['uuid'];
+                $invoiceCodeNumber = $document['invoiceCodeNumber'];
+        
+                // Call the getDocumentDetails function for each document
+                $documentDetails = $this->testGetDocumentDetails($uuid);
+                if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                    $generatedPdf = $this->generateAndSavePdf($documentDetails, $invoiceCodeNumber);
+                    
+                    if ($generatedPdf) {
+                        // PDF generated successfully, you can log or return success if needed
+                        echo "PDF generated successfully for Invoice: $invoiceCodeNumber \n";
+                    } else {
+                        echo "Failed to generate PDF for Invoice: $invoiceCodeNumber \n";
+                    }
+                } else {
+                    echo "Failed to retrieve document details for UUID: $uuid \n";
+                }
+            }
+
             return response()->json([
                 'message' => 'Document submission successful',
                 'submission_id' => $response->json()['submission_id'] ?? null,
@@ -149,58 +213,130 @@ class EInvoiceController extends Controller
         }
     }
 
-    public function getDocumentDetails($uuid)
+    public function getDocumentDetails($uuid, $invoiceCodeNumber)
     {
-        // API 端点 URL
+        // Your existing code for getDocumentDetails
+       
+
         $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documents/{$uuid}/details";
-        
-        // 获取访问令牌
         $accessTokenResponse = $this->login();
         $accessToken = $accessTokenResponse->getData()->access_token ?? null;
 
         if (!$accessToken) {
-            return response()->json(['error' => 'Failed to retrieve access token'], 500);
+            return ['error' => 'Failed to retrieve access token'];
         }
 
-        // 设置请求头
         $headers = [
             'Accept' => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken,
         ];
 
-        // 发起 GET 请求
         $response = Http::withHeaders($headers)->get($url);
 
-        // 检查请求结果
         if ($response->successful()) {
-            // 获取 uuid 和 longId
-            $uuid = $response->json()['uuid'] ?? null;
-            $longId = $response->json()['longId'] ?? null;
-
-            return response()->json([
-                'uuid' => $uuid,
-                'longId' => $longId,
-            ]);
+            return [
+                'uuid' => $response->json()['uuid'] ?? null,
+                'longId' => $response->json()['longId'] ?? null,
+            ];
         } else {
-            return response()->json([
-                'error' => 'Failed to retrieve document details',
-                'message' => $response->body(),
-            ], $response->status());
+            return ['error' => 'Failed to retrieve document details', 'message' => $response->body()];
         }
+    }
+
+    public function generateAndSavePdf($documentDetails, $invoiceCodeNumber)
+    {
+        $uuid = $documentDetails['uuid'];
+        $longId = $documentDetails['longId'];
+
+        $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+        $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+        $firstDeliveryProduct = $delivery->products()->first();
+        $deliveryProduct = $delivery->products()->get();
+
+        $saleProduct = $firstDeliveryProduct->saleProduct;
+        $sale = $saleProduct->sale;
+        $saleProducts = $sale->products;
+
+        $qrCode = $this->generateQrCode($uuid,$longId);
+        $customer = $sale->customer;
+        $envbaseurl = 'https://einvoice-portal.example.com';
+        // 构建验证链接
+        $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
+        $pdf = Pdf::loadView('invoice.' . 'pdf.powercool' . '_inv_pdf', [
+            'date' => now()->format('d/m/Y'),
+            'sku' => $invoiceCodeNumber,
+            'do_sku' => 'join(', ', $do_sku)',
+            'dos' => '$dos',
+            'do_products' => $deliveryProduct,
+            'customer' => $customer,
+            'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
+            'terms' => '', 
+            'validationLink' => $validationLink,
+            'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+        ]);
+        
+        $pdf->setPaper('A4', 'letter');
+        
+        $content = $pdf->download()->getOriginalContent();
+        
+        Storage::put('e-invoices/pdf/XML-INV12345.pdf', "ww". $content);
+    }
+
+    public function sendEmail($customerId,$invoiceId){
+        $customer = Customer::findOrFail($customerId);
+        $invoice = Invoice::findOrFail($invoiceId);
+      
+        // 使用Mailable发送邮件，附上PDF发票
+        Mail::to($customer->email)->send(new EInvoiceEmail($customer, $invoice));
+
+        return response()->json(['message' => '发票邮件已成功发送。']);
+    }
+    
+
+    public function test(){
+        $uuid = 'uuid';
+        $longId = 'lonfId';
+
+        $invoice = Invoice::where('sku', 'INV2411prOIF')->first();
+        $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+        $firstDeliveryProduct = $delivery->products()->first();
+        $deliveryProduct = $delivery->products()->get();
+        $saleProduct = $firstDeliveryProduct->saleProduct;
+        $sale = $saleProduct->sale;
+        $saleProducts = $sale->products;
+        $customer = $sale->customer;
+
+        $envbaseurl = 'https://einvoice-portal.example.com';
+        // 构建验证链接
+        $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
+    
+        // $base64QrCode = base64_encode($qrCode);
+        return view('invoice.pdf.powercool_inv_pdf',[
+            'date' => now()->format('d/m/Y'),
+            'sku' => 'INV2411prOIF',
+            'do_sku' => 'join(', ', $do_sku)',
+            'dos' => '$dos',
+            'do_products' => $deliveryProduct,
+            'customer' => $customer,
+            'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
+            'terms' => '', 
+            'validationLink' => $validationLink,
+            'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+        ]);
     }
 
     public function generateQrCode($uuid, $longId)
     {
         // 定义 e-Invoice 基础 URL
         $envbaseurl = 'https://einvoice-portal.example.com';
-
         // 构建验证链接
         $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
+        // dd(QrCode::size(300)->generate($validationLink));
 
-        $qrCode = QrCode::format('png')->size(300)->generate($validationLink);
+        $qrCode = QrCode::size(100)->generate($validationLink);
 
         // 返回 QR 代码作为响应
-        return response($qrCode)->header('Content-Type', 'image/png');
+        return $qrCode;
     }
 
     public function generateXmlInvoice($id)
