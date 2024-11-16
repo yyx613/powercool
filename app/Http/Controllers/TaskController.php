@@ -8,12 +8,14 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Milestone;
 use App\Models\Role;
+use App\Models\Service;
 use App\Models\Task;
 use App\Models\TaskMilestone;
+use App\Models\TaskService;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\UserTask;
-use App\Notifications\SystemNotification;
+use App\Notifications\MobileAppNotification;
 use Carbon\Carbon;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
@@ -49,6 +51,8 @@ class TaskController extends Controller
     ];
     const TECHNICIAN_FORM_RULES = [
         'ticket' => 'nullable',
+        'sale_order_id' => 'nullable',
+        'product_id' => 'required_with:sale_order_id',
         'task' => 'required',
         'customer' => 'required',
         'name' => 'required|max:250',
@@ -63,7 +67,8 @@ class TaskController extends Controller
         'custom_milestone' => 'required_without:milestone',
         'amount_to_collect' => 'nullable',
         'attachment' => 'nullable',
-        'attachment.*' => 'file'
+        'attachment.*' => 'file',
+        'services' => 'nullable',
     ];
 
     public function index() {
@@ -291,7 +296,7 @@ class TaskController extends Controller
 
             $this->createLog($task, 'Task created');
 
-            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+            Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
                 'task_id' => $task->id
@@ -313,7 +318,10 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES);
+        $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES, [], [
+            'sale_order_id' => 'sale order',
+            'product_id' => 'product',
+        ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -325,6 +333,8 @@ class TaskController extends Controller
                 'sku' => (new Task)->generateSku(),
                 'type' => Task::TYPE_TECHNICIAN,
                 'ticket_id' => $req->ticket,
+                'sale_order_id' => $req->sale_order_id,
+                'product_id' => $req->product_id,
                 'task_type' => $req->task,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
@@ -340,14 +350,24 @@ class TaskController extends Controller
             if ($req->ticket != null) {
                 Ticket::where('id', $req->ticket)->delete();
             }
-
+            // Services
+            if ($req->services != null) {
+                foreach ($req->services as $service_id) {
+                    TaskService::create([
+                        'task_id' => $task->id,
+                        'service_id' => $service_id,
+                        'amount' => Service::where('id', $service_id)->value('amount'),
+                    ]);
+                }
+            }
+            // Assign
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
                     'task_id' => $task->id
                 ]);
             }
-
+            // Milestones
             foreach ($req->milestone as $ms_id) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
@@ -375,7 +395,7 @@ class TaskController extends Controller
                     ]);
                 }
             }
-
+            // Attachment
             if ($req->hasFile('attachment')) {
                 foreach ($req->file('attachment') as $key => $file) {
                     $path = Storage::putFile(Attachment::TASK_PATH, $file);
@@ -413,7 +433,7 @@ class TaskController extends Controller
 
             $this->createLog($task, 'Task created');
 
-            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+            Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
                 'task_id' => $task->id
@@ -527,7 +547,7 @@ class TaskController extends Controller
 
             $this->createLog($task, 'Task created');
 
-            Notification::send(User::whereIn('id', $req->assign)->get(), new SystemNotification([
+            Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
                 'task_id' => $task->id
@@ -560,7 +580,7 @@ class TaskController extends Controller
     }
 
     public function edit(Task $task) {
-        $task->load('users', 'milestones', 'attachments');
+        $task->load('users', 'milestones', 'attachments', 'services');
 
         return view('task.form', [
             'task' => $task
@@ -670,7 +690,10 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES);
+        $validator = Validator::make($req->all(), self::TECHNICIAN_FORM_RULES, [], [
+            'sale_order_id' => 'sale order',
+            'product_id' => 'product',
+        ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -681,6 +704,8 @@ class TaskController extends Controller
             $task->update([
                 'ticket_id' => $req->ticket,
                 'task_type' => $req->task,
+                'sale_order_id' => $req->sale_order_id,
+                'product_id' => $req->product_id,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,
@@ -690,7 +715,18 @@ class TaskController extends Controller
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
-
+            // Services
+            TaskService::where('task_id', $task->id)->delete();
+            if ($req->services != null) {
+                foreach ($req->services as $service_id) {
+                    TaskService::create([
+                        'task_id' => $task->id,
+                        'service_id' => $service_id,
+                        'amount' => Service::where('id', $service_id)->value('amount'),
+                    ]);
+                }
+            }
+            // Assign
             UserTask::where('task_id', $task->id)->delete();
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
@@ -698,7 +734,7 @@ class TaskController extends Controller
                     'task_id' => $task->id
                 ]);
             }
-
+            // Milestone
             TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
             foreach ($req->milestone as $ms_id) {
                 $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
@@ -746,7 +782,7 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.technician.index'))->with('success', 'Task created');
+            return redirect(route('task.technician.index'))->with('success', 'Task updated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

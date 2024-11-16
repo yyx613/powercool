@@ -7,12 +7,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SystemNotification extends Notification
+class ServiceReminderNotification extends Notification
 {
     use Queueable;
 
     protected $data = [];
-
+    
     /**
      * Create a new notification instance.
      */
@@ -43,7 +43,7 @@ class SystemNotification extends Notification
                     ->action('Notification Action', url('/'))
                     ->line('Thank you for using our application!');
     }
-
+    
     /**
      * Get the array representation of the notification.
      *
@@ -61,6 +61,6 @@ class SystemNotification extends Notification
      */
     public function databaseType(object $notifiable): string
     {
-        return 'system';
+        return 'service-reminder';
     }
 }

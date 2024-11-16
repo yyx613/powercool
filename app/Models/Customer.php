@@ -16,6 +16,10 @@ class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_PENDING_FILL_UP_INFO = 2;
+
     protected $guarded = [];
     protected $casts = [
         'under_warranty' => 'boolean',

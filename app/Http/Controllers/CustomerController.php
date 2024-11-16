@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\ObjectCreditTerm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -71,6 +72,7 @@ class CustomerController extends Controller
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
                 'platform' => $record->platform->name ?? '-',
+                'status' => $record->status == Customer::STATUS_INACTIVE ? 'Inactive' : ($record->status == Customer::STATUS_ACTIVE ? 'Active' : 'Pending Fill Up Info'),
                 'can_edit' => hasPermission('customer.edit'),
                 'can_delete' => hasPermission('customer.delete'),
             ];
@@ -109,7 +111,7 @@ class CustomerController extends Controller
             'mobile_number' => 'nullable|max:250',
             'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
-            'currency' => 'required',
+            'currency' => 'nullable',
             'tin_number' => 'nullable|max:250',
             'status' => 'required',
             'picture' => 'nullable',
@@ -133,7 +135,7 @@ class CustomerController extends Controller
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
-                    'is_active' => $req->boolean('status'),
+                    'status' => $req->status,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
@@ -147,7 +149,7 @@ class CustomerController extends Controller
                     'platform_id' => $req->platform,
                 ]);
 
-                (new Branch)->assign(Customer::class, $customer->id);
+                (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
             } else {
                 $customer = Customer::where('id', $req->customer_id)->first();
                 $customer->update([
@@ -155,7 +157,7 @@ class CustomerController extends Controller
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
-                    'is_active' => $req->boolean('status'),
+                    'status' => $req->status,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
@@ -348,5 +350,21 @@ class CustomerController extends Controller
                 'result' => false
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function createLink(Request $req) {
+        if ($req->branch == null) {
+            abort(403);
+        }
+        $branch = Crypt::decrypt($req->branch);
+
+        $branches = [Branch::LOCATION_KL, Branch::LOCATION_PENANG];
+        if (!in_array($branch, $branches, true)) {
+            abort(403);
+        }
+
+        return view('customer.link', [
+            'default_branch' => $branch
+        ]);
     }
 }

@@ -34,6 +34,13 @@ class PermissionSeeder extends Seeder
             'grn.create',
             'grn.edit',
 
+            'service_history.view',
+            'service_history.create',
+            'service_history.edit',
+            'service_history.receive_reminder',
+
+            'warranty.view',
+
             'sale.quotation.view',
             'sale.quotation.create',
             'sale.quotation.edit',

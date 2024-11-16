@@ -54,4 +54,8 @@ class SaleProduct extends Model
     public function children() {
         return $this->hasMany(SaleProductChild::class);
     }
+
+    public function warrantyPeriod() {
+        return $this->belongsTo(WarrantyPeriod::class);
+    }
 }

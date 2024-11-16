@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
 use App\Models\Milestone;
+use App\Models\Product;
+use App\Models\ProductChild;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\Target;
 use App\Models\Task;
 use App\Models\TaskMilestone;
+use App\Models\TaskMilestoneInventory;
 use App\Models\User;
 use App\Models\UserTask;
-use App\Notifications\SystemNotification;
+use App\Notifications\MobileAppNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -154,6 +157,10 @@ class TaskController extends Controller
                 $q->pivot->attachments = Attachment::where('object_type', TaskMilestone::class)
                     ->where('object_id', $task_ms->id)
                     ->get();
+
+                if ($task_ms->inventories != null && count($task_ms->inventories) > 0) {
+                    $q->inventories = $this->formatTaskMilestoneInventory($task_ms);
+                }
             });
 
             return Response::json([
@@ -223,7 +230,7 @@ class TaskController extends Controller
 
             $this->createLog($task_ms, $ms->name . ' submitted');
 
-            Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new SystemNotification([
+            Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new MobileAppNotification([
                 'type' => 'milestone_completed',
                 'done_by' => $req->user()->id,
                 'task_id' => $task_ms->task_id,
@@ -232,7 +239,7 @@ class TaskController extends Controller
 
             $not_completed = TaskMilestone::where('task_id', $task_ms->task_id)->whereNull('submitted_at')->exists();
             if (!$not_completed) { // If all milestones completed
-                Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new SystemNotification([
+                Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new MobileAppNotification([
                     'type' => 'task_completed',
                     'done_by' => $req->user()->id,
                     'task_id' => $task_ms->task_id,
@@ -242,12 +249,44 @@ class TaskController extends Controller
                 ]);
             }
 
+            // Inventory
+            if ($req->inventory != null) {
+                foreach ($req->inventory as $prodId => $value) {
+                    $value = json_decode($value);
+
+                    if (is_array($value) && count($value) > 0) {
+                        $child_ids = $value;
+
+                        for ($i=0; $i < count($child_ids); $i++) { 
+                            TaskMilestoneInventory::create([
+                                'task_milestone_id' => $task_ms->id,
+                                'inventory_type' => ProductChild::class,
+                                'inventory_id' => $child_ids[$i],
+                                'qty' => 1,
+                            ]);
+                        }
+                    } else if ($value > 0) {
+                        TaskMilestoneInventory::create([
+                            'task_milestone_id' => $task_ms->id,
+                            'inventory_type' => Product::class,
+                            'inventory_id' => $prodId,
+                            'qty' => $value,
+                        ]);
+                    }
+                }
+            }
+
+            $data = [
+                'milestone' => $ms,
+                'task_milestone' => $task_ms,
+            ];
+            if ($task_ms->inventories != null && count($task_ms->inventories) > 0) {
+                $data['inventories'] = $this->formatTaskMilestoneInventory($task_ms);
+            }
+
             DB::commit();
 
-            return Response::json([
-                'milestone' => $ms,
-                'task_milestone' => $task_ms
-            ], HttpFoundationResponse::HTTP_OK);
+            return Response::json($data, HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -270,5 +309,28 @@ class TaskController extends Controller
         $task->updated_milestone = $task_ms;
 
         (new ActivityLog)->store(Task::class, $task->id, $desc, $task);
+    }
+
+    private function formatTaskMilestoneInventory(TaskMilestone $task_ms): array {
+        $inventories = $task_ms->inventories;
+        $newInventories = [];
+
+        for ($i=0; $i < count($inventories); $i++) { 
+            if (get_class($inventories[$i]->inventory) == ProductChild::class) {
+                $newInventories[] = [
+                    'product_id' => $inventories[$i]->inventory->parent->id,
+                    'product_child_id' => $inventories[$i]->inventory_id,
+                    'qty' => $inventories[$i]->qty,
+                ];
+            } else {
+                $newInventories[] = [
+                    'product_id' => $inventories[$i]->inventory_id,
+                    'product_child_id' => null,
+                    'qty' => $inventories[$i]->qty,
+                ];
+            }
+        }
+
+        return $newInventories;
     }
 }

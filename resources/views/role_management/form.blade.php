@@ -31,6 +31,7 @@
                                     $cat = $group;
                                     $labels = explode('.', $permission->name);
                                     $action_label = $labels[count($labels) - 1];
+                                    $action_label = join(' ', explode('_', $action_label));
                                 @endphp
                                 <label for="{{ $permission->name }}" data-group="{{ $cat }}" class="permission-selector cursor-pointer border border-gray-200 py-2 px-3 rounded flex flex-col w-full max-w-[150px]">
                                     <span class="text-sm text-slate-500 mb-2 leading-tight capitalize">{{ __($action_label) }}</span>

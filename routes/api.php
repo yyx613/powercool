@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\v1\InventoryController;
 use App\Http\Controllers\Api\v1\NotificationController;
 use App\Http\Controllers\Api\v1\SaleController;
 use App\Http\Controllers\Api\v1\TaskController;
@@ -49,5 +50,9 @@ Route::prefix('v1')->group(function() {
         Route::prefix('sales-target')->group(function() {
             Route::get('get-all', 'getAllSalesTarget');
         });
+    });
+    // Inventory
+    Route::controller(InventoryController::class)->prefix('inventory')->group(function() {
+        Route::get('/get-raw-material-and-sparepart', 'getRawMaterialAndSparepart');
     });
 });

@@ -24,11 +24,13 @@
                         @endif
                     </div>
                 </div> -->
-                <div class="flex flex-col">
-                    <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
-                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($customer) ? $customer->sku : null) }}" disabled="true"/>
-                    <x-app.message.error id="code_err"/>
-                </div>
+                @if (isset($customer))
+                    <div class="flex flex-col">
+                        <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
+                        <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($customer) ? $customer->sku : null) }}" disabled="true"/>
+                        <x-app.message.error id="code_err"/>
+                    </div>
+                @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="prefix" class="mb-1">{{ __('Prefix') }}</x-app.input.label>
                     <x-app.input.select2 name="prefix" id="prefix" :hasError="$errors->has('prefix')" placeholder="{{ __('Select a prefix') }}">
@@ -74,76 +76,92 @@
                     <x-app.input.input name="website" id="website" :hasError="$errors->has('website')" value="{{ old('website', isset($customer) ? $customer->website : null) }}"/>
                     <x-app.message.error id="website_err"/>
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="currency" class="mb-1">{{ __('Currency') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="currency" id="currency" :hasError="$errors->has('currency')">
-                        <option value="">{{ __('Select a currency') }}</option>
-                        @foreach ($currencies as $curr)
-                            <option value="{{ $curr->id }}" @selected(old('currency', isset($customer) ? $customer->currency_id : null) == $curr->id)>{{ $curr->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="currency_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="area" class="mb-1">{{ __('Area') }}</x-app.input.label>
-                    <x-app.input.select name="area" id="area" :hasError="$errors->has('area')">
-                        <option value="">{{ __('Select a area') }}</option>
-                        @foreach ($areas as $area)
-                            <option value="{{ $area->id }}" @selected(old('area', isset($customer) ? $customer->area_id : null) == $area->id)>{{ $area->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="area_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="debtor_type" class="mb-1">{{ __('Debtor Type') }}</x-app.input.label>
-                    <x-app.input.select name="debtor_type" id="debtor_type" :hasError="$errors->has('debtor_type')">
-                        <option value="">{{ __('Select a debtor type') }}</option>
-                        @foreach ($debtor_types as $debtor_type)
-                            <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>{{ $debtor_type->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="debtor_type_err"/>
-                </div>
+                @if (!isCreateLink())
+                    <div class="flex flex-col">
+                        <x-app.input.label id="currency" class="mb-1">{{ __('Currency') }}</x-app.input.label>
+                        <x-app.input.select name="currency" id="currency" :hasError="$errors->has('currency')">
+                            <option value="">{{ __('Select a currency') }}</option>
+                            @foreach ($currencies as $curr)
+                                <option value="{{ $curr->id }}" @selected(old('currency', isset($customer) ? $customer->currency_id : null) == $curr->id)>{{ $curr->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.message.error id="currency_err"/>
+                    </div>
+                @endif
+                @if (!isCreateLink())
+                    <div class="flex flex-col">
+                        <x-app.input.label id="area" class="mb-1">{{ __('Area') }}</x-app.input.label>
+                        <x-app.input.select name="area" id="area" :hasError="$errors->has('area')">
+                            <option value="">{{ __('Select a area') }}</option>
+                            @foreach ($areas as $area)
+                                <option value="{{ $area->id }}" @selected(old('area', isset($customer) ? $customer->area_id : null) == $area->id)>{{ $area->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.message.error id="area_err"/>
+                    </div>
+                @endif
+                @if (!isCreateLink())
+                    <div class="flex flex-col">
+                        <x-app.input.label id="debtor_type" class="mb-1">{{ __('Debtor Type') }}</x-app.input.label>
+                        <x-app.input.select name="debtor_type" id="debtor_type" :hasError="$errors->has('debtor_type')">
+                            <option value="">{{ __('Select a debtor type') }}</option>
+                            @foreach ($debtor_types as $debtor_type)
+                                <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>{{ $debtor_type->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.message.error id="debtor_type_err"/>
+                    </div>
+                @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN Number') }}</x-app.input.label>
                     <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')" value="{{ old('tin_number', isset($customer) ? $customer->tin_number : null) }}" />
                     <x-app.message.error id="tin_number_err"/>
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }}</x-app.input.label>
-                    <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')" placeholder="{{ __('Select a sale agent') }}">
-                        <option value="">{{ __('Select a sale agent') }}</option>
-                        @foreach ($sales as $sa)
-                            <option value="{{ $sa->id }}" @selected(old('sale', isset($customer) ? $customer->sale_agent : null) == $sa->id)>{{ $sa->name }}</option>
-                        @endforeach
-                    </x-app.input.select2>
-                    <x-app.message.error id="sale_agent_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="platform" class="mb-1">{{ __('Platform') }}</x-app.input.label>
-                    <x-app.input.select name="platform" id="platform" :hasError="$errors->has('platform')">
-                        <option value="">{{ __('Select a platform') }}</option>
-                        @foreach ($platforms as $platform)
-                            <option value="{{ $platform->id }}" @selected(old('platform', isset($customer) ? $customer->platform_id : null) == $platform->id)>{{ $platform->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="platform_err"/>
-                </div>
-                <div class="flex flex-col col-span">
-                    <x-app.input.label id="credit_term" class="mb-1">{{ __('Credit Terms') }}</x-app.input.label>
-                    <x-app.input.select name="credit_term[]" multiple>
-                        @foreach ($credit_terms as $ct)
-                            <option value="{{ $ct->id }}" @selected(old('credit_term', isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null))>{{ $ct->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-app.message.error id="credit_term_err"/>
-                </div>
+                @if (!isCreateLink())
+                    <div class="flex flex-col">
+                        <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }}</x-app.input.label>
+                        <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')" placeholder="{{ __('Select a sale agent') }}">
+                            <option value="">{{ __('Select a sale agent') }}</option>
+                            @foreach ($sales as $sa)
+                                <option value="{{ $sa->id }}" @selected(old('sale', isset($customer) ? $customer->sale_agent : null) == $sa->id)>{{ $sa->name }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-app.message.error id="sale_agent_err"/>
+                    </div>
+                @endif
+                @if (!isCreateLink())
+                    <div class="flex flex-col">
+                        <x-app.input.label id="platform" class="mb-1">{{ __('Platform') }}</x-app.input.label>
+                        <x-app.input.select name="platform" id="platform" :hasError="$errors->has('platform')">
+                            <option value="">{{ __('Select a platform') }}</option>
+                            @foreach ($platforms as $platform)
+                                <option value="{{ $platform->id }}" @selected(old('platform', isset($customer) ? $customer->platform_id : null) == $platform->id)>{{ $platform->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.message.error id="platform_err"/>
+                    </div>
+                @endif
+                @if (!isCreateLink())
+                    <div class="flex flex-col col-span">
+                        <x-app.input.label id="credit_term" class="mb-1">{{ __('Credit Terms') }}</x-app.input.label>
+                        <x-app.input.select name="credit_term[]" multiple>
+                            @foreach ($credit_terms as $ct)
+                                <option value="{{ $ct->id }}" @selected(old('credit_term', isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null))>{{ $ct->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.message.error id="credit_term_err"/>
+                    </div>
+                @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">{{ __('Select a Active/Inactive') }}</option>
-                        <option value="1" @selected(old('status', isset($customer) ? $customer->is_active : null) == 1)>{{ __('Active') }}</option>
-                        <option value="0" @selected(old('status', isset($customer) ? $customer->is_active : null) === 0)>{{ __('Inactive') }}</option>
+                        @if (isCreateLink())
+                            <option value="2" selected>{{ __('Pending Fill Up Info') }}</option>
+                        @else
+                            <option value="">{{ __('Select a Active/Inactive') }}</option>
+                            <option value="1" @selected(old('status', isset($customer) ? $customer->is_active : null) == 1)>{{ __('Active') }}</option>
+                            <option value="0" @selected(old('status', isset($customer) ? $customer->is_active : null) === 0)>{{ __('Inactive') }}</option>
+                        @endif
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
                 </div>
@@ -163,6 +181,7 @@
 @push('scripts')
     <script>
         INFO_FORM_CAN_SUBMIT = true
+        DEFAULT_BRANCH = @json($default_branch ?? null);
 
         $('input[name="picture[]"]').on('change', function() {
             let files = $(this).prop('files');
@@ -202,6 +221,8 @@
 
             // let picture = $('input[name="picture[]"]').prop('files')
             // if (picture.length > 0) formData.append('picture[]', picture)
+
+            if (DEFAULT_BRANCH != null) formData.append('branch', DEFAULT_BRANCH)
 
             $.ajax({
                 headers: {

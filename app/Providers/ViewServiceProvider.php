@@ -13,6 +13,7 @@ use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Platform;
 use App\Models\Product;
+use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProjectType;
@@ -22,12 +23,14 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\UOM;
 use App\Models\User;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -60,6 +63,8 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
                 'grn' => [],
+                'service_history' => [],
+                'warranty' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
                 'sale.delivery_order' => [],
@@ -85,6 +90,10 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'grn')) {
                     array_push($permissions_group['grn'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'service_history')) {
+                    array_push($permissions_group['service_history'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'warranty')) {
+                    array_push($permissions_group['warranty'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'sale.quotation')) {
                     array_push($permissions_group['sale.quotation'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'sale.sale_order')) {
@@ -179,14 +188,23 @@ class ViewServiceProvider extends ServiceProvider
             if ($is_edit) {
                 $customers = Customer::orderBy('id', 'desc')->get();
             } else {
-                $customers = Customer::orderBy('id', 'desc')->where('is_active', true)->get();
+                $customers = Customer::orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
             }
 
             // Return data
             if (str_contains(Route::currentRouteName(), '.technician.')) {
-                $view->with('task_types', [
-                    Milestone::TYPE_SERVICE_TASK => 'Service',
-                    Milestone::TYPE_INSTALLER_TASK => 'Installer',
+                $services = Service::where('is_active', true)->orderBy('id', 'desc')->get();
+                $sale_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
+                $sale_products = SaleProduct::with('product')->orderBy('id', 'desc')->get();
+
+                $view->with([
+                    'services' => $services,
+                    'sale_orders' => $sale_orders,
+                    'sale_products' => $sale_products,
+                    'task_types' => [
+                        Milestone::TYPE_SERVICE_TASK => 'Service',
+                        Milestone::TYPE_INSTALLER_TASK => 'Installer',
+                    ],
                 ]);
             }
             if (str_contains(Route::currentRouteName(), '.driver.')) {
@@ -211,7 +229,7 @@ class ViewServiceProvider extends ServiceProvider
             if ($is_edit) {
                 $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->get();
             } else {
-                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->where('is_active', true)->get();
+                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
             }
 
             $view->with('customers', $customers);
@@ -230,7 +248,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('drivers', $drivers);
         });
-        View::composer(['customer.form', 'supplier.form', 'quotation.form_step.customer_details'], function (ViewView $view) {
+        View::composer(['customer.form', 'customer.link', 'supplier.form', 'quotation.form_step.customer_details'], function (ViewView $view) {
             $prefix = [
                 'mr' => 'Mr',
                 'mrs' => 'Mrs',
@@ -250,38 +268,25 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function (ViewView $view) {
-            // Products
-            $exclude_ids = [];
-            // Not in production
-            $pmm_ids = ProductionMilestoneMaterial::distinct()->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
-            // Exclude converted sale
-            $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
-            $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
+            $involved_pc_ids = getInvolvedProductChild();
+
             // Exclude current sale, if edit
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $sale = request()->route()->parameter('sale');
                 $sp_ids = $sale->products()->pluck('id')->toArray();
-                $exclude_ids = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
+                $pc_for_sale = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
+
+                $involved_pc_ids = array_diff($involved_pc_ids, $pc_for_sale);
             }
 
-            $assigned_pc_ids = SaleProductChild::distinct()
-                ->whereNotIn('sale_product_id', $converted_sp_ids)
-                ->whereNotIn('product_children_id', $exclude_ids)
-                ->pluck('product_children_id')
-                ->toArray();
-
-            $products = Product::with(['children' => function ($q) use ($assigned_pc_ids, $pmm_ids) {
-                $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
-            }])
-                // ->withCount(['children' => function ($q) use ($assigned_pc_ids, $pmm_ids) {
-                //     $q->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids);
-                // }])
+            $products = Product::with(['children' => function ($q) use ($involved_pc_ids) {
+                    $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
+                }])
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
                 ->orWhere(function ($q) {
                     $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
                 })
-                // ->having('children_count', '>', 0)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -380,6 +385,19 @@ class ViewServiceProvider extends ServiceProvider
             
             $view->with('branches', $branches);
         });
+        View::composer(['components.app.modal.create-customer-link-modal'], function (ViewView $view) {
+            $branches = [
+                Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
+                Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
+            ];
+            $links = [
+                Branch::LOCATION_KL => route('customer.create_link', ['branch' => Crypt::encrypt(Branch::LOCATION_KL)]),
+                Branch::LOCATION_PENANG => route('customer.create_link', ['branch' => Crypt::encrypt(Branch::LOCATION_PENANG)]),
+            ];
+            
+            $view->with('branches', $branches);
+            $view->with('links', $links);
+        });
         View::composer(['user_management.form'], function (ViewView $view) {
             $branches = [
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
@@ -439,6 +457,19 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('sales', $sales);
             $view->with('terms', $terms);
             $view->with('costs', $costs);
+        });
+        View::composer(['service_history.form'], function (ViewView $view) {
+            $raw_materials = Product::where('type', Product::TYPE_RAW_MATERIAL)
+                ->where('is_sparepart', false)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $product_children = ProductChild::orderBy('id', 'desc')->get();
+
+            $view->with([
+                'raw_materials' => $raw_materials,
+                'product_children' => $product_children,
+            ]);
         });
     }
 }

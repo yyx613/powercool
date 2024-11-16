@@ -35,6 +35,10 @@ class Task extends Model
         return $date;
     }
 
+    public function services() {
+        return $this->belongsToMany(Service::class, 'task_services', 'task_id', 'service_id');
+    }
+
     public function users() {
         return $this->belongsToMany(User::class, 'user_task', 'task_id', 'user_id');
     }

@@ -40,10 +40,14 @@
     </head>
     <body class="font-sans antialiased overflow-x-hidden">
         <div class="min-h-screen flex">
-            @include('layouts.sidebar')
+            @if (!isCreateLink())
+                @include('layouts.sidebar')
+            @endif
     
             <main class="flex-1 overflow-hidden bg-gray-50">
-                @include('layouts.navbar')
+                @if (!isCreateLink())
+                    @include('layouts.navbar')
+                @endif  
                 <div class="p-4 h-full">
                     @yield('content')
                 </div>

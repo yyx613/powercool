@@ -12,6 +12,23 @@
                 <input type="hidden" name="ticket" value="{{ isset($from_ticket) ? $from_ticket->id : null }}">
                 @if ($for_role == 'technician')
                     <div class="flex flex-col">
+                        <x-app.input.label id="sale_order_id" class="mb-1">{{ __('Sale Order ID') }}</x-app.input.label>
+                        <x-app.input.select2 name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')" placeholder="{{ __('Select a sale order') }}">
+                            <option value="">{{ __('Select a sale order') }}</option>
+                            @foreach ($sale_orders as $so)
+                                <option value="{{ $so->id }}" @selected(old('sale_order_id', isset($task) ? $task->sale_order_id : null) == $so->id)>{{ $so->sku }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-input-error :messages="$errors->get('sale_order_id')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="product_id" class="mb-1">{{ __('Product ID') }}</x-app.input.label>
+                        <x-app.input.select2 name="product_id" id="product_id" :hasError="$errors->has('product_id')" placeholder="{{ __('Select a product') }}">
+                            <option value="">{{ __('Select a product') }}</option>
+                        </x-app.input.select2>
+                        <x-input-error :messages="$errors->get('product_id')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
                         <x-app.input.label id="task" class="mb-1">{{ __('Task') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select2 name="task" id="task" :hasError="$errors->has('task')" placeholder="{{ __('Select a task') }}">
                             <option value="">{{ __('Select a task') }}</option>
@@ -117,6 +134,18 @@
                         @endif
                     </div>
                 </div>
+                @if ($for_role == 'technician' && count($services) > 0)
+                    <div class="flex flex-col col-span-3">
+                        <x-app.input.label id="services" class="mb-1">{{ __('Services') }}</x-app.input.label>
+                        @foreach ($services as $key => $ser)
+                            <div class="flex items-center gap-x-2 {{ ($key + 1) != count($services) ? 'mb-1.5' : '' }}">
+                                <input type="checkbox" name="services[]" id="service_{{ $ser->id }}" value="{{ $ser->id }}" class="border-slate-400 rounded-sm" @checked(in_array($ser->id, old('service', isset($task) ? $task->services()->pluck('service_id')->toArray() : [])))>
+                                <label for="service_{{ $ser->id }}" class="text-sm">{{ $ser->name }} (RM{{ number_format($ser->amount, 2) }})</label>
+                            </div>
+                        @endforeach
+                        <x-input-error :messages="$errors->get('services')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col col-span-3">
                     <x-app.input.label id="assign" class="mb-1">{{ __('Assigned') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
@@ -154,11 +183,19 @@
 @push('scripts')
     <script>
         TASK = @json($task ?? null);
+        SERVICES = @json($services ?? null);
+        SALE_PRODUCTS = @json($sale_products ?? null);
         INIT_EDIT = true;
 
         $(document).ready(function() {
-            if (TASK != null && TASK.task_type != null) {
-                $('select[name="task"]').trigger('change')
+            if (TASK != null) {
+                if (TASK.task_type != null) {
+                    $('select[name="task"]').trigger('change')
+                }
+                if (TASK.sale_order_id != null && TASK.product_id != null) {
+                    $('select[name="sale_order_id"]').trigger('change')
+                    $('select[name="product_id"]').val(TASK.product_id)
+                }
             }
             INIT_EDIT = false
         })
@@ -199,7 +236,6 @@
                 $('.uploaded-file-preview-container[data-id="attachment"]').removeClass('hidden')
             }
         })
-
         $('select[name="task"]').on('change', function() {
             let val = $(this).val()
 
@@ -213,6 +249,35 @@
                     $(obj).removeClass('hidden')
                 }
             })
+        })
+        $('input[name="services[]"]').on('change', function() {
+            let amount = 0
+            let selectedServices = []
+
+            $('input[name="services[]"]:checked').each(function(i, obj) {
+                selectedServices.push(parseInt($(this).val()))
+            })
+            
+            for (let i = 0; i < SERVICES.length; i++) {
+                if (selectedServices.includes(SERVICES[i].id)) {
+                    amount += SERVICES[i].amount
+                }               
+            }
+
+            $('input[name="amount_to_collect"]').val(priceFormat(amount))
+        })
+        $('select[name="sale_order_id"]').on('change', function() {
+            let val = $(this).val()
+
+            $(`select[name="product_id"]`).find('option').not(':first').remove();
+
+            for (let i = 0; i < SALE_PRODUCTS.length; i++) {
+                if (SALE_PRODUCTS[i].sale_id == val) {
+
+                    let opt = new Option(`${SALE_PRODUCTS[i].product.model_name} (${SALE_PRODUCTS[i].product.sku})`, SALE_PRODUCTS[i].product_id)
+                    $(`select[name="product_id"]`).append(opt)
+                }
+            }
         })
 
         // Prevent form submit when hitting 'Enter' key

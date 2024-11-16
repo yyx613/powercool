@@ -1,10 +1,20 @@
 <?php
 
 use App\Models\Milestone;
+use App\Models\ProductChild;
+use App\Models\ProductionMilestone;
+use App\Models\ProductionMilestoneMaterial;
 use App\Models\Role;
+use App\Models\Sale;
+use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
+use App\Models\TaskMilestone;
+use App\Models\TaskMilestoneInventory;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 if (!function_exists('generateRandomAlphabet')) {
@@ -36,7 +46,7 @@ if (!function_exists('hasPermission')) {
 }
 
 if (!function_exists('isSuperAdmin')) {
-    function isSuperAdmin()
+    function isSuperAdmin(): bool
     {
         return getUserRoleId(Auth::user()) == Role::SUPERADMIN;
     }
@@ -207,3 +217,52 @@ if (!function_exists('priceToWord')) {
     }
 }
 
+if (!function_exists('is_create_link')) {
+    function isCreateLink(): bool {
+        $route_name = Route::currentRouteName();
+        $names = ['customer.create_link'];
+        
+        if (in_array($route_name, $names, true)) {
+            return true;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('hasUnreadNotifications')) {
+    function hasUnreadNotifications() {
+        return Session::get('unread_noti_count') > 0;
+    }
+}
+
+if (!function_exists('getInvolvedProductChild')) {
+    function getInvolvedProductChild(?int $production_id=null): array {
+        $involved_ids = [];
+        
+        // Involved in production
+        if ($production_id != null) {
+            $pm_ids = ProductionMilestone::where('production_id', $production_id)->pluck('id');
+            $pmm_ids = ProductionMilestoneMaterial::whereNotIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray();
+        } else {
+            $pmm_ids = ProductionMilestoneMaterial::distinct()->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
+        }
+        $involved_ids = array_merge($involved_ids, $pmm_ids);
+        
+        // Involved in QUO/SO (Exclude converted)
+        $converted_sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
+        $converted_sp_ids = SaleProduct::whereIn('sale_id', $converted_sale_ids)->pluck('id');
+
+        $assigned_pc_ids = SaleProductChild::distinct()
+            ->whereNotIn('sale_product_id', $converted_sp_ids)
+            ->pluck('product_children_id')
+            ->toArray();
+
+        $involved_ids = array_merge($involved_ids, $assigned_pc_ids);
+        
+        // Involved in task
+        $tmi_ids = TaskMilestoneInventory::where('inventory_type', ProductChild::class)->pluck('inventory_id')->toArray();
+        $involved_ids = array_merge($involved_ids, $tmi_ids);
+
+        return array_unique($involved_ids);
+    }
+}

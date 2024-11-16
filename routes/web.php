@@ -8,7 +8,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InventoryServiceHistoryController;
 use App\Http\Controllers\MaterialUseController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
@@ -32,6 +34,9 @@ use App\Http\Controllers\Platforms\LazadaController;
 use App\Http\Controllers\Platforms\ShopeeController;
 use App\Http\Controllers\Platforms\TiktokController;
 use App\Http\Controllers\Platforms\WooCommerceController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\WarrantyController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -47,6 +52,10 @@ Route::get('/', function () {
     return redirect(route('login'));
 });
 
+Route::controller(CustomerController::class)->name('customer.')->group(function () {
+    Route::get('/create-customer-link', 'createLink')->name('create_link');
+});
+
 // Change language
 Route::get('/change-language/{lang}', function($locale) {
     Session::put('selected_lang', $locale);
@@ -56,11 +65,17 @@ Route::get('/change-language/{lang}', function($locale) {
     return back();
 })->name('change_language');
 
-Route::middleware('auth', 'select_lang')->group(function () { 
+Route::middleware('auth', 'select_lang', 'notification')->group(function () { 
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';
     })->name('view_log');
+    // Notification 
+    Route::controller(NotificationController::class)->prefix('/notification')->name('notification.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/read/{id}', 'read')->name('read');
+    });
     // Dashboard
     Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/', 'index')->name('index');
@@ -81,6 +96,21 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in');
         Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
         Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
+    });
+    // Warranty
+    Route::controller(WarrantyController::class)->prefix('warranty')->name('warranty.')->middleware(['can:warranty.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+    });
+    // Service History
+    Route::controller(InventoryServiceHistoryController::class)->prefix('service-history')->name('service_history.')->middleware(['can:service_history.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:service_history.create']);
+        // Route::get('/edit/{sh}', 'edit')->name('edit')->middleware(['can:service_history.edit']);
+        Route::get('/view/{sh}', 'view')->name('view');
+        Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::post('/upsert/{sh?}', 'upsert')->name('upsert');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
@@ -285,8 +315,8 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::get('/create', 'create')->name('create')->middleware(['can:customer.create']);
         Route::get('/edit/{customer}', 'edit')->name('edit')->middleware(['can:customer.edit']);
         Route::get('/delete/{customer}', 'delete')->name('delete')->middleware(['can:customer.delete']);
-        Route::post('/upsert-info', 'upsertInfo')->name('upsert_info');
-        Route::post('/upsert-location', 'upsertLocation')->name('upsert_location');
+        Route::post('/upsert-info', 'upsertInfo')->name('upsert_info')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
+        Route::post('/upsert-location', 'upsertLocation')->name('upsert_location')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::get('/get-location', 'getLocation')->name('get_location');
     });
     // Supplier
@@ -338,6 +368,16 @@ Route::middleware('auth', 'select_lang')->group(function () {
             Route::get('/edit/{type}', 'edit')->name('edit');
             Route::post('/update/{type}', 'update')->name('update');
             Route::get('/delete/{type}', 'delete')->name('delete');
+        });
+        // Service
+        Route::controller(ServiceController::class)->prefix('service')->name('service.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{service}', 'edit')->name('edit');
+            Route::post('/update/{service}', 'update')->name('update');
+            Route::get('/delete/{service}', 'delete')->name('delete');
         });
         // Currency
         Route::controller(CurrencyController::class)->prefix('currency')->name('currency.')->group(function () {

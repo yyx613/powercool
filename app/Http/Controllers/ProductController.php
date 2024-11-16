@@ -10,6 +10,7 @@ use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
+use App\Models\TaskMilestoneInventory;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class ProductController extends Controller
     protected $production;
     protected $productionMsMaterial;
     protected $prodCost;
+    protected $taskMsInventory;
 
     public function __construct()
     {
@@ -41,6 +43,7 @@ class ProductController extends Controller
         $this->production = new Production();
         $this->productionMsMaterial = new ProductionMilestoneMaterial();
         $this->prodCost = new ProductCost();
+        $this->taskMsInventory = new TaskMilestoneInventory();
     }
 
     public function index()
@@ -151,6 +154,7 @@ class ProductController extends Controller
 
         if ($is_raw_material) {
             $reserved_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', false)->sum('qty');
+            $reserved_stock += $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $product->id)->value('qty');
             $on_hold_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', true)->sum('qty');
             $available_stock = $product->qty - $reserved_stock - $on_hold_stock;
         }
@@ -165,8 +169,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function viewGetData(Request $req)
-    {
+    public function viewGetData(Request $req) {
         $records = $this->prodChild::where('product_id', $req->product_id);
 
         // Search
@@ -220,13 +223,12 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function viewGetDataRawMaterial(Request $req)
-    {
-        $records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
+    public function viewGetDataRawMaterial(Request $req) {
+        $pmm_records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
+        $tmi_records = $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $req->product_id)->orderBy('id', 'desc');
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
-        $records_paginator = $records->simplePaginate(10);
+        $records_count = $pmm_records->count() + $tmi_records->count();
+        $records_ids = $pmm_records->pluck('id')->merge($tmi_records->pluck('id'));
 
         $data = [
             "recordsTotal" => $records_count,
@@ -234,13 +236,34 @@ class ProductController extends Controller
             "data" => [],
             'records_ids' => $records_ids,
         ];
-        foreach ($records_paginator as $key => $record) {
+        $pmm_records_paginator = $pmm_records->simplePaginate(10);
+        $tmi_records_paginator = $tmi_records->simplePaginate(10);
+        $pmm_idx = 0;
+        $tmi_idx = 0;
+
+        while (count($data['data']) < 10) {
+            if ($pmm_records_paginator[$pmm_idx] == null && $tmi_records_paginator[$tmi_idx] == null) {
+                break;
+            }
+            if ($tmi_records_paginator[$tmi_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at >= $tmi_records_paginator[$tmi_idx]->created_at) {
+                $order_id = $pmm_records_paginator[$pmm_idx]->productionMilestone->production->sku;
+                $qty = $pmm_records_paginator[$pmm_idx]->qty;
+                $on_hold = $pmm_records_paginator[$pmm_idx]->on_hold;
+                $at = $pmm_records_paginator[$pmm_idx]->updated_at;
+                $pmm_idx++;
+            } else if ($pmm_records_paginator[$pmm_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at < $tmi_records_paginator[$tmi_idx]->created_at) {
+                $order_id = $tmi_records_paginator[$tmi_idx]->taskMilestone->task->sku;
+                $qty = $tmi_records_paginator[$tmi_idx]->qty;
+                $on_hold = null;
+                $at = $tmi_records_paginator[$tmi_idx]->updated_at;
+                $tmi_idx++;
+            }
+
             $data['data'][] = [
-                'id' => $record->id,
-                'order_id' => $record->productionMilestone->production->sku,
-                'qty' => $record->qty,
-                'on_hold' => $record->on_hold,
-                'at' => Carbon::parse($record->updated_at)->format('d M Y, h:i A'),
+                'order_id' => $order_id,
+                'qty' => $qty,
+                'on_hold' => $on_hold,
+                'at' => Carbon::parse($at)->format('d M Y, h:i A'),
             ];
         }
 

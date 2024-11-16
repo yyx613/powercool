@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title url="{{ route('product.index') }}">
+        <x-app.page-title url="{{ $is_product ? route('product.index') : route('raw_material.index') }}">
             {{ __($is_product ? (isset($prod) ? 'Edit Product - ' . $prod->sku : 'Create Product') : (isset($prod) ? 'Edit Raw Material - ' . $prod->sku : 'Create Raw Material')) }}
         </x-app.page-title>
     </div>

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserTask;
-use App\Notifications\SystemNotification;
+use App\Notifications\MobileAppNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
 
@@ -37,7 +37,7 @@ class PromptTask extends Command
         for ($i=0; $i < count($tasks); $i++) { 
             $to_notify = UserTask::where('task_id', $tasks[$i]->id)->pluck('user_id')->toArray();
 
-            Notification::send(User::whereIn('id', $to_notify)->get(), new SystemNotification([
+            Notification::send(User::whereIn('id', $to_notify)->get(), new MobileAppNotification([
                 'type' => 'task_prompt',
                 'task_id' => $tasks[$i]->id
             ]));

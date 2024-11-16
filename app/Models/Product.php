@@ -55,26 +55,18 @@ class Product extends Model
         return $this->belongsTo(UOM::class, 'uom');
     }
 
-    public function branch()
-    {
+    public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function childrenWithoutAssigned($production_id)
-    {
-        // Not in production
-        $pm_ids = ProductionMilestone::where('production_id', $production_id)->pluck('id');
-        $pmm_ids = ProductionMilestoneMaterial::whereNotIn('production_milestone_id', $pm_ids)->pluck('product_child_id')->toArray();
-        // Exclude converted sale
-        $sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
-        $converted_sp_ids = SaleProduct::whereIn('sale_id', $sale_ids)->pluck('id');
+    public function serviceHistories() {
+        return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
+    }
 
-        $assigned_pc_ids = SaleProductChild::distinct()
-                ->whereNotIn('sale_product_id', $converted_sp_ids)
-                ->pluck('product_children_id')
-                ->toArray();
+    public function childrenWithoutAssigned($production_id) {
+        $involved_pc_ids = getInvolvedProductChild($production_id);
 
-        return $this->children()->whereNull('status')->whereNotIn('id', $assigned_pc_ids)->whereNotIn('id', $pmm_ids)->get();
+        return $this->children()->whereNull('status')->whereNotIn('id', $involved_pc_ids)->get();
     }
 
     public function materialUse()
@@ -90,14 +82,16 @@ class Product extends Model
         return $val;
     }
 
-    public function warehouseAvailableStock($product_id)
-    {
+    public function warehouseAvailableStock($product_id) {
         return $this->warehouseStock($product_id) - $this->warehouseReservedStock($product_id) - $this->warehouseOnHoldStock($product_id);
     }
 
     public function warehouseStock($product_id)
     {
-        return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->count();
+        return ProductChild::whereNull('status')
+            ->where('location', ProductChild::LOCATION_WAREHOUSE)
+            ->where('product_id', $product_id)
+            ->count();
     }
 
     public function warehouseReservedStock($product_id)
@@ -117,6 +111,9 @@ class Product extends Model
 
         // Check in Production
         $count += ProductionMilestoneMaterial::where('on_hold', false)->whereIn('product_child_id', $ids)->count();
+
+        // // Check in Task
+        // $count += TaskMilestoneInventory::where()
 
         return $count;
     }

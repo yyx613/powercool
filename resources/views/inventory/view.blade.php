@@ -237,7 +237,7 @@
                         "targets": 2,
                         'orderable': false,
                         render: function(data, type, row) {
-                            return data == true ? 'True' : 'False'
+                            return data == null ? '-' : data == true ? 'True' : 'False'
                         }
                     },
                     {

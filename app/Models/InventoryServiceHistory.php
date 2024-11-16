@@ -4,15 +4,15 @@ namespace App\Models;
 
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class TaskMilestone extends Pivot 
+class InventoryServiceHistory extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
     protected $casts = [
-        'submitted_at' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
@@ -21,11 +21,7 @@ class TaskMilestone extends Pivot
         return $date;
     }
 
-    public function task() {
-        return $this->belongsTo(Task::class);
-    }
-
-    public function inventories() {
-        return $this->hasMany(TaskMilestoneInventory::class, 'task_milestone_id');
+    public function objectable(): MorphTo {
+        return $this->morphTo('object');
     }
 }

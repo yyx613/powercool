@@ -42,6 +42,10 @@ class ProductChild extends Model
         return $this->hasOne(ProductionMilestoneMaterial::class, 'product_child_id');
     }
 
+    public function taskMilestoneInventory() {
+        return $this->morphOne(taskMilestoneInventory::class, 'inventory');
+    }
+
     public function stockOutBy() {
         return $this->belongsTo(User::class, 'stock_out_by');
     }
@@ -50,10 +54,15 @@ class ProductChild extends Model
         return $this->belongsTo(User::class, 'transfer_by');
     }
 
+    public function serviceHistories() {
+        return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
+    }
+
     public function assignedTo() {
+        // In QUO/SO/DO
         $sp_child = $this->saleProductChild()->orderBy('id', 'desc')->first();
 
-        if ($sp_child != null) { // In QUO/SO/DO
+        if ($sp_child != null) {
             $sale = $sp_child->saleProduct->sale;
 
             if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
@@ -63,12 +72,18 @@ class ProductChild extends Model
             } else if ($sale->status != Sale::STATUS_CONVERTED) {
                 return $sale;
             }
-        } else { // In Production
-            $pm_child = $this->productionMilestoneChildren()->orderBy('id', 'desc')->first();
-            
-            if ($pm_child != null) {
-                return $pm_child->productionMilestone->production;
-            }
+        }
+        
+        // In Production
+        $pm_child = $this->productionMilestoneChildren()->orderBy('id', 'desc')->first();
+        if ($pm_child != null) {
+            return $pm_child->productionMilestone->production;
+        }
+
+        // In Task
+        $task_child = $this->taskMilestoneInventory()->orderBy('id', 'desc')->first();
+        if ($task_child != null) {
+            return $task_child->taskMilestone->task;
         }
 
         return null;

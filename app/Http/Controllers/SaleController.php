@@ -292,7 +292,6 @@ class SaleController extends Controller
 
     public function getDataSaleOrder(Request $req)
     {
-        // dd(Sale::where('order_id','445710259310272')->first());
         $records = Sale::where('type', Sale::TYPE_SO);
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -308,8 +307,7 @@ class SaleController extends Controller
                     ->orWhere('payment_method', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_amount', 'like', '%' . $keyword . '%')
                     ->orWhere('payment_remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%')
-                    ->orWhere('delivery_address', 'like', '%' . $keyword . '%');
+                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%');
             });
         }
         // Order
