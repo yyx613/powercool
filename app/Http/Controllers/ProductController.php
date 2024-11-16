@@ -150,22 +150,13 @@ class ProductController extends Controller
     {
         $product->load('image');
 
-        $is_raw_material = $product->is_sparepart !== null && $product->is_sparepart == false;
-
-        if ($is_raw_material) {
-            $reserved_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', false)->sum('qty');
-            $reserved_stock += $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $product->id)->value('qty');
-            $on_hold_stock = $this->productionMsMaterial::where('product_id', $product->id)->where('on_hold', true)->sum('qty');
-            $available_stock = $product->qty - $reserved_stock - $on_hold_stock;
-        }
-
         return view('inventory.view', [
             'prod' => $product,
-            'warehouse_available_stock' => $is_raw_material ? $available_stock : $this->prod->warehouseAvailableStock($product->id),
-            'warehouse_reserved_stock' => $is_raw_material ? $reserved_stock : $this->prod->warehouseReservedStock($product->id),
-            'warehouse_on_hold_stock' => $is_raw_material ? $on_hold_stock : $this->prod->warehouseOnHoldStock($product->id),
-            'production_stock' => $is_raw_material ? 0 : $this->prod->productionStock($product->id),
-            'production_reserved_stock' => $is_raw_material ? 0 : $this->prod->productionReservedStock($product->id),
+            'warehouse_available_stock' => $product->warehouseAvailableStock(),
+            'warehouse_reserved_stock' => $product->warehouseReservedStock(),
+            'warehouse_on_hold_stock' => $product->warehouseOnHoldStock(),
+            'production_stock' => $product->productionStock(),
+            'production_reserved_stock' => $product->productionReservedStock(),
         ]);
     }
 

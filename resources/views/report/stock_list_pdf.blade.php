@@ -1,6 +1,3 @@
-@inject('productionMsMaterial', 'App\Models\ProductionMilestoneMaterial')
-@inject('product', 'App\Models\Product')
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,22 +35,13 @@
             <th style="text-align: left; font-size: 14px; border: solid 1px grey; padding: 5px;">On Hold Qty</th>
         </tr>
         @foreach($records as $record)
-        @php
-            $is_raw_material = $record->is_sparepart !== null && $record->is_sparepart == false;
-
-            if ($is_raw_material) {
-                $reserved_stock = $productionMsMaterial::where('product_id', $record->id)->where('on_hold', false)->sum('qty');
-                $on_hold_stock = $productionMsMaterial::where('product_id', $record->id)->where('on_hold', true)->sum('qty');
-                $available_stock = $record->qty - $reserved_stock - $on_hold_stock;
-            }
-        @endphp
-        <tr>
-            <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->model_name }}</td>
-            <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->sku }}</td>
-            <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $is_raw_material ? $available_stock : $product->warehouseAvailableStock($record->id) }}</td>
-            <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $is_raw_material ? $reserved_stock : $product->warehouseReservedStock($record->id) }}</td>
-            <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $is_raw_material ? $on_hold_stock : $product->warehouseOnHoldStock($record->id) }}</td>
-        </tr>
+            <tr>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->model_name }}</td>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->sku }}</td>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->warehouseAvailableStock() }}</td>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->$product->warehouseReservedStock() }}</td>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->warehouseOnHoldStock() }}</td>
+            </tr>
         @endforeach
     </table>
     

@@ -82,21 +82,40 @@ class Product extends Model
         return $val;
     }
 
-    public function warehouseAvailableStock($product_id) {
-        return $this->warehouseStock($product_id) - $this->warehouseReservedStock($product_id) - $this->warehouseOnHoldStock($product_id);
+    public function isRawMaterial(): bool {
+        return $this->is_sparepart !== null && $this->is_sparepart == false;
     }
 
-    public function warehouseStock($product_id)
-    {
+    public function warehouseAvailableStock() {
+        return $this->warehouseStock() - $this->warehouseReservedStock() - $this->warehouseOnHoldStock();
+    }
+
+    public function warehouseStock() {
+        if ($this->isRawMaterial()) {
+            return $this->qty;
+        }
+
         return ProductChild::whereNull('status')
             ->where('location', ProductChild::LOCATION_WAREHOUSE)
-            ->where('product_id', $product_id)
+            ->where('product_id', $this->id)
             ->count();
     }
 
-    public function warehouseReservedStock($product_id)
-    {
-        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
+    public function warehouseReservedStock() {
+        if ($this->isRawMaterial()) {
+            // Check in Production
+            $count = ProductionMilestoneMaterial::where('product_id', $this->id)->where('on_hold', false)->sum('qty');
+            // Check in Task
+            $count += TaskMilestoneInventory::where('inventory_type', Product::class)->where('inventory_id', $this->id)->value('qty');
+
+            return $count;
+        }
+
+        $ids = ProductChild::whereNull('status')
+            ->where('location', ProductChild::LOCATION_WAREHOUSE)
+            ->where('product_id', $this->id)
+            ->pluck('id');
+
         // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
 
@@ -112,28 +131,39 @@ class Product extends Model
         // Check in Production
         $count += ProductionMilestoneMaterial::where('on_hold', false)->whereIn('product_child_id', $ids)->count();
 
-        // // Check in Task
-        // $count += TaskMilestoneInventory::where()
+        // Check in Task
+        $count += TaskMilestoneInventory::where('inventory_type', ProductChild::class)
+            ->whereIn('inventory_id', $ids)
+            ->count();
 
         return $count;
     }
 
-    public function warehouseOnHoldStock($product_id)
-    {
-        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $product_id)->pluck('id');
+    public function warehouseOnHoldStock() {
+        if ($this->isRawMaterial()) {
+            return ProductionMilestoneMaterial::where('product_id', $this->id)->where('on_hold', true)->sum('qty');
+        }
+
+        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_WAREHOUSE)->where('product_id', $this->id)->pluck('id');
 
         // Check in Production
         return ProductionMilestoneMaterial::where('on_hold', true)->whereIn('product_child_id', $ids)->count();
     }
 
-    public function productionStock($product_id)
-    {
-        return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->count();
+    public function productionStock() {
+        if ($this->isRawMaterial()) {
+            return 0;
+        }
+
+        return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $this->id)->count();
     }
 
-    public function productionReservedStock($product_id)
-    {
-        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $product_id)->pluck('id');
+    public function productionReservedStock() {
+        if ($this->isRawMaterial()) {
+            return 0;
+        }
+
+        $ids = ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $this->id)->pluck('id');
 
         // Check in QUO/SO/DO
         $spc = SaleProductChild::whereIn('product_children_id', $ids)->distinct('product_children_id')->get();
@@ -153,8 +183,7 @@ class Product extends Model
         return $count;
     }
 
-    public function isLowStock(): bool
-    {
+    public function isLowStock(): bool {
         if ($this->low_stock_threshold != null && $this->qty <= $this->low_stock_threshold) {
             return true;
         }

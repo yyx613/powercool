@@ -39,22 +39,13 @@ class StockReportExport implements FromCollection, WithMapping, WithHeadings, Wi
         return ['Product Name', 'Product Code', 'Available Qty', 'Reserved Qty', 'On Hold Qty'];
     }
 
-    public function map($data): array
-    {
-        $is_raw_material = $data->is_sparepart !== null && $data->is_sparepart == false;
-
-        if ($is_raw_material) {
-            $reserved_stock = $this->productionMsMaterial::where('product_id', $data->id)->where('on_hold', false)->sum('qty');
-            $on_hold_stock = $this->productionMsMaterial::where('product_id', $data->id)->where('on_hold', true)->sum('qty');
-            $available_stock = $data->qty - $reserved_stock - $on_hold_stock;
-        }
-
+    public function map($data): array {
         return [
             $data->model_name,
             $data->sku,
-            $is_raw_material ? $available_stock : $this->product->warehouseAvailableStock($data->id),
-            $is_raw_material ? $reserved_stock : $this->product->warehouseReservedStock($data->id),
-            $is_raw_material ? $on_hold_stock : $this->product->warehouseOnHoldStock($data->id),
+            $data->warehouseAvailableStock(),
+            $data->warehouseReservedStock(),
+            $data->warehouseOnHoldStock(),
         ];
     }
 }

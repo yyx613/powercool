@@ -257,21 +257,13 @@ class ReportController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            $is_raw_material = $record->is_sparepart !== null && $record->is_sparepart == false;
-
-            if ($is_raw_material) {
-                $reserved_stock = $this->productionMsMaterial::where('product_id', $record->id)->where('on_hold', false)->sum('qty');
-                $on_hold_stock = $this->productionMsMaterial::where('product_id', $record->id)->where('on_hold', true)->sum('qty');
-                $available_stock = $record->qty - $reserved_stock - $on_hold_stock;
-            }
-
             $data['data'][] = [
                 'id' => $record->id,
                 'product_name' => $record->model_name,
                 'product_code' => $record->sku,
-                'warehouse_available_stock' => $is_raw_material ? $available_stock : $this->product->warehouseAvailableStock($record->id),
-                'warehouse_reserved_stock' => $is_raw_material ? $reserved_stock : $this->product->warehouseReservedStock($record->id),
-                'warehouse_on_hold_stock' => $is_raw_material ? $on_hold_stock : $this->product->warehouseOnHoldStock($record->id),
+                'warehouse_available_stock' => $record->warehouseAvailableStock(),
+                'warehouse_reserved_stock' => $record->warehouseReservedStock(),
+                'warehouse_on_hold_stock' => $record->warehouseOnHoldStock(),
             ];
         }
 
