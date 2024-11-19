@@ -28,4 +28,8 @@ class TaskMilestone extends Pivot
     public function inventories() {
         return $this->hasMany(TaskMilestoneInventory::class, 'task_milestone_id');
     }
+
+    public function attachments() {
+        return $this->morphMany(Attachment::class, 'object');
+    }
 }

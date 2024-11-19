@@ -69,7 +69,7 @@ class Task extends Model
         $sku = null;
         
         while (true) {
-            $sku = 'DT' . now()->format('ym') . generateRandomAlphabet();
+            $sku = 'T' . now()->format('ym') . generateRandomAlphabet();
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 

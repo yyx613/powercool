@@ -316,9 +316,10 @@
                         "targets": 4,
                         orderable: false,
                         render: function(data, type, row) {
+                            console.debug(row)
                             switch (data) {
                                 case 1:
-                                    return "{!! __('Stocked Out') !!}"
+                                    return `{!! __('Stocked Out') !!} (${row.stock_out_to == null ? '' : row.stock_out_to.name})`
                                 case 2:
                                     return "{!! __('In Transit') !!}"
                                 case 3:

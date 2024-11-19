@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\Customer;
 use App\Models\InventoryCategory;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -221,13 +223,19 @@ class InventoryController extends Controller
         }
     }
 
-    public function stockOut(ProductChild $product_child)
+    public function stockOut(Request $req, ProductChild $product_child)
     {
+        if (!$req->has('stock_out_to') || !$req->has('stock_out_to_selection')) {
+            abort(404);
+        }
+
         try {
             DB::beginTransaction();
 
             $product_child->status = $this->prodChild::STATUS_STOCK_OUT;
             $product_child->stock_out_by = Auth::user()->id;
+            $product_child->stock_out_to_type = $req->stock_out_to == 'customer' ? Customer::class : User::class;
+            $product_child->stock_out_to_id = $req->stock_out_to_selection;
             $product_child->stock_out_at = now();
             $product_child->save();
 

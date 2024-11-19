@@ -205,6 +205,7 @@ class ProductController extends Controller
                 'location' => $record->location,
                 'order_id' => $record->assignedTo(),
                 'status' => $record->status,
+                'stock_out_to' => $record->status != ProductChild::STATUS_STOCK_OUT ? null : $record->stockOutTo,
                 'done_by' => $record->status == ProductChild::STATUS_STOCK_OUT ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
                 'done_at' => $record->status == ProductChild::STATUS_STOCK_OUT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
                 'progress' => $record->location != 'factory' ? null : $production->getProgress($production),

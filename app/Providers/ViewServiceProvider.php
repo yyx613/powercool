@@ -332,6 +332,18 @@ class ViewServiceProvider extends ServiceProvider
                 'is_product' => $is_product,
             ]);
         });
+        View::composer(['components.app.modal.stock-out-modal'], function (ViewView $view) {
+            $customers = Customer::orderBy('id', 'desc')->get();
+            $technicians = User::whereHas('roles', function ($q) {
+                $q->where('id', Role::TECHNICIAN);
+            })->orderBy('id', 'desc')->get();
+
+
+            $view->with([
+                'customers' => $customers,
+                'technicians' => $technicians,
+            ]);
+        });
         View::composer(['production.form'], function (ViewView $view) {
             $users = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::SALE);

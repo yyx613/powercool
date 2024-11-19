@@ -18,13 +18,40 @@
                         <p id="serial-no" class="text-sm"></p>
                     </div>
                 </div>
+                <div class="mb-4">
+                    <span class="font-medium text-sm mb-1 block">{{ __('Stock Out To') }} <span class="text-sm text-red-500">*</span></span>
+                    <div>
+                        <div class="flex justify-between">
+                            <div class="flex-1 gap-x-2 flex items-center">
+                                <input type="radio" name="stock_out_to" id="customer" value="customer">
+                                <label for="customer" class="text-sm">{{ __('Customer') }}</label>
+                            </div>
+                            <div class="flex-1 gap-x-2 flex items-center">
+                                <input type="radio" name="stock_out_to" id="technician" value="technician">
+                                <label for="technician" class="text-sm">{{ __('Technician') }}</label>
+                            </div>
+                        </div>
+                        <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="customer" name="stock_out_to_selection">
+                            <option value="">{{ __('Select a customer') }}</option>
+                            @foreach($customers as $cus)
+                                <option value="{{ $cus->id }}">{{ $cus->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="technician" name="stock_out_to_selection">
+                            <option value="">{{ __('Select a technician') }}</option>
+                            @foreach($technicians as $te)
+                                <option value="{{ $te->id }}">{{ $te->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                    </div>
+                </div>
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">
                     <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">{{ __('No') }}</button>
                 </div>
                 <div class="flex-1 flex">
-                    <a href="" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">{{ __('Confirm') }}</a>
+                    <a href="" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hidden hover:bg-blue-700" id="yes-btn">{{ __('Confirm') }}</a>
                 </div>
             </div>
         </div>
@@ -35,6 +62,39 @@
 <script>
     $('#stock-out-modal #no-btn').on('click', function() {
         $('#stock-out-modal').removeClass('show-modal')
+    })
+    $('#stock-out-modal input[name="stock_out_to"]').on('change', function() {
+        let val = $(this).val()
+
+        $('#stock-out-modal .stock-out-to-selection').addClass('hidden')
+        $('#stock-out-modal select[name="stock_out_to_selection"]').val(null)
+        $('#stock-out-modal select[name="stock_out_to_selection"]').trigger('change')
+
+        if (val === 'customer') {
+            $('#stock-out-modal .stock-out-to-selection[data-type="customer"]').removeClass('hidden')
+        } else {
+            $('#stock-out-modal .stock-out-to-selection[data-type="technician"]').removeClass('hidden')
+        }
+
+        let url = $('#stock-out-modal #yes-btn').attr('href')
+        url = `${url}?stock_out_to=${val}`
+        $('#stock-out-modal #yes-btn').attr('href', url)
+    })
+    $('#stock-out-modal select[name="stock_out_to_selection"]').on('change', function() {
+        let val = $(this).val()
+
+        $('#stock-out-modal #yes-btn').addClass('hidden')
+        if (val != null && val != '') {
+            $('#stock-out-modal #yes-btn').removeClass('hidden')
+
+            let url = $('#stock-out-modal #yes-btn').attr('href')
+            url = `${url}&stock_out_to_selection=${val}`
+            $('#stock-out-modal #yes-btn').attr('href', url)
+        } else {
+            let url = $('#stock-out-modal #yes-btn').attr('href')
+            url = `${url}&stock_out_to_selection=null`
+            $('#stock-out-modal #yes-btn').attr('href', url)
+        }
     })
 </script>
 @endpush

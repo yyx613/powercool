@@ -242,6 +242,16 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Earning Report') }}</span>
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('report.service_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Report') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('report.technician_stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
+                                    </a>
+                                </li> 
                             </ul>
                         </div>
                     </div>
@@ -716,6 +726,16 @@
                 <li>
                     <a href="{{ route('report.earning_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Earning Report') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('report.service_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Report') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('report.technician_stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                     </a>
                 </li>
             </ul>

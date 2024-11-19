@@ -5,6 +5,7 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 
@@ -56,6 +57,10 @@ class ProductChild extends Model
 
     public function serviceHistories() {
         return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
+    }
+
+    public function stockOutTo(): MorphTo {
+        return $this->morphTo('stock_out_to');
     }
 
     public function assignedTo() {

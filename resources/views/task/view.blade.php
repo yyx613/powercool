@@ -99,7 +99,7 @@
                             <div class="mb-1">
                                 <p class="text-sm leading-none">{{ $log->desc }}</p>
                             </div>
-                            <span class="text-sm text-slate-400 leading-none">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }} &#x2022; {{ $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">View Data</a></span>
+                            <span class="text-sm text-slate-400 leading-none">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }} &#x2022; {{ $log->doneBy == null && isSuperAdmin() ? 'Admin' : $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">View Data</a></span>
                         </li>
                     @endforeach
                 </ul>

@@ -16,6 +16,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\UserTask;
 use App\Notifications\MobileAppNotification;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
@@ -895,6 +896,67 @@ class TaskController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    public function generate99ServiceReport(Request $req) {
+        $task_ids = explode(',', $req->task_ids);
+
+        $photo_equipment_ms_id = Milestone::where('type', Milestone::TYPE_SERVICE_TASK)
+            ->where('is_custom', false)
+            ->where('name', 'Photo of Equipment')
+            ->value('id');
+        $before_service_ms_id = Milestone::where('type', Milestone::TYPE_SERVICE_TASK)
+            ->where('is_custom', false)
+            ->where('name', 'Before Service')
+            ->value('id');
+        $afer_service_ms_id = Milestone::where('type', Milestone::TYPE_SERVICE_TASK)
+            ->where('is_custom', false)
+            ->where('name', 'After Service')
+            ->value('id');
+
+        $tasks = Task::where('type', Task::TYPE_TECHNICIAN)
+            ->whereIn('id', $task_ids)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $technicians = [];
+        $dates = [];
+        $records = [];
+
+        for ($i=0; $i < count($tasks); $i++) { 
+            // Technicians
+            for ($j=0; $j < count($tasks[$i]->users); $j++) { 
+                $user = $tasks[$i]->users[$j];
+                if (!in_array($user->name, $technicians)) {
+                    $technicians[] = $user->name;
+                }
+            }
+            // Dates
+            $dates[] = Carbon::parse($tasks[$i]->start_date)->format('d M Y');
+            // Images
+            $equipment_img = TaskMilestone::with('attachments')->where('task_id', $tasks[$i]->id)->where('milestone_id', $photo_equipment_ms_id)->whereNotNull('submitted_at')->first();
+            $before_img = TaskMilestone::with('attachments')->where('task_id', $tasks[$i]->id)->where('milestone_id', $before_service_ms_id)->whereNotNull('submitted_at')->first();
+            $after_img = TaskMilestone::with('attachments')->where('task_id', $tasks[$i]->id)->where('milestone_id', $afer_service_ms_id)->whereNotNull('submitted_at')->first();
+
+            $records[] = [
+                'task_name' => $tasks[$i]->name,
+                'equipment_img' => $equipment_img != null && count($equipment_img->attachments) > 0 ? $equipment_img->attachments[0]->url : null,
+                'before_img' => $before_img != null && count($before_img->attachments) > 0 ? $before_img->attachments[0]->url : null,
+                'after_img' => $after_img != null && count($after_img->attachments) > 0 ? $after_img->attachments[0]->url : null,
+            ];
+        }
+
+        $pdf = Pdf::loadView('task.report_pdf', [
+            'records' => $records,
+            'technicians' => join(', ', $technicians),
+            'dates' => join(', ', $dates),
+            'photo_equipment_ms_id' => $photo_equipment_ms_id,
+            'before_service_ms_id' => $before_service_ms_id,
+            'afer_service_ms_id' => $afer_service_ms_id,
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->download('99-service-report.pdf');
     }
 
     private function createLog(Task $task, string $desc) {
