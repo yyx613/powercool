@@ -97,7 +97,7 @@ class ProductChild extends Model
     public function generateSku($parent_prefix): string {
         $init_idx = 1;
         $sku = null;
-        $min_char = 4;
+        $min_char = 7;
         $existing_skus = self::pluck('sku')->toArray();
 
         while (true) {

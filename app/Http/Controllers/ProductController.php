@@ -322,7 +322,6 @@ class ProductController extends Controller
 
     public function upsert(Request $req)
     {
-        // dd($req->input());
         if ($req->order_idx != null) {
             $req->merge(['order_idx' => json_decode($req->order_idx)]);
         }
@@ -335,6 +334,7 @@ class ProductController extends Controller
         
         $rules = [
             'product_id' => 'nullable',
+            'initial_for_production' => 'required|max:250',
             'model_code' => 'required|max:250',
             'model_name' => 'required|max:250',
             'model_desc' => 'required|max:250',
@@ -371,6 +371,7 @@ class ProductController extends Controller
             $rules['supplier_id'] = 'nullable';
             $rules['is_sparepart'] = 'nullable';
         } else if (!$req->boolean('is_sparepart')) {
+            $rules['initial_for_production'] = 'nullable';
             $rules['qty'] = 'required';
             $rules['cost'] = 'nullable';
         }
@@ -403,6 +404,7 @@ class ProductController extends Controller
             if ($req->product_id == null) {
                 $prod = $this->prod::create([
                     'sku' => $req->model_code,
+                    'initial_for_production' => $req->initial_for_production,
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
@@ -433,6 +435,7 @@ class ProductController extends Controller
 
                 $prod->update([
                     'sku' => $req->model_code,
+                    'initial_for_production' => $req->initial_for_production,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
                     'barcode' => $req->barcode == null ? $req->model_code : $req->barcode,

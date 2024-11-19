@@ -211,7 +211,7 @@ class ProductionController extends Controller
                 $prod = $this->product::where('id', $req->product)->first();
                 $prodChild = $this->productChild::create([
                     'product_id' => $prod->id,
-                    'sku' => ($this->productChild)->generateSku($prod->sku),
+                    'sku' => ($this->productChild)->generateSku($prod->initial_for_production ?? $prod->sku),
                     'location' => $this->productChild::LOCATION_FACTORY,
                 ]);
 

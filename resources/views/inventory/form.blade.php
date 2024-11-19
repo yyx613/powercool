@@ -15,6 +15,11 @@
         <!-- Info -->
         <div class="bg-white p-4 border rounded-md">
             <div class="grid grid-cols-3 gap-8 w-full">
+                <div class="flex flex-col" id="initial-container">
+                    <x-app.input.label id="initial_for_production" class="mb-1">{{ __('Initial For Production') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="initial_for_production" id="initial_for_production" value="{{ old('initial_for_production', isset($prod) ? $prod->initial_for_production : null) }}" />
+                    <x-input-error :messages="$errors->get('initial_for_production')" class="mt-1" />
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="model_code" class="mb-1">{{ __('Model Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_code" id="model_code" value="{{ old('model_code', isset($prod) ? $prod->sku : null) }}" />
@@ -300,11 +305,13 @@
 
         if (val == true) {
             $('#serial-no-container, #cost-container').removeClass('hidden')
+            $('#initial-container').removeClass('hidden')
             $('#qty-container').addClass('hidden')
             $('#form #info-submit-container').addClass('hidden')
             $('#form #info-submit-container').removeClass('block')
         } else {
             $('#serial-no-container, #cost-container').addClass('hidden')
+            $('#initial-container').addClass('hidden')
             $('#qty-container').removeClass('hidden')
             $('#form #info-submit-container').addClass('block')
             $('#form #info-submit-container').removeClass('hidden')
