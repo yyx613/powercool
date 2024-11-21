@@ -81,6 +81,9 @@
             <div class="flex gap-x-4 mb-1">
                 <span class="text-xs font-semibold text-slate-500">{{ __('Code') }}: {{ $prod->sku }}</span>
                 <span class="text-xs font-semibold text-slate-500">{{ __('Category') }}: {{ $prod->category->name }}</span>
+                @if ($prod->low_stock_threshold != null)
+                    <span class="text-xs font-semibold text-slate-500">{{ __('Low Stock Threshold') }}: {{ $prod->low_stock_threshold }}</span>
+                @endif
             </div>
             @if ($prod->length != null || $prod->width != null || $prod->height != null || $prod->weight != null)
                 <div class="flex gap-x-4 mb-1">

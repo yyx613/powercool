@@ -360,7 +360,7 @@ class ViewServiceProvider extends ServiceProvider
                 ->orderBy('id', 'desc')
                 ->get();
 
-            $sales = Sale::orderBy('id', 'desc')->get();
+            $sales = Sale::with('products')->orderBy('id', 'desc')->get();
 
             $view->with('users', $users);
             $view->with('milestones', $milestones);

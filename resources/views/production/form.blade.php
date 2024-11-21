@@ -126,6 +126,8 @@
 
 @push('scripts')
     <script>
+        PRODUCTS = @json($products ?? null);
+        SALES = @json($sales ?? null);
         PRODUCTION = @json($production ?? null);
 
         $('input[name="start_date"]').daterangepicker(datepickerParam)
@@ -171,6 +173,28 @@
             }
         })
 
+        $('select[name="order"]').on('change', function() {
+            let val = $(this).val()
+
+            if (SALES != null) {
+                for (let i = 0; i < SALES.length; i++) {
+                    if (SALES[i].id == val) {
+                        $('select[name="product"] option').not(':first').remove()
+
+                        for (let j = 0; j < SALES[i].products.length; j++) {
+                            for (let k = 0; k < PRODUCTS.length; k++) {
+                                if (SALES[i].products[j].product_id == PRODUCTS[k].id) {
+                                    let opt = new Option(PRODUCTS[k].model_name, PRODUCTS[k].id)
+                                    $('select[name="product"]').append(opt)   
+                                    break
+                                }
+                            }
+                        }
+                        break
+                    }
+                }
+            }
+        })
         $('form').one('submit', function(e) {
             e.preventDefault()
 
