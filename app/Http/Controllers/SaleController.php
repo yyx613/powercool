@@ -1091,22 +1091,35 @@ class SaleController extends Controller
         ];
 
         foreach ($records_paginator as $record) {
-            $convert_to = $record->einvoice == null 
-            ? ($record->consolidatedEInvoices == null || isEmpty($record->consolidatedEInvoices ) ? "-" : "Consolidated E-Invoice")
-            : "E-Invoice";
+            $convert_to = "-";
+            $submission_date = "-";
+            $enable = true;
+            $exceed72Hours = false;
 
             $hasPlatformId = $record->deliveryOrders()
             ->whereHas('products.saleProduct.sale', function($query) {
                 $query->whereNotNull('platform_id');
             })->exists();
 
+            if ($record->einvoice) {
+                $convert_to = "E-Invoice";
+                $submission_date = $record->einvoice->updated_at->format('Y-m-d H:i:s');
+                $exceed72Hours = $record->einvoice->updated_at->diffInHours(now()) >= 72;
+            } elseif ($record->consolidatedEInvoices && !$record->consolidatedEInvoices->isEmpty()) {
+                $convert_to = "Consolidated E-Invoice";
+                $submission_date = $record->consolidatedEInvoices->first()->updated_at->format('Y-m-d H:i:s');
+            }
+
+            $enable = $hasPlatformId || $exceed72Hours;
+            
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'company' => $record->company,
                 'convert_to' => $convert_to,
+                'submission_date' => $submission_date,
                 'filename' => $record->filename,
-                'has_platform' => $hasPlatformId
+                'enable' => $enable
             ];
         }
 

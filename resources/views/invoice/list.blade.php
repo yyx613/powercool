@@ -60,6 +60,7 @@
                     <th>{{ __('Invoice ID') }}</th>
                     <th>{{ __('Company') }}</th>
                     <th>{{ __('Convert To') }}</th>
+                    <th>{{ __('Submmision Date') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -104,6 +105,7 @@
                 { data: 'sku' },
                 { data: 'company' },
                 { data: 'convert_to' },
+                { data: 'submission_date' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -112,8 +114,8 @@
                     "targets": 0,
                     orderable: false,
                     render: function(data, type, row) {
-                        var disabled = row.has_platform ? 'disabled' : '';
-                        var style = row.has_platform ? 'style="opacity: 0.5; cursor: not-allowed;"' : '';
+                        var disabled = row.enable ? 'disabled' : '';
+                        var style = row.enable ? 'style="opacity: 0.5; cursor: not-allowed;"' : '';
                         return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-company="${row.company}" ${disabled} ${style}>`;
                     }
                 },
@@ -139,8 +141,15 @@
                     }
                 },
                 { 
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "5%",
+                    "targets": 5,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
