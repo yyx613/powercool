@@ -47,6 +47,11 @@ class Customer extends Model
         return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
     }
 
+    public function deliveryOrders()
+    {
+        return $this->hasMany(DeliveryOrder::class, 'customer_id');
+    }
+
     public function generateSku(string $company_first_alphabet): string {
         $sku = null;
         $staring_num = 1;

@@ -2,7 +2,10 @@
 
 namespace App\Mail;
 
+use App\Models\CreditNote;
 use App\Models\Customer;
+use App\Models\DebitNote;
+use App\Models\EInvoice;
 use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,21 +23,15 @@ class EInvoiceEmail extends Mailable
      */
     public $customer;
     public $invoice;
+    public $path;
+    public $company;
 
-    public function __construct(Customer $customer, Invoice $invoice)
+    public function __construct(Customer $customer, $invoice, $path,  $company)
     {
         $this->customer = $customer;
         $this->invoice = $invoice;
-    }
-
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'E Invoice Email',
-        );
+        $this->path = $path;
+        $this->company = $company;
     }
 
     /**
@@ -59,11 +56,28 @@ class EInvoiceEmail extends Mailable
 
     public function build()
     {
-        $filePath = storage_path('app/public/e-invoices/pdf/' . 'XML-INV12345.pdf');
+        if ($this->invoice instanceof EInvoice) {
+            $subject = 'E-Invoice From '.$this->company;
+            $type = 'E-Invoice';
+        } elseif ($this->invoice instanceof CreditNote) {
+            $subject = 'Credit Note From '.$this->company;
+            $type = 'Credit Note';
+        } elseif ($this->invoice instanceof DebitNote) {
+            $subject = 'Debit Note From '.$this->company;
+            $type = 'Debit Note';
+        }
+        
+        $filePath = $this->path;
         return $this->view('invoice.email')
-                    ->subject('您的发票')
+                    ->subject($subject)
+                    ->with([
+                        'type' => $type,
+                        'uuid' => $this->invoice->uuid,
+                        'date' => $this->invoice->created_at,
+                        'company' => $this->company,
+                        'customer' => $this->customer
+                    ])
                     ->attach($filePath, [
-                        'as' => '发票-' . $this->invoice->filename,
                         'mime' => 'application/pdf',
                     ]);
     }

@@ -38,11 +38,11 @@
                         <td style="font-size: 14px;">:</td>
                         <td style="font-size: 14px;">{{ $date }}</td>
                     </tr>
-                    <tr>
+                    {{-- <tr>
                         <td style="font-size: 14px;">D/O No.</td>
                         <td style="font-size: 14px;">:</td>
                         <td style="font-size: 14px;">{{ $do_sku }}</td>
-                    </tr>
+                    </tr> --}}
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
                         <td style="font-size: 14px;">:</td>
@@ -54,7 +54,7 @@
     </table>
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
         <tr>
-            <td colspan="2" style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">INVOICE</td>
+            <td colspan="2" style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">{{ $type }}</td>
         </tr>
         <tr>
             <td style="padding: 0 35px 0 0;">
@@ -95,20 +95,18 @@
         @php
             $total = 0;
         @endphp
-        @foreach ($do_products as $key => $prod)
+        @foreach ($productDetails as $prod)
             <tr>
-                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $prod['index'] }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->saleProduct->product->model_name }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod['model_name'] }}</td>
                 <td style="font-size: 14px; text-align: right;"></td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->saleProduct->unit_price) - $prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ $prod['uom'] }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod['unit_price'], 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">0</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod['subtotal'], 2) }}</td>
             </tr>
-            @php
-                $total += ($prod->qty * $prod->saleProduct->unit_price) - $prod->saleProduct->discountAmount();
-            @endphp
         @endforeach
     </table>
     <!-- Item Summary -->

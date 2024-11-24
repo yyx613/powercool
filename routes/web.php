@@ -178,10 +178,15 @@ Route::middleware('auth', 'select_lang')->group(function () {
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
             Route::get('/', 'indexInvoice')->name('index');
             Route::get('/get-data', 'getDataInvoice')->name('get_data');
-            Route::get('/credit-debit-note', 'indexNote')->name('note.index');
-            Route::get('/get-data-note', 'getDataNote')->name('get_data_note');
+            Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
+            Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
+            Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
+            Route::get('/get-data-consolidated-e-invoice', 'getDataConsolidatedEInvoice')->name('get_data_consolidated-e-invoice');
+            Route::get('/credit-note', 'indexCreditNote')->name('credit-note.index');
+            Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
+            Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
+            Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
         });
-
 
         Route::get('/download', 'download')->name('download');
 
@@ -452,14 +457,24 @@ Route::prefix('e-invoice')->group(function () {
     Route::get('/generate', [EInvoiceController::class, 'generateXmlInvoice']);
     Route::get('/submit', [EInvoiceController::class, 'submit']);
     Route::post('/submit', [EInvoiceController::class, 'submit']);
-    Route::get('/send-to-customer/{customerId}/{invoiceId}', [EInvoiceController::class, 'sendEmail']);
+    Route::post('/submit-consolidated', [EInvoiceController::class, 'submitConsolidated']);
+    Route::get('/send-to-customer', [EInvoiceController::class, 'sendEmail'])->name('send.email');
+    Route::get('/download', [EInvoiceController::class, 'download'])->name('e-invoice.download');
+    Route::post('/get-invoice-item', [EInvoiceController::class, 'getInvoiceItem']);
+    Route::post('/submit-note', [EInvoiceController::class, 'submitNote'])->name('submit.note');
+    Route::post('/get-cons-invoice-item', [EInvoiceController::class, 'getConsInvoiceItem']);
+    Route::get('/to-note',  [EInvoiceController::class, 'toNote'])->name('to_note');
 });
+
 Route::post('/mock/document-submission', [EInvoiceController::class, 'testSubmitDocument'])->name('mock.document-submission');
+Route::post('/mock/consolidated-document-submission', [EInvoiceController::class, 'testConsolidatedSubmitDocument'])->name('mock.consolidated-document-submission');
 
 // Mock route to simulate getting submission details
 Route::get('/mock/get-submission/{submission_id}', [EInvoiceController::class, 'testGetSubmission']);
 Route::get('/test1', [EInvoiceController::class, 'test']);
-
+Route::get('/email', function(){
+    return view('invoice.email');
+});
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');

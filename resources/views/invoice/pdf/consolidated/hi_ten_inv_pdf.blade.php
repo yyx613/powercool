@@ -6,14 +6,15 @@
     <title>Invoice | {{ $sku }}</title>
 </head>
 <body>
+    <!-- Header -->
     @php
         $svgQrCode = QrCode::size(100)->generate($validationLink);
         $base64QrCode = base64_encode($svgQrCode);
     @endphp
+    <!-- Header -->
     <div style="display: flex; justify-content: flex-end; padding: 10px;">
         <img src="data:image/svg+xml;base64,{{ $base64QrCode }}" alt="QR Code">
     </div>
-    <!-- Header -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
             <td style="width: 70%; border-bottom: solid 1px black; padding: 0 50px 10px 0; text-align: center;">
@@ -54,10 +55,10 @@
     </table>
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
         <tr>
-            <td colspan="2" style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">INVOICE</td>
+            <td colspan="2" style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">CONSOLIDATED INVOICE</td>
         </tr>
         <tr>
-            <td style="padding: 0 35px 0 0;">
+            {{-- <td style="padding: 0 35px 0 0;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="font-size: 14px; font-weight: 700; padding: 0 0 10px 0;">{{ $customer->name }}</td>
@@ -76,8 +77,8 @@
                         <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
                     </tr>
                 </table>
-            </td>
-            <td style="padding: 0 35px 0 0; vertical-align: text-bottom;"></td>
+            </td> --}}
+            {{-- <td style="padding: 0 35px 0 0; vertical-align: text-bottom;"></td> --}}
         </tr>
     </table>
     <!-- Item -->

@@ -18,6 +18,7 @@ class VerifyCsrfToken extends Middleware
         'woo-commerce/order-created/webhook',
         'woo-commerce/order-updated/webhook',
         'test',
-        '/mock/document-submission'
+        '/mock/document-submission',
+        '/mock/consolidated-document-submission'
     ];
 }

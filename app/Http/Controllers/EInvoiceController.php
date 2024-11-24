@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Mail\EInvoiceEmail;
+use App\Models\ConsolidatedEInvoice;
+use App\Models\CreditNote;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
+use App\Models\DeliveryOrderProduct;
+use App\Models\EInvoice;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleProduct;
 use BaconQrCode\Encoder\QrCode as EncoderQrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
@@ -18,131 +25,118 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
+use App\Services\EInvoiceXmlGenerator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+
+use function PHPUnit\Framework\isEmpty;
 
 class EInvoiceController extends Controller
 {
     protected $endpoint;
-    protected $clientID;
-    protected $clientSecret;
+    protected $powerCoolId;
+    protected $powerCoolSecret;
+    protected $hitenId;
+    protected $hitenSecret;
     protected $msic = '01111';
+    protected $xmlGenerator;
+    protected $accessTokenPowerCool;
+    protected $accessTokenHiten;
+    protected $powerCoolTin;
+    protected $hitenTin;
+
 
     public function __construct()
     {
-        $this->clientID = config('e-invoices.client_id');
-        $this->clientSecret = config('e-invoices.client_secret');
+        $this->powerCoolId = config('e-invoices.powercool_client_id');
+        $this->powerCoolSecret = config('e-invoices.powercool_client_secret');
+        $this->hitenId = config('e-invoices.hiten_client_id');
+        $this->hitenSecret = config('e-invoices.hiten_client_secret');
         $this->endpoint = 'https://preprod-api.myinvois.hasil.gov.my';
-        // $this->platform = Platform::where('name','Shopee')->first();
-        // $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
+        $this->xmlGenerator = new EInvoiceXmlGenerator();
+        $this->accessTokenPowerCool = $this->login('powercool')->getData()->access_token ?? null;
+        $this->accessTokenHiten = $this->accessTokenPowerCool;
+        // $this->accessTokenHiten = $this->login('hiten')->getData()->access_token ?? null;
+
+        $this->powerCoolTin = "IG26663185010";
+        $this->hitenTin = "IG26663185010";
     }
 
-    public function testSubmitDocument(Request $request)
+    public function login($company)
     {
-        $request->validate([
-            'documents' => 'required|array',
-        ]);
+        try {
+            $path = "/connect/token";
+            $url = $this->endpoint . $path;
 
-        $documents = $request->input('documents');
-        $acceptedDocuments = [];
+            $clientId = $company == "powercool" ? $this->powerCoolId : $this->hitenId; 
+            $clientSecret = $company == "powercool" ? $this->powerCoolSecret : $this->hitenSecret;
 
-        // Generate a dynamic list of accepted documents
-        foreach ($documents as $document) {
-            $acceptedDocuments[] = [
-                'uuid' => Str::random(26),  // Randomly generate UUID for each document
-                'invoiceCodeNumber' => $document['codeNumber'] ?? 'INV' . rand(10000, 99999),
+            $response = Http::asForm()->post($url, [
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'grant_type' => 'client_credentials',
+                'scope' => 'InvoicingAPI',
+            ]);
+
+            if ($response->successful()) {
+                $accessToken = $response->json()['access_token'];
+                $expiresIn = $response->json()['expires_in'];
+
+                return response()->json([
+                    'access_token' => $accessToken,
+                    'expires_in' => $expiresIn,
+                ]);
+            } else {
+                return response()->json([
+                    'error' => 'Login failed',
+                    'message' => $response->body(),
+                ], $response->status());
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred during login',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function validateTIN($tin, $idType, $idValue, $company)
+    {
+        try {
+            $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/taxpayer/validate/{$tin}?idType={$idType}&idValue={$idValue}";
+
+            $headers = [
+                'Accept' => 'application/json',
+                'Accept-Language' => 'en',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' .$company == "powercool" ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
-        }
 
-        // Mock response data
-        $mockResponse = [
-            'submission_id' => Str::uuid(),
-            'acceptedDocuments' => $acceptedDocuments,
-            'rejectedDocuments' => [],
-        ];
+            $response = Http::withHeaders($headers)->get($url);
 
-        return response()->json($mockResponse, 200);
-    }
-
-    public function testGetDocumentDetails($uuid)
-    {
-        $mockResponse = [
-            'uuid' => $uuid,
-            'longId' => 'LONG-' . strtoupper(Str::random(16)),
-            'details' => 'This is a mock document detail response.',
-        ];
-        return $mockResponse;
-    }
-
-    public function login(){
-        $path = "/connect/token";
-        $url = $this->endpoint.$path;
-        // 准备请求体参数
-        $clientId = $this->clientID; // 替换为实际的 client_id
-        $clientSecret = $this->clientSecret; // 替换为实际的 client_secret
-        // 发起 POST 请求
-        $response = Http::asForm()->post($url, [
-            'client_id' => $clientId,
-            'client_secret' => $clientSecret,
-            'grant_type' => 'client_credentials',
-            'scope' => 'InvoicingAPI',
-        ]);
-        // 检查响应状态
-        if ($response->successful()) {
-            $accessToken = $response->json()['access_token'];
-            $expiresIn = $response->json()['expires_in'];
-
-            // 返回访问令牌或将其存储以供后续使用
+            if ($response->successful()) {
+                return response()->json([
+                    'message' => 'TIN validation successful',
+                    'data' => $response->json(),
+                ]);
+            } 
+            else {
+                return response()->json([
+                    'error' => 'TIN validation failed',
+                    'message' => $response->body(),
+                ], $response->status());
+            }
+        } catch (\Exception $e) {
             return response()->json([
-                'access_token' => $accessToken,
-                'expires_in' => $expiresIn,
-            ]);
-        } else {
-            // 返回错误信息
-            return response()->json([
-                'error' => 'Login failed',
-                'message' => $response->body(),
-            ], $response->status());
+                'error' => 'An error occurred during TIN validation',
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 
-    public function validateTIN($tin, $idType, $idValue)
-    {
-        // Step 1: 调用 login() 函数获取 access token
-        $accessTokenResponse = $this->login();
-
-        // 检查 access token 是否成功获取
-        $accessToken = $accessTokenResponse->getData()->access_token ?? null;
-
-        if (!$accessToken) {
-            return response()->json(['error' => 'Failed to retrieve access token'], 500);
-        }
-
-        // Step 2: 构建 API 请求的 URL
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/taxpayer/validate/{$tin}?idType={$idType}&idValue={$idValue}";
-
-        // Step 3: 设置请求头，包括 Authorization 和内容类型
-        $headers = [
-            'Accept' => 'application/json',
-            'Accept-Language' => 'en',
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer ' . $accessToken,
-        ];
-
-        // Step 4: 发送 GET 请求到 API
-        $response = Http::withHeaders($headers)->get($url);
-
-        // Step 5: 检查响应状态并返回结果
-        if ($response->successful()) {
-            return response()->json([
-                'message' => 'TIN validation successful',
-                'data' => $response->json(),
-            ]);
-        } else {
-            return response()->json([
-                'error' => 'TIN validation failed',
-                'message' => $response->body(),
-            ], $response->status());
-        }
-    }
 
     public function submit(Request $request){
         $request->validate([
@@ -150,24 +144,19 @@ class EInvoiceController extends Controller
             'invoices.*.id' => 'required|integer',
         ]);
         $selectedInvoices = $request->input('invoices');
-        $accessTokenResponse = $this->login();
-        $accessToken = $accessTokenResponse->getData()->access_token ?? null;
+        $company = $request->input('company');
+        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
 
-        // if (!$accessToken) {
-        //     return response()->json(['error' => 'Failed to retrieve access token'], 500);
-        // }
-        // $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
-        $url = route('mock.document-submission');
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . $accessToken, 
+            'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten, 
         ];
         $documents = [];
         foreach ($selectedInvoices as $invoice) {
             $invoice = Invoice::find($invoice['id']);
-            $document = $this->generateXmlInvoice($invoice['id']);
+            $document = $this->xmlGenerator->generateXml($invoice['id'], $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
             $documents[] = [
                 'format' => 'XML',
                 'document' => base64_encode($document),
@@ -178,1201 +167,877 @@ class EInvoiceController extends Controller
         $payload = [
             'documents' => $documents,
         ];
+        
         $response = Http::withHeaders($headers)->post($url, $payload);
         if ($response->successful()) {
-            foreach ($response->json()['acceptedDocuments'] as $document) {
-                $uuid = $document['uuid'];
-                $invoiceCodeNumber = $document['invoiceCodeNumber'];
-        
-                // Call the getDocumentDetails function for each document
-                $documentDetails = $this->testGetDocumentDetails($uuid);
-                if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
-                    $generatedPdf = $this->generateAndSavePdf($documentDetails, $invoiceCodeNumber);
+            DB::beginTransaction();
+            try {
+                $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
+                $errorDetails = [];
+                $successfulDocuments = [];
+                foreach ($acceptedDocuments as $document) {
+                    $uuid = $document['uuid'];
+                    $invoiceCodeNumber = $document['invoiceCodeNumber'];
                     
-                    if ($generatedPdf) {
-                        // PDF generated successfully, you can log or return success if needed
-                        echo "PDF generated successfully for Invoice: $invoiceCodeNumber \n";
-                    } else {
-                        echo "Failed to generate PDF for Invoice: $invoiceCodeNumber \n";
+                    $documentDetails = $this->getDocumentDetails($uuid, $company);
+                    if (isset($documentDetails['error'])) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $invoiceCodeNumber,
+                            'error' => $documentDetails['error'],
+                        ];
+                        continue;
                     }
-                } else {
-                    echo "Failed to retrieve document details for UUID: $uuid \n";
-                }
-            }
 
-            return response()->json([
-                'message' => 'Document submission successful',
-                'submission_id' => $response->json()['submission_id'] ?? null,
-                'document_ids' => $response->json()['document_ids'] ?? [],
-            ]);
+                    $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+
+                    if (!$invoice->einvoice) {
+                        $invoice->einvoice()->create([
+                            'uuid' => $uuid,
+                            'status' => 'valid'
+                        ]);
+                    } else {
+                        $invoice->einvoice->update([
+                            'uuid' => $uuid,
+                            'status' => 'valid'
+                        ]);
+                    }
+                    $successfulDocuments[] = $invoiceCodeNumber;
+
+                    if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                        $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
+                    }
+                }
+
+                if (!empty($rejectedDocuments)) {
+                    $errorDetails = [];
+                    foreach ($rejectedDocuments as $rejectedDoc) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                            'error_code' => $rejectedDoc['error']['code'],
+                            'error_message' => $rejectedDoc['error']['message'],
+                            'error_target' => $rejectedDoc['error']['target'],
+                            'property_path' => $rejectedDoc['error']['propertyPath'],
+                            'details' => array_map(function ($detail) {
+                                return [
+                                    'code' => $detail['code'],
+                                    'message' => $detail['message'],
+                                    'target' => $detail['target'],
+                                    'propertyPath' => $detail['propertyPath'],
+                                ];
+                            }, $rejectedDoc['error']['details'] ?? []),
+                        ];
+                    }
+                    DB::rollBack();
+                    dd($response->json());
+                    return response()->json([
+                        'error' => 'Some documents were rejected',
+                        'rejectedDocuments' => $errorDetails,
+                    ], 400);
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Document submission completed',
+                    'successfulDocuments' => $successfulDocuments,
+                    'errorDetails' => $errorDetails,
+                ]);
+
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                dd([$response->body(), $th]);
+            }
         } else {
             return response()->json([
                 'error' => 'Document submission failed',
                 'message' => $response->body(),
             ], $response->status());
         }
+        
     }
-
-    public function getDocumentDetails($uuid, $invoiceCodeNumber)
+    public function submitConsolidated(Request $request)
     {
-        // Your existing code for getDocumentDetails
-       
+        $request->validate([
+            'invoices' => 'required|array',
+            'invoices.*.id' => 'required|integer',
+        ]);
+        $invoices = $request->input('invoices');
+        $company = $request->input('company');
 
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documents/{$uuid}/details";
-        $accessTokenResponse = $this->login();
-        $accessToken = $accessTokenResponse->getData()->access_token ?? null;
-
-        if (!$accessToken) {
-            return ['error' => 'Failed to retrieve access token'];
-        }
-
+        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
         $headers = [
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept-Language' => 'en',
+            'Content-Type' => 'application/json', 
+            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten), 
         ];
+        $documents = [];
 
-        $response = Http::withHeaders($headers)->get($url);
+        $sku = (new ConsolidatedEInvoice)->generateSku();
 
-        if ($response->successful()) {
-            return [
-                'uuid' => $response->json()['uuid'] ?? null,
-                'longId' => $response->json()['longId'] ?? null,
+        DB::beginTransaction();
+        
+        try {
+            $consolidated = ConsolidatedEInvoice::create([
+                'sku' => $sku
+            ]);
+            
+            $document = $this->xmlGenerator->generateConsolidatedXml($invoices, $consolidated, $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
+            
+            $documents[] = [
+                'format' => 'XML',
+                'document' => base64_encode($document),
+                'documentHash' => hash('sha256', $document),
+                'codeNumber' => $sku,
             ];
-        } else {
-            return ['error' => 'Failed to retrieve document details', 'message' => $response->body()];
+            
+            $payload = [
+                'documents' => $documents,
+            ];
+
+            $response = Http::withHeaders($headers)->post($url, $payload);
+            if ($response->successful()) {
+                
+                $consolidated->invoices()->sync(array_column($invoices, 'id'));
+                $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
+        
+                foreach ($acceptedDocuments as $document) {
+                    $uuid = $document['uuid'];
+                    
+                    $invoiceCodeNumber = $document['invoiceCodeNumber'];
+                    $documentDetails = $this->getDocumentDetails($uuid, $company);
+                    
+                    if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                        $consolidated->update(['uuid' => $uuid, 'status' => 'valid']);
+                        $generatedPdf = $this->generateAndSaveConsolidatedPdf($documentDetails, $invoiceCodeNumber);
+                    } else {
+                        DB::rollBack();
+                        return $documentDetails;
+                    }
+                }
+        
+                if (!empty($rejectedDocuments)) {
+                    $errorDetails = [];
+                    foreach ($rejectedDocuments as $rejectedDoc) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                            'error_code' => $rejectedDoc['error']['code'],
+                            'error_message' => $rejectedDoc['error']['message'],
+                            'error_target' => $rejectedDoc['error']['target'],
+                            'property_path' => $rejectedDoc['error']['propertyPath'],
+                            'details' => array_map(function ($detail) {
+                                return [
+                                    'code' => $detail['code'],
+                                    'message' => $detail['message'],
+                                    'target' => $detail['target'],
+                                    'propertyPath' => $detail['propertyPath'],
+                                ];
+                            }, $rejectedDoc['error']['details'] ?? []),
+                        ];
+                    }
+                    DB::rollBack();
+                    return response()->json([
+                        'error' => 'Some documents were rejected',
+                        'rejectedDocuments' => $errorDetails,
+                    ], 400);
+                }
+        
+                DB::commit();
+        
+                return response()->json([
+                    'message' => 'Document submission successful',
+                    'acceptedDocuments' => $acceptedDocuments,
+                ]);
+        
+            } else {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'Document submission failed',
+                    'message' => $response->body(),
+                ], $response->status());
+            }
+            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dd([ $th]);
+        }
+    }
+    
+    public function getDocumentDetails($uuid,$company)
+    {
+        try {
+            $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documents/{$uuid}/details";
+
+            $headers = [
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+            ];
+
+            $maxRetries = 10; 
+            $retryCount = 0;
+            $delay = 2; 
+            while ($retryCount < $maxRetries) {
+                $response = Http::withHeaders($headers)->get($url);
+                if ($response->successful()) {
+                    $validationResults = $response->json()['validationResults'] ?? null;
+    
+                    if ($validationResults) {
+                        if ($validationResults['status'] === 'Invalid') {
+                            $validationSteps = $validationResults['validationSteps'] ?? [];
+                            foreach ($validationSteps as $step) {
+                                if ($step['status'] === 'Invalid') {
+                                    $error = $step['error']['innerError'][0]['error'] ?? null;
+                                    if ($error) {
+                                        return ['error' => $error];
+                                    }
+                                }
+                            }
+                        }
+                    }
+    
+                    $longId = $response->json()['longId'] ?? null;
+                    if (!empty($longId)) {
+                        return [
+                            'uuid' => $response->json()['uuid'] ?? null,
+                            'longId' => $longId,
+                        ];
+                    }
+                } else {
+                    return ['error' => $response->body(), 'message' => $response->body()];
+                }
+    
+                $retryCount++;
+                sleep($delay); 
+            }
+        } catch (\Throwable $th) {
+            dd($th);
+        }
+
+        return ['error' => 'Failed to retrieve longId after multiple attempts'];
+    }
+
+    public function generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber)
+    {
+        try {
+            $uuid = $documentDetails['uuid'];
+            $longId = $documentDetails['longId'];
+
+            $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+            $do_ids = DeliveryOrder::where('invoice_id', $invoice->id)->pluck('id');
+            $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
+
+            $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+            $firstDeliveryProduct = $delivery->products()->first();
+            $deliveryProduct = $delivery->products()->get();
+
+            $saleProduct = $firstDeliveryProduct->saleProduct;
+            $sale = $saleProduct->sale;
+
+            $customer = $sale->customer;
+            $validationLink = $this->generateValidationLink($uuid,$longId);
+
+            $pdf = Pdf::loadView('invoice.pdf.' . $invoice->company. '_inv_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'sku' => $invoiceCodeNumber,
+                'do_sku' => join(', ', $do_sku),
+                'dos' => '$dos',
+                'do_products' => $deliveryProduct,
+                'customer' => $customer,
+                'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
+                'terms' => '', 
+                'validationLink' => $validationLink,
+                'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+            ]);
+            
+            $pdf->setPaper('A4', 'letter');
+            
+            $content = $pdf->download()->getOriginalContent();
+            
+            $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf', $content);
+            return $e;
+        } catch (\Throwable $th) {
+            dd($th);
+            return false;
         }
     }
 
-    public function generateAndSavePdf($documentDetails, $invoiceCodeNumber)
+    private function getPdfType(Collection $sale_products): string
     {
-        $uuid = $documentDetails['uuid'];
-        $longId = $documentDetails['longId'];
+        $is_hi_ten = false;
 
-        $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
-        $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
-        $firstDeliveryProduct = $delivery->products()->first();
-        $deliveryProduct = $delivery->products()->get();
+        for ($i = 0; $i < count($sale_products); $i++) {
+            $product = $sale_products[$i]->product;
 
-        $saleProduct = $firstDeliveryProduct->saleProduct;
-        $sale = $saleProduct->sale;
-        $saleProducts = $sale->products;
-
-        $qrCode = $this->generateQrCode($uuid,$longId);
-        $customer = $sale->customer;
-        $envbaseurl = 'https://einvoice-portal.example.com';
-        // 构建验证链接
-        $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
-        $pdf = Pdf::loadView('invoice.' . 'pdf.powercool' . '_inv_pdf', [
-            'date' => now()->format('d/m/Y'),
-            'sku' => $invoiceCodeNumber,
-            'do_sku' => 'join(', ', $do_sku)',
-            'dos' => '$dos',
-            'do_products' => $deliveryProduct,
-            'customer' => $customer,
-            'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
-            'terms' => '', 
-            'validationLink' => $validationLink,
-            'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
-        ]);
-        
-        $pdf->setPaper('A4', 'letter');
-        
-        $content = $pdf->download()->getOriginalContent();
-        
-        Storage::put('e-invoices/pdf/XML-INV12345.pdf', "ww". $content);
+            if ($product->type == Product::TYPE_PRODUCT) {
+                $is_hi_ten = true;
+                break;
+            }
+        }
+        return $is_hi_ten ? 'hi_ten' : 'powercool';
     }
 
-    public function sendEmail($customerId,$invoiceId){
-        $customer = Customer::findOrFail($customerId);
-        $invoice = Invoice::findOrFail($invoiceId);
-      
-        // 使用Mailable发送邮件，附上PDF发票
-        Mail::to($customer->email)->send(new EInvoiceEmail($customer, $invoice));
+   
 
-        return response()->json(['message' => '发票邮件已成功发送。']);
+    public function generateAndSaveConsolidatedPdf($documentDetails, $consolidatedSku)
+    {
+        try {
+            $uuid = $documentDetails['uuid'];
+            $longId = $documentDetails['longId'];
+
+            $consolidatedInvoice = ConsolidatedEInvoice::where('sku', $consolidatedSku)->first();
+
+            $invoices = $consolidatedInvoice->invoices;
+            $deliveryProducts = collect();
+
+            foreach ($invoices as $invoice) {
+                $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+                if ($delivery) {
+                    $deliveryProducts = $deliveryProducts->merge($delivery->products);
+                }
+            }
+
+            $validationLink = $this->generateValidationLink($uuid, $longId);
+
+            $do_skus = $invoices->map(function($invoice) {
+                return DeliveryOrder::where('invoice_id', $invoice->id)->first()->sku ?? '';
+            })->filter()->toArray();
+            $do_ids = $invoices->map(function($invoice) {
+                return DeliveryOrder::where('invoice_id', $invoice->id)->first()->id ?? '';
+            })->filter()->toArray();
+            $sale_products = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
+
+            $pdf = Pdf::loadView('invoice.pdf.consolidated.'.$this->getPdfType($sale_products).'_inv_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'sku' => $consolidatedSku,
+                'do_sku' => implode(', ', $do_skus),
+                'dos' => $invoices,
+                'do_products' => $deliveryProducts,
+                'terms' => '', 
+                'validationLink' => $validationLink,
+            ]);
+
+            $pdf->setPaper('A4', 'letter');
+            
+            $content = $pdf->download()->getOriginalContent();
+            Storage::put('public/e-invoices/pdf/consolidated/' . 'consolidated_e_invoice_'.$uuid . '.pdf', $content);
+
+            return true;
+        } catch (\Throwable $th) {
+            dd($th);
+            return false;
+        }
+    }
+
+    public function sendEmail(Request $req){
+        $id = $req->input('id');
+        $type = $req->input('type');
+        if($type == 'eInvoice'){
+            $einvoice = EInvoice::find($id);
+            $invoice = $einvoice->invoice;
+            $deliveryOrder = $invoice->deliveryOrders->first();
+            $customer = Customer::findOrFail($deliveryOrder->customer_id);
+            $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+            $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
+            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
+        }
+        else if($type == 'credit'){
+            $creditNote = CreditNote::find($id);
+            $customer = $creditNote->eInvoices()
+            ->with('invoice.deliveryOrders.customer')
+            ->get()
+            ->pluck('invoice.deliveryOrders')
+            ->flatten()
+            ->pluck('customer')
+            ->first();
+            $company = $creditNote->einvoices()->first()->invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+            $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
+            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
+        }
+        else if($type == 'debit'){
+            $debitNote = DebitNote::find($id);
+            $customer = $debitNote->eInvoices()
+            ->with('invoice.deliveryOrders.customer')
+            ->get()
+            ->pluck('invoice.deliveryOrders')
+            ->flatten()
+            ->pluck('customer')
+            ->first();
+            $company = $debitNote->einvoices()->first()->invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+            $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
+            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
+        }
+
+        return response()->json(['message' => 'email sent']);
     }
     
 
-    public function test(){
-        $uuid = 'uuid';
-        $longId = 'lonfId';
-
-        $invoice = Invoice::where('sku', 'INV2411prOIF')->first();
-        $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
-        $firstDeliveryProduct = $delivery->products()->first();
-        $deliveryProduct = $delivery->products()->get();
-        $saleProduct = $firstDeliveryProduct->saleProduct;
-        $sale = $saleProduct->sale;
-        $saleProducts = $sale->products;
-        $customer = $sale->customer;
-
-        $envbaseurl = 'https://einvoice-portal.example.com';
-        // 构建验证链接
+    public function generateValidationLink($uuid, $longId)
+    {
+        $envbaseurl = 'https://preprod.myinvois.hasil.gov.my';
         $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
-    
-        // $base64QrCode = base64_encode($qrCode);
-        return view('invoice.pdf.powercool_inv_pdf',[
-            'date' => now()->format('d/m/Y'),
-            'sku' => 'INV2411prOIF',
-            'do_sku' => 'join(', ', $do_sku)',
-            'dos' => '$dos',
-            'do_products' => $deliveryProduct,
-            'customer' => $customer,
-            'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
-            'terms' => '', 
-            'validationLink' => $validationLink,
-            'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
-        ]);
+        return $validationLink;
     }
 
     public function generateQrCode($uuid, $longId)
     {
-        // 定义 e-Invoice 基础 URL
-        $envbaseurl = 'https://einvoice-portal.example.com';
-        // 构建验证链接
-        $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
-        // dd(QrCode::size(300)->generate($validationLink));
-
-        $qrCode = QrCode::size(100)->generate($validationLink);
-
-        // 返回 QR 代码作为响应
+        $qrCode = QrCode::size(100)->generate($this->generateValidationLink($uuid,$longId));
         return $qrCode;
     }
-
-    public function generateXmlInvoice($id)
+  
+    public function download(Request $req)
     {
-        $invoice = Invoice::find($id);
-        $delivery = DeliveryOrder::where('invoice_id',$id)->first();
-        $deliveryProduct = $delivery->products()->first();
-        $saleProduct = $deliveryProduct->saleProduct;
-        $sale = $saleProduct->sale;
-        $saleProducts = $sale->products;
-        $sellerIDType = "";
-        $sellerIDValue = ""; 
-        $sellerTIN = "IG26663185010";
-        $buyerTIN = "IG26663185010";
-        $buyerIDType = "";
-        $buyerIDValue = ""; 
-        // $this->validateTIN($sellerTIN,$sellerIDType,$sellerIDValue);
-        // $this->validateTIN($sellerTIN,$buyerIDType,$buyerIDValue);
-        // 创建 XML DOMDocument 实例
-        $xml = new \DOMDocument('1.0', 'UTF-8');
-        $xml->formatOutput = true;
+        $uuid = $req->input('uuid');
+        $type = $req->input('type');
+        if($type == 'consolidated'){
+            $path = '/public/e-invoices/pdf/consolidated/consolidated_e_invoice_' . $uuid . '.pdf';
 
-        // 创建根元素 <Invoice>
-        $invoiceElement = $xml->createElement('Invoice');
-        $invoiceElement->setAttribute('xmlns', 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2');
-        $invoiceElement->setAttribute('xmlns:cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
-        $invoiceElement->setAttribute('xmlns:cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
-        $xml->appendChild($invoiceElement);
+            if (Storage::exists($path)) {
+                return Storage::download($path);
+            } else {
+                return response()->json(['error' => '文件未找到'], 404);
+            }
+        }else if($type == 'eInvoice'){
+            $path = '/public/e-invoices/pdf/e-invoices/e_invoice_' . $uuid . '.pdf';
 
-        // $ublExtensions = $this->createUBLExtensions($xml);
-        // $invoiceElement->appendChild($ublExtensions);
+            if (Storage::exists($path)) {
+                return Storage::download($path);
+            } else {
+                return response()->json(['error' => '文件未找到'], 404);
+            }
+        }else if($type == 'credit'){
+            $path = '/public/e-invoices/pdf/credit_note/credit_note_' . $uuid . '.pdf';
 
-        // 添加 <cbc:ID> 元素
-        //this is invoice number (sku)
-        $cbcId = $xml->createElement('cbc:ID', 'XML-INV12345');
-        $invoiceElement->appendChild($cbcId);
+            if (Storage::exists($path)) {
+                return Storage::download($path);
+            } else {
+                return response()->json(['error' => '文件未找到'], 404);
+            }
+        }else if($type == 'debit'){
+            $path = '/public/e-invoices/pdf/debit_note/debit_note_' . $uuid . '.pdf';
 
-        // 添加 <cbc:IssueDate> 元素
-        $utcDateTime = new DateTime("now", new DateTimeZone("UTC"));
-        $currentDate = $utcDateTime->format("Y-m-d");
-        $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
-        $invoiceElement->appendChild($cbcIssueDate);
-
-        $currentTime = $utcDateTime->format("H:i:s") . "Z";
-        $cbcIssueTime = $xml->createElement('cbc:IssueTime', $currentTime);
-        $invoiceElement->appendChild($cbcIssueTime);
-
-        // 添加 <cbc:InvoiceTypeCode> 元素
-        $invoiceTypeCode = $xml->createElement('cbc:InvoiceTypeCode', '01');
-        $invoiceTypeCode->setAttribute('listVersionID', '1.0');
-        $invoiceElement->appendChild($invoiceTypeCode);
-
-        // 添加 <cbc:DocumentCurrencyCode> 元素
-        $currencyCode = $xml->createElement('cbc:DocumentCurrencyCode', 'MYR');
-        $invoiceElement->appendChild($currencyCode);
-
-        // 添加 <cbc:TaxCurrencyCode> 元素
-        //optional
-        // $taxCurrencyCode = $xml->createElement('cbc:TaxCurrencyCode', 'MYR');
-        // $invoiceElement->appendChild($taxCurrencyCode);
-
-        // 添加更多复杂结构如 <cac:InvoicePeriod>, <cac:BillingReference> 等
-        //optional
-        // $invoicePeriod = $this->createInvoicePeriod($xml, '2024-07-01', '2024-07-31', 'Monthly');
-        // $invoiceElement->appendChild($invoicePeriod);   
-
-        //<cac:BillingReference>
-        $billingReference = $this->createBillingReference($xml, '151891-1981');
-        $invoiceElement->appendChild($billingReference);
-
-        $additionalDocumentReference1 = $this->createAdditionalDocumentReference($xml, 'L1', 'CustomsImportForm');
-        $invoiceElement->appendChild($additionalDocumentReference1);
-
-        // 附加第二个 AdditionalDocumentReference 节点，包含 DocumentDescription
-        $additionalDocumentReference2 = $this->createAdditionalDocumentReference($xml, 'FTA', 'FreeTradeAgreement', 'Sample Description');
-        $invoiceElement->appendChild($additionalDocumentReference2);
-
-        // 附加第三个 AdditionalDocumentReference 节点，不包含 DocumentDescription
-        $additionalDocumentReference3 = $this->createAdditionalDocumentReference($xml, 'L1', 'K2');
-        $invoiceElement->appendChild($additionalDocumentReference3);
-
-        // 附加第四个 AdditionalDocumentReference 节点，仅包含 ID
-        $additionalDocumentReference4 = $this->createAdditionalDocumentReference($xml, 'L1');
-        $invoiceElement->appendChild($additionalDocumentReference4);
-        // 继续添加其他元素...
-
-        $signatureElement = $this->createSignatureElement(
-            $xml, 
-            'urn:oasis:names:specification:ubl:signature:Invoice', 
-            'urn:oasis:names:specification:ubl:dsig:enveloped:xades'
-        );
-        $invoiceElement->appendChild($signatureElement);
-
-        // 创建 AccountingSupplierParty 节点并附加到 invoiceElement
-        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN);
-        $invoiceElement->appendChild($accountingSupplierParty);
-
-        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN);
-        $invoiceElement->appendChild($accountingCustomerParty);
-
-        $deliveryElement = $this->createDeliveryElement($xml);
-        $invoiceElement->appendChild($deliveryElement);
-
-        $paymentMeansElement = $this->createPaymentMeansElement($xml);
-        $invoiceElement->appendChild($paymentMeansElement);
-
-        $paymentTermsElement = $this->createPaymentTermsElement($xml);
-        $invoiceElement->appendChild($paymentTermsElement);
-
-        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        $invoiceElement->appendChild($prepaidPaymentElement);
-
-        $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Sample Description', 100);
-        $invoiceElement->appendChild($allowanceCharge1);
-
-        // 创建第二个 AllowanceCharge 节点并附加到 invoiceElement
-        $allowanceCharge2 = $this->createAllowanceChargeElement($xml, true, 'Service charge', 100);
-        $invoiceElement->appendChild($allowanceCharge2);
-
-        $taxTotal = $this->createTaxTotalElement($xml, 87.63, 87.63);
-        $invoiceElement->appendChild($taxTotal);
-
-        $legalMonetaryTotal = $this->createLegalMonetaryTotalElement(
-            $xml, 
-            1436.50, 
-            1436.50, 
-            1436.50, 
-            1436.50, 
-            1436.50, 
-            0.30, 
-            1436.50
-        );
-        $invoiceElement->appendChild($legalMonetaryTotal);
-
-        $allowanceCharges = [
-            [
-                'chargeIndicator' => false,
-                'reason' => 'Sample Description',
-                'multiplierFactor' => 0.15,
-                'amount' => 100
-            ],
-            [
-                'chargeIndicator' => true,
-                'reason' => 'Sample Description',
-                'multiplierFactor' => 0.10,
-                'amount' => 100
-            ]
-        ];
-        
-        // 创建 InvoiceLine 元素并附加到 invoiceElement
-        foreach ($saleProducts as $saleProduct) {
-            // 提取每个产品的信息
-            $id = $saleProduct->id; // 产品 ID
-            $invoicedQuantity = $saleProduct->qty; // 数量
-            $lineExtensionAmount = $saleProduct->qty * $saleProduct->unit_price; // 行金额
-            $taxAmount = 0; // 预设税额为 0，可以根据需要计算
-            $taxableAmount = $lineExtensionAmount; // 可征税金额
-            $taxPercent = 6.00; // 税率，假设为 6.00
-            $taxExemptionReason = 'Exempt New Means of Transport'; // 税收豁免原因
-            $description = $saleProduct->desc ?? 'No Description'; // 产品描述
-            $originCountryCode = 'MYS'; // 产地国家代码
-            $itemClassificationCode = $saleProduct->product->sku; // 产品分类代码
-            $priceAmount = $saleProduct->unit_price; // 单价
-            $itemPriceExtensionAmount = $lineExtensionAmount; // 产品价格扩展金额
-            $allowanceCharges = []; // 根据需要提供免除费用
-        
-            // 调用 createInvoiceLineElement 方法创建发票行元素
-            $invoiceLine = $this->createInvoiceLineElement(
-                $xml,
-                (string) $id,
-                $invoicedQuantity,
-                $lineExtensionAmount,
-                $allowanceCharges,
-                $taxAmount,
-                $taxableAmount,
-                $taxPercent,
-                $taxExemptionReason,
-                $description,
-                $originCountryCode,
-                $itemClassificationCode,
-                $priceAmount,
-                $itemPriceExtensionAmount
-            );
-        
-            // 将生成的发票行元素添加到发票元素中
-            $invoiceElement->appendChild($invoiceLine);
+            if (Storage::exists($path)) {
+                return Storage::download($path);
+            } else {
+                return response()->json(['error' => '文件未找到'], 404);
+            }
         }
-        // $xml,
-        // string $id,
-        // float $invoicedQuantity,
-        // float $lineExtensionAmount,
-        // array $allowanceCharges,
-        // float $taxAmount,
-        // float $taxableAmount,
-        // float $taxPercent,
-        // string $taxExemptionReason,
-        // string $description,
-        // string $originCountryCode,
-        // string $itemClassificationCode,
-        // float $priceAmount,
-        // float $itemPriceExtensionAmount
-        
-        // 返回 XML 内容
-        $xmlContent = $xml->saveXML();
-        Storage::put('e-invoices/XML-INV12345.xml', $xmlContent);
-
-        return $xmlContent;
-    }
-
-    private function createSignatureInformation($xml)
-    {
-        // 创建签名信息节点
-        
-        $signatureInformation = $xml->createElement('sac:SignatureInformation');
-
-        // 添加 ID 和参考 ID
-        $cbcID = $xml->createElement('cbc:ID', 'urn:oasis:names:specification:ubl:signature:1');
-        $referencedSignatureID = $xml->createElement('sbc:ReferencedSignatureID', 'urn:oasis:names:specification:ubl:signature:Invoice');
-        $signatureInformation->appendChild($cbcID);
-        $signatureInformation->appendChild($referencedSignatureID);
-
-        // 创建 ds:Signature 元素和 SignedInfo 部分
-        $signature = $xml->createElementNS('http://www.w3.org/2000/09/xmldsig#', 'ds:Signature');
-        
-        $signedInfo = $this->createSignedInfo($xml);
-        $signature->appendChild($signedInfo);
-
-        // 添加签名值
-        $signatureValue = $xml->createElement('ds:SignatureValue', 'kZhLB843E/sJEd66jI1lcfRheCZXaaHs9EjYOktMy9f/Q');
-        $signature->appendChild($signatureValue);
-
-        // 添加密钥信息
-        $keyInfo = $this->createKeyInfo($xml);
-        $signature->appendChild($keyInfo);
-
-        $object = $this->createObject($xml);
-        $signature->appendChild($object);
-
-        $signatureInformation->appendChild($signature);
-
-        return $signatureInformation;
-    }
-
-    /**
-     * 创建 SignedInfo 节点
-     */
-    private function createSignedInfo($xml)
-    {
-        $signedInfo = $xml->createElement('ds:SignedInfo');
-
-        // 规范化方法
-        $canonicalizationMethod = $xml->createElement('ds:CanonicalizationMethod');
-        $canonicalizationMethod->setAttribute('Algorithm', 'http://www.w3.org/2001/10/xml-exc-c14n#');
-        $signedInfo->appendChild($canonicalizationMethod);
-
-        // 签名方法
-        $signatureMethod = $xml->createElement('ds:SignatureMethod');
-        $signatureMethod->setAttribute('Algorithm', 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256');
-        $signedInfo->appendChild($signatureMethod);
-
-        // 添加 Reference 节点
-        $reference1 = $this->createReferenceId($xml, 'id-doc-signed-data', '');
-        $signedInfo->appendChild($reference1);
-
-        // 添加第二个 Reference 节点
-        $reference2 = $this->createReferenceType($xml, 'id-xades-signed-props', 'http://www.w3.org/2000/09/xmldsig#SignatureProperties');
-        $signedInfo->appendChild($reference2);
-
-        return $signedInfo;
-    }
-
-    /**
-     * 创建 Reference 节点
-     */
-    private function createReferenceId($xml, $id, $uri)
-    {
-        $reference = $xml->createElement('ds:Reference');
-        $reference->setAttribute('Id', $id);
-        $reference->setAttribute('URI', $uri);
-
-        $transforms1 = $xml->createElement('ds:Transforms');
-        $reference->appendChild($transforms1);
-
-        $transform1_1 = $xml->createElement('ds:Transform');
-        $transform1_1->setAttribute('Algorithm', 'http://www.w3.org/TR/1999/REC-xpath-19991116');
-        $xpath1_1 = $xml->createElement('ds:XPath', 'not(//ancestor-or-self::ext:UBLExtensions)');
-        $transform1_1->appendChild($xpath1_1);
-        $transforms1->appendChild($transform1_1);
-
-        $transform1_2 = $xml->createElement('ds:Transform');
-        $transform1_2->setAttribute('Algorithm', 'http://www.w3.org/TR/1999/REC-xpath-19991116');
-        $xpath1_2 = $xml->createElement('ds:XPath', 'not(//ancestor-or-self::cac:Signature)');
-        $transform1_2->appendChild($xpath1_2);
-        $transforms1->appendChild($transform1_2);
-
-        $transform1_3 = $xml->createElement('ds:Transform');
-        $transform1_3->setAttribute('Algorithm', 'http://www.w3.org/2001/10/xml-exc-c14n#');
-        $transforms1->appendChild($transform1_3);
-
-        // DigestMethod and DigestValue
-        $digestMethod = $xml->createElement('ds:DigestMethod');
-        $digestMethod->setAttribute('Algorithm', 'http://www.w3.org/2001/04/xmlenc#sha256');
-        $digestValue = $xml->createElement('ds:DigestValue', 'your_digest_value_here');
-        $reference->appendChild($digestMethod);
-        $reference->appendChild($digestValue);
-
-        return $reference;
-    }
-
-    private function createReferenceType($xml, $id, $uri)
-    {
-        $reference = $xml->createElement('ds:Reference');
-        $reference->setAttribute('Type', $id);
-        $reference->setAttribute('URI', $uri);
-
-        // DigestMethod and DigestValue
-        $digestMethod = $xml->createElement('ds:DigestMethod');
-        $digestMethod->setAttribute('Algorithm', 'http://www.w3.org/2001/04/xmlenc#sha256');
-        $digestValue = $xml->createElement('ds:DigestValue', 'your_digest_value_here');
-        $reference->appendChild($digestMethod);
-        $reference->appendChild($digestValue);
-
-        return $reference;
-    }
-
-    /**
-     * 创建 KeyInfo 节点
-     */
-    private function createKeyInfo($xml)
-    {
-        $keyInfo = $xml->createElement('ds:KeyInfo');
-        $x509Data = $xml->createElement('ds:X509Data');
-        $x509Certificate = $xml->createElement('ds:X509Certificate', 'MIIFlDCCA3ygAwIBAgIQeomZorO+0AwmW2BRdWJMxT');
-        $x509Data->appendChild($x509Certificate);
-        $keyInfo->appendChild($x509Data);
-
-        return $keyInfo;
-    }
-
-    private function createObject($xml)
-    {
-        $object = $xml->createElement('ds:Object');
-
-        // 创建 <xades:QualifyingProperties> 元素
-        $qualifyingProperties = $xml->createElement('xades:QualifyingProperties');
-        $qualifyingProperties->setAttribute('xmlns:xades', 'http://uri.etsi.org/01903/v1.3.2#');
-        $qualifyingProperties->setAttribute('Target', 'signature');
-
-        // 创建 <xades:SignedProperties> 元素
-        $signedProperties = $xml->createElement('xades:SignedProperties');
-        $signedProperties->setAttribute('Id', 'id-xades-signed-props');
-
-        // 创建 <xades:SignedSignatureProperties> 元素
-        $signedSignatureProperties = $xml->createElement('xades:SignedSignatureProperties');
-
-        // 添加 <xades:SigningTime>
-        $signingTime = $xml->createElement('xades:SigningTime', '2024-07-23T16:31:06Z');
-        $signedSignatureProperties->appendChild($signingTime);
-
-        // 创建 <xades:SigningCertificate>
-        $signingCertificate = $xml->createElement('xades:SigningCertificate');
-        $cert = $xml->createElement('xades:Cert');
-
-        // 添加 <xades:CertDigest> 和子元素
-        $certDigest = $xml->createElement('xades:CertDigest');
-        $digestMethod = $xml->createElement('ds:DigestMethod');
-        $digestMethod->setAttribute('Algorithm', 'http://www.w3.org/2001/04/xmlenc#sha256');
-        $digestValue = $xml->createElement('ds:DigestValue', 'KKBSTyiPKGkGl1AFqcPziKCEIDYGtnYUTQN4ukO7G40=');
-
-        $certDigest->appendChild($digestMethod);
-        $certDigest->appendChild($digestValue);
-
-        // 将 <xades:CertDigest> 添加到 <xades:Cert>
-        $cert->appendChild($certDigest);
-
-        // 创建 <xades:IssuerSerial> 和子元素
-        $issuerSerial = $xml->createElement('xades:IssuerSerial');
-        $x509IssuerName = $xml->createElement('ds:X509IssuerName', 'CN=Trial LHDNM Sub CA V1, OU=Terms of use at http://www.posdigicert.com.my, O=LHDNM, C=MY');
-        $x509SerialNumber = $xml->createElement('ds:X509SerialNumber', '162880276254639189035871514749820882117');
-
-        $issuerSerial->appendChild($x509IssuerName);
-        $issuerSerial->appendChild($x509SerialNumber);
-
-        // 将 <xades:IssuerSerial> 添加到 <xades:Cert>
-        $cert->appendChild($issuerSerial);
-
-        // 将 <xades:Cert> 添加到 <xades:SigningCertificate>
-        $signingCertificate->appendChild($cert);
-
-        // 将 <xades:SigningCertificate> 添加到 <xades:SignedSignatureProperties>
-        $signedSignatureProperties->appendChild($signingCertificate);
-
-        // 将 <xades:SignedSignatureProperties> 添加到 <xades:SignedProperties>
-        $signedProperties->appendChild($signedSignatureProperties);
-
-        // 将 <xades:SignedProperties> 添加到 <xades:QualifyingProperties>
-        $qualifyingProperties->appendChild($signedProperties);
-
-        // 将 <xades:QualifyingProperties> 添加到 <ds:Object>
-        $object->appendChild($qualifyingProperties);
-
-        return $object;
-    }
-
-    private function createUBLExtensions($xml)
-    {
-        $ublExtensions = $xml->createElementNS('urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2', 'UBLExtensions');
-        
-        $UBLExtension = $xml->createElement('UBLExtension');
-        $ublExtensions->appendChild($UBLExtension);
-
-        $ExtensionURI = $xml->createElement('ExtensionURI', 'urn:oasis:names:specification:ubl:dsig:enveloped:xades');
-        $UBLExtension->appendChild($ExtensionURI);
-
-        $ExtensionContent = $xml->createElement('ExtensionContent');
-        $UBLExtension->appendChild($ExtensionContent);
-
-        $ublDocumentSignatures = $xml->createElementNS(
-            'urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2', 
-            'sig:UBLDocumentSignatures'
-        );
-        $ublDocumentSignatures->setAttribute('xmlns:sig', 'urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2');
-        $ublDocumentSignatures->setAttribute('xmlns:sac', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2');
-        $ublDocumentSignatures->setAttribute('xmlns:sbc', 'urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2');
-        $ExtensionContent->appendChild($ublDocumentSignatures);
-
-        $signatureInformation = $this->createSignatureInformation($xml);
-        $ublDocumentSignatures->appendChild($signatureInformation);
-
-        return $ublExtensions;
     }
     
-    public function createInvoicePeriod($xml,$startDate,$endDate,$description)
+    public function submitNote(Request $request)
     {
-        //three of these optional
-        // 创建 InvoicePeriod 元素
-        $invoicePeriod = $xml->createElement('cac:InvoicePeriod');
-        
-        // 创建并附加 StartDate 元素
-        $startDateElement = $xml->createElement('cbc:StartDate', $startDate);
-        $invoicePeriod->appendChild($startDateElement);
-        
-        // 创建并附加 EndDate 元素
-        $endDateElement = $xml->createElement('cbc:EndDate', $endDate);
-        $invoicePeriod->appendChild($endDateElement);
-        
-        // 创建并附加 Description 元素
-        $descriptionElement = $xml->createElement('cbc:Description', $description);
-        $invoicePeriod->appendChild($descriptionElement);
-        
-        return $invoicePeriod;
-    }
+        $noteType = Session::get('note_type');
+        $type = Session::get('invoice_type');
+        $company = Session::get('company');
+        $invoices = $request->input('invoices');
+        $totals = [];
+        $qtyDifferences = [];
+        $eInvoiceIds = [];
+        $totalsModified = 0;
 
-    public function createBillingReference($xml,$documentId)
-    {
-        // 创建 BillingReference 元素
-        $billingReference = $xml->createElement('cac:BillingReference');
-        
-        // 创建 AdditionalDocumentReference 元素
-        $additionalDocumentReference = $xml->createElement('cac:AdditionalDocumentReference');
-        
-        // 创建并附加 ID 元素
-        $idElement = $xml->createElement('cbc:ID', $documentId);
-        $additionalDocumentReference->appendChild($idElement);
-        
-        // 将 AdditionalDocumentReference 添加到 BillingReference
-        $billingReference->appendChild($additionalDocumentReference);
-        
-        return $billingReference;
-    }
+        DB::beginTransaction();
 
-    public function createAdditionalDocumentReference($xml, $documentId,$documentType = null,$documentDescription = null)
-    {
-        // 创建 AdditionalDocumentReference 元素
-        $additionalDocumentReference = $xml->createElement('cac:AdditionalDocumentReference');
-        
-        // 创建并附加 ID 元素
-        $idElement = $xml->createElement('cbc:ID', $documentId);
-        $additionalDocumentReference->appendChild($idElement);
-        
-        // 根据需要创建并附加 DocumentType 元素
-        if ($documentType !== null) {
-            $documentTypeElement = $xml->createElement('cbc:DocumentType', $documentType);
-            $additionalDocumentReference->appendChild($documentTypeElement);
+        try {
+            foreach ($invoices as $invoice) {
+                $invoiceUuid = $invoice['invoice_uuid'];
+
+                if ($type == 'eInvoice') {
+                    $eInvoice = EInvoice::where('uuid', $invoiceUuid)->first();
+                } else {
+                    $eInvoice = ConsolidatedEInvoice::where('uuid', $invoiceUuid)->first();
+                }
+
+                if ($eInvoice && !in_array($eInvoice->id, $eInvoiceIds)) {
+                    $eInvoiceIds[] = $eInvoice->id;
+                }
+
+                foreach ($invoice['items'] as $item) {
+                    $saleProduct = SaleProduct::find($item['product_id']);
+
+                    if (!$saleProduct) {
+                        continue;
+                    }
+
+                    $saleId = $saleProduct->sale->id;
+                    $amount = $item['qty'] * $item['price'];
+
+                    if (!isset($totals[$saleId])) {
+                        $totals[$saleId] = 0;
+                    }
+                    $totals[$saleId] += $amount;
+
+                    $qtyDifference = abs($saleProduct->qty - $item['qty']);
+                    $priceDifference = abs($saleProduct->unit_price - $item['price']);
+
+                    if ($qtyDifference != 0 || $priceDifference != 0) {
+                        $totalsModified += $qtyDifference * $item['price'];
+                        $qtyDifferences[] = [
+                            'id' => $item['product_id'],
+                            'diff' => $qtyDifference == 0 ? $saleProduct->qty : $qtyDifference,
+                            'price' => $item['price']
+                        ];
+                    }
+
+                    $saleProduct->update([
+                        'qty' => $item['qty'],
+                        'unit_price' => $item['price']
+                    ]);
+
+                    $customer = $saleProduct->sale->customer;
+                }
+            }
+
+            if (empty($qtyDifferences)) {
+                return response()->json([
+                    'message' => 'Nothing to Change!',
+                ]);
+            }
+
+            foreach ($totals as $saleId => $totalAmount) {
+                Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
+            }
+
+            if ($noteType == 'credit') {
+                $sku = (new CreditNote)->generateSku();
+                $note = CreditNote::create(['sku' => $sku]);
+            } else {
+                $sku = (new DebitNote)->generateSku();
+                $note = DebitNote::create(['sku' => $sku]);
+            }
+
+            if ($type == 'eInvoice') {
+                $note->eInvoices()->attach($eInvoiceIds);
+            } else {
+                $note->consolidatedEInvoice()->attach($eInvoiceIds);
+            }
+
+            $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
+            $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin,$customer);
+            
+            $result = $this->syncNote($document, $note, $qtyDifferences, $company);
+            if(!empty($result->original['errorDetails'])){
+                DB::rollBack();
+            }else{
+                DB::commit();
+            }
+            return $result;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dd($th);
         }
-        
-        // 根据需要创建并附加 DocumentDescription 元素
-        if ($documentDescription !== null) {
-            $documentDescriptionElement = $xml->createElement('cbc:DocumentDescription', $documentDescription);
-            $additionalDocumentReference->appendChild($documentDescriptionElement);
-        }
-        
-        return $additionalDocumentReference;
     }
 
-    public function createSignatureElement($xml, $signatureId,$signatureMethod)
+
+    public function syncNote($document, $note, $qtyDifferences, $company)
     {
-        // 创建 Signature 元素
-        $signatureElement = $xml->createElement('cac:Signature');
-        
-        // 创建并附加 ID 元素
-        $idElement = $xml->createElement('cbc:ID', $signatureId);
-        $signatureElement->appendChild($idElement);
-        
-        // 创建并附加 SignatureMethod 元素
-        $signatureMethodElement = $xml->createElement('cbc:SignatureMethod', $signatureMethod);
-        $signatureElement->appendChild($signatureMethodElement);
-        
-        return $signatureElement;
-    }
-
-    public function createAccountingSupplierPartyElement($xml,$sellerTIN)
-    {
-        // 创建 AccountingSupplierParty 元素
-        $accountingSupplierParty = $xml->createElement('cac:AccountingSupplierParty');
-
-        // 添加 AdditionalAccountID
-        $additionalAccountID = $xml->createElement('cbc:AdditionalAccountID', 'CPT-CCN-W-211111-KL-000002');
-        $additionalAccountID->setAttribute('schemeAgencyName', 'PowerCool');
-        $accountingSupplierParty->appendChild($additionalAccountID);
-
-        // 创建 Party 节点
-        $party = $xml->createElement('cac:Party');
-        $accountingSupplierParty->appendChild($party);
-
-        // 添加 IndustryClassificationCode
-        $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $this->msic);
-        $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator');
-        $party->appendChild($industryClassificationCode);
-
-        // 添加 PartyIdentification 节点
-        $partyIdentifications = [
-            ['schemeID' => 'TIN', 'ID' => $sellerTIN],
-            ['schemeID' => 'BRN', 'ID' => "202001234567"],
-            ['schemeID' => 'SST', 'ID' => 'A01-2345-67891012'],
+        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $headers = [
+            'Accept' => 'application/json',
+            'Accept-Language' => 'en',
+            'Content-Type' => 'application/json', 
+            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten), 
         ];
 
-        foreach ($partyIdentifications as $identification) {
-            $partyIdentification = $xml->createElement('cac:PartyIdentification');
-            $idElement = $xml->createElement('cbc:ID', $identification['ID']);
-            $idElement->setAttribute('schemeID', $identification['schemeID']);
-            $partyIdentification->appendChild($idElement);
-            $party->appendChild($partyIdentification);
-        }
-
-        // 添加 PostalAddress
-        $postalAddress = $xml->createElement('cac:PostalAddress');
-        $cityName = $xml->createElement('cbc:CityName', 'Kuala Lumpur');
-        $postalZone = $xml->createElement('cbc:PostalZone', '50480');
-        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', '14');
-        $postalAddress->appendChild($cityName);
-        $postalAddress->appendChild($postalZone);
-        $postalAddress->appendChild($countrySubentityCode);
-
-        // 添加 AddressLine
-        $addressLines = ['Lot 66', 'Bangunan Merdeka', 'Persiaran Jaya'];
-        foreach ($addressLines as $line) {
-            $addressLine = $xml->createElement('cac:AddressLine');
-            $lineElement = $xml->createElement('cbc:Line', $line);
-            $addressLine->appendChild($lineElement);
-            $postalAddress->appendChild($addressLine);
-        }
-
-        // 添加 Country
-        $country = $xml->createElement('cac:Country');
-        $identificationCode = $xml->createElement('cbc:IdentificationCode', 'MYS');
-        $identificationCode->setAttribute('listID', 'ISO3166-1');
-        $identificationCode->setAttribute('listAgencyID', '6');
-        $country->appendChild($identificationCode);
-        $postalAddress->appendChild($country);
-
-        $party->appendChild($postalAddress);
-
-        // 添加 PartyLegalEntity
-        $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $registrationName = $xml->createElement('cbc:RegistrationName', "PowerCool");
-        $partyLegalEntity->appendChild($registrationName);
-        $party->appendChild($partyLegalEntity);
-
-        // 添加 Contact
-        $contact = $xml->createElement('cac:Contact');
-        $telephone = $xml->createElement('cbc:Telephone', '+60123456789');
-        $email = $xml->createElement('cbc:ElectronicMail', 'supplier@email.com');
-        $contact->appendChild($telephone);
-        $contact->appendChild($email);
-        $party->appendChild($contact);
-
-        return $accountingSupplierParty;
-    }
-
-    public function createAccountingCustomerPartyElement($xml,$buyerTIN)
-    {
-        // 创建 AccountingCustomerParty 元素
-        $accountingCustomerParty = $xml->createElement('cac:AccountingCustomerParty');
-
-        // 创建 Party 节点
-        $party = $xml->createElement('cac:Party');
-        $accountingCustomerParty->appendChild($party);
-
-        // 添加 PartyIdentification 节点
-        $partyIdentifications = [
-            ['schemeID' => 'TIN', 'ID' => $buyerTIN],
-            ['schemeID' => 'BRN', 'ID' => "202001234567"],
-            ['schemeID' => 'SST', 'ID' => 'NA'],
+        $documents = [];
+        $documents[] = [
+            'format' => 'XML',
+            'document' => base64_encode($document),
+            'documentHash' => hash('sha256', $document),
+            'codeNumber' => $note->sku,
+        ];
+        $payload = [
+            'documents' => $documents,
         ];
 
-        foreach ($partyIdentifications as $identification) {
-            $partyIdentification = $xml->createElement('cac:PartyIdentification');
-            $idElement = $xml->createElement('cbc:ID', $identification['ID']);
-            $idElement->setAttribute('schemeID', $identification['schemeID']);
-            $partyIdentification->appendChild($idElement);
-            $party->appendChild($partyIdentification);
+        DB::beginTransaction();
+
+        try {
+            $response = Http::withHeaders($headers)->post($url, $payload);
+
+            if ($response->successful()) {
+                $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
+                $errorDetails = [];
+                $successfulDocuments = [];
+
+                foreach ($acceptedDocuments as $document) {
+                    $uuid = $document['uuid'];
+                    $invoiceCodeNumber = $document['invoiceCodeNumber'];
+                    $documentDetails = $this->getDocumentDetails($uuid, $company);
+
+                    if (isset($documentDetails['error'])) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $invoiceCodeNumber,
+                            'error' => $documentDetails['error'],
+                        ];
+                        continue;
+                    }
+
+                    if ($note instanceof CreditNote) {
+                        $note = CreditNote::where('sku', $invoiceCodeNumber)->first();
+                        if ($note) {
+                            $note->update([
+                                'uuid' => $uuid,
+                                'status' => 'valid'
+                            ]);
+                        }
+                    } else {
+                        $note = DebitNote::where('sku', $invoiceCodeNumber)->first();
+                        if ($note) {
+                            $note->update([
+                                'uuid' => $uuid,
+                                'status' => 'valid'
+                            ]);
+                        }
+                    }
+
+                    $successfulDocuments[] = $invoiceCodeNumber;
+
+                    if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences);
+                    }
+                }
+
+                
+                if (!empty($rejectedDocuments)) {
+                    $errorDetails = [];
+                    foreach ($rejectedDocuments as $rejectedDoc) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                            'error_code' => $rejectedDoc['error']['code'],
+                            'error_message' => $rejectedDoc['error']['message'],
+                            'error_target' => $rejectedDoc['error']['target'],
+                            'property_path' => $rejectedDoc['error']['propertyPath'],
+                            'details' => array_map(function ($detail) {
+                                return [
+                                    'code' => $detail['code'],
+                                    'message' => $detail['message'],
+                                    'target' => $detail['target'],
+                                    'propertyPath' => $detail['propertyPath'],
+                                ];
+                            }, $rejectedDoc['error']['details'] ?? []),
+                        ];
+                    }
+                    DB::rollBack();
+                    // return response()->json([
+                    //     'error' => 'Some documents were rejected',
+                    //     'rejectedDocuments' => $errorDetails,
+                    // ], 400);
+                }else{
+                    DB::commit();
+                }
+
+                return response()->json([
+                    'message' => 'Document submission completed',
+                    'successfulDocuments' => $successfulDocuments,
+                    'errorDetails' => $errorDetails,
+                ]);
+
+            } else {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'Document submission failed',
+                    'message' => $response->body(),
+                ], $response->status());
+            }
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dd([$response->body(), $th]);
         }
-
-        // 添加 PostalAddress
-        $postalAddress = $xml->createElement('cac:PostalAddress');
-        $cityName = $xml->createElement('cbc:CityName', 'Kuala Lumpur');
-        $postalZone = $xml->createElement('cbc:PostalZone', '50480');
-        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', '14');
-        $postalAddress->appendChild($cityName);
-        $postalAddress->appendChild($postalZone);
-        $postalAddress->appendChild($countrySubentityCode);
-
-        // 添加 AddressLine
-        $addressLines = ['Lot 66', 'Bangunan Merdeka', 'Persiaran Jaya'];
-        foreach ($addressLines as $line) {
-            $addressLine = $xml->createElement('cac:AddressLine');
-            $lineElement = $xml->createElement('cbc:Line', $line);
-            $addressLine->appendChild($lineElement);
-            $postalAddress->appendChild($addressLine);
-        }
-
-        // 添加 Country
-        $country = $xml->createElement('cac:Country');
-        $identificationCode = $xml->createElement('cbc:IdentificationCode', 'MYS');
-        $identificationCode->setAttribute('listID', 'ISO3166-1');
-        $identificationCode->setAttribute('listAgencyID', '6');
-        $country->appendChild($identificationCode);
-        $postalAddress->appendChild($country);
-
-        $party->appendChild($postalAddress);
-
-        // 添加 PartyLegalEntity
-        $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $registrationName = $xml->createElement('cbc:RegistrationName', "Buyer's Name");
-        $partyLegalEntity->appendChild($registrationName);
-        $party->appendChild($partyLegalEntity);
-
-        // 添加 Contact
-        $contact = $xml->createElement('cac:Contact');
-        $telephone = $xml->createElement('cbc:Telephone', '+60123456780');
-        $email = $xml->createElement('cbc:ElectronicMail', 'buyer@email.com');
-        $contact->appendChild($telephone);
-        $contact->appendChild($email);
-        $party->appendChild($contact);
-
-        return $accountingCustomerParty;
     }
 
-    public function createDeliveryElement($xml)
+
+    public function generateAndSaveNotePdf($documentDetails, $note,$items)
     {
-        // 创建 Delivery 元素
-        $delivery = $xml->createElement('cac:Delivery');
+        try {
+            $uuid = $documentDetails['uuid'];
+            $longId = $documentDetails['longId'];
 
-        // 创建 DeliveryParty 节点
-        $deliveryParty = $xml->createElement('cac:DeliveryParty');
+            $total = 0;
+            $productDetails = [];
 
-        // 添加 PartyIdentification 节点
-        $partyIdentifications = [
-            ['schemeID' => 'TIN', 'ID' => "IG26663185010"],
-            ['schemeID' => 'BRN', 'ID' => "Recipient's BRN"],
-        ];
+            foreach ($items as $key => $item) {
+                $saleProduct = SaleProduct::find($item['id']);
 
-        foreach ($partyIdentifications as $identification) {
-            $partyIdentification = $xml->createElement('cac:PartyIdentification');
-            $idElement = $xml->createElement('cbc:ID', $identification['ID']);
-            $idElement->setAttribute('schemeID', $identification['schemeID']);
-            $partyIdentification->appendChild($idElement);
-            $deliveryParty->appendChild($partyIdentification);
-        }
+                if ($saleProduct) {
+                    $productDetails[] = [
+                        'index' => $key + 1,
+                        'model_name' => $saleProduct->product->model_name ?? '',
+                        'qty' => $item['diff'],
+                        'uom' => $saleProduct->product->uom ?? '',
+                        'unit_price' => $item['price'],
+                        'subtotal' => $item['diff'] * $item['price'],
+                    ];
 
-        // 添加 PostalAddress
-        $postalAddress = $xml->createElement('cac:PostalAddress');
-        $postalAddress->appendChild($xml->createElement('cbc:CityName', 'Kuala Lumpur'));
-        $postalAddress->appendChild($xml->createElement('cbc:PostalZone', '50480'));
-        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', '14'));
-
-        $addressLines = ['Lot 66', 'Bangunan Merdeka', 'Persiaran Jaya'];
-        foreach ($addressLines as $line) {
-            $addressLine = $xml->createElement('cac:AddressLine');
-            $lineElement = $xml->createElement('cbc:Line', $line);
-            $addressLine->appendChild($lineElement);
-            $postalAddress->appendChild($addressLine);
-        }
-
-        $country = $xml->createElement('cac:Country');
-        $identificationCode = $xml->createElement('cbc:IdentificationCode', 'MYS');
-        $identificationCode->setAttribute('listID', 'ISO3166-1');
-        $identificationCode->setAttribute('listAgencyID', '6');
-        $country->appendChild($identificationCode);
-        $postalAddress->appendChild($country);
-
-        $deliveryParty->appendChild($postalAddress);
-
-        // 添加 PartyLegalEntity
-        $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $partyLegalEntity->appendChild($xml->createElement('cbc:RegistrationName', "Recipient's Name"));
-        $deliveryParty->appendChild($partyLegalEntity);
-
-        // 添加 DeliveryParty 到 Delivery
-        $delivery->appendChild($deliveryParty);
-
-        // 创建 Shipment 节点
-        $shipment = $xml->createElement('cac:Shipment');
-        $shipment->appendChild($xml->createElement('cbc:ID', '1234'));
-
-        // 创建 FreightAllowanceCharge 节点
-        $freightAllowanceCharge = $xml->createElement('cac:FreightAllowanceCharge');
-        $freightAllowanceCharge->appendChild($xml->createElement('cbc:ChargeIndicator', 'true'));
-        $freightAllowanceCharge->appendChild($xml->createElement('cbc:AllowanceChargeReason', 'Service charge'));
-
-        $amountElement = $xml->createElement('cbc:Amount', '100');
-        $amountElement->setAttribute('currencyID', 'MYR');
-        $freightAllowanceCharge->appendChild($amountElement);
-
-        $shipment->appendChild($freightAllowanceCharge);
-        $delivery->appendChild($shipment);
-
-        return $delivery;
-    }
-
-    public function createPaymentMeansElement($xml)
-    {
-        // 创建 PaymentMeans 元素
-        $paymentMeans = $xml->createElement('cac:PaymentMeans');
-
-        // 添加 PaymentMeansCode 节点
-        $paymentMeansCode = $xml->createElement('cbc:PaymentMeansCode', '01');
-        $paymentMeans->appendChild($paymentMeansCode);
-
-        // 创建并添加 PayeeFinancialAccount 节点
-        $payeeFinancialAccount = $xml->createElement('cac:PayeeFinancialAccount');
-        $accountID = $xml->createElement('cbc:ID', '1234567890');
-        $payeeFinancialAccount->appendChild($accountID);
+                    $total += $item['diff'] * $item['price'];
+                }
+            }
+            
+            $eInvoices = $note->eInvoices;
+            
+            if ($eInvoices->isNotEmpty()) {
+                $eInvoice = $eInvoices->first();
         
-        // 将 PayeeFinancialAccount 添加到 PaymentMeans
-        $paymentMeans->appendChild($payeeFinancialAccount);
+                $invoice = $eInvoice->invoice;
+        
+                $deliveryOrder = $invoice->deliveryOrders->first();
+        
+                $customer = Customer::find($deliveryOrder->customer_id);
 
-        return $paymentMeans;
-    }
+                $sale = $deliveryOrder->products->first()->saleProduct->sale;
+            } else {
+                $customer = null;
+            }
+          
+            $saleProductIds = array_column($items, 'id');
 
-    public function createPaymentTermsElement($xml)
-    {
-        // 创建 PaymentTerms 元素
-        $paymentTerms = $xml->createElement('cac:PaymentTerms');
-
-        // 添加 Note 节点
-        $note = $xml->createElement('cbc:Note', 'Payment method is cash');
-        $paymentTerms->appendChild($note);
-
-        return $paymentTerms;
-    }
-
-    public function createPrepaidPaymentElement($xml)
-    {
-        // 创建 PrepaidPayment 元素
-        $prepaidPayment = $xml->createElement('cac:PrepaidPayment');
-
-        // 添加 ID 节点
-        $id = $xml->createElement('cbc:ID', 'E12345678912');
-        $prepaidPayment->appendChild($id);
-
-        // 添加 PaidAmount 节点
-        $paidAmount = $xml->createElement('cbc:PaidAmount', '1.00');
-        $paidAmount->setAttribute('currencyID', 'MYR');
-        $prepaidPayment->appendChild($paidAmount);
-
-        // 添加 PaidDate 节点
-        $paidDate = $xml->createElement('cbc:PaidDate', '2024-07-23');
-        $prepaidPayment->appendChild($paidDate);
-
-        // 添加 PaidTime 节点
-        $paidTime = $xml->createElement('cbc:PaidTime', '00:30:00Z');
-        $prepaidPayment->appendChild($paidTime);
-
-        return $prepaidPayment;
-    }
-
-    public function createAllowanceChargeElement($xml,$chargeIndicator,$reason,$amount,$currency = 'MYR')
-    {
-        // 创建 AllowanceCharge 元素
-        $allowanceCharge = $xml->createElement('cac:AllowanceCharge');
-
-        // 添加 ChargeIndicator 节点
-        $chargeIndicatorElement = $xml->createElement('cbc:ChargeIndicator', $chargeIndicator ? 'true' : 'false');
-        $allowanceCharge->appendChild($chargeIndicatorElement);
-
-        // 添加 AllowanceChargeReason 节点
-        $allowanceChargeReason = $xml->createElement('cbc:AllowanceChargeReason', $reason);
-        $allowanceCharge->appendChild($allowanceChargeReason);
-
-        // 添加 Amount 节点
-        $amountElement = $xml->createElement('cbc:Amount', (string)$amount);
-        $amountElement->setAttribute('currencyID', $currency);
-        $allowanceCharge->appendChild($amountElement);
-
-        return $allowanceCharge;
-    }
-
-    public function createTaxTotalElement($xml,$taxAmount,$taxableAmount,$taxSchemeID = 'OTH',$schemeID = 'UN/ECE 5153',$schemeAgencyID = '6')
-    {
-        // 创建 TaxTotal 元素
-        $taxTotal = $xml->createElement('cac:TaxTotal');
-
-        // 创建并添加 TaxAmount 节点
-        $taxAmountElement = $xml->createElement('cbc:TaxAmount', (string)$taxAmount);
-        $taxAmountElement->setAttribute('currencyID', 'MYR');
-        $taxTotal->appendChild($taxAmountElement);
-
-        // 创建 TaxSubtotal 元素
-        $taxSubtotal = $xml->createElement('cac:TaxSubtotal');
-
-        // 创建并添加 TaxableAmount 节点
-        $taxableAmountElement = $xml->createElement('cbc:TaxableAmount', (string)$taxableAmount);
-        $taxableAmountElement->setAttribute('currencyID', 'MYR');
-        $taxSubtotal->appendChild($taxableAmountElement);
-
-        // 创建并添加 TaxAmount 节点（同样的税额）
-        $taxAmountSubtotalElement = $xml->createElement('cbc:TaxAmount', (string)$taxAmount);
-        $taxAmountSubtotalElement->setAttribute('currencyID', 'MYR');
-        $taxSubtotal->appendChild($taxAmountSubtotalElement);
-
-        // 创建 TaxCategory 元素
-        $taxCategory = $xml->createElement('cac:TaxCategory');
-
-        // 添加 cbc:ID 节点到 TaxCategory
-        $taxCategoryID = $xml->createElement('cbc:ID', '01');
-        $taxCategory->appendChild($taxCategoryID);
-
-        // 创建并添加 TaxScheme 元素
-        $taxScheme = $xml->createElement('cac:TaxScheme');
-        $taxSchemeIDElement = $xml->createElement('cbc:ID', $taxSchemeID);
-        $taxSchemeIDElement->setAttribute('schemeID', $schemeID);
-        $taxSchemeIDElement->setAttribute('schemeAgencyID', $schemeAgencyID);
-        $taxScheme->appendChild($taxSchemeIDElement);
-
-        // 将 TaxScheme 添加到 TaxCategory
-        $taxCategory->appendChild($taxScheme);
-
-        // 将 TaxCategory 添加到 TaxSubtotal
-        $taxSubtotal->appendChild($taxCategory);
-
-        // 将 TaxSubtotal 添加到 TaxTotal
-        $taxTotal->appendChild($taxSubtotal);
-
-        return $taxTotal;
-    }
-
-    public function createLegalMonetaryTotalElement(
-        $xml, 
-        float $lineExtensionAmount, 
-        float $taxExclusiveAmount, 
-        float $taxInclusiveAmount, 
-        float $allowanceTotalAmount, 
-        float $chargeTotalAmount, 
-        float $payableRoundingAmount, 
-        float $payableAmount
-    ){
-        // 创建 LegalMonetaryTotal 元素
-        $legalMonetaryTotal = $xml->createElement('cac:LegalMonetaryTotal');
-    
-        // 创建并添加 LineExtensionAmount 节点
-        // customer真正给的价钱
-        $lineExtensionAmountElement = $xml->createElement('cbc:LineExtensionAmount', (string)$lineExtensionAmount);
-        $lineExtensionAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($lineExtensionAmountElement);
-    
-        // 创建并添加 TaxExclusiveAmount 节点
-        //好像跟上面一样
-        $taxExclusiveAmountElement = $xml->createElement('cbc:TaxExclusiveAmount', (string)$taxExclusiveAmount);
-        $taxExclusiveAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($taxExclusiveAmountElement);
-    
-        // 创建并添加 TaxInclusiveAmount 节点
-        //全部包括tax
-        $taxInclusiveAmountElement = $xml->createElement('cbc:TaxInclusiveAmount', (string)$taxInclusiveAmount);
-        $taxInclusiveAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($taxInclusiveAmountElement);
-    
-        // 创建并添加 AllowanceTotalAmount 节点
-        //total discount多少
-        $allowanceTotalAmountElement = $xml->createElement('cbc:AllowanceTotalAmount', (string)$allowanceTotalAmount);
-        $allowanceTotalAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($allowanceTotalAmountElement);
-    
-        // 创建并添加 ChargeTotalAmount 节点
-        //税前charge的费用
-        $chargeTotalAmountElement = $xml->createElement('cbc:ChargeTotalAmount', (string)$chargeTotalAmount);
-        $chargeTotalAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($chargeTotalAmountElement);
-    
-        // 创建并添加 PayableRoundingAmount 节点
-        $payableRoundingAmountElement = $xml->createElement('cbc:PayableRoundingAmount', (string)$payableRoundingAmount);
-        $payableRoundingAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($payableRoundingAmountElement);
-    
-        // 创建并添加 PayableAmount 节点
-        //总共费用，包括tax和discount，不包括提前给的费用
-        $payableAmountElement = $xml->createElement('cbc:PayableAmount', (string)$payableAmount);
-        $payableAmountElement->setAttribute('currencyID', 'MYR');
-        $legalMonetaryTotal->appendChild($payableAmountElement);
-    
-        return $legalMonetaryTotal;
-    }
-
-    public function createInvoiceLineElement(
-        $xml,
-        string $id,
-        float $invoicedQuantity,
-        float $lineExtensionAmount,
-        array $allowanceCharges,
-        float $taxAmount,
-        float $taxableAmount,
-        float $taxPercent,
-        string $taxExemptionReason,
-        string $description,
-        string $originCountryCode,
-        string $itemClassificationCode,
-        float $priceAmount,
-        float $itemPriceExtensionAmount
-    ) {
-        $invoiceLine = $xml->createElement('cac:InvoiceLine');
-    
-        $idElement = $xml->createElement('cbc:ID', $id);
-        $invoiceLine->appendChild($idElement);
-    
-        $invoicedQuantityElement = $xml->createElement('cbc:InvoicedQuantity', (string)$invoicedQuantity);
-        $invoicedQuantityElement->setAttribute('unitCode', 'C62');
-        $invoiceLine->appendChild($invoicedQuantityElement);
-    
-        $lineExtensionAmountElement = $xml->createElement('cbc:LineExtensionAmount', number_format($lineExtensionAmount, 2, '.', ''));
-        $lineExtensionAmountElement->setAttribute('currencyID', 'MYR');
-        $invoiceLine->appendChild($lineExtensionAmountElement);
-    
-        foreach ($allowanceCharges as $charge) {
-            $allowanceCharge = $xml->createElement('cac:AllowanceCharge');
-    
-            $chargeIndicator = $xml->createElement('cbc:ChargeIndicator', $charge['chargeIndicator'] ? 'true' : 'false');
-            $allowanceCharge->appendChild($chargeIndicator);
-    
-            $allowanceChargeReason = $xml->createElement('cbc:AllowanceChargeReason', $charge['reason']);
-            $allowanceCharge->appendChild($allowanceChargeReason);
-    
-            $multiplierFactorNumeric = $xml->createElement('cbc:MultiplierFactorNumeric', number_format($charge['multiplierFactor'], 2, '.', ''));
-            $allowanceCharge->appendChild($multiplierFactorNumeric);
-    
-            $amount = $xml->createElement('cbc:Amount', number_format($charge['amount'], 2, '.', ''));
-            $amount->setAttribute('currencyID', 'MYR');
-            $allowanceCharge->appendChild($amount);
-    
-            $invoiceLine->appendChild($allowanceCharge);
+            $validationLink = $this->generateValidationLink($uuid,$longId);
+            $pdf = Pdf::loadView('invoice.pdf.note.' . $invoice->company . '_inv_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'sku' => $note->sku,
+                'productDetails' => $productDetails,
+                'total' => $total,
+                'customer' => $customer,
+                'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
+                'terms' => '', 
+                'type' => $note instanceof CreditNote ? 'CREDIT NOTE' : 'DEBIT NOTE',
+                'validationLink' => $validationLink,
+                'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+            ]);
+            
+            $pdf->setPaper('A4', 'letter');
+            
+            $content = $pdf->download()->getOriginalContent();
+            $type = $note instanceof CreditNote ? 'credit_note' : 'debit_note';
+            return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
+        } catch (\Throwable $th) {
+            dd($th,$items);
+            return false;
         }
-    
-        $taxTotal = $xml->createElement('cac:TaxTotal');
-        $taxAmountElement = $xml->createElement('cbc:TaxAmount', number_format($taxAmount, 2, '.', ''));
-        $taxAmountElement->setAttribute('currencyID', 'MYR');
-        $taxTotal->appendChild($taxAmountElement);
-    
-        $taxSubtotal = $xml->createElement('cac:TaxSubtotal');
-        $taxableAmountElement = $xml->createElement('cbc:TaxableAmount', number_format($taxableAmount, 2, '.', ''));
-        $taxableAmountElement->setAttribute('currencyID', 'MYR');
-        $taxSubtotal->appendChild($taxableAmountElement);
-    
-        $taxAmountElement2 = $xml->createElement('cbc:TaxAmount', number_format($taxAmount, 2, '.', ''));
-        $taxAmountElement2->setAttribute('currencyID', 'MYR');
-        $taxSubtotal->appendChild($taxAmountElement2);
-    
-        $percentElement = $xml->createElement('cbc:Percent', number_format($taxPercent, 2, '.', ''));
-        $taxSubtotal->appendChild($percentElement);
-    
-        $taxCategory = $xml->createElement('cac:TaxCategory');
-        $taxCategoryId = $xml->createElement('cbc:ID', 'E');
-        $taxCategory->appendChild($taxCategoryId);
-    
-        $taxExemptionReasonElement = $xml->createElement('cbc:TaxExemptionReason', $taxExemptionReason);
-        $taxCategory->appendChild($taxExemptionReasonElement);
-    
-        $taxScheme = $xml->createElement('cac:TaxScheme');
-        $taxSchemeId = $xml->createElement('cbc:ID', 'OTH');
-        $taxSchemeId->setAttribute('schemeID', 'UN/ECE 5153');
-        $taxSchemeId->setAttribute('schemeAgencyID', '6');
-        $taxScheme->appendChild($taxSchemeId);
-        $taxCategory->appendChild($taxScheme);
-    
-        $taxSubtotal->appendChild($taxCategory);
-        $taxTotal->appendChild($taxSubtotal);
-        $invoiceLine->appendChild($taxTotal);
-    
-        $item = $xml->createElement('cac:Item');
-        $descriptionElement = $xml->createElement('cbc:Description', $description);
-        $item->appendChild($descriptionElement);
-    
-        $originCountry = $xml->createElement('cac:OriginCountry');
-        $originCountryCodeElement = $xml->createElement('cbc:IdentificationCode', $originCountryCode);
-        $originCountry->appendChild($originCountryCodeElement);
-        $item->appendChild($originCountry);
-    
-        $commodityClassification1 = $xml->createElement('cac:CommodityClassification');
-        $itemClassificationCode1 = $xml->createElement('cbc:ItemClassificationCode', $itemClassificationCode);
-        $itemClassificationCode1->setAttribute('listID', 'PTC');
-        $commodityClassification1->appendChild($itemClassificationCode1);
-        $item->appendChild($commodityClassification1);
-    
-        // Add the second CommodityClassification element
-        $commodityClassification2 = $xml->createElement('cac:CommodityClassification');
-        $itemClassificationCode2 = $xml->createElement('cbc:ItemClassificationCode', '003');
-        $itemClassificationCode2->setAttribute('listID', 'CLASS');
-        $commodityClassification2->appendChild($itemClassificationCode2);
-        $item->appendChild($commodityClassification2);
-    
-        $invoiceLine->appendChild($item);
-    
-        $price = $xml->createElement('cac:Price');
-        $priceAmountElement = $xml->createElement('cbc:PriceAmount', number_format($priceAmount, 2, '.', ''));
-        $priceAmountElement->setAttribute('currencyID', 'MYR');
-        $price->appendChild($priceAmountElement);
-        $invoiceLine->appendChild($price);
-    
-        $itemPriceExtension = $xml->createElement('cac:ItemPriceExtension');
-        $amountElement = $xml->createElement('cbc:Amount', number_format($itemPriceExtensionAmount, 2, '.', ''));
-        $amountElement->setAttribute('currencyID', 'MYR');
-        $itemPriceExtension->appendChild($amountElement);
-        $invoiceLine->appendChild($itemPriceExtension);
-    
-        return $invoiceLine;
     }
 
+    public function toNote(Request $req)
+    {
+        $type = $req->input('from');
+        if($type){
+            Session::put('invoice_type',$type);
+        }
+        $step = 1;
+        if ($req->has('invs') || $step == 4) {
+            $step = 5;
+            $selectedInvoiceIds = explode(',', $req->invs);
+
+            if (!$selectedInvoiceIds || !is_array($selectedInvoiceIds)) {
+                return response()->json(['error' => 'Invalid invoice IDs provided'], 400);
+            }
+
+            $results = [];
+            if (Session::get('invoice_type') == 'eInvoice') {
+                foreach ($selectedInvoiceIds as $invoiceId) {
+                    $eInvoice = EInvoice::find($invoiceId);
+                    $invoice = $eInvoice->invoice;
     
+                    if ($invoice) {
+                        $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+    
+                        if ($delivery) {
+                            $invoiceItems = [];
+                            foreach ($delivery->products()->get() as $product) {
+                                $saleProduct = $product->saleProduct;
+                                $invoiceItems[] = [
+                                    'product_id' => $product->saleProduct->id,
+                                    'name' => $saleProduct->product->model_name,
+                                    'qty' => $saleProduct->qty,
+                                    'price' => $saleProduct->unit_price,
+                                ];
+                            }
+    
+                            $results[] = [
+                                'invoice_uuid' => $eInvoice->uuid,
+                                'items' => $invoiceItems
+                            ];
+                        }
+                    }
+                }
+            }else{    
+                if (!$selectedInvoiceIds || !is_array($selectedInvoiceIds)) {
+                    return response()->json(['error' => 'Invalid invoice IDs provided'], 400);
+                }
+                
+                $results = [];
+        
+                foreach ($selectedInvoiceIds as $invoiceId) {
+                    $eInvoice = ConsolidatedEInvoice::find($invoiceId);
+                    $invoices = $eInvoice->invoices;
+                    if ($invoices) {
+                        foreach ($invoices as $invoice) {
+                            $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+        
+                            if ($delivery) {
+                                $invoiceItems = [];
+                                foreach ($delivery->products()->get() as $product) {
+                                    $saleProduct = $product->saleProduct;
+                                    $invoiceItems[] = [
+                                        'product_id' => $product->saleProduct->id,
+                                        'name' => $saleProduct->product->model_name,
+                                        'qty' => $saleProduct->qty,
+                                        'price' => $saleProduct->unit_price,
+                                    ];
+                                }
+        
+                                $results[] = [
+                                    'invoice_uuid' => $eInvoice->uuid,
+                                    'items' => $invoiceItems
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+           
+        } else if ($req->has('cus')) {
+            $step = 4;
+            $customerId = $req->cus;
+            $eInvoices = EInvoice::whereHas('invoice.deliveryOrders', function ($query) use ($customerId) {
+                $query->where('customer_id', $customerId);
+                $company = Session::get('company') == 'powercool' ? 'powercool' : 'hi_ten';
+                $query->whereHas('invoice', function($invoiceQuery) use ($company) {
+                    $invoiceQuery->where('company', $company);
+                });
+            })->get();
+        }
+        else if ($req->has('type')) {
+            Session::put('note_type', $req->type);
+            if (Session::get('invoice_type') == 'eInvoice') {
+                $step = 3;
+                $customers = Customer::whereHas('deliveryOrders.invoice', function($query) {
+                    $query->whereHas('eInvoice');
+                    if (Session::get('company') == 'powercool') {
+                        $query->where('company', 'powercool');
+                    }else{
+                        $query->where('company', 'hi_ten');
+                    }
+                })->get();
+            } else {
+                $step = 4;
+                $eInvoices = ConsolidatedEInvoice::all(); 
+            }
+        }
+        else if ($req->has('company')) {
+            Session::put('company', $req->company);
+            $step = 2;
+        }
+        else {
+            $step = 1;
+        }
+
+        return view('invoice.convert', [
+            'step' => $step,
+            'customers' => $customers ?? [],
+            'eInvoices' => $eInvoices ?? [],
+            'results' => $results ?? []
+        ]);
+    }
 }
