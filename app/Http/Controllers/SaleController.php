@@ -1092,7 +1092,9 @@ class SaleController extends Controller
             $convert_to = $record->einvoice == null 
             ? ($record->consolidatedEInvoices == null ? "-" : "Consolidated E-Invoice")
             : "E-Invoice";
-
+            if($record->consolidatedEInvoices != null){
+                dd($record->consolidatedEInvoices);
+            }
             $hasPlatformId = $record->deliveryOrders()
             ->whereHas('products.saleProduct.sale', function($query) {
                 $query->whereNotNull('platform_id');
