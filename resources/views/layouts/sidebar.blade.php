@@ -136,13 +136,7 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('sale.invoice.view')
-                                <li>
-                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
+                                
                                 @can('sale.target.view')
                                 <li>
                                     <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -154,6 +148,50 @@
                                 <li>
                                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Billing') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <li>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="101">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-receipt" viewBox="0 0 16 16">
+                                <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
+                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
+                              </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Invoice') }}</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="101">
+                        <div class="overflow-hidden">
+                            <ul>
+                                @can('sale.invoice.view')
+                                <li>
+                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.e-invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('E Invoice') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.consolidated-e-invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.consolidated-e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Consolidated E Invoice') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.credit-note.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.credit-note.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Note') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('invoice.debit-note.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.debit-note.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debit Note') }}</span>
                                     </a>
                                 </li>
                                 @endcan

@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Billing;
 use App\Models\Branch;
+use App\Models\ConsolidatedEInvoice;
+use App\Models\CreditNote;
 use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
+use App\Models\EInvoice;
 use App\Models\Invoice;
 use App\Models\Platform;
 use App\Models\Product;
@@ -1006,18 +1010,19 @@ class SaleController extends Controller
             $sku = (new Invoice)->generateSku();
             $filename = $sku . '.pdf';
 
-            $inv = Invoice::create([
-                'sku' => $sku,
-                'filename' => $filename
-            ]);
-            (new Branch)->assign(Invoice::class, $inv->id);
-
-            // Create PDF
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
 
             $do_products = DeliveryOrderProduct::with('saleProduct')->whereIn('delivery_order_id', $do_ids)->get();
             $sale_products = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
 
+            $inv = Invoice::create([
+                'sku' => $sku,
+                'filename' => $filename,
+                'company' => $this->getPdfType($sale_products)
+            ]);
+            (new Branch)->assign(Invoice::class, $inv->id);
+
+            // Create PDF
             $pdf = Pdf::loadView('delivery_order.' . $this->getPdfType($sale_products) . '_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
@@ -1054,20 +1059,81 @@ class SaleController extends Controller
 
     public function getDataInvoice(Request $req)
     {
-        $records = new Invoice;
+        $records = Invoice::query();
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+            $records = $records->where('invoices.sku', 'like', '%' . $keyword . '%')
+            ->orWhere('invoices.company', 'like', '%' . $keyword . '%');
+        }
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'invoices.sku',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('invoices.id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+        ];
+
+        foreach ($records_paginator as $record) {
+            $convert_to = $record->einvoice == null 
+            ? ($record->consolidatedEInvoices == null ? "-" : "Consolidated E-Invoice")
+            : "E-Invoice";
+
+            $hasPlatformId = $record->deliveryOrders()
+            ->whereHas('products.saleProduct.sale', function($query) {
+                $query->whereNotNull('platform_id');
+            })->exists();
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'sku' => $record->sku,
+                'company' => $record->company,
+                'convert_to' => $convert_to,
+                'filename' => $record->filename,
+                'has_platform' => $hasPlatformId
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function indexEInvoice()
+    {
+        return view('invoice.e-invoice.list');
+    }
+
+    public function getDataEInvoice(Request $req)
+    {
+        $records = new EInvoice();
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%');
+                $q->where('uuid', 'like', '%' . $keyword . '%')
+                ->orWhere('status', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
+                0 => 'uuid',
+                1 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1088,9 +1154,169 @@ class SaleController extends Controller
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
+                'uuid' => $record->uuid,
+                'status' => $record->status,
+                'id' => $record->id
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function indexConsolidatedEInvoice()
+    {
+        return view('invoice.consolidated-e-invoice.list');
+    }
+
+    public function getDataConsolidatedEInvoice(Request $req)
+    {
+        $records = ConsolidatedEInvoice::with(['invoices']);
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('uuid', 'like', '%' . $keyword . '%')
+                ->orWhere('status', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'uuid',
+                1 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                $column = $map[$order['column']];
+                $records = $records->whereHas('invoices', function ($q) use ($column, $order) {
+                    $q->orderBy($column, $order['dir']);
+                });
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+        ];
+
+        foreach ($records_paginator as $consolidated) {
+            $data['data'][] = [
+                'uuid' => $consolidated->uuid,
+                'status' => $consolidated->status,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function indexCreditNote()
+    {
+        return view('invoice.credit-note.list');
+    }
+
+    public function getDataCreditNote(Request $req)
+    {
+        $records = new CreditNote();
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('uuid', 'like', '%' . $keyword . '%')
+                ->orWhere('status', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'uuid',
+                0 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,       
+        ];
+        
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [       
                 'id' => $record->id,
-                'sku' => $record->sku,
-                'filename' => $record->filename,
+                'uuid' => $record->uuid,
+                'status' => $record->status,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function indexDebitNote()
+    {
+        return view('invoice.debit-note.list');
+    }
+
+    public function getDataDebitNote(Request $req)
+    {
+        $records = new DebitNote();
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('uuid', 'like', '%' . $keyword . '%')
+                ->orWhere('status', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'uuid',
+                0 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            "recordsTotal" => $records_count,
+            "recordsFiltered" => $records_count,
+            "data" => [],
+            'records_ids' => $records_ids,       
+        ];
+        
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [       
+                'id' => $record->id,
+                'uuid' => $record->uuid,
+                'status' => $record->status,
             ];
         }
 

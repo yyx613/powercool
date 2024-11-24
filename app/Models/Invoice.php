@@ -33,6 +33,16 @@ class Invoice extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
+    public function einvoice()
+    {
+        return $this->hasOne(EInvoice::class);
+    }
+
+    public function consolidatedEInvoices()
+    {
+        return $this->belongsToMany(ConsolidatedEInvoice::class, 'consolidated_e_invoice_invoice');
+    }
+
     public function generateSku(): string {
         $sku = null;
         
