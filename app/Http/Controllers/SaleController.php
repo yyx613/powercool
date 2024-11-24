@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+use function PHPUnit\Framework\isEmpty;
+
 class SaleController extends Controller
 {
     const DELIVERY_ORDER_PATH = '/public/delivery_order/';
@@ -1090,11 +1092,9 @@ class SaleController extends Controller
 
         foreach ($records_paginator as $record) {
             $convert_to = $record->einvoice == null 
-            ? ($record->consolidatedEInvoices == null ? "-" : "Consolidated E-Invoice")
+            ? ($record->consolidatedEInvoices == null || isEmpty($record->consolidatedEInvoices ) ? "-" : "Consolidated E-Invoice")
             : "E-Invoice";
-            if($record->consolidatedEInvoices != null){
-                dd($record->consolidatedEInvoices);
-            }
+
             $hasPlatformId = $record->deliveryOrders()
             ->whereHas('products.saleProduct.sale', function($query) {
                 $query->whereNotNull('platform_id');
