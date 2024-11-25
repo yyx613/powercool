@@ -7,11 +7,11 @@
             <div class="content flex flex-col" style="max-height: calc(100vh - 8rem); overflow-y: auto;">
                 <div id="selected-orders-list" class="mb-4">
                     <h6 class="text-md font-medium">{{ __('E-Invoice UUID') }}</h6>
-                    <ul></ul> <!-- 这里会展示选中的订单 -->
+                    <ul></ul> 
                 </div>
                 <div id="selected-orders-list" class="mb-2">
                     <h6 class="text-md font-medium">{{ __('Invoice Item') }}</h6>
-                    <ul></ul> <!-- 这里会展示选中的订单 -->
+                    <ul></ul>
                 </div>
                 <div class="flex-1">
                     <table id="invoice-data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
@@ -84,14 +84,5 @@
     })
     
 
-    // $('#to-production-modal select[name="product"]').change(function() {
-    //     let val = $(this).val()
-
-    //     if (val != 'null') {
-    //         $('#to-production-modal #yes-btn').removeClass('hidden')
-    //     } else {
-    //         $('#to-production-modal #yes-btn').addClass('hidden')
-    //     }
-    // })
 </script>
 @endpush

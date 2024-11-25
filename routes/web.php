@@ -527,6 +527,8 @@ Route::prefix('e-invoice')->group(function () {
     Route::post('/submit-note', [EInvoiceController::class, 'submitNote'])->name('submit.note');
     Route::post('/get-cons-invoice-item', [EInvoiceController::class, 'getConsInvoiceItem']);
     Route::get('/to-note',  [EInvoiceController::class, 'toNote'])->name('to_note');
+    Route::post('/cancel-e-invoice',  [EInvoiceController::class, 'cancelEInvoice'])->name('cancel_e_invoice');
+    Route::post('/resubmit-e-invoice',  [EInvoiceController::class, 'resubmitEInvoice'])->name('resubmit_e_invoice');
 });
 
 Route::post('/mock/document-submission', [EInvoiceController::class, 'testSubmitDocument'])->name('mock.document-submission');

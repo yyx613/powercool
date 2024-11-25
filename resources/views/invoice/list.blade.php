@@ -60,7 +60,6 @@
                     <th>{{ __('Invoice ID') }}</th>
                     <th>{{ __('Company') }}</th>
                     <th>{{ __('Convert To') }}</th>
-                    <th>{{ __('Submmision Date') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -105,7 +104,6 @@
                 { data: 'sku' },
                 { data: 'company' },
                 { data: 'convert_to' },
-                { data: 'submission_date' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -141,15 +139,8 @@
                     }
                 },
                 { 
-                    "width": "10%",
-                    "targets": 4,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                { 
                     "width": "5%",
-                    "targets": 5,
+                    "targets": 4,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -308,11 +299,11 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        background: rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 9999; /* 确保加载指示器在最前面 */
+        z-index: 9999;
     }
 
     .loader {

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class EInvoice extends Model
 {
     use HasFactory;
-    protected $fillable = ['invoice_id', 'uuid', 'status'];
+    protected $guarded = [];
 
     public function invoice()
     {

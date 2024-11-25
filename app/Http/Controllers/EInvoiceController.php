@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 use App\Services\EInvoiceXmlGenerator;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -145,6 +146,7 @@ class EInvoiceController extends Controller
         ]);
         $selectedInvoices = $request->input('invoices');
         $company = $request->input('company');
+
         $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
 
         $headers = [
@@ -194,12 +196,14 @@ class EInvoiceController extends Controller
                     if (!$invoice->einvoice) {
                         $invoice->einvoice()->create([
                             'uuid' => $uuid,
-                            'status' => 'valid'
+                            'status' => 'Valid',
+                            'submission_date' => Carbon::now()
                         ]);
                     } else {
                         $invoice->einvoice->update([
                             'uuid' => $uuid,
-                            'status' => 'valid'
+                            'status' => 'Valid',
+                            'submission_date' => Carbon::now()
                         ]);
                     }
                     $successfulDocuments[] = $invoiceCodeNumber;
@@ -1040,4 +1044,168 @@ class EInvoiceController extends Controller
             'results' => $results ?? []
         ]);
     }
+
+    public function cancelEInvoice(Request $req){
+        $uuid = $req->input('uuid');
+        $reason = $req->input('reason');
+        $eInvoice = EInvoice::where('uuid', $uuid)->first();
+
+        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documents/state/{$uuid}/state";
+
+        $body = [
+            'status' => 'cancelled',
+            'reason' => $reason,
+        ];
+        DB::beginTransaction();
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $eInvoice->invoice->company == "powercool" ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Content-Type' => 'application/json',
+            ])->put($url, $body);
+        
+            if ($response->successful()) {
+                $data = $response->json();
+                $eInvoice->update([
+                    'status' => $data['status']
+                ]);
+                DB::commit();
+                return [
+                    'uuid' => $data['uuid'] ?? null,
+                    'status' => $data['status'] ?? 'Unknown',
+                ];
+            } else {
+                return [
+                    'error' => $response->json()['error']['message'] ?? 'Failed to cancel the document',
+                ];
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dd($th);
+        }
+    }
+
+    public function resubmitEInvoice(Request $request){
+        $request->validate([
+            'uuid' => 'required'
+        ]);
+
+        $eInvoice = EInvoice::where('uuid',$request->input('uuid'))->first();
+        $invoice = $eInvoice->invoice;
+        $company = $invoice->company;
+        
+        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Accept-Language' => 'en',
+            'Content-Type' => 'application/json', 
+            'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten, 
+        ];
+
+        $documents = [];
+
+        $document = $this->xmlGenerator->generateXml($invoice->id, $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
+
+        $documents[] = [
+            'format' => 'XML',
+            'document' => base64_encode($document),
+            'documentHash' => hash('sha256', $document),
+            'codeNumber' => $invoice->sku,
+        ];
+
+        $payload = [
+            'documents' => $documents,
+        ];
+        
+        $response = Http::withHeaders($headers)->post($url, $payload);
+        if ($response->successful()) {
+            DB::beginTransaction();
+            try {
+                $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
+                $errorDetails = [];
+                $successfulDocuments = [];
+                foreach ($acceptedDocuments as $document) {
+                    $uuid = $document['uuid'];
+                    $invoiceCodeNumber = $document['invoiceCodeNumber'];
+                    
+                    $documentDetails = $this->getDocumentDetails($uuid, $company);
+                    if (isset($documentDetails['error'])) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $invoiceCodeNumber,
+                            'error' => $documentDetails['error'],
+                        ];
+                        continue;
+                    }
+
+                    $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+
+                    if (!$invoice->einvoice) {
+                        $invoice->einvoice()->create([
+                            'uuid' => $uuid,
+                            'status' => 'Valid',
+                            'submission_date' => Carbon::now()
+                        ]);
+                    } else {
+                        $invoice->einvoice->update([
+                            'uuid' => $uuid,
+                            'status' => 'Valid',
+                            'submission_date' => Carbon::now()
+                        ]);
+                    }
+
+                    $successfulDocuments[] = $invoiceCodeNumber;
+
+                    if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                        $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
+                    }
+                }
+
+                if (!empty($rejectedDocuments)) {
+                    $errorDetails = [];
+                    foreach ($rejectedDocuments as $rejectedDoc) {
+                        $errorDetails[] = [
+                            'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                            'error_code' => $rejectedDoc['error']['code'],
+                            'error_message' => $rejectedDoc['error']['message'],
+                            'error_target' => $rejectedDoc['error']['target'],
+                            'property_path' => $rejectedDoc['error']['propertyPath'],
+                            'details' => array_map(function ($detail) {
+                                return [
+                                    'code' => $detail['code'],
+                                    'message' => $detail['message'],
+                                    'target' => $detail['target'],
+                                    'propertyPath' => $detail['propertyPath'],
+                                ];
+                            }, $rejectedDoc['error']['details'] ?? []),
+                        ];
+                    }
+                    DB::rollBack();
+                    dd($response->json());
+                    return response()->json([
+                        'error' => 'Some documents were rejected',
+                        'rejectedDocuments' => $errorDetails,
+                    ], 400);
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => 'Document submission completed',
+                    'successfulDocuments' => $successfulDocuments,
+                    'errorDetails' => $errorDetails,
+                ]);
+
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                dd([$response->body(), $th]);
+            }
+        } else {
+            return response()->json([
+                'error' => 'Document submission failed',
+                'message' => $response->body(),
+            ], $response->status());
+        }
+    }
+    
 }

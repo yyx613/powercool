@@ -1092,9 +1092,7 @@ class SaleController extends Controller
 
         foreach ($records_paginator as $record) {
             $convert_to = "-";
-            $submission_date = "-";
             $enable = true;
-            $exceed72Hours = false;
 
             $hasPlatformId = $record->deliveryOrders()
             ->whereHas('products.saleProduct.sale', function($query) {
@@ -1103,21 +1101,17 @@ class SaleController extends Controller
 
             if ($record->einvoice) {
                 $convert_to = "E-Invoice";
-                $submission_date = $record->einvoice->updated_at->format('Y-m-d H:i:s');
-                $exceed72Hours = $record->einvoice->updated_at->diffInHours(now()) >= 72;
             } elseif ($record->consolidatedEInvoices && !$record->consolidatedEInvoices->isEmpty()) {
                 $convert_to = "Consolidated E-Invoice";
-                $submission_date = $record->consolidatedEInvoices->first()->updated_at->format('Y-m-d H:i:s');
             }
 
-            $enable = $hasPlatformId || $exceed72Hours;
+            $enable = $hasPlatformId;
             
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'company' => $record->company,
                 'convert_to' => $convert_to,
-                'submission_date' => $submission_date,
                 'filename' => $record->filename,
                 'enable' => $enable
             ];
@@ -1149,6 +1143,7 @@ class SaleController extends Controller
             $map = [
                 0 => 'uuid',
                 1 => 'status',
+                2 => 'submission_date'
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1171,6 +1166,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'uuid' => $record->uuid,
                 'status' => $record->status,
+                'submission_date' => $record->submission_date,
                 'id' => $record->id
             ];
         }
