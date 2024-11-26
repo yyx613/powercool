@@ -200,7 +200,6 @@
 
             checkSelectAllStatus();
             toggleAssignButton();
-            console.log(selectedInvoices);
         });
 
 
@@ -238,7 +237,6 @@
                     $('.order-checkbox').prop('checked', false);
                     selectedInvoices = [];
                     $('#select-all').prop('checked', false);
-                    console.log(response.errorDetails);
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
                         

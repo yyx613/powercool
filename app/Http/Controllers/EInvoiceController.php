@@ -267,9 +267,7 @@ class EInvoiceController extends Controller
                 }else{
                     DB::commit();
                 }
-
                 
-
                 return response()->json([
                     'message' => 'Document submission completed',
                     'successfulDocuments' => $successfulDocuments,
@@ -370,17 +368,14 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                    return response()->json([
-                        'error' => 'Some documents were rejected',
-                        'rejectedDocuments' => $errorDetails,
-                    ], 400);
+                }else{
+                    DB::commit();
                 }
-        
-                DB::commit();
         
                 return response()->json([
                     'message' => 'Document submission successful',
                     'acceptedDocuments' => $acceptedDocuments,
+                    'errorDetails' => $errorDetails,
                 ]);
         
             } else {
