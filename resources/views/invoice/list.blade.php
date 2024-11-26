@@ -273,7 +273,20 @@
                     $('.order-checkbox').prop('checked', false);
                     selectedInvoices = [];
                     $('#select-all').prop('checked', false);
-                    alert(response.message || "Submit success");
+
+                    if (error.responseJSON.rejectedDocuments) {
+                        error.responseJSON.rejectedDocuments.forEach(function(document) {
+                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                            
+                            document.details.forEach(function(detail) {
+                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                            });
+                        });
+                        alert(errorMessage);
+                    }else{
+                        alert(response.message || "Submit success");
+                    }
+                    
                 },
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
