@@ -264,7 +264,6 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                    dd($response->json());
                     return response()->json([
                         'error' => 'Some documents were rejected',
                         'rejectedDocuments' => $errorDetails,
