@@ -30,7 +30,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-
+use Illuminate\Support\Facades\Cache;
 use function PHPUnit\Framework\isEmpty;
 
 class EInvoiceController extends Controller
@@ -56,12 +56,43 @@ class EInvoiceController extends Controller
         $this->hitenSecret = config('e-invoices.hiten_client_secret');
         $this->endpoint = 'https://preprod-api.myinvois.hasil.gov.my';
         $this->xmlGenerator = new EInvoiceXmlGenerator();
-        $this->accessTokenPowerCool = $this->login('powercool')->getData()->access_token ?? null;
+        $this->accessTokenPowerCool = $this->getAccessToken('powercool');
         $this->accessTokenHiten = $this->accessTokenPowerCool;
-        // $this->accessTokenHiten = $this->login('hiten')->getData()->access_token ?? null;
 
         $this->powerCoolTin = "IG26663185010";
         $this->hitenTin = "IG26663185010";
+    }
+
+    public function getAccessToken($company)
+    {
+        $cacheKey = "access_token_{$company}";
+        $accessTokenData = Cache::get($cacheKey);
+        
+        if ($accessTokenData) {
+            $expiresAt = $accessTokenData['expires_at'];
+            
+            if (now()->addMinute()->lt($expiresAt)) {
+                return $accessTokenData['access_token'];
+            }
+        }
+
+        $response = $this->login($company);
+
+
+        if ($response->status() === 200) {
+            $accessToken = $response->getData()->access_token;
+            $expiresIn = $response->getData()->expires_in;
+            
+            $expiresAt = now()->addSeconds($expiresIn);
+            Cache::put($cacheKey, [
+                'access_token' => $accessToken,
+                'expires_at' => $expiresAt
+            ], $expiresAt);
+
+            return $accessToken;
+        }
+
+        return null;
     }
 
     public function login($company)
@@ -70,7 +101,7 @@ class EInvoiceController extends Controller
             $path = "/connect/token";
             $url = $this->endpoint . $path;
 
-            $clientId = $company == "powercool" ? $this->powerCoolId : $this->hitenId; 
+            $clientId = $company == "powercool" ? $this->powerCoolId : $this->hitenId;
             $clientSecret = $company == "powercool" ? $this->powerCoolSecret : $this->hitenSecret;
 
             $response = Http::asForm()->post($url, [

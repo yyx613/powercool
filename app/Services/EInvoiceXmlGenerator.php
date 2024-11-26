@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
+use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\EInvoice;
 use App\Models\Invoice;
@@ -122,17 +123,17 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN);
         $invoiceElement->appendChild($accountingSupplierParty);
 
-        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$buyerIDValue);
+        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$customer,$buyerIDValue);
         $invoiceElement->appendChild($accountingCustomerParty);
 
-        $deliveryElement = $this->createDeliveryElement($xml);
+        $deliveryElement = $this->createDeliveryElement($xml,$sale);
         $invoiceElement->appendChild($deliveryElement);
 
         $paymentMeansElement = $this->createPaymentMeansElement($xml,$paymentMode);
         $invoiceElement->appendChild($paymentMeansElement);
 
-        $paymentTermsElement = $this->createPaymentTermsElement($xml);
-        $invoiceElement->appendChild($paymentTermsElement);
+        // $paymentTermsElement = $this->createPaymentTermsElement($xml);
+        // $invoiceElement->appendChild($paymentTermsElement);
 
         $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
         $invoiceElement->appendChild($prepaidPaymentElement);
@@ -145,17 +146,20 @@ class EInvoiceXmlGenerator
         // $allowanceCharge2 = $this->createAllowanceChargeElement($xml, true, 'Service charge', 100);
         // $invoiceElement->appendChild($allowanceCharge2);
 
-        $taxTotal = $this->createTaxTotalElement($xml, 87.63, 87.63);
+        $company = $invoice->company;
+        $paymentAmount = $sale->payment_amount;
+        $taxAmount = $company == 'powercool' ? $paymentAmount * 0.1 : 0;
+        $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount);
         $invoiceElement->appendChild($taxTotal);
         $legalMonetaryTotal = $this->createLegalMonetaryTotalElement(
             $xml, 
-            $sale->payment_amount, 
-            $sale->payment_amount, 
-            $sale->payment_amount, 
+            $paymentAmount, 
+            $paymentAmount, 
+            $paymentAmount, 
             $totalDiscount, 
             //税前 total-tax
-            $sale->payment_amount, 
-            $sale->payment_amount, 
+            $paymentAmount - $taxAmount, 
+            $paymentAmount, 
         );
         $invoiceElement->appendChild($legalMonetaryTotal);
 
@@ -167,9 +171,9 @@ class EInvoiceXmlGenerator
             $id = $saleProduct->id; // 产品 ID
             $invoicedQuantity = $saleProduct->qty; // 数量
             $lineExtensionAmount = $saleProduct->qty * $saleProduct->unit_price; // 行金额
-            $taxAmount = 0; // 预设税额为 0，可以根据需要计算
+            $taxAmount = $company == 'powercool' ? $lineExtensionAmount * 0.1 : 0; // 预设税额为 0，可以根据需要计算
             $taxableAmount = $lineExtensionAmount; // 可征税金额
-            $taxPercent = 6.00; // 税率，假设为 6.00
+            $taxPercent = $company == 'powercool' ? 10 : 0; // 税率，假设为 6.00
             $taxExemptionReason = 'Exempt New Means of Transport'; // 税收豁免原因
             $description = $saleProduct->desc ?? 'No Description'; // 产品描述
             $originCountryCode = 'MYS'; // 产地国家代码
@@ -254,6 +258,7 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($currencyCode);
 
         foreach ($invoices as $invoice) {
+            $company = $invoice->company;
             $billingReference = $this->createBillingReference($xml, $invoice->sku);
             $invoiceElement->appendChild($billingReference);
             $delivery = DeliveryOrder::where('invoice_id',$invoice->id)->first();
@@ -304,8 +309,8 @@ class EInvoiceXmlGenerator
         $paymentMeansElement = $this->createPaymentMeansElement($xml);
         $invoiceElement->appendChild($paymentMeansElement);
 
-        $paymentTermsElement = $this->createPaymentTermsElement($xml);
-        $invoiceElement->appendChild($paymentTermsElement);
+        // $paymentTermsElement = $this->createPaymentTermsElement($xml);
+        // $invoiceElement->appendChild($paymentTermsElement);
 
         $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
         $invoiceElement->appendChild($prepaidPaymentElement);
@@ -316,7 +321,11 @@ class EInvoiceXmlGenerator
         // $allowanceCharge2 = $this->createAllowanceChargeElement($xml, true, 'Service charge', 100);
         // $invoiceElement->appendChild($allowanceCharge2);
 
-        $taxTotal = $this->createTaxTotalElement($xml, $totalPayment * 0.06, $totalPayment * 0.06);  // Assuming a 6% tax
+        
+
+
+        $taxAmount = $company == 'powercool' ? $totalPayment * 0.1 : 0;
+        $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount); 
         $invoiceElement->appendChild($taxTotal);
 
         $legalMonetaryTotal = $this->createLegalMonetaryTotalElement(
@@ -325,9 +334,10 @@ class EInvoiceXmlGenerator
             $totalPayment,
             $totalPayment,
             $totalDiscount,
-            $totalPayment,
+            $totalPayment - $taxAmount,
             $totalPayment
         );
+
         $invoiceElement->appendChild($legalMonetaryTotal);
         
   
@@ -355,9 +365,9 @@ class EInvoiceXmlGenerator
                     $quantity,
                     $lineExtensionAmount,
                     $allowanceCharges,
-                    0, // Tax amount
+                    $company == 'powercool' ? $lineExtensionAmount * 0.1 : 0, // Tax amount
                     $lineExtensionAmount, // Taxable amount
-                    6.00, // Tax rate
+                    $company == 'powercool' ? 10 : 0, // Tax rate
                     'Exempt New Means of Transport',
                     $saleProduct->desc ?? 'No Description',
                     'MYS', // Origin country
@@ -472,8 +482,8 @@ class EInvoiceXmlGenerator
         $paymentMeansElement = $this->createPaymentMeansElement($xml);
         $invoiceElement->appendChild($paymentMeansElement);
 
-        $paymentTermsElement = $this->createPaymentTermsElement($xml);
-        $invoiceElement->appendChild($paymentTermsElement);
+        // $paymentTermsElement = $this->createPaymentTermsElement($xml);
+        // $invoiceElement->appendChild($paymentTermsElement);
 
         $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
         $invoiceElement->appendChild($prepaidPaymentElement);
@@ -962,7 +972,7 @@ class EInvoiceXmlGenerator
         return $accountingSupplierParty;
     }
 
-    public function createAccountingCustomerPartyElement($xml,$buyerTIN,$buyerIDValue = "NA")
+    public function createAccountingCustomerPartyElement($xml,$buyerTIN,$customer = null,$buyerIDValue = "NA")
     {
         // 创建 AccountingCustomerParty 元素
         $accountingCustomerParty = $xml->createElement('cac:AccountingCustomerParty');
@@ -987,16 +997,20 @@ class EInvoiceXmlGenerator
         }
 
         // 添加 PostalAddress
+        $deliveryAddress = null;
+        if($customer){
+            $deliveryAddress = (new CustomerLocation)->defaultDeliveryAddress($customer->id);
+        }
         $postalAddress = $xml->createElement('cac:PostalAddress');
-        $cityName = $xml->createElement('cbc:CityName', 'Kuala Lumpur');
-        $postalZone = $xml->createElement('cbc:PostalZone', '50480');
-        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', '14');
+        $cityName = $xml->createElement('cbc:CityName', $deliveryAddress->city ?? 'NA');
+        $postalZone = $xml->createElement('cbc:PostalZone', $deliveryAddress->zip_code ?? 'NA');
+        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', $deliveryAddress ? ($deliveryAddress->countrySubentityCode() ?? '17') : '17');
         $postalAddress->appendChild($cityName);
         $postalAddress->appendChild($postalZone);
         $postalAddress->appendChild($countrySubentityCode);
 
         // 添加 AddressLine
-        $addressLines = ['Lot 66', 'Bangunan Merdeka', 'Persiaran Jaya'];
+        $addressLines = [$deliveryAddress->address ?? 'NA'];
         foreach ($addressLines as $line) {
             $addressLine = $xml->createElement('cac:AddressLine');
             $lineElement = $xml->createElement('cbc:Line', $line);
@@ -1016,14 +1030,14 @@ class EInvoiceXmlGenerator
 
         // 添加 PartyLegalEntity
         $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $registrationName = $xml->createElement('cbc:RegistrationName', "Buyer's Name");
+        $registrationName = $xml->createElement('cbc:RegistrationName', $customer->name ?? 'NA');
         $partyLegalEntity->appendChild($registrationName);
         $party->appendChild($partyLegalEntity);
 
         // 添加 Contact
         $contact = $xml->createElement('cac:Contact');
-        $telephone = $xml->createElement('cbc:Telephone', '+60123456780');
-        $email = $xml->createElement('cbc:ElectronicMail', 'buyer@email.com');
+        $telephone = $xml->createElement('cbc:Telephone', $customer->phone ?? 'NA');
+        $email = $xml->createElement('cbc:ElectronicMail', $customer->email ?? 'NA');
         $contact->appendChild($telephone);
         $contact->appendChild($email);
         $party->appendChild($contact);
@@ -1031,9 +1045,10 @@ class EInvoiceXmlGenerator
         return $accountingCustomerParty;
     }
 
-    public function createDeliveryElement($xml)
+    public function createDeliveryElement($xml,$sale = null)
     {
         // 创建 Delivery 元素
+        $customer = $sale ? $sale->customer : null;
         $delivery = $xml->createElement('cac:Delivery');
 
         // 创建 DeliveryParty 节点
@@ -1041,8 +1056,8 @@ class EInvoiceXmlGenerator
 
         // 添加 PartyIdentification 节点
         $partyIdentifications = [
-            ['schemeID' => 'TIN', 'ID' => "IG26663185010"],
-            ['schemeID' => 'BRN', 'ID' => "Recipient's BRN"],
+            ['schemeID' => 'TIN', 'ID' => $customer->tin_number ?? 'EI00000000010'],
+            ['schemeID' => 'BRN', 'ID' => $customer->company_registration_number ?? 'NA'],
         ];
 
         foreach ($partyIdentifications as $identification) {
@@ -1054,12 +1069,16 @@ class EInvoiceXmlGenerator
         }
 
         // 添加 PostalAddress
+        $address = null;
+        if($customer){
+            $address = (new CustomerLocation)->defaultDeliveryAddress($customer->id);
+        }
         $postalAddress = $xml->createElement('cac:PostalAddress');
-        $postalAddress->appendChild($xml->createElement('cbc:CityName', 'Kuala Lumpur'));
-        $postalAddress->appendChild($xml->createElement('cbc:PostalZone', '50480'));
-        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', '14'));
+        $postalAddress->appendChild($xml->createElement('cbc:CityName', $address->city ?? 'NA'));
+        $postalAddress->appendChild($xml->createElement('cbc:PostalZone', $address->zip_code ?? 'NA'));
+        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', $address ? ($address->countrySubentityCode() ?? '17') : '17'));
 
-        $addressLines = ['Lot 66', 'Bangunan Merdeka', 'Persiaran Jaya'];
+        $addressLines = [$address->address ?? 'NA'];
         foreach ($addressLines as $line) {
             $addressLine = $xml->createElement('cac:AddressLine');
             $lineElement = $xml->createElement('cbc:Line', $line);
@@ -1078,27 +1097,12 @@ class EInvoiceXmlGenerator
 
         // 添加 PartyLegalEntity
         $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $partyLegalEntity->appendChild($xml->createElement('cbc:RegistrationName', "Recipient's Name"));
+        $partyLegalEntity->appendChild($xml->createElement('cbc:RegistrationName', $customer->name ?? 'NA'));
         $deliveryParty->appendChild($partyLegalEntity);
 
         // 添加 DeliveryParty 到 Delivery
         $delivery->appendChild($deliveryParty);
 
-        // 创建 Shipment 节点
-        $shipment = $xml->createElement('cac:Shipment');
-        $shipment->appendChild($xml->createElement('cbc:ID', '1234'));
-
-        // 创建 FreightAllowanceCharge 节点
-        $freightAllowanceCharge = $xml->createElement('cac:FreightAllowanceCharge');
-        $freightAllowanceCharge->appendChild($xml->createElement('cbc:ChargeIndicator', 'true'));
-        $freightAllowanceCharge->appendChild($xml->createElement('cbc:AllowanceChargeReason', 'Service charge'));
-
-        $amountElement = $xml->createElement('cbc:Amount', '100');
-        $amountElement->setAttribute('currencyID', 'MYR');
-        $freightAllowanceCharge->appendChild($amountElement);
-
-        $shipment->appendChild($freightAllowanceCharge);
-        $delivery->appendChild($shipment);
 
         return $delivery;
     }
@@ -1194,24 +1198,19 @@ class EInvoiceXmlGenerator
         // 创建 TaxSubtotal 元素
         $taxSubtotal = $xml->createElement('cac:TaxSubtotal');
 
-        // 创建并添加 TaxableAmount 节点
         $taxableAmountElement = $xml->createElement('cbc:TaxableAmount', (string)$taxableAmount);
         $taxableAmountElement->setAttribute('currencyID', 'MYR');
         $taxSubtotal->appendChild($taxableAmountElement);
 
-        // 创建并添加 TaxAmount 节点（同样的税额）
         $taxAmountSubtotalElement = $xml->createElement('cbc:TaxAmount', (string)$taxAmount);
         $taxAmountSubtotalElement->setAttribute('currencyID', 'MYR');
         $taxSubtotal->appendChild($taxAmountSubtotalElement);
 
-        // 创建 TaxCategory 元素
         $taxCategory = $xml->createElement('cac:TaxCategory');
 
-        // 添加 cbc:ID 节点到 TaxCategory
         $taxCategoryID = $xml->createElement('cbc:ID', '01');
         $taxCategory->appendChild($taxCategoryID);
 
-        // 创建并添加 TaxScheme 元素
         $taxScheme = $xml->createElement('cac:TaxScheme');
         $taxSchemeIDElement = $xml->createElement('cbc:ID', $taxSchemeID);
         $taxSchemeIDElement->setAttribute('schemeID', $schemeID);
@@ -1220,9 +1219,34 @@ class EInvoiceXmlGenerator
 
         // 将 TaxScheme 添加到 TaxCategory
         $taxCategory->appendChild($taxScheme);
-
-        // 将 TaxCategory 添加到 TaxSubtotal
         $taxSubtotal->appendChild($taxCategory);
+
+
+        $taxSubtotal2 = $xml->createElement('cac:TaxSubtotal');
+        $taxableAmountElement2 = $xml->createElement('cbc:TaxableAmount', (string)$taxableAmount);
+        $taxableAmountElement2->setAttribute('currencyID', 'MYR');
+        $taxSubtotal2->appendChild($taxableAmountElement2);
+
+        $taxAmountSubtotalElement2 = $xml->createElement('cbc:TaxAmount', (string)$taxAmount);
+        $taxAmountSubtotalElement2->setAttribute('currencyID', 'MYR');
+        $taxSubtotal2->appendChild($taxAmountSubtotalElement2);
+
+        $taxCategory2 = $xml->createElement('cac:TaxCategory');
+
+        // 添加 cbc:ID 节点到 TaxCategory
+        $taxCategoryID2 = $xml->createElement('cbc:ID', '02');
+        $taxCategory2->appendChild($taxCategoryID2);
+
+        $taxScheme2 = $xml->createElement('cac:TaxScheme');
+        $taxSchemeIDElement2 = $xml->createElement('cbc:ID', $taxSchemeID);
+        $taxSchemeIDElement2->setAttribute('schemeID', $schemeID);
+        $taxSchemeIDElement2->setAttribute('schemeAgencyID', $schemeAgencyID);
+        $taxScheme2->appendChild($taxSchemeIDElement2);
+
+        $taxCategory2->appendChild($taxScheme2);
+        
+        $taxSubtotal2->appendChild($taxCategory2);
+        $taxTotal->appendChild($taxSubtotal2);
 
         // 将 TaxSubtotal 添加到 TaxTotal
         $taxTotal->appendChild($taxSubtotal);
