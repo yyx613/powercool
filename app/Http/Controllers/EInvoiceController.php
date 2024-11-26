@@ -264,13 +264,11 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                    return response()->json([
-                        'error' => 'Some documents were rejected',
-                        'rejectedDocuments' => $errorDetails,
-                    ], 400);
+                }else{
+                    DB::commit();
                 }
 
-                DB::commit();
+                
 
                 return response()->json([
                     'message' => 'Document submission completed',

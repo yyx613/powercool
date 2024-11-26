@@ -277,7 +277,17 @@
                 },
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
-                    alert("Submit failed: " + (error.responseJSON.message || "Unknown error"));
+                    if (error.responseJSON.rejectedDocuments) {
+                        error.responseJSON.rejectedDocuments.forEach(function(document) {
+                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                            
+                            document.details.forEach(function(detail) {
+                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                            });
+                        });
+                    }
+
+                    alert(errorMessage);
                 }
             });
         });
