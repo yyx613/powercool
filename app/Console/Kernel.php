@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:refresh-tik-tok-token')->everyThreeHours();
         $schedule->command('app:refresh-lazada-token')->everyThreeHours();
         $schedule->command('app:refresh-shopee-token')->everyThreeHours();
+        $schedule->command('app:prompt-task')->everyFiveMinutes()->withoutOverlapping()->evenInMaintenanceMode();
+        $schedule->command('app:service-reminder')->dailyAt(1)->evenInMaintenanceMode();
     }
 
     /**
