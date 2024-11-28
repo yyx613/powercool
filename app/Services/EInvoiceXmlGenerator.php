@@ -120,7 +120,7 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($signatureElement);
 
         // 创建 AccountingSupplierParty 节点并附加到 invoiceElement
-        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN);
+        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,$invoice->company);
         $invoiceElement->appendChild($accountingSupplierParty);
 
         $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$customer,$buyerIDValue);
@@ -297,7 +297,7 @@ class EInvoiceXmlGenerator
         );
         $invoiceElement->appendChild($signatureElement);
 
-        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN);
+        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,$company );
         $invoiceElement->appendChild($accountingSupplierParty);
 
         $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN);
@@ -442,6 +442,7 @@ class EInvoiceXmlGenerator
 
 
         foreach ($eInvoices as $eInvoice) {
+            $company = $eInvoice->invoice->company;
             $billingReference = $this->createInvoiceDocumentReference($xml, $eInvoice->sku ?? $eInvoice->invoice->sku, $eInvoice->uuid);
             $invoiceElement->appendChild($billingReference);
         }
@@ -470,7 +471,7 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($signatureElement);
 
         // 创建 AccountingSupplierParty 节点并附加到 invoiceElement
-        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN);
+        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,$company);
         $invoiceElement->appendChild($accountingSupplierParty);
 
         $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$buyerIDValue);
@@ -893,14 +894,14 @@ class EInvoiceXmlGenerator
         return $signatureElement;
     }
 
-    public function createAccountingSupplierPartyElement($xml,$sellerTIN)
+    public function createAccountingSupplierPartyElement($xml,$sellerTIN,$company)
     {
         // 创建 AccountingSupplierParty 元素
         $accountingSupplierParty = $xml->createElement('cac:AccountingSupplierParty');
 
         // 添加 AdditionalAccountID
         $additionalAccountID = $xml->createElement('cbc:AdditionalAccountID', 'CPT-CCN-W-211111-KL-0000021111');
-        $additionalAccountID->setAttribute('schemeAgencyName', 'PowerCool');
+        $additionalAccountID->setAttribute('schemeAgencyName', $company == 'powercool' ? 'POWER COOL EQUIPMENTS (M) SDN BHD' : 'HI-TEN TRADING SDN BHD');
         $accountingSupplierParty->appendChild($additionalAccountID);
 
         // 创建 Party 节点
@@ -909,14 +910,14 @@ class EInvoiceXmlGenerator
 
         // 添加 IndustryClassificationCode
         $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $this->msic);
-        $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator1111');
+        $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator');
         $party->appendChild($industryClassificationCode);
 
         // 添加 PartyIdentification 节点
         $partyIdentifications = [
             ['schemeID' => 'TIN', 'ID' => $sellerTIN],
             ['schemeID' => 'BRN', 'ID' => "202001234567"],
-            ['schemeID' => 'SST', 'ID' => 'A01-2345-67891012'],
+            ['schemeID' => 'SST', 'ID' => 'NA'],
         ];
 
         foreach ($partyIdentifications as $identification) {
@@ -929,15 +930,16 @@ class EInvoiceXmlGenerator
 
         // 添加 PostalAddress
         $postalAddress = $xml->createElement('cac:PostalAddress');
-        $cityName = $xml->createElement('cbc:CityName', 'Kuala Lumpur');
-        $postalZone = $xml->createElement('cbc:PostalZone', '50481');
-        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', '14');
+        $cityName = $xml->createElement('cbc:CityName', 'SERENDAH');
+        $postalZone = $xml->createElement('cbc:PostalZone', '48200');
+        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', '10');
         $postalAddress->appendChild($cityName);
         $postalAddress->appendChild($postalZone);
         $postalAddress->appendChild($countrySubentityCode);
 
         // 添加 AddressLine
-        $addressLines = ['Lot 66', 'Bangunan Test', 'Persiaran Jaya'];
+        $addressLines = ['NO:12,RCI PARK,JALAN KESIDANG 2,', 'KAWASAN PERINDUSTRIAN SUNGAI CHOH,', '48200 SERENDAH,SELANGOR.'];
+        
         foreach ($addressLines as $line) {
             $addressLine = $xml->createElement('cac:AddressLine');
             $lineElement = $xml->createElement('cbc:Line', $line);
@@ -957,14 +959,14 @@ class EInvoiceXmlGenerator
 
         // 添加 PartyLegalEntity
         $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $registrationName = $xml->createElement('cbc:RegistrationName', "PowerCool Test");
+        $registrationName = $xml->createElement('cbc:RegistrationName', $company == 'powercool' ? 'POWER COOL EQUIPMENTS (M) SDN BHD' : 'HI-TEN TRADING SDN BHD');
         $partyLegalEntity->appendChild($registrationName);
         $party->appendChild($partyLegalEntity);
 
         // 添加 Contact
         $contact = $xml->createElement('cac:Contact');
-        $telephone = $xml->createElement('cbc:Telephone', '+60123456789');
-        $email = $xml->createElement('cbc:ElectronicMail', 'supplier@email.com');
+        $telephone = $xml->createElement('cbc:Telephone', $company == 'powercool' ? '+60123868743' : '+60122632919');
+        $email = $xml->createElement('cbc:ElectronicMail', $company == 'powercool' ? 'enquiry@powercool.com.my' : 'imax.hiten_sales@powercool.com.my');
         $contact->appendChild($telephone);
         $contact->appendChild($email);
         $party->appendChild($contact);
