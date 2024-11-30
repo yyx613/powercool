@@ -909,15 +909,15 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty->appendChild($party);
 
         // 添加 IndustryClassificationCode
-        $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $this->msic);
+        $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $company == 'powercool' ? "28191" : "46496");
         $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator');
         $party->appendChild($industryClassificationCode);
 
         // 添加 PartyIdentification 节点
         $partyIdentifications = [
             ['schemeID' => 'TIN', 'ID' => $sellerTIN],
-            ['schemeID' => 'BRN', 'ID' => "202001234567"],
-            ['schemeID' => 'SST', 'ID' => 'NA'],
+            ['schemeID' => 'BRN', 'ID' => $company == 'powercool' ? "199601010696(383045D)" : "200501027542"],
+            ['schemeID' => 'SST', 'ID' => $company == 'powercool' ? "B16-1809-22000036" : "NA"],
         ];
 
         foreach ($partyIdentifications as $identification) {
