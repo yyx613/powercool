@@ -531,11 +531,8 @@ Route::prefix('e-invoice')->group(function () {
     Route::post('/resubmit-e-invoice',  [EInvoiceController::class, 'resubmitEInvoice'])->name('resubmit_e_invoice');
 });
 
-Route::post('/mock/document-submission', [EInvoiceController::class, 'testSubmitDocument'])->name('mock.document-submission');
-Route::post('/mock/consolidated-document-submission', [EInvoiceController::class, 'testConsolidatedSubmitDocument'])->name('mock.consolidated-document-submission');
+Route::get('/sync-classification-codes', [EInvoiceController::class, 'syncClassificationCodes']);
 
-// Mock route to simulate getting submission details
-Route::get('/mock/get-submission/{submission_id}', [EInvoiceController::class, 'testGetSubmission']);
 Route::get('/test1', [EInvoiceController::class, 'test']);
 Route::get('/email', function(){
     return view('invoice.email');

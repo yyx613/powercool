@@ -363,6 +363,9 @@ class ProductController extends Controller
             'shopee_sku' => 'nullable',
             'tiktok_sku' => 'nullable',
             'woo_commerce_sku' => 'nullable',
+
+            'classification_code' => 'required|array',
+            'classification_code.*' => 'exists:classification_codes,id',
         ];
         if ($req->product_id != null) {
             $rules['image'] = 'nullable';
@@ -380,6 +383,7 @@ class ProductController extends Controller
             'model_desc' => 'model description',
             'category_id' => 'category',
             'qty' => 'quantity',
+            'classification_code' => 'classification codes',
         ]);
         // Validate model code is unique in the branch
         $current_branch = Auth::user()->branch;
@@ -460,6 +464,9 @@ class ProductController extends Controller
                 ]);
             }
 
+            $classificationCodes = $req->input('classification_code', []);
+            $prod->classificationCodes()->sync($classificationCodes);
+
             if ($req->hasFile('image')) {
                 if ($req->product_id != null) {
                     Attachment::where([
@@ -531,6 +538,7 @@ class ProductController extends Controller
             return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
+            dd($th);
             report($th);
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();

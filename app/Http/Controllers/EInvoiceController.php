@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\EInvoiceEmail;
+use App\Models\Branch;
+use App\Models\ClassificationCode;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
 use App\Models\Customer;
@@ -27,10 +29,13 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Str;
 use App\Services\EInvoiceXmlGenerator;
 use Carbon\Carbon;
+use DOMDocument;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+
 use function PHPUnit\Framework\isEmpty;
 
 class EInvoiceController extends Controller
@@ -70,7 +75,6 @@ class EInvoiceController extends Controller
         
         if ($accessTokenData) {
             $expiresAt = $accessTokenData['expires_at'];
-            
             if (now()->addMinute()->lt($expiresAt)) {
                 return $accessTokenData['access_token'];
             }
@@ -186,6 +190,7 @@ class EInvoiceController extends Controller
             'Content-Type' => 'application/json', 
             'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten, 
         ];
+        
         $documents = [];
         foreach ($selectedInvoices as $invoice) {
             $invoice = Invoice::find($invoice['id']);
@@ -200,7 +205,7 @@ class EInvoiceController extends Controller
         $payload = [
             'documents' => $documents,
         ];
-        
+        dd($headers);
         $response = Http::withHeaders($headers)->post($url, $payload);
         if ($response->successful()) {
             DB::beginTransaction();
@@ -1228,6 +1233,61 @@ class EInvoiceController extends Controller
                 'error' => 'Document submission failed',
                 'message' => $response->body(),
             ], $response->status());
+        }
+    }
+    
+    public function syncClassificationCodes()
+    {
+        $url = 'https://sdk.myinvois.hasil.gov.my/codes/classification-codes/';
+
+        try {
+            $response = Http::get($url);
+            
+            if ($response->failed()) {
+                return response()->json(['message' => 'Failed to fetch classification codes.'], 500);
+            }
+
+            $htmlContent = $response->body();
+            $dom = new DOMDocument();
+
+            libxml_use_internal_errors(true);
+            $dom->loadHTML($htmlContent);
+            libxml_clear_errors();
+
+            $rows = $dom->getElementsByTagName('tr');
+            $syncedCount = 0;
+
+            foreach ($rows as $index => $row) {
+                if ($index === 0) {
+                    continue;
+                }
+
+                $cells = $row->getElementsByTagName('td');
+                if ($cells->length === 2) {
+                    $code = trim($cells->item(0)->textContent);
+                    $description = trim($cells->item(1)->textContent);
+
+                    $classificationCode = ClassificationCode::updateOrCreate(
+                        ['code' => $code],
+                        ['description' => $description]
+                    );
+                    (new Branch())->assign(ClassificationCode::class, $classificationCode->id);
+
+                    $syncedCount++;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Classification codes synchronized successfully.',
+                'syncedCount' => $syncedCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error syncing classification codes: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while syncing classification codes.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
     

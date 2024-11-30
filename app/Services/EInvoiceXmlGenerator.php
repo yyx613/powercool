@@ -177,7 +177,7 @@ class EInvoiceXmlGenerator
             $taxExemptionReason = 'Exempt New Means of Transport'; // 税收豁免原因
             $description = $saleProduct->desc ?? 'No Description'; // 产品描述
             $originCountryCode = 'MYS'; // 产地国家代码
-            $itemClassificationCode = $saleProduct->product->sku; // 产品分类代码
+            $itemClassificationCode = $saleProduct->product->classificationCodes; // 产品分类代码
             $priceAmount = $saleProduct->unit_price; // 单价
             $itemPriceExtensionAmount = $lineExtensionAmount; // 产品价格扩展金额
             $allowanceCharges = [
@@ -371,9 +371,10 @@ class EInvoiceXmlGenerator
                     'Exempt New Means of Transport',
                     $saleProduct->desc ?? 'No Description',
                     'MYS', // Origin country
-                    $saleProduct->product->sku,
+                    $saleProduct->product->classificationCodes,
                     $saleProduct->unit_price,
-                    $lineExtensionAmount
+                    $lineExtensionAmount,
+                    true
                 );
     
                 $invoiceElement->appendChild($invoiceLine);
@@ -527,21 +528,20 @@ class EInvoiceXmlGenerator
         
         foreach ($items as $item) {
             $saleProduct = SaleProduct::find($item['id']);
-            $id = $item['id']; // 产品 ID
-            $invoicedQuantity = $item['diff']; // 数量
-            $lineExtensionAmount = $item['diff'] * $item['price']; // 行金额
-            $taxAmount = 0; // 预设税额为 0，可以根据需要计算
-            $taxableAmount = $lineExtensionAmount; // 可征税金额
-            $taxPercent = 6.00; // 税率，假设为 6.00
-            $taxExemptionReason = 'Exempt New Means of Transport'; // 税收豁免原因
-            $description = $saleProduct->desc ?? 'No Description'; // 产品描述
-            $originCountryCode = 'MYS'; // 产地国家代码
-            $itemClassificationCode = $saleProduct->product->sku; // 产品分类代码
-            $priceAmount = $item['price']; // 单价
-            $itemPriceExtensionAmount = $lineExtensionAmount; // 产品价格扩展金额
-            $allowanceCharges = []; // 根据需要提供免除费用
+            $id = $item['id']; 
+            $invoicedQuantity = $item['diff']; 
+            $lineExtensionAmount = $item['diff'] * $item['price']; 
+            $taxAmount = 0; 
+            $taxableAmount = $lineExtensionAmount; 
+            $taxPercent = 6.00;
+            $taxExemptionReason = 'Exempt New Means of Transport';
+            $description = $saleProduct->desc ?? 'No Description'; 
+            $originCountryCode = 'MYS'; 
+            $itemClassificationCode = $saleProduct->product->classificationCodes; 
+            $priceAmount = $item['price'];
+            $itemPriceExtensionAmount = $lineExtensionAmount;
+            $allowanceCharges = []; 
         
-            // 调用 createInvoiceLineElement 方法创建发票行元素
             $invoiceLine = $this->createInvoiceLineElement(
                 $xml,
                 (string) $id,
@@ -909,6 +909,7 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty->appendChild($party);
 
         // 添加 IndustryClassificationCode
+        
         $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $company == 'powercool' ? "28191" : "46496");
         $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator');
         $party->appendChild($industryClassificationCode);
@@ -916,8 +917,11 @@ class EInvoiceXmlGenerator
         // 添加 PartyIdentification 节点
         $partyIdentifications = [
             ['schemeID' => 'TIN', 'ID' => $sellerTIN],
-            ['schemeID' => 'BRN', 'ID' => $company == 'powercool' ? "199601010696(383045D)" : "200501027542"],
-            ['schemeID' => 'SST', 'ID' => $company == 'powercool' ? "B16-1809-22000036" : "NA"],
+            // ['schemeID' => 'BRN', 'ID' => $company == 'powercool' ? "199601010696(383045D)" : "200501027542"],
+            ['schemeID' => 'BRN', 'ID' => "202001234567"],
+            ['schemeID' => 'SST', 'ID' => 'NA'],
+            
+            // ['schemeID' => 'SST', 'ID' => $company == 'powercool' ? "B16-1809-22000036" : "NA"],
         ];
 
         foreach ($partyIdentifications as $identification) {
@@ -1321,9 +1325,10 @@ class EInvoiceXmlGenerator
         string $taxExemptionReason,
         string $description,
         string $originCountryCode,
-        string $itemClassificationCode,
+        $itemClassificationCodes,
         float $priceAmount,
-        float $itemPriceExtensionAmount
+        float $itemPriceExtensionAmount,
+        $isConsolidated = false
     ) {
         $invoiceLine = $xml->createElement('cac:InvoiceLine');
     
@@ -1401,18 +1406,37 @@ class EInvoiceXmlGenerator
         $originCountry->appendChild($originCountryCodeElement);
         $item->appendChild($originCountry);
     
-        $commodityClassification1 = $xml->createElement('cac:CommodityClassification');
-        $itemClassificationCode1 = $xml->createElement('cbc:ItemClassificationCode', $itemClassificationCode);
-        $itemClassificationCode1->setAttribute('listID', 'PTC');
-        $commodityClassification1->appendChild($itemClassificationCode1);
-        $item->appendChild($commodityClassification1);
+        // $commodityClassification1 = $xml->createElement('cac:CommodityClassification');
+        // $itemClassificationCode1 = $xml->createElement('cbc:ItemClassificationCode', $itemClassificationCode);
+        // $itemClassificationCode1->setAttribute('listID', 'PTC');
+        // $commodityClassification1->appendChild($itemClassificationCode1);
+        // $item->appendChild($commodityClassification1);
     
         // Add the second CommodityClassification element
-        $commodityClassification2 = $xml->createElement('cac:CommodityClassification');
-        $itemClassificationCode2 = $xml->createElement('cbc:ItemClassificationCode', '003');
-        $itemClassificationCode2->setAttribute('listID', 'CLASS');
-        $commodityClassification2->appendChild($itemClassificationCode2);
-        $item->appendChild($commodityClassification2);
+        
+        if ($isConsolidated) {
+            $has004 = false;
+    
+            foreach ($itemClassificationCodes as $itemClassificationCode) {
+                if ($itemClassificationCode->code === '004') {
+                    $has004 = true;
+                    break;
+                }
+            }
+    
+            if (!$has004) {
+                $itemClassificationCodes[] = (object)['code' => '004'];
+            }
+        }
+    
+        foreach ($itemClassificationCodes as $itemClassificationCode) {
+            $commodityClassification2 = $xml->createElement('cac:CommodityClassification');
+            $itemClassificationCode2 = $xml->createElement('cbc:ItemClassificationCode', $itemClassificationCode->code);
+            $itemClassificationCode2->setAttribute('listID', 'CLASS');
+            $commodityClassification2->appendChild($itemClassificationCode2);
+            $item->appendChild($commodityClassification2);
+        }
+        
     
         $invoiceLine->appendChild($item);
     
