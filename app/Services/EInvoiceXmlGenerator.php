@@ -575,7 +575,8 @@ class EInvoiceXmlGenerator
         $sellerIDType = "";
         $sellerIDValue = ""; 
         $sellerTIN = $tin;
-        $buyerTIN = "EI00000000010";
+        $buyerTIN = "C11901266090";
+        $buyerIDValue = "200501027542";  
         $totalPayment = 0;
         $totalDiscount = 0;
 
@@ -611,17 +612,6 @@ class EInvoiceXmlGenerator
         foreach ($invoices as $invoice) {
             $billingReference = $this->createBillingReference($xml, $invoice->sku);
             $invoiceElement->appendChild($billingReference);
-            // $delivery = DeliveryOrder::where('invoice_id',$invoice->id)->first();
-            // $deliveryProduct = $delivery->products()->first();
-            // $saleProduct = $deliveryProduct->saleProduct;
-            // $sale = $saleProduct->sale;
-            // $saleProducts = $sale->products;
-            // $totalPayment += $sale->payment_amount;
-
-            // $deliveryProducts = $delivery->products();
-            // foreach ($saleProducts as $sp) {
-            //     $totalDiscount += $sp->discountAmount();
-            // }
         }
 
         $additionalDocumentReference1 = $this->createAdditionalDocumentReference($xml, 'L1', 'CustomsImportForm');
@@ -650,7 +640,7 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,"powercool");
         $invoiceElement->appendChild($accountingSupplierParty);
 
-        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN);
+        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,null,$buyerIDValue,true);
         $invoiceElement->appendChild($accountingCustomerParty);
 
         $deliveryElement = $this->createDeliveryElement($xml);
