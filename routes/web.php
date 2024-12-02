@@ -518,7 +518,6 @@ Route::prefix('woo-commerce')->group(function () {
 Route::prefix('e-invoice')->group(function () {
     Route::get('/login', [EInvoiceController::class, 'login']);
     Route::get('/generate', [EInvoiceController::class, 'generateXmlInvoice']);
-    Route::get('/submit', [EInvoiceController::class, 'submit']);
     Route::post('/submit', [EInvoiceController::class, 'submit']);
     Route::post('/submit-consolidated', [EInvoiceController::class, 'submitConsolidated']);
     Route::get('/send-to-customer', [EInvoiceController::class, 'sendEmail'])->name('send.email');
@@ -529,13 +528,12 @@ Route::prefix('e-invoice')->group(function () {
     Route::get('/to-note',  [EInvoiceController::class, 'toNote'])->name('to_note');
     Route::post('/cancel-e-invoice',  [EInvoiceController::class, 'cancelEInvoice'])->name('cancel_e_invoice');
     Route::post('/resubmit-e-invoice',  [EInvoiceController::class, 'resubmitEInvoice'])->name('resubmit_e_invoice');
+    Route::post('/billing-submit', [EInvoiceController::class, 'billingSubmit']);
+
 });
 
-Route::post('/mock/document-submission', [EInvoiceController::class, 'testSubmitDocument'])->name('mock.document-submission');
-Route::post('/mock/consolidated-document-submission', [EInvoiceController::class, 'testConsolidatedSubmitDocument'])->name('mock.consolidated-document-submission');
+Route::get('/sync-classification-codes', [EInvoiceController::class, 'syncClassificationCodes']);
 
-// Mock route to simulate getting submission details
-Route::get('/mock/get-submission/{submission_id}', [EInvoiceController::class, 'testGetSubmission']);
 Route::get('/test1', [EInvoiceController::class, 'test']);
 Route::get('/email', function(){
     return view('invoice.email');

@@ -74,6 +74,11 @@ class Product extends Model
         return $this->hasOne(MaterialUse::class);
     }
 
+    public function classificationCodes()
+    {
+        return $this->belongsToMany(ClassificationCode::class, 'classification_code_product');
+    }
+
     public function getQtyAttribute($val)
     {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool)$this->is_sparepart == true)) {

@@ -48,6 +48,7 @@
                 <tr>
                     <th>{{ __('UUID') }}</th>
                     <th>{{ __('Status') }}</th>
+                    <th>{{ __('From') }}</th>
                     <th>{{ __('Submission Date') }}</th>
                     <th></th>
                 </tr>
@@ -79,6 +80,7 @@
             columns: [
                 { data: 'uuid' },
                 { data: 'status' },
+                { data: 'from' },
                 { data: 'submission_date' },
                 { data: 'id' },
             ],
@@ -105,8 +107,15 @@
                     }
                 },
                 { 
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 3,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "5%",
+                    "targets": 4,
                     orderable: false,
                     render: function (data, type, row) {
                         const submissionDate = new Date(row.submission_date);

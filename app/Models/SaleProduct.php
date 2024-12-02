@@ -58,4 +58,11 @@ class SaleProduct extends Model
     public function warrantyPeriod() {
         return $this->belongsTo(WarrantyPeriod::class);
     }
+
+    public function billings()
+    {
+        return $this->belongsToMany(Billing::class, 'billing_sale_product', 'sale_product_id', 'billing_id')
+            ->withPivot('custom_unit_price') 
+            ->withTimestamps();
+    }
 }

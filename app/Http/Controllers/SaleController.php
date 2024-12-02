@@ -1143,7 +1143,8 @@ class SaleController extends Controller
             $map = [
                 0 => 'uuid',
                 1 => 'status',
-                2 => 'submission_date'
+                2 => 'submission_date',
+                3 => 'from',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1167,7 +1168,8 @@ class SaleController extends Controller
                 'uuid' => $record->uuid,
                 'status' => $record->status,
                 'submission_date' => $record->submission_date,
-                'id' => $record->id
+                'id' => $record->id,
+                'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing'
             ];
         }
 
@@ -1617,7 +1619,6 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create record
             $sku = (new Billing)->generateSku();
             $do_filename = $sku . 'DO.pdf';
             $inv_filename = $sku . 'INV.pdf';
@@ -1626,11 +1627,25 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'do_filename' => $do_filename,
                 'inv_filename' => $inv_filename,
+                'term_id' => Session::get('billing_term'),
+                'sale_person_id' => Session::get('billing_saleperson'),
+                'our_do_no' => Session::get('billing_our_do_no'),
             ]);
+
+            $invoiceIds = explode(',', Session::get('invoice_ids'));
+            $bill->invoices()->attach($invoiceIds);
+
+            $saleProducts = $req->input('sale_product_id', []); 
+            $pivotData = [];
+            foreach ($saleProducts as $saleProductId) {
+                $customUnitPrice = $req->input("custom-unit-price-{$saleProductId}", 0);
+                $pivotData[$saleProductId] = ['custom_unit_price' => $customUnitPrice];
+            }
+            $bill->saleProducts()->attach($pivotData);
+
             (new Branch)->assign(Billing::class, $bill->id);
-            // Generate DO PDF
+
             $this->generateDeliveryOrderBillingPDF($sku, $do_filename, $req->sale_product_id);
-            // Generate INV PDF
             $this->generateInvoiceBillingPDF($sku, $inv_filename, $req->sale_product_id, $req->all());
 
             DB::commit();
@@ -1639,7 +1654,7 @@ class SaleController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
-
+            dd($th);
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }

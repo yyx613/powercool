@@ -135,6 +135,7 @@
                         @endif
                     </div>
                 </div>
+                
                 @if ($is_product == false)
                     <div class="flex flex-col">
                         <x-app.input.label id="supplier_id" class="mb-1">{{ __('Supplier') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -166,7 +167,30 @@
                 </div>
             @endif
         </div>
-
+       
+        <div class="bg-white p-4 border rounded-md mt-4">
+            <div class="grid grid-cols-3 gap-8 w-full">
+                <div class="flex flex-col col-span-4">
+                    <x-app.input.label id="classification_code" class="mb-1">{{ __('Classification Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="classification_code[]" multiple class="h-36">
+                        @foreach ($classificationCodes as $classificationCode)
+                            <option value="{{ $classificationCode->id }}" 
+                                @selected(in_array($classificationCode->id, old('classification_code', isset($prod) ? $prod->classificationCodes->pluck('id')->toArray() : [])))
+                                >{{ $classificationCode->code }} - {{ $classificationCode->description }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('classification_code')" class="mt-1" />
+                </div>
+            </div>
+            @if (!$is_product)
+                <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">
+                    @if (!isset($prod))
+                        <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
+                    @endif
+                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+                </div>
+            @endif
+        </div>
         <div class="bg-white p-4 border rounded-md mt-4">
             <div class="grid grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col">
@@ -189,8 +213,6 @@
                     <x-app.input.input name="woo_commerce_sku" id="woo_commerce_sku" value="{{ old('woo_commerce_sku', isset($prod) ? $prod->woo_commerce_sku : ($dup_prod != null ? $dup_prod->woo_commerce_sku : null)) }}" />
                     <x-input-error :messages="$errors->get('woo_commerce_sku')" class="mt-1" />
                 </div>
-               
-               
             </div>
             @if (!$is_product)
                 <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">

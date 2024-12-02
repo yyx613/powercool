@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Area;
 use App\Models\Branch;
+use App\Models\ClassificationCode;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
@@ -315,11 +316,12 @@ class ViewServiceProvider extends ServiceProvider
             $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
-
+            $classificationCodes = ClassificationCode::all();
             $view->with([
                 'inv_cats' => $inv_cats,
                 'suppliers' => $suppliers,
                 'uoms' => $uoms,
+                'classificationCodes' => $classificationCodes
             ]);
         });
         View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function (ViewView $view) {
