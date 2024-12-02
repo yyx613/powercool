@@ -387,7 +387,7 @@ class EInvoiceXmlGenerator
         return $xmlContent;
     }
 
-    public function generateNoteXml($id, $items, $note,$totalsModified,$type,$tin,$customer)
+    public function generateNoteXml($id, $items, $note,$totalsModified,$type,$tin,$customer = null,$fromBilling)
     {
         if($type == 'eInvoice'){
             $eInvoices = EInvoice::whereIn('id', $id)->get();
@@ -398,8 +398,8 @@ class EInvoiceXmlGenerator
         $sellerIDType = "";
         $sellerIDValue = ""; 
         $sellerTIN = $tin;
-        $buyerTIN = $customer->tin_number;
-        $buyerIDValue = $customer->company_registration_number;  
+        $buyerTIN = !$fromBilling ? $customer->tin_number : "C11901266090";
+        $buyerIDValue = !$fromBilling ? $customer->company_registration_number : "200501027542";  
         // $this->validateTIN($sellerTIN,$sellerIDType,$sellerIDValue);
         // $this->validateTIN($sellerTIN,$buyerIDType,$buyerIDValue);
  
@@ -441,10 +441,9 @@ class EInvoiceXmlGenerator
         $currencyCode = $xml->createElement('cbc:DocumentCurrencyCode', 'MYR');
         $invoiceElement->appendChild($currencyCode);
 
-
         foreach ($eInvoices as $eInvoice) {
-            $company = $eInvoice->invoice->company;
-            $billingReference = $this->createInvoiceDocumentReference($xml, $eInvoice->sku ?? $eInvoice->invoice->sku, $eInvoice->uuid);
+            $company = $fromBilling ? 'powercool' : $eInvoice->einvoiceable->company;
+            $billingReference = $this->createInvoiceDocumentReference($xml, $eInvoice->sku ?? $eInvoice->einvoiceable->sku, $eInvoice->uuid);
             $invoiceElement->appendChild($billingReference);
         }
 
@@ -475,7 +474,7 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,$company);
         $invoiceElement->appendChild($accountingSupplierParty);
 
-        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$buyerIDValue);
+        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$customer,$buyerIDValue,$fromBilling);
         $invoiceElement->appendChild($accountingCustomerParty);
 
         $deliveryElement = $this->createDeliveryElement($xml);
@@ -559,14 +558,182 @@ class EInvoiceXmlGenerator
                 $itemPriceExtensionAmount
             );
         
-            // 将生成的发票行元素添加到发票元素中
             $invoiceElement->appendChild($invoiceLine);
         }
         
-        // 返回 XML 内容
         $xmlContent = $xml->saveXML();
         $noteType = $note instanceof CreditNote ? '/credit-note' : '/debit-note';
         Storage::put('/public'.$noteType.'/'. $note->sku.'.xml', $xmlContent);
+
+        return $xmlContent;
+    }
+    
+    public function generateBillingEInvoiceXml($billing, $tin)
+    {
+        $invoices = $billing->invoices;
+        $saleProducts = $billing->saleProducts;
+        $sellerIDType = "";
+        $sellerIDValue = ""; 
+        $sellerTIN = $tin;
+        $buyerTIN = "EI00000000010";
+        $totalPayment = 0;
+        $totalDiscount = 0;
+
+        $xml = new \DOMDocument('1.0', 'UTF-8');
+        $xml->formatOutput = true;
+
+        $invoiceElement = $xml->createElement('Invoice');
+        $invoiceElement->setAttribute('xmlns', 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2');
+        $invoiceElement->setAttribute('xmlns:cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
+        $invoiceElement->setAttribute('xmlns:cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
+        $xml->appendChild($invoiceElement);
+
+        $cbcId = $xml->createElement('cbc:ID', $billing->sku);
+        $invoiceElement->appendChild($cbcId);
+
+        $dateTime = new DateTime("now", new DateTimeZone("Asia/Kuala_Lumpur"));
+        $dateTime->modify('-1 day');
+        $currentDate = $dateTime->format("Y-m-d");
+        $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
+        $invoiceElement->appendChild($cbcIssueDate);
+
+        $currentTime = $dateTime->format("H:i:s") . "Z";
+        $cbcIssueTime = $xml->createElement('cbc:IssueTime', $currentTime);
+        $invoiceElement->appendChild($cbcIssueTime);
+
+        $invoiceTypeCode = $xml->createElement('cbc:InvoiceTypeCode', '01');
+        $invoiceTypeCode->setAttribute('listVersionID', '1.0');
+        $invoiceElement->appendChild($invoiceTypeCode);
+
+        $currencyCode = $xml->createElement('cbc:DocumentCurrencyCode', 'MYR');
+        $invoiceElement->appendChild($currencyCode);
+
+        foreach ($invoices as $invoice) {
+            $billingReference = $this->createBillingReference($xml, $invoice->sku);
+            $invoiceElement->appendChild($billingReference);
+            // $delivery = DeliveryOrder::where('invoice_id',$invoice->id)->first();
+            // $deliveryProduct = $delivery->products()->first();
+            // $saleProduct = $deliveryProduct->saleProduct;
+            // $sale = $saleProduct->sale;
+            // $saleProducts = $sale->products;
+            // $totalPayment += $sale->payment_amount;
+
+            // $deliveryProducts = $delivery->products();
+            // foreach ($saleProducts as $sp) {
+            //     $totalDiscount += $sp->discountAmount();
+            // }
+        }
+
+        $additionalDocumentReference1 = $this->createAdditionalDocumentReference($xml, 'L1', 'CustomsImportForm');
+        $invoiceElement->appendChild($additionalDocumentReference1);
+
+        // 附加第二个 AdditionalDocumentReference 节点，包含 DocumentDescription
+        $additionalDocumentReference2 = $this->createAdditionalDocumentReference($xml, 'FTA', 'FreeTradeAgreement', 'Sample Description');
+        $invoiceElement->appendChild($additionalDocumentReference2);
+
+        // 附加第三个 AdditionalDocumentReference 节点，不包含 DocumentDescription
+        $additionalDocumentReference3 = $this->createAdditionalDocumentReference($xml, 'L1', 'K2');
+        $invoiceElement->appendChild($additionalDocumentReference3);
+
+        // 附加第四个 AdditionalDocumentReference 节点，仅包含 ID
+        $additionalDocumentReference4 = $this->createAdditionalDocumentReference($xml, 'L1');
+        $invoiceElement->appendChild($additionalDocumentReference4);
+        // 继续添加其他元素...
+
+        $signatureElement = $this->createSignatureElement(
+            $xml, 
+            'urn:oasis:names:specification:ubl:signature:Invoice', 
+            'urn:oasis:names:specification:ubl:dsig:enveloped:xades'
+        );
+        $invoiceElement->appendChild($signatureElement);
+
+        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml,$sellerTIN,"powercool");
+        $invoiceElement->appendChild($accountingSupplierParty);
+
+        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN);
+        $invoiceElement->appendChild($accountingCustomerParty);
+
+        $deliveryElement = $this->createDeliveryElement($xml);
+        $invoiceElement->appendChild($deliveryElement);
+
+        $paymentMeansElement = $this->createPaymentMeansElement($xml);
+        $invoiceElement->appendChild($paymentMeansElement);
+
+        // $paymentTermsElement = $this->createPaymentTermsElement($xml);
+        // $invoiceElement->appendChild($paymentTermsElement);
+
+        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
+        $invoiceElement->appendChild($prepaidPaymentElement);
+
+        $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount on Products', 0);
+        $invoiceElement->appendChild($allowanceCharge1);
+
+        // $allowanceCharge2 = $this->createAllowanceChargeElement($xml, true, 'Service charge', 100);
+        // $invoiceElement->appendChild($allowanceCharge2);
+
+        
+
+        foreach ($saleProducts as $saleProduct) {
+            $customUnitPrice = $saleProduct->pivot->custom_unit_price;
+            $quantity = $saleProduct->qty;
+            $productPayment = $quantity * $customUnitPrice;
+    
+            $totalPayment += $productPayment;
+        }
+        
+
+        $taxAmount = $totalPayment * 0.1;
+        $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount); 
+        $invoiceElement->appendChild($taxTotal);
+
+        $legalMonetaryTotal = $this->createLegalMonetaryTotalElement(
+            $xml,
+            $totalPayment,
+            $totalPayment,
+            $totalPayment,
+            $totalDiscount,
+            $totalPayment - $taxAmount,
+            $totalPayment
+        );
+
+        $invoiceElement->appendChild($legalMonetaryTotal);
+        
+  
+        foreach ($saleProducts as $saleProduct) {
+            $id = $saleProduct->id;
+            $quantity = $saleProduct->qty;
+            $customUnitPrice = $saleProduct->pivot->custom_unit_price;
+            $lineExtensionAmount = $quantity * $customUnitPrice;
+            $allowanceCharges = [
+                [
+                    'chargeIndicator' => false,
+                    'reason' => 'Discount On Product',
+                    'amount' => 0
+                ]
+            ];
+            $invoiceLine = $this->createInvoiceLineElement(
+                $xml,
+                (string)$id,
+                $quantity,
+                $lineExtensionAmount,
+                $allowanceCharges,
+                $lineExtensionAmount * 0.1, // Tax amount
+                $lineExtensionAmount, // Taxable amount
+                10, // Tax rate
+                'Exempt New Means of Transport',
+                $saleProduct->desc ?? 'No Description',
+                'MYS', // Origin country
+                $saleProduct->product->classificationCodes,
+                $customUnitPrice,
+                $lineExtensionAmount,
+                true
+            );
+
+            $invoiceElement->appendChild($invoiceLine);
+        }
+        
+        $xmlContent = $xml->saveXML();
+        Storage::put('/public/billing_e-invoice/'.$billing->sku.'.xml', $xmlContent);
 
         return $xmlContent;
     }
@@ -909,7 +1076,7 @@ class EInvoiceXmlGenerator
         $accountingSupplierParty->appendChild($party);
 
         // 添加 IndustryClassificationCode
-        
+        // $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $this->msic);
         $industryClassificationCode = $xml->createElement('cbc:IndustryClassificationCode', $company == 'powercool' ? "28191" : "46496");
         $industryClassificationCode->setAttribute('name', 'Wholesale of Refrigrerator');
         $party->appendChild($industryClassificationCode);
@@ -917,11 +1084,10 @@ class EInvoiceXmlGenerator
         // 添加 PartyIdentification 节点
         $partyIdentifications = [
             ['schemeID' => 'TIN', 'ID' => $sellerTIN],
+            ['schemeID' => 'NRIC', 'ID' => "001022030687"],
+
             // ['schemeID' => 'BRN', 'ID' => $company == 'powercool' ? "199601010696(383045D)" : "200501027542"],
-            ['schemeID' => 'BRN', 'ID' => "202001234567"],
-            ['schemeID' => 'SST', 'ID' => 'NA'],
-            
-            // ['schemeID' => 'SST', 'ID' => $company == 'powercool' ? "B16-1809-22000036" : "NA"],
+            ['schemeID' => 'SST', 'ID' => $company == 'powercool' ? "B16-1809-22000036" : "NA"],
         ];
 
         foreach ($partyIdentifications as $identification) {
@@ -978,7 +1144,7 @@ class EInvoiceXmlGenerator
         return $accountingSupplierParty;
     }
 
-    public function createAccountingCustomerPartyElement($xml,$buyerTIN,$customer = null,$buyerIDValue = "NA")
+    public function createAccountingCustomerPartyElement($xml,$buyerTIN,$customer = null,$buyerIDValue = "NA", $fromBilling = false)
     {
         // 创建 AccountingCustomerParty 元素
         $accountingCustomerParty = $xml->createElement('cac:AccountingCustomerParty');
@@ -1007,16 +1173,21 @@ class EInvoiceXmlGenerator
         if($customer){
             $deliveryAddress = (new CustomerLocation)->defaultDeliveryAddress($customer->id);
         }
+
         $postalAddress = $xml->createElement('cac:PostalAddress');
-        $cityName = $xml->createElement('cbc:CityName', $deliveryAddress->city ?? 'NA');
-        $postalZone = $xml->createElement('cbc:PostalZone', $deliveryAddress->zip_code ?? 'NA');
-        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', $deliveryAddress ? ($deliveryAddress->countrySubentityCode() ?? '17') : '17');
+        $cityName = $xml->createElement('cbc:CityName', $fromBilling ? 'SERENDAH' : $deliveryAddress->city ?? 'NA');
+        $postalZone = $xml->createElement('cbc:PostalZone', $fromBilling ? '48200' :  $deliveryAddress->zip_code ?? 'NA');
+        $countrySubentityCode = $xml->createElement('cbc:CountrySubentityCode', $fromBilling ? '10' : ($deliveryAddress ? ($deliveryAddress->countrySubentityCode() ?? '17') : '17') );
         $postalAddress->appendChild($cityName);
         $postalAddress->appendChild($postalZone);
         $postalAddress->appendChild($countrySubentityCode);
 
         // 添加 AddressLine
-        $addressLines = [$deliveryAddress->address ?? 'NA'];
+        if($fromBilling){
+            $addressLines = ['NO:12,RCI PARK,JALAN KESIDANG 2,', 'KAWASAN PERINDUSTRIAN SUNGAI CHOH,', '48200 SERENDAH,SELANGOR.'];
+        }else{
+            $addressLines = [$deliveryAddress->address ?? 'NA'];
+        }
         foreach ($addressLines as $line) {
             $addressLine = $xml->createElement('cac:AddressLine');
             $lineElement = $xml->createElement('cbc:Line', $line);
@@ -1036,14 +1207,14 @@ class EInvoiceXmlGenerator
 
         // 添加 PartyLegalEntity
         $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
-        $registrationName = $xml->createElement('cbc:RegistrationName', $customer->name ?? 'NA');
+        $registrationName = $xml->createElement('cbc:RegistrationName', $fromBilling ? 'HI-TEN TRADING SDN BHD' : ($customer->name ?? 'NA'));
         $partyLegalEntity->appendChild($registrationName);
         $party->appendChild($partyLegalEntity);
 
         // 添加 Contact
         $contact = $xml->createElement('cac:Contact');
-        $telephone = $xml->createElement('cbc:Telephone', $customer->phone ?? 'NA');
-        $email = $xml->createElement('cbc:ElectronicMail', $customer->email ?? 'NA');
+        $telephone = $xml->createElement('cbc:Telephone', $fromBilling ? '+60122632919' : ($customer->phone ?? 'NA'));
+        $email = $xml->createElement('cbc:ElectronicMail', $fromBilling ? 'imax.hiten_sales@powercool.com.my' : ($customer->email ?? 'NA'));
         $contact->appendChild($telephone);
         $contact->appendChild($email);
         $party->appendChild($contact);
@@ -1414,20 +1585,20 @@ class EInvoiceXmlGenerator
     
         // Add the second CommodityClassification element
         
-        if ($isConsolidated) {
-            $has004 = false;
+        // if ($isConsolidated) {
+        //     $has004 = false;
     
-            foreach ($itemClassificationCodes as $itemClassificationCode) {
-                if ($itemClassificationCode->code === '004') {
-                    $has004 = true;
-                    break;
-                }
-            }
+        //     foreach ($itemClassificationCodes as $itemClassificationCode) {
+        //         if ($itemClassificationCode->code === '004') {
+        //             $has004 = true;
+        //             break;
+        //         }
+        //     }
     
-            if (!$has004) {
-                $itemClassificationCodes[] = (object)['code' => '004'];
-            }
-        }
+        //     if (!$has004) {
+        //         $itemClassificationCodes[] = (object)['code' => '004'];
+        //     }
+        // }
     
         foreach ($itemClassificationCodes as $itemClassificationCode) {
             $commodityClassification2 = $xml->createElement('cac:CommodityClassification');

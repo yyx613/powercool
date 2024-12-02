@@ -33,14 +33,19 @@ class Invoice extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function einvoice()
-    {
-        return $this->hasOne(EInvoice::class);
-    }
-
     public function consolidatedEInvoices()
     {
         return $this->belongsToMany(ConsolidatedEInvoice::class, 'consolidated_e_invoice_invoice');
+    }
+
+    public function billings()
+    {
+        return $this->belongsToMany(Billing::class, 'billing_invoice', 'invoice_id', 'billing_id');
+    }
+
+    public function einvoice()
+    {
+        return $this->morphOne(EInvoice::class, 'einvoiceable');
     }
 
     public function generateSku(): string {

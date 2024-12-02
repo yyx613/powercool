@@ -29,6 +29,23 @@ class Billing extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
+    public function invoices()
+    {
+        return $this->belongsToMany(Invoice::class, 'billing_invoice', 'billing_id', 'invoice_id');
+    }
+
+    public function einvoice()
+    {
+        return $this->morphOne(EInvoice::class, 'einvoiceable');
+    }
+
+    public function saleProducts()
+    {
+        return $this->belongsToMany(SaleProduct::class, 'billing_sale_product', 'billing_id', 'sale_product_id')
+            ->withPivot('custom_unit_price')
+            ->withTimestamps();
+    }
+
     public function generateSku(): string {
         $sku = null;
         

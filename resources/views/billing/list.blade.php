@@ -18,8 +18,17 @@
 @endpush
 
 @section('content')
-    <div class="mb-6">
-        <x-app.page-title>{{ __('Billing') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between">
+        <x-app.page-title>{{ __('Billing') }}</x-app.page-title><div class="flex gap-x-4">
+            <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-btn">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
+                <span>{{ __('Submit E-Invoice') }}</span>
+            </a>
+            <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-consolidated-btn">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
+                <span>{{ __('Submit Consolidated E-Invoice') }}</span>
+            </a>
+        </div>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -38,12 +47,18 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>
+                        <input type="checkbox" id="select-all">
+                    </th>
                     <th>{{ __('SKU') }}</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
+    </div>
+    <div id="loading-indicator" style="display: none;">
+        <span class="loader"></span>
     </div>
 @endsection
 
@@ -62,20 +77,31 @@
             serverSide: true,
             order: [],
             columns: [
+                { data: 'id' },
                 { data: 'sku' },
                 { data: 'action' },
             ],
             columnDefs: [
                 {
-                    "width": "10%",
+                    "width": "5%",
                     "targets": 0,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        var disabled = row.enable ? 'disabled' : '';
+                        var style = row.enable ? 'style="opacity: 0.5; cursor: not-allowed;"' : '';
+                        return `<input type="checkbox" class="order-checkbox" data-id="${data}" ${disabled} ${style}>`;
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 1,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "width": "5%",
-                    "targets": 1,
+                    "targets": 2,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -102,5 +128,143 @@
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
         })
+
+        let selectedInvoices = [];
+
+        $('#select-all').on('click', function() {
+            let checked = this.checked;
+            $('.order-checkbox').each(function() {
+                if (!$(this).prop('disabled')) {
+                    $(this).prop('checked', checked).trigger('change');
+                }
+            });
+        });
+
+        $(document).on('change', '.order-checkbox', function () {
+            let invoiceId = $(this).data('id');
+            let isChecked = this.checked;
+            
+            if (isChecked) {
+                selectedInvoices.push({ id: invoiceId });
+            } else {
+                selectedInvoices = selectedInvoices.filter(invoice => invoice.id != invoiceId);
+            }
+            console.log(selectedInvoices)
+            checkSelectAllStatus();
+            toggleAssignButton();
+        });
+
+
+        function checkSelectAllStatus() {
+            let enabledCheckboxes = $('.order-checkbox:not(:disabled)').length;
+            let checkedEnabledCheckboxes = $('.order-checkbox:not(:disabled):checked').length;
+
+            let allChecked = enabledCheckboxes > 0 && enabledCheckboxes === checkedEnabledCheckboxes;
+            $('#select-all').prop('checked', allChecked);
+        }
+
+        $('#submit-btn').on('click', function(e) {
+            e.preventDefault();
+            if (selectedInvoices.length === 0) {
+                alert("Please select at least one order to submit.");
+                return;
+            }
+
+            const loadingIndicator = document.getElementById('loading-indicator'); 
+            loadingIndicator.style.display = 'flex';
+
+            let url = "{{ config('app.url') }}";
+            url = `${url}/e-invoice/billing-submit`;
+            let billingIds = selectedInvoices.map(invoice => invoice.id);
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST', 
+                data: JSON.stringify({ billings: billingIds }),
+                contentType: 'application/json',
+                success: function(response) {
+                    loadingIndicator.style.display = 'none';
+                    $('.order-checkbox').prop('checked', false);
+                    selectedInvoices = [];
+                    $('#select-all').prop('checked', false);
+                    if (response.errorDetails && response.errorDetails.length > 0) {
+                        let errorMessage = "Some documents were rejected:\n";
+                        
+                        response.errorDetails.forEach(function(document) {
+                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                            
+                            document.details.forEach(function(detail) {
+                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                            });
+                        });
+                        
+                        alert(errorMessage);
+                    } else {
+                        alert(response.message || "Submit success");
+                    }
+                },
+                error: function(error) {
+                    loadingIndicator.style.display = 'none';
+
+                    if (error.responseJSON.rejectedDocuments) {
+                        error.responseJSON.rejectedDocuments.forEach(function(document) {
+                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                            
+                            document.details.forEach(function(detail) {
+                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                            });
+                        });
+                    }
+
+                    alert(errorMessage);
+                }
+            });
+        });
+
+        function toggleAssignButton() {
+            if (selectedInvoices.length === 0) {
+                $('#assign-btn').addClass('bg-gray-200 cursor-not-allowed').removeClass('bg-green-200').prop('disabled', true);
+            } else {
+                $('#assign-btn').removeClass('bg-gray-200 cursor-not-allowed').addClass('bg-green-200').prop('disabled', false);
+            }
+        }
     </script>
+@endpush
+@push('styles')
+<style>
+    #loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #FFF;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
 @endpush

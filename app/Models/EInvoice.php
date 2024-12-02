@@ -10,10 +10,10 @@ class EInvoice extends Model
     use HasFactory;
     protected $guarded = [];
 
-    public function invoice()
-    {
-        return $this->belongsTo(Invoice::class);
-    }
+    // public function invoice()
+    // {
+    //     return $this->belongsTo(Invoice::class);
+    // }
 
     public function creditNotes()
     {
@@ -23,5 +23,10 @@ class EInvoice extends Model
     public function debitNotes()
     {
         return $this->belongsToMany(DebitNote::class, 'debit_note_e_invoice', 'einvoice_id', 'debit_note_id');
+    }
+
+    public function einvoiceable()
+    {
+        return $this->morphTo();
     }
 }
