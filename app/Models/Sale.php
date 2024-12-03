@@ -22,6 +22,7 @@ class Sale extends Model
     const STATUS_INACTIVE = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_CONVERTED = 2;
+    const STATUS_CANCELLED = 3;
 
     protected $guarded = [];
     protected $casts = [

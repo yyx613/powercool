@@ -70,31 +70,28 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('grn.view')
-                                <li>
-                                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('GRN') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
-                                @can('service_history.view')
-                                <li>
-                                    <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
-                                @can('warranty.view')
-                                <li>
-                                    <a href="{{ route('warranty.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
                             </ul>
                         </div>
                     </div>
                 </li>
+                @can('service_history.view')
+                    <li>
+                        <a href="{{ route('service_history.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z"/><path d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.293.707l3,3a1,1,0,0,0,1.414-1.414L13,11.586V7A1,1,0,0,0,12,6Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Service History') }}</span>
+                        </a>
+                    </li>
+                @endcan
+                @can('warranty.view')
+                    <li>
+                        <a href="{{ route('warranty.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Warranty') }}</span>
+                        </a>
+                    </li>
+                @endcan
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="3">
                         <button class="p-2 flex items-center rounded-md w-full">
@@ -379,6 +376,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('priority.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
                                     </a>
@@ -452,6 +454,30 @@
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
                         </button>
                     </li>
+                    @can('service_history.view')
+                        <li>
+                            <a href="{{ route('service_history.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                                <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z"/><path d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.293.707l3,3a1,1,0,0,0,1.414-1.414L13,11.586V7A1,1,0,0,0,12,6Z"/></svg>
+                                <!-- Tooltip -->
+                                <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Service History') }}</span>
+                                </div>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('warranty.view')
+                        <li>
+                            <a href="{{ route('warranty.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                                <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                    <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
+                                </svg>
+                                <!-- Tooltip -->
+                                <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Warranty') }}</span>
+                                </div>
+                            </a>
+                        </li>
+                    @endcan
                     <li class="expand-sub-menu-triggers" data-type="sale">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23,22H3a1,1,0,0,1-1-1V1A1,1,0,0,0,0,1V21a3,3,0,0,0,3,3H23a1,1,0,0,0,0-2Z"/><path d="M15,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,15,20Z"/><path d="M7,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,7,20Z"/><path d="M19,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,19,20Z"/><path d="M11,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,11,20Z"/></svg>
@@ -726,6 +752,11 @@
                 <li>
                     <a href="{{ route('platform.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('priority.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
                     </a>
                 </li>
                 <li>

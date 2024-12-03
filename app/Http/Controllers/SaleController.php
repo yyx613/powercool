@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Role;
 use App\Models\Sale;
+use App\Models\SaleOrderCancellationHistory;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Target;
@@ -347,8 +348,10 @@ class SaleController extends Controller
                 'total_amount' => $record->payment_amount,
                 'status' => $record->status,
                 'platform' => $record->platform->name ?? '-',
+                'cancellation_charge' => number_format($record->cancellation_charge, 2),
                 'can_edit' => hasPermission('sale.sale_order.edit'),
-                'can_delete' => hasPermission('sale.sale_order.delete'),
+                'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
+                'can_delete' => hasPermission('sale.sale_order.delete') && !in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
             ];
         }
 
@@ -371,7 +374,24 @@ class SaleController extends Controller
 
     public function editSaleOrder(Sale $sale)
     {
-        $sale->load('products.product.children', 'products.children');
+        if ($sale->status == Sale::STATUS_CANCELLED) {
+            $sale->load([
+                'products'=> function ($q) {
+                    $q->withTrashed()->with(['product' => function ($q) {
+                        $q->withTrashed()->with(['children' => function ($q) {
+                            $q->withTrashed();
+                        }]);
+                    }]);
+                },
+                'products'=> function ($q) {
+                    $q->withTrashed()->with(['children' => function ($q) {
+                        $q->withTrashed();
+                    }]);
+                },
+            ]);
+        } else {
+            $sale->load('products.product.children', 'products.children');
+        }
 
         $sale->products->each(function ($q) {
             $q->attached_to_do = $q->attachedToDo();
@@ -380,6 +400,49 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale
         ]);
+    }
+
+    public function cancelSaleOrder(Request $req, Sale $sale) {
+        try {
+            DB::beginTransaction();
+
+            $sps = SaleProduct::where('sale_id', $sale->id)->get();
+
+            for ($i=0; $i < count($sps); $i++) { 
+                // Update cancellation history
+                $soch = SaleOrderCancellationHistory::where([
+                    ['sale_person_id', $sale->sale_id],
+                    ['product_id', $sps[$i]->product_id]
+                ])->first();
+
+                if ($soch == null) {
+                    SaleOrderCancellationHistory::create([
+                        'sale_person_id' => $sale->sale_id,
+                        'product_id' => $sps[$i]->product_id,
+                        'qty' => $sps[$i]->qty,
+                    ]);
+                } else {
+                    $soch->increment('qty', $sps[$i]->qty);
+                }
+
+                // Delete product/child
+                SaleProductChild::where('sale_product_id', $sps[$i]->id)->delete();
+                SaleProduct::where('id', $sps[$i]->id)->delete();
+            }
+
+            $sale->cancellation_charge = $req->charge;
+            $sale->status = Sale::STATUS_CANCELLED;
+            $sale->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Quotation cancelled');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 
     public function pdfSaleOrder(Sale $sale)
@@ -620,6 +683,32 @@ class SaleController extends Controller
             } else {
                 $sale = Sale::where('id', $req->sale_id)->first();
 
+                // Update Cancellation History
+                if ($sale->sale_id != $req->sale) {
+                    $sps = SaleProduct::where('sale_id', $sale->id)->get();
+
+                    for ($i=0; $i < count($sps); $i++) { 
+                        // Increment for old sale person
+                        $soch = SaleOrderCancellationHistory::where([
+                            ['sale_person_id', $sale->sale_id],
+                            ['product_id', $sps[$i]->product_id]
+                        ])->first();
+        
+                        if ($soch != null) {
+                            $soch->increment('qty', $sps[$i]->qty);
+                        }
+                        // Decrement for new sale person
+                        $soch = SaleOrderCancellationHistory::where([
+                            ['sale_person_id', $req->sale],
+                            ['product_id', $sps[$i]->product_id]
+                        ])->first();
+        
+                        if ($soch != null) {
+                            $soch->decrement('qty', $sps[$i]->qty);
+                        }
+                    }
+                }
+
                 $sale->update([
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
@@ -706,10 +795,27 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
+            $sale = Sale::where('id', $req->sale_id)->first();
+
             if ($req->product_order_id != null) {
                 $order_idx = array_filter($req->product_order_id, function ($val) {
                     return $val != null;
-                });
+                }) ?? [];
+
+                // Update cancellation history
+                $sps = SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx)->get();
+                
+                for ($i=0; $i < count($sps); $i++) { 
+                    $soch = SaleOrderCancellationHistory::where([
+                        ['sale_person_id', $sale->sale_id],
+                        ['product_id', $sps[$i]->product_id]
+                    ])->first();
+
+                    if ($soch != null) {
+                        $soch->decrement('qty', $sps[$i]->qty);
+                    }
+                }
+
                 SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->delete();
                 SaleProductChild::whereNotIn('sale_product_id', $order_idx ?? [])->delete();
             }
@@ -718,6 +824,17 @@ class SaleController extends Controller
             for ($i = 0; $i < count($req->product_id); $i++) {
                 if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                     $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
+                    
+                    // Update Cancellation History
+                    $soch = SaleOrderCancellationHistory::where([
+                        ['sale_person_id', $sale->sale_id],
+                        ['product_id', $req->product_id[$i]]
+                    ])->first();
+
+                    if ($soch != null && $sp->qty != $req->qty[$i]) {
+                        $soch->decrement('qty', $sp->qty);
+                        $soch->increment('qty', $req->qty[$i]);
+                    }
 
                     $sp->update([
                         'product_id' => $req->product_id[$i],
@@ -729,6 +846,16 @@ class SaleController extends Controller
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
                 } else {
+                    // Update Cancellation History
+                    $soch = SaleOrderCancellationHistory::where([
+                        ['sale_person_id', $sale->sale_id],
+                        ['product_id', $req->product_id[$i]]
+                    ])->first();
+
+                    if ($soch != null) {
+                        $soch->decrement('qty', $req->qty[$i]);
+                    }
+
                     $sp = SaleProduct::create([
                         'sale_id' => $req->sale_id,
                         'product_id' => $req->product_id[$i],
@@ -1839,8 +1966,6 @@ class SaleController extends Controller
             return response()->json(['message' => $th->getMessage()]);
 
         }
-    
-        
     }
 
     public function getPendingOrdersCount()
@@ -1848,8 +1973,4 @@ class SaleController extends Controller
         $pendingOrdersCount = Sale::where('type', Sale::TYPE_PENDING)->count();
         return response()->json(['count' => $pendingOrdersCount]);
     }
-
-
-    
-
 }

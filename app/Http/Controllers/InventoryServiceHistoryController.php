@@ -109,7 +109,6 @@ class InventoryServiceHistoryController extends Controller
     public function upsert(Request $req) {
         // Validate form
         $rules = [
-            'is_child' => 'required',
             'product' => 'required',
             'next_service_date' => 'required',
             'remind' => 'nullable',
@@ -123,7 +122,7 @@ class InventoryServiceHistoryController extends Controller
             DB::beginTransaction();
 
             $this->inventoryServiceHistory::create([
-                'object_type' => $req->boolean('is_child') == true ? ProductChild::class : Product::class,
+                'object_type' => ProductChild::class,
                 'object_id' => $req->product,
                 'next_service_date' => $req->next_service_date,
                 'reminding_days' => $req->remind,

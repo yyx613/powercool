@@ -12,6 +12,7 @@ use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
 use App\Models\Platform;
+use App\Models\Priority;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
@@ -362,10 +363,14 @@ class ViewServiceProvider extends ServiceProvider
 
             $sales = Sale::with('products')->orderBy('id', 'desc')->get();
 
+            $priorities = Priority::orderBy('id', 'desc')->get();
+
             $view->with('users', $users);
             $view->with('milestones', $milestones);
             $view->with('products', $products);
             $view->with('sales', $sales);
+            $view->with('sales', $sales);
+            $view->with('priorities', $priorities);
         });
         View::composer(['material_use.form'], function (ViewView $view) {
             $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
@@ -471,16 +476,10 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('costs', $costs);
         });
         View::composer(['service_history.form'], function (ViewView $view) {
-            $raw_materials = Product::where('type', Product::TYPE_RAW_MATERIAL)
-                ->where('is_sparepart', false)
-                ->orderBy('id', 'desc')
-                ->get();
-
-            $product_children = ProductChild::orderBy('id', 'desc')->get();
+            $sale_orders = Sale::with('products.children.productChild')->where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
 
             $view->with([
-                'raw_materials' => $raw_materials,
-                'product_children' => $product_children,
+                'sale_orders' => $sale_orders,
             ]);
         });
     }

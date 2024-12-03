@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductChild;
-use App\Models\ProductionMilestoneMaterial;
 use App\Models\Sale;
+use App\Models\SaleOrderCancellationHistory;
 use App\Models\SaleProduct;
-use App\Models\SaleProductChild;
 use App\Models\TaskMilestoneInventory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 
@@ -41,6 +42,26 @@ class InventoryController extends Controller
         return Response::json([
             'raw_materials' => $raw_materials,
             'spareparts' => $spareparts,
+        ], HttpFoundationResponse::HTTP_OK);
+    }
+
+    public function getSalePersonCancelledProducts(Request $req) {
+        $histories = SaleOrderCancellationHistory::select('*', DB::raw('SUM(qty) AS sum_qty'))
+            ->with('product.image')
+            ->where('sale_person_id', $req->user()->id)
+            ->groupBy('product_id');
+
+        if ($req->keyword != null && $req->keyword != '') {
+            $histories = $histories->whereHas('product', function($q) use ($req) {
+                $q->where('model_name', 'like', '%'.$req->keyword.'%')
+                    ->orWhere('sku', 'like', '%'.$req->keyword.'%');
+            });
+        }
+
+        $histories = $histories->simplePaginate();
+
+        return Response::json([
+            'histories' => $histories,
         ], HttpFoundationResponse::HTTP_OK);
     }
 }

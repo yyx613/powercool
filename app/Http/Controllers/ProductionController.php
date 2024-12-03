@@ -61,7 +61,10 @@ class ProductionController extends Controller
                 $q->where('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('name', 'like', '%' . $keyword . '%')
                     ->orWhere('start_date', 'like', '%' . $keyword . '%')
-                    ->orWhere('due_date', 'like', '%' . $keyword . '%');
+                    ->orWhere('due_date', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('priority', function($q) use ($keyword) {
+                        $q->where('name', 'like', '%'.$keyword.'%');
+                    });
             });
         }
         // Order
@@ -99,6 +102,7 @@ class ProductionController extends Controller
                 'days_left' => Carbon::parse($record->due_date)->addDay()->diffInDays(now()),
                 'progress' => $record->getProgress($record),
                 'status' => $record->status,
+                'priority' => $record->priority,
                 'can_edit' => hasPermission('production.edit'),
                 'can_delete' => hasPermission('production.delete'),
             ];
@@ -191,6 +195,7 @@ class ProductionController extends Controller
             'status' => 'required',
             'product' => 'required',
             'order' => 'nullable',
+            'priority' => 'nullable',
             'assign' => 'required',
             'assign.*' => 'exists:users,id',
             'milestone' => 'required_without:custom_milestone',
@@ -226,6 +231,7 @@ class ProductionController extends Controller
                     'start_date' => $req->start_date,
                     'due_date' => $req->due_date,
                     'status' => $req->status,
+                    'priority_id' => $req->priority,
                 ]);
                 (new Branch)->assign(Production::class, $production->id);
             } else {
@@ -238,6 +244,7 @@ class ProductionController extends Controller
                     'start_date' => $req->start_date,
                     'due_date' => $req->due_date,
                     'status' => $req->status,
+                    'priority_id' => $req->priority,
                 ]);
             }
             // Assign

@@ -17,6 +17,10 @@
                 <div class="mt-8 flex justify-end">
                     <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
                 </div>
+            @elseif (isset($sale) && $sale->status == 3)
+                <div class="mt-8 flex justify-end">
+                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
+                </div>
             @else
                 <div class="mt-8 flex justify-end">
                     <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>

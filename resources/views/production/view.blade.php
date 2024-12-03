@@ -34,6 +34,14 @@
                         <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Progress') }}</span>
                     </div>
                 </div>
+                @if ($production->priority != null)
+                    <div class="flex-1 flex flex-col pt-4">
+                        <div class="bg-teal-300 rounded-lg p-1.5 flex flex-col">
+                            <span class="flex-1 uppercase text-lg text-center font-semibold" id="progress">{{ $production->priority->name }}</span>
+                            <span class="text-xs text-center font-semibold mt-1 bg-white rounded-full">{{ __('Priority') }}</span>
+                        </div>
+                    </div>
+                @endif
             </div>
             <div class="border-t pt-4 mt-4">
                 <div class="mb-4">
