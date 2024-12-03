@@ -35,6 +35,7 @@ use App\Http\Controllers\Platforms\LazadaController;
 use App\Http\Controllers\Platforms\ShopeeController;
 use App\Http\Controllers\Platforms\TiktokController;
 use App\Http\Controllers\Platforms\WooCommerceController;
+use App\Http\Controllers\PriorityController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\WarrantyController;
 
@@ -183,6 +184,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
             Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
+            Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
             Route::get('/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
@@ -463,6 +465,15 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/edit/{platform}', 'edit')->name('edit');
             Route::post('/update/{platform}', 'update')->name('update');
         });
+        // Priorities
+        Route::controller(PriorityController::class)->prefix('priority')->name('priority.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{priority}', 'edit')->name('edit');
+            Route::post('/update/{priority}', 'update')->name('update');
+        });
         // User Management
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -479,6 +490,8 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::controller(RoleController::class)->prefix('role-management')->name('role_management.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
             Route::get('/edit/{role}', 'edit')->name('edit');
             Route::post('/update/{role}', 'update')->name('update');
         });

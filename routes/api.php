@@ -33,26 +33,27 @@ Route::prefix('v1')->group(function() {
         Route::post('reset-password', 'resetPassword');
         Route::post('get-verification-mail', 'getVerificationMail');
     });
-    // Task
-    Route::controller(TaskController::class)->middleware('auth:sanctum')->prefix('task')->group(function() {
-        Route::get('get-statistic', 'getStatistic');
-        Route::get('get-all', 'getAll');
-        Route::get('get-detail/{task}', 'getDetail');
-        Route::post('update-milestone/{task_ms}', 'updateMilestone');
-    });
-    // Notification
-    Route::controller(NotificationController::class)->middleware('auth:sanctum')->prefix('notification')->group(function() {
-        Route::get('get-all', 'getAll');
-        Route::get('read/{noti}', 'read');
-    });
-    // Target
-    Route::controller(SaleController::class)->middleware('auth:sanctum')->group(function() {
-        Route::prefix('sales-target')->group(function() {
+    Route::middleware('auth:sanctum')->group(function() {
+        // Task
+        Route::controller(TaskController::class)->prefix('task')->group(function() {
+            Route::get('get-statistic', 'getStatistic');
+            Route::get('get-all', 'getAll');
+            Route::get('get-detail/{task}', 'getDetail');
+            Route::post('update-milestone/{task_ms}', 'updateMilestone');
+        });
+        // Notification
+        Route::controller(NotificationController::class)->prefix('notification')->group(function() {
+            Route::get('get-all', 'getAll');
+            Route::get('read/{noti}', 'read');
+        });
+        // Target
+        Route::controller(SaleController::class)->prefix('sales-target')->group(function() {
             Route::get('get-all', 'getAllSalesTarget');
         });
-    });
-    // Inventory
-    Route::controller(InventoryController::class)->prefix('inventory')->group(function() {
-        Route::get('/get-raw-material-and-sparepart', 'getRawMaterialAndSparepart');
+        // Inventory
+        Route::controller(InventoryController::class)->prefix('inventory')->group(function() {
+            Route::get('/get-raw-material-and-sparepart', 'getRawMaterialAndSparepart');
+            Route::get('/get-sale-person-cancelled-products', 'getSalePersonCancelledProducts');
+        });
     });
 });

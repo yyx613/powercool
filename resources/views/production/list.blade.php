@@ -56,6 +56,7 @@
                     <th>{{ __('Start Date') }}</th>
                     <th>{{ __('Due Date') }}</th>
                     <th>{{ __('Days Left') }}</th>
+                    <th>{{ __('Priority') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th>{{ __('Progress') }}</th>
                     <th></th>
@@ -87,6 +88,7 @@
                 { data: 'start_date' },
                 { data: 'due_date' },
                 { data: 'days_left' },
+                { data: 'priority' },
                 { data: 'status' },
                 { data: 'progress' },
                 { data: 'action' },
@@ -121,8 +123,16 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "10%",
                     "targets": 4,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data == null ? '-' : data.name
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 5,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -139,7 +149,7 @@
                 },
                 {
                     "width": "10%",
-                    "targets": 5,
+                    "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
@@ -147,7 +157,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 6,
+                    "targets": 7,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

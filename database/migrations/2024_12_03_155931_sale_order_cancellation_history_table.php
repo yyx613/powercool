@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('product_children', function (Blueprint $table) {
-            $table->string("stock_out_to_type")->nullable()->after('stock_out_by');
-            $table->unsignedBigInteger("stock_out_to_id")->nullable()->after('stock_out_to_type');
-            $table->index(["stock_out_to_id", "stock_out_to_type"]);
+        Schema::create('sale_order_cancellation_histories', function(Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('sale_person_id');
+            $table->unsignedBigInteger('product_id');
+            $table->bigInteger('qty');
+            $table->timestamps();
         });
     }
 

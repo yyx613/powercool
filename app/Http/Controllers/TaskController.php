@@ -157,7 +157,9 @@ class TaskController extends Controller
             $whatsapp_url = null;
             if ($role == Task::TYPE_DRIVER && $record->sale_order_id != null) {
                 $driver = $record->users[0];
-                $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
+                if ($driver->phone_number != null) {
+                    $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
+                }
             }
             
             $data['data'][] = [

@@ -48,6 +48,42 @@ class RoleController extends Controller
         return $data;
     }
 
+    public function create() {
+        return view('role_management.form');
+    }
+
+    public function store(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:250|unique:roles',
+        ]);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+        // Create role
+        try {
+            DB::beginTransaction();
+
+            $role = Role::create([
+                'name' => $request->input('name')
+            ]);
+
+            $selected_permissions = $request->except(['_token', 'name']);
+
+            $role->name = $request->input('name');
+            $role->save();
+            $role->syncPermissions(array_values($selected_permissions));
+
+            DB::commit();
+
+            return redirect()->route('role_management.index')->with('success', 'Role created.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Failed to create the role.');
+        }
+    }
+
     public function edit(Role $role)
     {
         $role_permissions = $role->getAllPermissions()->pluck('name')->toArray();
@@ -71,9 +107,6 @@ class RoleController extends Controller
             DB::beginTransaction();
 
             $selected_permissions = $request->except(['_token', 'name']);
-
-            $old_role = clone ($role);
-            $old_role->permissions = $old_role->getAllPermissions()->pluck('name')->toArray();
 
             $role->name = $request->input('name');
             $role->save();
