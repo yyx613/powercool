@@ -26,7 +26,7 @@ class EInvoiceEmail extends Mailable
     public $path;
     public $company;
 
-    public function __construct(Customer $customer, $invoice, $path,  $company)
+    public function __construct($customer, $invoice, $path,  $company)
     {
         $this->customer = $customer;
         $this->invoice = $invoice;

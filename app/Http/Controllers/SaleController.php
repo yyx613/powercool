@@ -1252,7 +1252,8 @@ class SaleController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'uuid',
-                0 => 'status',
+                1 => 'status',
+                2 => 'from',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1276,6 +1277,7 @@ class SaleController extends Controller
             $data['data'][] = [       
                 'id' => $record->id,
                 'uuid' => $record->uuid,
+                'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
                 'status' => $record->status,
             ];
         }
@@ -1305,7 +1307,8 @@ class SaleController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'uuid',
-                0 => 'status',
+                1 => 'status',
+                2 => 'from'
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1329,6 +1332,7 @@ class SaleController extends Controller
             $data['data'][] = [       
                 'id' => $record->id,
                 'uuid' => $record->uuid,
+                'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
                 'status' => $record->status,
             ];
         }

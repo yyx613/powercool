@@ -17,7 +17,7 @@ class CreditNote extends Model
         return $this->belongsToMany(EInvoice::class, 'credit_note_e_invoice', 'credit_note_id', 'einvoice_id');
     }
 
-    public function consolidatedEInvoice()
+    public function consolidatedEInvoices()
     {
         return $this->belongsToMany(ConsolidatedEInvoice::class, 'credit_note_con_e_invoice', 'credit_note_id', 'con_einvoice_id');
     }

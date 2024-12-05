@@ -355,9 +355,9 @@ class EInvoiceController extends Controller
                         return $documentDetails;
                     }
                 }
-        
+
+                $errorDetails = [];
                 if (!empty($rejectedDocuments)) {
-                    $errorDetails = [];
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
                             'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
@@ -568,6 +568,7 @@ class EInvoiceController extends Controller
     public function sendEmail(Request $req){
         $id = $req->input('id');
         $type = $req->input('type');
+        $isSent = false;
         if($type == 'eInvoice'){
             $einvoice = EInvoice::find($id);
             $invoice = $einvoice->einvoiceable;
@@ -576,35 +577,58 @@ class EInvoiceController extends Controller
             $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
             $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
             Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
+            $isSent = true;
         }
         else if($type == 'credit'){
             $creditNote = CreditNote::find($id);
-            $customer = $creditNote->eInvoices()
-            ->with('invoice.deliveryOrders.customer')
-            ->get()
-            ->pluck('invoice.deliveryOrders')
-            ->flatten()
-            ->pluck('customer')
-            ->first();
-            $company = $creditNote->einvoices()->first()->invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-            $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
-            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
+            if($creditNote->eInvoices->count() > 0){
+                if($creditNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                    $customer = $creditNote->eInvoices()
+                    ->with('einvoiceable.deliveryOrders.customer')
+                    ->get()
+                    ->pluck('einvoiceable.deliveryOrders')
+                    ->flatten()
+                    ->pluck('customer')
+                    ->first();
+    
+                    $company = $creditNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+                }else{
+                    $customer = null;
+                    $company = 'PowerCool';
+                }
+               
+                $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
+                Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
+                $isSent = true;
+            }  
         }
         else if($type == 'debit'){
             $debitNote = DebitNote::find($id);
-            $customer = $debitNote->eInvoices()
-            ->with('invoice.deliveryOrders.customer')
-            ->get()
-            ->pluck('invoice.deliveryOrders')
-            ->flatten()
-            ->pluck('customer')
-            ->first();
-            $company = $debitNote->einvoices()->first()->invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-            $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
-            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
+            if($debitNote->eInvoices->count() > 0){
+                if($debitNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                    $customer = $debitNote->eInvoices()
+                    ->with('einvoiceable.deliveryOrders.customer')
+                    ->get()
+                    ->pluck('einvoiceable.deliveryOrders')
+                    ->flatten()
+                    ->pluck('customer')
+                    ->first();
+                    $company = $debitNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+                }else{
+                    $customer = null;
+                    $company = 'PowerCool';
+                }
+                
+                $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
+                Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
+                $isSent = true;
+            }
         }
-
-        return response()->json(['message' => 'email sent']);
+        if($isSent == true){
+            return response()->json(['message' => 'email sent']);
+        }else{
+            return response()->json(['message' => 'email sent failed']);
+        }
     }
     
 
@@ -762,14 +786,14 @@ class EInvoiceController extends Controller
             if ($type == 'eInvoice') {
                 $note->eInvoices()->attach($eInvoiceIds);
             } else {
-                $note->consolidatedEInvoice()->attach($eInvoiceIds);
+                $note->consolidatedEInvoices()->attach($eInvoiceIds);
             }
 
             $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
 
             $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin,$customer,$fromBilling);
             
-            $result = $this->syncNote($document, $note, $qtyDifferences, $company);
+            $result = $this->syncNote($document, $note, $qtyDifferences, $company,$type);
             if(!empty($result->original['errorDetails'])){
                 DB::rollBack();
             }else{
@@ -783,7 +807,7 @@ class EInvoiceController extends Controller
     }
 
 
-    public function syncNote($document, $note, $qtyDifferences, $company)
+    public function syncNote($document, $note, $qtyDifferences, $company,$type)
     {
         $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
         $headers = [
@@ -849,7 +873,7 @@ class EInvoiceController extends Controller
                     $successfulDocuments[] = $invoiceCodeNumber;
 
                     if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
-                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences);
+                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences,$type);
                     }
                 }
 
@@ -903,7 +927,7 @@ class EInvoiceController extends Controller
     }
 
 
-    public function generateAndSaveNotePdf($documentDetails, $note,$items)
+    public function generateAndSaveNotePdf($documentDetails, $note,$items,$type)
     {
         try {
             $uuid = $documentDetails['uuid'];
@@ -928,26 +952,50 @@ class EInvoiceController extends Controller
                     $total += $item['diff'] * $item['price'];
                 }
             }
-            
-            $eInvoices = $note->eInvoices;
-            
-            if ($eInvoices->isNotEmpty()) {
-                $eInvoice = $eInvoices->first();
-        
-                $invoice = $eInvoice->einvoiceable;
-                if($invoice instanceof Invoice){
-                    $deliveryOrder = $invoice->deliveryOrders->first();
-        
-                    $customer = Customer::find($deliveryOrder->customer_id);
-    
-                    $sale = $deliveryOrder->products->first()->saleProduct->sale;
-                }else{
 
+            if($type == 'eInvoice'){
+                $eInvoices = $note->eInvoices;
+            
+                if ($eInvoices->isNotEmpty()) {
+                    $eInvoice = $eInvoices->first();
+            
+                    $invoice = $eInvoice->einvoiceable;
+                    if($invoice instanceof Invoice){
+                        $deliveryOrder = $invoice->deliveryOrders->first();
+            
+                        $customer = Customer::find($deliveryOrder->customer_id);
+        
+                        $sale = $deliveryOrder->products->first()->saleProduct->sale;
+                    }else{
+    
+                    }
+                    
+                } else {
+                    $customer = null;
                 }
-                
-            } else {
-                $customer = null;
+            }else{
+                $eInvoices = $note->consolidatedEInvoices;
+            
+                if ($eInvoices->isNotEmpty()) {
+                    $eInvoice = $eInvoices->first();
+            
+                    $invoice = $eInvoice->invoices;
+                    if($invoice instanceof Invoice){
+                        $deliveryOrder = $invoice->deliveryOrders->first();
+            
+                        $customer = null;
+        
+                        $sale = $deliveryOrder->products->first()->saleProduct->sale;
+                    }else{
+    
+                    }
+                    
+                } else {
+                    $customer = null;
+                }
             }
+            
+           
           
             $saleProductIds = array_column($items, 'id');
             $validationLink = $this->generateValidationLink($uuid,$longId);
@@ -1070,6 +1118,7 @@ class EInvoiceController extends Controller
                 foreach ($selectedInvoiceIds as $invoiceId) {
                     $eInvoice = ConsolidatedEInvoice::find($invoiceId);
                     $invoices = $eInvoice->invoices;
+                    // dd($invoices);
                     if ($invoices) {
                         foreach ($invoices as $invoice) {
                             $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();

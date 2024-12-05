@@ -135,8 +135,8 @@ class EInvoiceXmlGenerator
         // $paymentTermsElement = $this->createPaymentTermsElement($xml);
         // $invoiceElement->appendChild($paymentTermsElement);
 
-        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        $invoiceElement->appendChild($prepaidPaymentElement);
+        // $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
+        // $invoiceElement->appendChild($prepaidPaymentElement);
 
         $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount On Products', $totalDiscount);
         $invoiceElement->appendChild($allowanceCharge1);
@@ -312,8 +312,8 @@ class EInvoiceXmlGenerator
         // $paymentTermsElement = $this->createPaymentTermsElement($xml);
         // $invoiceElement->appendChild($paymentTermsElement);
 
-        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        $invoiceElement->appendChild($prepaidPaymentElement);
+        // $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
+        // $invoiceElement->appendChild($prepaidPaymentElement);
 
         $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount on Products', $totalDiscount);
         $invoiceElement->appendChild($allowanceCharge1);
@@ -391,17 +391,16 @@ class EInvoiceXmlGenerator
     {
         if($type == 'eInvoice'){
             $eInvoices = EInvoice::whereIn('id', $id)->get();
+            $buyerTIN = !$fromBilling ? $customer->tin_number : "C11901266090";
+            $buyerIDValue = !$fromBilling ? $customer->company_registration_number : "200501027542";  
         }else{
             $eInvoices = ConsolidatedEInvoice::whereIn('id', $id)->get();
+            $buyerTIN = "EI00000000010";
+            $buyerIDValue = "NA";  
         }
 
-        $sellerIDType = "";
-        $sellerIDValue = ""; 
         $sellerTIN = $tin;
-        $buyerTIN = !$fromBilling ? $customer->tin_number : "C11901266090";
-        $buyerIDValue = !$fromBilling ? $customer->company_registration_number : "200501027542";  
-        // $this->validateTIN($sellerTIN,$sellerIDType,$sellerIDValue);
-        // $this->validateTIN($sellerTIN,$buyerIDType,$buyerIDValue);
+        
  
         $xml = new \DOMDocument('1.0', 'UTF-8');
         $xml->formatOutput = true;
@@ -442,7 +441,11 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($currencyCode);
 
         foreach ($eInvoices as $eInvoice) {
-            $company = $fromBilling ? 'powercool' : $eInvoice->einvoiceable->company;
+            if($eInvoice instanceof EInvoice){
+                $company = $fromBilling ? 'powercool' : $eInvoice->einvoiceable->company;
+            }else{
+                $company = $eInvoice->invoices->first()->company;
+            }
             $billingReference = $this->createInvoiceDocumentReference($xml, $eInvoice->sku ?? $eInvoice->einvoiceable->sku, $eInvoice->uuid);
             $invoiceElement->appendChild($billingReference);
         }
@@ -486,8 +489,8 @@ class EInvoiceXmlGenerator
         // $paymentTermsElement = $this->createPaymentTermsElement($xml);
         // $invoiceElement->appendChild($paymentTermsElement);
 
-        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        $invoiceElement->appendChild($prepaidPaymentElement);
+        // $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
+        // $invoiceElement->appendChild($prepaidPaymentElement);
 
         $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Sample Description', 100);
         $invoiceElement->appendChild($allowanceCharge1);
@@ -652,8 +655,8 @@ class EInvoiceXmlGenerator
         // $paymentTermsElement = $this->createPaymentTermsElement($xml);
         // $invoiceElement->appendChild($paymentTermsElement);
 
-        $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        $invoiceElement->appendChild($prepaidPaymentElement);
+        // $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
+        // $invoiceElement->appendChild($prepaidPaymentElement);
 
         $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount on Products', 0);
         $invoiceElement->appendChild($allowanceCharge1);

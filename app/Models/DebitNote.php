@@ -17,7 +17,7 @@ class DebitNote extends Model
         return $this->belongsToMany(EInvoice::class, 'debit_note_e_invoice', 'debit_note_id', 'einvoice_id');
     }
 
-    public function consolidatedEInvoice()
+    public function consolidatedEInvoices()
     {
         return $this->belongsToMany(ConsolidatedEInvoice::class, 'debit_note_con_e_invoice', 'debit_note_id', 'con_einvoice_id');
     }
