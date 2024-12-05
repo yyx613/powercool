@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sale_order_cancellation_histories', function(Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('sale_person_id');
-            $table->unsignedBigInteger('product_id');
-            $table->bigInteger('qty');
-            $table->timestamps();
+        Schema::table('delivery_orders', function (Blueprint $table) {
+            $table->smallInteger('status')->nullable()->after('payment_terms');
+        });
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->smallInteger('status')->nullable()->after('company');
         });
     }
 

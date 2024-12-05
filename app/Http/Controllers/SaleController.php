@@ -19,7 +19,7 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Role;
 use App\Models\Sale;
-use App\Models\SaleOrderCancellationHistory;
+use App\Models\SaleOrderCancellation;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Target;
@@ -406,33 +406,7 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $sps = SaleProduct::where('sale_id', $sale->id)->get();
-
-            for ($i=0; $i < count($sps); $i++) { 
-                // Update cancellation history
-                $soch = SaleOrderCancellationHistory::where([
-                    ['sale_person_id', $sale->sale_id],
-                    ['product_id', $sps[$i]->product_id]
-                ])->first();
-
-                if ($soch == null) {
-                    SaleOrderCancellationHistory::create([
-                        'sale_person_id' => $sale->sale_id,
-                        'product_id' => $sps[$i]->product_id,
-                        'qty' => $sps[$i]->qty,
-                    ]);
-                } else {
-                    $soch->increment('qty', $sps[$i]->qty);
-                }
-
-                // Delete product/child
-                SaleProductChild::where('sale_product_id', $sps[$i]->id)->delete();
-                SaleProduct::where('id', $sps[$i]->id)->delete();
-            }
-
-            $sale->cancellation_charge = $req->charge;
-            $sale->status = Sale::STATUS_CANCELLED;
-            $sale->save();
+            $this->cancelSaleOrderFlow($sale, false, $req->charge);            
 
             DB::commit();
 
@@ -629,6 +603,12 @@ class SaleController extends Controller
                 'convert_to' => $do->id,
             ]);
 
+            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->get();
+            
+            for ($i=0; $i < count($sales); $i++) { 
+                SaleOrderCancellation::calCancellation($sales[$i], 2);
+            }
+
             DB::commit();
 
             return redirect(route('delivery_order.index'))->with('success', 'Sale Order has converted');
@@ -682,32 +662,6 @@ class SaleController extends Controller
                 (new Branch)->assign(Sale::class, $sale->id);
             } else {
                 $sale = Sale::where('id', $req->sale_id)->first();
-
-                // Update Cancellation History
-                if ($sale->sale_id != $req->sale) {
-                    $sps = SaleProduct::where('sale_id', $sale->id)->get();
-
-                    for ($i=0; $i < count($sps); $i++) { 
-                        // Increment for old sale person
-                        $soch = SaleOrderCancellationHistory::where([
-                            ['sale_person_id', $sale->sale_id],
-                            ['product_id', $sps[$i]->product_id]
-                        ])->first();
-        
-                        if ($soch != null) {
-                            $soch->increment('qty', $sps[$i]->qty);
-                        }
-                        // Decrement for new sale person
-                        $soch = SaleOrderCancellationHistory::where([
-                            ['sale_person_id', $req->sale],
-                            ['product_id', $sps[$i]->product_id]
-                        ])->first();
-        
-                        if ($soch != null) {
-                            $soch->decrement('qty', $sps[$i]->qty);
-                        }
-                    }
-                }
 
                 $sale->update([
                     'sale_id' => $req->sale,
@@ -795,26 +749,10 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $sale = Sale::where('id', $req->sale_id)->first();
-
             if ($req->product_order_id != null) {
                 $order_idx = array_filter($req->product_order_id, function ($val) {
                     return $val != null;
-                }) ?? [];
-
-                // Update cancellation history
-                $sps = SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx)->get();
-                
-                for ($i=0; $i < count($sps); $i++) { 
-                    $soch = SaleOrderCancellationHistory::where([
-                        ['sale_person_id', $sale->sale_id],
-                        ['product_id', $sps[$i]->product_id]
-                    ])->first();
-
-                    if ($soch != null) {
-                        $soch->decrement('qty', $sps[$i]->qty);
-                    }
-                }
+                });
 
                 SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->delete();
                 SaleProductChild::whereNotIn('sale_product_id', $order_idx ?? [])->delete();
@@ -825,17 +763,6 @@ class SaleController extends Controller
                 if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                     $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
                     
-                    // Update Cancellation History
-                    $soch = SaleOrderCancellationHistory::where([
-                        ['sale_person_id', $sale->sale_id],
-                        ['product_id', $req->product_id[$i]]
-                    ])->first();
-
-                    if ($soch != null && $sp->qty != $req->qty[$i]) {
-                        $soch->decrement('qty', $sp->qty);
-                        $soch->increment('qty', $req->qty[$i]);
-                    }
-
                     $sp->update([
                         'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
@@ -846,16 +773,6 @@ class SaleController extends Controller
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
                 } else {
-                    // Update Cancellation History
-                    $soch = SaleOrderCancellationHistory::where([
-                        ['sale_person_id', $sale->sale_id],
-                        ['product_id', $req->product_id[$i]]
-                    ])->first();
-
-                    if ($soch != null) {
-                        $soch->decrement('qty', $req->qty[$i]);
-                    }
-
                     $sp = SaleProduct::create([
                         'sale_id' => $req->sale_id,
                         'product_id' => $req->product_id[$i],
@@ -1086,6 +1003,7 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'item_count' => $record->products()->count(),
                 'filename' => $record->filename,
+                'status' => $record->status,
             ];
         }
 
@@ -1181,6 +1099,46 @@ class SaleController extends Controller
         }
     }
 
+    public function cancelDeliveryOrder(DeliveryOrder $do) {
+        if ($do->status == DeliveryOrder::STATUS_CANCELLED) {
+            return back()->with('warning', 'Delivery Order is cancelled');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $sales = Sale::where('type', Sale::TYPE_SO)->where('convert_to', $do->id)->get();
+            
+            for ($i=0; $i < count($sales); $i++) {
+                $this->cancelSaleOrderFlow($sales[$i], true);
+            }
+            $do->status = DeliveryOrder::STATUS_CANCELLED;
+            $do->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Delivery Order cancelled');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public static function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge=null) {
+        SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1);
+
+        $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
+        // Delete product/child
+        SaleProductChild::where('sale_product_id', $sp_ids)->delete();
+        SaleProduct::where('id', $sp_ids)->delete();
+
+        $sale->cancellation_charge = $charge;
+        $sale->status = Sale::STATUS_CANCELLED;
+        $sale->save();
+    }
+
     public function indexInvoice()
     {
         return view('invoice.list');
@@ -1240,7 +1198,8 @@ class SaleController extends Controller
                 'company' => $record->company,
                 'convert_to' => $convert_to,
                 'filename' => $record->filename,
-                'enable' => $enable
+                'enable' => $enable,
+                'status' => $record->status,
             ];
         }
 
@@ -1461,6 +1420,45 @@ class SaleController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function cancelInvoice(Invoice $inv) {
+        if ($inv->status == Invoice::STATUS_CANCELLED) {
+            return back()->with('warning', 'Delivery Order is cancelled');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $dos = DeliveryOrder::where('invoice_id', $inv->id)->get();
+            
+            for ($i=0; $i < count($dos); $i++) {
+                if ($dos[$i]->status == DeliveryOrder::STATUS_CANCELLED) {
+                    continue;
+                }
+
+                $sales = Sale::where('type', Sale::TYPE_SO)->where('convert_to', $dos[$i]->id)->get();
+                
+                for ($j=0; $j < count($sales); $j++) {
+                    $this->cancelSaleOrderFlow($sales[$j], true);
+                }
+
+                $dos[$i]->status = DeliveryOrder::STATUS_CANCELLED;
+                $dos[$i]->save();
+            }
+            
+            $inv->status = Invoice::STATUS_CANCELLED;
+            $inv->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Invoice cancelled');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 
     public function download(Request $req)

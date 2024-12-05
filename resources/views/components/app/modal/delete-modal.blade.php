@@ -5,7 +5,7 @@
         </div>
         <div class="flex-1 flex flex-col p-4">
             <div class="flex-1">
-                <p class="text-slate-500 leading-snug">{{ __('Are you sure to delete the record?') }}</p>
+                <p class="text-slate-500 leading-snug" id="txt">{{ __('Are you sure to delete the record?') }}</p>
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">

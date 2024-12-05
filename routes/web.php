@@ -28,7 +28,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\Platforms\LazadaController;
@@ -207,6 +206,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-data', 'getDataDeliveryOrder')->name('get_data');
             Route::get('/to-invoice', 'toInvoice')->name('to_invoice')->middleware(['can:sale.delivery_order.convert']);
             Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
+            Route::get('/cancel/{do}', 'cancelDeliveryOrder')->name('cancel');
         });
         // Invoice
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
@@ -220,6 +220,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
             Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
             Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
+            Route::get('/cancel/{inv}', 'cancelInvoice')->name('cancel');
         });
 
         Route::get('/download', 'download')->name('download');

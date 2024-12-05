@@ -119,14 +119,14 @@
             @endif
             <!-- Step 4 -->
             @if ($step == 4)
-                <div>
+                <div class="flex flex-col h-full">
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">Select sale order to proceed</h5>
                     </div>
                     @if (count($sale_orders) > 0)
-                        <ul class="flex flex-wrap gap-4">
+                        <ul class="flex items-start flex-wrap gap-4 flex-1">
                             @foreach ($sale_orders as $so)
-                                <li class="w-1/6 p-2 rounded-md cursor-pointer border border-slate-100 text-center sale-order-selections" data-id="{{ $so->id }}">{{ $so->sku }}</li>
+                                <li class="w-1/6  p-2 rounded-md cursor-pointer border border-slate-100 text-center sale-order-selections" data-id="{{ $so->id }}">{{ $so->sku }}</li>
                             @endforeach
                         </ul>
                         <div class="flex justify-end mt-8">
@@ -142,12 +142,12 @@
             @endif
             <!-- Step 5 -->
             @if ($step == 5)
-                <div>
+                <div class="flex flex-col h-full">
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">Select product to convert</h5>
                     </div>
                     @if (count($products) > 0)
-                        <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-4 flex-1">
                             @foreach ($products as $pro)
                                 @if ($pro->remainingQty() > 0)
                                     <div class="p-2 rounded-md border border-slate-100 flex items-center justify-between gap-x-4 products" data-id="{{ $pro->id }}">
