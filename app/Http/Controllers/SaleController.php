@@ -534,12 +534,13 @@ class SaleController extends Controller
             // Create PDF
             $product_ids = explode(',', $req->prod);
             $qtys = explode(',', $req->qty);
+            $sale_order_ids_to_convert = explode(',', Session::get('convert_sale_order_id'));
             for ($i = 0; $i < count($product_ids); $i++) {
                 $prod_qty[$product_ids[$i]] = $qtys[$i];
             }
             $sku = (new DeliveryOrder)->generateSku();
 
-            $sale_orders = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->get();
+            $sale_orders = Sale::where('type', Sale::TYPE_SO)->whereIn('id', $sale_order_ids_to_convert)->get();
 
             $products = SaleProduct::whereIn('id', $product_ids)->get();
 
@@ -575,7 +576,7 @@ class SaleController extends Controller
             $filename = $sku . '.pdf';
             Storage::put(self::DELIVERY_ORDER_PATH . $filename, $content);
 
-            // Create record
+            // Create DO
             $do = DeliveryOrder::create([
                 'customer_id' => Session::get('convert_customer_id'),
                 'sale_id' => Session::get('convert_salesperson_id'),
@@ -584,8 +585,9 @@ class SaleController extends Controller
                 'filename' => $filename
             ]);
             (new Branch)->assign(DeliveryOrder::class, $do->id);
-
+            // Create DO products
             $dop = [];
+            $soc_alter_qty = [];
             foreach ($prod_qty as $prod_id => $qty) {
                 $dop[] = [
                     'delivery_order_id' => $do->id,
@@ -594,19 +596,28 @@ class SaleController extends Controller
                     'created_at' => $do->created_at,
                     'updated_at' => $do->updated_at,
                 ];
+                $soc_alter_qty[$prod_id] = $qty;
             }
             DeliveryOrderProduct::insert($dop);
 
-            // Change SO's status to converted
-            Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->update([
-                'status' => Sale::STATUS_CONVERTED,
-                'convert_to' => $do->id,
-            ]);
-
-            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('id', explode(',', Session::get('convert_sale_order_id')))->get();
+            // Change SO's status to converted, if SO has no product left to convert
+            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('id', $sale_order_ids_to_convert)->get();
             
             for ($i=0; $i < count($sales); $i++) { 
-                SaleOrderCancellation::calCancellation($sales[$i], 2);
+                if ($sales[$i]->hasNoMoreQtyToConvertDO()) {
+                    $sales[$i]->status = Sale::STATUS_CONVERTED;
+                }
+
+                $current_do_ids = [];
+                if ($sales[$i]->convert_to != null) {
+                    $current_do_ids = explode(',', $sales[$i]->convert_to);
+                }
+                $current_do_ids[] = $do->id;
+
+                $sales[$i]->convert_to = join(',', $current_do_ids);
+                $sales[$i]->save();
+
+                SaleOrderCancellation::calCancellation($sales[$i], 2, $soc_alter_qty);
             }
 
             DB::commit();
@@ -1099,21 +1110,30 @@ class SaleController extends Controller
         }
     }
 
-    public function cancelDeliveryOrder(DeliveryOrder $do) {
-        if ($do->status == DeliveryOrder::STATUS_CANCELLED) {
-            return back()->with('warning', 'Delivery Order is cancelled');
-        }
-
+    public function cancelDeliveryOrder(Request $req) {
         try {
             DB::beginTransaction();
 
-            $sales = Sale::where('type', Sale::TYPE_SO)->where('convert_to', $do->id)->get();
-            
+            // Prepare data
+            $involved = json_decode($req->involved, true);
+            $do_to_cancel = [];
+            $so_to_cancel = [];
+
+            foreach ($involved as $key => $value) {
+                $do_to_cancel[] = $key;
+                $so_to_cancel = array_merge($so_to_cancel, $value);
+            }
+            $so_to_cancel = array_unique($so_to_cancel);
+
+            // Cancellation
+            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
+
             for ($i=0; $i < count($sales); $i++) {
                 $this->cancelSaleOrderFlow($sales[$i], true);
             }
-            $do->status = DeliveryOrder::STATUS_CANCELLED;
-            $do->save();
+            DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
+                'status' => DeliveryOrder::STATUS_CANCELLED
+            ]);
 
             DB::commit();
 
@@ -1126,8 +1146,8 @@ class SaleController extends Controller
         }
     }
 
-    public static function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge=null) {
-        SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1);
+    private function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge=null) {
+        SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1, null);
 
         $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
         // Delete product/child
@@ -1137,6 +1157,65 @@ class SaleController extends Controller
         $sale->cancellation_charge = $charge;
         $sale->status = Sale::STATUS_CANCELLED;
         $sale->save();
+    }
+
+    public function getCancellationInvolvedDO(Request $req, DeliveryOrder $do) {
+        $involved = [];
+        $to_search_do_ids = [$do->id];
+        $searched_do_ids = [];
+
+        while (true) {
+            $do_id_to_search = null;
+            if (count($to_search_do_ids) <= 0) {
+                break;
+            }
+            $do_id_to_search = $to_search_do_ids[0];
+
+            $data = $this->getCancellationInvolvedDOFlow($do_id_to_search);
+            $searched_do_ids[] = $do_id_to_search;
+            
+            if (isset($data['do_ids'])) {
+                $diff = array_values(array_diff($data['do_ids'], $searched_do_ids));
+                $to_search_do_ids = array_merge($to_search_do_ids, $diff);
+            }
+            if (isset($data['so_skus'])) {
+                $do_sku = DeliveryOrder::where('id', $do_id_to_search)->value('sku');
+                
+                $involved[$do_sku] = $data['so_skus'];
+            }
+
+            $to_search_do_ids = array_unique(array_values(array_diff($to_search_do_ids, [$do_id_to_search])));
+        }
+        
+        return Response::json([
+            'involved' => $involved,
+        ], HttpFoundationResponse::HTTP_OK);
+    }
+
+    private function getCancellationInvolvedDOFlow(int $do_id) {
+        $so_skus = [];
+        $do_ids = [];
+
+        $sales = Sale::where('type', Sale::TYPE_SO)
+                ->whereRaw("find_in_set('".$do_id."', convert_to)")
+                ->get();
+
+        for ($i=0; $i < count($sales); $i++) {
+            $sale_do_ids = null;
+            if (str_contains($sales[$i]->convert_to, ',')) {
+                $sale_do_ids = explode(',', $sales[$i]->convert_to);
+            } else {
+                $sale_do_ids = [$sales[$i]->convert_to];
+            }
+
+            $so_skus[] = $sales[$i]->sku;
+            $do_ids = array_merge($do_ids, $sale_do_ids);
+        }
+
+        return [
+            'so_skus' => $so_skus,
+            'do_ids' => array_unique($do_ids),
+        ];
     }
 
     public function indexInvoice()
@@ -1422,33 +1501,27 @@ class SaleController extends Controller
         return response()->json($data);
     }
 
-    public function cancelInvoice(Invoice $inv) {
-        if ($inv->status == Invoice::STATUS_CANCELLED) {
-            return back()->with('warning', 'Delivery Order is cancelled');
-        }
-
+    public function cancelInvoice(Request $req) {
         try {
             DB::beginTransaction();
 
-            $dos = DeliveryOrder::where('invoice_id', $inv->id)->get();
-            
-            for ($i=0; $i < count($dos); $i++) {
-                if ($dos[$i]->status == DeliveryOrder::STATUS_CANCELLED) {
-                    continue;
-                }
+            // Prepare data
+            $inv_to_cancel = json_decode($req->involved_inv_skus, true);
+            $do_to_cancel = array_unique(json_decode($req->involved_do_skus, true));
+            $so_to_cancel = array_unique(json_decode($req->involved_so_skus, true));
 
-                $sales = Sale::where('type', Sale::TYPE_SO)->where('convert_to', $dos[$i]->id)->get();
-                
-                for ($j=0; $j < count($sales); $j++) {
-                    $this->cancelSaleOrderFlow($sales[$j], true);
-                }
+            // Cancellation
+            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
 
-                $dos[$i]->status = DeliveryOrder::STATUS_CANCELLED;
-                $dos[$i]->save();
+            for ($i=0; $i < count($sales); $i++) {
+                $this->cancelSaleOrderFlow($sales[$i], true);
             }
-            
-            $inv->status = Invoice::STATUS_CANCELLED;
-            $inv->save();
+            DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
+                'status' => DeliveryOrder::STATUS_CANCELLED
+            ]);
+            Invoice::whereIn('sku', $inv_to_cancel)->update([
+                'status' => Invoice::STATUS_CANCELLED
+            ]);
 
             DB::commit();
 
@@ -1459,6 +1532,86 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    public function getCancellationInvolvedInv(Request $req, Invoice $inv) {
+        $involved = [];
+        $involved_inv_skus = [];
+        $involved_do_skus = [];
+        $involved_so_skus = [];
+        $to_search_inv_ids = [$inv->id];
+        $searched_inv_ids = [];
+
+        while (true) {
+            $inv_id_to_search = null;
+            if (count($to_search_inv_ids) <= 0) {
+                break;
+            }
+            $inv_id_to_search = $to_search_inv_ids[0];
+
+            $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search);
+            $searched_inv_ids[] = $inv_id_to_search;
+            // dd($data);
+            
+            if (isset($data['inv_ids'])) {
+                $diff = array_values(array_diff($data['inv_ids'], $searched_inv_ids));
+                $to_search_inv_ids = array_merge($to_search_inv_ids, $diff);
+            }
+            if (isset($data['do_skus'])) {
+                $inv_sku = Invoice::where('id', $inv_id_to_search)->value('sku');
+                
+                $involved[$inv_sku] = array_merge($data['do_skus'], $data['so_skus']);
+
+                $involved_inv_skus[] = $inv_sku;
+                $involved_do_skus = array_merge($involved_do_skus, $data['do_skus']);
+                $involved_so_skus = array_merge($involved_so_skus, $data['so_skus']);
+            }
+
+            $to_search_inv_ids = array_unique(array_values(array_diff($to_search_inv_ids, [$inv_id_to_search])));
+        }
+        
+        return Response::json([
+            'involved' => $involved,
+            'involved_inv_skus' => $involved_inv_skus,
+            'involved_do_skus' => $involved_do_skus,
+            'involved_so_skus' => $involved_so_skus,
+        ], HttpFoundationResponse::HTTP_OK);
+    }
+
+    private function getCancellationInvolvedInvFlow(int $inv_id) {
+        $so_skus = [];
+        $do_skus = [];
+        $inv_ids = [];
+        
+        $do_ids = DeliveryOrder::where('invoice_id', $inv_id)->pluck('id')->toArray();
+
+        $sales = Sale::where('type', Sale::TYPE_SO);
+
+        $sales = $sales->where(function($q) use ($do_ids) {
+            for ($i=0; $i < count($do_ids); $i++) {
+                $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
+            }
+        });
+        $sales = $sales->get();
+
+        for ($i=0; $i < count($sales); $i++) {
+            $sale_do_ids = null;
+            if (str_contains($sales[$i]->convert_to, ',')) {
+                $sale_do_ids = explode(',', $sales[$i]->convert_to);
+            } else {
+                $sale_do_ids = [$sales[$i]->convert_to];
+            }
+
+            $so_skus[] = $sales[$i]->sku;
+            $do_skus = array_merge($do_skus, DeliveryOrder::whereIn('id', $sale_do_ids)->pluck('sku')->toArray());
+            $inv_ids = array_merge($inv_ids, DeliveryOrder::whereIn('id', $sale_do_ids)->whereNotNull('invoice_id')->pluck('invoice_id')->toArray());
+        }
+
+        return [
+            'so_skus' => $so_skus,
+            'do_skus' => $do_skus,
+            'inv_ids' => $inv_ids,
+        ];
     }
 
     public function download(Request $req)
@@ -1718,9 +1871,14 @@ class SaleController extends Controller
             $inv_ids = Session::get('invoice_ids');
             $do_ids = DeliveryOrder::whereIn('invoice_id', explode(',', $inv_ids))->pluck('id');
 
-            $sale_ids = Sale::where('type', Sale::TYPE_SO)
-                ->whereIn('convert_to', $do_ids)
-                ->pluck('id');
+            $sale_ids = Sale::where('type', Sale::TYPE_SO);
+            
+            $sale_ids = $sale_ids->where(function($q) use ($do_ids) {
+                for ($i=0; $i < count($do_ids); $i++) {
+                    $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
+                }
+            });
+            $sale_ids = $sale_ids->pluck('id');
 
             $products = SaleProduct::whereIn('sale_id', $sale_ids)->get();
         } else if ($req->has('inv')) {

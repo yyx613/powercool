@@ -206,7 +206,8 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-data', 'getDataDeliveryOrder')->name('get_data');
             Route::get('/to-invoice', 'toInvoice')->name('to_invoice')->middleware(['can:sale.delivery_order.convert']);
             Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
-            Route::get('/cancel/{do}', 'cancelDeliveryOrder')->name('cancel');
+            Route::get('/cancel', 'cancelDeliveryOrder')->name('cancel');
+            Route::get('/get-cancellation-involved-do/{do}', 'getCancellationInvolvedDO')->name('get_cancellation_involved_do');
         });
         // Invoice
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
@@ -220,7 +221,22 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
             Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
             Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
-            Route::get('/cancel/{inv}', 'cancelInvoice')->name('cancel');
+            Route::get('/cancel', 'cancelInvoice')->name('cancel');
+            Route::get('/get-cancellation-involved-inv/{inv}', 'getCancellationInvolvedInv')->name('get_cancellation_involved_inv');
+        });
+        // Invoice
+        Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
+            Route::get('/', 'indexInvoice')->name('index');
+            Route::get('/get-data', 'getDataInvoice')->name('get_data');
+            Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
+            Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
+            Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
+            Route::get('/get-data-consolidated-e-invoice', 'getDataConsolidatedEInvoice')->name('get_data_consolidated-e-invoice');
+            Route::get('/credit-note', 'indexCreditNote')->name('credit-note.index');
+            Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
+            Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
+            Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
+            Route::get('/cancel', 'cancelInvoice')->name('cancel');
         });
 
         Route::get('/download', 'download')->name('download');

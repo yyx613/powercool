@@ -56,7 +56,7 @@
         </table>
     </div>
 
-    <x-app.modal.delete-modal/>
+    <x-app.modal.do-inv-cancel-modal/>
 @endsection
 
 @push('scripts')
@@ -139,10 +139,46 @@
         })
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
-
-            $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/delivery-order/cancel/${id}`)
-            $('#delete-modal #txt').text("{!! __('Are you sure to cancel the record?') !!}")
-            $('#delete-modal').addClass('show-modal')
+            
+            getOtherInvolvedDO(id);
         })
+        
+        function getOtherInvolvedDO(do_id) {
+            $('#do-inv-cancel-modal .cancellation-hint').remove()
+
+            let url = "{{ config('app.url') }}"
+            url = `${url}/delivery-order/get-cancellation-involved-do/${do_id}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET', 
+                contentType: 'application/json',
+                success: function(res) {
+                    for (const key in res.involved) {
+                        const element = res.involved[key];
+                        
+                        let clone = $('#do-inv-cancel-modal #info-template')[0].cloneNode(true);
+
+                        $(clone).find('#main').text(key)
+                        for (let i = 0; i < element.length; i++) {
+                            let soClone = $('#do-inv-cancel-modal #info-body-container #sub')[0].cloneNode(true);
+
+                            $(soClone).text(element[i])
+                            $(clone).append(soClone)
+                        }
+                        $(clone).addClass('cancellation-hint')
+                        $(clone).removeClass('hidden')
+
+                        $('#do-inv-cancel-modal #info-body-container').append(clone)
+                    }
+
+                    $('#do-inv-cancel-modal #yes-btn').attr('href', `{{ config('app.url') }}/delivery-order/cancel?involved=${JSON.stringify(res.involved)}`)
+                    $('#do-inv-cancel-modal').addClass('show-modal')
+                }
+            });
+        }
     </script>
 @endpush

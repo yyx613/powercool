@@ -59,11 +59,11 @@ class InventoryController extends Controller
                     ->groupBy('product_id');
 
         $cancellation = DB::table('sale_order_cancellation')
-                    ->select('sale_order_cancellation.product_id', DB::raw('(qty_to_sell.qty - qty_to_on_hold.qty) AS qty'))
-                    ->joinSub($qty_to_sell, 'qty_to_sell', function ($join) {
+                    ->select('sale_order_cancellation.product_id', DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0)) AS qty'))
+                    ->leftJoinSub($qty_to_sell, 'qty_to_sell', function ($join) {
                         $join->on('sale_order_cancellation.product_id', '=', 'qty_to_sell.product_id');
                     })
-                    ->joinSub($qty_to_on_hold, 'qty_to_on_hold', function ($join) {
+                    ->leftJoinSub($qty_to_on_hold, 'qty_to_on_hold', function ($join) {
                         $join->on('sale_order_cancellation.product_id', '=', 'qty_to_on_hold.product_id');
                     })
                     ->join('products', 'products.id', '=', 'sale_order_cancellation.product_id')

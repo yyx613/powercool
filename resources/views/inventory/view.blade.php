@@ -308,9 +308,6 @@
                         "targets": 3,
                         orderable: false,
                         render: function(data, type, row) {
-                            if (data != null) {
-                                return data.sku
-                            }
                             return data ?? '-'
                         }
                     },

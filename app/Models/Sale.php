@@ -101,4 +101,18 @@ class Sale extends Model
                 return $this->payment_method ?? '-';
         }
     }
+
+    public function hasNoMoreQtyToConvertDO(): bool {
+        $fully_converted = true;
+                
+        $sps = $this->products;
+        for ($j=0; $j < count($sps); $j++) {
+            if ($sps[$j]->remainingQty() > 0) {
+                $fully_converted = false;
+                break;
+            }
+        }
+
+        return $fully_converted;
+    }
 }

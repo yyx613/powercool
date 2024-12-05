@@ -35,8 +35,12 @@ class SaleOrderCancellation extends Model
      * Type 1 - cancel
      * Type 2 - convert
      * Type 3 - cancel from converted
+     * 
+     * alter_qty - use alter qty instead Sale Product qty when provided
+     * alter_qty format - array of [sale_product_id => qty]
+     * 
      */
-    public static function calCancellation(Sale $sale, int $type) {
+    public static function calCancellation(Sale $sale, int $type, ?array $alter_qty=null) {
         $sps = SaleProduct::where('sale_id', $sale->id)->get();
         $bulk = [];
         $now = now();
@@ -50,16 +54,20 @@ class SaleOrderCancellation extends Model
                     'qty' => $sps[$i]->qty,
                 ];
             } else if ($type == 2) {
-                $remaining_sps_qty_to_on_hold = $sps[$i]->qty;
+                if ($alter_qty != null && isset($alter_qty[$sps[$i]->id])) {
+                    $remaining_sps_qty_to_on_hold = $alter_qty[$sps[$i]->id];
+                } else {
+                    $remaining_sps_qty_to_on_hold = $sps[$i]->qty;
+                }
 
-                $sochs = self::where([
+                $socs = self::where([
                     ['on_hold_sale_id', null],
                     ['saleperson_id', $sale->sale_id],
                     ['product_id', $sps[$i]->product_id],
                 ])->get();
 
-                for ($j=0; $j < count($sochs); $j++) { 
-                    $count_to_sell = $sochs[$j]->toSellCount();
+                for ($j=0; $j < count($socs); $j++) { 
+                    $count_to_sell = $socs[$j]->toSellCount();
 
                     if ($count_to_sell <= 0) {
                         continue;
@@ -67,7 +75,7 @@ class SaleOrderCancellation extends Model
 
                     $bulk[] = [
                         'sale_id' => $sale->id,
-                        'on_hold_sale_id' => $sochs[$j]->sale_id,
+                        'on_hold_sale_id' => $socs[$j]->sale_id,
                         'saleperson_id' => $sale->sale_id,
                         'product_id' => $sps[$i]->product_id,
                         'qty' => $remaining_sps_qty_to_on_hold,
@@ -85,7 +93,7 @@ class SaleOrderCancellation extends Model
                 self::where([
                     ['saleperson_id', $sale->sale_id],
                     ['product_id', $sps[$i]->product_id],
-                    ['sale_id', $sale->id]
+                    ['sale_id', $sale->id],
                 ])
                 ->delete();
             }
