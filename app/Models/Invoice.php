@@ -15,6 +15,8 @@ class Invoice extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const STATUS_CANCELLED = 1;
+
     protected $guarded = [];
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',

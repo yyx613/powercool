@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductChild;
-use App\Models\Sale;
-use App\Models\SaleOrderCancellationHistory;
-use App\Models\SaleProduct;
+use App\Models\SaleOrderCancellation;
 use App\Models\TaskMilestoneInventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,22 +44,50 @@ class InventoryController extends Controller
     }
 
     public function getSalePersonCancelledProducts(Request $req) {
-        $histories = SaleOrderCancellationHistory::select('*', DB::raw('SUM(qty) AS sum_qty'))
-            ->with('product.image')
-            ->where('sale_person_id', $req->user()->id)
-            ->groupBy('product_id');
+        $qty_to_on_hold = DB::table('sale_order_cancellation')
+                    ->select('id', 'product_id', DB::raw('SUM(qty - COALESCE(extra, 0)) AS qty'))
+                    ->where('saleperson_id', $req->user()->id)
+                    ->whereNotNull('on_hold_sale_id')
+                    ->whereNull('deleted_at')
+                    ->groupBy('product_id');
 
+        $qty_to_sell = DB::table('sale_order_cancellation')
+                    ->select('id', 'product_id', DB::raw('SUM(qty) AS qty'))
+                    ->where('saleperson_id', $req->user()->id)
+                    ->whereNull('on_hold_sale_id')
+                    ->whereNull('deleted_at')
+                    ->groupBy('product_id');
+
+        $cancellation = DB::table('sale_order_cancellation')
+                    ->select('sale_order_cancellation.product_id', DB::raw('(qty_to_sell.qty - qty_to_on_hold.qty) AS qty'))
+                    ->joinSub($qty_to_sell, 'qty_to_sell', function ($join) {
+                        $join->on('sale_order_cancellation.product_id', '=', 'qty_to_sell.product_id');
+                    })
+                    ->joinSub($qty_to_on_hold, 'qty_to_on_hold', function ($join) {
+                        $join->on('sale_order_cancellation.product_id', '=', 'qty_to_on_hold.product_id');
+                    })
+                    ->join('products', 'products.id', '=', 'sale_order_cancellation.product_id')
+                    ->where('saleperson_id', $req->user()->id)
+                    ->whereNull('on_hold_sale_id')
+                    ->whereNull('sale_order_cancellation.deleted_at')
+                    ->having('qty', '>', 0)
+                    ->groupBy('sale_order_cancellation.product_id');
+        
+        // Filter keyword
         if ($req->keyword != null && $req->keyword != '') {
-            $histories = $histories->whereHas('product', function($q) use ($req) {
-                $q->where('model_name', 'like', '%'.$req->keyword.'%')
-                    ->orWhere('sku', 'like', '%'.$req->keyword.'%');
-            });
+            $cancellation = $cancellation->where('products.model_name', 'like', '%'.$req->keyword.'%')
+                ->orWhere('products.sku', 'like', '%'.$req->keyword.'%');
         }
 
-        $histories = $histories->simplePaginate();
+        $cancellation = $cancellation->simplePaginate();
+
+        $cancellation->each(function($q) {
+            $product = Product::withTrashed()->with('image')->where('id', $q->product_id)->first();;
+            $q->product = $product;
+        });
 
         return Response::json([
-            'histories' => $histories,
+            'cancellation' => $cancellation,
         ], HttpFoundationResponse::HTTP_OK);
     }
 }

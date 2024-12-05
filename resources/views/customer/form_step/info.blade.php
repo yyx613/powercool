@@ -159,8 +159,8 @@
                             <option value="2" selected>{{ __('Pending Fill Up Info') }}</option>
                         @else
                             <option value="">{{ __('Select a Active/Inactive') }}</option>
-                            <option value="1" @selected(old('status', isset($customer) ? $customer->is_active : null) == 1)>{{ __('Active') }}</option>
-                            <option value="0" @selected(old('status', isset($customer) ? $customer->is_active : null) === 0)>{{ __('Inactive') }}</option>
+                            <option value="1" @selected(old('status', isset($customer) ? $customer->status : null) == 1)>{{ __('Active') }}</option>
+                            <option value="0" @selected(old('status', isset($customer) ? $customer->status : null) === 0)>{{ __('Inactive') }}</option>
                         @endif
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>
