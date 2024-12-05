@@ -199,11 +199,21 @@ class ProductController extends Controller
             if ($record->location == 'factory') {
                 $production = $this->production->where('product_child_id', $record->id)->first();
             }
+            $assigned_to = $record->assignedTo();
+            if ($assigned_to != null && is_array($assigned_to)) {
+                $skus = [];
+                for ($i=0; $i < count($assigned_to); $i++) { 
+                    $skus[] = $assigned_to[$i]->sku;
+                }
+                $assigned_to = join(', ', $skus);
+            } else if ($assigned_to != null) {
+                $assigned_to = $assigned_to->sku;
+            }
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'location' => $record->location,
-                'order_id' => $record->assignedTo(),
+                'order_id' => $assigned_to,
                 'status' => $record->status,
                 'stock_out_to' => $record->status != ProductChild::STATUS_STOCK_OUT ? null : $record->stockOutTo,
                 'done_by' => $record->status == ProductChild::STATUS_STOCK_OUT ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),

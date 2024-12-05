@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('role_management.index') }}">{{ __('Edit Role - ') . $role->name }}</x-app.page-title>
+        <x-app.page-title url="{{ route('role_management.index') }}">{{ isset($role) ? __('Edit Role - ') . $role->name : __('Create Role') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="p-6 rounded-md shadow bg-white">
-        <form action="{{ route('role_management.update', ['role' => $role->id]) }}" method="POST">
+        <form action="{{ isset($role) ? route('role_management.update', ['role' => $role]) : route('role_management.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="flex flex-col">
                 <x-app.input.label id="name" class="mb-1">{{ __('Name') }}</x-app.input.label>
-                <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($role) ? $role->name : null) }}" disabled="true" />
+                <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($role) ? $role->name : null) }}" />
             </div>
 
             <div class="border-t border-gray-300 mt-6 pt-4">

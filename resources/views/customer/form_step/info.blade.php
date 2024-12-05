@@ -47,7 +47,7 @@
                     <x-app.message.error id="customer_name_err"/>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} </x-app.input.label>
                     <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')" value="{{ old('company_name', isset($customer) ? $customer->company_name : null) }}" />
                     <x-app.message.error id="company_name_err"/>
                 </div>
@@ -159,8 +159,8 @@
                             <option value="2" selected>{{ __('Pending Fill Up Info') }}</option>
                         @else
                             <option value="">{{ __('Select a Active/Inactive') }}</option>
-                            <option value="1" @selected(old('status', isset($customer) ? $customer->is_active : null) == 1)>{{ __('Active') }}</option>
-                            <option value="0" @selected(old('status', isset($customer) ? $customer->is_active : null) === 0)>{{ __('Inactive') }}</option>
+                            <option value="1" @selected(old('status', isset($customer) ? $customer->status : null) == 1)>{{ __('Active') }}</option>
+                            <option value="0" @selected(old('status', isset($customer) ? $customer->status : null) === 0)>{{ __('Inactive') }}</option>
                         @endif
                     </x-app.input.select>
                     <x-app.message.error id="status_err"/>

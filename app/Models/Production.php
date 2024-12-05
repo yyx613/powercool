@@ -38,6 +38,10 @@ class Production extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function priority() {
+        return $this->belongsTo(Priority::class);
+    }
+
     public function milestones() {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
             ->withPivot('id', 'required_serial_no', 'submitted_at')

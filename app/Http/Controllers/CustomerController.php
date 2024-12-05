@@ -105,7 +105,7 @@ class CustomerController extends Controller
             'customer_id' => 'nullable',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
-            'company_name' => 'required|max:250',
+            'company_name' => 'nullable|max:250',
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
@@ -130,13 +130,13 @@ class CustomerController extends Controller
 
             if ($req->customer_id == null || $req->customer_id == 'null') {
                 $customer = Customer::create([
-                    'sku' => (new Customer)->generateSku($req->company_name[0]),
+                    'sku' => (new Customer)->generateSku($req->company_name != null ? $req->company_name[0] : $req->customer_name[0]),
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
                     'status' => $req->status,
-                    'company_name' => $req->company_name,
+                    'company_name' => $req->company_name ?? $req->customer_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
                     'prefix' => $req->prefix,

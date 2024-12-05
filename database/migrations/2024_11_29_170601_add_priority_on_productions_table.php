@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('product_children', function (Blueprint $table) {
-            $table->string("stock_out_to_type")->nullable()->after('stock_out_by');
-            $table->unsignedBigInteger("stock_out_to_id")->nullable()->after('stock_out_to_type');
-            $table->index(["stock_out_to_id", "stock_out_to_type"]);
+        Schema::table('productions', function (Blueprint $table) {
+            $table->unsignedBigInteger('priority_id')->nullable()->after('sale_id');
         });
     }
 

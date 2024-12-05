@@ -64,6 +64,16 @@
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('order')" class="mt-2" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Priority') }}</x-app.input.label>
+                    <x-app.input.select2 name="priority" id="priority" placeholder="{{ __('Select a priority') }}" :hasError="$errors->has('priority')">
+                        <option value="">{{ __('Select a priority') }}</option>
+                        @foreach ($priorities as $priority)
+                            <option value="{{ $priority->id }}" @selected(old('priority', isset($production) ? $production->priority_id : null) == $priority->id)>{{ $priority->name }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-input-error :messages="$errors->get('priority')" class="mt-2" />
+                </div>
                 <div class="flex flex-col col-span-3">
                     <x-app.input.label id="assign" class="mb-1">{{ __('Assigned Staff') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>

@@ -50,6 +50,7 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.view',
             'sale.sale_order.create',
             'sale.sale_order.edit',
+            'sale.sale_order.cancel',
             'sale.sale_order.delete',
             'sale.sale_order.convert',
 

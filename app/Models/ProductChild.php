@@ -71,8 +71,14 @@ class ProductChild extends Model
             $sale = $sp_child->saleProduct->sale;
 
             if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
-                $do = DeliveryOrder::where('id', $sale->convert_to)->first();
+                if (str_contains($sale->convert_to, ',')) {
+                    $dos = DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->get();
+
+                    return $dos;
+                }
                 
+                $do = DeliveryOrder::where('id', $sale->convert_to)->first();
+
                 return $do;
             } else if ($sale->status != Sale::STATUS_CONVERTED) {
                 return $sale;

@@ -21,6 +21,9 @@ class SaleProduct extends Model
         return $date;
     }
 
+    /**
+     * remaining qty to convert to DO
+     */
     public function remainingQty() {
         return $this->qty - DeliveryOrderProduct::where('sale_product_id', $this->id)->sum('qty');
     }
