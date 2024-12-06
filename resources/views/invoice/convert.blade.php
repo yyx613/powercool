@@ -225,7 +225,7 @@
                                                     <td></td>
                                                     <td></td>
                                                     <td class="font-black pt-2">Total</td>
-                                                    <td class="font-black pt-2">RM {{ number_format($totalPrice, 2) }}</td>
+                                                    <td class="font-black pt-2 total-price">RM {{ number_format($totalPrice, 2) }}</td>
                                                 </tr>
                                             </tfoot>
                                         </table>
@@ -233,17 +233,14 @@
                                 @endforeach
                             </ul>
                         
-                            <!-- 单一的提交按钮 -->
                             <div class="flex justify-end mt-8">
                                 <button type="submit" class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512">
-                                        <!-- SVG 内容 -->
                                     </svg>
                                     <span class="text-sm font-semibold">Submit All</span>
                                 </button>
                             </div>
             
-                            <!-- 加载指示器和成功消息 -->
                             <div id="loading-indicator" style="display: none;">
                                 <span class="loader"></span>
                             </div>
@@ -457,7 +454,33 @@
         }
     });
 
+    $(document).ready(function () {
+        $('input[name*="[price]"], input[name*="[qty]"]').on('input', function () {
+            const $row = $(this).closest('tr');
 
+            const price = parseFloat($row.find('input[name*="[price]"]').val()) || 0;
+            const qty = parseInt($row.find('input[name*="[qty]"]').val()) || 0;
+
+            const itemTotal = price * qty;
+
+            $row.find('.item-total').text(`RM ${itemTotal.toFixed(2)}`);
+
+            updateTableTotal($row.closest('table'));
+        });
+
+        function updateTableTotal($table) {
+            let totalPrice = 0;
+
+            $table.find('tbody tr').each(function () {
+                const price = parseFloat($(this).find('input[name*="[price]"]').val()) || 0;
+                const qty = parseInt($(this).find('input[name*="[qty]"]').val()) || 0;
+
+                totalPrice += price * qty;
+            });
+
+            $table.find('.total-price').text(`RM ${totalPrice.toFixed(2)}`);
+        }
+    });
    
 </script>
 @endpush
@@ -470,11 +493,11 @@
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        background: rgba(0, 0, 0, 0.5); 
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 9999; /* 确保加载指示器在最前面 */
+        z-index: 9999;
     }
 
     .loader {
