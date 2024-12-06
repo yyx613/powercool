@@ -209,7 +209,7 @@
                                                         </td>
                                                         <td>
                                                             <div class="bg-white rounded-md border border-gray-300 p-1 text-center" style="width: 50%; display: inline-block;">
-                                                                <input type="text" name="invoices[{{ $loop->parent->index }}][items][{{ $key }}][price]" value="{{ number_format($item['price'], 2) }}" class="text-sm w-full border-none focus:ring-0">
+                                                                <input type="text" name="invoices[{{ $loop->parent->index }}][items][{{ $key }}][price]" value="{{ $item['price'] }}" class="text-sm w-full border-none focus:ring-0">
                                                             </div>
                                                         </td>
                                                         <td>
