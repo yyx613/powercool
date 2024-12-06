@@ -727,7 +727,7 @@ class EInvoiceController extends Controller
                     
                     $saleId = $saleProduct->sale->id;
                     $amount = (int) $item['qty'] * (float)  $item['price'];
-                    dd([$item['qty'] ,$item['price'],$amount]);
+                    dd([(int) $item['qty'] ,(float)  $item['price'],$amount]);
                     if (!isset($totals[$saleId])) {
                         $totals[$saleId] = 0;
                     }
