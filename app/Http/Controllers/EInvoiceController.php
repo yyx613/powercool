@@ -569,66 +569,71 @@ class EInvoiceController extends Controller
         $id = $req->input('id');
         $type = $req->input('type');
         $isSent = false;
-        if($type == 'eInvoice'){
-            $einvoice = EInvoice::find($id);
-            $invoice = $einvoice->einvoiceable;
-            $deliveryOrder = $invoice->deliveryOrders->first();
-            $customer = Customer::findOrFail($deliveryOrder->customer_id);
-            $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-            $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
-            Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
-            $isSent = true;
-        }
-        else if($type == 'credit'){
-            $creditNote = CreditNote::find($id);
-            if($creditNote->eInvoices->count() > 0){
-                if($creditNote->eInvoices->first()->einvoiceable instanceof Invoice){
-                    $customer = $creditNote->eInvoices()
-                    ->with('einvoiceable.deliveryOrders.customer')
-                    ->get()
-                    ->pluck('einvoiceable.deliveryOrders')
-                    ->flatten()
-                    ->pluck('customer')
-                    ->first();
-    
-                    $company = $creditNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                }else{
-                    $customer = null;
-                    $company = 'PowerCool';
-                }
-               
-                $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
-                Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
-                $isSent = true;
-            }  
-        }
-        else if($type == 'debit'){
-            $debitNote = DebitNote::find($id);
-            if($debitNote->eInvoices->count() > 0){
-                if($debitNote->eInvoices->first()->einvoiceable instanceof Invoice){
-                    $customer = $debitNote->eInvoices()
-                    ->with('einvoiceable.deliveryOrders.customer')
-                    ->get()
-                    ->pluck('einvoiceable.deliveryOrders')
-                    ->flatten()
-                    ->pluck('customer')
-                    ->first();
-                    $company = $debitNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                }else{
-                    $customer = null;
-                    $company = 'PowerCool';
-                }
-                
-                $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
-                Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
+        try {
+            if($type == 'eInvoice'){
+                $einvoice = EInvoice::find($id);
+                $invoice = $einvoice->einvoiceable;
+                $deliveryOrder = $invoice->deliveryOrders->first();
+                $customer = Customer::findOrFail($deliveryOrder->customer_id);
+                $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+                $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
+                Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
                 $isSent = true;
             }
+            else if($type == 'credit'){
+                $creditNote = CreditNote::find($id);
+                if($creditNote->eInvoices->count() > 0){
+                    if($creditNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                        $customer = $creditNote->eInvoices()
+                        ->with('einvoiceable.deliveryOrders.customer')
+                        ->get()
+                        ->pluck('einvoiceable.deliveryOrders')
+                        ->flatten()
+                        ->pluck('customer')
+                        ->first();
+        
+                        $company = $creditNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+                    }else{
+                        $customer = null;
+                        $company = 'PowerCool';
+                    }
+                   
+                    $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
+                    Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
+                    $isSent = true;
+                }  
+            }
+            else if($type == 'debit'){
+                $debitNote = DebitNote::find($id);
+                if($debitNote->eInvoices->count() > 0){
+                    if($debitNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                        $customer = $debitNote->eInvoices()
+                        ->with('einvoiceable.deliveryOrders.customer')
+                        ->get()
+                        ->pluck('einvoiceable.deliveryOrders')
+                        ->flatten()
+                        ->pluck('customer')
+                        ->first();
+                        $company = $debitNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
+                    }else{
+                        $customer = null;
+                        $company = 'PowerCool';
+                    }
+                    
+                    $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
+                    Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
+                    $isSent = true;
+                }
+            }
+            if($isSent == true){
+                return response()->json(['message' => 'email sent']);
+            }else{
+                return response()->json(['message' => 'email sent failed']);
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()]);
         }
-        if($isSent == true){
-            return response()->json(['message' => 'email sent']);
-        }else{
-            return response()->json(['message' => 'email sent failed']);
-        }
+        
     }
     
 
