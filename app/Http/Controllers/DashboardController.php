@@ -69,7 +69,11 @@ class DashboardController extends Controller
             if ($limit <= 0) {
                 break;
             }
-            $best_selling_products[$count] = Product::where('id', $product_id)->first();
+
+            $best_selling_products[] = [
+                'product' => Product::withTrashed()->where('id', $product_id)->first(),
+                'count' => $count,
+            ];
             $limit--;
         }
 

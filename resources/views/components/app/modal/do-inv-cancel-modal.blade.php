@@ -1,6 +1,6 @@
 <x-app.modal.base-modal id="do-inv-cancel-modal">
     <div class="aspect-[2/1] flex flex-col">
-        <div class="border-b py-2 px-4 bg-gray-100">
+        <div class="py-2 px-4 bg-gray-100">
             <h6 class="text-lg font-black">{{ __('Cancel Confirmation') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">

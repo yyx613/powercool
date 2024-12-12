@@ -133,8 +133,6 @@
 
     $(document).ready(function(){
         if (SALE != null) {
-            console.debug(SALE)
-
             for (let i = 0; i < SALE.products.length; i++) {
                 const sp = SALE.products[i];
 

@@ -8,7 +8,7 @@
         <div>
             <div class="grid grid-cols-3 gap-8 w-full mb-8">
                 <div class="flex flex-col">
-                    <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
                     <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')" value="{{ isset($sale) ? $sale->reference : null }}" />
                     <x-app.message.error id="reference_err"/>
                 </div>

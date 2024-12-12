@@ -53,7 +53,9 @@ class ProductController extends Controller
 
     public function getData(Request $req)
     {
-        $records = $this->prod->with('category');
+        $records = $this->prod->with(['category' => function($q) {
+            $q->withTrashed();
+        }]);
 
         if ($req->boolean('is_product') == true) {
             $records = $records->where('type', Product::TYPE_PRODUCT);
@@ -323,6 +325,13 @@ class ProductController extends Controller
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
+            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
+            $data['capacity'][] = $prod->capacity;
+            $data['weight'][] = $prod->weight;
+            $data['refrigerant'][] = $prod->refrigerant;
+            $data['power_input'][] = $prod->power_input;
+            $data['voltage_frequency'][] = $prod->voltage_frequency;
+            $data['standard_features'][] = $prod->standard_features;
         }
         $pdf = Pdf::loadView('inventory.barcode', $data);
         $pdf->setPaper('A4', 'letter');
@@ -348,7 +357,6 @@ class ProductController extends Controller
             'model_code' => 'required|max:250',
             'model_name' => 'required|max:250',
             'model_desc' => 'required|max:250',
-            'barcode' => 'nullable|max:250',
             'uom' => 'required|max:250',
             'category_id' => 'required',
             'supplier_id' => 'required',
@@ -356,14 +364,20 @@ class ProductController extends Controller
             'min_price' => 'required',
             'max_price' => 'required|gt:min_price',
             'cost' => 'required',
-            'weight' => 'nullable',
-            'dimension_length' => 'nullable',
-            'dimension_width' => 'nullable',
-            'dimension_height' => 'nullable',
             'status' => 'required',
             'is_sparepart' => 'required',
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
+        
+            'weight' => 'nullable',
+            'capacity' => 'nullable|max:250',
+            'refrigerant' => 'nullable|max:250',
+            'power_input' => 'nullable|max:250',
+            'voltage_frequency' => 'nullable|max:250',
+            'standard_features' => 'nullable|max:250',
+            'dimension_length' => 'nullable',
+            'dimension_width' => 'nullable',
+            'dimension_height' => 'nullable',
 
             'order_idx' => 'nullable',
             'serial_no' => 'nullable',
@@ -386,6 +400,8 @@ class ProductController extends Controller
         } else if (!$req->boolean('is_sparepart')) {
             $rules['initial_for_production'] = 'nullable';
             $rules['qty'] = 'required';
+            $rules['min_price'] = 'nullable';
+            $rules['max_price'] = 'nullable';
             $rules['cost'] = 'nullable';
         }
         // Validate request
@@ -422,7 +438,6 @@ class ProductController extends Controller
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
-                    'barcode' => $req->barcode == null ? $req->model_code : $req->barcode,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
@@ -435,6 +450,11 @@ class ProductController extends Controller
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,
                     'height' => $req->dimension_height,
+                    'capacity' => $req->capacity,
+                    'refrigerant' => $req->refrigerant,
+                    'power_input' => $req->power_input,
+                    'voltage_frequency' => $req->voltage_frequency,
+                    'standard_features' => $req->standard_features,
                     'is_active' => $req->boolean('status'),
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
                     'lazada_sku' => $req->lazada_sku,
@@ -452,7 +472,6 @@ class ProductController extends Controller
                     'initial_for_production' => $req->initial_for_production,
                     'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
-                    'barcode' => $req->barcode == null ? $req->model_code : $req->barcode,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
                     'supplier_id' => $req->supplier_id,
@@ -465,6 +484,11 @@ class ProductController extends Controller
                     'length' => $req->dimension_length,
                     'width' => $req->dimension_width,
                     'height' => $req->dimension_height,
+                    'capacity' => $req->capacity,
+                    'refrigerant' => $req->refrigerant,
+                    'power_input' => $req->power_input,
+                    'voltage_frequency' => $req->voltage_frequency,
+                    'standard_features' => $req->standard_features,
                     'is_active' => $req->boolean('status'),
                     'is_sparepart' => $req->is_sparepart == null ? null : $req->boolean('is_sparepart'),
                     'lazada_sku' => $req->lazada_sku,
@@ -548,7 +572,6 @@ class ProductController extends Controller
             return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
             report($th);
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();

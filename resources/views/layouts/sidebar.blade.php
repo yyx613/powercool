@@ -10,8 +10,9 @@
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto px-2 my-4">
+        <div class="flex-1 overflow-y-auto px-2 my-4 hide-scrollbar">
             <ul>
+                <!-- Notification -->
                 <li>
                     <a href="{{ route('notification.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'notification.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <div class="relative">
@@ -24,6 +25,7 @@
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Notification</span>
                     </a>
                 </li>
+                <!-- Dashboard -->
                 <li>
                     <a href="{{ route('dashboard.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dashboard.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
@@ -32,41 +34,28 @@
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Dashboard') }}</span>
                     </a>
                 </li>
+                <!-- Contact -->
                 <li>
-                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="4">
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="6">
                         <button class="p-2 flex items-center rounded-md w-full">
-                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Inventory') }}</span>
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Contact') }}</span>
                         </button>
                     </div>
-                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="4">
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="6">
                         <div class="overflow-hidden">
                             <ul>
-                                @can('inventory.summary.view')
+                                @can('customer.view')
                                 <li>
-                                    <a href="{{ route('inventory_summary.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_summary.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Summary') }}</span>
+                                    <a href="{{ route('customer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Customer') }}</span>
                                     </a>
                                 </li>
                                 @endcan
-                                @can('inventory.category.view')
+                                @can('supplier.view')
                                 <li>
-                                    <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Category') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
-                                @can('inventory.product.view')
-                                <li>
-                                    <a href="{{ route('product.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'product.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product') }}</span>
-                                    </a>
-                                </li>
-                                @endcan
-                                @can('inventory.raw_material.view')
-                                <li>
-                                    <a href="{{ route('raw_material.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                                    <a href="{{ route('supplier.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'supplier.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Supplier') }}</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -74,29 +63,12 @@
                         </div>
                     </div>
                 </li>
-                @can('service_history.view')
-                    <li>
-                        <a href="{{ route('service_history.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z"/><path d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.293.707l3,3a1,1,0,0,0,1.414-1.414L13,11.586V7A1,1,0,0,0,12,6Z"/></svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Service History') }}</span>
-                        </a>
-                    </li>
-                @endcan
-                @can('warranty.view')
-                    <li>
-                        <a href="{{ route('warranty.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
-                            </svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Warranty') }}</span>
-                        </a>
-                    </li>
-                @endcan
+                <!-- Sale & Invoice -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="3">
                         <button class="p-2 flex items-center rounded-md w-full">
                             <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23,22H3a1,1,0,0,1-1-1V1A1,1,0,0,0,0,1V21a3,3,0,0,0,3,3H23a1,1,0,0,0,0-2Z"/><path d="M15,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,15,20Z"/><path d="M7,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,7,20Z"/><path d="M19,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,19,20Z"/><path d="M11,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,11,20Z"/></svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Sale') }}</span>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Sale & Invoice') }}</span>
                         </button>
                     </div>
                     <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="3">
@@ -133,14 +105,13 @@
                                     </a>
                                 </li>
                                 @endcan
-                                
-                                @can('sale.target.view')
+                                @can('sale.invoice.view')
                                 <li>
-                                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Target') }}</span>
+                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
                                     </a>
                                 </li>
-                                @endcan
+                                @endcan 
                                 @can('sale.billing.view')
                                 <li>
                                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -152,25 +123,21 @@
                         </div>
                     </div>
                 </li>
+                <!-- E - Invoice -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="101">
                         <button class="p-2 flex items-center rounded-md w-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-receipt" viewBox="0 0 16 16">
                                 <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
                                 <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
-                              </svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Invoice') }}</span>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('E - Invoice') }}</span>
                         </button>
                     </div>
                     <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="101">
                         <div class="overflow-hidden">
                             <ul>
                                 @can('sale.invoice.view')
-                                <li>
-                                    <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
-                                    </a>
-                                </li>
                                 <li>
                                     <a href="{{ route('invoice.e-invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('E Invoice') }}</span>
@@ -196,17 +163,75 @@
                         </div>
                     </div>
                 </li>
-                @can('task.view')
+                <!-- Inventory -->
                 <li>
-                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="1">
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="4">
                         <button class="p-2 flex items-center rounded-md w-full">
-                            <svg class="h-5 w-5 flex-none fill-white" id="Layer_1" height="512" viewBox="0 0 24 24" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><path d="m4 6a2.982 2.982 0 0 1 -2.122-.879l-1.544-1.374a1 1 0 0 1 1.332-1.494l1.585 1.414a1 1 0 0 0 1.456.04l3.604-3.431a1 1 0 0 1 1.378 1.448l-3.589 3.414a2.964 2.964 0 0 1 -2.1.862zm20-2a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1zm-17.9 9.138 3.589-3.414a1 1 0 1 0 -1.378-1.448l-3.6 3.431a1.023 1.023 0 0 1 -1.414 0l-1.59-1.585a1 1 0 0 0 -1.414 1.414l1.585 1.585a3 3 0 0 0 4.226.017zm17.9-1.138a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1zm-17.9 9.138 3.585-3.414a1 1 0 1 0 -1.378-1.448l-3.6 3.431a1 1 0 0 1 -1.456-.04l-1.585-1.414a1 1 0 0 0 -1.332 1.494l1.544 1.374a3 3 0 0 0 4.226.017zm17.9-1.138a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1z"/></svg>
-                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Task') }}</span>
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Inventory') }}</span>
                         </button>
                     </div>
-                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="1">
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="4">
                         <div class="overflow-hidden">
                             <ul>
+                                @can('inventory.summary.view')
+                                <li>
+                                    <a href="{{ route('inventory_summary.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_summary.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Summary') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('grn.view')
+                                <li>
+                                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('GRN') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('inventory.product.view')
+                                <li>
+                                    <a href="{{ route('product.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'product.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('inventory.raw_material.view')
+                                <li>
+                                    <a href="{{ route('raw_material.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('production.view')
+                                <li>
+                                    <a href="{{ route('production.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production') }}</span>
+                                    </a>
+                                </li>
+                                @endcan 
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                <!-- Ticket & Task -->
+                <li>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="8">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Ticket & Task') }}</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="8">
+                        <div class="overflow-hidden">
+                            <ul>
+                                @can('ticket.view')
+                                <li>
+                                    <a href="{{ route('ticket.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'ticket.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Ticket') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('task.view')
                                 <li>
                                     <a href="{{ route('task.driver.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
@@ -222,29 +247,50 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sale') }}</span>
                                     </a>
                                 </li>
+                                @endcan
+                                @can('sale.target.view')
+                                <li>
+                                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Target') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
                             </ul>
                         </div>
                     </div>
                 </li>
-                @endcan
-                @can('production.view')
+                <!-- Service History & Warranty -->
                 <li>
-                    <a href="{{ route('production.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                            <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
-                        </svg>
-                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Production') }}</span>
-                    </a>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="7">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Service & Warranty') }}</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="7">
+                        <div class="overflow-hidden">
+                            <ul>
+                                @can('service_history.view')
+                                <li>
+                                    <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('warranty.view')
+                                <li>
+                                    <a href="{{ route('warranty.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </div>
+                    </div>
                 </li>
-                @endcan
-                @can('ticket.view')
-                <li>
-                    <a href="{{ route('ticket.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'ticket.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
-                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Ticket') }}</span>
-                    </a>
-                </li>
-                @endcan
+                <!-- Report -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="5">
                         <button class="p-2 flex items-center rounded-md w-full">
@@ -290,25 +336,33 @@
                             </ul>
                         </div>
                     </div>
-                </li>
-                @can('customer.view')
+                </li> 
+                <!-- User Role Management -->
                 <li>
-                    <a href="{{ route('customer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
-                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Customer') }}</span>
-                    </a>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="9">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M15,6c0-3.309-2.691-6-6-6S3,2.691,3,6s2.691,6,6,6,6-2.691,6-6Zm-6,4c-2.206,0-4-1.794-4-4s1.794-4,4-4,4,1.794,4,4-1.794,4-4,4Zm-.008,4.938c.068,.548-.32,1.047-.869,1.116-3.491,.436-6.124,3.421-6.124,6.946,0,.552-.448,1-1,1s-1-.448-1-1c0-4.531,3.386-8.37,7.876-8.93,.542-.069,1.047,.32,1.116,.869Zm13.704,4.195l-.974-.562c.166-.497,.278-1.019,.278-1.572s-.111-1.075-.278-1.572l.974-.562c.478-.276,.642-.888,.366-1.366-.277-.479-.887-.644-1.366-.366l-.973,.562c-.705-.794-1.644-1.375-2.723-1.594v-1.101c0-.552-.448-1-1-1s-1,.448-1,1v1.101c-1.079,.22-2.018,.801-2.723,1.594l-.973-.562c-.48-.277-1.09-.113-1.366,.366-.276,.479-.112,1.09,.366,1.366l.974,.562c-.166,.497-.278,1.019-.278,1.572s.111,1.075,.278,1.572l-.974,.562c-.478,.276-.642,.888-.366,1.366,.186,.321,.521,.5,.867,.5,.169,0,.341-.043,.499-.134l.973-.562c.705,.794,1.644,1.375,2.723,1.594v1.101c0,.552,.448,1,1,1s1-.448,1-1v-1.101c1.079-.22,2.018-.801,2.723-1.594l.973,.562c.158,.091,.33,.134,.499,.134,.346,0,.682-.179,.867-.5,.276-.479,.112-1.09-.366-1.366Zm-5.696,.866c-1.654,0-3-1.346-3-3s1.346-3,3-3,3,1.346,3,3-1.346,3-3,3Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('User Role Management') }}</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="9">
+                        <div class="overflow-hidden">
+                            <ul>
+                                <li>
+                                    <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Role Management') }}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </li>
-                @endcan
-                @can('supplier.view')
-                <li>
-                    <a href="{{ route('supplier.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'supplier.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                            <path d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z"/>
-                        </svg>
-                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Supplier') }}</span>
-                    </a>
-                </li>
-                @endcan
+                <!-- Settings -->
                 @can('setting.view')
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="2">
@@ -321,43 +375,18 @@
                         <div class="overflow-hidden">
                             <ul>
                                 <li>
-                                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
+                                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                                     </a>
-                                </li>
+                                </li> 
                                 <li>
-                                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
+                                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -366,8 +395,25 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                                    </a>
+                                </li>
+                                @can('inventory.category.view')
+                                <li>
+                                    <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Category') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                <li>
+                                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -381,13 +427,18 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
+                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Role Management') }}</span>
+                                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                                     </a>
                                 </li>
                             </ul>
@@ -423,6 +474,7 @@
             </div>
             <div class="flex-1 my-4">
                 <ul>
+                    <!-- Notification -->
                     <li>
                         <a href="{{ route('notification.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
                             <div class="relative">
@@ -438,6 +490,7 @@
                             </div>
                         </a>
                     </li>
+                    <!-- Dashboard -->
                     <li>
                         <a href="{{ route('dashboard.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
@@ -449,102 +502,62 @@
                             </div>
                         </a>
                     </li>
-                    <li class="expand-sub-menu-triggers" data-type="inventory">
+                    <!-- Contact -->
+                    <li class="expand-sub-menu-triggers" data-type="contact">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
-                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
                         </button>
                     </li>
-                    @can('service_history.view')
-                        <li>
-                            <a href="{{ route('service_history.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
-                                <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A11.972,11.972,0,0,0,4,3.073V1A1,1,0,0,0,2,1V4A3,3,0,0,0,5,7H8A1,1,0,0,0,8,5H5a.854.854,0,0,1-.1-.021A9.987,9.987,0,1,1,2,12a1,1,0,0,0-2,0A12,12,0,1,0,12,0Z"/><path d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.293.707l3,3a1,1,0,0,0,1.414-1.414L13,11.586V7A1,1,0,0,0,12,6Z"/></svg>
-                                <!-- Tooltip -->
-                                <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                    <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Service History') }}</span>
-                                </div>
-                            </a>
-                        </li>
-                    @endcan
-                    @can('warranty.view')
-                        <li>
-                            <a href="{{ route('warranty.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
-                                <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                    <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
-                                </svg>
-                                <!-- Tooltip -->
-                                <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                    <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Warranty') }}</span>
-                                </div>
-                            </a>
-                        </li>
-                    @endcan
+                    <!-- Sale & Invoice -->
                     <li class="expand-sub-menu-triggers" data-type="sale">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23,22H3a1,1,0,0,1-1-1V1A1,1,0,0,0,0,1V21a3,3,0,0,0,3,3H23a1,1,0,0,0,0-2Z"/><path d="M15,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,15,20Z"/><path d="M7,20a1,1,0,0,0,1-1V12a1,1,0,0,0-2,0v7A1,1,0,0,0,7,20Z"/><path d="M19,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,19,20Z"/><path d="M11,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,11,20Z"/></svg>
                         </button>
                     </li>
-                    @can('task.view')
-                    <li class="expand-sub-menu-triggers" data-type="task">
+                    <!-- E - Invoice -->
+                    <li class="expand-sub-menu-triggers" data-type="e-invoice">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
-                            <svg class="h-5 w-5 fill-white" id="Layer_1" height="512" viewBox="0 0 24 24" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><path d="m4 6a2.982 2.982 0 0 1 -2.122-.879l-1.544-1.374a1 1 0 0 1 1.332-1.494l1.585 1.414a1 1 0 0 0 1.456.04l3.604-3.431a1 1 0 0 1 1.378 1.448l-3.589 3.414a2.964 2.964 0 0 1 -2.1.862zm20-2a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1zm-17.9 9.138 3.589-3.414a1 1 0 1 0 -1.378-1.448l-3.6 3.431a1.023 1.023 0 0 1 -1.414 0l-1.59-1.585a1 1 0 0 0 -1.414 1.414l1.585 1.585a3 3 0 0 0 4.226.017zm17.9-1.138a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1zm-17.9 9.138 3.585-3.414a1 1 0 1 0 -1.378-1.448l-3.6 3.431a1 1 0 0 1 -1.456-.04l-1.585-1.414a1 1 0 0 0 -1.332 1.494l1.544 1.374a3 3 0 0 0 4.226.017zm17.9-1.138a1 1 0 0 0 -1-1h-10a1 1 0 0 0 0 2h10a1 1 0 0 0 1-1z"/></svg>
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-receipt" viewBox="0 0 16 16">
+                                <path d="M1.92.506a.5.5 0 0 1 .434.14L3 1.293l.646-.647a.5.5 0 0 1 .708 0L5 1.293l.646-.647a.5.5 0 0 1 .708 0L7 1.293l.646-.647a.5.5 0 0 1 .708 0L9 1.293l.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .801.13l.5 1A.5.5 0 0 1 15 2v12a.5.5 0 0 1-.053.224l-.5 1a.5.5 0 0 1-.8.13L13 14.707l-.646.647a.5.5 0 0 1-.708 0L11 14.707l-.646.647a.5.5 0 0 1-.708 0L9 14.707l-.646.647a.5.5 0 0 1-.708 0L7 14.707l-.646.647a.5.5 0 0 1-.708 0L5 14.707l-.646.647a.5.5 0 0 1-.708 0L3 14.707l-.646.647a.5.5 0 0 1-.801-.13l-.5-1A.5.5 0 0 1 1 14V2a.5.5 0 0 1 .053-.224l.5-1a.5.5 0 0 1 .367-.27m.217 1.338L2 2.118v11.764l.137.274.51-.51a.5.5 0 0 1 .707 0l.646.647.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.646.646.646-.646a.5.5 0 0 1 .708 0l.509.509.137-.274V2.118l-.137-.274-.51.51a.5.5 0 0 1-.707 0L12 1.707l-.646.647a.5.5 0 0 1-.708 0L10 1.707l-.646.647a.5.5 0 0 1-.708 0L8 1.707l-.646.647a.5.5 0 0 1-.708 0L6 1.707l-.646.647a.5.5 0 0 1-.708 0L4 1.707l-.646.647a.5.5 0 0 1-.708 0z"/>
+                                <path d="M3 4.5a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 1 1 0 1h-6a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5m8-6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5"/>
+                            </svg>
                         </button>
                     </li>
-                    @endcan
-                    @can('production.view')
-                    <li>
-                        <a href="{{ route('production.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
-                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
-                            </svg>
-                            <!-- Tooltip -->
-                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Production') }}</span>
-                            </div>
-                        </a>
+                    <!-- Inventory -->
+                    <li class="expand-sub-menu-triggers" data-type="inventory">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
+                        </button>
                     </li>
-                    @endcan
-                    @can('ticket.view')
-                    <li>
-                        <a href="{{ route('ticket.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                    <!-- Ticket & Task -->
+                    <li class="expand-sub-menu-triggers" data-type="ticket-and-task">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
-                            <!-- Tooltip -->
-                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Ticket') }}</span>
-                            </div>
-                        </a>
+                        </button>
                     </li>
-                    @endcan
+                    <!-- Service History & Warranty -->
+                    <li class="expand-sub-menu-triggers" data-type="service-history-and-warranty">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m7.283,3.697c-.385-.396-.376-1.029.021-1.414.396-.384,1.029-.376,1.414.021l2.374,2.442c.34.339.912.341,1.266-.007L16.792.294c.391-.392,1.023-.392,1.414-.002.392.39.392,1.023.002,1.414l-4.439,4.45c-.567.561-1.309.841-2.049.841s-1.487-.283-2.052-.847l-2.384-2.453Zm13.717-.697c-1.654,0-3,1.346-3,3v5.184c-.266-.094-.542-.164-.832-.18-.794-.042-1.567.226-2.173.769l-3.009,2.768c-.082-.084-.16-.172-.247-.252l-2.744-2.525c-.844-.756-1.996-.931-2.996-.579v-5.186c0-1.654-1.346-3-3-3S0,4.346,0,6v10.101c0,2.137.832,4.146,2.343,5.657l1.95,1.95c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.95-1.95c-1.133-1.133-1.757-2.64-1.757-4.243V6c0-.551.449-1,1-1s1,.449,1,1c0,0-.005,8.077,0,8.118.03.654.286,1.308.747,1.854l2.616,2.721c.383.399,1.017.411,1.414.028.398-.383.411-1.016.028-1.414l-2.57-2.671c-.317-.377-.308-.938.021-1.305.367-.41.999-.444,1.397-.086l2.734,2.516c1.026.944,1.615,2.285,1.615,3.68v3.559c0,.552.448,1,1,1s1-.448,1-1v-3.559c0-1.152-.294-2.275-.824-3.276l3.163-2.911c.198-.178.454-.272.72-.253.266.015.51.132.687.33.16.178.241.402.255.623v.045s0,.001,0,.002c.003.217-.058.427-.188.584l-2.533,2.634c-.383.398-.37,1.031.027,1.414.194.187.443.279.693.279.263,0,.524-.103.721-.307l2.578-2.685c.45-.536.686-1.195.701-1.857.002-.023,0-8.065,0-8.065,0-.551.448-1,1-1s1,.449,1,1v10.101c0,1.603-.624,3.109-1.757,4.243l-1.95,1.95c-.391.39-.391,1.023,0,1.414.195.195.451.293.707.293s.512-.098.707-.293l1.95-1.95c1.511-1.511,2.343-3.52,2.343-5.657V6c0-1.654-1.346-3-3-3Z"/>
+                            </svg>
+                        </button>
+                    </li>
+                    <!-- Report -->
                     <li class="expand-sub-menu-triggers" data-type="report">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                 <path d="m22.204,1.162c-1.141-.952-2.634-1.343-4.098-1.081l-3.822.695c-.913.167-1.706.634-2.284,1.289-.578-.655-1.371-1.123-2.285-1.289L5.894.082C4.433-.181,2.938.21,1.796,1.162c-1.142.953-1.796,2.352-1.796,3.839v12.792c0,2.417,1.727,4.486,4.106,4.919l6.284,1.143c.534.097,1.072.146,1.61.146s1.076-.048,1.61-.146l6.285-1.143c2.379-.433,4.105-2.502,4.105-4.919V5.001c0-1.487-.655-2.886-1.796-3.839Zm-11.204,20.766c-.084-.012-6.536-1.184-6.536-1.184-1.428-.26-2.464-1.501-2.464-2.952V5.001c0-.892.393-1.731,1.078-2.303.545-.455,1.223-.697,1.919-.697.179,0,.36.016.54.049l3.821.695c.952.173,1.643,1.001,1.643,1.968v17.216Zm11-4.135c0,1.451-1.036,2.692-2.463,2.952,0,0-6.452,1.171-6.537,1.184V4.712c0-.967.691-1.794,1.642-1.968l3.821-.695c.878-.161,1.773.076,2.459.648.685.572,1.078,1.411,1.078,2.303v12.792ZM8.984,6.224c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.901,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,3.955c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.903,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,4c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.902,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm11-8.857c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm0,3.955c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.098,1.064.262,1.163.805Zm0,4c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm-2,4.364c.099.543-.262,1.064-.805,1.163,0,0-1.121.198-1.18.198-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l1-.182c.549-.098,1.064.262,1.163.805Zm-11,.221c-.088.483-.509.821-.983.821-.059,0-1.18-.198-1.18-.198-.543-.099-.904-.619-.805-1.163.099-.543.615-.906,1.163-.805l1,.182c.543.099.904.619.805,1.163Z"/>
                             </svg>
                         </button>
-                    </li>
-                    @can('customer.view')
-                    <li>
-                        <a href="{{ route('customer.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
-                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
-                            <!-- Tooltip -->
-                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap ">{{ __('Customer') }}</span>
-                            </div>
-                        </a>
-                    </li>
-                    @endcan
-                    @can('supplier.view')
-                    <li>
-                        <a href="{{ route('supplier.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
-                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                <path d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z"/>
-                            </svg>
-                            <!-- Tooltip -->
-                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
-                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap ">{{ __('Supplier') }}</span>
-                            </div>
-                        </a>
-                    </li>
-                    @endcan
+                    </li>     
+                    <!-- User Role Management -->
+                    <li class="expand-sub-menu-triggers" data-type="user-role-management">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M15,6c0-3.309-2.691-6-6-6S3,2.691,3,6s2.691,6,6,6,6-2.691,6-6Zm-6,4c-2.206,0-4-1.794-4-4s1.794-4,4-4,4,1.794,4,4-1.794,4-4,4Zm-.008,4.938c.068,.548-.32,1.047-.869,1.116-3.491,.436-6.124,3.421-6.124,6.946,0,.552-.448,1-1,1s-1-.448-1-1c0-4.531,3.386-8.37,7.876-8.93,.542-.069,1.047,.32,1.116,.869Zm13.704,4.195l-.974-.562c.166-.497,.278-1.019,.278-1.572s-.111-1.075-.278-1.572l.974-.562c.478-.276,.642-.888,.366-1.366-.277-.479-.887-.644-1.366-.366l-.973,.562c-.705-.794-1.644-1.375-2.723-1.594v-1.101c0-.552-.448-1-1-1s-1,.448-1,1v1.101c-1.079,.22-2.018,.801-2.723,1.594l-.973-.562c-.48-.277-1.09-.113-1.366,.366-.276,.479-.112,1.09,.366,1.366l.974,.562c-.166,.497-.278,1.019-.278,1.572s.111,1.075,.278,1.572l-.974,.562c-.478,.276-.642,.888-.366,1.366,.186,.321,.521,.5,.867,.5,.169,0,.341-.043,.499-.134l.973-.562c.705,.794,1.644,1.375,2.723,1.594v1.101c0,.552,.448,1,1,1s1-.448,1-1v-1.101c1.079-.22,2.018-.801,2.723-1.594l.973,.562c.158,.091,.33,.134,.499,.134,.346,0,.682-.179,.867-.5,.276-.479,.112-1.09-.366-1.366Zm-5.696,.866c-1.654,0-3-1.346-3-3s1.346-3,3-3,3,1.346,3,3-1.346,3-3,3Z"/></svg>
+                        </button>
+                    </li>     
+                    <!-- Settings -->
                     @can('setting.view')
                     <li class="expand-sub-menu-triggers" data-type="setting">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
@@ -563,6 +576,28 @@
                 </form>
             </div>
         </div>
+        <!-- Contact -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="contact">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Contact') }}</h6>
+            </div>
+            <ul>
+                @can('customer.view')
+                <li>
+                    <a href="{{ route('customer.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Customer') }}</span>
+                    </a>
+                </li>
+                @endcan
+                @can('supplier.view')
+                <li>
+                    <a href="{{ route('supplier.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'supplier.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Supplier') }}</span>
+                    </a>
+                </li>
+                @endcan
+            </ul>
+        </div>
         <!-- Inventory -->
         <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="inventory">
             <div class="mb-4 p-2 border-b">
@@ -576,10 +611,10 @@
                     </a>
                 </li>
                 @endcan
-                @can('inventory.category.view')
+                @can('grn.view')
                 <li>
-                    <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Category') }}</span>
+                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('GRN') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -597,39 +632,32 @@
                     </a>
                 </li>
                 @endcan
-                @can('grn.view')
+                @can('production.view')
                 <li>
-                    <a href="{{ route('grn.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'grn.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('GRN') }}</span>
-                    </a>
-                </li>
-                @endcan
-                @can('service_history.view')
-                <li>
-                    <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
-                    </a>
-                </li>
-                @endcan
-                @can('warranty.view')
-                <li>
-                    <a href="{{ route('warranty.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty') }}</span>
+                    <a href="{{ route('production.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production') }}</span>
                     </a>
                 </li>
                 @endcan
             </ul>
         </div>
-        <!-- Sale -->
+        <!-- Sale & Invoice -->
         <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="sale">
             <div class="mb-4 p-2 border-b">
-                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Sale') }}</h6>
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Sale & Invoice') }}</h6>
             </div>
             <ul>
                 @can('sale.quotation.view')
                 <li>
                     <a href="{{ route('quotation.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'quotation.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Quotation') }}</span>
+                    </a>
+                </li>
+                @endcan
+                @can('sale.sale_order.view')
+                <li>
+                    <a href="{{ route('pending_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Pending Order') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -654,13 +682,6 @@
                     </a>
                 </li>
                 @endcan
-                @can('sale.target.view')
-                <li>
-                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Target') }}</span>
-                    </a>
-                </li>
-                @endcan
                 @can('sale.billing.view')
                 <li>
                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -670,12 +691,49 @@
                 @endcan
             </ul>
         </div>
-        <!-- Task -->
-        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="task">
+        <!-- E - Invoice -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="e-invoice">
             <div class="mb-4 p-2 border-b">
-                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Task') }}</h6>
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('E - Invoice') }}</h6>
             </div>
             <ul>
+                @can('sale.invoice.view')
+                <li>
+                    <a href="{{ route('invoice.e-invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.e-invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('E Invoice') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('invoice.consolidated-e-invoice.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.consolidated-e-invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Consolidated E Invoice') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('invoice.credit-note.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.credit-note.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Note') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('invoice.debit-note.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.debit-note.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debit Note') }}</span>
+                    </a>
+                </li>
+                @endcan
+            </ul>
+        </div>
+        <!-- Ticket & Task -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="ticket-and-task">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Ticket & Task') }}</h6>
+            </div>
+            <ul>
+                @can('ticket.view')
+                <li>
+                    <a href="{{ route('ticket.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'ticket.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Ticket') }}</span>
+                    </a>
+                </li>
+                @endcan
                 <li>
                     <a href="{{ route('task.driver.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
@@ -691,84 +749,35 @@
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sale') }}</span>
                     </a>
                 </li>
+                @can('sale.target.view')
+                <li>
+                    <a href="{{ route('target.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'target.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Target') }}</span>
+                    </a>
+                </li>
+                @endcan
             </ul>
         </div>
-        <!-- Setting -->
-        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="setting">
+        <!-- Service History & Warranty -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="service-history-and-warranty">
             <div class="mb-4 p-2 border-b">
-                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Setting') }}</h6>
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Service & Warranty') }}</h6>
             </div>
             <ul>
+                @can('service_history.view')
                 <li>
-                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                    <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('warranty.view')
                 <li>
-                    <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
+                    <a href="{{ route('warranty.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty') }}</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('debtor_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('platform.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('priority.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Role Management') }}</span>
-                    </a>
-                </li>
+                @endcan
             </ul>
         </div>
         <!-- Report -->
@@ -805,6 +814,99 @@
                 <li>
                     <a href="{{ route('report.technician_stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- User Role Management -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="user-role-management">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('User Role Management') }}</h6>
+            </div>
+            <ul>
+                <li>
+                    <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
+                    </a>
+                </li> 
+                <li>
+                    <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Role Management') }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- Setting -->
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="setting">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Setting') }}</h6>
+            </div>
+            <ul>
+                <li>
+                    <a href="{{ route('area.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('debtor_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                    </a>
+                </li>
+                @can('inventory.category.view')
+                <li>
+                    <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Category') }}</span>
+                    </a>
+                </li>
+                @endcan
+                <li>
+                    <a href="{{ route('promotion.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('project_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('platform.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('priority.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                     </a>
                 </li>
             </ul>

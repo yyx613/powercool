@@ -158,7 +158,7 @@ class CustomerController extends Controller
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
                     'status' => $req->status,
-                    'company_name' => $req->company_name,
+                    'company_name' => $req->company_name ?? $req->customer_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
                     'prefix' => $req->prefix,

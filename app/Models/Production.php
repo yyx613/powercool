@@ -44,8 +44,7 @@ class Production extends Model
 
     public function milestones() {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
-            ->withPivot('id', 'required_serial_no', 'submitted_at')
-            ->orderByPivot('id', 'desc')
+            ->withPivot('id', 'required_serial_no', 'material_use_product_id', 'submitted_at')
             ->using(ProductionMilestone::class);
     }
 

@@ -182,6 +182,7 @@
     <script>
         INFO_FORM_CAN_SUBMIT = true
         DEFAULT_BRANCH = @json($default_branch ?? null);
+        IS_CREATE_LINK = @json($is_create_link ?? null);
 
         $('input[name="picture[]"]').on('change', function() {
             let files = $(this).prop('files');
@@ -235,6 +236,10 @@
                 processData: false,
                 success: function(res) {
                     CUSTOMER = res.customer
+
+                    if (IS_CREATE_LINK) {
+                        $('#create-customer-link-created-modal').addClass('show-modal')
+                    }
                     
                     setTimeout(() => {
                         $('#info-form #submit-btn').text('Updated')

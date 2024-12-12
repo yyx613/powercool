@@ -1,6 +1,6 @@
 <x-app.modal.base-modal id="convert-ticket-modal">
     <div class="aspect-[2/1] flex flex-col">
-        <div class="border-b py-2 px-4 bg-gray-100">
+        <div class="py-2 px-4 bg-gray-100">
             <h6 class="text-lg font-black" id="title">{{ __('Convert Ticket') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">

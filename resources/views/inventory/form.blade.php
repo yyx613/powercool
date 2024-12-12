@@ -14,14 +14,25 @@
         @endif
         <!-- Info -->
         <div class="bg-white p-4 border rounded-md">
-            <div class="grid grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-3 gap-8 w-full items-start">
+                @if ($is_product == false)
+                    <div class="flex flex-col">
+                        <x-app.input.label id="is_sparepart" class="mb-1">{{ __('Is Spare part') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select name="is_sparepart" id="is_sparepart">
+                            <option value="">{{ __('Select a Yes/No') }}</option>
+                            <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>Yes</option>
+                            <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>No</option>
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('is_sparepart')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col" id="initial-container">
                     <x-app.input.label id="initial_for_production" class="mb-1">{{ __('Initial For Production') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="initial_for_production" id="initial_for_production" value="{{ old('initial_for_production', isset($prod) ? $prod->initial_for_production : null) }}" />
                     <x-input-error :messages="$errors->get('initial_for_production')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_code" class="mb-1">{{ __('Model Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="model_code" class="mb-1">{{ __('Model Code / Supplier Barcode Info') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_code" id="model_code" value="{{ old('model_code', isset($prod) ? $prod->sku : null) }}" />
                     <x-input-error :messages="$errors->get('model_code')" class="mt-1" />
                 </div>
@@ -34,12 +45,7 @@
                     <x-app.input.label id="model_desc" class="mb-1">{{ __('Model Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_desc" id="model_desc" value="{{ old('model_desc', isset($prod) ? $prod->model_desc : ($dup_prod != null ? $dup_prod->model_desc : null)) }}" />
                     <x-input-error :messages="$errors->get('model_desc')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="barcode" class="mb-1">{{ __('Barcode') }}</x-app.input.label>
-                    <x-app.input.input name="barcode" id="barcode" value="{{ old('barcode', isset($prod) ? $prod->barcode : ($dup_prod != null ? $dup_prod->barcode : null)) }}" />
-                    <x-input-error :messages="$errors->get('barcode')" class="mt-1" />
-                </div>
+                </div> 
                 <div class="flex flex-col">
                     <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="uom" id="uom">
@@ -73,7 +79,7 @@
                     <x-input-error :messages="$errors->get('low_stock_threshold')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="min_price" class="mb-1">{{ __('Selling Price') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="min_price" class="mb-1">{{ __('Selling Price') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
                     <div class="flex gap-x-4">
                         <x-app.input.input name="min_price" id="min_price" class="decimal-input flex-1" value="{{ old('min_price', isset($prod) ? $prod->min_price : ($dup_prod != null ? $dup_prod->min_price : null)) }}"/>
                         <x-app.input.input name="max_price" id="max_price" class="decimal-input flex-1" value="{{ old('max_price', isset($prod) ? $prod->max_price : ($dup_prod != null ? $dup_prod->max_price : null)) }}"/>
@@ -82,34 +88,9 @@
                     <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
                 </div>
                 <div class="flex flex-col" id="cost-container">
-                    <x-app.input.label id="cost" class="mb-1">{{ __('Cost') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="cost" class="mb-1">{{ __('Cost') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
                     <x-app.input.input name="cost" id="cost" class="decimal-input flex-1" value="{{ old('cost', isset($prod) ? $prod->cost : ($dup_prod != null ? $dup_prod->cost : null)) }}"/>
                     <x-input-error :messages="$errors->get('cost')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="weight" class="mb-1">{{ __('Weight (In KG)') }}</x-app.input.label>
-                    <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ old('weight', isset($prod) ? $prod->weight : ($dup_prod != null ? $dup_prod->weight : null)) }}"/>
-                    <x-input-error :messages="$errors->get('weight')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In CM)') }}</x-app.input.label>
-                    <div class="flex gap-x-2">
-                        <div class="bg-gray-100 flex items-center">
-                            <span class="font-black p-2">L</span>
-                            <x-app.input.input name="dimension_length" id="dimension_length" class="decimal-input" value="{{ old('dimension_length', isset($prod) ? $prod->length : ($dup_prod != null ? $dup_prod->length : null)) }}"/>
-                        </div>
-                        <div class="bg-gray-100 flex items-center">
-                            <span class="font-black p-2">W</span>
-                            <x-app.input.input name="dimension_width" id="dimension_width" class="decimal-input" value="{{ old('dimension_width', isset($prod) ? $prod->width : ($dup_prod != null ? $dup_prod->width : null)) }}"/>
-                        </div>
-                        <div class="bg-gray-100 flex items-center">
-                            <span class="font-black p-2">H</span>
-                            <x-app.input.input name="dimension_height" id="dimension_height" class="decimal-input" value="{{ old('dimension_height', isset($prod) ? $prod->height : ($dup_prod != null ? $dup_prod->height : null)) }}"/>
-                        </div>
-                    </div>
-                    <x-input-error :messages="$errors->get('dimension_length')" class="mt-1" />
-                    <x-input-error :messages="$errors->get('dimension_width')" class="mt-1" />
-                    <x-input-error :messages="$errors->get('dimension_height')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -146,28 +127,66 @@
                             @endforeach
                         </x-app.input.select>
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-1" />
-                    </div>
-                    <div class="flex flex-col">
-                        <x-app.input.label id="is_sparepart" class="mb-1">{{ __('Is Spare part') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.select name="is_sparepart" id="is_sparepart">
-                            <option value="">{{ __('Select a Yes/No') }}</option>
-                            <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>Yes</option>
-                            <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>No</option>
-                        </x-app.input.select>
-                        <x-input-error :messages="$errors->get('is_sparepart')" class="mt-1" />
-                    </div>
+                    </div> 
                 @endif
             </div>
-            @if (!$is_product)
-                <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">
-                    @if (!isset($prod))
-                        <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
-                    @endif
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                </div>
-            @endif
         </div>
-       
+        <!-- Barcode Details -->
+        <div class="bg-white p-4 border rounded-md mt-4">
+            <div class="grid grid-cols-3 gap-8 w-full">
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In MM)') }}</x-app.input.label>
+                    <div class="flex gap-x-2">
+                        <div class="bg-gray-100 flex items-center">
+                            <span class="font-black p-2">L</span>
+                            <x-app.input.input name="dimension_length" id="dimension_length" class="decimal-input" value="{{ old('dimension_length', isset($prod) ? $prod->length : ($dup_prod != null ? $dup_prod->length : null)) }}"/>
+                        </div>
+                        <div class="bg-gray-100 flex items-center">
+                            <span class="font-black p-2">W</span>
+                            <x-app.input.input name="dimension_width" id="dimension_width" class="decimal-input" value="{{ old('dimension_width', isset($prod) ? $prod->width : ($dup_prod != null ? $dup_prod->width : null)) }}"/>
+                        </div>
+                        <div class="bg-gray-100 flex items-center">
+                            <span class="font-black p-2">H</span>
+                            <x-app.input.input name="dimension_height" id="dimension_height" class="decimal-input" value="{{ old('dimension_height', isset($prod) ? $prod->height : ($dup_prod != null ? $dup_prod->height : null)) }}"/>
+                        </div>
+                    </div>
+                    <x-input-error :messages="$errors->get('dimension_length')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('dimension_width')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('dimension_height')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="capacity" class="mb-1">{{ __('Capacity') }}</x-app.input.label>
+                    <x-app.input.input name="capacity" id="capacity" value="{{ old('capacity', isset($prod) ? $prod->capacity : ($dup_prod != null ? $dup_prod->capacity : null)) }}"/>
+                    <x-input-error :messages="$errors->get('capacity')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="weight" class="mb-1">{{ __('Weight (In KG)') }}</x-app.input.label>
+                    <x-app.input.input name="weight" id="weight" class="decimal-input" value="{{ old('weight', isset($prod) ? $prod->weight : ($dup_prod != null ? $dup_prod->weight : null)) }}"/>
+                    <x-input-error :messages="$errors->get('weight')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="refrigerant" class="mb-1">{{ __('Refrigerant') }}</x-app.input.label>
+                    <x-app.input.input name="refrigerant" id="refrigerant" value="{{ old('refrigerant', isset($prod) ? $prod->refrigerant : ($dup_prod != null ? $dup_prod->refrigerant : null)) }}"/>
+                    <x-input-error :messages="$errors->get('refrigerant')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="power_input" class="mb-1">{{ __('Power Input') }}</x-app.input.label>
+                    <x-app.input.input name="power_input" id="power_input" value="{{ old('power_input', isset($prod) ? $prod->power_input : ($dup_prod != null ? $dup_prod->power_input : null)) }}"/>
+                    <x-input-error :messages="$errors->get('power_input')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="voltage_frequency" class="mb-1">{{ __('Voltage / Frequency') }}</x-app.input.label>
+                    <x-app.input.input name="voltage_frequency" id="voltage_frequency" value="{{ old('voltage_frequency', isset($prod) ? $prod->voltage_frequency : ($dup_prod != null ? $dup_prod->voltage_frequency : null)) }}"/>
+                    <x-input-error :messages="$errors->get('voltage_frequency')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="standard_features" class="mb-1">{{ __('Standard Features') }}</x-app.input.label>
+                    <x-app.input.input name="standard_features" id="standard_features" value="{{ old('standard_features', isset($prod) ? $prod->standard_features : ($dup_prod != null ? $dup_prod->standard_features : null)) }}"/>
+                    <x-input-error :messages="$errors->get('standard_features')" class="mt-1" />
+                </div>
+            </div>
+        </div>
+        <!-- Classification Code  -->
         <div class="bg-white p-4 border rounded-md mt-4">
             <div class="grid grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col col-span-4">
@@ -182,15 +201,8 @@
                     <x-input-error :messages="$errors->get('classification_code')" class="mt-1" />
                 </div>
             </div>
-            @if (!$is_product)
-                <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">
-                    @if (!isset($prod))
-                        <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
-                    @endif
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                </div>
-            @endif
         </div>
+        <!-- Platform -->
         <div class="bg-white p-4 border rounded-md mt-4">
             <div class="grid grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col">
@@ -214,17 +226,7 @@
                     <x-input-error :messages="$errors->get('woo_commerce_sku')" class="mt-1" />
                 </div>
             </div>
-            @if (!$is_product)
-                <div class="mt-8 flex justify-end gap-x-4" id="info-submit-container">
-                    @if (!isset($prod))
-                        <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
-                    @endif
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                </div>
-            @endif
         </div>
-
-        
         <!-- Serial No -->
         <div class="bg-white p-4 border rounded-md mt-6" id="serial-no-container">
             <div class="mb-2 flex items-center justify-between">
@@ -326,13 +328,13 @@
         let val = $(this).val()
 
         if (val == true) {
-            $('#serial-no-container, #cost-container').removeClass('hidden')
+            $('.required-star').removeClass('hidden')
             $('#initial-container').removeClass('hidden')
             $('#qty-container').addClass('hidden')
             $('#form #info-submit-container').addClass('hidden')
             $('#form #info-submit-container').removeClass('block')
         } else {
-            $('#serial-no-container, #cost-container').addClass('hidden')
+            $('.required-star').addClass('hidden')
             $('#initial-container').addClass('hidden')
             $('#qty-container').removeClass('hidden')
             $('#form #info-submit-container').addClass('block')

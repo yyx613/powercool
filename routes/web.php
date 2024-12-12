@@ -372,6 +372,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/edit/{supplier}', 'edit')->name('edit')->middleware(['can:supplier.edit']);
         Route::get('/delete/{supplier}', 'delete')->name('delete')->middleware(['can:supplier.delete']);
         Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
+        Route::get('/grn-history/{supplier}', 'grnHistory')->name('grn_history');
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function() {

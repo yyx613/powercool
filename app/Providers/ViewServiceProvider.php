@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\CustomerCredit;
 use App\Models\DebtorType;
 use App\Models\InventoryCategory;
+use App\Models\MaterialUse;
 use App\Models\Milestone;
 use App\Models\Platform;
 use App\Models\Priority;
@@ -25,6 +26,7 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\Scopes\BranchScope;
 use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\Ticket;
@@ -317,7 +319,7 @@ class ViewServiceProvider extends ServiceProvider
             $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
-            $classificationCodes = ClassificationCode::all();
+            $classificationCodes = ClassificationCode::withoutGlobalScope(BranchScope::class)->get();
             $view->with([
                 'inv_cats' => $inv_cats,
                 'suppliers' => $suppliers,
@@ -348,11 +350,14 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['production.form'], function (ViewView $view) {
-            $users = User::whereHas('roles', function ($q) {
-                $q->where('id', Role::SALE);
-            })->orderBy('id', 'desc')->get();
+            $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
+            $material_uses = MaterialUse::with('materials.material')->get();
+            $sales = Sale::with('products')->orderBy('id', 'desc')->get();
+            $priorities = Priority::orderBy('id', 'desc')->get();
 
-            $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->orderBy('id', 'desc')->get();
+            $users = User::whereHas('roles', function ($q) {
+                $q->where('id', Role::PRODUCTION_STAFF);
+            })->orderBy('id', 'desc')->get();
 
             $products = Product::where('type', Product::TYPE_PRODUCT)
                 ->orWhere(function ($q) {
@@ -363,16 +368,13 @@ class ViewServiceProvider extends ServiceProvider
                 ->orderBy('id', 'desc')
                 ->get();
 
-            $sales = Sale::with('products')->orderBy('id', 'desc')->get();
-
-            $priorities = Priority::orderBy('id', 'desc')->get();
-
             $view->with('users', $users);
             $view->with('milestones', $milestones);
             $view->with('products', $products);
             $view->with('sales', $sales);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
+            $view->with('material_uses', $material_uses);
         });
         View::composer(['material_use.form'], function (ViewView $view) {
             $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
@@ -439,7 +441,9 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('report_types', $report_types);
         });
         View::composer(['promotion.form', 'grn.form'], function (ViewView $view) {
-            $products = Product::orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
+                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+            })->orderBy('id', 'desc')->get();
 
             $view->with('products', $products);
         });
@@ -465,6 +469,7 @@ class ViewServiceProvider extends ServiceProvider
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
 
             $view->with('platforms', $platforms);
+            $view->with('is_create_link', isCreateLink());
         });
         View::composer(['billing.convert'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {

@@ -246,5 +246,14 @@
         $('#stock-in-btn').on('click', function() {
             $('#stock-in-modal').addClass('show-modal')
         })
+        
+        $('body').on('keyup', 'input[name="qty"], input[name="unit_price"]', function() {
+            let rowId = $(this).closest('.items').data('id')
+            let qty = $(`.items[data-id="${rowId}"] input[name="qty"]`).val()
+            let unitPrice = $(`.items[data-id="${rowId}"] input[name="unit_price"]`).val()
+            let subtotal = (qty * unitPrice)
+            
+            $(`.items[data-id="${rowId}"] input[name="total_price"]`).val(decimalPlace2(subtotal))
+        })
     </script>
 @endpush

@@ -7,6 +7,7 @@ use App\Models\GRN;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
+use App\Models\Scopes\BranchScope;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -110,7 +111,8 @@ class GRNController extends Controller
             DB::beginTransaction();
 
             if ($req->sku == null) {
-                $sku = now()->format('ymd') . generateRandomAlphabet();
+                $existing_skus = GRN::withoutGlobalScope(BranchScope::class)->groupBy('sku')->pluck('sku')->toArray();
+                $sku = generateSku('GR', $existing_skus);
             } else {
                 $sku = $req->sku;
 

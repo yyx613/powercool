@@ -24,6 +24,17 @@
                 </td>
             </tr>
             <tr>
+                <td style="padding: 0 0 20px 0;">
+                    <p style="margin: 0; font-size: 12px;">DIMENSION: {{ $dimension[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">CAPACITY: {{ $capacity[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">WEIGHT: {{ $weight[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">REFRIGERANT: {{ $refrigerant[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">POWER INPUT: {{ $power_input[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">VOLTAGE / FREQUENCY: {{ $voltage_frequency[$i] }}</p>
+                    <p style="margin: 0; font-size: 12px;">STANDARD FEATURES: {{ $standard_features[$i] }}</p>
+                </td>
+            </tr>
+            <tr>
                 <td style="text-align: center;">
                     <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt="" style="height: 75px; width: 75px; margin: 0 0 5px 0;">
                     <p style="margin: 0; font-size: 12px;">Warranty Policy</p>
@@ -35,7 +46,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <p style="margin: 150px 0 0 0; font-size: 12px; text-align: left;">
+                    <p style="margin: 050px 0 0 0; font-size: 12px; text-align: left;">
                         <img src="{{ public_path('images/whatsapp.jpg') }}" alt="" style="height: 10px; width: 10px; margin: 0 5px 0 0;">
                         Hotline: 6012-3868210
                     </p>

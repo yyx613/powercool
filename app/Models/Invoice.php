@@ -49,20 +49,4 @@ class Invoice extends Model
     {
         return $this->morphOne(EInvoice::class, 'einvoiceable');
     }
-
-    public function generateSku(): string {
-        $sku = null;
-        
-        while (true) {
-            $sku = 'INV' . now()->format('ym') . generateRandomAlphabet();
-
-            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
-
-            if (!$exists) {
-                break;
-            }
-        }
-
-        return $sku;
-    }
 }

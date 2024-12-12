@@ -3,7 +3,7 @@
 @section('content')
     <div class="max-w-screen-xl m-auto">
         <div class="mb-6 flex justify-between items-center">
-            <x-app.page-title>{{ isset($customer) ? __('Edit Customer') : __('Create Customer') }}</x-app.page-title>
+            <x-app.page-title>{{ __('Customer Information') }}</x-app.page-title>
         </div>
         @include('components.app.alert.parent')
         
@@ -14,10 +14,12 @@
             @include('customer.form_step.location')
         </div>
     </div>
+
+    <x-app.modal.create-customer-link-created-modal/>
 @endsection
 
 @push('scripts')
 <script>
-    CUSTOMER = @json($customer ?? null);    
+    CUSTOMER = @json($customer ?? null);
 </script>
 @endpush

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Branch;
 use App\Models\Milestone;
 use App\Models\ProductChild;
 use App\Models\ProductionMilestone;
@@ -265,4 +266,49 @@ if (!function_exists('getInvolvedProductChild')) {
 
         return array_unique($involved_ids);
     }
+}
+
+if (!function_exists('generateSku')) {
+    function generateSku(string $prefix, array $existing_skus): string {
+        $sku = null;
+        $staring_num = 1;
+        $digits_length = 6;
+        $formatted_prefix = $prefix;
+        if (getCurrentUserBranch() != null && getCurrentUserBranch() == Branch::LOCATION_PENANG) {
+            $formatted_prefix = 'PH' . $formatted_prefix;
+        }
+
+        while (true) {
+            $digits = (string)$staring_num;
+            
+            while (strlen($digits) < $digits_length) {
+                $digits = '0' . $digits;
+            }
+            $sku = strtoupper($formatted_prefix . '-' . $digits);
+
+            if (!in_array($sku, $existing_skus)) {
+                break;
+            }
+            $staring_num++;
+        }
+
+        return $sku;
+    } 
+}
+
+if (!function_exists('getCurrentUserBranch')) {
+    function getCurrentUserBranch(): ?int {
+        if (Auth::hasUser()) {
+            if (isSuperAdmin()) {
+                return Session::get('as_branch');
+            }
+    
+            $user_branch = Auth::user()->branch;
+            if ($user_branch != null) {
+                return $user_branch->location;
+            }
+        }
+
+        return null;
+    } 
 }

@@ -26,6 +26,6 @@ class SaleProductChild extends Model
     }
 
     public function productChild() {
-        return $this->belongsTo(productChild::class, 'product_children_id');
+        return $this->belongsTo(ProductChild::class, 'product_children_id');
     }
 }

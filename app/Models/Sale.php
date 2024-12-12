@@ -70,21 +70,6 @@ class Sale extends Model
         }
     }
 
-    public function generateSku($type): null|string {
-        $sku = null;
-        
-        while (true) {
-            $sku = ($type == self::TYPE_QUO ? 'Q' : 'SO') . now()->format('ym') . generateRandomAlphabet();
-            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
-
-            if (!$exists) {
-                break;
-            }
-        }
-
-        return $sku;
-    }
-
     public function paymentMethodHumanRead(): string {
         switch ($this->payment_method) {
             case 'cash':

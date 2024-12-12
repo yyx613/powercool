@@ -63,7 +63,7 @@ class MaterialUseController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
-                'product' => $record->product->model_name,
+                'product' => $record->product()->withTrashed()->first()->model_name,
             ];
         }
                 

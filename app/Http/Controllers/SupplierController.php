@@ -6,7 +6,9 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Supplier;
 use App\Models\CustomerLocation;
+use App\Models\GRN;
 use App\Models\ObjectCreditTerm;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -212,5 +214,30 @@ class SupplierController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    public function grnHistory(Supplier $supplier) {
+        $formatted_grns = [];
+        $formatted_products = [];
+
+        $grns = GRN::where('supplier_id', $supplier->id)->orderBy('id', 'desc')->get();
+
+        $product_ids = [];
+        for ($i=0; $i < count($grns); $i++) { 
+            $formatted_grns[$grns[$i]->product_id][] = $grns[$i];                
+            $product_ids[] = $grns[$i]->product_id;
+        }
+        $product_ids = array_unique($product_ids);
+
+        $products = Product::withTrashed()->whereIn('id', $product_ids)->get();
+        for ($i=0; $i < count($products); $i++) { 
+            $formatted_products[$products[$i]->id] = $products[$i];            
+        }
+
+        return view('supplier.grn_history', [
+            'supplier' => $supplier,
+            'formatted_grns' => $formatted_grns,
+            'formatted_products' => $formatted_products,
+        ]);
     }
 }

@@ -202,6 +202,7 @@ class ProductionController extends Controller
             'custom_milestone' => 'required_without:milestone',
             'milestone_required_serial_no' => 'nullable',
             'custom_milestone_required_serial_no' => 'nullable',
+            'material_use_product' => 'nullable',
         ];
         // Validate request
         $req->validate($rules, [], [
@@ -259,20 +260,32 @@ class ProductionController extends Controller
                 }
             }
 
+            $material_use_product = $req->material_use_product == null ? null : json_decode($req->material_use_product);
             // Create milestone
             $this->prodMs::where('production_id', $production->id)->whereNotIn('milestone_id', $req->milestone ?? [])->delete();
             if ($req->milestone != null) {
                 $milestone_required_serial_no = explode(',', $req->milestone_required_serial_no);
                 foreach ($req->milestone as $key => $ms_id) {
                     $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $ms_id)->first();
+
+                    $ms_material_use_product = null;
+                    for ($i=0; $i < count($material_use_product); $i++) { 
+                        if ($material_use_product[$i]->is_custom == false && $material_use_product[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
+                            $ms_material_use_product = join(',', $material_use_product[$i]->value);
+                            break;
+                        }
+                    }
+
                     if ($ms == null) {
                         $this->prodMs::create([
                             'production_id' => $production->id,
                             'milestone_id' => $ms_id,
                             'required_serial_no' => $milestone_required_serial_no[$key] == 'true',
+                            'material_use_product_id' => $ms_material_use_product,
                         ]);
                     } else {
                         $ms->required_serial_no = $milestone_required_serial_no[$key] == 'true';
+                        $ms->material_use_product_id = $ms_material_use_product;
                         $ms->save();
                     }
                 }
@@ -281,15 +294,25 @@ class ProductionController extends Controller
             if ($req->custom_milestone != null) {
                 $custom_milestone_required_serial_no = explode(',', $req->custom_milestone_required_serial_no);
                 foreach ($req->custom_milestone as $key => $ms) {
+                    $ms_material_use_product = null;
+                    for ($i=0; $i < count($material_use_product); $i++) { 
+                        if ($material_use_product[$i]->is_custom == true && $material_use_product[$i]->id == ($key + 1)) {
+                            $ms_material_use_product = join(',', $material_use_product[$i]->value);
+                            break;
+                        }
+                    }
+
                     $custom_ms = $this->ms::create([
                         'type' => $this->ms::TYPE_PRODUCTION,
                         'name' => $ms,
                         'is_custom' => true,
+                        'product_id' => $req->product
                     ]);
                     $this->prodMs::create([
                         'production_id' => $production->id,
                         'milestone_id' => $custom_ms->id,
                         'required_serial_no' => $custom_milestone_required_serial_no[$key] == 'true',
+                        'material_use_product_id' => $ms_material_use_product,
                     ]);
                 }
             }

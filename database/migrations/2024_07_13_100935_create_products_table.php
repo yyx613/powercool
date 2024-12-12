@@ -23,9 +23,9 @@ return new class extends Migration
             $table->unsignedInteger('low_stock_threshold')->nullable();
             $table->decimal('price');
             $table->decimal('weight')->nullable()->comment('In KG');
-            $table->decimal('length')->nullable()->comment('In cm');
-            $table->decimal('width')->nullable()->comment('In cm');
-            $table->decimal('height')->nullable()->comment('In cm');
+            $table->decimal('length')->nullable()->comment('In MM');
+            $table->decimal('width')->nullable()->comment('In MM');
+            $table->decimal('height')->nullable()->comment('In MM');
             $table->boolean('is_active');
             $table->boolean('is_sparepart')->nullable();
             $table->softDeletes();

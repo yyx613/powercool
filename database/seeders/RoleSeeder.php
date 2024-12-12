@@ -33,6 +33,10 @@ class RoleSeeder extends Seeder
                 'id' => Role::DRIVER,
                 'name' => 'Driver',
             ],
+            [
+                'id' => Role::PRODUCTION_STAFF,
+                'name' => 'Production Staff',
+            ],
         ];
         $permissions = Permission::get();
 

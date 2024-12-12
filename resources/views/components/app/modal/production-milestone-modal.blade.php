@@ -1,6 +1,6 @@
 <x-app.modal.base-modal id="production-milestone-modal">
     <div class="aspect-[2/1] flex flex-col">
-        <div class="border-b py-2 px-4 bg-slate-100 flex items-center">
+        <div class="py-2 px-4 bg-slate-100 flex items-center">
             <h6 class="text-lg font-black">{{ __('Check In Milestone') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">

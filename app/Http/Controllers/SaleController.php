@@ -22,6 +22,7 @@ use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\Scopes\BranchScope;
 use App\Models\Target;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -160,6 +161,7 @@ class SaleController extends Controller
             Session::put('convert_salesperson_id', $req->sp);
 
             $quotations = Sale::where('type', Sale::TYPE_QUO)
+                ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->where('status', Sale::STATUS_ACTIVE)
@@ -172,6 +174,7 @@ class SaleController extends Controller
             Session::put('convert_customer_id', $req->cus);
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->where('status', Sale::STATUS_ACTIVE)
@@ -182,6 +185,7 @@ class SaleController extends Controller
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->where('status', Sale::STATUS_ACTIVE)
@@ -538,7 +542,10 @@ class SaleController extends Controller
             for ($i = 0; $i < count($product_ids); $i++) {
                 $prod_qty[$product_ids[$i]] = $qtys[$i];
             }
-            $sku = (new DeliveryOrder)->generateSku();
+            $existing_skus = DeliveryOrder::withoutGlobalScope(BranchScope::class)
+                ->pluck('sku')
+                ->toArray();
+            $sku = generateSku('DO', $existing_skus);
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)->whereIn('id', $sale_order_ids_to_convert)->get();
 
@@ -639,7 +646,7 @@ class SaleController extends Controller
             'quo_id' => 'nullable',
             'sale' => 'required',
             'customer' => 'required',
-            'reference' => 'required',
+            'reference' => 'nullable',
             'from' => 'nullable|max:250',
             'cc' => 'nullable|max:250',
             'status' => 'required',
@@ -657,9 +664,12 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             if ($req->sale_id == null) {
+                $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+                $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus);
+
                 $sale = Sale::create([
                     'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
-                    'sku' => (new Sale)->generateSku($req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO),
+                    'sku' => $sku,
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
@@ -674,11 +684,18 @@ class SaleController extends Controller
             } else {
                 $sale = Sale::where('id', $req->sale_id)->first();
 
+                $ref = null;
+                if ($req->type == 'quo') {
+                    $ref = $req->reference;
+                } else if ($req->type != 'quo' && $req->reference != null) {
+                    $ref = json_encode(explode(',', $req->reference));
+                }
+
                 $sale->update([
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
-                    'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
+                    'reference' => $ref,
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
@@ -916,7 +933,7 @@ class SaleController extends Controller
             'driver' => 'required',
             'delivery_date' => 'required',
             'delivery_time' => 'required',
-            'delivery_instruction' => 'required|max:250',
+            'delivery_instruction' => 'nullable|max:250',
             'delivery_address' => 'nullable',
             'status' => 'required',
         ];
@@ -1065,7 +1082,8 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             // Create record
-            $sku = (new Invoice)->generateSku();
+            $existing_skus = Invoice::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
+            $sku = generateSku('I', $existing_skus);
             $filename = $sku . '.pdf';
 
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
@@ -1555,7 +1573,6 @@ class SaleController extends Controller
 
             $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search);
             $searched_inv_ids[] = $inv_id_to_search;
-            // dd($data);
             
             if (isset($data['inv_ids'])) {
                 $diff = array_values(array_diff($data['inv_ids'], $searched_inv_ids));
@@ -1941,7 +1958,7 @@ class SaleController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
-            dd($th);
+
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }

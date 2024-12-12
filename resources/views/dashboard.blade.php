@@ -182,18 +182,24 @@
             <!-- Best Selling Products -->
             <div class="bg-white rounded-lg p-3 border">
                 <h6 class="text-lg font-semibold mb-4">{{ __('Best Selling Products') }}</h6>
-                @foreach ($best_selling_products as $count => $pro)
+                @foreach ($best_selling_products as $row)
                     <div class="mb-2 flex items-center gap-4 bg-slate-50 p-2 rounded-md">
                         <div class="h-8 w-8 bg-white rounded-md">
-                            @if ($pro->image != null)
-                                <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                            @if ($row['product']->image != null)
+                                <img src="{{ $row['product']->image->url }}" alt="" class="h-full w-full object-contain">
+                            @else
+                                <div class="p-1" title="No Image">
+                                    <svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                        <path d="m18,8c0,1.105-.895,2-2,2s-2-.895-2-2,.895-2,2-2,2,.895,2,2Zm5.707,15.707c-.195.195-.451.293-.707.293s-.512-.098-.707-.293L.293,1.707C-.098,1.316-.098.684.293.293S1.316-.098,1.707.293l1.536,1.536c.814-.538,1.771-.829,2.757-.829h12c2.757,0,5,2.243,5,5v12c0,.987-.291,1.944-.829,2.757l1.536,1.536c.391.391.391,1.023,0,1.414ZM4.707,3.293l16,16c.191-.4.293-.842.293-1.293V6c0-1.654-1.346-3-3-3H6c-.451,0-.892.102-1.293.293Zm12.293,17.707H6c-1.523,0-2.783-1.14-2.974-2.612l4.681-4.681c.391-.391.391-1.023,0-1.414s-1.023-.391-1.414,0l-3.293,3.293V7c0-.553-.448-1-1-1s-1,.447-1,1v11c0,2.757,2.243,5,5,5h11c.552,0,1-.447,1-1s-.448-1-1-1Z"/>
+                                    </svg>
+                                </div>
                             @endif
                         </div>
                         <div class="flex flex-col flex-1">
-                            <span class="text-md font-medium">{{ $pro->model_name }}</span>
-                            <span class="text-xs font-medium text-slate-400">{{ $pro->sku }}</span>
+                            <span class="text-md font-medium">{{ $row['product']->model_name }}</span>
+                            <span class="text-xs font-medium text-slate-400">{{ $row['product']->sku }}</span>
                         </div>
-                        <span class="flex-1 text-md font-medium text-center">{{ $count }} SO Involved</span>
+                        <span class="flex-1 text-md font-medium text-center">{{ $row['count'] }} SO Involved</span>
                     </div>
                 @endforeach
             </div>

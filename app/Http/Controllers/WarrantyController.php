@@ -72,7 +72,7 @@ class WarrantyController extends Controller
             $data['data'][] = [
                 'sale_order_id' => $record->sale->id,
                 'sale_order_sku' => $record->sale->sku,
-                'product' => $record->product,
+                'product' => $record->product()->withTrashed()->first(),
                 'warranty' => $record->warrantyPeriod == null ? null : $record->warrantyPeriod->name,
             ];
         }
