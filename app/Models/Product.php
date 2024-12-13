@@ -63,12 +63,6 @@ class Product extends Model
         return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
     }
 
-    public function childrenWithoutAssigned($production_id) {
-        $involved_pc_ids = getInvolvedProductChild($production_id);
-
-        return $this->children()->whereNull('status')->whereNotIn('id', $involved_pc_ids)->get();
-    }
-
     public function materialUse()
     {
         return $this->hasOne(MaterialUse::class);

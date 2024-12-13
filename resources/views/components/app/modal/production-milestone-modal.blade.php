@@ -13,30 +13,29 @@
                 </div>
                 <div id="serial-no-container">
                     <span class="font-medium text-sm block mb-2">{{ __('Materials') }}</span>
-                    <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64">
-                        @foreach($product->materialUse->materials as $key => $material)
-                            <div class="mb-4 {{ ($key + 1) < count($product->materialUse->materials) ? 'pb-4 border-b' : '' }}">
-                                <div class="mb-2 flex flex-col">
-                                    <span class="font-medium text-sm">{{ $material->material->model_name }}</span>
-                                    <span class="font-medium text-xs text-slate-400">{{ __('Quantity Needed') }}: x{{ $material->qty }}</span>
-                                </div>
-                                @if ($material->material->is_sparepart)
-                                    <div class="grid grid-cols-2 gap-2">
-                                        @foreach($material->material->childrenWithoutAssigned($production->id) as $m)
-                                            @if ($m->location == 'warehouse')
-                                                <div class="flex items-center gap-x-2">
-                                                    <input type="checkbox" name="serial_no[]" id="{{ $m->id }}" class="border-slate-500 rounded" data-mu-id="{{ $material->id }}">
-                                                    <label for="{{ $m->id }}" class="text-sm">{{ $m->sku }}</label>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                    <x-app.message.error id="materials_err" class="mt-2" data-material-id="{{ $material->id }}" />
-                                @else
-                                    <p class="text-sm text-blue-600">{{ __('Not spare part, selection is not required') }}</p>
-                                @endif
+                    <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64" id="serial-no-selection-container">
+                        <!-- Raw Material Template -->
+                        <div class="mb-4 hidden" id="rm-template">
+                            <div class="mb-2 flex flex-col">
+                                <span class="font-medium text-sm" id="product-name"></span>
+                                <span class="font-medium text-xs text-slate-400" id="qty-needed"></span>
                             </div>
-                        @endforeach
+                            <p class="text-sm text-blue-600">{{ __('Not spare part, selection is not required') }}</p>
+                        </div>
+                        <!-- Sparepart Template -->
+                        <div class="mb-4 hidden" id="sp-template">
+                            <div class="mb-2 flex flex-col">
+                                <span class="font-medium text-sm" id="product-name"></span>
+                                <span class="font-medium text-xs text-slate-400" id="qty-needed"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 sp-serial-no-container">
+                                <div class="flex items-center gap-x-2 hidden sp-serial-no-template">
+                                    <input type="checkbox" name="serial_no[]" id="" class="border-slate-500 rounded" data-mu-id="">
+                                    <label for="" class="text-sm"></label>
+                                </div>
+                            </div>
+                            <x-app.message.error id="materials_err" class="mt-2" data-mu-id="" />
+                        </div> 
                     </div>
                 </div>
             </div>
@@ -44,9 +43,6 @@
                 <button type="button" class="w-full p-2 rounded-md text-red-600 text-sm font-medium transiton-all duration-300 hover:bg-red-50" id="no-btn">{{ __('No') }}</button>
                 <button type="button" class="w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transiton-all duration-300 text-center hover:bg-blue-700" id="yes-btn">{{ __('Confirm') }}</button>
             </div>
-        </div>
-        <div class="border-t px-2 py-3 hidden" id="last-milestone-msg">
-            <p class="text-sm text-blue-500 leading-tight font-medium text-center">{{ __('Checking in this milestone will complete the production. Please make sure the materials used are correct (if there is any).') }}</p>
         </div>
     </div>
 </x-app.modal.base-modal>
@@ -66,9 +62,8 @@
         FORM_CAN_SUBMIT = false
 
         $('.err_msg').addClass('hidden') // Remove error messages
-        // Submit
-        let url = '{{ route("production.check_in_milestone") }}'
 
+        // Prepare data
         let materials = {}
         $('#serial-no-container input[name="serial_no[]"]').each(function(i, obj) {
             if ($(this).is(':checked')) {
@@ -77,21 +72,26 @@
                 let vals = materials[$(this).data('mu-id')]
                 vals.push($(this).attr('id'))
                 materials[$(this).data('mu-id')] = vals
-                MATERIALS_NEEDED.push($(this).attr('id'))
+
+                if (PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')] === undefined) {
+                    PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')] = []
+                }
+                PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')] = PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')].concat(vals.map(function(item) {
+                    return parseInt(item)
+                }))
             }
         })
-
+        // Submit
         $.ajax({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            url: url,
+            url: '{{ route("production.check_in_milestone") }}',
             type: 'POST',
             data: {
                 'production_milestone_id': $('#production-milestone-modal #yes-btn').attr('data-id'),
                 'datetime': $('#production-milestone-modal #date').text(),
                 'materials': materials,
-                'last_milestone': !($('#production-milestone-modal #last-milestone-msg').hasClass('hidden'))
             },  
             success: function(res) {
                 $('#production-milestone-modal').removeClass('show-modal')
@@ -117,8 +117,8 @@
                                 let field = key.split('.')[0]
                                 let idx = key.split('.')[1]
     
-                                $(`#production-milestone-modal #${field}_err[data-material-id="${idx}"]`).find('p').text(errors[key])
-                                $(`#production-milestone-modal #${field}_err[data-material-id="${idx}"]`).removeClass('hidden') 
+                                $(`#production-milestone-modal #${field}_err[data-mu-id="${idx}"]`).find('p').text(errors[key])
+                                $(`#production-milestone-modal #${field}_err[data-mu-id="${idx}"]`).removeClass('hidden') 
                             }
                         }
                     }

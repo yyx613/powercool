@@ -94,13 +94,13 @@
                                 <label for="{{ $stone->id }}" class="text-sm">{{ $stone->name }}</label>
                             </div>
                             <div class="flex items-center">
-                                <button type="button" data-id="{{ $stone->id }}" data-is-custom="false" class="mr-3 view-material-use-selection-btns {{ isset($production) && $production->milestones()->where('milestone_id', $stone->id)->value('required_serial_no') ? '' : 'hidden'  }}" title="View Material Use Selection">
+                                <button type="button" data-id="{{ $stone->id }}" data-is-custom="false" class="mr-3 view-material-use-selection-btns {{ isset($production) && $production->milestones()->where('milestone_id', $stone->id)->value('material_use_product_id') ? '' : 'hidden'  }}" title="View Material Use Selection">
                                     <svg class="h-4 w-4 fill-slate-400 hover:fill-black" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                         <path d="M23.707,22.293l-5.969-5.969c1.412-1.725,2.262-3.927,2.262-6.324C20,4.486,15.514,0,10,0S0,4.486,0,10s4.486,10,10,10c2.397,0,4.599-.85,6.324-2.262l5.969,5.969c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414ZM2,10C2,5.589,5.589,2,10,2s8,3.589,8,8-3.589,8-8,8S2,14.411,2,10Zm13.933-1.261c-.825-1.21-2.691-3.239-5.933-3.239s-5.108,2.03-5.933,3.239c-.522,.766-.522,1.755,0,2.521,.825,1.21,2.692,3.24,5.933,3.24s5.108-2.03,5.933-3.239c.522-.766,.522-1.755,0-2.521Zm-1.652,1.395c-.735,1.08-2.075,2.366-4.28,2.366s-3.544-1.287-4.28-2.367c-.056-.081-.056-.185,0-.267,.735-1.08,2.075-2.366,4.28-2.366s3.545,1.287,4.28,2.366h0c.056,.082,.056,.186,0,.268Zm-2.78-.134c0,.829-.671,1.5-1.5,1.5s-1.5-.671-1.5-1.5,.671-1.5,1.5-1.5,1.5,.671,1.5,1.5Z"/>
                                     </svg>
                                 </button>
                                 <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
-                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" data-id="{{ $stone->id }}" data-is-custom="false" @checked(isset($production) ? $production->milestones()->where('milestone_id', $stone->id)->value('required_serial_no') : null) />
+                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" data-id="{{ $stone->id }}" data-is-custom="false" @checked(isset($production) ? $production->milestones()->where('milestone_id', $stone->id)->value('material_use_product_id') : null) />
                                     <div class="flex items-center w-full">
                                         <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
                                         <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
@@ -138,8 +138,6 @@
                     @else
                         <x-input-error :messages="$errors->get('custom_milestone')" class="mt-2" />
                     @endif
-                    <input type="hidden" name="milestone_required_serial_no">
-                    <input type="hidden" name="custom_milestone_required_serial_no">
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
@@ -168,8 +166,7 @@
 
                 for (let i = 0; i < PRODUCTION.milestones.length; i++) {
                     const element = PRODUCTION.milestones[i];
-
-                    if (element.pivot.required_serial_no == true) {
+                    if (element.pivot.material_use_product_id != null) {
                         SELECTED_MATERIAL_USES[`ms_${element.pivot.milestone_id}`] = element.pivot.material_use_product_id.split(',')
                     }
                 }
@@ -251,22 +248,6 @@
         })
         $('form').one('submit', function(e) {
             e.preventDefault()
-
-            let msRequiredSerialNo = []
-            $('.milestone-selection').each(function(i, obj) {
-                if ($(this).find('input[name="milestone[]"]').is(':checked')) {
-                    msRequiredSerialNo.push($(this).find('input[name="required_serial_no[]"]').is(':checked'))
-                }
-            })
-            $('input[name="milestone_required_serial_no"]').val(msRequiredSerialNo)
-
-            let customMsRequiredSerialNo = []
-            $('.custom-milestone').each(function(i, obj) {
-                if ($(this).find('input[name="custom_milestone[]"]').is(':checked')) {
-                    customMsRequiredSerialNo.push($(this).find('input[name="required_serial_no[]"]').is(':checked'))
-                }
-            })
-            $('input[name="custom_milestone_required_serial_no"]').val(customMsRequiredSerialNo)
 
             let materialUseProduct = []
             for (const key in SELECTED_MATERIAL_USES) {
