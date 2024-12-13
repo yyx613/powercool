@@ -48,12 +48,12 @@
                     <tr>
                         <td style="font-size: 14px;">Our P/O No</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $our_po_no }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Terms</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $term }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Date</td>
@@ -63,12 +63,12 @@
                     <tr>
                         <td style="font-size: 14px;">Our P/O Date</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $our_po_date }}</td>
                     </tr>
                     <tr>
                         <td style="font-size: 14px;">Store</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $store }}</td>
                     </tr>
                 </table>
             </td>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\CreditTerm;
 use App\Models\GRN;
 use App\Models\Product;
 use App\Models\ProductChild;
@@ -10,6 +11,7 @@ use App\Models\ProductCost;
 use App\Models\Scopes\BranchScope;
 use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -89,6 +91,9 @@ class GRNController extends Controller
         // Validate form
         $rules = [
             'sku' => 'nullable',
+            'our_po_no' => 'required',
+            'term' => 'required',
+            'our_po_date' => 'required',
             'supplier' => 'required',
             'product_id' => 'required',
             'product_id.*' => 'required',
@@ -124,6 +129,10 @@ class GRNController extends Controller
             for ($i = 0; $i < count($req->product_id); $i++) {
                 $grn = $this->grn::create([
                     'sku' => $sku,
+                    'our_po_no' => $req->our_po_no,
+                    'term' => $req->term,
+                    'our_po_date' => $req->our_po_date,
+                    'branch_id' => getCurrentUserBranch(),
                     'supplier_id' => $req->supplier,
                     'product_id' => $req->product_id[$i],
                     'qty' => $req->qty[$i],
@@ -161,6 +170,10 @@ class GRNController extends Controller
             'sku' => $sku,
             'grns' => $grns,
             'supplier' => Supplier::where('id', $grns[0]->supplier_id)->first(),
+            'our_po_no' => $grns[0]->our_po_no,
+            'term' => CreditTerm::where('id', $grns[0]->term)->value('name'),
+            'our_po_date' => Carbon::parse($grns[0]->our_po_date)->format('d/m/Y'),
+            'store' => (new Branch)->keyToLabel($grns[0]->branch_id),
         ]);
         $pdf->setPaper('A4', 'letter');
 

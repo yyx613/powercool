@@ -450,9 +450,11 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['grn.form'], function (ViewView $view) {
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
             $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
+            $credit_terms = CreditTerm::where('is_active', true)->orderBy('id', 'desc')->get();
 
             $view->with('suppliers', $suppliers);
             $view->with('uoms', $uoms);
+            $view->with('credit_terms', $credit_terms);
         });
         View::composer(['supplier.form', 'customer.form_step.info'], function (ViewView $view) {
             $currencies = Currency::where('is_active', true)->orderBy('id', 'desc')->get();

@@ -11,7 +11,29 @@
             @if (isset($sku))
                 <x-app.input.input name="sku" id="sku" value="{{ $sku }}" class="hidden"/>
             @endif
-            <div class="flex flex-col p-4">
+            <div class="grid grid-cols-3 gap-6 w-full p-4">
+                <div class="flex flex-col">
+                    <x-app.input.label id="our_po_no" class="mb-1">{{ __('Our P/O No') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="our_po_no" id="our_po_no" />
+                    <x-app.message.error id="our_po_no_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="term" class="mb-1">{{ __('Terms') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="term">
+                        <option value="">{{ __('Select a term') }}</option>
+                        @foreach($credit_terms as $term)
+                            <option value="{{ $term->id }}">{{ $term->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="term_err"/>
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="our_po_date" class="mb-1">{{ __('Our P/O Date :') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="our_po_date" id="our_po_date" />
+                    <x-app.message.error id="our_po_date_err"/>
+                </div>
+            </div>
+            <div class="flex flex-col p-4 border-b-2 pb-8 mb-8">
                 <x-app.input.label id="supplier" class="mb-1">{{ __('Supplier') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.select2 name="supplier" id="supplier" :hasError="$errors->has('supplier')" placeholder="{{ __('Select a supplier') }}">
                     <option value="">{{ __('Select a supplier') }}</option>
@@ -99,6 +121,9 @@
 
                     $('#add-item-btn').click()
 
+                    $(`input[name="our_po_no"]`).val(grn.our_po_no).trigger('change')
+                    $(`input[name="our_po_date"]`).val(moment(grn.our_po_date).format('Y-MM-DD')).trigger('change')
+                    $(`select[name="term"]`).val(grn.term).trigger('change')
                     $(`select[name="supplier"]`).val(grn.supplier_id).trigger('change')
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(grn.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(grn.qty)
@@ -110,6 +135,11 @@
                 $('#add-item-btn').click()
             }
         })
+
+        $('input[name="our_po_date"]').daterangepicker(datepickerParam)
+        $('input[name="our_po_date"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
 
         $('#add-item-btn').on('click', function() {
             let clone = $('#item-template')[0].cloneNode(true);
@@ -193,6 +223,9 @@
                 type: 'POST',
                 data: {
                     'sku': $('input[name="sku"]').val(),
+                    'our_po_no': $('input[name="our_po_no"]').val(),
+                    'term': $('select[name="term"]').val(),
+                    'our_po_date': $('input[name="our_po_date"]').val(),
                     'supplier': $('select[name="supplier"]').val(),
                     'product_id': prodId,
                     'qty': qty,
@@ -222,9 +255,9 @@
                             let errors = err.responseJSON.errors
 
                             for (const key in errors) {
-                                if (key == 'supplier') {
-                                    $(`#form #supplier_err`).find('p').text(errors[key])
-                                    $(`#form #supplier_err`).removeClass('hidden')
+                                if (!key.includes('.')) {
+                                    $(`#form #${key}_err`).find('p').text(errors[key])
+                                    $(`#form #${key}_err`).removeClass('hidden')
                                 } else {
                                     let field = key.split('.')[0]
                                     let idx = key.split('.')[1]
