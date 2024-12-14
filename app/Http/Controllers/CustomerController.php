@@ -14,21 +14,24 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Http;
 
 class CustomerController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('customer.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = new Customer;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
@@ -81,11 +84,13 @@ class CustomerController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('customer.form');
     }
 
-    public function edit(Customer $customer) {
+    public function edit(Customer $customer)
+    {
         $customer->load('pictures', 'locations');
 
         return view('customer.form', [
@@ -93,13 +98,62 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function delete(Customer $customer) {
+    public function delete(Customer $customer)
+    {
         $customer->delete();
 
         return back()->with('success', 'Customer deleted');
     }
 
-    public function upsertInfo(Request $req) {
+    public function sync(Customer $customer, $company)
+    {
+        try {
+            // //Prepare customer data for AutoCount format
+            $autocountData = [
+                // 'ControlAccount' => $customer->id,
+                'AccNo' => $customer->id,
+                'CompanyName' => $customer->name,
+                'Address1' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address2' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address3' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address4' =>  $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Phone1' => $customer->mobile_number,
+                'Phone2' => $customer->phone,
+                'Attention' => $customer->remark,
+                'EmailAddress' => $customer->email,
+                'CurrencyCode' => 'MYR',
+            ];
+
+            // //Make API call to AutoCount
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
+                'Content-Type' => 'application/json',
+            ])->post(config('services.autocount.base_url') . '/api/Debtor/CreateNewDebtor', $autocountData);
+
+            if ($response->successful()) {
+
+                return back()->with('success', 'Customer successfully synced to AutoCount');
+            }
+
+            Log::error('AutoCount Sync Failed', [
+                'customer' => $customer->id,
+                'response' => $response->json()
+            ]);
+
+            return back()->with('error', 'Failed to sync with AutoCount');
+
+        } catch (\Exception $e) {
+            Log::error('AutoCount Sync Error', [
+                'customer' => $customer->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Error syncing customer: ' . $e->getMessage());
+        }
+    }
+
+    public function upsertInfo(Request $req)
+    {
         // Validate request
         $req->validate([
             'customer_id' => 'nullable',
@@ -220,7 +274,7 @@ class CustomerController extends Controller
                 ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->delete();
 
                 $terms = [];
-                for ($i=0; $i < count($req->credit_term); $i++) { 
+                for ($i = 0; $i < count($req->credit_term); $i++) {
                     $terms[] = [
                         'object_type' => Customer::class,
                         'object_id' => $customer->id,
@@ -248,7 +302,8 @@ class CustomerController extends Controller
         }
     }
 
-    public function upsertLocation(Request $req) {
+    public function upsertLocation(Request $req)
+    {
         // Validate request
         $req->validate([
             'customer_id' => 'required',
@@ -278,7 +333,7 @@ class CustomerController extends Controller
         // Validate only 1 billing address is default or 1 delivery address is default
         $bill_has_default = false;
         $deli_has_default = false;
-        for ($i=0; $i < count($req->address); $i++) {
+        for ($i = 0; $i < count($req->address); $i++) {
             if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING) {
                 if ($bill_has_default == true) {
                     return Response::json([
@@ -300,13 +355,14 @@ class CustomerController extends Controller
             DB::beginTransaction();
 
             if ($req->location_id != null) {
-                $order_idx = array_filter($req->location_id, function($val) { return $val != null; });
+                $order_idx = array_filter($req->location_id, function ($val) {
+                    return $val != null; });
                 CustomerLocation::where('customer_id', $req->customer_id)->whereNotIn('id', $order_idx ?? [])->delete();
             }
 
             $now = now();
             $data = [];
-            for ($i=0; $i < count($req->address); $i++) {
+            for ($i = 0; $i < count($req->address); $i++) {
                 if ($req->location_id != null && $req->location_id[$i] != null) {
                     CustomerLocation::where('id', $req->location_id[$i])->update([
                         'address' => $req->address[$i],
@@ -355,7 +411,8 @@ class CustomerController extends Controller
         }
     }
 
-    public function getLocation(Request $req) {
+    public function getLocation(Request $req)
+    {
         try {
             DB::beginTransaction();
 
@@ -377,7 +434,8 @@ class CustomerController extends Controller
         }
     }
 
-    public function createLink(Request $req) {
+    public function createLink(Request $req)
+    {
         if ($req->branch == null) {
             abort(403);
         }

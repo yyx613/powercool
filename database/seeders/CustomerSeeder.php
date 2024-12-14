@@ -20,7 +20,7 @@ class CustomerSeeder extends Seeder
                     'name' => 'Customer'. ($i + 1),
                     'phone' => fake()->phoneNumber(),
                     // 'under_warranty' => fake()->boolean(),
-                    'status' => 1,
+                    // 'is_active' => true,
                 ]);
 
                 Branch::create([

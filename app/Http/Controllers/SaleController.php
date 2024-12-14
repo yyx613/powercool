@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Http;
 
 use function PHPUnit\Framework\isEmpty;
 
@@ -1240,6 +1241,42 @@ class SaleController extends Controller
     public function indexInvoice()
     {
         return view('invoice.list');
+    }
+
+    public function sync(Request $request)
+    {
+        try {
+            $ids = collect($request->input('skus'))->pluck('id')->toArray();
+
+            $invoices = Invoice::with('customer')->whereIn('id', $ids)
+            ->get();
+            foreach ($invoices as $invoice) {
+                $autocountData = [
+                    'DebtorCode' => $invoice->customer->id,
+                    'DocNo' => $invoice->sku,
+                    'DocDate' => $invoice->created_at,
+                    'Description' => $invoice->filename,
+                ];
+    
+                // //Make API call to AutoCount
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
+                    'Content-Type' => 'application/json',
+                ])->post(config('services.autocount.base_url') . '/api/Sales/NewSaleInvoice', $autocountData);
+    
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully synced ' . '1'. ' invoice(s)'
+            ]);
+        } catch (\Exception $e) {
+            Log::info($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getDataInvoice(Request $req)

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Http;
 
 class GRNController extends Controller
 {
@@ -25,25 +26,28 @@ class GRNController extends Controller
     protected $prodChild;
     protected $prodCost;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->grn = new GRN();
         $this->prod = new Product();
         $this->prodChild = new ProductChild();
         $this->prodCost = new ProductCost();
     }
 
-    public function index() {
+    public function index()
+    {
         return view('grn.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->grn;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%');
             });
         }
@@ -66,15 +70,17 @@ class GRNController extends Controller
                 'sku' => $record->sku,
             ];
         }
-                
+
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('grn.form');
     }
 
-    public function edit($sku) {
+    public function edit($sku)
+    {
         $grns = $this->grn::where('sku', $sku)->get();
 
         if (count($grns) <= 0) {
@@ -87,7 +93,8 @@ class GRNController extends Controller
         ]);
     }
 
-    public function upsert(Request $req) {
+    public function upsert(Request $req)
+    {
         // Validate form
         $rules = [
             'sku' => 'nullable',
@@ -158,13 +165,14 @@ class GRNController extends Controller
         }
     }
 
-    public function pdf($sku) {
+    public function pdf($sku)
+    {
         $grns = $this->grn::where('sku', $sku)->get();
 
         if (count($grns) <= 0) {
             abort(404);
         }
-        
+
         $pdf = Pdf::loadView('grn.powercool_pdf', [
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
@@ -180,7 +188,51 @@ class GRNController extends Controller
         return $pdf->stream();
     }
 
-    public function stockIn(Request $req) {
+    public function sync(Request $request)
+    {
+        try {
+
+            $ids = collect($request->input('skus'))->pluck('id')->toArray();
+            $grns = Grn::with('product')
+                ->whereIn('id', $ids)
+                ->get();
+
+            foreach ($grns as $grn) {
+                // Access GRN and its products
+                Log::info($grn->product->is_active);
+                Log::info($grn->product->is_sparepart);
+               
+                $autocountData = [
+                    'poDocNo' => $grn->id,
+                    'itemCode' => $grn->product->sku,
+                    'uom' => $grn->uom,
+                    'qtyToTransfer' => $grn->qty,
+                    'focQtyToTrasnfer' =>0
+                ];
+    
+                // //Make API call to AutoCount
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
+                    'Content-Type' => 'application/json',
+                ])->post(config('services.autocount.base_url') . '/api/Sales/NewSaleInvoice', $autocountData);
+    
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully synced ' . count($ids) . ' GRNs'
+            ]);
+        } catch (\Exception $e) {
+            Log::info($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function stockIn(Request $req)
+    {
         try {
             DB::beginTransaction();
 
@@ -189,10 +241,10 @@ class GRNController extends Controller
             for ($i = 0; $i < count($req->product); $i++) {
                 if ($req->{'serial_no_' . $req->product[$i]} != null) {
                     $grn = $this->grn::where('sku', $req->sku)->where('product_id', $req->product[$i])->first();
-                    
+
                     $serial_no = explode(',', $req->{'serial_no_' . $req->product[$i]});
 
-                    for ($j=0; $j < count($serial_no); $j++) { 
+                    for ($j = 0; $j < count($serial_no); $j++) {
                         $data[] = [
                             'product_id' => $req->product[$i],
                             'sku' => $serial_no[$j],
