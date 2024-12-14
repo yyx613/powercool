@@ -15,6 +15,15 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="can_submit_einvoice" class="mb-1">{{ __('Can Submit Einvoice') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="can_submit_einvoice" id="can_submit_einvoice" :hasError="$errors->has('can_submit_einvoice')">
+                        <option value="">{{ __('Select a Yes/No') }}</option>
+                        <option value="1" @selected(old('can_submit_einvoice', isset($platform) ? $platform->can_submit_einvoice : null) == 1)>{{ __('Yes') }}</option>
+                        <option value="0" @selected(old('can_submit_einvoice', isset($platform) ? $platform->can_submit_einvoice : null) === 0)>{{ __('No') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('can_submit_einvoice')" class="mt-1" />
+                </div>   
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>

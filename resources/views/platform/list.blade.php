@@ -45,6 +45,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Can Submit eInvoice') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -72,6 +73,7 @@
             order: [],
             columns: [
                 { data: 'name' },
+                { data: 'eInvoice' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -90,6 +92,19 @@
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
+                                return "{!! __('No') !!}"
+                            case 1:
+                                return "{!! __('Yes') !!}"
+                        }
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 2,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        switch (data) {
+                            case 0:
                                 return "{!! __('Inactive') !!}"
                             case 1:
                                 return "{!! __('Active') !!}"
@@ -98,7 +113,7 @@
                 },
                 { 
                     "width": "5%",
-                    "targets": 2,
+                    "targets": 3,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

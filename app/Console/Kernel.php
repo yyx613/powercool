@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:refresh-shopee-token')->everyThreeHours();
         $schedule->command('app:prompt-task')->everyFiveMinutes()->withoutOverlapping()->evenInMaintenanceMode();
         $schedule->command('app:service-reminder')->dailyAt(1)->evenInMaintenanceMode();
+        $schedule->command('app:check-e-invoice-status')->everyThreeHours();
     }
 
     /**
