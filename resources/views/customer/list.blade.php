@@ -58,6 +58,8 @@
                     <th>{{ __('Company Name') }}</th>
                     <th>{{ __('Platform') }}</th>
                     <th>{{ __('Status') }}</th>
+                    <th>{{ __('HiTen') }}</th>
+                    <th>{{ __('PowerCool') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -67,6 +69,7 @@
 
     <x-app.modal.delete-modal/>
     <x-app.modal.create-customer-link-modal/>
+    <x-app.modal.customer-sync-modal />
 @endsection
 
 @push('scripts')
@@ -92,6 +95,8 @@
                 { data: 'company_name' },
                 { data: 'platform' },
                 { data: 'status' },
+                { data: '' },
+                { data: '' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -139,8 +144,24 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 6,
+                    "orderable": false,
+                    render: function (data, type, row) {
+                        return `<button class="rounded-full p-2 bg-blue-200 inline-block company1_sync" data-id="${row.id}" style="padding-left: 20px;padding-right: 20px;">Sync</button>`
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 7,
+                    "orderable": false,
+                    render: function (data, type, row) {
+                        return `<button class="rounded-full p-2 bg-blue-200 inline-block company2_sync" data-id="${row.id}" style="padding-left: 20px;padding-right: 20px;">Sync</button>`
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 8,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -183,6 +204,22 @@
 
         $('#create-customer-link-btn').on('click', function() {
             $('#create-customer-link-modal').addClass('show-modal')
+        })
+
+        $('#data-table').on('click', '.company1_sync', function () {
+            id = $(this).data('id')
+            console.log(id);
+            console.log('company1_sync');
+            $('#customer-sync-modal #yes-btn').attr('href', `{{ config('app.url') }}/customer/sync/${id}/HiTen`)
+            $('#customer-sync-modal').addClass('show-modal')
+        })
+
+        $('#data-table').on('click', '.company2_sync', function () {
+            id = $(this).data('id')
+            console.log(id);
+            console.log('company2_sync');
+            $('#customer-sync-modal #yes-btn').attr('href', `{{ config('app.url') }}/customer/sync/${id}/PowerCool`)
+            $('#customer-sync-modal').addClass('show-modal')
         })
     </script>
 @endpush

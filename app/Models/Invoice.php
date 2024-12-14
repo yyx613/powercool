@@ -31,6 +31,18 @@ class Invoice extends Model
         return $this->hasMany(DeliveryOrder::class);
     }
 
+    public function customer()
+    {
+        return $this->hasOneThrough(
+            Customer::class,
+            DeliveryOrder::class,
+            'invoice_id', // Foreign key on delivery_orders table
+            'id',        // Foreign key on customers table
+            'id',        // Local key on invoices table
+            'customer_id' // Local key on delivery_orders table
+        );
+    }
+
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }

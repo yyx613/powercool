@@ -66,7 +66,7 @@ Route::get('/change-language/{lang}', function($locale) {
     return back();
 })->name('change_language');
 
-Route::middleware('auth', 'select_lang', 'notification')->group(function () { 
+Route::middleware(['auth', 'select_lang', 'notification'])->group(function () { 
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';
@@ -124,6 +124,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
+        Route::post('/sync', 'sync')->name('sync');
     });
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
@@ -181,7 +182,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::prefix('sale-order')->name('sale_order.')->middleware(['can:sale.sale_order.view'])->group(function () {
             Route::get('/', 'indexSaleOrder')->name('index');
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
-            Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
+            Route::get('/create', action: 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
             Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
@@ -363,6 +364,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert-info', 'upsertInfo')->name('upsert_info')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::post('/upsert-location', 'upsertLocation')->name('upsert_location')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::get('/get-location', 'getLocation')->name('get_location');
+        Route::get(uri: '/sync/{customer}/{company}', action: 'sync')->name('sync');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {

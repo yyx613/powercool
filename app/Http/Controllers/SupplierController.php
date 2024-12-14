@@ -17,21 +17,24 @@ use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Http;
 
 class SupplierController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('supplier.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = new Supplier;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
@@ -78,11 +81,13 @@ class SupplierController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('supplier.form');
     }
 
-    public function edit(Supplier $supplier) {
+    public function edit(Supplier $supplier)
+    {
         $supplier->load('pictures');
 
         return view('supplier.form', [
@@ -90,13 +95,62 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function delete(Supplier $supplier) {
+    public function delete(Supplier $supplier)
+    {
         $supplier->delete();
 
         return back()->with('success', 'Supplier deleted');
     }
 
-    public function upsert(Request $req, Supplier $supplier) {
+    public function sync(Supplier $supplier, $company)
+    {
+        try {
+            // //Prepare customer data for AutoCount format
+            $autocountData = [
+                // 'ControlAccount' => $supplier->id,
+                'AccNo' => $supplier->id,
+                'CompanyName' => $supplier->name,
+                'Address1' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address2' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address3' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Address4' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
+                'Phone1' => $supplier->mobile_number,
+                'Phone2' => $supplier->phone,
+                'Attention' => $supplier->remark,
+                'EmailAddress' => $supplier->email,
+                'CurrencyCode' => 'MYR',
+            ];
+
+            // //Make API call to AutoCount
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
+                'Content-Type' => 'application/json',
+            ])->post(config('services.autocount.base_url') . '/api/Creditor/NewCreditor', $autocountData);
+
+            if ($response->successful()) {
+
+                return back()->with('success', 'Supplier successfully synced to AutoCount');
+            }
+
+            Log::error('AutoCount Sync Failed', [
+                'supplier' => $supplier->id,
+                'response' => $response->json()
+            ]);
+
+            return back()->with('error', 'Failed to sync with AutoCount');
+
+        } catch (\Exception $e) {
+            Log::error('AutoCount Sync Error', [
+                'customer' => $supplier->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Error syncing customer: ' . $e->getMessage());
+        }
+    }
+
+    public function upsert(Request $req, Supplier $supplier)
+    {
         // Validate request
         $req->validate([
             'prefix' => 'nullable',
@@ -193,7 +247,7 @@ class SupplierController extends Controller
                 ObjectCreditTerm::where('object_type', Supplier::class)->where('object_id', $supplier->id)->delete();
 
                 $terms = [];
-                for ($i=0; $i < count($req->credit_term); $i++) { 
+                for ($i = 0; $i < count($req->credit_term); $i++) {
                     $terms[] = [
                         'object_type' => Supplier::class,
                         'object_id' => $supplier->id,

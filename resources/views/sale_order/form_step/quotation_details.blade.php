@@ -156,7 +156,7 @@
             // Submit
             let url = '{{ route("sale.upsert_quo_details") }}'
             url = `${url}?type=so`
-
+console.log(url);
             $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
