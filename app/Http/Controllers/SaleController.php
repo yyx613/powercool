@@ -1277,8 +1277,11 @@ class SaleController extends Controller
             $enable = true;
 
             $hasPlatformId = $record->deliveryOrders()
-            ->whereHas('products.saleProduct.sale', function($query) {
-                $query->whereNotNull('platform_id');
+            ->whereHas('products.saleProduct.sale', function ($query) {
+                $query->whereNotNull('platform_id')
+                    ->whereHas('platform', function ($subQuery) {
+                        $subQuery->where('can_submit_einvoice', true);
+                    });
             })->exists();
 
             if ($record->einvoice) {

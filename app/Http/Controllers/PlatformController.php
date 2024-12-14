@@ -57,6 +57,7 @@ class PlatformController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'eInvoice' => $record->can_submit_einvoice,
                 'status' => $record->is_active,
             ];
         }
@@ -84,6 +85,7 @@ class PlatformController extends Controller
             $dt = $this->platform::create([
                 'name' => $req->name,
                 'is_active' => $req->status,
+                'can_submit_einvoice' => $req->can_submit_einvoice
             ]);
             (new Branch)->assign(Platform::class, $dt->id);
 
@@ -103,7 +105,7 @@ class PlatformController extends Controller
 
     public function edit(Platform $platform) {
         return view('platform.form', [
-            'debtor' => $platform
+            'platform' => $platform
         ]);
     }
 
@@ -123,6 +125,7 @@ class PlatformController extends Controller
             $platform->update([
                 'name' => $req->name,
                 'is_active' => $req->status,
+                'can_submit_einvoice' => $req->can_submit_einvoice
             ]);
 
             DB::commit();
