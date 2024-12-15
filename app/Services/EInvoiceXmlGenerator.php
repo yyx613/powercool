@@ -39,7 +39,7 @@ class EInvoiceXmlGenerator
         $sellerIDType = "";
         $sellerIDValue = ""; 
         $sellerTIN = $tin;
-        $buyerTIN = $customer->tin_number;
+        $buyerTIN = $customer->type == 1 ? $customer->tin_number : 'EI000000000020';
         $buyerIDValue = $customer->company_registration_number; 
         // $this->validateTIN($sellerTIN,$sellerIDType,$sellerIDValue);
         // $this->validateTIN($sellerTIN,$buyerIDType,$buyerIDValue);
@@ -391,7 +391,7 @@ class EInvoiceXmlGenerator
     {
         if($type == 'eInvoice'){
             $eInvoices = EInvoice::whereIn('id', $id)->get();
-            $buyerTIN = !$fromBilling ? $customer->tin_number : "C11901266090";
+            $buyerTIN = !$fromBilling ? ($customer->type == 1 ? $customer->tin_number : 'EI000000000020') : "C11901266090";
             $buyerIDValue = !$fromBilling ? $customer->company_registration_number : "200501027542";  
         }else{
             $eInvoices = ConsolidatedEInvoice::whereIn('id', $id)->get();

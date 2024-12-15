@@ -121,6 +121,7 @@ class CustomerController extends Controller
             'area' => 'nullable',
             'debtor_type' => 'nullable',
             'platform' => 'nullable',
+            'type' => 'nullable',
         ], [], [
             'picture.*' => 'picture'
         ]);
@@ -147,6 +148,7 @@ class CustomerController extends Controller
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
+                    'type' => $req->type
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -169,6 +171,7 @@ class CustomerController extends Controller
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
+                    'type' => $req->type
                 ]);
             }
 

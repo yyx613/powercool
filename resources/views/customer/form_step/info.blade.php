@@ -153,6 +153,15 @@
                     </div>
                 @endif
                 <div class="flex flex-col">
+                    <x-app.input.label id="type" class="mb-1">{{ __('Type') }}</x-app.input.label>
+                    <x-app.input.select name="type" id="type" :hasError="$errors->has('type')">
+                        <option value="">{{ __('Select a type') }}</option>
+                        <option value="1" @selected(old('type', isset($customer) ? $customer->type : null) == 1)>{{ __('Local') }}</option>
+                        <option value="2" @selected(old('type', isset($customer) ? $customer->type : null) == 2)>{{ __('Oversea') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('type')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         @if (isCreateLink())
