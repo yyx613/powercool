@@ -108,39 +108,11 @@ class CustomerController extends Controller
     public function sync(Customer $customer, $company)
     {
         try {
-            // //Prepare customer data for AutoCount format
-            $autocountData = [
-                // 'ControlAccount' => $customer->id,
-                'AccNo' => $customer->id,
-                'CompanyName' => $customer->name,
-                'Address1' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address2' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address3' => $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address4' =>  $customer->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Phone1' => $customer->mobile_number,
-                'Phone2' => $customer->phone,
-                'Attention' => $customer->remark,
-                'EmailAddress' => $customer->email,
-                'CurrencyCode' => 'MYR',
-            ];
-
-            // //Make API call to AutoCount
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
-                'Content-Type' => 'application/json',
-            ])->post(config('services.autocount.base_url') . '/api/Debtor/CreateNewDebtor', $autocountData);
-
-            if ($response->successful()) {
-
-                return back()->with('success', 'Customer successfully synced to AutoCount');
-            }
-
-            Log::error('AutoCount Sync Failed', [
-                'customer' => $customer->id,
-                'response' => $response->json()
-            ]);
-
-            return back()->with('error', 'Failed to sync with AutoCount');
+            $customer = $customer->where('company_name', $company)->where('deleted_at', null)->get();
+            return Response::json([
+                'result' => true,
+                'data' => $customer
+            ], HttpFoundationResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
@@ -148,7 +120,9 @@ class CustomerController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error syncing customer: ' . $e->getMessage());
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

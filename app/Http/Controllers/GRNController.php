@@ -36,6 +36,7 @@ class GRNController extends Controller
 
     public function index()
     {
+        Log::info('12313213131313');
         return view('grn.list');
     }
 
@@ -188,46 +189,24 @@ class GRNController extends Controller
         return $pdf->stream();
     }
 
-    public function sync(Request $request)
+    public function sync($company)
     {
         try {
-
-            $ids = collect($request->input('skus'))->pluck('id')->toArray();
-            $grns = Grn::with('product')
-                ->whereIn('id', $ids)
+            $supplier = Supplier::where('company_name', $company)->where('deleted_at', null)->get();
+            $supplier_id = collect($supplier)->pluck('id')->toArray();
+            $grns = Grn::with('products')  // Match the exact relationship name
+                ->whereIn('supplier_id', $supplier_id)
                 ->get();
 
-            foreach ($grns as $grn) {
-                // Access GRN and its products
-                Log::info($grn->product->is_active);
-                Log::info($grn->product->is_sparepart);
-               
-                $autocountData = [
-                    'poDocNo' => $grn->id,
-                    'itemCode' => $grn->product->sku,
-                    'uom' => $grn->uom,
-                    'qtyToTransfer' => $grn->qty,
-                    'focQtyToTrasnfer' =>0
-                ];
-    
-                // //Make API call to AutoCount
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
-                    'Content-Type' => 'application/json',
-                ])->post(config('services.autocount.base_url') . '/api/Sales/NewSaleInvoice', $autocountData);
-    
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Successfully synced ' . count($ids) . ' GRNs'
-            ]);
+            return Response::json([
+                'result' => true,
+                'data' => $grns
+            ], HttpFoundationResponse::HTTP_OK);
         } catch (\Exception $e) {
             Log::info($e);
-            return response()->json([
-                'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage()
-            ], 500);
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
