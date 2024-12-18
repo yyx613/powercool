@@ -44,7 +44,7 @@ class ProductChild extends Model
     }
 
     public function taskMilestoneInventory() {
-        return $this->morphOne(taskMilestoneInventory::class, 'inventory');
+        return $this->morphOne(TaskMilestoneInventory::class, 'inventory');
     }
 
     public function stockOutBy() {
@@ -56,7 +56,7 @@ class ProductChild extends Model
     }
 
     public function serviceHistories() {
-        return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
+        return $this->morphMany(InventoryServiceReminder::class, 'object')->orderBy('id', 'desc');
     }
 
     public function stockOutTo(): MorphTo {
@@ -71,15 +71,23 @@ class ProductChild extends Model
             $sale = $sp_child->saleProduct->sale;
 
             if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
+                $dopc = DeliveryOrderProductChild::where('product_children_id', $this->id)->first();
+                if ($dopc != null) {
+                    return $dopc->doProduct->do;
+                }
+
+                $spc = SaleProductChild::where('product_children_id', $this->id)->first();
+                if ($spc != null) {
+                    return $spc->saleProduct->sale;
+                }
+
                 if (str_contains($sale->convert_to, ',')) {
                     $dos = DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->get();
 
                     return $dos;
                 }
                 
-                $do = DeliveryOrder::where('id', $sale->convert_to)->first();
-
-                return $do;
+                return DeliveryOrder::where('id', $sale->convert_to)->first();
             } else if ($sale->status != Sale::STATUS_CONVERTED) {
                 return $sale;
             }

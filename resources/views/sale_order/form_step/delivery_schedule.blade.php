@@ -5,141 +5,123 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Delivery Schedule') }}</span>
     </div>
-    <form action="" method="POST" enctype="multipart/form-data" id="delivery-form">
-        @csrf
-        <div>
-            <div class="grid grid-cols-3 gap-8 w-full mb-8">
-                <div class="flex flex-col">
-                    <x-app.input.label id="delivery_date" class="mb-1">{{ __('Delivery Date') }}</x-app.input.label>
-                    <x-app.input.input name="delivery_date" id="delivery_date" :hasError="$errors->has('delivery_date')" value="{{ isset($sale) ? $sale->delivery_date : null }}" />
-                    <x-app.message.error id="delivery_date_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="delivery_time" class="mb-1">{{ __('Delivery Time') }}</x-app.input.label>
-                    <x-app.input.input name="delivery_time" id="delivery_time" :hasError="$errors->has('delivery_time')" value="{{ isset($sale) ? $sale->delivery_time : null }}" type="time" />
-                    <x-app.message.error id="delivery_time_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="driver" class="mb-1">{{ __('Driver') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="driver" id="driver" :hasError="$errors->has('driver')" placeholder="{{ __('Select a driver') }}">
-                        <option value="">{{ __('Select a driver') }}</option>
-                        @foreach ($drivers as $dr)
-                            <option value="{{ $dr->id }}" @selected(old('driver', isset($sale) ? $sale->driver_id : null) == $dr->id)>{{ $dr->name }}</option>
-                        @endforeach
-                    </x-app.input.select2>
-                    <x-app.message.error id="driver_err"/>
-                </div>
-                <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="delivery_instruction" class="mb-1">{{ __('Delivery Instructions') }}</x-app.input.label>
-                    <x-app.input.input name="delivery_instruction" id="delivery_instruction" :hasError="$errors->has('delivery_instruction')" value="{{ isset($sale) ? $sale->delivery_instruction : null }}" />
-                    <x-app.message.error id="delivery_instruction_err"/>
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">{{ __('Select a Active/Inactive') }}</option>
-                        <option value="1" @selected(old('status', isset($sale) ? $sale->is_active : null) == 1)>{{ __('Active') }}</option>
-                        <option value="0" @selected(old('status', isset($sale) ? $sale->is_active : null) === 0)>{{ __('Inactive') }}</option>
-                    </x-app.input.select>
-                    <x-app.message.error id="status_err"/>
-                </div>
-                <div class="flex flex-col col-span-2">
-                    <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
-                    <x-app.input.select id="delivery_address" name="delivery_address">
-                    </x-app.input.select>
-                    <x-app.message.error id="delivery_address_err"/>
-                </div>
-            </div>
-            @if (isset($sale) && $sale->status == 2)
-                <div class="mt-8 flex justify-end">
-                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
-                </div>
-            @elseif (isset($sale) && $sale->status == 3)
-                <div class="mt-8 flex justify-end">
-                    <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
-                </div>
-            @else
-                <div class="mt-8 flex justify-end">
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                </div>
-            @endif
+    <div class="grid grid-cols-3 gap-8 w-full mb-8">
+        <div class="flex flex-col">
+            <x-app.input.label id="delivery_date" class="mb-1">{{ __('Delivery Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.input name="delivery_date" id="delivery_date" :hasError="$errors->has('delivery_date')" value="{{ isset($sale) ? $sale->delivery_date : null }}" />
+            <x-app.message.error id="delivery_date_err"/>
         </div>
-    </form>
+        <div class="flex flex-col">
+            <x-app.input.label id="delivery_time" class="mb-1">{{ __('Delivery Time') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.input name="delivery_time" id="delivery_time" :hasError="$errors->has('delivery_time')" value="{{ isset($sale) ? $sale->delivery_time : null }}" type="time" />
+            <x-app.message.error id="delivery_time_err"/>
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="driver" class="mb-1">{{ __('Driver') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="driver" id="driver" :hasError="$errors->has('driver')" placeholder="{{ __('Select a driver') }}">
+                <option value="">{{ __('Select a driver') }}</option>
+                @foreach ($drivers as $dr)
+                    <option value="{{ $dr->id }}" @selected(old('driver', isset($sale) ? $sale->driver_id : null) == $dr->id)>{{ $dr->name }}</option>
+                @endforeach
+            </x-app.input.select2>
+            <x-app.message.error id="driver_err"/>
+        </div>
+        <div class="flex flex-col col-span-2">
+            <x-app.input.label id="delivery_instruction" class="mb-1">{{ __('Delivery Instructions') }}</x-app.input.label>
+            <x-app.input.input name="delivery_instruction" id="delivery_instruction" :hasError="$errors->has('delivery_instruction')" value="{{ isset($sale) ? $sale->delivery_instruction : null }}" />
+            <x-app.message.error id="delivery_instruction_err"/>
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="delivery_status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select name="delivery_status" id="delivery_status" :hasError="$errors->has('delivery_status')">
+                <option value="">{{ __('Select a Active/Inactive') }}</option>
+                <option value="1" @selected(old('delivery_status', isset($sale) ? $sale->delivery_is_active : null) == 1)>{{ __('Active') }}</option>
+                <option value="0" @selected(old('delivery_status', isset($sale) ? $sale->delivery_is_active : null) === 0)>{{ __('Inactive') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="delivery_status_err"/>
+        </div>
+        <div class="flex flex-col col-span-2">
+            <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
+            <x-app.input.select id="delivery_address" name="delivery_address">
+            </x-app.input.select>
+            <x-app.message.error id="delivery_address_err"/>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
     <script>
-        DELIVERY_FORM_CAN_SUBMIT = true
+        // DELIVERY_FORM_CAN_SUBMIT = true
 
         $('input[name="delivery_date"]').daterangepicker(datepickerParam)
         $('input[name="delivery_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
 
-        $('#delivery-form').on('submit', function(e) {
-            e.preventDefault()
+        // $('#delivery-form').on('submit', function(e) {
+        //     e.preventDefault()
 
-            if (!DELIVERY_FORM_CAN_SUBMIT) return
+        //     if (!DELIVERY_FORM_CAN_SUBMIT) return
 
-            DELIVERY_FORM_CAN_SUBMIT = false
+        //     DELIVERY_FORM_CAN_SUBMIT = false
 
-            $('#delivery-form #submit-btn').text('Updating')
-            $('#delivery-form #submit-btn').removeClass('bg-yellow-400 shadow')
-            $('.err_msg').addClass('hidden') // Remove error messages
-            // Submit
-            let url = '{{ route("sale.upsert_delivery_schedule") }}'
-            url = `${url}`
+        //     $('#delivery-form #submit-btn').text('Updating')
+        //     $('#delivery-form #submit-btn').removeClass('bg-yellow-400 shadow')
+        //     $('.err_msg').addClass('hidden') // Remove error messages
+        //     // Submit
+        //     let url = ''
+        //     url = `${url}`
 
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'POST',
-                data: {
-                    'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
-                    'driver': $('#delivery-form select[name="driver"]').val(),
-                    'delivery_date': $('#delivery-form input[name="delivery_date"]').val(),
-                    'delivery_time': $('#delivery-form input[name="delivery_time"]').val(),
-                    'delivery_instruction': $('#delivery-form input[name="delivery_instruction"]').val(),
-                    'delivery_address': $('#delivery-form select[name="delivery_address"]').val() === 'null' ? null : $('#delivery-form select[name="delivery_address"]').val(),
-                    'status': $('#delivery-form select[name="status"]').val(),
-                },
-                success: function(res) {
-                    if (typeof QUO !== 'undefined') {
-                        QUO = res.quo
-                    }
+        //     $.ajax({
+        //         headers: {
+        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //         },
+        //         url: url,
+        //         type: 'POST',
+        //         data: {
+        //             'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
+        //             'driver': $('#delivery-form select[name="driver"]').val(),
+        //             'delivery_date': $('#delivery-form input[name="delivery_date"]').val(),
+        //             'delivery_time': $('#delivery-form input[name="delivery_time"]').val(),
+        //             'delivery_instruction': $('#delivery-form input[name="delivery_instruction"]').val(),
+        //             'delivery_address': $('#delivery-form select[name="delivery_address"]').val() === 'null' ? null : $('#delivery-form select[name="delivery_address"]').val(),
+        //             'status': $('#delivery-form select[name="status"]').val(),
+        //         },
+        //         success: function(res) {
+        //             if (typeof QUO !== 'undefined') {
+        //                 QUO = res.quo
+        //             }
                     
-                    setTimeout(() => {
-                        $('#delivery-form #submit-btn').text('Updated')
-                        $('#delivery-form #submit-btn').addClass('bg-green-400 shadow')
+        //             setTimeout(() => {
+        //                 $('#delivery-form #submit-btn').text('Updated')
+        //                 $('#delivery-form #submit-btn').addClass('bg-green-400 shadow')
 
-                        setTimeout(() => {
-                            $('#delivery-form #submit-btn').text('Save and Update')
-                            $('#delivery-form #submit-btn').removeClass('bg-green-400')
-                            $('#delivery-form #submit-btn').addClass('bg-yellow-400 shadow')
+        //                 setTimeout(() => {
+        //                     $('#delivery-form #submit-btn').text('Save and Update')
+        //                     $('#delivery-form #submit-btn').removeClass('bg-green-400')
+        //                     $('#delivery-form #submit-btn').addClass('bg-yellow-400 shadow')
                             
-                            DELIVERY_FORM_CAN_SUBMIT = true
-                        }, 2000);
-                    }, 300);
-                },
-                error: function(err) {
-                    setTimeout(() => {
-                        if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
-                            let errors = err.responseJSON.errors
+        //                     DELIVERY_FORM_CAN_SUBMIT = true
+        //                 }, 2000);
+        //             }, 300);
+        //         },
+        //         error: function(err) {
+        //             setTimeout(() => {
+        //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
+        //                     let errors = err.responseJSON.errors
     
-                            for (const key in errors) {
-                                $(`#delivery-form #${key}_err`).find('p').text(errors[key])
-                                $(`#delivery-form #${key}_err`).removeClass('hidden')
-                            }
-                        }
-                        $('#delivery-form #submit-btn').text('Save and Update')
-                        $('#delivery-form #submit-btn').addClass('bg-yellow-400 shadow')
+        //                     for (const key in errors) {
+        //                         $(`#delivery-form #${key}_err`).find('p').text(errors[key])
+        //                         $(`#delivery-form #${key}_err`).removeClass('hidden')
+        //                     }
+        //                 }
+        //                 $('#delivery-form #submit-btn').text('Save and Update')
+        //                 $('#delivery-form #submit-btn').addClass('bg-yellow-400 shadow')
 
-                        DELIVERY_FORM_CAN_SUBMIT = true
-                    }, 300);
-                },
-            });
-        })
+        //                 DELIVERY_FORM_CAN_SUBMIT = true
+        //             }, 300);
+        //         },
+        //     });
+        // })
     </script>
 @endpush

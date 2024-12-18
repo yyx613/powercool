@@ -84,7 +84,7 @@
                                 @can('sale.sale_order.view')
                                 <li>
                                     <a href="{{ route('pending_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Pending Order') }}</span>
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('E-Order Assign') }}</span>
                                         <svg id="pending-orders-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ee6b6e" class="bi bi-exclamation-circle-fill ml-2" viewBox="0 0 16 16">
                                             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4m.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
                                         </svg>
@@ -202,17 +202,21 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('production.view')
-                                <li>
-                                    <a href="{{ route('production.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production') }}</span>
-                                    </a>
-                                </li>
-                                @endcan 
                             </ul>
                         </div>
                     </div>
                 </li>
+                <!-- Production -->
+                @can('production.view')
+                <li>
+                    <a href="{{ route('production.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Production') }}</span>
+                    </a>
+                </li>
+                @endcan
                 <!-- Ticket & Task -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="8">
@@ -259,7 +263,7 @@
                         </div>
                     </div>
                 </li>
-                <!-- Service History & Warranty -->
+                <!-- Service Reminder/History & Warranty -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="7">
                         <button class="p-2 flex items-center rounded-md w-full">
@@ -276,6 +280,13 @@
                                 <li>
                                     <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('service_reminder.view')
+                                <li>
+                                    <a href="{{ route('service_reminder.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_reminder.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Reminder') }}</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -529,13 +540,27 @@
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M19.5,16c0,.553-.447,1-1,1h-2c-.553,0-1-.447-1-1s.447-1,1-1h2c.553,0,1,.447,1,1Zm4.5-1v5c0,2.206-1.794,4-4,4H4c-2.206,0-4-1.794-4-4v-5c0-2.206,1.794-4,4-4h1V4C5,1.794,6.794,0,9,0h6c2.206,0,4,1.794,4,4v7h1c2.206,0,4,1.794,4,4ZM7,11h10V4c0-1.103-.897-2-2-2h-6c-1.103,0-2,.897-2,2v7Zm-3,11h7V13H4c-1.103,0-2,.897-2,2v5c0,1.103,.897,2,2,2Zm18-7c0-1.103-.897-2-2-2h-7v9h7c1.103,0,2-.897,2-2v-5Zm-14.5,0h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1s-.447-1-1-1ZM14,5c0-.553-.447-1-1-1h-2c-.553,0-1,.447-1,1s.447,1,1,1h2c.553,0,1-.447,1-1Z"/></svg>
                         </button>
                     </li>
+                    <!-- Production -->
+                    @can('production.view')
+                    <li>
+                        <a href="{{ route('production.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Production') }}</span>
+                            </div>
+                        </a>
+                    </li>
+                    @endcan
                     <!-- Ticket & Task -->
                     <li class="expand-sub-menu-triggers" data-type="ticket-and-task">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0h-.13a2.02,2.02,0,0,0-1.941,1.532,2,2,0,0,1-3.858,0A2.02,2.02,0,0,0,8.13,0H8A5.006,5.006,0,0,0,3,5V21a3,3,0,0,0,3,3H8.13a2.02,2.02,0,0,0,1.941-1.532,2,2,0,0,1,3.858,0A2.02,2.02,0,0,0,15.87,24H18a3,3,0,0,0,3-3V5A5.006,5.006,0,0,0,16,0Zm2,22-2.143-.063A4,4,0,0,0,8.13,22H6a1,1,0,0,1-1-1V17H7a1,1,0,0,0,0-2H5V5A3,3,0,0,1,8,2l.143.063A4.01,4.01,0,0,0,12,5a4.071,4.071,0,0,0,3.893-3H16a3,3,0,0,1,3,3V15H17a1,1,0,0,0,0,2h2v4A1,1,0,0,1,18,22Z"/><path d="M13,15H11a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2Z"/></svg>
                         </button>
                     </li>
-                    <!-- Service History & Warranty -->
+                    <!-- Service Reminder/History & Warranty -->
                     <li class="expand-sub-menu-triggers" data-type="service-history-and-warranty">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
@@ -632,13 +657,6 @@
                     </a>
                 </li>
                 @endcan
-                @can('production.view')
-                <li>
-                    <a href="{{ route('production.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production') }}</span>
-                    </a>
-                </li>
-                @endcan
             </ul>
         </div>
         <!-- Sale & Invoice -->
@@ -657,7 +675,7 @@
                 @can('sale.sale_order.view')
                 <li>
                     <a href="{{ route('pending_order.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Pending Order') }}</span>
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('E-Order Assign') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -758,7 +776,7 @@
                 @endcan
             </ul>
         </div>
-        <!-- Service History & Warranty -->
+        <!-- Service Reminder/History & Warranty -->
         <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="service-history-and-warranty">
             <div class="mb-4 p-2 border-b">
                 <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Service & Warranty') }}</h6>
@@ -768,6 +786,13 @@
                 <li>
                     <a href="{{ route('service_history.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_history.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service History') }}</span>
+                    </a>
+                </li>
+                @endcan
+                @can('service_reminder.view')
+                <li>
+                    <a href="{{ route('service_reminder.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service_reminder.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Reminder') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -923,13 +948,25 @@
             getTimeSection()
 
             if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
-                // if (CURRENT_ROUTE_NAME.includes('finance.')) {
-                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="1"]').click()
-                // } else if (CURRENT_ROUTE_NAME.includes('master_data.')) {
-                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
-                // } else if (CURRENT_ROUTE_NAME.includes('invoice.')) {
-                //     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
-                // }
+                if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes('grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes('raw_material.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') || CURRENT_ROUTE_NAME.includes('target.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('report.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
+                } 
             } else {
                 $('#expanded-sidebar').removeClass('max-w-[250px] transition-all duration-700 delay-700')
                 $('#expanded-sidebar').addClass('max-w-0 w-0 opacity-0 -z-10')

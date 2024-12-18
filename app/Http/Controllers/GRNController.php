@@ -117,7 +117,7 @@ class GRNController extends Controller
 
             if ($req->sku == null) {
                 $existing_skus = GRN::withoutGlobalScope(BranchScope::class)->groupBy('sku')->pluck('sku')->toArray();
-                $sku = generateSku('GR', $existing_skus);
+                $sku = generateSku('GR', $existing_skus, true);
             } else {
                 $sku = $req->sku;
 

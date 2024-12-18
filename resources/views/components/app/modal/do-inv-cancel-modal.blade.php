@@ -7,11 +7,11 @@
             <div class="flex-1">
                 <p class="text-slate-500 leading-snug">{{ __('Are you sure to cancel the record?') }}</p>
                 <div id="info-container" class="my-4">
-                    <p class="text-red-500 font-medium leading-snug text-sm">{{ __('Following DO & SO will be cancelled') }}</p>
+                    <p class="text-red-500 font-medium leading-snug text-sm" id="warning-txt"></p>
                     <div id="info-body-container" class="mt-4 max-h-64 overflow-y-auto">
                         <div id="info-template" class="hidden mb-2 border rounded p-2">
-                            <p class="text-blue-700 leading-snug text-sm" id="main"></p>
-                            <p class="text-blue-300 leading-snug text-sm" id="sub"></p>
+                            <p class="text-blue-700 leading-snug text-sm font-medium" id="main"></p>
+                            <p class="text-blue-500 leading-snug text-sm" id="sub"></p>
                         </div>
                     </div>
                 </div>

@@ -150,27 +150,30 @@
                         <div class="flex flex-col gap-4 flex-1">
                             @foreach ($products as $pro)
                                 @if ($pro->remainingQty() > 0)
-                                    <div class="p-2 rounded-md border border-slate-100 flex items-center justify-between gap-x-4 products" data-id="{{ $pro->id }}">
-                                        <div class="flex items-center">
-                                            <input type="checkbox" name="product" value="{{ $pro->id }}" class="rounded-full border-slate-300 cursor-pointer">
+                                    <div class="p-2 rounded-md border border-slate-200 products">
+                                        <div class="flex-1 flex justify-between items-start">
+                                            <div>
+                                                <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}</h6>
+                                                <p class="text-xs text-slate-500">{{ __('SKU') }}: {{ $pro->sku }}</p>
+                                                <p class="text-xs text-slate-500">{{ __('Description') }}: {{ $pro->desc }}</p>
+                                            </div>
+                                            <div class="flex flex-col items-end">
+                                                <span class="text-slate-500 text-xs">{{ __('From SO') }}</span>
+                                                <span>{{ $pro->sale->sku }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex-1">
-                                            <h6 class="leading-none">{{ $pro->product->model_name }}</h6>
-                                            <p class="text-sm text-slate-400">{{ $pro->desc }}</p>
-                                            <p class="text-sm text-slate-600 mt-2">Remaining Qty: {{ $pro->remainingQty() }}</p>
-                                        </div>
-                                        <div class="flex items-center gap-x-4 qty-summary" data-max-qty="{{ $pro->remainingQty() }}" data-current-qty="1">
-                                            <button type="button" class="p-3 rounded-full bg-slate-100 transition duration-300 hover:bg-yellow-200 add-btns" data-id="{{ $pro->id }}">
-                                                <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
-                                                    <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
-                                                </svg>
-                                            </button>
-                                            <span class="qty-to-convert" data-id="{{ $pro->id }}">1</span>
-                                            <button type="button" class="p-3 rounded-full bg-slate-100 transition duration-300 hover:bg-yellow-200 sub-btns" data-id="{{ $pro->id }}">
-                                                <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
-                                                    <path d="M480,288H32c-17.673,0-32-14.327-32-32s14.327-32,32-32h448c17.673,0,32,14.327,32,32S497.673,288,480,288z"/>
-                                                </svg>
-                                            </button>
+                                        <div class="border-t pt-2 mt-2">
+                                            @foreach ($pro->children as $pc)
+                                                @php
+                                                    if (!in_array($pc->product_children_id, $allowed_spc_ids)) {
+                                                        continue;
+                                                    }
+                                                @endphp
+                                                <label for="{{ $pc->id }}" class="w-full block my-1">
+                                                    <input type="checkbox" name="product_children" id="{{ $pc->id }}" value="{{ $pc->id }}" class="rounded mr-1">
+                                                    <span>{{ $pc->productChild->sku }}</span>
+                                                </label>
+                                            @endforeach
                                         </div>
                                     </div>
                                 @endif
@@ -256,14 +259,6 @@
         window.location.href = url
     })
     $('.products input[type="checkbox"]').on('change', function() {
-        let val = $(this).val()
-
-        if ($(this).is(':checked')) {
-            $(`.products[data-id="${val}"]`).addClass('!border-black')
-        } else {
-            $(`.products[data-id="${val}"]`).removeClass('!border-black')
-        }
-
         let canConvert = false
         $('.products input[type="checkbox"]').each(function() {
             if ($(this).is(':checked')) {
@@ -279,53 +274,21 @@
             $('#convert-btn').addClass('bg-slate-100')
         }
     })
-    $('.add-btns').on('click', function() {
-        let id = $(this).data('id')
-        let currentQty = $(this).parent().data('current-qty')
-        let maxQty = $(this).parent().data('max-qty')
-
-        currentQty++
-
-        if (currentQty <= maxQty) {
-            $(`.qty-to-convert[data-id="${id}"]`).text(currentQty)
-            $(this).parent().data('current-qty', currentQty)
-        }
-    })
-    $('.sub-btns').on('click', function() {
-        let id = $(this).data('id')
-        let currentQty = $(this).parent().data('current-qty')
-
-        currentQty--
-
-        if (currentQty >= 1) {
-            $(`.qty-to-convert[data-id="${id}"]`).text(currentQty)
-            $(this).parent().data('current-qty', currentQty)
-        }
-    })
     $('#convert-btn').on('click', function(e) {
         e.preventDefault()
 
+        let productChildIds = []
         let canConvert = false
         $('.products input[type="checkbox"]').each(function() {
             if ($(this).is(':checked')) {
+                productChildIds.push($(this).attr('value'))
                 canConvert = true
             }
         })
         if (!canConvert) return
 
-        // Prepare data
-        let prodIds = []
-        let qty = []
-
-        $('.products').each(function() {
-            if ($(this).find('input[type="checkbox"]').is(':checked')) {
-                prodIds.push($(this).data('id'))
-                qty.push($(this).find('.qty-summary').data('current-qty'))
-            }
-        })
-
         let url = $(this).attr('href')
-        url = `${url}?prod=${prodIds}&qty=${qty}`
+        url = `${url}?product_children=${productChildIds}`
 
         window.location.href = url
     })

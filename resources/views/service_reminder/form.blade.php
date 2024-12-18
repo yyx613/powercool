@@ -2,10 +2,10 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('service_history.index') }}">{{ isset($sh) ? __('Edit Service History') : __('Create Service History') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('service_reminder.index') }}">{{ isset($sr) ? __('Edit Service Reminder') : __('Create Service Reminder') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form action="{{ isset($sh) ? route('service_history.upsert', ['sh' => $sh]) : route('service_history.upsert') }}" method="POST" enctype="multipart/form-data" id="form">
+    <form action="{{ isset($sr) ? route('service_reminder.upsert', ['sr' => $sr]) : route('service_reminder.upsert') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-3 gap-8 w-full mb-4">
@@ -38,7 +38,7 @@
                 </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
-                @if (!isset($sh))
+                @if (!isset($sr))
                     <x-app.button.submit id="submit-create-btn">{{ __('Save and Create') }}</x-app.button.submit>
                 @endif
                 <x-app.button.submit>{{ __('Save and Update') }}</x-app.button.submit>

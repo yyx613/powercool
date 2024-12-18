@@ -12,6 +12,7 @@ class WarrantyPeriodController extends Controller
 {
     const FORM_RULES = [
         'name' => 'required|max:250',
+        'period' => 'required',
         'status' => 'required',
     ];
 
@@ -40,6 +41,7 @@ class WarrantyPeriodController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'period',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -62,6 +64,7 @@ class WarrantyPeriodController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'period' => $record->period,
                 'status' => $record->is_active,
             ];
         }
@@ -85,6 +88,7 @@ class WarrantyPeriodController extends Controller
 
             $wp = $this->wp::create([
                 'name' => $req->name,
+                'period' => $req->period,
                 'is_active' => $req->boolean('status'),
             ]);
 
@@ -122,6 +126,7 @@ class WarrantyPeriodController extends Controller
 
             $warranty->update([
                 'name' => $req->name,
+                'period' => $req->period,
                 'is_active' => $req->boolean('status'),
             ]);
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DeliveryOrderProduct extends Model
+class DeliveryOrderProductChild extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -21,15 +21,11 @@ class DeliveryOrderProduct extends Model
         return $date;
     }
 
-    public function saleProduct() {
-        return $this->belongsTo(SaleProduct::class);
+    public function doProduct() {
+        return $this->belongsTo(DeliveryOrderProduct::class, 'delivery_order_product_id');
     }
 
-    public function do() {
-        return $this->belongsTo(DeliveryOrder::class, 'delivery_order_id');
-    }
-
-    public function children() {
-        return $this->hasMany(DeliveryOrderProductChild::class);
+    public function productChild() {
+        return $this->belongsTo(ProductChild::class, 'product_children_id');
     }
 }

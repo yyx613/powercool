@@ -18,13 +18,13 @@
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
                     <img src="{{ public_path('images/imax.jpg') }}" alt="" style="height: 35px; width: 75px; margin: 0 0 10px 0;">
-                    <div style="width: 150px; height: 25px; margin: auto;">{!! $renderer[$i] !!}</div>
+                    <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
                     <p style="margin: 0; font-size: 12px;">{{ $product_name[$i] }}</p>
                     <p style="margin: 0; font-size: 12px;">{{ $product_code[$i] }} [{{ $barcode[$i] }}]</p>
                 </td>
             </tr>
             <tr>
-                <td style="padding: 0 0 20px 0;">
+                <td style="padding: 0 0 20px 0;" colspan="2">
                     <p style="margin: 0; font-size: 12px;">DIMENSION: {{ $dimension[$i] }}</p>
                     <p style="margin: 0; font-size: 12px;">CAPACITY: {{ $capacity[$i] }}</p>
                     <p style="margin: 0; font-size: 12px;">WEIGHT: {{ $weight[$i] }}</p>
@@ -35,18 +35,18 @@
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center;">
+                <td style="text-align: left;">
                     <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt="" style="height: 75px; width: 75px; margin: 0 0 5px 0;">
                     <p style="margin: 0; font-size: 12px;">Warranty Policy</p>
                 </td>
-                <td style="text-align: center;">
+                <td style="text-align: right;">
                     <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt="" style="height: 75px; width: 75px; margin: 0 0 5px 0;">
                     <p style="margin: 0; font-size: 12px;">User Manual</p>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <p style="margin: 050px 0 0 0; font-size: 12px; text-align: left;">
+                    <p style="margin: 20px 0 0 0; font-size: 12px; text-align: left;">
                         <img src="{{ public_path('images/whatsapp.jpg') }}" alt="" style="height: 10px; width: 10px; margin: 0 5px 0 0;">
                         Hotline: 6012-3868210
                     </p>
