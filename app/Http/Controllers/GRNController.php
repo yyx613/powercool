@@ -36,7 +36,6 @@ class GRNController extends Controller
 
     public function index()
     {
-        Log::info('12313213131313');
         return view('grn.list');
     }
 
