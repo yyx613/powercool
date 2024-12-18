@@ -115,25 +115,21 @@
         @php
             $total = 0;
         @endphp
+        <!-- Product List -->
+        @foreach ($spcs as $key => $prod)
+            <tr>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->sku }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->parent->desc }}</td>
+                <td style="font-size: 14px; text-align: right;"></td>
+                <td style="font-size: 14px; text-align: right;">1</td>
+            </tr>
+            @php
+                $total += 1;
+            @endphp
+        @endforeach
+        <!-- Remark -->
         @foreach ($sale_orders as $key => $so)
-            @foreach ($products as $key => $prod)
-                @php
-                    if ($prod->sale_id != $so->id) {
-                        continue;
-                    }
-                @endphpf
-                <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;"></td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
-                    <td style="font-size: 14px; text-align: right;"></td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod_qty[$prod->id] }}</td>
-                </tr>
-                @php
-                    $total += $prod_qty[$prod->id];
-                @endphp
-            @endforeach
-            <!-- Remark -->
             @if ($so->remark != null)
                 <tr>
                     <td colspan="2"></td>

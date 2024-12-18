@@ -141,9 +141,12 @@
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
+            @if (isset($production) && $production->status != 3)
+            <!-- Not completed -->
             <div class="mt-8 flex justify-end">
                 <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
             </div>
+            @endif
         </div>
     </form>
 

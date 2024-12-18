@@ -34,11 +34,13 @@ class PermissionSeeder extends Seeder
             'grn.create',
             'grn.edit',
 
-            'service_history.view',
-            'service_history.create',
-            'service_history.edit',
-            'service_history.receive_reminder',
+            'service_reminder.view',
+            'service_reminder.create',
+            'service_reminder.edit',
+            'service_reminder.receive_reminder',
 
+            'service_history.view',
+            
             'warranty.view',
 
             'sale.quotation.view',
@@ -53,6 +55,7 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.cancel',
             'sale.sale_order.delete',
             'sale.sale_order.convert',
+            'sale.sale_order.by_pass_conversion',
 
             'sale.delivery_order.view',
             'sale.delivery_order.convert',

@@ -88,13 +88,13 @@
             @if ($prod->length != null || $prod->width != null || $prod->height != null || $prod->weight != null)
                 <div class="flex gap-x-4 mb-1">
                     @if ($prod->length != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ $prod->length }} CM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ $prod->length }} MM</span>
                     @endif
                     @if ($prod->width != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ $prod->width }} CM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ $prod->width }} MM</span>
                     @endif
                     @if ($prod->height != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ $prod->height }} CM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ $prod->height }} MM</span>
                     @endif
                     @if ($prod->weight != null)
                         <span class="text-xs font-semibold text-slate-500">{{ __('Weight') }}: {{ $prod->weight }} KG</span>

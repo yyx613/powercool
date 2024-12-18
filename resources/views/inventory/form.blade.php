@@ -66,6 +66,16 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('category_id')" class="mt-1" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="item_type" class="mb-1">{{ __('Item Type') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="item_type" id="item_type">
+                        <option value="">{{ __('Select a item type') }}</option>
+                        @foreach ($inventory_types as $key => $value)
+                            <option value="{{ $key }}" @selected(old('item_type', isset($prod) ? $prod->item_type : ($dup_prod != null ? $dup_prod->item_type : null)) == $key)>{{ $value }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('item_type')" class="mt-1" />
+                </div>
                 @if ($is_product == false)
                     <div class="flex flex-col" id="qty-container">
                         <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span class="text-sm text-red-500">*</span></x-app.input.label>

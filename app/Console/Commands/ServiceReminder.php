@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\InventoryServiceHistory;
+use App\Models\InventoryServiceReminder;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\ServiceReminderNotification;
@@ -33,20 +33,20 @@ class ServiceReminder extends Command
     public function handle()
     {
         $receivers = User::whereHas('roles.permissions', function($q) {
-                $q->whereIn('name', ['service_history.receive_reminder']);
+                $q->whereIn('name', ['service_reminder.receive_reminder']);
             })->get();
 
-        $shs = InventoryServiceHistory::whereNotNull('reminding_days')->whereNull('reminded_at')->get();
+        $srs = InventoryServiceReminder::whereNotNull('reminding_days')->whereNull('reminded_at')->get();
 
-        for ($i=0; $i < count($shs); $i++) { 
-            if (now()->format('Y-m-d') > Carbon::parse($shs[$i]->next_service_date)->subDays($shs[$i]->reminding_days)->format('Y-m-d')) {
+        for ($i=0; $i < count($srs); $i++) { 
+            if (now()->format('Y-m-d') > Carbon::parse($srs[$i]->next_service_date)->subDays($srs[$i]->reminding_days)->format('Y-m-d')) {
                 Notification::send($receivers, new ServiceReminderNotification([
-                    'service_history' => $shs[$i]->id,
-                    'desc' => 'The service date for ' . $shs[$i]->objectable->sku . ' is ' . Carbon::parse($shs[$i]->next_service_date)->format('d M Y'),
+                    'service_reminder' => $srs[$i]->id,
+                    'desc' => 'The service date for ' . $srs[$i]->objectable->sku . ' is ' . Carbon::parse($srs[$i]->next_service_date)->format('d M Y'),
                 ]));
     
-                $shs[$i]->reminded_at = now();
-                $shs[$i]->save();
+                $srs[$i]->reminded_at = now();
+                $srs[$i]->save();
             }
         }
     }

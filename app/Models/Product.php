@@ -20,6 +20,11 @@ class Product extends Model
     public const TYPE_PRODUCT = 1;
     public const TYPE_RAW_MATERIAL = 2;
 
+    const ITEM_TYPE_PRODUCT_MFG = 1;    
+    const ITEM_TYPE_PRODUCT_HFG = 2;   
+    const ITEM_TYPE_RAW_MATERIAL_MSP = 1;    
+    const ITEM_TYPE_RAW_MATERIAL_HSP = 2;    
+
     protected $guarded = [];
     protected $casts = [
         'is_active' => 'integer',
@@ -60,7 +65,7 @@ class Product extends Model
     }
 
     public function serviceHistories() {
-        return $this->morphMany(InventoryServiceHistory::class, 'object')->orderBy('id', 'desc');
+        return $this->morphMany(InventoryServiceReminder::class, 'object')->orderBy('id', 'desc');
     }
 
     public function materialUse()
