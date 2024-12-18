@@ -105,39 +105,12 @@ class SupplierController extends Controller
     public function sync(Supplier $supplier, $company)
     {
         try {
-            // //Prepare customer data for AutoCount format
-            $autocountData = [
-                // 'ControlAccount' => $supplier->id,
-                'AccNo' => $supplier->id,
-                'CompanyName' => $supplier->name,
-                'Address1' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address2' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address3' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Address4' => $supplier->locations->where('type', 'billing')->where('is_default', true)->first()?->address,
-                'Phone1' => $supplier->mobile_number,
-                'Phone2' => $supplier->phone,
-                'Attention' => $supplier->remark,
-                'EmailAddress' => $supplier->email,
-                'CurrencyCode' => 'MYR',
-            ];
+            $supplier = $supplier->where('company_name', $company)->where('deleted_at', null)->get();
 
-            // //Make API call to AutoCount
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
-                'Content-Type' => 'application/json',
-            ])->post(config('services.autocount.base_url') . '/api/Creditor/NewCreditor', $autocountData);
-
-            if ($response->successful()) {
-
-                return back()->with('success', 'Supplier successfully synced to AutoCount');
-            }
-
-            Log::error('AutoCount Sync Failed', [
-                'supplier' => $supplier->id,
-                'response' => $response->json()
-            ]);
-
-            return back()->with('error', 'Failed to sync with AutoCount');
+            return Response::json([
+                'result' => true,
+                'data' => $supplier
+            ], HttpFoundationResponse::HTTP_OK);
 
         } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
@@ -145,7 +118,9 @@ class SupplierController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error syncing customer: ' . $e->getMessage());
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

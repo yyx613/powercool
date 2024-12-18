@@ -124,7 +124,7 @@ Route::middleware(['auth', 'select_lang', 'notification'])->group(function () {
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
-        Route::post('/sync', 'sync')->name('sync');
+        // Route::post('/sync', 'sync')->name('sync');
     });
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product

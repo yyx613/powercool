@@ -1243,116 +1243,31 @@ class SaleController extends Controller
         return view('invoice.list');
     }
 
-    public function sync(Request $request)
+    public function sync($company)
     {
         try {
-            $ids = collect($request->input('skus'))->pluck('id')->toArray();
+            $customers = Customer::where('company_name', $company)->where('deleted_at', null)->get();
+            $customer_id = collect($customers)->pluck('id')->toArray();
 
-            $invoices = Invoice::with('customer')->whereIn('id', $ids)
-            ->get();
-            foreach ($invoices as $invoice) {
-                $autocountData = [
-                    'DebtorCode' => $invoice->customer->id,
-                    'DocNo' => $invoice->sku,
-                    'DocDate' => $invoice->created_at,
-                    'Description' => $invoice->filename,
-                ];
-    
-                // //Make API call to AutoCount
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . config('services.autocount.api_key'),
-                    'Content-Type' => 'application/json',
-                ])->post(config('services.autocount.base_url') . '/api/Sales/NewSaleInvoice', $autocountData);
-    
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Successfully synced ' . '1'. ' invoice(s)'
-            ]);
+            $invoices = Invoice::whereHas('customer', function($query) use ($customer_id) {
+                $query->whereIn('id', $customer_id);
+            })->with('customer')->get();
+            
+            return Response::json([
+                'result' => true,
+                'data' => $invoices
+            ], HttpFoundationResponse::HTTP_OK);
         } catch (\Exception $e) {
             Log::info($e);
-            return response()->json([
-                'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage()
-            ], 500);
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    public function getDataInvoice(Request $req)
-    {
-        $records = Invoice::query();
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-            $records = $records->where('invoices.sku', 'like', '%' . $keyword . '%')
-            ->orWhere('invoices.company', 'like', '%' . $keyword . '%');
-        }
-
-        // Order
-        if ($req->has('order')) {
-            $map = [
-                0 => 'invoices.sku',
-            ];
-            foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
-            }
-        } else {
-            $records = $records->orderBy('invoices.id', 'desc');
-        }
-
-        $records_count = $records->count();
-        $records_paginator = $records->simplePaginate(10);
-
-        $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
-        ];
-
-        foreach ($records_paginator as $record) {
-            $convert_to = "-";
-            $enable = true;
-
-            $hasPlatformId = $record->deliveryOrders()
-            ->whereHas('products.saleProduct.sale', function ($query) {
-                $query->whereNotNull('platform_id')
-                    ->whereHas('platform', function ($subQuery) {
-                        $subQuery->where('can_submit_einvoice', true);
-                    });
-            })->exists();
-
-            if ($record->einvoice) {
-                $convert_to = "E-Invoice";
-            } elseif ($record->consolidatedEInvoices && !$record->consolidatedEInvoices->isEmpty()) {
-                $convert_to = "Consolidated E-Invoice";
-            }
-
-            $enable = $hasPlatformId;
-            
-            $data['data'][] = [
-                'id' => $record->id,
-                'sku' => $record->sku,
-                'invoice_date' => $record->date,
-                'company' => $record->company,
-                'convert_to' => $convert_to,
-                'filename' => $record->filename,
-                'enable' => $enable,
-                'status' => $record->status,
-            ];
-        }
-
-        return response()->json($data);
-    }
-
-    public function indexEInvoice()
-    {
-        return view('invoice.e-invoice.list');
     }
 
     public function getDataEInvoice(Request $req)
     {
-        $records = new EInvoice();
+        $records = new Invoice;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -1408,7 +1323,7 @@ class SaleController extends Controller
 
     public function getDataConsolidatedEInvoice(Request $req)
     {
-        $records = ConsolidatedEInvoice::with(['invoices']);
+        $records = new Invoice;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
