@@ -19,7 +19,7 @@
     </head>
     <body>
         <div class="min-h-screen flex">
-            <div class="flex-1 bg-blue-800 flex flex-col items-center justify-center py-2 px-6">
+            <div class="flex-1 bg-blue-800 flex-col items-center justify-center py-2 px-6 hidden lg:flex">
                 <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
                 <h1 class="text-white text-2xl text-center">POWER COOL EQUIPMENTS (M) SDN BHD</h1>
             </div>
@@ -31,9 +31,13 @@
                     </div>
                     <!-- Auth  -->
                     <div class="flex items-center justify-center h-full">
-                         <div class="max-w-sm w-full">
-                             {{ $slot }}
-                         </div>
+                        <div class="max-w-sm w-full">
+                            <div class="flex lg:hidden flex-col items-center justify-center py-2 px-6 mb-6">
+                                <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                                <h1 class="text-2xl text-center text-blue-800 font-medium">POWER COOL EQUIPMENTS (M) SDN BHD</h1>
+                            </div>
+                            {{ $slot }}
+                        </div>
                     </div>
                 </div>
             </div>

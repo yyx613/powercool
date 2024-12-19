@@ -3,7 +3,7 @@
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
-    <div class="grid grid-cols-3 gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
         <div class="flex flex-col">
             <x-app.input.label id="open_until" class="mb-1">{{ __('Open Until') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.input name="open_until" id="open_until" :hasError="$errors->has('open_until')" value="{{ isset($sale) ? $sale->open_until : null }}" />

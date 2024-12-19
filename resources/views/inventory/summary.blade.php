@@ -7,7 +7,7 @@
     @include('components.app.alert.parent')
     <!-- Summary -->
     <div class="mb-6">
-        <div class="flex gap-4">
+        <div class="flex gap-4 flex-col md:flex-row">
             <div class="flex-1 bg-slate-200 p-2 rounded">
                 <div>
                     <span class="text-lg font-black">{{ __('Warehouse') }}</span>
@@ -41,7 +41,7 @@
         </div>
     </div>
     <!-- Content -->
-    <div class="flex gap-4">
+    <div class="flex gap-4 flex-col md:flex-row">
         <!-- Left -->
         <div class="flex-[2] flex flex-col gap-4">
             <!-- Low Quantity Stock (Products) -->

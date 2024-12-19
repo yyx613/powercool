@@ -8,7 +8,7 @@
     <form action="{{ isset($ticket) ? route('ticket.update', ['ticket' => $ticket]) : route('ticket.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="customer" class="mb-1">{{ __('Customer') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="{{ __('Select a customer') }}">
@@ -50,7 +50,7 @@
                     <x-app.input.input name="subject" id="subject" :hasError="$errors->has('subject')" value="{{ old('subject', isset($ticket) ? $ticket->subject : null) }}" />
                     <x-input-error :messages="$errors->get('subject')" class="mt-1" />
                 </div>
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label id="body" class="mb-1">{{ __('Body') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.textarea name="body" id="body" :hasError="$errors->has('body')" text="{{ old('body', isset($ticket) ? $ticket->body : null) }}" />
                     <x-input-error :messages="$errors->get('body')" class="mt-1" />

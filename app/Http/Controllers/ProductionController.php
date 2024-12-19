@@ -63,6 +63,9 @@ class ProductionController extends Controller
                     ->orWhere('due_date', 'like', '%' . $keyword . '%')
                     ->orWhereHas('priority', function($q) use ($keyword) {
                         $q->where('name', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('productChild', function($q) use ($keyword) {
+                        $q->where('sku', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -70,9 +73,9 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
-                1 => 'name',
-                2 => 'start_date',
-                3 => 'due_date',
+                2 => 'name',
+                3 => 'start_date',
+                4 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -95,6 +98,7 @@ class ProductionController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'product_serial_no' => $record->productChild->sku,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,

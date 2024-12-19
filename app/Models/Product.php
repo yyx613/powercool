@@ -78,6 +78,10 @@ class Product extends Model
         return $this->belongsToMany(ClassificationCode::class, 'classification_code_product');
     }
 
+    public function sellingPrices() {
+        return $this->hasMany(ProductSellingPrice::class);
+    }
+
     public function getQtyAttribute($val)
     {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool)$this->is_sparepart == true)) {

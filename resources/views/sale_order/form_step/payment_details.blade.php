@@ -8,7 +8,7 @@
             <p class="text-sm border rounded border-blue-500 text-blue-500 p-1.5 font-medium shadow">{{ __('By Pass Conversion Enabled') }}</p>
         </div>
     </div>
-    <div class="grid grid-cols-3 gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
         @can('sale.sale_order.by_pass_conversion')
         <div class="flex flex-col">
             <x-app.input.label id="by_pass_conversion" class="mb-1">{{ __('By Pass Conversion') }}</x-app.input.label>

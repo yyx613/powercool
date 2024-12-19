@@ -38,6 +38,10 @@ class Production extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function productChild() {
+        return $this->belongsTo(ProductChild::class);
+    }
+
     public function priority() {
         return $this->belongsTo(Priority::class);
     }

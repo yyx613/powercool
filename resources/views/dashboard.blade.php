@@ -9,7 +9,7 @@
         </div>
     </div>
     <!-- Content -->
-    <div class="flex gap-4">
+    <div class="flex flex-col lg:flex-row gap-4">
         <div class="flex-[2] flex flex-col gap-4">
             <!-- Today Task -->
             <div class="bg-white rounded-lg p-3 border">

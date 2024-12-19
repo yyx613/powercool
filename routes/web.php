@@ -36,6 +36,7 @@ use App\Http\Controllers\Platforms\ShopeeController;
 use App\Http\Controllers\Platforms\TiktokController;
 use App\Http\Controllers\Platforms\WooCommerceController;
 use App\Http\Controllers\PriorityController;
+use App\Http\Controllers\ProductionMaterialController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\WarrantyController;
 
@@ -133,7 +134,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
         Route::get('/', 'index')->name('index');
-        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-data', 'getData')->name('get_data')->withoutMiddleware(['can:inventory.view']);
         Route::get('/create', 'create')->name('create')->middleware(['can:inventory.product.create']);
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit']);
         Route::post('/upsert', 'upsert')->name('upsert');
@@ -305,6 +306,11 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+    });
+    // Production Material
+    Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/view/{product}', 'view')->name('view');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->middleware(['can:ticket.view'])->group(function () {

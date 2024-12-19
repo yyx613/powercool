@@ -18,8 +18,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Production') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-4 md:mb-0">{{ __('Production') }}</x-app.page-title>
         @can('production.create')
         <a href="{{ route('production.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
@@ -53,6 +53,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Production ID') }}</th>
+                    <th>{{ __('Product Serial No') }}</th>
                     <th>{{ __('Start Date') }}</th>
                     <th>{{ __('Due Date') }}</th>
                     <th>{{ __('Days Left') }}</th>
@@ -81,6 +82,7 @@
             order: [],
             columns: [
                 { data: 'sku' },
+                { data: 'product_serial_no' },
                 { data: 'start_date' },
                 { data: 'due_date' },
                 { data: 'days_left' },
@@ -100,6 +102,7 @@
                 {
                     "width": "10%",
                     "targets": 1,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -121,6 +124,13 @@
                 {
                     "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 5,
                     orderable: false,
                     render: function(data, type, row) {
                         return data == null ? '-' : data.name
@@ -128,7 +138,7 @@
                 },
                 {
                     "width": '10%',
-                    "targets": 5,
+                    "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -145,7 +155,7 @@
                 },
                 {
                     "width": "10%",
-                    "targets": 6,
+                    "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
@@ -153,7 +163,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 7,
+                    "targets": 8,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

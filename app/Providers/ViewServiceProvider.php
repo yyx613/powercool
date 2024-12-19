@@ -79,6 +79,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.billing' => [],
                 'task' => [],
                 'production' => [],
+                'production_material' => [],
                 'ticket' => [],
                 'customer' => [],
                 'supplier' => [],
@@ -116,6 +117,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.billing'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'task')) {
                     array_push($permissions_group['task'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'production_material')) {
+                    array_push($permissions_group['production_material'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'production')) {
                     array_push($permissions_group['production'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'ticket')) {
@@ -290,6 +293,7 @@ class ViewServiceProvider extends ServiceProvider
             $products = Product::with(['children' => function ($q) use ($involved_pc_ids) {
                     $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
                 }])
+                ->with('sellingPrices')
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
                 ->orWhere(function ($q) {
@@ -348,12 +352,17 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function (ViewView $view) {
             $is_product = true;
+            $is_production = false;
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
                 $is_product = false;
+            } else if (str_contains(Route::currentRouteName(), 'production_material.')) {
+                $is_product = false;
+                $is_production = true;
             }
 
             $view->with([
                 'is_product' => $is_product,
+                'is_production' => $is_production,
             ]);
         });
         View::composer(['components.app.modal.stock-out-modal'], function (ViewView $view) {

@@ -16,6 +16,9 @@ return new class extends Migration
             $table->longText('payment_amount')->change();
             $table->boolean('can_by_pass_conversion')->default(false)->after('payment_status');
         });
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('location')->default('warehouse')->after('sku');
+        });
     }
 
     /**

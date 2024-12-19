@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Service Reminder For') }} {{ $sr->objectable->sku }}</x-app.page-title>
+        <x-app.page-title>{{ __('Service Reminder For') }} {{ $sr->objectable()->withTrashed()->first()->sku }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

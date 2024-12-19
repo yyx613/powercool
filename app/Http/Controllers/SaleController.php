@@ -1248,7 +1248,22 @@ class SaleController extends Controller
 
     public function getDataDeliveryOrder(Request $req)
     {
-        $records = DeliveryOrder::withCount('products');
+
+        $dopc = DB::table('delivery_order_product_children')
+            ->select('delivery_order_product_id', DB::raw('COUNT(*) AS count'))
+            ->groupBy('delivery_order_product_id');
+        $dop = DB::table('delivery_order_products')
+            ->select('delivery_order_id', 'dopc.count')
+            ->joinSub($dopc, 'dopc', function ($join) {
+                $join->on('delivery_order_products.id', '=', 'dopc.delivery_order_product_id');
+            })
+            ->groupBy('delivery_order_id');
+        $records = DB::table('delivery_orders')
+            ->select('id', 'sku', 'filename', 'status', 'dop.count AS item_count')
+            ->leftJoinSub($dop, 'dop', function ($join) {
+                $join->on('delivery_orders.id', '=', 'dop.delivery_order_id');
+            })
+            ->latest();
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -1266,7 +1281,7 @@ class SaleController extends Controller
             ];
             foreach ($req->order as $order) {
                 if ($order['column'] == 1) {
-                    $records->orderBy('products_count', $order['dir']);
+                    $records->orderBy('item_count', $order['dir']);
                 } else {
                     $records->orderBy($map[$order['column']], $order['dir']);
                 }
@@ -1289,7 +1304,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'item_count' => $record->products()->count(),
+                'item_count' => $record->item_count,
                 'filename' => $record->filename,
                 'status' => $record->status,
             ];
@@ -1307,13 +1322,18 @@ class SaleController extends Controller
 
             Session::put('convert_terms', $req->term);
 
-            $delivery_orders = DeliveryOrder::whereNull('invoice_id')->where('customer_id', Session::get('convert_customer_id'))->where('payment_terms', $req->term)->get();
+            $delivery_orders = DeliveryOrder::whereNull('invoice_id')
+                ->whereNull('status')
+                ->where('customer_id', Session::get('convert_customer_id'))
+                ->where('payment_terms', $req->term)
+                ->get();
         } elseif ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
 
             $term_ids = DeliveryOrder::where('customer_id', $req->cus)
+                ->whereNull('status')
                 ->whereNotNull('payment_terms')
                 ->distinct()
                 ->pluck('payment_terms');
@@ -1384,6 +1404,7 @@ class SaleController extends Controller
 
             DeliveryOrder::whereIn('id', $do_ids)->update([
                 'invoice_id' => $inv->id,
+                'status' => DeliveryOrder::STATUS_CONVERTED,
             ]);
 
             // Create service reminder for 6 months & remind 3 days before
@@ -2202,22 +2223,14 @@ class SaleController extends Controller
             $inv_ids = Session::get('invoice_ids');
             $do_ids = DeliveryOrder::whereIn('invoice_id', explode(',', $inv_ids))->pluck('id');
 
-            $sale_ids = Sale::where('type', Sale::TYPE_SO);
-
-            $sale_ids = $sale_ids->where(function ($q) use ($do_ids) {
-                for ($i = 0; $i < count($do_ids); $i++) {
-                    $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
-                }
-            });
-            $sale_ids = $sale_ids->pluck('id');
-
-            $products = SaleProduct::whereIn('sale_id', $sale_ids)->get();
+            $products = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->get();
+            dd($products);
         } elseif ($req->has('inv')) {
             $step = 2;
 
             Session::put('invoice_ids', $req->inv);
         } else {
-            $invoices = Invoice::orderBy('id', 'desc')->get();
+            $invoices = Invoice::whereNull('status')->orderBy('id', 'desc')->get();
         }
 
         return view('billing.convert', [

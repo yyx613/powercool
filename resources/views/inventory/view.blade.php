@@ -23,12 +23,12 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title url="{{ $is_product ? route('product.index') : route('raw_material.index') }}">{{ $is_product ? __('View Product') : __('View Raw Material') }}</x-app.page-title>
+        <x-app.page-title url="{{ $is_product ? route('product.index') : route('raw_material.index') }}">{{ $is_product ? __('View Product') : ($is_production ? __('View Production Material') : __('View Raw Material')) }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
     <div class="mb-6">
-        <div class="flex gap-4">
+        <div class="flex gap-4 flex-col lg:flex-row">
             <div class="flex-1 bg-slate-200 p-2 rounded">
                 <div>
                     <span class="text-lg font-black">{{ __('Warehouse') }}</span>
@@ -106,13 +106,15 @@
             </div>
         </div>
     </div>
-
+    
+    @if (!$is_production)
     <div class="flex justify-end mb-4">
         <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
             <button type="button" class="text-sm p-2 font-medium bg-emerald-200" id="view-list-btn">{{ __('View List') }}</button>
             <button type="button" class="text-sm p-2 font-medium bg-slate-200" id="view-cost-btn">{{ __('View Cost') }}</button>
         </div>
     </div>
+    @endif
     
     <div id="data-table-container">
         @if ($is_product || $prod->is_sparepart == true)
@@ -179,6 +181,7 @@
     </div>
 
     <!-- Cost Table -->
+    @if (!$is_production)
     <div id="cost-table-container" class="hidden">
         <table id="cost-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
@@ -196,10 +199,12 @@
             <tbody></tbody>
         </table>
     </div>
+    @endif
 @endsection
 
 @push('scripts')
     <script>
+        IS_PRODUCTION = @json($is_production ?? null);
         PRODUCT = @json($prod ?? null);
         CHECKED_CHECKBOXES = []
 
@@ -457,63 +462,65 @@
         })
 
         // Cost Table
-        var costDT = new DataTable('#cost-table', {
-            dom: 'rtip',
-            pagingType: 'numbers',
-            pageLength: 10,
-            processing: true,
-            serverSide: true,
-            order: [],
-            columns: [
-                { data: 'qty_sku' },
-                { data: 'unit_price' },
-                { data: 'total_price' },
-                { data: 'at' },
-            ],
-            columnDefs: [
-                {
-                    "width": "10%",
-                    "targets": 0,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
+        if (!IS_PRODUCTION) {
+            var costDT = new DataTable('#cost-table', {
+                dom: 'rtip',
+                pagingType: 'numbers',
+                pageLength: 10,
+                processing: true,
+                serverSide: true,
+                order: [],
+                columns: [
+                    { data: 'qty_sku' },
+                    { data: 'unit_price' },
+                    { data: 'total_price' },
+                    { data: 'at' },
+                ],
+                columnDefs: [
+                    {
+                        "width": "10%",
+                        "targets": 0,
+                        orderable: false,
+                        render: function(data, type, row) {
+                            return data
+                        }
+                    },
+                    {
+                        "width": "10%",
+                        "targets": 1,
+                        orderable: false,
+                        render: function(data, type, row) {
+                            return data
+                        }
+                    },
+                    {
+                        "width": "10%",
+                        "targets": 2,
+                        orderable: false,
+                        render: function(data, type, row) {
+                            return data
+                        }
+                    },
+                    {
+                        "width": "10%",
+                        "targets": 3,
+                        orderable: false,
+                        render: function(data, type, row) {
+                            return data
+                        }
+                    },
+                ],
+                ajax: {
+                    data: function(){
+                        var info = $('#cost-table').DataTable().page.info();
+                        var url = "{{ route('product.view_get_data_cost') }}"
+    
+                        url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
+                        $('#cost-table').DataTable().ajax.url(url);
+                    },
                 },
-                {
-                    "width": "10%",
-                    "targets": 1,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
-                    "width": "10%",
-                    "targets": 2,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
-                    "width": "10%",
-                    "targets": 3,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-            ],
-            ajax: {
-                data: function(){
-                    var info = $('#cost-table').DataTable().page.info();
-                    var url = "{{ route('product.view_get_data_cost') }}"
-
-                    url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
-                    $('#cost-table').DataTable().ajax.url(url);
-                },
-            },
-        });
+            });
+        }
 
         $('#switch-view-btn').on('click', function() {
             $('#view-list-btn, #view-cost-btn').toggleClass('bg-emerald-200 bg-slate-200')

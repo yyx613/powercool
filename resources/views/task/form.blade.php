@@ -8,7 +8,7 @@
     <form action="{{ isset($task) ? route($form_route_name, ['task' => $task]) : route($form_route_name) }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <input type="hidden" name="ticket" value="{{ isset($from_ticket) ? $from_ticket->id : null }}">
                 @if ($for_role == 'technician')
                     <div class="flex flex-col">
@@ -66,7 +66,7 @@
                         <x-input-error :messages="$errors->get('sale_order_id')" class="mt-1" />
                     </div>
                 @endif
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col col-span-1 lg:col-span-2">
                     <x-app.input.label id="desc" class="mb-1">{{ __('Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="desc" id="desc" :hasError="$errors->has('desc')" value="{{ old('desc', isset($from_ticket) ? $from_ticket->body : (isset($task) ? $task->desc : null)) }}" />
                     <x-input-error :messages="$errors->get('desc')" class="mt-1" />
@@ -76,7 +76,7 @@
                     <x-app.input.input name="start_date" id="start_date" :hasError="$errors->has('start_date')" value="{{ old('start_date', isset($task) ? $task->start_date : null) }}" />
                     <x-input-error :messages="$errors->get('start_date')" class="mt-1" />
                 </div>
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col col-span-1 lg:col-span-2">
                     <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                     <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ old('remark', isset($task) ? $task->remark : null) }}" />
                     <x-input-error :messages="$errors->get('remark')" class="mt-1" />
@@ -135,7 +135,7 @@
                     </div>
                 </div>
                 @if ($for_role == 'technician' && count($services) > 0)
-                    <div class="flex flex-col col-span-3">
+                    <div class="flex flex-col col-span-2 lg:col-span-3">
                         <x-app.input.label id="services" class="mb-1">{{ __('Services') }}</x-app.input.label>
                         @foreach ($services as $key => $ser)
                             <div class="flex items-center gap-x-2 {{ ($key + 1) != count($services) ? 'mb-1.5' : '' }}">
@@ -146,7 +146,7 @@
                         <x-input-error :messages="$errors->get('services')" class="mt-1" />
                     </div>
                 @endif
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label id="assign" class="mb-1">{{ __('Assigned') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
                     @foreach ($users as $user)
@@ -155,7 +155,7 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('assign')" class="mt-1" />
                 </div>
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label class="mb-2">{{ __('Service Task Milestones') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="custom_milestone" class="mb-2" placeholder="{{ __('Enter custom milestone here') }}" />
                     @foreach($milestones as $stone)
