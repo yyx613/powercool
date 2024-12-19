@@ -1429,7 +1429,6 @@ class EInvoiceController extends Controller
                         ['code' => $code],
                         ['description' => $description]
                     );
-                    (new Branch())->assign(ClassificationCode::class, $classificationCode->id);
 
                     $syncedCount++;
                 }

@@ -161,7 +161,8 @@
                     <x-app.input.label id="msic_code" class="mb-1">{{ __('Msic Code') }}</x-app.input.label>
                     <x-app.input.select name="msic_code">
                         @foreach ($msics as $msic)
-                            <option value="{{ $msic->id }}" @selected(old('msic_code', isset($customer) ? $customer->msicCode->id == $msic->id : null))>{{ $msic->code }} - {{ $msic->description }}</option>
+                            <option value="">{{ __('Select a Msic Code') }}</option>
+                            <option value="{{ $msic->id }}" @selected(old('msic_code', isset($customer->msicCode->id) ? $customer->msicCode->id == $msic->id : null))>{{ $msic->code }} - {{ $msic->description }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-app.message.error id="msic_code_err"/>
