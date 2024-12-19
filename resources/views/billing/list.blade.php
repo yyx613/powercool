@@ -208,14 +208,23 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
 
-                    if (error.responseJSON.rejectedDocuments) {
-                        error.responseJSON.rejectedDocuments.forEach(function(document) {
-                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
-                            document.details.forEach(function(detail) {
-                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
-                            });
-                        });
+                    let errorMessage = "An unknown error occurred.";
+
+                    if (error.responseJSON) {
+                        if (error.responseJSON.error) {
+                            errorMessage = error.responseJSON.error;
+                        }
+
+                        if (error.responseJSON.message) {
+                            try {
+                                const parsedMessage = JSON.parse(error.responseJSON.message);
+                                if (parsedMessage.error) {
+                                    errorMessage += `\nDetails: ${parsedMessage.error}`;
+                                }
+                            } catch (e) {
+                                errorMessage += `\nDetails: ${error.responseJSON.message}`;
+                            }
+                        }
                     }
 
                     alert(errorMessage);

@@ -16,20 +16,17 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\EInvoice;
 use App\Models\Invoice;
+use App\Models\MsicCode;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\User;
-use BaconQrCode\Encoder\QrCode as EncoderQrCode;
 use Barryvdh\DomPDF\Facade\Pdf;
-use DateTime;
-use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Illuminate\Support\Str;
 use App\Services\EInvoiceXmlGenerator;
 use Carbon\Carbon;
 use DOMDocument;
@@ -38,8 +35,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-
-use function PHPUnit\Framework\isEmpty;
 
 class EInvoiceController extends Controller
 {
@@ -283,7 +278,10 @@ class EInvoiceController extends Controller
 
             } catch (\Throwable $th) {
                 DB::rollBack();
-                dd([$response->body(), $th]);
+                return response()->json([
+                    'error' => 'Document submission failed',
+                    'message' => $th->getMessage(),
+                ]);
             }
         } else {
             return response()->json([
@@ -1450,6 +1448,39 @@ class EInvoiceController extends Controller
             ], 500);
         }
     }
+
+    public function syncMsicCodes()
+    {
+        $response = Http::get('https://sdk.myinvois.hasil.gov.my/files/MSICSubCategoryCodes.json');
+    
+        if ($response->ok()) {
+            $data = $response->json();
+    
+            $totalCodes = count($data); 
+            $storedCodes = 0; 
+    
+            foreach ($data as $item) {
+                $msicCode = MsicCode::updateOrCreate(
+                    ['code' => $item['Code']],
+                    ['description' => $item['Description']]
+                );
+    
+                if ($msicCode->wasRecentlyCreated) {
+                    $storedCodes++;
+                }
+            }
+    
+            return response()->json([
+                'message' => 'Data successfully fetched and stored',
+                'total_codes' => $totalCodes,
+                'stored_codes' => $storedCodes,
+            ], 200);
+        }
+    
+        return response()->json(['message' => 'Failed to fetch data'], 500);
+    }
+    
+    
     
     public function billingSubmit(Request $request){
         $request->validate([
@@ -1558,7 +1589,10 @@ class EInvoiceController extends Controller
 
             } catch (\Throwable $th) {
                 DB::rollBack();
-                dd([$response->body(), $th]);
+                return response()->json([
+                    'error' => 'Document submission failed',
+                    'message' => $th->getMessage(),
+                ]);
             }
         } else {
             return response()->json([
@@ -1598,105 +1632,4 @@ class EInvoiceController extends Controller
         }
     }
 
-    public function submitBillingNote(Request $request)
-    {
-        $noteType = Session::get('note_type');
-        $type = Session::get('invoice_type');
-        $invoices = $request->input('invoices');
-        $totals = [];
-        $qtyDifferences = [];
-        $eInvoiceIds = [];
-        $totalsModified = 0;
-
-        DB::beginTransaction();
-
-        try {
-            foreach ($invoices as $invoice) {
-                $invoiceUuid = $invoice['invoice_uuid'];
-
-                if ($type == 'eInvoice') {
-                    $eInvoice = EInvoice::where('uuid', $invoiceUuid)->first();
-                } else {
-                    $eInvoice = ConsolidatedEInvoice::where('uuid', $invoiceUuid)->first();
-                }
-
-                if ($eInvoice && !in_array($eInvoice->id, $eInvoiceIds)) {
-                    $eInvoiceIds[] = $eInvoice->id;
-                }
-
-                foreach ($invoice['items'] as $item) {
-                    $saleProduct = SaleProduct::find($item['product_id']);
-
-                    if (!$saleProduct) {
-                        continue;
-                    }
-
-                    $saleId = $saleProduct->sale->id;
-                    $amount = $item['qty'] * $item['price'];
-
-                    if (!isset($totals[$saleId])) {
-                        $totals[$saleId] = 0;
-                    }
-                    $totals[$saleId] += $amount;
-
-                    $qtyDifference = abs($saleProduct->qty - $item['qty']);
-                    $priceDifference = abs($saleProduct->unit_price - $item['price']);
-
-                    if ($qtyDifference != 0 || $priceDifference != 0) {
-                        $totalsModified += $qtyDifference * $item['price'];
-                        $qtyDifferences[] = [
-                            'id' => $item['product_id'],
-                            'diff' => $qtyDifference == 0 ? $saleProduct->qty : $qtyDifference,
-                            'price' => $item['price']
-                        ];
-                    }
-
-                    $saleProduct->update([
-                        'qty' => $item['qty'],
-                        'unit_price' => $item['price']
-                    ]);
-
-                    $customer = $saleProduct->sale->customer;
-                }
-            }
-
-            if (empty($qtyDifferences)) {
-                return response()->json([
-                    'message' => 'Nothing to Change!',
-                ]);
-            }
-
-            foreach ($totals as $saleId => $totalAmount) {
-                Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
-            }
-
-            if ($noteType == 'credit') {
-                $sku = (new CreditNote)->generateSku();
-                $note = CreditNote::create(['sku' => $sku]);
-            } else {
-                $sku = (new DebitNote)->generateSku();
-                $note = DebitNote::create(['sku' => $sku]);
-            }
-
-            if ($type == 'eInvoice') {
-                $note->eInvoices()->attach($eInvoiceIds);
-            } else {
-                $note->consolidatedEInvoice()->attach($eInvoiceIds);
-            }
-
-            $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
-            $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin,$customer);
-            
-            $result = $this->syncNote($document, $note, $qtyDifferences, $company);
-            if(!empty($result->original['errorDetails'])){
-                DB::rollBack();
-            }else{
-                DB::commit();
-            }
-            return $result;
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            dd($th);
-        }
-    }
 }

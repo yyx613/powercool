@@ -106,7 +106,6 @@ class CustomerController extends Controller
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
-            'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
             'email' => 'nullable|email|max:250',
@@ -122,6 +121,25 @@ class CustomerController extends Controller
             'debtor_type' => 'nullable',
             'platform' => 'nullable',
             'type' => 'nullable',
+            'msic_code' => 'nullable',
+            'company_registration_number' => [
+                'nullable',
+                'max:250',
+                function ($attribute, $value, $fail) use ($req) {
+                    if ($value && $req->sst_number) {
+                        $fail(__('Company Registration Number and SST Number cannot both be filled.'));
+                    }
+                },
+            ],
+            'sst_number' => [
+                'nullable',
+                'max:250',
+                function ($attribute, $value, $fail) use ($req) {
+                    if ($value && $req->company_registration_number) {
+                        $fail(__('SST Number and Company Registration Number cannot both be filled.'));
+                    }
+                },
+            ],
         ], [], [
             'picture.*' => 'picture'
         ]);
@@ -143,12 +161,14 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
-                    'tin_number' => $req->tin_number,
+                    'tin_number' => $req->type == 2 ? 'EI000000000020' : $req->tin_number,
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
-                    'type' => $req->type
+                    'type' => $req->type,
+                    'msic_id' => $req->msic_code,
+                    'sst_number' => $req->sst_number
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -166,12 +186,14 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
-                    'tin_number' => $req->tin_number,
+                    'tin_number' => $req->type == 2 ? 'EI000000000020' : $req->tin_number,
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
-                    'type' => $req->type
+                    'type' => $req->type,
+                    'msic_id' => $req->msic_code,
+                    'sst_number' => $req->sst_number
                 ]);
             }
 

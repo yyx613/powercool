@@ -562,6 +562,7 @@ Route::prefix('e-invoice')->group(function () {
     Route::post('/billing-submit', [EInvoiceController::class, 'billingSubmit']);
 
 });
+Route::get('/sync-msic-codes', [EInvoiceController::class, 'syncMsicCodes']);
 
 Route::get('/sync-classification-codes', [EInvoiceController::class, 'syncClassificationCodes']);
 

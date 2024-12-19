@@ -63,14 +63,25 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($cbcId);
 
         // 添加 <cbc:IssueDate> 元素
-        $dateTime = new DateTime("now", new DateTimeZone("Asia/Kuala_Lumpur"));
-        $dateTime->modify('-1 day');
+        // $dateTime = new DateTime("now", new DateTimeZone("UTC+8")); // 设置时区为 UTC+8
+        $invoiceCreatedAt = new DateTime($invoice->created_at, new DateTimeZone("UTC"));
+        $currentTime = new DateTime("now", new DateTimeZone("UTC"));
+        
+        $timeDiff = $currentTime->getTimestamp() - $invoiceCreatedAt->getTimestamp();
+        $hoursDiff = $timeDiff / 3600;
+        
+        if ($hoursDiff > 72) {
+            $dateTime = $currentTime;
+        } else {
+            $dateTime = $invoiceCreatedAt;
+        }
+        
         $currentDate = $dateTime->format("Y-m-d");
         $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
         $invoiceElement->appendChild($cbcIssueDate);
-
-        $currentTime = $dateTime->format("H:i:s") . "Z";
-        $cbcIssueTime = $xml->createElement('cbc:IssueTime', $currentTime);
+        
+        $currentTimeFormatted = $dateTime->format("H:i:s") . "Z";
+        $cbcIssueTime = $xml->createElement('cbc:IssueTime', $currentTimeFormatted);
         $invoiceElement->appendChild($cbcIssueTime);
 
         // 添加 <cbc:InvoiceTypeCode> 元素
@@ -240,8 +251,7 @@ class EInvoiceXmlGenerator
         $cbcId = $xml->createElement('cbc:ID', $consolidated->sku);
         $invoiceElement->appendChild($cbcId);
 
-        $dateTime = new DateTime("now", new DateTimeZone("Asia/Kuala_Lumpur"));
-        $dateTime->modify('-1 day');
+        $dateTime = new DateTime("now", new DateTimeZone("UTC"));
         $currentDate = $dateTime->format("Y-m-d");
         $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
         $invoiceElement->appendChild($cbcIssueDate);
@@ -421,8 +431,7 @@ class EInvoiceXmlGenerator
         $invoiceElement->appendChild($cbcId);
 
         // 添加 <cbc:IssueDate> 元素
-        $dateTime = new DateTime("now", new DateTimeZone("Asia/Kuala_Lumpur"));
-        $dateTime->modify('-1 day');
+        $dateTime = new DateTime("now", new DateTimeZone("UTC"));
         $currentDate = $dateTime->format("Y-m-d");
         $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
         $invoiceElement->appendChild($cbcIssueDate);
@@ -595,8 +604,7 @@ class EInvoiceXmlGenerator
         $cbcId = $xml->createElement('cbc:ID', $billing->sku);
         $invoiceElement->appendChild($cbcId);
 
-        $dateTime = new DateTime("now", new DateTimeZone("Asia/Kuala_Lumpur"));
-        $dateTime->modify('-1 day');
+        $dateTime = new DateTime("now", new DateTimeZone("UTC"));
         $currentDate = $dateTime->format("Y-m-d");
         $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
         $invoiceElement->appendChild($cbcIssueDate);

@@ -56,6 +56,11 @@ class Customer extends Model
         return $this->hasMany(DeliveryOrder::class, 'customer_id');
     }
 
+    public function msicCode()
+    {
+        return $this->belongsTo(MsicCode::class, 'msic_id');
+    }
+
     public function generateSku(string $company_first_alphabet): string {
         $sku = null;
         $staring_num = 1;

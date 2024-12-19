@@ -13,6 +13,7 @@ use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\MaterialUse;
 use App\Models\Milestone;
+use App\Models\MsicCode;
 use App\Models\Platform;
 use App\Models\Priority;
 use App\Models\Product;
@@ -469,8 +470,10 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
+            $msics = MsicCode::all();
 
             $view->with('platforms', $platforms);
+            $view->with('msics', $msics);
             $view->with('is_create_link', isCreateLink());
         });
         View::composer(['billing.convert'], function (ViewView $view) {

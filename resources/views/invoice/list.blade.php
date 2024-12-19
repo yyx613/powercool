@@ -310,16 +310,24 @@
                     $('.order-checkbox').prop('checked', false);
                     selectedInvoices = [];
                     $('#select-all').prop('checked', false);
+                    console.log(response.errorDetails && response.errorDetails.length > 0)
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
-                        
-                        response.errorDetails.forEach(function(document) {
-                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
-                            document.details.forEach(function(detail) {
-                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                        try {
+                            response.errorDetails.forEach(function(document) {
+                                errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                                
+                                document.details.forEach(function(detail) {
+                                    errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                                });
                             });
-                        });
+                        } catch (error) {
+                            errorMessage = ""
+                            response.errorDetails.forEach(function(document) {
+                                errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError: ${document.error}\n`;
+                            });
+                        }
+                        
                         
                         alert(errorMessage);
                     } else {
@@ -329,14 +337,24 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
 
-                    if (error.responseJSON.rejectedDocuments) {
-                        error.responseJSON.rejectedDocuments.forEach(function(document) {
-                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
-                            document.details.forEach(function(detail) {
-                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
-                            });
-                        });
+                    
+                    let errorMessage = "An unknown error occurred.";
+
+                    if (error.responseJSON) {
+                        if (error.responseJSON.error) {
+                            errorMessage = error.responseJSON.error;
+                        }
+
+                        if (error.responseJSON.message) {
+                            try {
+                                const parsedMessage = JSON.parse(error.responseJSON.message);
+                                if (parsedMessage.error) {
+                                    errorMessage += `\nDetails: ${parsedMessage.error}`;
+                                }
+                            } catch (e) {
+                                errorMessage += `\nDetails: ${error.responseJSON.message}`;
+                            }
+                        }
                     }
 
                     alert(errorMessage);
@@ -389,15 +407,37 @@
                 },
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
-                    if (error.responseJSON.rejectedDocuments) {
-                        error.responseJSON.rejectedDocuments.forEach(function(document) {
-                            errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
-                            document.details.forEach(function(detail) {
-                                errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                    try {
+                        
+                        if (error.responseJSON.rejectedDocuments) {
+                            error.responseJSON.rejectedDocuments.forEach(function(document) {
+                                errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+                                console.log(1)
+                                document.details.forEach(function(detail) {
+                                    errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                                });
                             });
-                        });
+                        }
+                    } catch (error) {
+                        if (error.responseJSON) {
+                            if (error.responseJSON.error) {
+                                errorMessage = error.responseJSON.error;
+                            }
+                            console.log(2)
+
+                            if (error.responseJSON.message) {
+                                try {
+                                    const parsedMessage = JSON.parse(error.responseJSON.message);
+                                    if (parsedMessage.error) {
+                                        errorMessage += `\nDetails: ${parsedMessage.error}`;
+                                    }
+                                } catch (e) {
+                                    errorMessage += `\nDetails: ${error.responseJSON.message}`;
+                                }
+                            }
+                        }
                     }
+                   
 
                     alert(errorMessage);
                 }

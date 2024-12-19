@@ -57,6 +57,11 @@
                     <x-app.message.error id="company_registration_number_err"/>
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="sst_number" class="mb-1">{{ __('SST Number') }}</x-app.input.label>
+                    <x-app.input.input name="sst_number" id="sst_number" :hasError="$errors->has('sst_number')" value="{{ old('sst_number', isset($customer) ? $customer->sst_number : null) }}" />
+                    <x-app.message.error id="sst_number_err"/>
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')" value="{{ old('phone_number', isset($customer) ? $customer->phone : null) }}"/>
                     <x-app.message.error id="phone_number_err"/>
@@ -152,6 +157,15 @@
                         <x-app.message.error id="credit_term_err"/>
                     </div>
                 @endif
+                <div class="flex flex-col col-span">
+                    <x-app.input.label id="msic_code" class="mb-1">{{ __('Msic Code') }}</x-app.input.label>
+                    <x-app.input.select name="msic_code">
+                        @foreach ($msics as $msic)
+                            <option value="{{ $msic->id }}" @selected(old('msic_code', isset($customer) ? $customer->msicCode->id == $msic->id : null))>{{ $msic->code }} - {{ $msic->description }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="msic_code_err"/>
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="type" class="mb-1">{{ __('Type') }}</x-app.input.label>
                     <x-app.input.select name="type" id="type" :hasError="$errors->has('type')">
