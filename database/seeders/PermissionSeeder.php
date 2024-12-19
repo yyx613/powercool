@@ -78,6 +78,8 @@ class PermissionSeeder extends Seeder
             'production.edit',
             'production.delete',
 
+            'production_material.view',
+
             'ticket.view',
             'ticket.create',
             'ticket.edit',

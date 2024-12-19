@@ -16,6 +16,7 @@ class DeliveryOrder extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_CANCELLED = 1;
+    const STATUS_CONVERTED = 2;
 
     protected $guarded = [];
     protected $casts = [

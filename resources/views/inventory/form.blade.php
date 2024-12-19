@@ -14,7 +14,7 @@
         @endif
         <!-- Info -->
         <div class="bg-white p-4 border rounded-md">
-            <div class="grid grid-cols-3 gap-8 w-full items-start">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
                 @if ($is_product == false)
                     <div class="flex flex-col">
                         <x-app.input.label id="is_sparepart" class="mb-1">{{ __('Is Spare part') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -87,16 +87,7 @@
                     <x-app.input.label id="low_stock_threshold" class="mb-1">{{ __('Low Stock Threshold') }}</x-app.input.label>
                     <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ old('low_stock_threshold', isset($prod) ? $prod->low_stock_threshold : ($dup_prod != null ? $dup_prod->low_stock_threshold : null)) }}" />
                     <x-input-error :messages="$errors->get('low_stock_threshold')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="min_price" class="mb-1">{{ __('Selling Price') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
-                    <div class="flex gap-x-4">
-                        <x-app.input.input name="min_price" id="min_price" class="decimal-input flex-1" value="{{ old('min_price', isset($prod) ? $prod->min_price : ($dup_prod != null ? $dup_prod->min_price : null)) }}"/>
-                        <x-app.input.input name="max_price" id="max_price" class="decimal-input flex-1" value="{{ old('max_price', isset($prod) ? $prod->max_price : ($dup_prod != null ? $dup_prod->max_price : null)) }}"/>
-                    </div>
-                    <x-input-error :messages="$errors->get('min_price')" class="mt-1" />
-                    <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
-                </div>
+                </div> 
                 <div class="flex flex-col" id="cost-container">
                     <x-app.input.label id="cost" class="mb-1">{{ __('Cost') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
                     <x-app.input.input name="cost" id="cost" class="decimal-input flex-1" value="{{ old('cost', isset($prod) ? $prod->cost : ($dup_prod != null ? $dup_prod->cost : null)) }}"/>
@@ -141,10 +132,85 @@
                 @endif
             </div>
         </div>
+        <!-- Selling Prices -->
+        <div class="bg-white p-4 border rounded-md mt-4">
+            <div class="mb-2 flex items-center justify-between">
+                <h6 class="font-medium text-lg">{{ __('Selling Prices') }}</h6>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4 hidden" id="selling-price-template">
+                <div class="flex flex-col col-span-2 lg:col-span-1">
+                    <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
+                    <x-app.input.input name="selling_price_name[]" id="selling_price_name" />
+                    <x-input-error :messages="$errors->get('selling_price_name')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
+                    <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" />
+                    <x-input-error :messages="$errors->get('selling_price_min_price')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
+                    <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" />
+                    <x-input-error :messages="$errors->get('selling_price_max_price')" class="mt-1" />
+                </div>
+            </div>
+            <div id="selling-price-container">
+                @if (old('selling_price_name') != null)
+                    @foreach(old('selling_price_name') as $key => $val)
+                        <div class="grid grid-cols-3 gap-8 w-full mb-4 selling-prices">
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_name[]" id="selling_price_name" value="{{ old('selling_price_name.' . $key) }}" />
+                                <x-input-error :messages="$errors->get('selling_price_name.' . $key)" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" value="{{ old('selling_price_min_price.' . $key) }}" />
+                                <x-input-error :messages="$errors->get('selling_price_min_price.' . $key)" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" value="{{ old('selling_price_max_price.' . $key) }}" />
+                                <x-input-error :messages="$errors->get('selling_price_max_price.' . $key)" class="mt-1" />
+                            </div>
+                        </div>
+                    @endforeach
+                @elseif (isset($prod))
+                    @foreach($prod->sellingPrices as $sp)
+                        <div class="grid grid-cols-3 gap-8 w-full mb-4 selling-prices">
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_name[]" id="selling_price_name" value="{{ $sp->name }}" />
+                                <x-input-error :messages="$errors->get('selling_price_name')" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" value="{{ $sp->min_price }}" />
+                                <x-input-error :messages="$errors->get('selling_price_min_price')" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" value="{{ $sp->max_price }}" />
+                                <x-input-error :messages="$errors->get('selling_price_max_price')" class="mt-1" />
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+            <!-- Add Items -->
+            <div class="flex justify-end mt-8">
+                <button type="button" class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow" id="add-selling-price-btn">
+                    <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                        <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+                    </svg>
+                    <span class="text-sm">{{ __('Add Item') }}</span>
+                </button>
+            </div>
+        </div>
         <!-- Barcode Details -->
         <div class="bg-white p-4 border rounded-md mt-4">
-            <div class="grid grid-cols-3 gap-8 w-full">
-                <div class="flex flex-col">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                <div class="flex flex-col col-span-2 lg:col-span-1">
                     <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In MM)') }}</x-app.input.label>
                     <div class="flex gap-x-2">
                         <div class="bg-gray-100 flex items-center">
@@ -214,7 +280,7 @@
         </div>
         <!-- Platform -->
         <div class="bg-white p-4 border rounded-md mt-4">
-            <div class="grid grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col">
                     <x-app.input.label id="lazada_sku" class="mb-1">{{ __('Lazada Sku') }}</x-app.input.label>
                     <x-app.input.input name="lazada_sku" id="lazada_sku" value="{{ old('lazada_sku', isset($prod) ? $prod->lazada_sku : ($dup_prod != null ? $dup_prod->lazada_sku : null)) }}" />
@@ -284,8 +350,11 @@
 
                 addSerialNo(child.sku, child.id)
             }
-
             $('select[name="is_sparepart"]').trigger('change')
+
+            if (PRODUCT.selling_prices.length == 0) $('#add-selling-price-btn').trigger('click')
+        } else {
+            $('#add-selling-price-btn').trigger('click')
         }
     })
     $('#submit-create-btn').on('click', function(e) {
@@ -351,6 +420,15 @@
             $('#form #info-submit-container').removeClass('hidden')
         }
     })
+    $('#add-selling-price-btn').on('click', function() {
+        let clone = $('#selling-price-template')[0].cloneNode(true);
+        
+        $(clone).addClass('selling-prices')
+        $(clone).removeClass('hidden')
+        $(clone).removeAttr('id')
+        
+        $('#selling-price-container').append(clone)
+    })
     $('#form').one('submit', function(e) {
         e.preventDefault()
 
@@ -360,6 +438,9 @@
         })
 
         $('input[name="order_idx"]').val(JSON.stringify(orderId))
+
+        // Prepare selling price
+        $('#selling-price-template').remove()
 
         $(this).submit()
     })

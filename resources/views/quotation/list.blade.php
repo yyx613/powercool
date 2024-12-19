@@ -18,8 +18,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Quotation') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-4 md:mb-0">{{ __('Quotation') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.quotation.convert')
             <a href="{{ route('quotation.to_sale_order') }}" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
@@ -54,8 +54,13 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('Quotation ID') }}</th>
-                    <th>{{ __('Open Until') }}</th>
+                    <th>{{ __('Doc No.') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Agent') }}</th>
+                    <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Curr. Rate') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>

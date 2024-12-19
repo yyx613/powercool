@@ -54,7 +54,7 @@ class InventoryServiceReminderController extends Controller
 
             $data['data'][] = [
                 'id' => Crypt::encrypt($record->id),
-                'sku' => $record->objectable->sku,
+                'sku' => $record->objectable()->withTrashed()->first()->sku,
                 'next_service_date' => Carbon::parse($next_service_date->next_service_date)->format('d M Y'),
                 'last_service_date' => $last_service_date == null ? null : Carbon::parse($last_service_date->next_service_date)->format('d M Y'),
             ];

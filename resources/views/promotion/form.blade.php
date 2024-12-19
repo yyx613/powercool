@@ -8,7 +8,7 @@
     <form action="{{ isset($promo) ? route('promotion.update', ['promotion' => $promo]) : route('promotion.store') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="promo_code" class="mb-1">{{ __('Promo Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="promo_code" id="promo_code" value="{{ old('promo_code') ?? (isset($promo) ? $promo->sku : null) }}" />

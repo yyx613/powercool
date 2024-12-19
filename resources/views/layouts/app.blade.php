@@ -48,7 +48,7 @@
                 @if (!isCreateLink())
                     @include('layouts.navbar')
                 @endif  
-                <div class="p-4 h-full">
+                <div class="p-4 h-full overflow-x-auto">
                     @yield('content')
                 </div>
             </main>

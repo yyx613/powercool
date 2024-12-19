@@ -18,8 +18,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between">
-        <x-app.page-title>{{ __('Invoice') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
+        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.billing.convert')
             <a href="{{ route('billing.to_billing') }}" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">

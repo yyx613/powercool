@@ -9,7 +9,7 @@
     <form action="{{ isset($supplier) ? route('supplier.upsert', ['supplier' => $supplier->id]) : route('supplier.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-4">
                 <!-- <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Picture</x-app.input.label>
                     <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>
@@ -154,7 +154,7 @@
                     <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')" value="{{ old('remark', isset($supplier) ? $supplier->remark : null) }}" />
                     <x-input-error :messages="$errors->get('remark')" class="mt-2" />
                 </div>
-                <div class="flex flex-col col-span-3">
+                <div class="flex flex-col col-span-2 md:col-span-3">
                     <x-app.input.label id="location" class="mb-1">{{ __('Location') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.textarea name="location" id="location" :hasError="$errors->has('location')" text="{{ old('location', isset($supplier) ? $supplier->location : null) }}" />
                     <x-input-error :messages="$errors->get('location')" class="mt-2" />
