@@ -8,7 +8,7 @@
     <form action="{{ isset($area) ? route('area.update', ['area' => $area]) : route('area.store') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="name" id="name" value="{{ old('name') ?? (isset($area) ? $area->name : null) }}" />

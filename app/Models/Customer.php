@@ -60,6 +60,10 @@ class Customer extends Model
     {
         return $this->belongsTo(MsicCode::class, 'msic_id');
     }
+    
+    public function currency() {
+        return $this->belongsTo(Currency::class);
+    }
 
     public function generateSku(string $company_first_alphabet): string {
         $sku = null;

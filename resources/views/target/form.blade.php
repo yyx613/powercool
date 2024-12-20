@@ -11,7 +11,7 @@
         <form action="{{ isset($target) ? route('target.update', ['target' => $target]) : route('target.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div>
-                <div class="grid grid-cols-3 gap-8 w-full mb-8">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
                     <div class="flex flex-col">
                         <x-app.input.label id="sale" class="mb-1">{{ __('Salesperson') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')" placeholder="{{ __('Select a salesperson') }}">

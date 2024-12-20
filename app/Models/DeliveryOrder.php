@@ -16,6 +16,7 @@ class DeliveryOrder extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_CANCELLED = 1;
+    const STATUS_CONVERTED = 2;
 
     protected $guarded = [];
     protected $casts = [
@@ -43,6 +44,11 @@ class DeliveryOrder extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
     }
 
     public function generateSku(): string {

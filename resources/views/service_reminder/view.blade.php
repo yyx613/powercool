@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Service History For') }} {{ $sh->objectable->sku }}</x-app.page-title>
+        <x-app.page-title>{{ __('Service Reminder For') }} {{ $sr->objectable()->withTrashed()->first()->sku }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -48,11 +48,7 @@
 
 @push('scripts')
     <script>
-        SERVICE_HISTORY = @json($sh ?? null);
-
-        $(document).ready(function(){
-            dt.draw()
-        })
+        SERVICE_REMINDER = @json($sr ?? null);
 
         // Datatable
         var dt = new DataTable('#data-table', {
@@ -78,9 +74,9 @@
             ajax: {
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
-                    var url = "{{ route('service_history.view_get_data') }}"
+                    var url = "{{ route('service_reminder.view_get_data') }}"
                     
-                    url = `${url}?page=${ info.page + 1 }&id=${ SERVICE_HISTORY.id }`
+                    url = `${url}?page=${ info.page + 1 }&id=${ SERVICE_REMINDER.id }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },

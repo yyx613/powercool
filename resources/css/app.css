@@ -88,6 +88,9 @@
 .dataTables_scroll thead tr th {
     border: none!important;
 }
+.dataTables_wrapper {
+    min-width: 800px;
+}
 
 .show-modal {
     opacity: 1;

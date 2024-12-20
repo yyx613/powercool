@@ -9,7 +9,8 @@ use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\EInvoiceController;
 use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\InventoryServiceHistoryController;
+use App\Http\Controllers\InventoryServiceReminderController;
+use App\Http\Controllers\InventoryServieHistoryController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Platforms\ShopeeController;
 use App\Http\Controllers\Platforms\TiktokController;
 use App\Http\Controllers\Platforms\WooCommerceController;
 use App\Http\Controllers\PriorityController;
+use App\Http\Controllers\ProductionMaterialController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\WarrantyController;
 
@@ -105,15 +107,19 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/view/{sale}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
     });
-    // Service History
-    Route::controller(InventoryServiceHistoryController::class)->prefix('service-history')->name('service_history.')->middleware(['can:service_history.view'])->group(function () {
+    // Service Reminder
+    Route::controller(InventoryServiceReminderController::class)->prefix('service-reminder')->name('service_reminder.')->middleware(['can:service_reminder.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:service_history.create']);
-        // Route::get('/edit/{sh}', 'edit')->name('edit')->middleware(['can:service_history.edit']);
-        Route::get('/view/{sh}', 'view')->name('view');
+        Route::get('/create', 'create')->name('create')->middleware(['can:service_reminder.create']);
+        Route::get('/view/{sr}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
-        Route::post('/upsert/{sh?}', 'upsert')->name('upsert');
+        Route::post('/upsert/{sr?}', 'upsert')->name('upsert');
+    });
+    // Service History
+    Route::controller(InventoryServieHistoryController::class)->prefix('service-history')->name('service_history.')->middleware(['can:service_history.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
@@ -128,7 +134,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
         Route::get('/', 'index')->name('index');
-        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-data', 'getData')->name('get_data')->withoutMiddleware(['can:inventory.view']);
         Route::get('/create', 'create')->name('create')->middleware(['can:inventory.product.create']);
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit']);
         Route::post('/upsert', 'upsert')->name('upsert');
@@ -191,11 +197,12 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         });
 
         Route::prefix('sale')->name('sale.')->group(function () {
-            Route::post('/upsert-quotation-details', 'upsertQuoDetails')->name('upsert_quo_details');
-            Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
-            Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
-            Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
-            Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
+            Route::post('/upsert-details', 'upsertDetails')->name('upsert_details');
+            // Route::post('/upsert-quotation-details', 'upsertQuoDetails')->name('upsert_quo_details');
+            // Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
+            // Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
+            // Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
+            // Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
             Route::get('/get-products/{sale}', 'getProducts')->name('get_products');
             Route::get('/to-production/{sale}', 'toProduction')->name('to_production');
         });
@@ -299,6 +306,11 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+    });
+    // Production Material
+    Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/view/{product}', 'view')->name('view');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->middleware(['can:ticket.view'])->group(function () {

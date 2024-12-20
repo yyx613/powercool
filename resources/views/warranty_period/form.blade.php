@@ -8,11 +8,16 @@
     <form action="{{ isset($warranty) ? route('warranty_period.update', ['warranty' => $warranty]) : route('warranty_period.store') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($warranty) ? $warranty->name : null) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="period" class="mb-1">{{ __('Period (In Month)') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="period" id="period" :hasError="$errors->has('period')" value="{{ old('period', isset($warranty) ? $warranty->period : null) }}" />
+                    <x-input-error :messages="$errors->get('period')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>

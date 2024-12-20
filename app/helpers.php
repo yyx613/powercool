@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Branch;
+use App\Models\DeliveryOrderProductChild;
 use App\Models\Milestone;
+use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
@@ -12,8 +14,10 @@ use App\Models\SaleProductChild;
 use App\Models\TaskMilestone;
 use App\Models\TaskMilestoneInventory;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -70,30 +74,31 @@ if (!function_exists('getPaymentCollectionIds')) {
 
 if (!function_exists('getWhatsAppContent')) {
     function getWhatsAppContent(string $driver_name, string $driver_contact, string $car_plate, string $estimated_time, string $delivery_date) {
-        return 'Dear Valued Customer/Mr/Mrs,
-            We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on '.$delivery_date.'
-
-            The details of delivery as below:
-            Driver Name: '.$driver_name.'
-            Contact Number: '.$driver_contact.'
-            Estimate Time Arrival: '.$estimated_time.'
-            Car plate: '.$car_plate.'
-
-            The delivery time may change due to circumstance beyond our control (heavy traffic, accident and etc.
-            Appreciate your kind understanding and thanks for shopping with us. Have a nice day! 😊
-
-            中文:
-            您好Mr/Ms/Mrs,
-            感谢您对HiTen 的支持! 很高兴让您知道我们已收到您的订单。您的送货期将会在 '.$delivery_date.'
-
-            以下是您的送货详情:
-            司机姓名:  '.$driver_name.' 
-            联系电话:  '.$driver_contact.'
-            抵达时间:  '.$estimated_time.'
-            车牌号码:  '.$car_plate.'
-
-            送货时间可能因特殊情况而做出临时调整(比如：交通阻塞，车祸或其他特殊情况导致)。
-            感谢您的谅解以及非常感谢您选择了HiTen 产品';
+        $msg = 'Dear Valued Customer/Mr/Mrs' . '%0a';
+        $msg .= 'We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on '.$delivery_date. '%0a';
+        $msg .= '%0a';
+        $msg .= 'The details of delivery as below:' . '%0a';
+        $msg .= 'Driver Name: '.$driver_name . '%0a';
+        $msg .= 'Contact Number: '.$driver_contact . '%0a';
+        $msg .= 'Estimate Time Arrival: '.$estimated_time . '%0a';
+        $msg .= 'Car plate: '.$car_plate . '%0a';
+        $msg .= '%0a';
+        $msg .= 'The delivery time may change due to circumstance beyond our control (heavy traffic, accident and etc.' . '%0a';
+        $msg .= 'Appreciate your kind understanding and thanks for shopping with us. Have a nice day! 😊' . '%0a';
+        $msg .= '%0a';
+        $msg .= '中文:' . '%0a';
+        $msg .= '您好Mr/Ms/Mrs,' . '%0a';
+        $msg .= '感谢您对HiTen 的支持! 很高兴让您知道我们已收到您的订单。您的送货期将会在 '.$delivery_date. '%0a';
+        $msg .= '%0a';
+        $msg .= '以下是您的送货详情:' . '%0a';
+        $msg .= '司机姓名:'.$driver_name . '%0a';
+        $msg .= '联系电话:'.$driver_contact . '%0a';
+        $msg .= '抵达时间:'.$estimated_time . '%0a';
+        $msg .= '车牌号码:'.$car_plate . '%0a';
+        $msg .= '送货时间可能因特殊情况而做出临时调整(比如：交通阻塞，车祸或其他特殊情况导致)。' . '%0a';
+        $msg .= '感谢您的谅解以及非常感谢您选择了HiTen 产品';
+        
+        return $msg;
     }
 }
 
@@ -249,6 +254,10 @@ if (!function_exists('getInvolvedProductChild')) {
         }
         $involved_ids = array_merge($involved_ids, $pmm_ids);
         
+        // Involved in DO
+        $dopc_ids = DeliveryOrderProductChild::pluck('product_children_id')->toArray();
+        $involved_ids = array_merge($involved_ids, $dopc_ids);
+
         // Involved in QUO/SO (Exclude converted)
         $converted_sale_ids = Sale::where('status', Sale::STATUS_CONVERTED)->pluck('id');
         $converted_sp_ids = SaleProduct::whereIn('sale_id', $converted_sale_ids)->pluck('id');
@@ -269,13 +278,23 @@ if (!function_exists('getInvolvedProductChild')) {
 }
 
 if (!function_exists('generateSku')) {
-    function generateSku(string $prefix, array $existing_skus): string {
+    function generateSku(string $prefix, array $existing_skus, bool $is_hi_ten): string {
         $sku = null;
         $staring_num = 1;
         $digits_length = 6;
         $formatted_prefix = $prefix;
-        if (getCurrentUserBranch() != null && getCurrentUserBranch() == Branch::LOCATION_PENANG) {
-            $formatted_prefix = 'PH' . $formatted_prefix;
+        $user_branch = getCurrentUserBranch();
+
+        if ($user_branch != null) {
+            if (!$is_hi_ten) { // Powercool
+                if ($user_branch == Branch::LOCATION_PENANG) {
+                    $formatted_prefix = 'P' . $formatted_prefix;
+                } else if ($user_branch == Branch::LOCATION_KL) {
+                    $formatted_prefix = 'W' . $formatted_prefix;
+                } 
+            } else if ($user_branch == Branch::LOCATION_PENANG) { // Hi-ten
+                $formatted_prefix = 'PH' . $formatted_prefix;
+            }
         }
 
         while (true) {
@@ -311,4 +330,22 @@ if (!function_exists('getCurrentUserBranch')) {
 
         return null;
     } 
+}
+
+if (!function_exists('isHiTen')) {
+    /**
+    * @param Collection<Product> $products
+    */
+    function isHiTen(Collection $products): ?int {
+        $is_hi_ten = false;
+
+        for ($i = 0; $i < count($products); $i++) {
+            if ($products[$i]->type == Product::TYPE_PRODUCT) {
+                $is_hi_ten = true;
+                break;
+            }
+        }
+        
+        return $is_hi_ten;
+    }
 }

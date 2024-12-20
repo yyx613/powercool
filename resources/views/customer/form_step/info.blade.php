@@ -6,7 +6,7 @@
     <form action="" method="POST" enctype="multipart/form-data" id="info-form">
         @csrf
         <div id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4">
                 <!-- <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Picture</x-app.input.label>
                     <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>

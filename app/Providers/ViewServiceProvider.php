@@ -68,6 +68,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
                 'grn' => [],
+                'service_reminder' => [],
                 'service_history' => [],
                 'warranty' => [],
                 'sale.quotation' => [],
@@ -78,6 +79,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.billing' => [],
                 'task' => [],
                 'production' => [],
+                'production_material' => [],
                 'ticket' => [],
                 'customer' => [],
                 'supplier' => [],
@@ -95,6 +97,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'grn')) {
                     array_push($permissions_group['grn'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'service_reminder')) {
+                    array_push($permissions_group['service_reminder'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'service_history')) {
                     array_push($permissions_group['service_history'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'warranty')) {
@@ -113,6 +117,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.billing'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'task')) {
                     array_push($permissions_group['task'], $permissions[$i]);
+                } else if (str_contains($permissions[$i], 'production_material')) {
+                    array_push($permissions_group['production_material'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'production')) {
                     array_push($permissions_group['production'], $permissions[$i]);
                 } else if (str_contains($permissions[$i], 'ticket')) {
@@ -287,6 +293,7 @@ class ViewServiceProvider extends ServiceProvider
             $products = Product::with(['children' => function ($q) use ($involved_pc_ids) {
                     $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
                 }])
+                ->with('sellingPrices')
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
                 ->orWhere(function ($q) {
@@ -321,21 +328,41 @@ class ViewServiceProvider extends ServiceProvider
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
             $classificationCodes = ClassificationCode::withoutGlobalScope(BranchScope::class)->get();
+
+
+            if (str_contains(Route::currentRouteName(), 'raw_material.')) {
+                $inventory_types = [
+                    Product::ITEM_TYPE_RAW_MATERIAL_MSP => 'MSP',
+                    Product::ITEM_TYPE_RAW_MATERIAL_HSP => 'HSP',
+                ];
+            } else {
+                $inventory_types = [
+                    Product::ITEM_TYPE_PRODUCT_MFG => 'MFG',
+                    Product::ITEM_TYPE_PRODUCT_HFG => 'HFG',
+                ];
+            }
+
             $view->with([
                 'inv_cats' => $inv_cats,
                 'suppliers' => $suppliers,
                 'uoms' => $uoms,
-                'classificationCodes' => $classificationCodes
+                'classificationCodes' => $classificationCodes,
+                'inventory_types' => $inventory_types,
             ]);
         });
         View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function (ViewView $view) {
             $is_product = true;
+            $is_production = false;
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
                 $is_product = false;
+            } else if (str_contains(Route::currentRouteName(), 'production_material.')) {
+                $is_product = false;
+                $is_production = true;
             }
 
             $view->with([
                 'is_product' => $is_product,
+                'is_production' => $is_production,
             ]);
         });
         View::composer(['components.app.modal.stock-out-modal'], function (ViewView $view) {
@@ -487,11 +514,22 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('terms', $terms);
             $view->with('costs', $costs);
         });
-        View::composer(['service_history.form'], function (ViewView $view) {
+        View::composer(['service_reminder.form'], function (ViewView $view) {
             $sale_orders = Sale::with('products.children.productChild')->where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
 
             $view->with([
                 'sale_orders' => $sale_orders,
+            ]);
+        });
+        View::composer(['sale_order.form_step.payment_details'], function (ViewView $view) {
+            $payment_statuses = [
+                Sale::PAYMENT_STATUS_UNPAID => 'Unpaid',
+                Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',
+                Sale::PAYMENT_STATUS_PAID => 'Paid',
+            ];
+
+            $view->with([
+                'payment_statuses' => $payment_statuses
             ]);
         });
     }

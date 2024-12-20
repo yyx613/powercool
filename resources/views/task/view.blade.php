@@ -5,7 +5,7 @@
         <x-app.page-title url="{{ $for_role == 'driver' ? route('task.driver.index') : ($for_role == 'technician' ? route('task.technician.index') : route('task.sale.index')) }}">{{ __('View Task') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <div class="bg-white p-4 rounded-md shadow flex">
+    <div class="bg-white p-4 rounded-md shadow flex flex-col lg:flex-row">
         <div class="flex-[2]">
             <div class="border rounded-md flex">
                 <div class="flex-1 flex flex-col p-3">
@@ -63,7 +63,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex-1 pl-4 ml-4 border-l">
+        <div class="flex-1 lg:pl-4 lg:ml-4 lg:border-l lg:border-t-0 lg:pt-0 lg:mt-0 pt-4 mt-4 border-t">
             <div class="bg-blue-900 rounded-lg p-2">
                 <h1 class="font-black text-xl text-white">{{ __('Task ID') }}: {{ $task->sku }}</h1>
             </div>

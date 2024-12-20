@@ -36,6 +36,9 @@
         <!-- Chartjs -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
+        <!-- QR Code -->
+        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">
@@ -48,7 +51,7 @@
                 @if (!isCreateLink())
                     @include('layouts.navbar')
                 @endif  
-                <div class="p-4 h-full">
+                <div class="p-4 h-full overflow-x-auto">
                     @yield('content')
                 </div>
             </main>
