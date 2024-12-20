@@ -60,7 +60,7 @@
                     <th>{{ __('Debtor Name') }}</th>
                     <th>{{ __('Agent') }}</th>
                     <th>{{ __('Curr. Code') }}</th>
-                    <th>{{ __('Curr. Rate') }}</th>
+                    <th>{{ __('Total') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -84,8 +84,13 @@
             serverSide: true,
             order: [],
             columns: [
-                { data: 'sku' },
-                { data: 'open_until' },
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'total' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -105,8 +110,44 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "10%",
                     "targets": 2,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 3,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 5,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return `RM ${data}`
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -121,7 +162,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 8,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

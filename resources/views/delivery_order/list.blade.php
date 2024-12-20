@@ -54,7 +54,8 @@
                     <th>{{ __('Debtor Name') }}</th>
                     <th>{{ __('Agent') }}</th>
                     <th>{{ __('Curr. Code') }}</th>
-                    <th>{{ __('Curr. Rate') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Created By') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -77,8 +78,16 @@
             serverSide: true,
             order: [],
             columns: [
-                { data: 'sku' },
-                { data: 'item_count' },
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'transfer_from' },
+                { data: 'transfer_to' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'total' },
+                { data: 'created_by' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -100,6 +109,66 @@
                 {
                     "width": "10%",
                     "targets": 2,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 3,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 4,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 7,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 8,
+                    render: function(data, type, row) {
+                        return `RM ${data}`
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
@@ -112,7 +181,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 11,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

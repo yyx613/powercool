@@ -57,9 +57,15 @@
                     <th>
                         <input type="checkbox" id="select-all">
                     </th>
-                    <th>{{ __('Invoice ID') }}</th>
-                    <th>{{ __('Company') }}</th>
-                    <th>{{ __('Convert To') }}</th>
+                    <th>{{ __('Doc No.') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Transfer From') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Agent') }}</th>
+                    <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Created By') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -76,10 +82,6 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function(){
-            dt.draw()
-        })
-
         $('#data-table').on('draw.dt', function() {
             $('.order-checkbox').each(function() {
                 let invoiceId = $(this).data('id');
@@ -104,9 +106,15 @@
             order: [],
             columns: [
                 { data: 'id' },
-                { data: 'sku' },
-                { data: 'company' },
-                { data: 'convert_to' },
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'transfer_from' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'total' },
+                { data: 'created_by' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -145,6 +153,50 @@
                 { 
                     "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 7,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 8,
+                    render: function(data, type, row) {
+                        return `RM ${data}`
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
@@ -155,7 +207,7 @@
                 },
                 { 
                     "width": "5%",
-                    "targets":5,
+                    "targets": 11,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -212,8 +264,6 @@
                 type: 'GET', 
                 contentType: 'application/json',
                 success: function(res) {
-                    console.debug(res)
-
                     for (const key in res.involved) {
                         const element = res.involved[key];
                         

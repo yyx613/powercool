@@ -36,6 +36,9 @@
         <!-- Chartjs -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
+        <!-- QR Code -->
+        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">

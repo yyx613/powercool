@@ -276,6 +276,10 @@ class ProductionController extends Controller
                     'priority_id' => $req->priority,
                 ]);
             }
+            $this->product::where('id', $req->product)->update([
+                'in_production' => true
+            ]);
+
             // Assign
             $this->userProd::where('production_id', $production->id)->whereNotIn('user_id', $req->assign ?? [])->delete();
             foreach ($req->assign as $assign_id) {

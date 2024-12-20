@@ -225,7 +225,7 @@ class InventoryController extends Controller
 
     public function stockOut(Request $req, ProductChild $product_child)
     {
-        if (!$req->has('stock_out_to') || !$req->has('stock_out_to_selection')) {
+        if ($req->has('stock_out_to') && $req->stock_out_to !== 'production' && (!$req->has('stock_out_to') || !$req->has('stock_out_to_selection'))) {
             abort(404);
         }
 
@@ -234,10 +234,17 @@ class InventoryController extends Controller
 
             $product_child->status = $this->prodChild::STATUS_STOCK_OUT;
             $product_child->stock_out_by = Auth::user()->id;
-            $product_child->stock_out_to_type = $req->stock_out_to == 'customer' ? Customer::class : User::class;
+            $product_child->stock_out_to_type = $req->stock_out_to === 'production' ? Production::class : ($req->stock_out_to == 'customer' ? Customer::class : User::class);
             $product_child->stock_out_to_id = $req->stock_out_to_selection;
             $product_child->stock_out_at = now();
             $product_child->save();
+
+            if ($req->stock_out_to === 'production') {
+                $product_child->location = ProductChild::LOCATION_FACTORY;
+                $product_child->save();
+                $product_child->parent->in_production = true;
+                $product_child->parent->save();
+            }
 
             DB::commit();
 

@@ -56,20 +56,35 @@ class ProductController extends Controller
         return view('inventory.list');
     }
 
-    public function getData(Request $req)
-    {
+    public function getData(Request $req) {
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $pc = $this->prodChild::where('sku', $keyword)->first();
+            if ($pc != null) {
+                return response()->json([
+                    'is_product' => $pc->parent()->withTrashed()->first()->type == Product::TYPE_PRODUCT,
+                    'parent_id' => $pc->product_id,
+                    'search' => $keyword,
+                ]);
+            }
+        }
+
         $records = $this->prod->with(['category' => function($q) {
             $q->withTrashed();
         }]);
 
-        if ($req->boolean('is_product') == true) {
-            $records = $records->where('type', Product::TYPE_PRODUCT);
-        } else {
-            $records = $records->where('type', Product::TYPE_RAW_MATERIAL);
+        if ($req->boolean('is_production') != true) {
+            if ($req->boolean('is_product') == true) {
+                $records = $records->where('type', Product::TYPE_PRODUCT);
+            } else {
+                $records = $records->where('type', Product::TYPE_RAW_MATERIAL);
+            }
         }
 
-        if ($req->location != null) {
-            $records = $records->where('location', $req->location);
+        if ($req->boolean('is_production') == true) {
+            $records = $records->where('in_production', true);
         }
 
         // Search
@@ -173,6 +188,10 @@ class ProductController extends Controller
     public function viewGetData(Request $req) {
         $records = $this->prodChild::where('product_id', $req->product_id);
 
+        if ($req->boolean('is_production') == true) {
+            $records = $records->where('location', 'factory');  
+        }
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -206,6 +225,7 @@ class ProductController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            $production = null;
             if ($record->location == 'factory') {
                 $production = $this->production->where('product_child_id', $record->id)->first();
             }
@@ -225,10 +245,10 @@ class ProductController extends Controller
                 'location' => $record->location,
                 'order_id' => $assigned_to,
                 'status' => $record->status,
-                'stock_out_to' => $record->status != ProductChild::STATUS_STOCK_OUT ? null : $record->stockOutTo,
+                'stock_out_to' => $record->stock_out_to_type == Production::class ? 'production' : ($record->status != ProductChild::STATUS_STOCK_OUT ? null : $record->stockOutTo),
                 'done_by' => $record->status == ProductChild::STATUS_STOCK_OUT ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
                 'done_at' => $record->status == ProductChild::STATUS_STOCK_OUT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
-                'progress' => $record->location != 'factory' ? null : $production->getProgress($production),
+                'progress' => $record->location != 'factory' || $production == null ? null : $production->getProgress($production),
             ];
         }
 
@@ -257,7 +277,7 @@ class ProductController extends Controller
             if ($pmm_records_paginator[$pmm_idx] == null && $tmi_records_paginator[$tmi_idx] == null) {
                 break;
             }
-            if ($tmi_records_paginator[$tmi_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at >= $tmi_records_paginator[$tmi_idx]->created_at) {
+            if ($tmi_records_paginator[$tmi_idx] == null || ($pmm_records_paginator[$pmm_idx] != null && $pmm_records_paginator[$pmm_idx]->created_at >= $tmi_records_paginator[$tmi_idx]->created_at)) {
                 $order_id = $pmm_records_paginator[$pmm_idx]->productionMilestone->production->sku;
                 $qty = $pmm_records_paginator[$pmm_idx]->qty;
                 $on_hold = $pmm_records_paginator[$pmm_idx]->on_hold;

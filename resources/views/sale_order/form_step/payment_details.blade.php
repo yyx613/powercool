@@ -71,7 +71,7 @@
 @push('scripts')
     <script>
         // PAYMENT_FORM_CAN_SUBMIT = true
-        PAYMENT_AMOUNT = @json(isset($sale) ? $sale->getFormattedPaymentAmount() : null);
+        PAYMENT_AMOUNT = @json(isset($sale) ? $sale->getFormattedPaymentAmount(true) : null);
         
         $('input[name="payment_due_date"]').daterangepicker(datepickerParam)
         $('input[name="payment_due_date"]').on('apply.daterangepicker', function(ev, picker) {
