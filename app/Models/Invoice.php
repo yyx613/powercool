@@ -49,4 +49,9 @@ class Invoice extends Model
     {
         return $this->morphOne(EInvoice::class, 'einvoiceable');
     }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

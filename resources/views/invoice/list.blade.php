@@ -57,10 +57,15 @@
                     <th>
                         <input type="checkbox" id="select-all">
                     </th>
-                    <th>{{ __('Invoice ID') }}</th>
-                    <th>{{ __('Company') }}</th>
-                    <th>{{ __('Invoice Date') }}</th>
-                    <th>{{ __('Convert To') }}</th>
+                    <th>{{ __('Doc No.') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Transfer From') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Agent') }}</th>
+                    <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Created By') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -77,14 +82,10 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function(){
-            dt.draw()
-        })
-
         $('#data-table').on('draw.dt', function() {
             $('.order-checkbox').each(function() {
                 let invoiceId = $(this).data('id');
-                
+
                 if (selectedInvoices.some(invoice => invoice.id === invoiceId)) {
                     $(this).prop('checked', true);
                 } else {
@@ -105,10 +106,15 @@
             order: [],
             columns: [
                 { data: 'id' },
-                { data: 'sku' },
-                { data: 'company' },
-                { data: 'invoice_date' },
-                { data: 'convert_to' },
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'transfer_from' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'total' },
+                { data: 'created_by' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -123,7 +129,7 @@
                         return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-company="${row.company}" ${disabled} ${style}>`;
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 1,
                     orderable: false,
@@ -131,7 +137,7 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 2,
                     orderable: false,
@@ -139,7 +145,7 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 3,
                     orderable: false,
@@ -147,15 +153,59 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
+                    "width": "10%",
+                    "targets": 8,
+                    render: function(data, type, row) {
+                        return `RM ${data}`
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 10,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
                     "width": "10%",
                     "targets": 5,
                     orderable: false,
@@ -166,9 +216,9 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets":6,
+                    "targets": 11,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -189,7 +239,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('invoice.get_data') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
@@ -207,10 +257,10 @@
         })
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
-            
+
             getOtherInvolvedInv(id);
         })
-        
+
         function getOtherInvolvedInv(inv_id) {
             $('#do-inv-cancel-modal .cancellation-hint').remove()
 
@@ -222,14 +272,12 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'GET', 
+                type: 'GET',
                 contentType: 'application/json',
                 success: function(res) {
-                    console.debug(res)
-
                     for (const key in res.involved) {
                         const element = res.involved[key];
-                        
+
                         let clone = $('#do-inv-cancel-modal #info-template')[0].cloneNode(true);
 
                         $(clone).find('#main').text(key)
@@ -308,9 +356,9 @@
         });
 
         function submitEinvoice(){
-            const loadingIndicator = document.getElementById('loading-indicator'); 
+            const loadingIndicator = document.getElementById('loading-indicator');
             loadingIndicator.style.display = 'flex';
-            
+
             let url = "{{ config('app.url') }}";
             url = `${url}/e-invoice/submit`;
             $.ajax({
@@ -318,7 +366,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'POST', 
+                type: 'POST',
                 data: JSON.stringify({ invoices: selectedInvoices , company: firstCompany}),
                 contentType: 'application/json',
                 success: function(response) {
@@ -335,7 +383,7 @@
                         try {
                             response.errorDetails.forEach(function(document) {
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                                
+
                                 document.details.forEach(function(detail) {
                                     errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
                                 });
@@ -346,8 +394,8 @@
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError: ${document.error}\n`;
                             });
                         }
-                        
-                        
+
+
                         alert(errorMessage);
                     } else {
                         alert(response.message || "Submit success");
@@ -356,7 +404,7 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
 
-                    
+
                     let errorMessage = "An error occurred.";
 
                     if (error.responseJSON) {
@@ -380,7 +428,7 @@
                             const overdueInvoices = error.responseJSON.overdue_invoices;
 
                             const container = document.getElementById('overdue-invoices-container');
-                            container.innerHTML = ''; 
+                            container.innerHTML = '';
 
                             overdueInvoices.forEach((invoice, index) => {
                                 const label = document.createElement('label');
@@ -391,7 +439,7 @@
                                 input.type = 'datetime-local';
                                 input.name = `invoice_date_${index}`;
                                 input.id = `invoice-date-${index}`;
-                                input.value = new Date(invoice.date).toISOString().slice(0, 16); 
+                                input.value = new Date(invoice.date).toISOString().slice(0, 16);
 
                                 input.className = 'w-full border rounded-md p-2 mb-2';
 
@@ -403,7 +451,7 @@
                                 modalTitle.textContent = `Update Invoice Date (Should Not More Than 72 hours)`;
                             }
                             $('#update-invoice-date-modal').addClass('show-modal');
-                                           
+
                         }
                     }
 
@@ -420,7 +468,7 @@
                 return;
             }
 
-            const loadingIndicator = document.getElementById('loading-indicator'); 
+            const loadingIndicator = document.getElementById('loading-indicator');
             loadingIndicator.style.display = 'flex';
 
             let url = "{{ config('app.url') }}";
@@ -431,7 +479,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'POST', 
+                type: 'POST',
                 data: JSON.stringify({ invoices: selectedInvoices , company: firstCompany}),
                 contentType: 'application/json',
                 success: function(response) {
@@ -441,15 +489,15 @@
                     $('#select-all').prop('checked', false);
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
-                        
+
                         response.errorDetails.forEach(function(document) {
                             errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
+
                             document.details.forEach(function(detail) {
                                 errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
                             });
                         });
-                        
+
                         alert(errorMessage);
                     } else {
                         alert(response.message || "Submit success");
@@ -458,7 +506,7 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
                     try {
-                        
+
                         if (error.responseJSON.rejectedDocuments) {
                             error.responseJSON.rejectedDocuments.forEach(function(document) {
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
@@ -487,7 +535,7 @@
                             }
                         }
                     }
-                   
+
 
                     alert(errorMessage);
                 }
@@ -508,7 +556,7 @@
             let validationError = false;
 
             const now = new Date();
-            
+
             const seventyTwoHoursAgo = new Date(now.getTime() - (72 * 60 * 60 * 1000));
 
             container.find('input').each(function (index) {
@@ -518,7 +566,7 @@
                 if (!date) {
                     alert(`Invoice SKU ${sku} date is required.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 const invoiceDate = new Date(date);
@@ -526,13 +574,13 @@
                 if (invoiceDate > now) {
                     alert(`Invoice SKU ${sku} cannot have a future date.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 if (invoiceDate < seventyTwoHoursAgo) {
                     alert(`Invoice SKU ${sku} date cannot be older than 72 hours.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 updatedInvoices.push({ sku, date });

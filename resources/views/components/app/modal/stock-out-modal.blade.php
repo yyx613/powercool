@@ -30,6 +30,12 @@
                                 <input type="radio" name="stock_out_to" id="technician" value="technician">
                                 <label for="technician" class="text-sm">{{ __('Technician') }}</label>
                             </div>
+                            @if ($is_product == false)
+                                <div class="flex-1 gap-x-2 flex items-center">
+                                    <input type="radio" name="stock_out_to" id="production" value="production">
+                                    <label for="production" class="text-sm">{{ __('Factory') }}</label>
+                                </div>
+                            @endif
                         </div>
                         <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="customer" name="stock_out_to_selection">
                             <option value="">{{ __('Select a customer') }}</option>
@@ -72,8 +78,13 @@
 
         if (val === 'customer') {
             $('#stock-out-modal .stock-out-to-selection[data-type="customer"]').removeClass('hidden')
-        } else {
+        } else if (val === 'technician') {
             $('#stock-out-modal .stock-out-to-selection[data-type="technician"]').removeClass('hidden')
+        } else if (val === 'production') {
+            $('#stock-out-modal .stock-out-to-selection[data-type="customer"]').addClass('hidden')
+            $('#stock-out-modal .stock-out-to-selection[data-type="technician"]').addClass('hidden')
+
+            $('#stock-out-modal #yes-btn').removeClass('hidden')
         }
 
         let url = $('#stock-out-modal #yes-btn').attr('href')

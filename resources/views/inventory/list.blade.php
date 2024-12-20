@@ -52,12 +52,7 @@
                 </x-app.input.input>
             </div>
             <div class="flex-1">
-                <button type="button" class="flex items-center gap-x-4 bg-sky-300 p-2 rounded w-fit" id="scanner-btn">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                        <path d="m24,11.5c0,.829-.671,1.5-1.5,1.5H1.5c-.829,0-1.5-.671-1.5-1.5s.671-1.5,1.5-1.5h21c.829,0,1.5.671,1.5,1.5ZM1.5,8c.829,0,1.5-.671,1.5-1.5v-1c0-1.378,1.122-2.5,2.5-2.5h1c.829,0,1.5-.671,1.5-1.5s-.671-1.5-1.5-1.5h-1C2.467,0,0,2.467,0,5.5v1c0,.829.671,1.5,1.5,1.5Zm5,13h-1c-1.378,0-2.5-1.122-2.5-2.5v-1c0-.829-.671-1.5-1.5-1.5s-1.5.671-1.5,1.5v1c0,3.033,2.467,5.5,5.5,5.5h1c.829,0,1.5-.671,1.5-1.5s-.671-1.5-1.5-1.5Zm16-5c-.829,0-1.5.671-1.5,1.5v1c0,1.378-1.122,2.5-2.5,2.5h-1c-.829,0-1.5.671-1.5,1.5s.671,1.5,1.5,1.5h1c3.033,0,5.5-2.467,5.5-5.5v-1c0-.829-.671-1.5-1.5-1.5ZM18.5,0h-1c-.829,0-1.5.671-1.5,1.5s.671,1.5,1.5,1.5h1c1.378,0,2.5,1.122,2.5,2.5v1c0,.829.671,1.5,1.5,1.5s1.5-.671,1.5-1.5v-1c0-3.033-2.467-5.5-5.5-5.5Z"/>
-                    </svg>
-                    <span class="font-medium">{{ __('Scan Barcode') }}</span>
-                </button>
+                <x-app.qr-scanner />
             </div>
         </div>
 
@@ -235,10 +230,18 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('product.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }&is_product=${IS_PRODUCT}&location=${ IS_PRODUCTION ? 'factory' : 'warehouse' }`
+                    url = `${url}?page=${ info.page + 1 }&is_product=${IS_PRODUCT}&is_production=${IS_PRODUCTION}`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
+            fnDrawCallback: function(data) {
+                if (data.json.is_product !== undefined && data.json.parent_id !== undefined && data.json.search !== undefined) {
+                    let url = '{{ config("app.url") }}'
+                    url = `${url}/${data.json.is_product == true ? 'product' : 'raw-material'}/view/${data.json.parent_id}?search=${data.json.search}`
+
+                    window.location.href = url
+                }
+            }
         });
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
@@ -249,10 +252,6 @@
 
             $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/${IS_PRODUCT ? 'product' : 'raw-material'}/delete/${id}`)
             $('#delete-modal').addClass('show-modal')
-        })
-
-        $('#scanner-btn').on('click', function() {
-            $('input[name="filter_search"]').focus()
         })
     </script>
 @endpush

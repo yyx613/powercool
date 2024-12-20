@@ -1478,8 +1478,9 @@
 
         $(document).ready(function(){
             getTimeSection()
-        
-            if ($(window).width >= 1024) {
+
+            
+            if ($(window).width() >= 1024) {
                 if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
                     if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
