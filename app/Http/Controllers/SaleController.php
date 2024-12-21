@@ -16,7 +16,6 @@ use App\Models\DeliveryOrderProductChild;
 use App\Models\EInvoice;
 use App\Models\InventoryServiceReminder;
 use App\Models\Invoice;
-use App\Models\Platform;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Role;
@@ -32,24 +31,22 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-
-use function PHPUnit\Framework\isEmpty;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class SaleController extends Controller
 {
     const DELIVERY_ORDER_PATH = '/public/delivery_order/';
+
     const INVOICE_PATH = '/public/invoice/';
+
     const BILLING_PATH = '/public/billing/';
 
     public function index()
@@ -62,14 +59,14 @@ class SaleController extends Controller
         $quo_count = Sale::where('type', Sale::TYPE_QUO)->count();
 
         $data = [
-            "recordsTotal" => $quo_count,
-            "recordsFiltered" => $quo_count,
-            "data" => [],
+            'recordsTotal' => $quo_count,
+            'recordsFiltered' => $quo_count,
+            'data' => [],
             'records_ids' => [],
         ];
 
         $count = 1;
-        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_QUO)->cursor() : Sale::where('type', Sale::TYPE_QUO)->skip(((int)$req->page - 1) * 10)->take($so_count)->cursor() as $record) {
+        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_QUO)->cursor() : Sale::where('type', Sale::TYPE_QUO)->skip(((int) $req->page - 1) * 10)->take($quo_count)->cursor() as $record) {
             if (count($data['data']) < 10) {
                 $cus = $record->customer()->withTrashed()->first();
                 $total_amount = $record->getTotalAmount();
@@ -77,14 +74,14 @@ class SaleController extends Controller
                 // Search
                 if ($req->has('search') && $req->search['value'] != null) {
                     $keyword = $req->search['value'];
-    
+
                     if (
-                        !str_contains($record->sku, $keyword) &&
-                        !str_contains($cus->sku, $keyword) &&
-                        !str_contains($cus->name, $keyword) &&
-                        !str_contains($record->saleperson->name ?? null, $keyword) &&
-                        !str_contains($cur->currency->name ?? null, $keyword) &&
-                        !str_contains($total_amount, $keyword)
+                        ! str_contains($record->sku, $keyword) &&
+                        ! str_contains($cus->sku, $keyword) &&
+                        ! str_contains($cus->name, $keyword) &&
+                        ! str_contains($record->saleperson->name ?? null, $keyword) &&
+                        ! str_contains($cur->currency->name ?? null, $keyword) &&
+                        ! str_contains($total_amount, $keyword)
                     ) {
                         continue;
                     }
@@ -119,10 +116,10 @@ class SaleController extends Controller
             $dir = $req->order[0]['dir'];
             $map = [
                 'doc_no', 'date', 'debtor_code', 'debtor_name', 'agent',
-                'curr_code', 'total', 'status'
+                'curr_code', 'total', 'status',
             ];
 
-            usort($data['data'], function($a, $b) use ($dir, $col, $map) {
+            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
                 if ($dir == 'asc') {
                     return $a[$map[$col]] > $b[$map[$col]];
                 } else {
@@ -130,7 +127,7 @@ class SaleController extends Controller
                 }
             });
         } else {
-            usort($data['data'], function($a, $b) {
+            usort($data['data'], function ($a, $b) {
                 return $a['id'] < $b['id'];
             });
         }
@@ -151,7 +148,7 @@ class SaleController extends Controller
     public function edit(Sale $sale)
     {
         return view('quotation.form', [
-            'sale' => $sale->load('products.product.children', 'products.children')
+            'sale' => $sale->load('products.product.children', 'products.children'),
         ]);
     }
 
@@ -180,11 +177,11 @@ class SaleController extends Controller
     {
         $products = collect();
         $sps = $sale->products;
-        for ($i = 0; $i < count($sps) ;$i++) {
+        for ($i = 0; $i < count($sps); $i++) {
             $products->push($sps[$i]->product);
         }
 
-        $pdf = Pdf::loadView('quotation.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('quotation.'.(isHiTen($products) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -213,7 +210,7 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->get();
-        } else if ($req->has('cus')) {
+        } elseif ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
@@ -270,14 +267,14 @@ class SaleController extends Controller
             $request = new Request([
                 'sale' => Session::get('convert_salesperson_id'),
                 'customer' => Session::get('convert_customer_id'),
-                'reference' => join(',', $references->toArray()),
+                'reference' => implode(',', $references->toArray()),
                 'status' => true,
                 'type' => 'so',
                 'report_type' => $req->report_type,
             ]);
             $res = $this->upsertQuoDetails($request)->getData();
             if ($res->result != true) {
-                throw new Exception("Failed to create quotation");
+                throw new Exception('Failed to create quotation');
             }
 
             $sale_id = $res->sale->id;
@@ -312,17 +309,17 @@ class SaleController extends Controller
             ]);
             $res = $this->upsertProDetails($request)->getData();
             if ($res->result != true) {
-                throw new Exception("Failed to create product");
+                throw new Exception('Failed to create product');
             }
 
             // Create remark details
             $request = new Request([
                 'sale_id' => $sale_id,
-                'remark' => count($remarks) <= 0 ? null : join(',', $remarks->toArray()),
+                'remark' => count($remarks) <= 0 ? null : implode(',', $remarks->toArray()),
             ]);
             $res = $this->upsertRemark($request)->getData();
             if ($res->result != true) {
-                throw new Exception("Failed to create remark");
+                throw new Exception('Failed to create remark');
             }
             // Change QUO's status to converted
             Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->update([
@@ -351,33 +348,33 @@ class SaleController extends Controller
         $so_count = Sale::where('type', Sale::TYPE_SO)->count();
 
         $data = [
-            "recordsTotal" => $so_count,
-            "recordsFiltered" => $so_count,
-            "data" => [],
+            'recordsTotal' => $so_count,
+            'recordsFiltered' => $so_count,
+            'data' => [],
             'records_ids' => [],
         ];
 
         $count = 1;
-        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_SO)->cursor() : Sale::where('type', Sale::TYPE_SO)->skip(((int)$req->page - 1) * 10)->take($so_count)->cursor() as $record) {
+        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_SO)->cursor() : Sale::where('type', Sale::TYPE_SO)->skip(((int) $req->page - 1) * 10)->take($so_count)->cursor() as $record) {
             if (count($data['data']) < 10) {
                 $transfer_to = $record->getTransferredTo();
                 $cus = $record->customer()->withTrashed()->first();
                 $paid_amount = $record->getPaidAmount();
                 $total_amount = $record->getTotalAmount();
-    
+
                 // Search
                 if ($req->has('search') && $req->search['value'] != null) {
                     $keyword = $req->search['value'];
-    
+
                     if (
-                        !str_contains($record->sku, $keyword) &&
-                        !str_contains($cus->sku, $keyword) &&
-                        !str_contains($transfer_to == null ? null : join(', ', $transfer_to), $keyword) &&
-                        !str_contains($cus->name, $keyword) &&
-                        !str_contains($record->saleperson->name ?? null, $keyword) &&
-                        !str_contains($cur->currency->name ?? null, $keyword) &&
-                        !str_contains($paid_amount, $keyword) &&
-                        !str_contains($total_amount, $keyword)
+                        ! str_contains($record->sku, $keyword) &&
+                        ! str_contains($cus->sku, $keyword) &&
+                        ! str_contains($transfer_to == null ? null : implode(', ', $transfer_to), $keyword) &&
+                        ! str_contains($cus->name, $keyword) &&
+                        ! str_contains($record->saleperson->name ?? null, $keyword) &&
+                        ! str_contains($cur->currency->name ?? null, $keyword) &&
+                        ! str_contains($paid_amount, $keyword) &&
+                        ! str_contains($total_amount, $keyword)
                     ) {
                         continue;
                     }
@@ -397,7 +394,7 @@ class SaleController extends Controller
                     'status' => $record->status,
                     'can_edit' => hasPermission('sale.sale_order.edit'),
                     'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
-                    'can_delete' => hasPermission('sale.sale_order.delete') && !in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
+                    'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
                 ];
             }
 
@@ -415,10 +412,10 @@ class SaleController extends Controller
             $dir = $req->order[0]['dir'];
             $map = [
                 'doc_no', 'date', 'debtor_code', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'paid', 'total', 'status'
+                'curr_code', 'paid', 'total', 'status',
             ];
 
-            usort($data['data'], function($a, $b) use ($dir, $col, $map) {
+            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
                 if ($dir == 'asc') {
                     return $a[$map[$col]] > $b[$map[$col]];
                 } else {
@@ -426,7 +423,7 @@ class SaleController extends Controller
                 }
             });
         } else {
-            usort($data['data'], function($a, $b) {
+            usort($data['data'], function ($a, $b) {
                 return $a['id'] < $b['id'];
             });
         }
@@ -457,14 +454,14 @@ class SaleController extends Controller
     {
         if ($sale->status == Sale::STATUS_CANCELLED) {
             $sale->load([
-                'products'=> function ($q) {
+                'products' => function ($q) {
                     $q->withTrashed()->with(['product' => function ($q) {
                         $q->withTrashed()->with(['children' => function ($q) {
                             $q->withTrashed();
                         }]);
                     }]);
                 },
-                'products'=> function ($q) {
+                'products' => function ($q) {
                     $q->withTrashed()->with(['children' => function ($q) {
                         $q->withTrashed();
                     }]);
@@ -479,15 +476,16 @@ class SaleController extends Controller
         });
 
         return view('sale_order.form', [
-            'sale' => $sale
+            'sale' => $sale,
         ]);
     }
 
-    public function cancelSaleOrder(Request $req, Sale $sale) {
+    public function cancelSaleOrder(Request $req, Sale $sale)
+    {
         try {
             DB::beginTransaction();
 
-            $this->cancelSaleOrderFlow($sale, false, $req->charge);            
+            $this->cancelSaleOrderFlow($sale, false, $req->charge);
 
             DB::commit();
 
@@ -504,11 +502,11 @@ class SaleController extends Controller
     {
         $products = collect();
         $sps = $sale->products;
-        for ($i = 0; $i < count($sps) ;$i++) {
+        for ($i = 0; $i < count($sps); $i++) {
             $products->push($sps[$i]->product);
         }
 
-        $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('sale_order.'.(isHiTen($products) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -554,7 +552,7 @@ class SaleController extends Controller
             for ($i = 0; $i < count($sale_orders); $i++) {
                 $products = $products->merge($sale_orders[$i]->products);
             }
-        } else if ($req->has('term')) {
+        } elseif ($req->has('term')) {
             $step = 4;
 
             Session::put('convert_terms', $req->term);
@@ -565,13 +563,13 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where('payment_term', Session::get('convert_terms'))
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
                         ->orWhere('can_by_pass_conversion', true);
                 })
                 ->has('products.children')
                 ->get();
-        } else if ($req->has('sp')) {
+        } elseif ($req->has('sp')) {
             $step = 3;
 
             Session::put('convert_salesperson_id', $req->sp);
@@ -581,7 +579,7 @@ class SaleController extends Controller
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
                         ->orWhere('can_by_pass_conversion', true);
                 })
@@ -591,7 +589,7 @@ class SaleController extends Controller
                 ->pluck('payment_term');
 
             $terms = CreditTerm::whereIn('id', $term_ids)->get();
-        } else if ($req->has('cus')) {
+        } elseif ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
@@ -600,7 +598,7 @@ class SaleController extends Controller
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', $req->cus)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
                         ->orWhere('can_by_pass_conversion', true);
                 })
@@ -613,7 +611,7 @@ class SaleController extends Controller
             $sales = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
                         ->orWhere('can_by_pass_conversion', true);
                 })
@@ -640,7 +638,7 @@ class SaleController extends Controller
             'sale_orders' => $sale_orders ?? [],
             'products' => $products ?? [],
             'terms' => $terms ?? [],
-            'allowed_spc_ids'=> $allowed_spc_ids ?? [],
+            'allowed_spc_ids' => $allowed_spc_ids ?? [],
         ]);
     }
 
@@ -659,10 +657,10 @@ class SaleController extends Controller
             // Prepare data
             $is_hi_ten = isHiTen($products);
             $sku = generateSku('DO', DeliveryOrder::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray(), $is_hi_ten);
-            $filename = $sku . '.pdf';
+            $filename = $sku.'.pdf';
             $soc_alter_qty = [];
             $sale_orders = collect();
-            
+
             // Create DO
             $do = DeliveryOrder::create([
                 'customer_id' => Session::get('convert_customer_id'),
@@ -670,7 +668,7 @@ class SaleController extends Controller
                 'payment_terms' => Session::get('convert_terms'),
                 'sku' => $sku,
                 'filename' => $filename,
-                'created_by' => Auth::user()->id
+                'created_by' => Auth::user()->id,
             ]);
             (new Branch)->assign(DeliveryOrder::class, $do->id);
 
@@ -685,7 +683,7 @@ class SaleController extends Controller
                 // Create DO product children
                 $spcs = SaleProductChild::whereIn('id', $spc_ids)->where('sale_product_id', $sp->id)->get();
                 $dopc = [];
-                for ($j=0; $j < count($spcs); $j++) {
+                for ($j = 0; $j < count($spcs); $j++) {
                     $dopc[] = [
                         'delivery_order_product_id' => $dop->id,
                         'product_children_id' => $spcs[$j]->productChild->id,
@@ -715,7 +713,7 @@ class SaleController extends Controller
             }
 
             // Create PDF
-            $pdf = Pdf::loadView('sale_order.' . ($is_hi_ten ? 'hi_ten' : 'powercool') . '_do_pdf', [
+            $pdf = Pdf::loadView('sale_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_do_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
@@ -723,15 +721,15 @@ class SaleController extends Controller
                 'sale_orders' => $sale_orders,
                 'spcs' => $spcs,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
-                'delivery_address' => !$deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
+                'delivery_address' => ! $deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
                 'terms' => Session::get('convert_terms'),
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
-            Storage::put(self::DELIVERY_ORDER_PATH . $filename, $content);
-            
+            Storage::put(self::DELIVERY_ORDER_PATH.$filename, $content);
+
             // Change SO's status to converted, if SO has no product left to convert
-            for ($i=0; $i < count($sale_orders); $i++) { 
+            for ($i = 0; $i < count($sale_orders); $i++) {
                 if ($sale_orders[$i]->hasNoMoreQtyToConvertDO()) {
                     $sale_orders[$i]->status = Sale::STATUS_CONVERTED;
                 }
@@ -742,7 +740,7 @@ class SaleController extends Controller
                 }
                 $current_do_ids[] = $do->id;
 
-                $sale_orders[$i]->convert_to = join(',', $current_do_ids);
+                $sale_orders[$i]->convert_to = implode(',', $current_do_ids);
                 $sale_orders[$i]->save();
 
                 SaleOrderCancellation::calCancellation($sale_orders[$i], 2, $soc_alter_qty);
@@ -759,7 +757,8 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertDetails(Request $req) {
+    public function upsertDetails(Request $req)
+    {
         // Validate form
         $rules = [
             // upsertQuoDetails
@@ -848,11 +847,11 @@ class SaleController extends Controller
 
         if ($req->type == 'so') {
             if ($req->by_pass_conversion != null) {
-                if (!Hash::check($req->by_pass_conversion, Auth::user()->password)) {
+                if (! Hash::check($req->by_pass_conversion, Auth::user()->password)) {
                     return Response::json([
                         'errors' => [
                             'by_pass_conversion' => 'Invalid Password',
-                        ]
+                        ],
                     ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                 }
             }
@@ -866,7 +865,7 @@ class SaleController extends Controller
             $res = $this->upsertQuoDetails($req, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertQuoDetails failed');
-            } 
+            }
             if ($res->sale) {
                 $data['sale'] = $res->sale;
                 $req->merge(['sale_id' => $res->sale->id]);
@@ -914,13 +913,14 @@ class SaleController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated=false) {
-        if (!$validated) {
+    public function upsertQuoDetails(Request $req, bool $validated = false)
+    {
+        if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'nullable',
@@ -970,7 +970,7 @@ class SaleController extends Controller
                 $ref = null;
                 if ($req->type == 'quo') {
                     $ref = $req->reference;
-                } else if ($req->type != 'quo' && $req->reference != null) {
+                } elseif ($req->type != 'quo' && $req->reference != null) {
                     $ref = json_encode(explode(',', $req->reference));
                 }
 
@@ -994,20 +994,21 @@ class SaleController extends Controller
 
             return Response::json([
                 'result' => true,
-                'sale' => $sale
+                'sale' => $sale,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function upsertProDetails(Request $req, bool $validated=false) {
-        if (!$validated) {
+    public function upsertProDetails(Request $req, bool $validated = false)
+    {
+        if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'required',
@@ -1046,7 +1047,7 @@ class SaleController extends Controller
                     if ($req->product_serial_no[$i] == null) {
                         continue;
                     }
-    
+
                     $match = array_intersect($serial_no, $req->product_serial_no[$i]);
                     if (count($match) > 0) {
                         return Response::json([
@@ -1067,7 +1068,7 @@ class SaleController extends Controller
                 });
 
                 $sps = SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->get();
-                for ($i = 0; $i < count($sps) ;$i++) {
+                for ($i = 0; $i < count($sps); $i++) {
                     SaleProductChild::where('sale_product_id', $sps[$i]->id)->delete();
                     $sps[$i]->delete();
                 }
@@ -1077,7 +1078,7 @@ class SaleController extends Controller
             for ($i = 0; $i < count($req->product_id); $i++) {
                 if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                     $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
-                    
+
                     $sp->update([
                         'product_id' => $req->product_id[$i],
                         'desc' => $req->product_desc[$i],
@@ -1099,7 +1100,7 @@ class SaleController extends Controller
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
                 }
-                
+
                 // Sale product children
                 SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->delete();
                 $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
@@ -1130,7 +1131,7 @@ class SaleController extends Controller
 
             return Response::json([
                 'result' => true,
-                'product_ids' => $new_prod_ids
+                'product_ids' => $new_prod_ids,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -1142,8 +1143,9 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertRemark(Request $req, bool $validated=false) {
-        if (!$validated) {
+    public function upsertRemark(Request $req, bool $validated = false)
+    {
+        if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'required',
@@ -1162,20 +1164,21 @@ class SaleController extends Controller
             DB::commit();
 
             return Response::json([
-                'result' => true
+                'result' => true,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function upsertPayDetails(Request $req, bool $validated=false) {
-        if (!$validated) {
+    public function upsertPayDetails(Request $req, bool $validated = false)
+    {
+        if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'required',
@@ -1188,13 +1191,13 @@ class SaleController extends Controller
                 'by_pass_conversion' => 'nullable',
             ];
             $req->validate($rules);
-    
+
             if ($req->by_pass_conversion != null) {
-                if (!Hash::check($req->by_pass_conversion, Auth::user()->password)) {
+                if (! Hash::check($req->by_pass_conversion, Auth::user()->password)) {
                     return Response::json([
                         'errors' => [
                             'by_pass_conversion' => 'Invalid Password',
-                        ]
+                        ],
                     ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                 }
             }
@@ -1210,14 +1213,14 @@ class SaleController extends Controller
                     $amount = number_format($req->payment_amount, 2, '.', '');
                     if ($sale->payment_amount == null) {
                         $new_amount = [];
-                    } else if (str_contains($sale->payment_amount, ',')) {
+                    } elseif (str_contains($sale->payment_amount, ',')) {
                         $new_amount = explode(',', $sale->payment_amount);
                     } else {
                         $new_amount = [$sale->payment_amount];
                     }
                     $new_amount[] = $amount;
 
-                    $sale->payment_amount = join(',', $new_amount);
+                    $sale->payment_amount = implode(',', $new_amount);
                 }
                 if ($req->by_pass_conversion != null) {
                     $sale->can_by_pass_conversion = true;
@@ -1243,13 +1246,14 @@ class SaleController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function upsertDelSchedule(Request $req, bool $validated=false) {
-        if (!$validated) {
+    public function upsertDelSchedule(Request $req, bool $validated = false)
+    {
+        if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'required',
@@ -1262,7 +1266,7 @@ class SaleController extends Controller
             ];
             $req->validate($rules);
         }
-        
+
         try {
             DB::beginTransaction();
 
@@ -1285,7 +1289,7 @@ class SaleController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -1301,7 +1305,7 @@ class SaleController extends Controller
     {
         return redirect(route('production.create', [
             'sale_id' => $sale->id,
-            'product_id' => $req->product
+            'product_id' => $req->product,
         ]));
     }
 
@@ -1310,18 +1314,19 @@ class SaleController extends Controller
         return view('delivery_order.list');
     }
 
-    public function getDataDeliveryOrder(Request $req) {
+    public function getDataDeliveryOrder(Request $req)
+    {
         $do_count = DeliveryOrder::count();
 
         $data = [
-            "recordsTotal" => $do_count,
-            "recordsFiltered" => $do_count,
-            "data" => [],
+            'recordsTotal' => $do_count,
+            'recordsFiltered' => $do_count,
+            'data' => [],
             'records_ids' => [],
         ];
 
         $count = 1;
-        foreach ($req->page == 1 ? DeliveryOrder::cursor() : DeliveryOrder::skip(((int)$req->page - 1) * 10)->take($do_count)->cursor() as $do) {
+        foreach ($req->page == 1 ? DeliveryOrder::cursor() : DeliveryOrder::skip(((int) $req->page - 1) * 10)->take($do_count)->cursor() as $do) {
             if (count($data['data']) < 10) {
                 $so_skus = [];
                 $total_amount = 0;
@@ -1331,26 +1336,26 @@ class SaleController extends Controller
                 }
                 $cus = $sos[0]->customer()->withTrashed()->first();
                 $saleperson = $sos[0]->saleperson;
-                
-                for ($i = 0; $i < count($sos) ;$i++) {
+
+                for ($i = 0; $i < count($sos); $i++) {
                     $so_skus[] = $sos[$i]->sku;
                     $total_amount += $sos[$i]->getTotalAmount();
                 }
-    
+
                 // Search
                 if ($req->has('search') && $req->search['value'] != null) {
                     $keyword = $req->search['value'];
-    
+
                     if (
-                        !str_contains($do->sku, $keyword) &&
-                        !str_contains($cus->sku, $keyword) &&
-                        !str_contains(join(', ', $so_skus), $keyword) &&
-                        !str_contains($do->invoice->sku ?? null, $keyword) &&
-                        !str_contains($cus->name, $keyword) &&
-                        !str_contains($saleperson->name, $keyword) &&
-                        !str_contains($cus->currency->name ?? null, $keyword) &&
-                        !str_contains($total_amount, $keyword) &&
-                        !str_contains($do->createdBy->name ?? null, $keyword)
+                        ! str_contains($do->sku, $keyword) &&
+                        ! str_contains($cus->sku, $keyword) &&
+                        ! str_contains(implode(', ', $so_skus), $keyword) &&
+                        ! str_contains($do->invoice->sku ?? null, $keyword) &&
+                        ! str_contains($cus->name, $keyword) &&
+                        ! str_contains($saleperson->name, $keyword) &&
+                        ! str_contains($cus->currency->name ?? null, $keyword) &&
+                        ! str_contains($total_amount, $keyword) &&
+                        ! str_contains($do->createdBy->name ?? null, $keyword)
                     ) {
                         continue;
                     }
@@ -1361,13 +1366,13 @@ class SaleController extends Controller
                     'doc_no' => $do->sku,
                     'date' => Carbon::parse($do->created_at)->format('d M Y'),
                     'debtor_code' => $cus->sku,
-                    'transfer_from' => join(', ', $so_skus),
+                    'transfer_from' => implode(', ', $so_skus),
                     'transfer_to' => $do->invoice->sku ?? null,
                     'debtor_name' => $cus->name,
                     'agent' => $saleperson->name,
                     'curr_code' => $cus->currency->name ?? null,
                     'total' => number_format($total_amount, 2),
-                    'created_by' => $do->createdBy->name ?? null, 
+                    'created_by' => $do->createdBy->name ?? null,
                     'status' => $do->status,
                 ];
             }
@@ -1386,10 +1391,10 @@ class SaleController extends Controller
             $dir = $req->order[0]['dir'];
             $map = [
                 'doc_no', 'date', 'debtor_code', 'transfer_from', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'total', 'created_by', 'status'
+                'curr_code', 'total', 'created_by', 'status',
             ];
 
-            usort($data['data'], function($a, $b) use ($dir, $col, $map) {
+            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
                 if ($dir == 'asc') {
                     return $a[$map[$col]] > $b[$map[$col]];
                 } else {
@@ -1397,7 +1402,7 @@ class SaleController extends Controller
                 }
             });
         } else {
-            usort($data['data'], function($a, $b) {
+            usort($data['data'], function ($a, $b) {
                 return $a['id'] < $b['id'];
             });
         }
@@ -1424,7 +1429,7 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('payment_terms', $req->term)
                 ->get();
-        } else if ($req->has('cus')) {
+        } elseif ($req->has('cus')) {
             $step = 2;
 
             Session::put('convert_customer_id', $req->cus);
@@ -1434,7 +1439,7 @@ class SaleController extends Controller
                 ->whereNotNull('payment_terms')
                 ->distinct()
                 ->pluck('payment_terms');
-            
+
             $terms = CreditTerm::whereIn('id', $term_ids)->get();
         } else {
             $customer_ids = DeliveryOrder::distinct()->pluck('customer_id');
@@ -1460,7 +1465,7 @@ class SaleController extends Controller
 
             $products = collect();
             $sps = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
-            for ($i = 0; $i < count($sps) ;$i++) {
+            for ($i = 0; $i < count($sps); $i++) {
                 $products->push($sps[$i]->product);
             }
             $is_hi_ten = isHiTen($products);
@@ -1468,11 +1473,11 @@ class SaleController extends Controller
             // Create record
             $existing_skus = Invoice::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku('I', $existing_skus, $is_hi_ten);
-            $filename = $sku . '.pdf';
+            $filename = $sku.'.pdf';
 
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
 
-            $do_products = DeliveryOrderProduct::with(['saleProduct' => function($q) {
+            $do_products = DeliveryOrderProduct::with(['saleProduct' => function ($q) {
                 $q->withTrashed();
             }])->whereIn('delivery_order_id', $do_ids)->get();
 
@@ -1480,15 +1485,15 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'filename' => $filename,
                 'created_by' => Auth::user()->id,
-                'company' => $is_hi_ten ? 'hi_ten' : 'powercool'
+                'company' => $is_hi_ten ? 'hi_ten' : 'powercool',
             ]);
             (new Branch)->assign(Invoice::class, $inv->id);
 
             // Create PDF
-            $pdf = Pdf::loadView('delivery_order.' . ($is_hi_ten ? 'hi_ten' : 'powercool') . '_inv_pdf', [
+            $pdf = Pdf::loadView('delivery_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
-                'do_sku' => join(', ', $do_sku),
+                'do_sku' => implode(', ', $do_sku),
                 'dos' => $dos,
                 'do_products' => $do_products,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
@@ -1497,11 +1502,11 @@ class SaleController extends Controller
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
-            Storage::put(self::INVOICE_PATH . $filename, $content);
+            Storage::put(self::INVOICE_PATH.$filename, $content);
 
             DeliveryOrder::whereIn('id', $do_ids)->update([
                 'invoice_id' => $inv->id,
-                'status' => DeliveryOrder::STATUS_CONVERTED
+                'status' => DeliveryOrder::STATUS_CONVERTED,
             ]);
 
             // Create service reminder for 6 months & remind 3 days before
@@ -1520,7 +1525,7 @@ class SaleController extends Controller
                 ];
             }
             InventoryServiceReminder::insert($data);
-            
+
             DB::commit();
 
             return redirect(route('invoice.index'))->with('success', 'Delivery Order has converted');
@@ -1532,7 +1537,8 @@ class SaleController extends Controller
         }
     }
 
-    public function cancelDeliveryOrder(Request $req) {
+    public function cancelDeliveryOrder(Request $req)
+    {
         try {
             DB::beginTransaction();
 
@@ -1550,11 +1556,11 @@ class SaleController extends Controller
             // Cancellation
             $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
 
-            for ($i=0; $i < count($sales); $i++) {
+            for ($i = 0; $i < count($sales); $i++) {
                 $this->cancelSaleOrderFlow($sales[$i], true, null, $do_to_cancel);
             }
             DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
-                'status' => DeliveryOrder::STATUS_CANCELLED
+                'status' => DeliveryOrder::STATUS_CANCELLED,
             ]);
 
             DB::commit();
@@ -1568,7 +1574,8 @@ class SaleController extends Controller
         }
     }
 
-    private function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge=null, ?array $do_skus=null) {
+    private function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge = null, ?array $do_skus = null)
+    {
         SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1, null);
 
         $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
@@ -1588,7 +1595,8 @@ class SaleController extends Controller
         $sale->save();
     }
 
-    public function getCancellationInvolvedDO(Request $req, DeliveryOrder $do) {
+    public function getCancellationInvolvedDO(Request $req, DeliveryOrder $do)
+    {
         $involved = [];
         $to_search_do_ids = [$do->id];
         $searched_do_ids = [];
@@ -1602,34 +1610,35 @@ class SaleController extends Controller
 
             $data = $this->getCancellationInvolvedDOFlow($do_id_to_search);
             $searched_do_ids[] = $do_id_to_search;
-            
+
             if (isset($data['do_ids'])) {
                 $diff = array_values(array_diff($data['do_ids'], $searched_do_ids));
                 $to_search_do_ids = array_merge($to_search_do_ids, $diff);
             }
             if (isset($data['so_skus'])) {
                 $do_sku = DeliveryOrder::where('id', $do_id_to_search)->value('sku');
-                
+
                 $involved[$do_sku] = $data['so_skus'];
             }
 
             $to_search_do_ids = array_unique(array_values(array_diff($to_search_do_ids, [$do_id_to_search])));
         }
-        
+
         return Response::json([
             'involved' => $involved,
         ], HttpFoundationResponse::HTTP_OK);
     }
 
-    private function getCancellationInvolvedDOFlow(int $do_id) {
+    private function getCancellationInvolvedDOFlow(int $do_id)
+    {
         $so_skus = [];
         $do_ids = [];
 
         $sales = Sale::where('type', Sale::TYPE_SO)
-                ->whereRaw("find_in_set('".$do_id."', convert_to)")
-                ->get();
+            ->whereRaw("find_in_set('".$do_id."', convert_to)")
+            ->get();
 
-        for ($i=0; $i < count($sales); $i++) {
+        for ($i = 0; $i < count($sales); $i++) {
             $sale_do_ids = null;
             if (str_contains($sales[$i]->convert_to, ',')) {
                 $sale_do_ids = explode(',', $sales[$i]->convert_to);
@@ -1657,14 +1666,14 @@ class SaleController extends Controller
         $inv_count = DeliveryOrder::count();
 
         $data = [
-            "recordsTotal" => $inv_count,
-            "recordsFiltered" => $inv_count,
-            "data" => [],
+            'recordsTotal' => $inv_count,
+            'recordsFiltered' => $inv_count,
+            'data' => [],
             'records_ids' => [],
         ];
 
         $count = 1;
-        foreach ($req->page == 1 ? Invoice::cursor() : Invoice::skip(((int)$req->page - 1) * 10)->take($inv_count)->cursor() as $record) {
+        foreach ($req->page == 1 ? Invoice::cursor() : Invoice::skip(((int) $req->page - 1) * 10)->take($inv_count)->cursor() as $record) {
             if (count($data['data']) < 10) {
                 $do_skus = [];
                 $total_amount = 0;
@@ -1674,10 +1683,10 @@ class SaleController extends Controller
                 }
                 $cus = null;
                 $saleperson = null;
-                
-                for ($i = 0; $i < count($dos) ;$i++) {
+
+                for ($i = 0; $i < count($dos); $i++) {
                     $do_skus[] = $dos[$i]->sku;
-                    
+
                     $sos = Sale::where('type', Sale::TYPE_SO)->get();
                     for ($j = 0; $j < count($sos); $j++) {
                         if ($j == 0) {
@@ -1687,20 +1696,20 @@ class SaleController extends Controller
                         $total_amount += $sos[$i]->getTotalAmount();
                     }
                 }
-    
+
                 // Search
                 if ($req->has('search') && $req->search['value'] != null) {
                     $keyword = $req->search['value'];
-    
+
                     if (
-                        !str_contains($record->sku, $keyword) &&
-                        !str_contains($cus->sku, $keyword) &&
-                        !str_contains(join(', ', $do_skus), $keyword) &&
-                        !str_contains($cus->name, $keyword) &&
-                        !str_contains($saleperson->name, $keyword) &&
-                        !str_contains($cus->currency->name ?? null, $keyword) &&
-                        !str_contains($total_amount, $keyword) &&
-                        !str_contains($do->createdBy->name ?? null, $keyword)
+                        ! str_contains($record->sku, $keyword) &&
+                        ! str_contains($cus->sku, $keyword) &&
+                        ! str_contains(implode(', ', $do_skus), $keyword) &&
+                        ! str_contains($cus->name, $keyword) &&
+                        ! str_contains($saleperson->name, $keyword) &&
+                        ! str_contains($cus->currency->name ?? null, $keyword) &&
+                        ! str_contains($total_amount, $keyword) &&
+                        ! str_contains($do->createdBy->name ?? null, $keyword)
                     ) {
                         continue;
                     }
@@ -1711,12 +1720,12 @@ class SaleController extends Controller
                     'doc_no' => $record->sku,
                     'date' => Carbon::parse($record->created_at)->format('d M Y'),
                     'debtor_code' => $cus->sku,
-                    'transfer_from' => join(', ', $do_skus),
+                    'transfer_from' => implode(', ', $do_skus),
                     'debtor_name' => $cus->name,
                     'agent' => $saleperson->name ?? null,
                     'curr_code' => $cus->currency->name ?? null,
                     'total' => number_format($total_amount, 2),
-                    'created_by' => $record->createdBy->name ?? null, 
+                    'created_by' => $record->createdBy->name ?? null,
                     'status' => $record->status,
                 ];
             }
@@ -1735,10 +1744,10 @@ class SaleController extends Controller
             $dir = $req->order[0]['dir'];
             $map = [
                 'doc_no', 'date', 'debtor_code', 'transfer_from', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'total', 'created_by', 'status'
+                'curr_code', 'total', 'created_by', 'status',
             ];
 
-            usort($data['data'], function($a, $b) use ($dir, $col, $map) {
+            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
                 if ($dir == 'asc') {
                     return $a[$map[$col]] > $b[$map[$col]];
                 } else {
@@ -1746,7 +1755,7 @@ class SaleController extends Controller
                 }
             });
         } else {
-            usort($data['data'], function($a, $b) {
+            usort($data['data'], function ($a, $b) {
                 return $a['id'] < $b['id'];
             });
         }
@@ -1755,6 +1764,7 @@ class SaleController extends Controller
             $data['recordsTotal'] = 0;
             $data['recordsFiltered'] = 0;
         }
+
         return response()->json($data);
     }
 
@@ -1765,15 +1775,15 @@ class SaleController extends Controller
 
     public function getDataEInvoice(Request $req)
     {
-        $records = new EInvoice();
+        $records = new EInvoice;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('uuid', 'like', '%' . $keyword . '%')
-                ->orWhere('status', 'like', '%' . $keyword . '%');
+                $q->where('uuid', 'like', '%'.$keyword.'%')
+                    ->orWhere('status', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -1796,9 +1806,9 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -1807,7 +1817,7 @@ class SaleController extends Controller
                 'status' => $record->status,
                 'submission_date' => $record->submission_date,
                 'id' => $record->id,
-                'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing'
+                'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing',
             ];
         }
 
@@ -1828,8 +1838,8 @@ class SaleController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('uuid', 'like', '%' . $keyword . '%')
-                ->orWhere('status', 'like', '%' . $keyword . '%');
+                $q->where('uuid', 'like', '%'.$keyword.'%')
+                    ->orWhere('status', 'like', '%'.$keyword.'%');
             });
         }
 
@@ -1853,9 +1863,9 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
         ];
 
         foreach ($records_paginator as $consolidated) {
@@ -1875,15 +1885,15 @@ class SaleController extends Controller
 
     public function getDataCreditNote(Request $req)
     {
-        $records = new CreditNote();
+        $records = new CreditNote;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('uuid', 'like', '%' . $keyword . '%')
-                ->orWhere('status', 'like', '%' . $keyword . '%');
+                $q->where('uuid', 'like', '%'.$keyword.'%')
+                    ->orWhere('status', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -1905,14 +1915,14 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
-            'records_ids' => $records_ids,       
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
         ];
-        
+
         foreach ($records_paginator as $key => $record) {
-            $data['data'][] = [       
+            $data['data'][] = [
                 'id' => $record->id,
                 'uuid' => $record->uuid,
                 'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
@@ -1930,15 +1940,15 @@ class SaleController extends Controller
 
     public function getDataDebitNote(Request $req)
     {
-        $records = new DebitNote();
+        $records = new DebitNote;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('uuid', 'like', '%' . $keyword . '%')
-                ->orWhere('status', 'like', '%' . $keyword . '%');
+                $q->where('uuid', 'like', '%'.$keyword.'%')
+                    ->orWhere('status', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -1946,7 +1956,7 @@ class SaleController extends Controller
             $map = [
                 0 => 'uuid',
                 1 => 'status',
-                2 => 'from'
+                2 => 'from',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1960,14 +1970,14 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
-            'records_ids' => $records_ids,       
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
         ];
-        
+
         foreach ($records_paginator as $key => $record) {
-            $data['data'][] = [       
+            $data['data'][] = [
                 'id' => $record->id,
                 'uuid' => $record->uuid,
                 'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
@@ -1978,7 +1988,8 @@ class SaleController extends Controller
         return response()->json($data);
     }
 
-    public function cancelInvoice(Request $req) {
+    public function cancelInvoice(Request $req)
+    {
         try {
             DB::beginTransaction();
 
@@ -1990,14 +2001,14 @@ class SaleController extends Controller
             // Cancellation
             $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
 
-            for ($i=0; $i < count($sales); $i++) {
+            for ($i = 0; $i < count($sales); $i++) {
                 $this->cancelSaleOrderFlow($sales[$i], true, null, $do_to_cancel);
             }
             DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
-                'status' => DeliveryOrder::STATUS_CANCELLED
+                'status' => DeliveryOrder::STATUS_CANCELLED,
             ]);
             Invoice::whereIn('sku', $inv_to_cancel)->update([
-                'status' => Invoice::STATUS_CANCELLED
+                'status' => Invoice::STATUS_CANCELLED,
             ]);
             // Delete service reminder
             InventoryServiceReminder::where('attached_type', Invoice::class)
@@ -2015,7 +2026,8 @@ class SaleController extends Controller
         }
     }
 
-    public function getCancellationInvolvedInv(Request $req, Invoice $inv) {
+    public function getCancellationInvolvedInv(Request $req, Invoice $inv)
+    {
         $involved = [];
         $involved_inv_skus = [];
         $involved_do_skus = [];
@@ -2032,14 +2044,14 @@ class SaleController extends Controller
 
             $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search);
             $searched_inv_ids[] = $inv_id_to_search;
-            
+
             if (isset($data['inv_ids'])) {
                 $diff = array_values(array_diff($data['inv_ids'], $searched_inv_ids));
                 $to_search_inv_ids = array_merge($to_search_inv_ids, $diff);
             }
             if (isset($data['do_skus'])) {
                 $inv_sku = Invoice::where('id', $inv_id_to_search)->value('sku');
-                
+
                 $involved[$inv_sku] = array_merge($data['do_skus'], $data['so_skus']);
 
                 $involved_inv_skus[] = $inv_sku;
@@ -2049,7 +2061,7 @@ class SaleController extends Controller
 
             $to_search_inv_ids = array_unique(array_values(array_diff($to_search_inv_ids, [$inv_id_to_search])));
         }
-        
+
         return Response::json([
             'involved' => $involved,
             'involved_inv_skus' => $involved_inv_skus,
@@ -2058,23 +2070,24 @@ class SaleController extends Controller
         ], HttpFoundationResponse::HTTP_OK);
     }
 
-    private function getCancellationInvolvedInvFlow(int $inv_id) {
+    private function getCancellationInvolvedInvFlow(int $inv_id)
+    {
         $so_skus = [];
         $do_skus = [];
         $inv_ids = [];
-        
+
         $do_ids = DeliveryOrder::where('invoice_id', $inv_id)->pluck('id')->toArray();
 
         $sales = Sale::where('type', Sale::TYPE_SO);
 
-        $sales = $sales->where(function($q) use ($do_ids) {
-            for ($i=0; $i < count($do_ids); $i++) {
+        $sales = $sales->where(function ($q) use ($do_ids) {
+            for ($i = 0; $i < count($do_ids); $i++) {
                 $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
             }
         });
         $sales = $sales->get();
 
-        for ($i=0; $i < count($sales); $i++) {
+        for ($i = 0; $i < count($sales); $i++) {
             $sale_do_ids = null;
             if (str_contains($sales[$i]->convert_to, ',')) {
                 $sale_do_ids = explode(',', $sales[$i]->convert_to);
@@ -2097,11 +2110,11 @@ class SaleController extends Controller
     public function download(Request $req)
     {
         if ($req->type == 'do') {
-            return Storage::download(self::DELIVERY_ORDER_PATH . '/' . $req->query('file'));
-        } else if ($req->type == 'inv') {
-            return Storage::download(self::INVOICE_PATH . '/' . $req->query('file'));
-        } else if ($req->type == 'billing') {
-            return Storage::download(self::BILLING_PATH . '/' . $req->query('file'));
+            return Storage::download(self::DELIVERY_ORDER_PATH.'/'.$req->query('file'));
+        } elseif ($req->type == 'inv') {
+            return Storage::download(self::INVOICE_PATH.'/'.$req->query('file'));
+        } elseif ($req->type == 'billing') {
+            return Storage::download(self::BILLING_PATH.'/'.$req->query('file'));
         }
     }
 
@@ -2119,9 +2132,9 @@ class SaleController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('amount', 'like', '%' . $keyword . '%')
+                $q->where('amount', 'like', '%'.$keyword.'%')
                     ->orWhereHas('salesperson', function ($q) use ($keyword) {
-                        return $q->where('name', 'like', '%' . $keyword . '%');
+                        return $q->where('name', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -2148,9 +2161,9 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -2160,7 +2173,7 @@ class SaleController extends Controller
                 'amount' => number_format($record->amount, 2),
                 'date' => Carbon::parse($record->date)->format('M Y'),
                 'can_create' => hasPermission('sale.target.create'),
-                'can_edit' => hasPermission('sale.target.edit')
+                'can_edit' => hasPermission('sale.target.edit'),
             ];
         }
 
@@ -2265,7 +2278,8 @@ class SaleController extends Controller
         }
     }
 
-    public function indexBilling() {
+    public function indexBilling()
+    {
         return view('billing.list');
     }
 
@@ -2278,7 +2292,7 @@ class SaleController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%');
+                $q->where('sku', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -2298,9 +2312,9 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -2341,7 +2355,7 @@ class SaleController extends Controller
             }
 
             $step = 3;
-            
+
             Session::put('billing_saleperson', $req->sale);
             Session::put('billing_term', $req->term);
             Session::put('billing_your_po_no', $req->your_po_no);
@@ -2353,7 +2367,7 @@ class SaleController extends Controller
 
             $products = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->get();
             dd($products);
-        } else if ($req->has('inv')) {
+        } elseif ($req->has('inv')) {
             $step = 2;
 
             Session::put('invoice_ids', $req->inv);
@@ -2375,8 +2389,8 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             $sku = (new Billing)->generateSku();
-            $do_filename = $sku . 'DO.pdf';
-            $inv_filename = $sku . 'INV.pdf';
+            $do_filename = $sku.'DO.pdf';
+            $inv_filename = $sku.'INV.pdf';
 
             $bill = Billing::create([
                 'sku' => $sku,
@@ -2390,7 +2404,7 @@ class SaleController extends Controller
             $invoiceIds = explode(',', Session::get('invoice_ids'));
             $bill->invoices()->attach($invoiceIds);
 
-            $saleProducts = $req->input('sale_product_id', []); 
+            $saleProducts = $req->input('sale_product_id', []);
             $pivotData = [];
             foreach ($saleProducts as $saleProductId) {
                 $customUnitPrice = $req->input("custom-unit-price-{$saleProductId}", 0);
@@ -2414,7 +2428,8 @@ class SaleController extends Controller
         }
     }
 
-    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, array $sale_product_ids) {
+    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, array $sale_product_ids)
+    {
         $pdf = Pdf::loadView('billing.do_pdf', [
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
@@ -2426,10 +2441,11 @@ class SaleController extends Controller
         ]);
         $pdf->setPaper('A4', 'letter');
         $content = $pdf->download()->getOriginalContent();
-        Storage::put(self::BILLING_PATH . $filename, $content);
+        Storage::put(self::BILLING_PATH.$filename, $content);
     }
 
-    private function generateInvoiceBillingPDF(string $sku, string $filename, array $sale_product_ids, array $custom_unit_price) {
+    private function generateInvoiceBillingPDF(string $sku, string $filename, array $sale_product_ids, array $custom_unit_price)
+    {
         $pdf = Pdf::loadView('billing.inv_pdf', [
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
@@ -2441,7 +2457,7 @@ class SaleController extends Controller
         ]);
         $pdf->setPaper('A4', 'letter');
         $content = $pdf->download()->getOriginalContent();
-        Storage::put(self::BILLING_PATH . $filename, $content);
+        Storage::put(self::BILLING_PATH.$filename, $content);
     }
 
     /**
@@ -2470,16 +2486,16 @@ class SaleController extends Controller
             $keyword = $req->search['value'];
 
             $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
+                $q->where('sku', 'like', '%'.$keyword.'%')
                     ->orWhereHas('platform', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%' . $keyword . '%');
+                        $q->where('name', 'like', '%'.$keyword.'%');
                     })
-                    ->orWhere('reference', 'like', '%' . $keyword . '%')
-                    ->orWhere('remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_method', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_amount', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%');
+                    ->orWhere('reference', 'like', '%'.$keyword.'%')
+                    ->orWhere('remark', 'like', '%'.$keyword.'%')
+                    ->orWhere('payment_method', 'like', '%'.$keyword.'%')
+                    ->orWhere('payment_amount', 'like', '%'.$keyword.'%')
+                    ->orWhere('payment_remark', 'like', '%'.$keyword.'%')
+                    ->orWhere('delivery_instruction', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -2487,7 +2503,7 @@ class SaleController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'payment_amount',
-                2  => 'platform'
+                2 => 'platform',
             ];
             foreach ($req->order as $order) {
                 $records->orderBy($map[$order['column']], $order['dir']);
@@ -2501,9 +2517,9 @@ class SaleController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -2544,7 +2560,7 @@ class SaleController extends Controller
         });
 
         return view('sale_order.form', [
-            'sale' => $sale
+            'sale' => $sale,
         ]);
     }
 
@@ -2552,11 +2568,11 @@ class SaleController extends Controller
     {
         $products = collect();
         $sps = $sale->products;
-        for ($i = 0; $i < count($sps) ;$i++) {
+        for ($i = 0; $i < count($sps); $i++) {
             $products->push($sps[$i]->product);
         }
-        
-        $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+
+        $pdf = Pdf::loadView('sale_order.'.(isHiTen($products) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -2569,32 +2585,33 @@ class SaleController extends Controller
         return $pdf->stream();
     }
 
-    
-    public function getSalePerson(Request $request){
+    public function getSalePerson(Request $request)
+    {
         $salePersons = User::whereHas('roles', function ($q) {
             $q->where('id', Role::SALE);
         })->orderBy('id', 'desc')->get();
+
         return response()->json(['salesPersons' => $salePersons]);
     }
-    
+
     public function assignSalePerson(Request $request)
     {
         try {
             $validated = $request->validate([
                 'salesPersonId' => 'required',
                 'sales' => 'required|array',
-                'sales.*.id' => 'required', 
+                'sales.*.id' => 'required',
             ]);
 
             $salesPersonId = $validated['salesPersonId'];
-    
-            $saleIds = collect($validated['sales'])->pluck('id'); 
-        
+
+            $saleIds = collect($validated['sales'])->pluck('id');
+
             Sale::whereIn('id', $saleIds)->update([
                 'sale_id' => $salesPersonId,
-                'type' => Sale::TYPE_SO
+                'type' => Sale::TYPE_SO,
             ]);
-            
+
             return response()->json(['message' => 'Orders successfully assigned to sales person']);
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()]);
@@ -2605,6 +2622,7 @@ class SaleController extends Controller
     public function getPendingOrdersCount()
     {
         $pendingOrdersCount = Sale::where('type', Sale::TYPE_PENDING)->count();
+
         return response()->json(['count' => $pendingOrdersCount]);
     }
 }
