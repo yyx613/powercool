@@ -66,7 +66,7 @@ class SaleController extends Controller
         ];
 
         $count = 1;
-        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_QUO)->cursor() : Sale::where('type', Sale::TYPE_QUO)->skip(((int) $req->page - 1) * 10)->take($so_count)->cursor() as $record) {
+        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_QUO)->cursor() : Sale::where('type', Sale::TYPE_QUO)->skip(((int) $req->page - 1) * 10)->take($quo_count)->cursor() as $record) {
             if (count($data['data']) < 10) {
                 $cus = $record->customer()->withTrashed()->first();
                 $total_amount = $record->getTotalAmount();

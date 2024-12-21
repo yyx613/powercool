@@ -46,11 +46,11 @@
             @if (!isCreateLink())
                 @include('layouts.sidebar')
             @endif
-    
+
             <main class="flex-1 overflow-hidden bg-gray-50">
                 @if (!isCreateLink())
                     @include('layouts.navbar')
-                @endif  
+                @endif
                 <div class="p-4 h-full overflow-x-auto">
                     @yield('content')
                 </div>
@@ -60,7 +60,7 @@
 
     <script>
         moment.tz.setDefault("Asia/Kuala_Lumpur")
-        
+
         var datepickerParam = {
             singleDatePicker: true,
             showDropdowns: true,
@@ -112,7 +112,7 @@
 
         $('body').on('keyup', '.uppercase-input', function(e) {
             let selector = $(this).find('input')
-            
+
             if (selector.length > 1) {
                 selector = $(this).find("input[type='text']")
             }
