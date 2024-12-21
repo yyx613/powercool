@@ -24,10 +24,6 @@
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
                 <span>{{ __('Submit E-Invoice') }}</span>
             </a>
-            <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-consolidated-btn">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
-                <span>{{ __('Submit Consolidated E-Invoice') }}</span>
-            </a>
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -51,6 +47,7 @@
                         <input type="checkbox" id="select-all">
                     </th>
                     <th>{{ __('SKU') }}</th>
+                    <th>{{ __('Billing Date') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -60,6 +57,7 @@
     <div id="loading-indicator" style="display: none;">
         <span class="loader"></span>
     </div>
+    <x-app.modal.update-invoice-date-modal/>
 @endsection
 
 @push('scripts')
@@ -79,6 +77,7 @@
             columns: [
                 { data: 'id' },
                 { data: 'sku' },
+                { data: 'billing_date' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -100,8 +99,15 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 2,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 3,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -169,7 +175,11 @@
                 alert("Please select at least one order to submit.");
                 return;
             }
+            submitEinvoice();
+            
+        });
 
+        function submitEinvoice(){
             const loadingIndicator = document.getElementById('loading-indicator'); 
             loadingIndicator.style.display = 'flex';
 
@@ -189,6 +199,10 @@
                     $('.order-checkbox').prop('checked', false);
                     selectedInvoices = [];
                     $('#select-all').prop('checked', false);
+                    const modal = document.getElementById('update-invoice-date-modal');
+                    if (modal && modal.classList.contains('show-modal')) {
+                        modal.classList.remove('show-modal');
+                    }
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
                         
@@ -227,8 +241,101 @@
                         }
                     }
 
+                    if (error.responseJSON.overdue_billing) {
+                        const overdueInvoices = error.responseJSON.overdue_billing;
+
+                        const container = document.getElementById('overdue-invoices-container');
+                        container.innerHTML = ''; 
+
+                        overdueInvoices.forEach((invoice, index) => {
+                            const label = document.createElement('label');
+                            label.className = 'mb-1';
+                            label.innerHTML = `Billing SKU: ${invoice.sku}`;
+
+                            const input = document.createElement('input');
+                            input.type = 'datetime-local';
+                            input.name = `invoice_date_${index}`;
+                            input.id = `invoice-date-${index}`;
+                            input.value = new Date(invoice.date).toISOString().slice(0, 16); 
+
+                            input.className = 'w-full border rounded-md p-2 mb-2';
+
+                            container.appendChild(label);
+                            container.appendChild(input);
+                        });
+                        const modalTitle = document.querySelector('#update-invoice-date-modal h6');
+                        if (modalTitle) {
+                            modalTitle.textContent = `Update Billing Date (Should Not More Than 72 hours)`;
+                        }
+                        $('#update-invoice-date-modal').addClass('show-modal');
+                                        
+                    }
+
                     alert(errorMessage);
                 }
+            });
+        }
+
+        $('#yes-btn').on('click', function () {
+            const container = $('#overdue-invoices-container');
+            const updatedInvoices = [];
+            let validationError = false;
+
+            const now = new Date();
+            
+            const seventyTwoHoursAgo = new Date(now.getTime() - (72 * 60 * 60 * 1000));
+
+            container.find('input').each(function (index) {
+                const sku = container.find('label').eq(index).text().replace('Billing SKU: ', '').trim();
+                const date = $(this).val();
+
+                if (!date) {
+                    alert(`Invoice SKU ${sku} date is required.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                const invoiceDate = new Date(date);
+
+                if (invoiceDate > now) {
+                    alert(`Invoice SKU ${sku} cannot have a future date.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                if (invoiceDate < seventyTwoHoursAgo) {
+                    alert(`Invoice SKU ${sku} date cannot be older than 72 hours.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                updatedInvoices.push({ sku, date });
+            });
+
+            if (validationError) {
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('update_billing_date') }}",
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                },
+                contentType: 'application/json',
+                data: JSON.stringify({ billings: updatedInvoices }),
+                success: function (response) {
+                    submitEinvoice()
+                },
+                error: function (xhr) {
+                    let errorMessage = 'Error updating billing: ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage += xhr.responseJSON.message;
+                    } else {
+                        errorMessage += 'Unknown error occurred';
+                    }
+                    alert(errorMessage);
+                },
             });
         });
 

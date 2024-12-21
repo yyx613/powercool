@@ -560,7 +560,8 @@ Route::prefix('e-invoice')->group(function () {
     Route::post('/cancel-e-invoice',  [EInvoiceController::class, 'cancelEInvoice'])->name('cancel_e_invoice');
     Route::post('/resubmit-e-invoice',  [EInvoiceController::class, 'resubmitEInvoice'])->name('resubmit_e_invoice');
     Route::post('/billing-submit', [EInvoiceController::class, 'billingSubmit']);
-
+    Route::post('/update-invoice-date', [EInvoiceController::class, 'updateInvoiceDate'])->name('update_invoice_date');
+    Route::post('/update-billing-date', [EInvoiceController::class, 'updateBillingDate'])->name('update_billing_date');
 });
 Route::get('/sync-msic-codes', [EInvoiceController::class, 'syncMsicCodes']);
 

@@ -171,6 +171,28 @@ class EInvoiceController extends Controller
         }
     }
 
+    public function updateInvoiceDate(Request $request)
+    {
+        $validated = $request->validate([
+            'invoices' => 'required|array',
+            'invoices.*.sku' => 'required|string',
+            'invoices.*.date' => 'required|date',
+        ]);
+        $updatedInvoices = [];
+        foreach ($validated['invoices'] as $invoiceData) {
+            $invoice = Invoice::where('sku', $invoiceData['sku'])->first();
+            if ($invoice) {
+                $invoice->update(['date' => $invoiceData['date']]);
+                $updatedInvoices[] = $invoice;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Invoices updated successfully',
+            'updated_invoices' => $updatedInvoices,
+        ]);
+    }
+
 
     public function submit(Request $request){
         $request->validate([
@@ -179,6 +201,31 @@ class EInvoiceController extends Controller
         ]);
         $selectedInvoices = $request->input('invoices');
         $company = $request->input('company');
+
+        $now = now();
+
+        $overdueInvoices = [];
+        foreach ($selectedInvoices as $invoiceData) {
+            $invoice = Invoice::find($invoiceData['id']);
+            if (!$invoice) {
+                continue;
+            }
+
+            $invoiceDate = $invoice->date;
+            if ($now->diffInHours($invoiceDate) > 72) {
+                $overdueInvoices[] = [
+                    'sku' => $invoice->sku,
+                    'date' => $invoiceDate,
+                ];
+            }
+        }
+
+        if (!empty($overdueInvoices)) {
+            return response()->json([
+                'message' => 'Some invoices are overdue by more than 72 hours.',
+                'overdue_invoices' => $overdueInvoices,
+            ], 400);
+        }
 
         $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
 
@@ -1479,7 +1526,27 @@ class EInvoiceController extends Controller
         return response()->json(['message' => 'Failed to fetch data'], 500);
     }
     
-    
+    public function updateBillingDate(Request $request)
+    {
+        $validated = $request->validate([
+            'billings' => 'required|array',
+            'billings.*.sku' => 'required|string',
+            'billings.*.date' => 'required|date',
+        ]);
+        $updatedBilling = [];
+        foreach ($validated['billings'] as $billingData) {
+            $billing = Billing::where('sku', $billingData['sku'])->first();
+            if ($billing) {
+                $billing->update(['date' => $billingData['date']]);
+                $updatedBilling[] = $billing;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Billing updated successfully',
+            'updated_billing' => $updatedBilling,
+        ]);
+    }
     
     public function billingSubmit(Request $request){
         $request->validate([
@@ -1487,6 +1554,31 @@ class EInvoiceController extends Controller
             'billings.*' => 'required|integer',
         ]);
         $selectedBillings = $request->input('billings');
+        
+        $now = now();
+
+        $overdueBilling = [];
+        foreach ($selectedBillings as $billingId) {
+            $billing = Billing::find($billingId);
+            if (!$billing) {
+                continue;
+            }
+
+            $billingDate = $billing->date;
+            if ($now->diffInHours($billingDate) > 72) {
+                $overdueBilling[] = [
+                    'sku' => $billing->sku,
+                    'date' => $billingDate,
+                ];
+            }
+        }
+
+        if (!empty($overdueBilling)) {
+            return response()->json([
+                'message' => 'Some billing are overdue by more than 72 hours.',
+                'overdue_billing' => $overdueBilling,
+            ], 400);
+        }
 
         $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
 

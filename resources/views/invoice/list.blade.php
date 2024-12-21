@@ -59,6 +59,7 @@
                     </th>
                     <th>{{ __('Invoice ID') }}</th>
                     <th>{{ __('Company') }}</th>
+                    <th>{{ __('Invoice Date') }}</th>
                     <th>{{ __('Convert To') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
@@ -70,7 +71,7 @@
     <div id="loading-indicator" style="display: none;">
         <span class="loader"></span>
     </div>
-
+    <x-app.modal.update-invoice-date-modal/>
     <x-app.modal.do-inv-cancel-modal/>
     @endsection
 
@@ -106,6 +107,7 @@
                 { data: 'id' },
                 { data: 'sku' },
                 { data: 'company' },
+                { data: 'invoice_date' },
                 { data: 'convert_to' },
                 { data: 'status' },
                 { data: 'action' },
@@ -124,6 +126,7 @@
                 { 
                     "width": "10%",
                     "targets": 1,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -131,6 +134,7 @@
                 { 
                     "width": "10%",
                     "targets": 2,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -138,6 +142,7 @@
                 { 
                     "width": "10%",
                     "targets": 3,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -145,6 +150,14 @@
                 { 
                     "width": "10%",
                     "targets": 4,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 5,
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
@@ -155,7 +168,7 @@
                 },
                 { 
                     "width": "5%",
-                    "targets":5,
+                    "targets":6,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -290,13 +303,15 @@
                 alert("Please select at least one order to submit.");
                 return;
             }
+            submitEinvoice()
+        });
 
+        function submitEinvoice(){
             const loadingIndicator = document.getElementById('loading-indicator'); 
             loadingIndicator.style.display = 'flex';
-
+            
             let url = "{{ config('app.url') }}";
             url = `${url}/e-invoice/submit`;
-
             $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -310,7 +325,10 @@
                     $('.order-checkbox').prop('checked', false);
                     selectedInvoices = [];
                     $('#select-all').prop('checked', false);
-                    console.log(response.errorDetails && response.errorDetails.length > 0)
+                    const modal = document.getElementById('update-invoice-date-modal');
+                    if (modal && modal.classList.contains('show-modal')) {
+                        modal.classList.remove('show-modal');
+                    }
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
                         try {
@@ -338,12 +356,13 @@
                     loadingIndicator.style.display = 'none';
 
                     
-                    let errorMessage = "An unknown error occurred.";
+                    let errorMessage = "An error occurred.";
 
                     if (error.responseJSON) {
                         if (error.responseJSON.error) {
                             errorMessage = error.responseJSON.error;
                         }
+
 
                         if (error.responseJSON.message) {
                             try {
@@ -355,12 +374,42 @@
                                 errorMessage += `\nDetails: ${error.responseJSON.message}`;
                             }
                         }
+
+                        if (error.responseJSON.overdue_invoices) {
+                            const overdueInvoices = error.responseJSON.overdue_invoices;
+
+                            const container = document.getElementById('overdue-invoices-container');
+                            container.innerHTML = ''; 
+
+                            overdueInvoices.forEach((invoice, index) => {
+                                const label = document.createElement('label');
+                                label.className = 'mb-1';
+                                label.innerHTML = `Invoice SKU: ${invoice.sku}`;
+
+                                const input = document.createElement('input');
+                                input.type = 'datetime-local';
+                                input.name = `invoice_date_${index}`;
+                                input.id = `invoice-date-${index}`;
+                                input.value = new Date(invoice.date).toISOString().slice(0, 16); 
+
+                                input.className = 'w-full border rounded-md p-2 mb-2';
+
+                                container.appendChild(label);
+                                container.appendChild(input);
+                            });
+                            const modalTitle = document.querySelector('#update-invoice-date-modal h6');
+                            if (modalTitle) {
+                                modalTitle.textContent = `Update Invoice Date (Should Not More Than 72 hours)`;
+                            }
+                            $('#update-invoice-date-modal').addClass('show-modal');
+                                           
+                        }
                     }
 
                     alert(errorMessage);
                 }
             });
-        });
+        }
 
         $('#submit-consolidated-btn').on('click', function(e) {
             e.preventDefault();
@@ -451,6 +500,71 @@
                 $('#assign-btn').removeClass('bg-gray-200 cursor-not-allowed').addClass('bg-green-200').prop('disabled', false);
             }
         }
+
+        $('#yes-btn').on('click', function () {
+            const container = $('#overdue-invoices-container');
+            const updatedInvoices = [];
+            let validationError = false;
+
+            const now = new Date();
+            
+            const seventyTwoHoursAgo = new Date(now.getTime() - (72 * 60 * 60 * 1000));
+
+            container.find('input').each(function (index) {
+                const sku = container.find('label').eq(index).text().replace('Invoice SKU: ', '').trim();
+                const date = $(this).val();
+
+                if (!date) {
+                    alert(`Invoice SKU ${sku} date is required.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                const invoiceDate = new Date(date);
+
+                if (invoiceDate > now) {
+                    alert(`Invoice SKU ${sku} cannot have a future date.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                if (invoiceDate < seventyTwoHoursAgo) {
+                    alert(`Invoice SKU ${sku} date cannot be older than 72 hours.`);
+                    validationError = true;
+                    return false; 
+                }
+
+                updatedInvoices.push({ sku, date });
+            });
+
+            if (validationError) {
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('update_invoice_date') }}",
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                },
+                contentType: 'application/json',
+                data: JSON.stringify({ invoices: updatedInvoices }),
+                success: function (response) {
+                    submitEinvoice()
+                },
+                error: function (xhr) {
+                    let errorMessage = 'Error updating invoices: ';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage += xhr.responseJSON.message;
+                    } else {
+                        errorMessage += 'Unknown error occurred';
+                    }
+                    alert(errorMessage);
+                },
+            });
+        });
+
+
     </script>
 @endpush
 @push('styles')

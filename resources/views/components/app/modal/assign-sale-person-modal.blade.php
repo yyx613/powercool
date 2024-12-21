@@ -6,7 +6,7 @@
         <div class="flex-1 flex flex-col p-4">
             <div id="selected-orders-list" class="mb-4">
                 <h6 class="text-sm font-medium">{{ __('Selected Orders') }}</h6>
-                <ul></ul> <!-- 这里会展示选中的订单 -->
+                <ul></ul> 
             </div>
             <div class="flex-1">
                 <span class="font-medium text-sm mb-1 block">{{ __('Select Sales Person') }}</span>

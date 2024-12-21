@@ -1094,7 +1094,8 @@ class SaleController extends Controller
             $inv = Invoice::create([
                 'sku' => $sku,
                 'filename' => $filename,
-                'company' => $this->getPdfType($sale_products)
+                'company' => $this->getPdfType($sale_products),
+                'date' => now()
             ]);
             (new Branch)->assign(Invoice::class, $inv->id);
 
@@ -1295,6 +1296,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'invoice_date' => $record->date,
                 'company' => $record->company,
                 'convert_to' => $convert_to,
                 'filename' => $record->filename,
@@ -1851,6 +1853,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'billing_date' => $record->date,
                 'do_filename' => $record->do_filename,
                 'inv_filename' => $record->inv_filename,
             ];
@@ -1937,6 +1940,7 @@ class SaleController extends Controller
                 'term_id' => Session::get('billing_term'),
                 'sale_person_id' => Session::get('billing_saleperson'),
                 'our_do_no' => Session::get('billing_our_do_no'),
+                'date' => now()
             ]);
 
             $invoiceIds = explode(',', Session::get('invoice_ids'));
