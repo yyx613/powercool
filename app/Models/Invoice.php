@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 #[ScopedBy([BranchScope::class])]
 class Invoice extends Model
@@ -18,20 +17,24 @@ class Invoice extends Model
     const STATUS_CANCELLED = 1;
 
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function deliveryOrders() {
+    public function deliveryOrders()
+    {
         return $this->hasMany(DeliveryOrder::class);
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
@@ -52,6 +55,6 @@ class Invoice extends Model
 
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
     }
 }

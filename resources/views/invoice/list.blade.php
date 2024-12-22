@@ -202,14 +202,6 @@
                     "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
-                    "width": "10%",
-                    "targets": 5,
-                    orderable: false,
-                    render: function(data, type, row) {
                         if (data == 1) {
                             return '{!! __("Cancelled") !!}'
                         }

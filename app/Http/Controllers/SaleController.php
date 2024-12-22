@@ -1664,7 +1664,7 @@ class SaleController extends Controller
 
     public function getDataInvoice(Request $req)
     {
-        $inv_count = DeliveryOrder::count();
+        $inv_count = Invoice::count();
 
         $data = [
             'recordsTotal' => $inv_count,
@@ -1710,7 +1710,7 @@ class SaleController extends Controller
                         ! str_contains($saleperson->name, $keyword) &&
                         ! str_contains($cus->currency->name ?? null, $keyword) &&
                         ! str_contains($total_amount, $keyword) &&
-                        ! str_contains($do->createdBy->name ?? null, $keyword)
+                        ! str_contains($record->createdBy->name ?? null, $keyword)
                     ) {
                         continue;
                     }

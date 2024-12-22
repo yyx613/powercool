@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -19,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 #[ScopedBy([BranchScope::class])]
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -49,41 +48,49 @@ class User extends Authenticatable
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
+
     protected $appends = ['latest_picture'];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function tasks() {
+    public function tasks()
+    {
         return $this->belongsToMany(Task::class, 'user_task', 'user_id', 'task_id');
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function pictures() {
+    public function pictures()
+    {
         return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
     }
 
-    public function getLatestPictureAttribute() {
+    public function getLatestPictureAttribute()
+    {
         return $this->pictures()->first();
     }
 
-    public function isDeleted(): bool {
+    public function isDeleted(): bool
+    {
         return $this->deleted_at != null;
     }
 
-    public function generateSku(): string {
+    public function generateSku(): string
+    {
         $sku = null;
-        
+
         while (true) {
-            $sku = 'U' . now()->format('ym') . generateRandomAlphabet();
+            $sku = 'U'.now()->format('ym').generateRandomAlphabet();
 
             $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 break;
             }
         }
