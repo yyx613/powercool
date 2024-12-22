@@ -6,5 +6,5 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
-import {StatusCodes} from 'http-status-codes'
+import { StatusCodes } from 'http-status-codes'
 window.StatusCodes = StatusCodes;
