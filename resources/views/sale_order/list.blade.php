@@ -78,10 +78,6 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function(){
-            dt.draw()
-        })
-
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -119,54 +115,56 @@
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 2,
                     render: function(data, type, row) {
-                        return data;  
+                        return data;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data;  
+                        return data;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 4,
                     render: function(data, type, row) {
-                        return data;  
+                        return data;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 5,
                     render: function(data, type, row) {
-                        return data;  
+                        return data;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data;  
+                        return data;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 7,
+                    orderable: false,
                     render: function(data, type, row) {
-                        return `RM ${data}`;  
+                        return `RM ${data}`;
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 8,
+                    orderable: false,
                     render: function(data, type, row) {
-                        return `RM ${data}`;  
+                        return `RM ${data}`;
                     }
                 },
                 {
@@ -205,7 +203,7 @@
                             }
                             <a href="{{ config('app.url') }}/sale-order/pdf/${row.id}" class="rounded-full p-2 bg-emerald-200 inline-block" target="_blank" title="{!! __('View PDF') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0H8A5.006,5.006,0,0,0,3,5V23a1,1,0,0,0,1.564.825L6.67,22.386l2.106,1.439a1,1,0,0,0,1.13,0l2.1-1.439,2.1,1.439a1,1,0,0,0,1.131,0l2.1-1.438,2.1,1.437A1,1,0,0,0,21,23V5A5.006,5.006,0,0,0,16,0Zm3,21.1-1.1-.752a1,1,0,0,0-1.132,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.131,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.129,0L5,21.1V5A3,3,0,0,1,8,2h8a3,3,0,0,1,3,3Z"/><rect x="7" y="8" width="10" height="2" rx="1"/><rect x="7" y="12" width="8" height="2" rx="1"/></svg>
-                            </a>  
+                            </a>
                             ${
                                 row.can_edit ? `
                                 <a href="{{ config('app.url') }}/sale-order/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('Edit') !!}">
@@ -213,7 +211,7 @@
                                 </a>` : ''
                             }
                             ${
-                                row.can_cancel ? 
+                                row.can_cancel ?
                                 `<button class="rounded-full p-2 bg-yellow-200 inline-block cancel-btns" data-id="${row.id}" title="{!! __('Cancel') !!}">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
                                 </button>` : ''

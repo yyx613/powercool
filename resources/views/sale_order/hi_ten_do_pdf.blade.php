@@ -123,7 +123,7 @@
             $total = 0;
         @endphp
         <!-- Product List -->
-        @foreach ($spcs as $key => $prod)
+        @foreach ($dopcs as $key => $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->sku }}</td>

@@ -40,7 +40,7 @@ class PermissionSeeder extends Seeder
             'service_reminder.receive_reminder',
 
             'service_history.view',
-            
+
             'warranty.view',
 
             'sale.quotation.view',
@@ -95,7 +95,12 @@ class PermissionSeeder extends Seeder
             'supplier.edit',
             'supplier.delete',
 
-            'setting.view'
+            'dealer.view',
+            'dealer.create',
+            'dealer.edit',
+            'dealer.delete',
+
+            'setting.view',
         ];
         $now = now();
 

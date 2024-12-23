@@ -4,6 +4,7 @@
     <div class="mb-6">
         <x-app.page-title url="{{ route('invoice.index') }}">{{ __('Convert Invoice to Billing') }}</x-app.page-title>
     </div>
+    @include('components.app.alert.parent')
     <div class="flex gap-4 flex-col lg:flex-row">
         <!-- Left -->
         <div class="bg-white p-4 border rounded-md flex flex-1 flex-col lg:flex-row gap-8 lg:gap-x-12">
@@ -93,46 +94,42 @@
                                         <x-input-error :messages="$errors->get('our_do_no')" class="mt-1" />
                                     </div>
                                     <div class="flex flex-col">
-                                        <x-app.input.label id="your_po_no" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
-                                        <x-app.input.input name="your_po_no" id="your_po_no" value="{{ old('your_po_no') }}" />
-                                        <x-input-error :messages="$errors->get('your_po_no')" class="mt-1" />
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <x-app.input.label id="your_so_no" class="mb-1">{{ __('Your S/O No') }}</x-app.input.label>
-                                        <x-app.input.input name="your_so_no" id="your_so_no" value="{{ old('your_so_no') }}" />
-                                        <x-input-error :messages="$errors->get('your_so_no')" class="mt-1" />
+                                        <x-app.input.label id="your_ref" class="mb-1">{{ __('Your Ref') }}</x-app.input.label>
+                                        <x-app.input.input name="your_ref" id="your_ref" value="{{ old('your_ref') }}" />
+                                        <x-input-error :messages="$errors->get('your_ref')" class="mt-1" />
                                     </div>
                                 </div>
                                 <div class="flex justify-end mt-8">
                                     <x-app.button.submit>{{ __('Submit') }}</x-app.button.submit>
                                 </div>
                             </form>
-                        </div> 
+                        </div>
                     </div>
                 @endif
                 <!-- Step 3 -->
                 @if ($step == 3)
                     <div>
                         <div class="mb-4">
-                            <h5 class="text-md font-semibold">{{ __('Confirm products to convert') }}</h5> 
+                            <h5 class="text-md font-semibold">{{ __('Confirm products to convert') }}</h5>
                         </div>
                         @if (count($products) > 0)
                             <form action="{{ route('billing.convert_to_billing') }}">
                                 @csrf
                                 <div class="grid grid-cols-2 gap-4">
-                                    @foreach ($products as $pro)
+                                    @foreach ($products as $key => $pro)
                                         <div>
-                                            <input type="text" name="sale_product_id[]" value="{{ $pro->id }}" class="hidden">
+                                            <input type="text" name="product_id[]" value="{{ $key }}" class="hidden">
                                             <div class="w-full p-3 rounded-md border border-slate-100">
-                                                <h6 class="leading-none">{{ $pro->saleProduct->product->model_name }}</h6>
-                                                <p class="text-sm text-slate-400">{{ $pro->desc }}</p>
-                                                <div class="flex justify-between">
-                                                    <span class="text-sm text-slate-600 mt-2 qty-label" data-id="{{ $pro->id }}" data-value="{{ $pro->qty }}">Qty: {{ $pro->qty }}</span>
-                                                    <span class="text-sm text-slate-600 mt-2 unit-price-label" data-id="{{ $pro->id }}">U/Price: RM {{ number_format($pro->unit_price, 2) }}</span>
-                                                    <span class="text-sm text-slate-600 mt-2 total-price-label" data-id="{{ $pro->id }}">T/Price: RM {{ number_format(($pro->qty * $pro->unit_price), 2) }}</span>
-                                                </div>
+                                                <h6 class="leading-none">{{ $pro['product_name'] }}</h6>
+                                                <p class="text-sm text-slate-400">{{ $pro['product_desc'] }}</p>
+                                                @foreach ($pro['serial_no'] as $val)
+                                                    <div class="flex justify-between">
+                                                        <span class="text-sm text-slate-600 mt-2">Serial No: {{ $val['serial_no'] }}</span>
+                                                        <span class="text-sm text-slate-600 mt-2 unit-price-label" data-id="{{ $key }}">U/Price: RM {{ number_format($val['unit_price'], 2) }}</span>
+                                                    </div>
+                                                @endforeach
                                                 <div class="border-t pt-4 mt-4">
-                                                    <x-app.input.input name="custom-unit-price-{{ $pro->id }}" placeholder="Enter customer unit price here" class="text-sm decimal-input border-slate-200 custom-unit-price" data-id="{{ $pro->id }}" />
+                                                    <x-app.input.input name="custom-unit-price-{{ $key }}" placeholder="Enter customer unit price here" class="text-sm decimal-input border-slate-200 custom-unit-price" data-id="{{ $key }}" />
                                                 </div>
                                             </div>
                                         </div>
@@ -207,7 +204,7 @@
         e.preventDefault()
 
         if (SELECTED_INVS.length <= 0) return
-        
+
         let url = $(this).attr('href')
         url = `${url}?inv=${SELECTED_INVS}`
 
@@ -215,10 +212,8 @@
     })
     $('.custom-unit-price input').on('keyup', function() {
         let id = $(this).parent().data('id')
-        let qty = $(`.qty-label[data-id="${id}"]`).data('value')
 
         $(`.unit-price-label[data-id="${id}"]`).text(`U/Price: RM ${ priceFormat($(this).val()) }`)
-        $(`.total-price-label[data-id="${id}"]`).text(`T/Price: RM ${ priceFormat(qty * $(this).val()) }`)
     })
 </script>
 @endpush

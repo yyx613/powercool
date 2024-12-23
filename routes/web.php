@@ -5,6 +5,7 @@ use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DealerController;
 use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\EInvoiceController;
 use App\Http\Controllers\GRNController;
@@ -384,6 +385,15 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{supplier}', 'delete')->name('delete')->middleware(['can:supplier.delete']);
         Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
         Route::get('/grn-history/{supplier}', 'grnHistory')->name('grn_history');
+    });
+    // Dealer
+    Route::controller(DealerController::class)->prefix('dealer')->name('dealer.')->middleware(['can:dealer.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:dealer.create']);
+        Route::get('/edit/{dealer}', 'edit')->name('edit')->middleware(['can:dealer.edit']);
+        Route::get('/delete/{dealer}', 'delete')->name('delete')->middleware(['can:dealer.delete']);
+        Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function () {

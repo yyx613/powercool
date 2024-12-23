@@ -59,6 +59,13 @@
                                     </a>
                                 </li>
                                 @endcan
+                                 @can('dealer.view')
+                                <li>
+                                    <a href="{{ route('dealer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dealer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Dealer') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
                             </ul>
                         </div>
                     </div>
@@ -111,7 +118,7 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
                                     </a>
                                 </li>
-                                @endcan 
+                                @endcan
                                 @can('sale.billing.view')
                                 <li>
                                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -363,11 +370,11 @@
                                     <a href="{{ route('report.technician_stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                                     </a>
-                                </li> 
+                                </li>
                             </ul>
                         </div>
                     </div>
-                </li> 
+                </li>
                 <!-- User Role Management -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="9">
@@ -414,7 +421,7 @@
                                     <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                                     </a>
-                                </li> 
+                                </li>
                                 <li>
                                     <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
@@ -513,7 +520,7 @@
                                 <span class="absolute flex h-2 w-2 top-0 right-0 {{ hasUnreadNotifications() ? '' : 'hidden' }}">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                </span> 
+                                </span>
                             </div>
                             <!-- Tooltip -->
                             <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
@@ -591,13 +598,13 @@
                                 <path d="m22.204,1.162c-1.141-.952-2.634-1.343-4.098-1.081l-3.822.695c-.913.167-1.706.634-2.284,1.289-.578-.655-1.371-1.123-2.285-1.289L5.894.082C4.433-.181,2.938.21,1.796,1.162c-1.142.953-1.796,2.352-1.796,3.839v12.792c0,2.417,1.727,4.486,4.106,4.919l6.284,1.143c.534.097,1.072.146,1.61.146s1.076-.048,1.61-.146l6.285-1.143c2.379-.433,4.105-2.502,4.105-4.919V5.001c0-1.487-.655-2.886-1.796-3.839Zm-11.204,20.766c-.084-.012-6.536-1.184-6.536-1.184-1.428-.26-2.464-1.501-2.464-2.952V5.001c0-.892.393-1.731,1.078-2.303.545-.455,1.223-.697,1.919-.697.179,0,.36.016.54.049l3.821.695c.952.173,1.643,1.001,1.643,1.968v17.216Zm11-4.135c0,1.451-1.036,2.692-2.463,2.952,0,0-6.452,1.171-6.537,1.184V4.712c0-.967.691-1.794,1.642-1.968l3.821-.695c.878-.161,1.773.076,2.459.648.685.572,1.078,1.411,1.078,2.303v12.792ZM8.984,6.224c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.901,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,3.955c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.903,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm0,4c-.088.483-.509.821-.983.821-.059,0-3.18-.562-3.18-.562-.543-.099-.904-.619-.805-1.163.099-.543.615-.902,1.163-.805l3,.545c.543.099.904.619.805,1.163Zm11-8.857c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm0,3.955c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.098,1.064.262,1.163.805Zm0,4c.099.543-.262,1.064-.805,1.163,0,0-3.121.562-3.18.562-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l3-.545c.541-.097,1.064.262,1.163.805Zm-2,4.364c.099.543-.262,1.064-.805,1.163,0,0-1.121.198-1.18.198-.474,0-.895-.338-.983-.821-.099-.543.262-1.064.805-1.163l1-.182c.549-.098,1.064.262,1.163.805Zm-11,.221c-.088.483-.509.821-.983.821-.059,0-1.18-.198-1.18-.198-.543-.099-.904-.619-.805-1.163.099-.543.615-.906,1.163-.805l1,.182c.543.099.904.619.805,1.163Z"/>
                             </svg>
                         </button>
-                    </li>     
+                    </li>
                     <!-- User Role Management -->
                     <li class="expand-sub-menu-triggers" data-type="user-role-management">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M15,6c0-3.309-2.691-6-6-6S3,2.691,3,6s2.691,6,6,6,6-2.691,6-6Zm-6,4c-2.206,0-4-1.794-4-4s1.794-4,4-4,4,1.794,4,4-1.794,4-4,4Zm-.008,4.938c.068,.548-.32,1.047-.869,1.116-3.491,.436-6.124,3.421-6.124,6.946,0,.552-.448,1-1,1s-1-.448-1-1c0-4.531,3.386-8.37,7.876-8.93,.542-.069,1.047,.32,1.116,.869Zm13.704,4.195l-.974-.562c.166-.497,.278-1.019,.278-1.572s-.111-1.075-.278-1.572l.974-.562c.478-.276,.642-.888,.366-1.366-.277-.479-.887-.644-1.366-.366l-.973,.562c-.705-.794-1.644-1.375-2.723-1.594v-1.101c0-.552-.448-1-1-1s-1,.448-1,1v1.101c-1.079,.22-2.018,.801-2.723,1.594l-.973-.562c-.48-.277-1.09-.113-1.366,.366-.276,.479-.112,1.09,.366,1.366l.974,.562c-.166,.497-.278,1.019-.278,1.572s.111,1.075,.278,1.572l-.974,.562c-.478,.276-.642,.888-.366,1.366,.186,.321,.521,.5,.867,.5,.169,0,.341-.043,.499-.134l.973-.562c.705,.794,1.644,1.375,2.723,1.594v1.101c0,.552,.448,1,1,1s1-.448,1-1v-1.101c1.079-.22,2.018-.801,2.723-1.594l.973,.562c.158,.091,.33,.134,.499,.134,.346,0,.682-.179,.867-.5,.276-.479,.112-1.09-.366-1.366Zm-5.696,.866c-1.654,0-3-1.346-3-3s1.346-3,3-3,3,1.346,3,3-1.346,3-3,3Z"/></svg>
                         </button>
-                    </li>     
+                    </li>
                     <!-- Settings -->
                     @can('setting.view')
                     <li class="expand-sub-menu-triggers" data-type="setting">
@@ -634,6 +641,13 @@
                 <li>
                     <a href="{{ route('supplier.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'supplier.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Supplier') }}</span>
+                    </a>
+                </li>
+                @endcan
+                @can('dealer.view')
+                <li>
+                    <a href="{{ route('dealer.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'dealer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Dealer') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -889,7 +903,7 @@
                     <a href="{{ route('user_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'user_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('User Management') }}</span>
                     </a>
-                </li> 
+                </li>
                 <li>
                     <a href="{{ route('role_management.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'role_management.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Role Management') }}</span>
@@ -1036,6 +1050,13 @@
                                     </a>
                                 </li>
                                 @endcan
+                                @can('dealer.view')
+                                <li>
+                                    <a href="{{ route('dealer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dealer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Dealer') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
                             </ul>
                         </div>
                     </div>
@@ -1088,7 +1109,7 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
                                     </a>
                                 </li>
-                                @endcan 
+                                @endcan
                                 @can('sale.billing.view')
                                 <li>
                                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1340,11 +1361,11 @@
                                     <a href="{{ route('report.technician_stock_report.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                                     </a>
-                                </li> 
+                                </li>
                             </ul>
                         </div>
                     </div>
-                </li> 
+                </li>
                 <!-- User Role Management -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="9">
@@ -1391,7 +1412,7 @@
                                     <a href="{{ route('credit_term.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                                     </a>
-                                </li> 
+                                </li>
                                 <li>
                                     <a href="{{ route('currency.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
@@ -1479,7 +1500,7 @@
         $(document).ready(function(){
             getTimeSection()
 
-            
+
             if ($(window).width() >= 1024) {
                 if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
                     if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
@@ -1502,18 +1523,18 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
-                    } 
+                    }
                 } else {
                     $('#expanded-sidebar').removeClass('max-w-[250px] transition-all duration-700 delay-700')
                     $('#expanded-sidebar').addClass('max-w-0 w-0 opacity-0 -z-10')
-    
+
                     setTimeout(() => {
                         $('#expanded-sidebar').addClass('transition-all duration-700')
                     }, 100);
-    
+
                     $('#collapsed-sidebar').removeClass('max-w-0 transition-all duration-700 -z-10 opacity-0')
                     $('#collapsed-sidebar').addClass('max-w-[250px]')
-    
+
                     setTimeout(() => {
                         $('#collapsed-sidebar').addClass('transition-all duration-700 delay-700')
                     }, 100);
@@ -1539,8 +1560,8 @@
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
-                } 
-            }            
+                }
+            }
         })
 
         function getTimeSection() {
@@ -1610,7 +1631,7 @@
                     if (response.count > 0) {
                         $('#pending-orders-icon').css('display', 'block');
                     } else {
-                        $('#pending-orders-icon').css('display', 'none'); 
+                        $('#pending-orders-icon').css('display', 'none');
                     }
                 },
                 error: function() {

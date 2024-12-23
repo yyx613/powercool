@@ -88,19 +88,19 @@
         @php
             $total = 0;
         @endphp
-        @foreach ($do_products as $key => $prod)
+        @foreach ($dopcs as $key => $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->saleProduct->product->model_name }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->sku }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->doProduct->saleProduct->product->model_name }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;"></td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->saleProduct->unit_price) - $prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->doProduct->saleProduct->unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->doProduct->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->doProduct->saleProduct->unit_price) - $prod->doProduct->saleProduct->discountAmount(), 2) }}</td>
             </tr>
             @php
-                $total += ($prod->qty * $prod->saleProduct->unit_price) - $prod->saleProduct->discountAmount();
+                $total += ($prod->qty * $prod->doProduct->saleProduct->unit_price) - $prod->doProduct->saleProduct->discountAmount();
             @endphp
         @endforeach
     </table>

@@ -31,6 +31,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -56,91 +57,78 @@ class SaleController extends Controller
 
     public function getData(Request $req)
     {
-        $quo_count = Sale::where('type', Sale::TYPE_QUO)->count();
+        $records = DB::table('sales')
+            ->select(
+                'sales.id AS id', 'sales.sku AS doc_no', 'sales.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
+                'sales.convert_to AS transfer_to', 'users.name AS agent', 'currencies.name AS curr_code', 'sales.status AS status'
+            )
+            ->where('sales.type', Sale::TYPE_QUO)
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('users', 'users.id', '=', 'sales.sale_id');
 
-        $data = [
-            'recordsTotal' => $quo_count,
-            'recordsFiltered' => $quo_count,
-            'data' => [],
-            'records_ids' => [],
-        ];
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
 
-        $count = 1;
-        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_QUO)->cursor() : Sale::where('type', Sale::TYPE_QUO)->skip(((int) $req->page - 1) * 10)->take($quo_count)->cursor() as $record) {
-            if (count($data['data']) < 10) {
-                $cus = $record->customer()->withTrashed()->first();
-                $total_amount = $record->getTotalAmount();
-
-                // Search
-                if ($req->has('search') && $req->search['value'] != null) {
-                    $keyword = $req->search['value'];
-
-                    if (
-                        ! str_contains($record->sku, $keyword) &&
-                        ! str_contains($cus->sku, $keyword) &&
-                        ! str_contains($cus->name, $keyword) &&
-                        ! str_contains($record->saleperson->name ?? null, $keyword) &&
-                        ! str_contains($cur->currency->name ?? null, $keyword) &&
-                        ! str_contains($total_amount, $keyword)
-                    ) {
-                        continue;
-                    }
-                }
-
-                $data['data'][] = [
-                    'id' => $record->id,
-                    'doc_no' => $record->sku,
-                    'date' => Carbon::parse($record->created_at)->format('d M Y'),
-                    'debtor_code' => $cus->sku,
-                    'debtor_name' => $cus->name,
-                    'agent' => $record->saleperson->name,
-                    'curr_code' => $cus->currency->name ?? null,
-                    'total' => number_format($total_amount, 2),
-                    'status' => $record->status,
-                    'can_edit' => hasPermission('sale.quotation.edit'),
-                    'can_delete' => hasPermission('sale.quotation.delete'),
-                ];
-            }
-
-            if ($req->has('search') && $req->search['value'] != null) {
-                $data['recordsTotal'] = $count;
-                $data['recordsFiltered'] = $count;
-            }
-            $data['records_ids'][] = $record->id;
-            $count++;
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('sales.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('sales.created_at', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('users.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%');
+            });
         }
-
         // Order
         if ($req->has('order')) {
-            $col = $req->order[0]['column'];
-            $dir = $req->order[0]['dir'];
             $map = [
-                'doc_no', 'date', 'debtor_code', 'debtor_name', 'agent',
-                'curr_code', 'total', 'status',
+                0 => 'doc_no',
+                1 => 'date',
+                2 => 'debtor_code',
+                3 => 'debtor_name',
+                5 => 'agent',
             ];
-
-            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
-                if ($dir == 'asc') {
-                    return $a[$map[$col]] > $b[$map[$col]];
-                } else {
-                    return $a[$map[$col]] < $b[$map[$col]];
-                }
-            });
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
         } else {
-            usort($data['data'], function ($a, $b) {
-                return $a['id'] < $b['id'];
-            });
+            $records = $records->orderBy('id', 'desc');
         }
 
-        if (count($data['data']) == 0) {
-            $data['recordsTotal'] = 0;
-            $data['recordsFiltered'] = 0;
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $quo = Sale::where('type', Sale::TYPE_QUO)->where('id', $record->id)->first();
+            $total_amount = $quo->getTotalAmount();
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'debtor_code' => $record->debtor_code,
+                'debtor_name' => $record->debtor_name,
+                'agent' => $record->agent,
+                'curr_code' => $record->curr_code ?? null,
+                'total' => number_format($total_amount, 2),
+                'status' => $record->status,
+                'can_edit' => hasPermission('sale.quotation.edit'),
+                'can_delete' => hasPermission('sale.quotation.delete'),
+            ];
         }
 
         return response()->json($data);
     }
 
-    public function create(Request $req)
+    public function create()
     {
         return view('quotation.form');
     }
@@ -345,92 +333,82 @@ class SaleController extends Controller
 
     public function getDataSaleOrder(Request $req)
     {
-        $so_count = Sale::where('type', Sale::TYPE_SO)->count();
+        $records = DB::table('sales')
+            ->select(
+                'sales.id AS id', 'sales.sku AS doc_no', 'sales.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
+                'sales.convert_to AS transfer_to', 'users.name AS agent', 'currencies.name AS curr_code', 'sales.status AS status'
+            )
+            ->where('sales.type', Sale::TYPE_SO)
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('users', 'users.id', '=', 'sales.sale_id');
 
-        $data = [
-            'recordsTotal' => $so_count,
-            'recordsFiltered' => $so_count,
-            'data' => [],
-            'records_ids' => [],
-        ];
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
 
-        $count = 1;
-        foreach ($req->page == 1 ? Sale::where('type', Sale::TYPE_SO)->cursor() : Sale::where('type', Sale::TYPE_SO)->skip(((int) $req->page - 1) * 10)->take($so_count)->cursor() as $record) {
-            if (count($data['data']) < 10) {
-                $transfer_to = $record->getTransferredTo();
-                $cus = $record->customer()->withTrashed()->first();
-                $paid_amount = $record->getPaidAmount();
-                $total_amount = $record->getTotalAmount();
+            $do_ids = DeliveryOrder::where('sku', 'like', '%'.$keyword.'%')->pluck('id')->toArray();
 
-                // Search
-                if ($req->has('search') && $req->search['value'] != null) {
-                    $keyword = $req->search['value'];
+            $records = $records->where(function ($q) use ($keyword, $do_ids) {
+                $q->where('sales.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('sales.created_at', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('users.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%');
 
-                    if (
-                        ! str_contains($record->sku, $keyword) &&
-                        ! str_contains($cus->sku, $keyword) &&
-                        ! str_contains($transfer_to == null ? null : implode(', ', $transfer_to), $keyword) &&
-                        ! str_contains($cus->name, $keyword) &&
-                        ! str_contains($record->saleperson->name ?? null, $keyword) &&
-                        ! str_contains($cur->currency->name ?? null, $keyword) &&
-                        ! str_contains($paid_amount, $keyword) &&
-                        ! str_contains($total_amount, $keyword)
-                    ) {
-                        continue;
-                    }
+                for ($i = 0; $i < count($do_ids); $i++) {
+                    $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
                 }
-
-                $data['data'][] = [
-                    'id' => $record->id,
-                    'doc_no' => $record->sku,
-                    'date' => Carbon::parse($record->created_at)->format('d M Y'),
-                    'debtor_code' => $cus->sku,
-                    'transfer_to' => $transfer_to,
-                    'debtor_name' => $cus->name,
-                    'agent' => $record->saleperson->name,
-                    'curr_code' => $cus->currency->name ?? null,
-                    'paid' => number_format($paid_amount, 2),
-                    'total' => number_format($total_amount, 2),
-                    'status' => $record->status,
-                    'can_edit' => hasPermission('sale.sale_order.edit'),
-                    'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
-                    'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
-                ];
-            }
-
-            if ($req->has('search') && $req->search['value'] != null) {
-                $data['recordsTotal'] = $count;
-                $data['recordsFiltered'] = $count;
-            }
-            $data['records_ids'][] = $record->id;
-            $count++;
+            });
         }
-
         // Order
         if ($req->has('order')) {
-            $col = $req->order[0]['column'];
-            $dir = $req->order[0]['dir'];
             $map = [
-                'doc_no', 'date', 'debtor_code', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'paid', 'total', 'status',
+                0 => 'doc_no',
+                1 => 'date',
+                2 => 'debtor_code',
+                4 => 'debtor_name',
+                5 => 'agent',
             ];
-
-            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
-                if ($dir == 'asc') {
-                    return $a[$map[$col]] > $b[$map[$col]];
-                } else {
-                    return $a[$map[$col]] < $b[$map[$col]];
-                }
-            });
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
         } else {
-            usort($data['data'], function ($a, $b) {
-                return $a['id'] < $b['id'];
-            });
+            $records = $records->orderBy('id', 'desc');
         }
 
-        if (count($data['data']) == 0) {
-            $data['recordsTotal'] = 0;
-            $data['recordsFiltered'] = 0;
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $so = Sale::where('type', Sale::TYPE_SO)->where('id', $record->id)->first();
+            $paid_amount = $so->getPaidAmount();
+            $total_amount = $so->getTotalAmount();
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'debtor_code' => $record->debtor_code,
+                'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
+                'debtor_name' => $record->debtor_name,
+                'agent' => $record->agent,
+                'curr_code' => $record->curr_code ?? null,
+                'paid' => number_format($paid_amount, 2),
+                'total' => number_format($total_amount, 2),
+                'status' => $record->status,
+                'can_edit' => hasPermission('sale.sale_order.edit'),
+                'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
+                'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
+            ];
         }
 
         return response()->json($data);
@@ -501,15 +479,14 @@ class SaleController extends Controller
     public function pdfSaleOrder(Sale $sale)
     {
         $products = collect();
-        $sps = $sale->products;
+        $sps = $sale->products()->withTrashed()->get();
         for ($i = 0; $i < count($sps); $i++) {
             $products->push($sps[$i]->product);
         }
-
         $pdf = Pdf::loadView('sale_order.'.(isHiTen($products) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
-            'products' => $sale->products,
+            'products' => $sale->products()->withTrashed()->get(),
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
@@ -713,13 +690,17 @@ class SaleController extends Controller
             }
 
             // Create PDF
+            $dopcs = collect();
+            for ($i = 0; $i < count($do->products); $i++) {
+                $dopcs = $dopcs->merge($do->products[$i]->children);
+            }
             $pdf = Pdf::loadView('sale_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_do_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
                 'sale_orders' => $sale_orders,
-                'spcs' => $spcs,
+                'dopcs' => $dopcs,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => ! $deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
                 'terms' => Session::get('convert_terms'),
@@ -1316,100 +1297,92 @@ class SaleController extends Controller
 
     public function getDataDeliveryOrder(Request $req)
     {
-        $do_count = DeliveryOrder::count();
+        $records = DB::table('delivery_orders')
+            ->select(
+                'delivery_orders.id AS id', 'delivery_orders.sku AS doc_no', 'delivery_orders.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
+                'users.name AS agent', 'currencies.name AS curr_code', 'delivery_orders.status AS status', 'delivery_orders.filename AS filename', 'created_by.name AS created_by',
+                'invoices.sku AS transfer_to'
+            )
+            ->where('sales.type', Sale::TYPE_SO)
+            ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('users', 'users.id', '=', 'sales.sale_id')
+            ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
+            ->leftJoin('invoices', 'invoices.id', '=', 'delivery_orders.invoice_id')
+            ->groupBy('delivery_orders.id');
 
-        $data = [
-            'recordsTotal' => $do_count,
-            'recordsFiltered' => $do_count,
-            'data' => [],
-            'records_ids' => [],
-        ];
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
 
-        $count = 1;
-        foreach ($req->page == 1 ? DeliveryOrder::cursor() : DeliveryOrder::skip(((int) $req->page - 1) * 10)->take($do_count)->cursor() as $do) {
-            if (count($data['data']) < 10) {
-                $so_skus = [];
-                $total_amount = 0;
-                $sos = Sale::whereRaw("find_in_set('".$do->id."', convert_to)")->get();
-                if (config('app.env') == 'local' && count($sos) == 0) {
-                    $sos = [Sale::latest()->first()];
-                }
-                $cus = $sos[0]->customer()->withTrashed()->first();
-                $saleperson = $sos[0]->saleperson;
+            $so_ids = Sale::where('type', Sale::TYPE_SO)->where('sku', 'like', '%'.$keyword.'%')->pluck('id')->toArray();
 
-                for ($i = 0; $i < count($sos); $i++) {
-                    $so_skus[] = $sos[$i]->sku;
-                    $total_amount += $sos[$i]->getTotalAmount();
-                }
+            $records = $records->where(function ($q) use ($keyword, $so_ids) {
+                $q->where('delivery_orders.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('delivery_orders.created_at', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('users.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('created_by.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('invoices.sku', 'like', '%'.$keyword.'%')
+                    ->orWhereIn('sales.id', $so_ids);
 
-                // Search
-                if ($req->has('search') && $req->search['value'] != null) {
-                    $keyword = $req->search['value'];
-
-                    if (
-                        ! str_contains($do->sku, $keyword) &&
-                        ! str_contains($cus->sku, $keyword) &&
-                        ! str_contains(implode(', ', $so_skus), $keyword) &&
-                        ! str_contains($do->invoice->sku ?? null, $keyword) &&
-                        ! str_contains($cus->name, $keyword) &&
-                        ! str_contains($saleperson->name, $keyword) &&
-                        ! str_contains($cus->currency->name ?? null, $keyword) &&
-                        ! str_contains($total_amount, $keyword) &&
-                        ! str_contains($do->createdBy->name ?? null, $keyword)
-                    ) {
-                        continue;
-                    }
-                }
-
-                $data['data'][] = [
-                    'id' => $do->id,
-                    'doc_no' => $do->sku,
-                    'date' => Carbon::parse($do->created_at)->format('d M Y'),
-                    'debtor_code' => $cus->sku,
-                    'transfer_from' => implode(', ', $so_skus),
-                    'transfer_to' => $do->invoice->sku ?? null,
-                    'debtor_name' => $cus->name,
-                    'agent' => $saleperson->name,
-                    'curr_code' => $cus->currency->name ?? null,
-                    'total' => number_format($total_amount, 2),
-                    'created_by' => $do->createdBy->name ?? null,
-                    'status' => $do->status,
-                ];
-            }
-
-            if ($req->has('search') && $req->search['value'] != null) {
-                $data['recordsTotal'] = $count;
-                $data['recordsFiltered'] = $count;
-            }
-            $data['records_ids'][] = $do->id;
-            $count++;
+            });
         }
-
         // Order
         if ($req->has('order')) {
-            $col = $req->order[0]['column'];
-            $dir = $req->order[0]['dir'];
             $map = [
-                'doc_no', 'date', 'debtor_code', 'transfer_from', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'total', 'created_by', 'status',
+                0 => 'delivery_orders.sku',
+                1 => 'delivery_orders.created_at',
+                2 => 'customers.sku',
+                5 => 'customers.name',
+                6 => 'users.name',
             ];
-
-            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
-                if ($dir == 'asc') {
-                    return $a[$map[$col]] > $b[$map[$col]];
-                } else {
-                    return $a[$map[$col]] < $b[$map[$col]];
-                }
-            });
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
         } else {
-            usort($data['data'], function ($a, $b) {
-                return $a['id'] < $b['id'];
-            });
+            $records = $records->orderBy('delivery_orders.id', 'desc');
         }
 
-        if (count($data['data']) == 0) {
-            $data['recordsTotal'] = 0;
-            $data['recordsFiltered'] = 0;
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$record->id."', convert_to)")->get();
+            $total_amount = 0;
+            $so_skus = [];
+
+            for ($i = 0; $i < count($sos); $i++) {
+                $total_amount += $sos[$i]->getTotalAmount();
+                $so_skus[] = $sos[$i]->sku;
+            }
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'debtor_code' => $record->debtor_code,
+                'transfer_from' => implode(', ', $so_skus),
+                'transfer_to' => $record->transfer_to ?? null,
+                'debtor_name' => $record->debtor_name,
+                'agent' => $record->agent,
+                'curr_code' => $record->curr_code ?? null,
+                'total' => number_format($total_amount, 2),
+                'created_by' => $record->created_by ?? null,
+                'status' => $record->status,
+                'filename' => $record->filename,
+
+            ];
         }
 
         return response()->json($data);
@@ -1477,10 +1450,6 @@ class SaleController extends Controller
 
             $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
 
-            $do_products = DeliveryOrderProduct::with(['saleProduct' => function ($q) {
-                $q->withTrashed();
-            }])->whereIn('delivery_order_id', $do_ids)->get();
-
             $inv = Invoice::create([
                 'sku' => $sku,
                 'filename' => $filename,
@@ -1491,12 +1460,19 @@ class SaleController extends Controller
             (new Branch)->assign(Invoice::class, $inv->id);
 
             // Create PDF
+            $dopcs = collect();
+            $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
+            for ($i = 0; $i < count($dos); $i++) {
+                for ($j = 0; $j < count($dos[$i]->products); $j++) {
+                    $dopcs = $dopcs->merge($dos[$i]->products[$j]->children);
+                }
+            }
             $pdf = Pdf::loadView('delivery_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'do_sku' => implode(', ', $do_sku),
                 'dos' => $dos,
-                'do_products' => $do_products,
+                'dopcs' => $dopcs,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'terms' => Session::get('convert_terms'),
@@ -1664,106 +1640,90 @@ class SaleController extends Controller
 
     public function getDataInvoice(Request $req)
     {
-        $inv_count = Invoice::count();
+        $records = DB::table('invoices')
+            ->select(
+                'invoices.id AS id', 'invoices.sku AS doc_no', 'invoices.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
+                'users.name AS agent', 'currencies.name AS curr_code', 'invoices.status AS status', 'invoices.filename AS filename', 'created_by.name AS created_by',
+            )
+            ->where('sales.type', Sale::TYPE_SO)
+            ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
+            ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('users', 'users.id', '=', 'sales.sale_id')
+            ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
+            ->groupBy('invoices.id');
 
-        $data = [
-            'recordsTotal' => $inv_count,
-            'recordsFiltered' => $inv_count,
-            'data' => [],
-            'records_ids' => [],
-        ];
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
 
-        $count = 1;
-        foreach ($req->page == 1 ? Invoice::cursor() : Invoice::skip(((int) $req->page - 1) * 10)->take($inv_count)->cursor() as $record) {
-            if (count($data['data']) < 10) {
-                $do_skus = [];
-                $total_amount = 0;
-                $dos = DeliveryOrder::where('invoice_id', $record->id)->get();
-                if (config('app.env') == 'local' && count($dos) == 0) {
-                    $dos = [DeliveryOrder::latest()->first()];
-                }
-                $cus = null;
-                $saleperson = null;
+            $do_ids = DeliveryOrder::where('sku', 'like', '%'.$keyword.'%')->pluck('id')->toArray();
 
-                for ($i = 0; $i < count($dos); $i++) {
-                    $do_skus[] = $dos[$i]->sku;
-
-                    $sos = Sale::where('type', Sale::TYPE_SO)->get();
-                    for ($j = 0; $j < count($sos); $j++) {
-                        if ($j == 0) {
-                            $cus = $sos[0]->customer()->withTrashed()->first();
-                            $saleperson = $sos[0]->saleperson;
-                        }
-                        $total_amount += $sos[$i]->getTotalAmount();
-                    }
-                }
-
-                // Search
-                if ($req->has('search') && $req->search['value'] != null) {
-                    $keyword = $req->search['value'];
-
-                    if (
-                        ! str_contains($record->sku, $keyword) &&
-                        ! str_contains($cus->sku, $keyword) &&
-                        ! str_contains(implode(', ', $do_skus), $keyword) &&
-                        ! str_contains($cus->name, $keyword) &&
-                        ! str_contains($saleperson->name, $keyword) &&
-                        ! str_contains($cus->currency->name ?? null, $keyword) &&
-                        ! str_contains($total_amount, $keyword) &&
-                        ! str_contains($record->createdBy->name ?? null, $keyword)
-                    ) {
-                        continue;
-                    }
-                }
-
-                $data['data'][] = [
-                    'id' => $record->id,
-                    'doc_no' => $record->sku,
-                    'date' => Carbon::parse($record->created_at)->format('d M Y'),
-                    'debtor_code' => $cus->sku,
-                    'transfer_from' => implode(', ', $do_skus),
-                    'debtor_name' => $cus->name,
-                    'agent' => $saleperson->name ?? null,
-                    'curr_code' => $cus->currency->name ?? null,
-                    'total' => number_format($total_amount, 2),
-                    'created_by' => $record->createdBy->name ?? null,
-                    'status' => $record->status,
-                ];
-            }
-
-            if ($req->has('search') && $req->search['value'] != null) {
-                $data['recordsTotal'] = $count;
-                $data['recordsFiltered'] = $count;
-            }
-            $data['records_ids'][] = $record->id;
-            $count++;
+            $records = $records->where(function ($q) use ($keyword, $do_ids) {
+                $q->where('invoices.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('invoices.created_at', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('users.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('created_by.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%')
+                    ->orWhereIn('delivery_orders.id', $do_ids);
+            });
         }
-
         // Order
         if ($req->has('order')) {
-            $col = $req->order[0]['column'];
-            $dir = $req->order[0]['dir'];
             $map = [
-                'doc_no', 'date', 'debtor_code', 'transfer_from', 'transfer_to', 'debtor_name', 'agent',
-                'curr_code', 'total', 'created_by', 'status',
+                1 => 'invoices.sku',
+                2 => 'invoices.created_at',
+                3 => 'customers.sku',
+                5 => 'customers.name',
+                6 => 'users.name',
             ];
-
-            usort($data['data'], function ($a, $b) use ($dir, $col, $map) {
-                if ($dir == 'asc') {
-                    return $a[$map[$col]] > $b[$map[$col]];
-                } else {
-                    return $a[$map[$col]] < $b[$map[$col]];
-                }
-            });
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
         } else {
-            usort($data['data'], function ($a, $b) {
-                return $a['id'] < $b['id'];
-            });
+            $records = $records->orderBy('invoices.id', 'desc');
         }
 
-        if (count($data['data']) == 0) {
-            $data['recordsTotal'] = 0;
-            $data['recordsFiltered'] = 0;
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $dos = DeliveryOrder::where('invoice_id', $record->id)->get();
+            $total_amount = 0;
+            $do_skus = [];
+
+            for ($i = 0; $i < count($dos); $i++) {
+                $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$dos[$i]->id."', convert_to)")->get();
+                for ($j = 0; $j < count($sos); $j++) {
+                    $total_amount += $sos[$j]->getTotalAmount();
+                }
+                $do_skus[] = $dos[$i]->sku;
+            }
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'debtor_code' => $record->debtor_code,
+                'transfer_from' => implode(', ', $do_skus),
+                'debtor_name' => $record->debtor_name,
+                'agent' => $record->agent ?? null,
+                'curr_code' => $record->curr_code ?? null,
+                'total' => number_format($total_amount, 2),
+                'created_by' => $record->created_by ?? null,
+                'status' => $record->status,
+                'filename' => $record->filename,
+            ];
         }
 
         return response()->json($data);
@@ -2343,11 +2303,8 @@ class SaleController extends Controller
             if ($req->term == null) {
                 $errors['term'] = 'Please select a term';
             }
-            if ($req->your_po_no == null) {
-                $errors['your_po_no'] = 'Please enter a Your P/O No';
-            }
-            if ($req->your_so_no == null) {
-                $errors['your_so_no'] = 'Please enter a Your S/O No';
+            if ($req->your_ref == null) {
+                $errors['your_ref'] = 'Please enter a Your Ref';
             }
             if ($req->our_do_no == null) {
                 $errors['our_do_no'] = 'Please enter a Our D/O No';
@@ -2360,15 +2317,44 @@ class SaleController extends Controller
 
             Session::put('billing_saleperson', $req->sale);
             Session::put('billing_term', $req->term);
-            Session::put('billing_your_po_no', $req->your_po_no);
-            Session::put('billing_your_so_no', $req->your_so_no);
+            Session::put('billing_your_ref', $req->your_ref);
             Session::put('billing_our_do_no', $req->our_do_no);
 
             $inv_ids = Session::get('invoice_ids');
             $do_ids = DeliveryOrder::whereIn('invoice_id', explode(',', $inv_ids))->pluck('id');
 
-            $products = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->get();
-            dd($products);
+            $dops = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->get();
+
+            $products = [];
+            $existing_product_ids = [];
+            foreach ($dops as $dop) {
+                $sp = $dop->saleProduct;
+
+                if (in_array($sp->product->id, $existing_product_ids)) {
+                    $dopcs = $dop->children->pluck('productChild.sku')->toArray();
+                    for ($i = 0; $i < count($dopcs); $i++) {
+                        $products[$sp->product->id]['serial_no'][] = [
+                            'unit_price' => $sp->unit_price,
+                            'serial_no' => $dopcs[$i],
+                        ];
+                    }
+                } else {
+                    $products[$sp->product->id] = [
+                        'product_name' => $sp->product->model_name,
+                        'product_desc' => $sp->product->model_desc,
+                    ];
+
+                    $dopcs = $dop->children->pluck('productChild.sku')->toArray();
+                    for ($i = 0; $i < count($dopcs); $i++) {
+                        $products[$sp->product->id]['serial_no'][] = [
+                            'unit_price' => $sp->unit_price,
+                            'serial_no' => $dopcs[$i],
+                        ];
+                    }
+                }
+
+                $existing_product_ids[] = $sp->product->id;
+            }
         } elseif ($req->has('inv')) {
             $step = 2;
 
@@ -2417,8 +2403,17 @@ class SaleController extends Controller
 
             (new Branch)->assign(Billing::class, $bill->id);
 
-            $this->generateDeliveryOrderBillingPDF($sku, $do_filename, $req->sale_product_id);
-            $this->generateInvoiceBillingPDF($sku, $inv_filename, $req->sale_product_id, $req->all());
+            // Prepare dopcs
+            $dopcs = collect();
+            $dos = DeliveryOrder::whereIn('invoice_id', $invoiceIds)->get();
+            for ($i = 0; $i < count($dos); $i++) {
+                for ($j = 0; $j < count($dos[$i]->products); $j++) {
+                    $dopcs = $dopcs->merge($dos[$i]->products[$j]->children);
+                }
+            }
+
+            $this->generateDeliveryOrderBillingPDF($sku, $do_filename, $dopcs, $req->all());
+            $this->generateInvoiceBillingPDF($sku, $inv_filename, $dopcs, $req->all());
 
             DB::commit();
 
@@ -2431,31 +2426,35 @@ class SaleController extends Controller
         }
     }
 
-    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, array $sale_product_ids)
+    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, Collection $dopcs, array $custom_unit_price)
     {
-        $pdf = Pdf::loadView('billing.do_pdf', [
+        $pdf = Pdf::loadView('billing.do_inv_pdf', [
+            'is_do' => true,
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
-            'your_po_no' => Session::get('billing_your_po_no'),
-            'your_so_no' => Session::get('billing_your_so_no'),
+            'your_ref' => Session::get('billing_your_ref'),
+            'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
             'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
-            'products' => SaleProduct::whereIn('id', $sale_product_ids)->get(),
+            'dopcs' => $dopcs,
+            'custom_unit_price' => $custom_unit_price,
         ]);
         $pdf->setPaper('A4', 'letter');
         $content = $pdf->download()->getOriginalContent();
         Storage::put(self::BILLING_PATH.$filename, $content);
     }
 
-    private function generateInvoiceBillingPDF(string $sku, string $filename, array $sale_product_ids, array $custom_unit_price)
+    private function generateInvoiceBillingPDF(string $sku, string $filename, Collection $dopcs, array $custom_unit_price)
     {
-        $pdf = Pdf::loadView('billing.inv_pdf', [
+        $pdf = Pdf::loadView('billing.do_inv_pdf', [
+            'is_do' => false,
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
+            'your_ref' => Session::get('billing_your_ref'),
             'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
             'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
-            'products' => SaleProduct::whereIn('id', $sale_product_ids)->get(),
+            'dopcs' => $dopcs,
             'custom_unit_price' => $custom_unit_price,
         ]);
         $pdf->setPaper('A4', 'letter');

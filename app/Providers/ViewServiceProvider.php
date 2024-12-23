@@ -8,7 +8,6 @@ use App\Models\ClassificationCode;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
-use App\Models\CustomerCredit;
 use App\Models\DebtorType;
 use App\Models\InventoryCategory;
 use App\Models\MaterialUse;
@@ -17,12 +16,9 @@ use App\Models\MsicCode;
 use App\Models\Platform;
 use App\Models\Priority;
 use App\Models\Product;
-use App\Models\ProductChild;
 use App\Models\ProductCost;
-use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProjectType;
 use App\Models\Promotion;
-use App\Models\Report;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -36,7 +32,6 @@ use App\Models\User;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
@@ -83,51 +78,54 @@ class ViewServiceProvider extends ServiceProvider
                 'ticket' => [],
                 'customer' => [],
                 'supplier' => [],
+                'dealer' => [],
                 'setting' => [],
             ];
 
             for ($i = 0; $i < count($permissions); $i++) {
                 if (str_contains($permissions[$i], 'inventory.summary')) {
                     array_push($permissions_group['inventory.summary'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'inventory.category')) {
+                } elseif (str_contains($permissions[$i], 'inventory.category')) {
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'inventory.product')) {
+                } elseif (str_contains($permissions[$i], 'inventory.product')) {
                     array_push($permissions_group['inventory.product'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'inventory.raw_material')) {
+                } elseif (str_contains($permissions[$i], 'inventory.raw_material')) {
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'grn')) {
+                } elseif (str_contains($permissions[$i], 'grn')) {
                     array_push($permissions_group['grn'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'service_reminder')) {
+                } elseif (str_contains($permissions[$i], 'service_reminder')) {
                     array_push($permissions_group['service_reminder'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'service_history')) {
+                } elseif (str_contains($permissions[$i], 'service_history')) {
                     array_push($permissions_group['service_history'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'warranty')) {
+                } elseif (str_contains($permissions[$i], 'warranty')) {
                     array_push($permissions_group['warranty'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.quotation')) {
+                } elseif (str_contains($permissions[$i], 'sale.quotation')) {
                     array_push($permissions_group['sale.quotation'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.sale_order')) {
+                } elseif (str_contains($permissions[$i], 'sale.sale_order')) {
                     array_push($permissions_group['sale.sale_order'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.delivery_order')) {
+                } elseif (str_contains($permissions[$i], 'sale.delivery_order')) {
                     array_push($permissions_group['sale.delivery_order'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.invoice')) {
+                } elseif (str_contains($permissions[$i], 'sale.invoice')) {
                     array_push($permissions_group['sale.invoice'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.target')) {
+                } elseif (str_contains($permissions[$i], 'sale.target')) {
                     array_push($permissions_group['sale.target'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'sale.billing')) {
+                } elseif (str_contains($permissions[$i], 'sale.billing')) {
                     array_push($permissions_group['sale.billing'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'task')) {
+                } elseif (str_contains($permissions[$i], 'task')) {
                     array_push($permissions_group['task'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'production_material')) {
+                } elseif (str_contains($permissions[$i], 'production_material')) {
                     array_push($permissions_group['production_material'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'production')) {
+                } elseif (str_contains($permissions[$i], 'production')) {
                     array_push($permissions_group['production'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'ticket')) {
+                } elseif (str_contains($permissions[$i], 'ticket')) {
                     array_push($permissions_group['ticket'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'customer')) {
+                } elseif (str_contains($permissions[$i], 'customer')) {
                     array_push($permissions_group['customer'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'supplier')) {
+                } elseif (str_contains($permissions[$i], 'supplier')) {
                     array_push($permissions_group['supplier'], $permissions[$i]);
-                } else if (str_contains($permissions[$i], 'setting')) {
+                } elseif (str_contains($permissions[$i], 'dealer')) {
+                    array_push($permissions_group['dealer'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'setting')) {
                     array_push($permissions_group['setting'], $permissions[$i]);
                 }
             }
@@ -137,9 +135,9 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['task.form', 'task.view'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $for_role = 'technician';
-            } else if (str_contains(Route::currentRouteName(), '.sale.')) {
+            } elseif (str_contains(Route::currentRouteName(), '.sale.')) {
                 $for_role = 'sale';
-            } else if (str_contains(Route::currentRouteName(), '.driver.')) {
+            } elseif (str_contains(Route::currentRouteName(), '.driver.')) {
                 $for_role = 'driver';
             }
 
@@ -167,7 +165,7 @@ class ViewServiceProvider extends ServiceProvider
                 } else {
                     $milestones->where('is_custom', false);
                 }
-            } else if (str_contains(Route::currentRouteName(), '.sale.')) {
+            } elseif (str_contains(Route::currentRouteName(), '.sale.')) {
                 $users = User::whereHas('roles', function ($q) {
                     $q->where('id', Role::SALE);
                 })->orderBy('id', 'desc')->get();
@@ -179,7 +177,7 @@ class ViewServiceProvider extends ServiceProvider
                 } else {
                     $milestones->where('is_custom', false);
                 }
-            } else if (str_contains(Route::currentRouteName(), '.driver.')) {
+            } elseif (str_contains(Route::currentRouteName(), '.driver.')) {
                 $users = User::whereHas('roles', function ($q) {
                     $q->where('id', Role::DRIVER);
                 })->orderBy('id', 'desc')->get();
@@ -220,8 +218,8 @@ class ViewServiceProvider extends ServiceProvider
             }
             if (str_contains(Route::currentRouteName(), '.driver.')) {
                 $sales_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
-                
-                $view->with('sales_orders', $sales_orders);   
+
+                $view->with('sales_orders', $sales_orders);
             }
 
             $view->with([
@@ -268,14 +266,14 @@ class ViewServiceProvider extends ServiceProvider
             ];
 
             $view->with([
-                'prefix' => $prefix
+                'prefix' => $prefix,
             ]);
         });
         View::composer(['user_management.form', 'components.app.modal.convert-ticket-modal'], function (ViewView $view) {
             $roles = Role::whereNot('id', Role::SUPERADMIN)->get();
 
             $view->with([
-                'roles' => $roles
+                'roles' => $roles,
             ]);
         });
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function (ViewView $view) {
@@ -291,8 +289,8 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             $products = Product::with(['children' => function ($q) use ($involved_pc_ids) {
-                    $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
-                }])
+                $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
+            }])
                 ->with('sellingPrices')
                 ->where('is_active', true)
                 ->where('type', Product::TYPE_PRODUCT)
@@ -307,12 +305,12 @@ class ViewServiceProvider extends ServiceProvider
             // Promotions
             $promotions = Promotion::orderBy('id', 'desc')
                 ->where('status', 1)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->orWhereNull('valid_till')
-                    ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
-                }) 
+                        ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
+                })
                 ->get();
-            
+
             // UOM
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
 
@@ -328,7 +326,6 @@ class ViewServiceProvider extends ServiceProvider
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
             $classificationCodes = ClassificationCode::withoutGlobalScope(BranchScope::class)->get();
-
 
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
                 $inventory_types = [
@@ -355,7 +352,7 @@ class ViewServiceProvider extends ServiceProvider
             $is_production = false;
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
                 $is_product = false;
-            } else if (str_contains(Route::currentRouteName(), 'production_material.')) {
+            } elseif (str_contains(Route::currentRouteName(), 'production_material.')) {
                 $is_product = false;
                 $is_production = true;
             }
@@ -370,7 +367,6 @@ class ViewServiceProvider extends ServiceProvider
             $technicians = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::TECHNICIAN);
             })->orderBy('id', 'desc')->get();
-
 
             $view->with([
                 'customers' => $customers,
@@ -431,7 +427,7 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
-            
+
             $view->with('branches', $branches);
         });
         View::composer(['components.app.modal.create-customer-link-modal'], function (ViewView $view) {
@@ -443,7 +439,7 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_KL => route('customer.create_link', ['branch' => Crypt::encrypt(Branch::LOCATION_KL)]),
                 Branch::LOCATION_PENANG => route('customer.create_link', ['branch' => Crypt::encrypt(Branch::LOCATION_PENANG)]),
             ];
-            
+
             $view->with('branches', $branches);
             $view->with('links', $links);
         });
@@ -529,7 +525,7 @@ class ViewServiceProvider extends ServiceProvider
             ];
 
             $view->with([
-                'payment_statuses' => $payment_statuses
+                'payment_statuses' => $payment_statuses,
             ]);
         });
     }

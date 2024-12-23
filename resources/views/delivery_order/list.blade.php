@@ -154,6 +154,7 @@
                 {
                     "width": "10%",
                     "targets": 8,
+                    orderable: false,
                     render: function(data, type, row) {
                         return `RM ${data}`
                     }
@@ -213,10 +214,10 @@
         })
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
-            
+
             getOtherInvolvedDO(id);
         })
-        
+
         function getOtherInvolvedDO(do_id) {
             $('#do-inv-cancel-modal .cancellation-hint').remove()
 
@@ -228,12 +229,12 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'GET', 
+                type: 'GET',
                 contentType: 'application/json',
                 success: function(res) {
                     for (const key in res.involved) {
                         const element = res.involved[key];
-                        
+
                         let clone = $('#do-inv-cancel-modal #info-template')[0].cloneNode(true);
 
                         $(clone).find('#main').text(key)
