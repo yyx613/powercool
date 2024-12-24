@@ -215,6 +215,8 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
             Route::get('/cancel', 'cancelDeliveryOrder')->name('cancel');
             Route::get('/get-cancellation-involved-do/{do}', 'getCancellationInvolvedDO')->name('get_cancellation_involved_do');
+            Route::get('/generate-transport-acknowledgement', 'transportAcknowledgement')->name('transport_acknowledgement');
+            Route::post('/generate-transport-acknowledgement', 'generateTransportAcknowledgement')->name('generate_transport_acknowledgement');
         });
         // Invoice
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {

@@ -8,7 +8,9 @@ use App\Models\ClassificationCode;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\Dealer;
 use App\Models\DebtorType;
+use App\Models\DeliveryOrder;
 use App\Models\InventoryCategory;
 use App\Models\MaterialUse;
 use App\Models\Milestone;
@@ -526,6 +528,20 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'payment_statuses' => $payment_statuses,
+            ]);
+        });
+        View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
+            $delivery_orders = DeliveryOrder::whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
+            $dealers = Dealer::orderBy('id', 'desc')->get();
+            $types = [
+                DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',
+                DeliveryOrder::TRANSPORT_ACK_TYPE_COLLECTION => 'Collection',
+            ];
+
+            $view->with([
+                'delivery_orders' => $delivery_orders,
+                'dealers' => $dealers,
+                'types' => $types,
             ]);
         });
     }

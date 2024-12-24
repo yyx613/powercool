@@ -16,29 +16,38 @@ class DeliveryOrder extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_CANCELLED = 1;
+
     const STATUS_CONVERTED = 2;
 
+    const TRANSPORT_ACK_TYPE_DELIVERY = 1;
+
+    const TRANSPORT_ACK_TYPE_COLLECTION = 2;
+
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function products() {
+    public function products()
+    {
         return $this->hasMany(DeliveryOrderProduct::class);
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
     public function invoice()
     {
-        return $this->belongsTo(Invoice::class, 'invoice_id'); 
+        return $this->belongsTo(Invoice::class, 'invoice_id');
     }
 
     public function customer()
@@ -51,19 +60,20 @@ class DeliveryOrder extends Model
         return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
     }
 
-    public function generateSku(): string {
+    public function generateSku(): string
+    {
         $sku = null;
-        
+
         while (true) {
-            $sku = 'DO' . now()->format('ym') . generateRandomAlphabet();
+            $sku = 'DO'.now()->format('ym').generateRandomAlphabet();
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 break;
             }
         }
 
         return $sku;
-    } 
+    }
 }

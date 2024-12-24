@@ -9,6 +9,7 @@ use App\Models\CreditNote;
 use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Dealer;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
@@ -45,6 +46,8 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 class SaleController extends Controller
 {
     const DELIVERY_ORDER_PATH = '/public/delivery_order/';
+
+    const TRANSPORT_ACKNOWLEDGEMENT_PATH = '/public/transport_acknowledgement/';
 
     const INVOICE_PATH = '/public/invoice/';
 
@@ -1301,7 +1304,7 @@ class SaleController extends Controller
             ->select(
                 'delivery_orders.id AS id', 'delivery_orders.sku AS doc_no', 'delivery_orders.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
                 'users.name AS agent', 'currencies.name AS curr_code', 'delivery_orders.status AS status', 'delivery_orders.filename AS filename', 'created_by.name AS created_by',
-                'invoices.sku AS transfer_to'
+                'invoices.sku AS transfer_to', 'delivery_orders.transport_ack_filename'
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
@@ -1381,7 +1384,7 @@ class SaleController extends Controller
                 'created_by' => $record->created_by ?? null,
                 'status' => $record->status,
                 'filename' => $record->filename,
-
+                'transport_ack_filename' => $record->transport_ack_filename,
             ];
         }
 
@@ -2076,7 +2079,10 @@ class SaleController extends Controller
             return Storage::download(self::INVOICE_PATH.'/'.$req->query('file'));
         } elseif ($req->type == 'billing') {
             return Storage::download(self::BILLING_PATH.'/'.$req->query('file'));
+        } elseif ($req->type == 'ta') {
+            return Storage::download(self::TRANSPORT_ACKNOWLEDGEMENT_PATH.'/'.$req->query('file'));
         }
+
     }
 
     public function indexTarget()
@@ -2626,5 +2632,70 @@ class SaleController extends Controller
         $pendingOrdersCount = Sale::where('type', Sale::TYPE_PENDING)->count();
 
         return response()->json(['count' => $pendingOrdersCount]);
+    }
+
+    public function transportAcknowledgement()
+    {
+        return view('delivery_order.generate_transport_acknowledgement');
+    }
+
+    public function generateTransportAcknowledgement(Request $req)
+    {
+        // Validate form
+        $rules = [
+            'delivery_order' => 'required',
+            'dealer' => 'required',
+            'type' => 'required',
+        ];
+        $req->validate($rules);
+
+        try {
+            DB::beginTransaction();
+
+            if ($req->dealer != '-1' && $req->dealer != '-2') {
+                $dealer = Dealer::where('id', $req->dealer)->first();
+
+                $dealer_name = $dealer->name;
+            } elseif ($req->dealer == '-1') {
+                $dealer_name = 'Powercool';
+            } elseif ($req->dealer == '-2') {
+                $dealer_name = 'Hi Ten Trading';
+            }
+
+            $do = DeliveryOrder::where('id', $req->delivery_order)->first();
+            $first_so = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$do->id."', convert_to)")->first();
+            $dopcs = collect();
+
+            for ($i = 0; $i < count($do->products); $i++) {
+                for ($j = 0; $j < count($do->products[$i]->children); $j++) {
+                    $dopcs->push($do->products[$i]->children[$j]);
+                }
+            }
+
+            $pdf = Pdf::loadView('delivery_order.transport_acknowledgement_pdf', [
+                'date' => now()->format('d/m/Y'),
+                'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
+                'do_sku' => $do->sku,
+                'address' => $first_so->customer->locations()->where('type', CustomerLocation::TYPE_DELIVERY)->value('address'),
+                'dopcs' => $dopcs,
+                'dealer_name' => $dealer_name,
+            ]);
+            $pdf->setPaper('A4', 'letter');
+            $content = $pdf->download()->getOriginalContent();
+            $filename = 'transport-ack-'.now()->format('ymdhis').'.pdf';
+            Storage::put(self::TRANSPORT_ACKNOWLEDGEMENT_PATH.$filename, $content);
+
+            $do->transport_ack_filename = $filename;
+            $do->save();
+
+            DB::commit();
+
+            return redirect(route('delivery_order.index'))->with('success', 'Transport Acknowledgement generated');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong, Please contact administrator');
+        }
     }
 }
