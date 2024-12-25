@@ -54,6 +54,32 @@ class SaleController extends Controller
         return view('quotation.list');
     }
 
+    public function getDataInvoice(Request $request)
+{
+    try {
+        $records = Invoice::query();
+
+        if ($request->has('search') && $request->search['value'] != null) {
+            $keyword = $request->search['value'];
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('invoice_number', 'like', '%' . $keyword . '%')
+                    ->orWhere('reference_no', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $count = $records->count();
+        
+        return response()->json([
+            'recordsTotal' => $count,
+            'recordsFiltered' => $count,
+            'data' => $records->get()
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Invoice Data Error', ['error' => $e->getMessage()]);
+        return response()->json(['error' => 'Failed to fetch invoice data'], 500);
+    }
+}
+
     public function getData(Request $req)
     {
         $records = Sale::where('type', Sale::TYPE_QUO);
@@ -1246,19 +1272,20 @@ class SaleController extends Controller
     public function sync($company)
     {
         try {
-            $invoices = Invoice::with('customer')
-                ->whereHas('customer', function($query) use ($company) {
-                    $query->where('company_name', $company)
-                        ->whereNull('deleted_at');
-                })
-                ->get();
-                
+            $invoices = Invoice::with(['customer' => function($query) use ($company) {
+                $query->where('company_name', $company);
+            }])
+            ->whereHas('customer', function($query) use ($company) {
+                $query->where('company_name', $company)
+                      ->whereNull('customers.deleted_at');  // Specify the table name
+            })
+            ->get();
+            
             return Response::json([
                 'result' => true,
                 'data' => $invoices
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Exception $e) {
-            Log::info($e);
             return Response::json([
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);

@@ -108,15 +108,15 @@ class SupplierController extends Controller
             $suppliers = Supplier::where('company_name', $company)
                 ->whereNull('deleted_at')
                 ->get();
-             return Response::json([
+            return Response::json([
                 'result' => true,
                 'data' => $suppliers
             ], HttpFoundationResponse::HTTP_OK);
-         } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
                 'error' => $e->getMessage()
             ]);
-             return Response::json([
+            return Response::json([
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -243,22 +243,23 @@ class SupplierController extends Controller
         }
     }
 
-    public function grnHistory(Supplier $supplier) {
+    public function grnHistory(Supplier $supplier)
+    {
         $formatted_grns = [];
         $formatted_products = [];
 
         $grns = GRN::where('supplier_id', $supplier->id)->orderBy('id', 'desc')->get();
 
         $product_ids = [];
-        for ($i=0; $i < count($grns); $i++) { 
-            $formatted_grns[$grns[$i]->product_id][] = $grns[$i];                
+        for ($i = 0; $i < count($grns); $i++) {
+            $formatted_grns[$grns[$i]->product_id][] = $grns[$i];
             $product_ids[] = $grns[$i]->product_id;
         }
         $product_ids = array_unique($product_ids);
 
         $products = Product::withTrashed()->whereIn('id', $product_ids)->get();
-        for ($i=0; $i < count($products); $i++) { 
-            $formatted_products[$products[$i]->id] = $products[$i];            
+        for ($i = 0; $i < count($products); $i++) {
+            $formatted_products[$products[$i]->id] = $products[$i];
         }
 
         return view('supplier.grn_history', [
