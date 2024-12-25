@@ -105,22 +105,21 @@ class CustomerController extends Controller
         return back()->with('success', 'Customer deleted');
     }
 
-    public function sync(Customer $customer, $company)
+    public function sync($company)
     {
         try {
-            $customer = $customer->where('company_name', $company)->where('deleted_at', null)->get();
-            return Response::json([
+            $customers = Customer::where('company_name', $company)
+                ->whereNull('deleted_at')
+                ->get();
+             return Response::json([
                 'result' => true,
-                'data' => $customer
+                'data' => $customers
             ], HttpFoundationResponse::HTTP_OK);
-
-        } catch (\Exception $e) {
+         } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
-                'customer' => $customer->id,
                 'error' => $e->getMessage()
             ]);
-
-            return Response::json([
+             return Response::json([
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }

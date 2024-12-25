@@ -188,4 +188,8 @@ class Product extends Model
         }
         return false;
     }
+
+    public function suppliers() {
+        return $this->belongsTo(related: Supplier::class);
+    }
 }

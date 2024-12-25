@@ -191,12 +191,12 @@ class GRNController extends Controller
     public function sync($company)
     {
         try {
-            $supplier = Supplier::where('company_name', $company)->where('deleted_at', null)->get();
-            $supplier_id = collect($supplier)->pluck('id')->toArray();
-            $grns = Grn::with('products')  // Match the exact relationship name
-                ->whereIn('supplier_id', $supplier_id)
+            $grns = GRN::with('products')
+                ->whereHas('supplier', function ($query) use ($company) {
+                    $query->where('company_name', $company)
+                        ->whereNull('deleted_at');
+                })
                 ->get();
-
             return Response::json([
                 'result' => true,
                 'data' => $grns

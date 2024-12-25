@@ -6,6 +6,7 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
@@ -53,9 +54,11 @@ class ProductController extends Controller
 
     public function getData(Request $req)
     {
-        $records = $this->prod->with(['category' => function($q) {
-            $q->withTrashed();
-        }]);
+        $records = $this->prod->with([
+            'category' => function ($q) {
+                $q->withTrashed();
+            }
+        ]);
 
         if ($req->boolean('is_product') == true) {
             $records = $records->where('type', Product::TYPE_PRODUCT);
@@ -162,7 +165,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function viewGetData(Request $req) {
+    public function viewGetData(Request $req)
+    {
         $records = $this->prodChild::where('product_id', $req->product_id);
 
         // Search
@@ -204,7 +208,7 @@ class ProductController extends Controller
             $assigned_to = $record->assignedTo();
             if ($assigned_to != null && is_array($assigned_to)) {
                 $skus = [];
-                for ($i=0; $i < count($assigned_to); $i++) { 
+                for ($i = 0; $i < count($assigned_to); $i++) {
                     $skus[] = $assigned_to[$i]->sku;
                 }
                 $assigned_to = join(', ', $skus);
@@ -227,7 +231,8 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function viewGetDataRawMaterial(Request $req) {
+    public function viewGetDataRawMaterial(Request $req)
+    {
         $pmm_records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
         $tmi_records = $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $req->product_id)->orderBy('id', 'desc');
 
@@ -301,7 +306,8 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function generateBarcode(Request $req) {
+    public function generateBarcode(Request $req)
+    {
         if ($req->has('is_rm')) {
             $products = $this->prod::whereIn('id', [$req->id])->get();
         } else {
@@ -313,14 +319,14 @@ class ProductController extends Controller
             'barcode' => [],
             'renderer' => [],
         ];
-        for ($i=0; $i < count($products); $i++) { 
+        for ($i = 0; $i < count($products); $i++) {
             $prod = $req->has('is_rm') ? $products[$i] : $products[$i]->parent;
 
             $barcode = (new TypeCode128)->getBarcode($products[$i]->sku);
-    
+
             // Output the barcode as HTML in the browser with a HTML Renderer
             $renderer = new DynamicHtmlRenderer;
-            
+
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
@@ -350,7 +356,7 @@ class ProductController extends Controller
             });
             $req->merge(['serial_no' => $serial_no]);
         }
-        
+
         $rules = [
             'product_id' => 'nullable',
             'initial_for_production' => 'required|max:250',
@@ -368,7 +374,7 @@ class ProductController extends Controller
             'is_sparepart' => 'required',
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
-        
+
             'weight' => 'nullable',
             'capacity' => 'nullable|max:250',
             'refrigerant' => 'nullable|max:250',
@@ -527,7 +533,7 @@ class ProductController extends Controller
                     });
                     $this->prodChild::where('product_id', $prod->id)->whereNotIn('id', $order_idx ?? [])->delete();
                 }
-    
+
                 $now = now();
                 $data = [];
                 for ($i = 0; $i < count($req->serial_no); $i++) {
@@ -537,7 +543,7 @@ class ProductController extends Controller
 
                     if ($req->order_idx != null && $req->order_idx[$i] != null) {
                         $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
-    
+
                         $pc->update([
                             'sku' => $req->serial_no[$i],
                         ]);
@@ -583,5 +589,26 @@ class ProductController extends Controller
         $product->delete();
 
         return back()->with('success', 'Product deleted');
+    }
+
+    public function sync($company)
+    {
+        try {
+            $products = Product::with('suppliers')
+                ->whereHas('suppliers', function ($query) use ($company) {
+                    $query->where('company_name', $company)
+                        ->whereNull('deleted_at');
+                })
+                ->get();
+            return Response::json([
+                'result' => true,
+                'data' => $products
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Exception $e) {
+            Log::info($e);
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

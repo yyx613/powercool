@@ -1246,13 +1246,13 @@ class SaleController extends Controller
     public function sync($company)
     {
         try {
-            $customers = Customer::where('company_name', $company)->where('deleted_at', null)->get();
-            $customer_id = collect($customers)->pluck('id')->toArray();
-
-            $invoices = Invoice::whereHas('customer', function($query) use ($customer_id) {
-                $query->whereIn('id', $customer_id);
-            })->with('customer')->get();
-            
+            $invoices = Invoice::with('customer')
+                ->whereHas('customer', function($query) use ($company) {
+                    $query->where('company_name', $company)
+                        ->whereNull('deleted_at');
+                })
+                ->get();
+                
             return Response::json([
                 'result' => true,
                 'data' => $invoices

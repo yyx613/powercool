@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\InventoryController;
 use App\Http\Controllers\Api\v1\NotificationController;
 use App\Http\Controllers\Api\v1\SaleController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Api\v1\TaskController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -60,19 +61,23 @@ Route::prefix('v1')->group(function () {
         });
         // Customer
         Route::controller(CustomerController::class)->prefix('customer')->group(function () {
-            Route::get(uri: '/sync/{customer}/{company}', action: 'sync')->name('sync');
+            Route::get('/sync/{company}', 'sync')->name('customer.sync');
         });
         // Supplier
         Route::controller(SupplierController::class)->prefix('supplier')->group(function () {
-            Route::get(uri: '/sync/{supplier}/{company}', action: 'sync')->name('sync');
+            Route::get('/sync/{company}', 'sync')->name('supplier.sync');
         });
         // Grn
         Route::controller(GRNController::class)->prefix('grn')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('sync');
+            Route::get('/sync/{company}', 'sync')->name('grn.sync');
         });
         // Invoice
         Route::controller(SaleController::class)->prefix('invoice')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('sync');
+            Route::get('/sync/{company}', 'sync')->name('invoice.sync');
+        });
+        // Product
+        Route::controller(ProductController::class)->prefix('product')->group(function () {
+            Route::get('/sync/{company}', 'sync')->name('product.sync');
         });
     });
 

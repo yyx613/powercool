@@ -102,23 +102,21 @@ class SupplierController extends Controller
         return back()->with('success', 'Supplier deleted');
     }
 
-    public function sync(Supplier $supplier, $company)
+    public function sync($company)
     {
         try {
-            $supplier = $supplier->where('company_name', $company)->where('deleted_at', null)->get();
-
-            return Response::json([
+            $suppliers = Supplier::where('company_name', $company)
+                ->whereNull('deleted_at')
+                ->get();
+             return Response::json([
                 'result' => true,
-                'data' => $supplier
+                'data' => $suppliers
             ], HttpFoundationResponse::HTTP_OK);
-
-        } catch (\Exception $e) {
+         } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
-                'customer' => $supplier->id,
                 'error' => $e->getMessage()
             ]);
-
-            return Response::json([
+             return Response::json([
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
