@@ -613,50 +613,120 @@ class ProductController extends Controller
     }
 
     public function createNewProduct(Request $req)
+    {
+        // Validate request
+        $req->validate([
+            'model_code' => 'required|max:250',
+            'model_name' => 'required|max:250',
+            'model_desc' => 'required|max:250',
+            'uom' => 'required|max:250',
+            'category_id' => 'required',
+            'supplier_id' => 'required',
+            'min_price' => 'required|numeric',
+            'max_price' => 'required|numeric|gt:min_price',
+            'cost' => 'required|numeric',
+            'status' => 'required|boolean',
+            'type' => 'required|in:' . Product::TYPE_PRODUCT . ',' . Product::TYPE_RAW_MATERIAL,
+            'is_sparepart' => 'required|boolean',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $product = Product::create([
+                'sku' => $req->model_code,
+                'type' => $req->type,
+                'model_name' => $req->model_name,
+                'model_desc' => $req->model_desc,
+                'uom' => $req->uom,
+                'inventory_category_id' => $req->category_id,
+                'supplier_id' => $req->supplier_id,
+                'min_price' => $req->min_price,
+                'max_price' => $req->max_price,
+                'cost' => $req->cost,
+                'is_active' => $req->status,
+                'is_sparepart' => $req->is_sparepart,
+                'qty' => 0, // Initial quantity set to 0
+            ]);
+
+            // Assign to current branch
+            (new Branch())->assign(Product::class, $product->id);
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                'product' => $product,
+            ], HttpFoundationResponse::HTTP_OK);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+                'message' => $th->getMessage()
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function createNewProductList(Request $req)
 {
-    // Validate request
+    // Validate request - now expecting an array of products
     $req->validate([
-        'model_code' => 'required|max:250',
-        'model_name' => 'required|max:250',
-        'model_desc' => 'required|max:250',
-        'uom' => 'required|max:250',
-        'category_id' => 'required',
-        'supplier_id' => 'required',
-        'min_price' => 'required|numeric',
-        'max_price' => 'required|numeric|gt:min_price',
-        'cost' => 'required|numeric',
-        'status' => 'required|boolean',
-        'type' => 'required|in:' . Product::TYPE_PRODUCT . ',' . Product::TYPE_RAW_MATERIAL,
-        'is_sparepart' => 'required|boolean',
+        'products' => 'required|array',
+        'products.*.model_code' => 'required|max:250',
+        'products.*.model_name' => 'required|max:250',
+        'products.*.model_desc' => 'required|max:250',
+        'products.*.uom' => 'required|max:250',
+        'products.*.category_id' => 'required',
+        'products.*.supplier_id' => 'required',
+        'products.*.min_price' => 'required|numeric',
+        'products.*.max_price' => 'required|numeric',
+        'products.*.cost' => 'required|numeric',
+        'products.*.status' => 'required|boolean',
+        'products.*.type' => 'required|in:' . Product::TYPE_PRODUCT . ',' . Product::TYPE_RAW_MATERIAL,
+        'products.*.is_sparepart' => 'required|boolean',
     ]);
 
     try {
         DB::beginTransaction();
 
-        $product = Product::create([
-            'sku' => $req->model_code,
-            'type' => $req->type,
-            'model_name' => $req->model_name,
-            'model_desc' => $req->model_desc,
-            'uom' => $req->uom,
-            'inventory_category_id' => $req->category_id,
-            'supplier_id' => $req->supplier_id,
-            'min_price' => $req->min_price,
-            'max_price' => $req->max_price,
-            'cost' => $req->cost,
-            'is_active' => $req->status,
-            'is_sparepart' => $req->is_sparepart,
-            'qty' => 0, // Initial quantity set to 0
-        ]);
+        $createdProducts = [];
 
-        // Assign to current branch
-        (new Branch())->assign(Product::class, $product->id);
+        foreach ($req->products as $productData) {
+            // Validate max_price > min_price for each product
+            if ($productData['max_price'] <= $productData['min_price']) {
+                throw new \Exception('Max price must be greater than min price for product: ' . $productData['model_code']);
+            }
+
+            $product = Product::create([
+                'sku' => $productData['model_code'],
+                'type' => $productData['type'],
+                'model_name' => $productData['model_name'],
+                'model_desc' => $productData['model_desc'],
+                'uom' => $productData['uom'],
+                'inventory_category_id' => $productData['category_id'],
+                'supplier_id' => $productData['supplier_id'],
+                'min_price' => $productData['min_price'],
+                'max_price' => $productData['max_price'],
+                'cost' => $productData['cost'],
+                'is_active' => $productData['status'],
+                'is_sparepart' => $productData['is_sparepart'],
+                'qty' => 0, // Initial quantity set to 0
+            ]);
+
+            // Assign to current branch
+            (new Branch())->assign(Product::class, $product->id);
+
+            $createdProducts[] = $product;
+        }
 
         DB::commit();
 
         return Response::json([
             'result' => true,
-            'product' => $product,
+            'products' => $createdProducts,
         ], HttpFoundationResponse::HTTP_OK);
 
     } catch (\Throwable $th) {

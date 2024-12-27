@@ -169,6 +169,59 @@ class SupplierController extends Controller
         }
     }
 
+    public function createNewSupplierList(Request $req)
+    {
+        // Validate request - now expecting an array of suppliers
+        $req->validate([
+            'suppliers' => 'required|array',
+            'suppliers.*.sku' => 'required|max:250',
+            'suppliers.*.customer_name' => 'required|max:250',
+            'suppliers.*.company_name' => 'nullable|max:250',
+            'suppliers.*.phone_number' => 'required|max:250',
+            'suppliers.*.email' => 'nullable|email|max:250',
+            'suppliers.*.status' => 'required|boolean',
+            'suppliers.*.company_register_number' => 'required|max:250',
+            'suppliers.*.location' => 'required|max:250'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $createdSuppliers = [];
+
+            foreach ($req->suppliers as $supplierData) {
+                $supplier = Supplier::create([
+                    'sku' => $supplierData['sku'],
+                    'name' => $supplierData['customer_name'],
+                    'phone' => $supplierData['phone_number'],
+                    'is_active' => $supplierData['status'],
+                    'company_name' => $supplierData['company_name'] ?? $supplierData['customer_name'],
+                    'email' => $supplierData['email'],
+                    'company_registration_number' => $supplierData['company_register_number'],
+                    'location' => $supplierData['location']
+                ]);
+
+                $createdSuppliers[] = $supplier;
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                'suppliers' => $createdSuppliers,
+            ], HttpFoundationResponse::HTTP_OK);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+                'message' => $th->getMessage()
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function upsert(Request $req, Supplier $supplier)
     {
         // Validate request

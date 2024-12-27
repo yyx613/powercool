@@ -65,11 +65,13 @@ Route::prefix('v1')->group(function () {
     Route::controller(CustomerController::class)->prefix('customer')->group(function () {
         Route::get('/sync/{company}', 'sync')->name('customer.sync');
         Route::post('/create', 'createNewCustomer')->name('customer.createNewCustomer');
+        Route::post('/list-create', 'createNewCustomerList')->name('customer.createNewCustomerList');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->group(function () {
         Route::get('/sync/{company}', 'sync')->name('supplier.sync');
         Route::post('/create', action: 'createNewSupplier')->name('supplier.createNewSupplier');
+        Route::post('/list-create', action: 'createNewSupplierList')->name('supplier.createNewSupplierList');
 
     });
     // Grn
@@ -84,6 +86,7 @@ Route::prefix('v1')->group(function () {
     Route::controller(ProductController::class)->prefix('product')->group(function () {
         Route::get('/sync/{company}', 'sync')->name('product.sync');
         Route::post('/create', action: 'createNewProduct')->name('product.createNewProduct');
+        Route::post('/list-create', action: 'createNewProductList')->name('product.createNewProductList');
 
     });
 });

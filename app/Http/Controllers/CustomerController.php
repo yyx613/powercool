@@ -166,6 +166,55 @@ class CustomerController extends Controller
         }
     }
 
+    public function createNewCustomerList(Request $req)
+    {
+        // Validate request - now expecting an array of customers
+        $req->validate([
+            'customers' => 'required|array',
+            'customers.*.sku' => 'required|max:250',
+            'customers.*.customer_name' => 'required|max:250',
+            'customers.*.company_name' => 'nullable|max:250',
+            'customers.*.phone_number' => 'required|max:250',
+            'customers.*.email' => 'nullable|email|max:250',
+            'customers.*.status' => 'required|boolean',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $createdCustomers = [];
+
+            foreach ($req->customers as $customerData) {
+                $customer = Customer::create([
+                    'sku' => $customerData['sku'],
+                    'name' => $customerData['customer_name'],
+                    'phone' => $customerData['phone_number'],
+                    'status' => $customerData['status'],
+                    'company_name' => $customerData['company_name'] ?? $customerData['customer_name'],
+                    'email' => $customerData['email'],
+                ]);
+
+                $createdCustomers[] = $customer;
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                'customers' => $createdCustomers,
+            ], HttpFoundationResponse::HTTP_OK);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+                'message' => $th->getMessage()
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function upsertInfo(Request $req)
     {
         // Validate request
