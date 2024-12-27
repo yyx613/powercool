@@ -611,4 +611,62 @@ class ProductController extends Controller
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function createNewProduct(Request $req)
+{
+    // Validate request
+    $req->validate([
+        'model_code' => 'required|max:250',
+        'model_name' => 'required|max:250',
+        'model_desc' => 'required|max:250',
+        'uom' => 'required|max:250',
+        'category_id' => 'required',
+        'supplier_id' => 'required',
+        'min_price' => 'required|numeric',
+        'max_price' => 'required|numeric|gt:min_price',
+        'cost' => 'required|numeric',
+        'status' => 'required|boolean',
+        'type' => 'required|in:' . Product::TYPE_PRODUCT . ',' . Product::TYPE_RAW_MATERIAL,
+        'is_sparepart' => 'required|boolean',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $product = Product::create([
+            'sku' => $req->model_code,
+            'type' => $req->type,
+            'model_name' => $req->model_name,
+            'model_desc' => $req->model_desc,
+            'uom' => $req->uom,
+            'inventory_category_id' => $req->category_id,
+            'supplier_id' => $req->supplier_id,
+            'min_price' => $req->min_price,
+            'max_price' => $req->max_price,
+            'cost' => $req->cost,
+            'is_active' => $req->status,
+            'is_sparepart' => $req->is_sparepart,
+            'qty' => 0, // Initial quantity set to 0
+        ]);
+
+        // Assign to current branch
+        (new Branch())->assign(Product::class, $product->id);
+
+        DB::commit();
+
+        return Response::json([
+            'result' => true,
+            'product' => $product,
+        ], HttpFoundationResponse::HTTP_OK);
+
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        report($th);
+
+        return Response::json([
+            'result' => false,
+            'message' => $th->getMessage()
+        ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+    }
+}
 }

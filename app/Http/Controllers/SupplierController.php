@@ -122,6 +122,53 @@ class SupplierController extends Controller
         }
     }
 
+    public function createNewSupplier(Request $req)
+    {
+
+        // Validate request
+        $req->validate([
+            'sku' => 'required|max:250',
+            'customer_name' => 'required|max:250',
+            'company_name' => 'nullable|max:250',
+            'phone_number' => 'required|max:250',
+            'email' => 'nullable|email|max:250',
+            'status' => 'required|boolean',
+            'company_register_number' => 'required|max:250',
+            'location' => 'required|max:250'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $supplier = Supplier::create([
+                'sku' => $req->sku,//(new Customer)->generateSku($req->company_name != null ? $req->company_name[0] : $req->customer_name[0]),
+                'name' => $req->customer_name,
+                'phone' => $req->phone_number,
+                'is_active' => $req->status,
+                'company_name' => $req->company_name ?? $req->customer_name,
+                'email' => $req->email,
+                'company_registration_number' => $req->company_register_number,
+                'location' => $req->location
+            ]);
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                'supplier' => $supplier,
+            ], HttpFoundationResponse::HTTP_OK);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+                'message' => $th
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function upsert(Request $req, Supplier $supplier)
     {
         // Validate request

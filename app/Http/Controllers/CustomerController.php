@@ -111,16 +111,57 @@ class CustomerController extends Controller
             $customers = Customer::where('company_name', $company)
                 ->whereNull('deleted_at')
                 ->get();
-             return Response::json([
+            return Response::json([
                 'result' => true,
                 'data' => $customers
             ], HttpFoundationResponse::HTTP_OK);
-         } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('AutoCount Sync Error', [
                 'error' => $e->getMessage()
             ]);
-             return Response::json([
+            return Response::json([
                 'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function createNewCustomer(Request $req)
+    {
+        // Validate request
+        $req->validate([
+            'sku' => 'required|max:250',
+            'customer_name' => 'required|max:250',
+            'company_name' => 'nullable|max:250',
+            'phone_number' => 'required|max:250',
+            'email' => 'nullable|email|max:250',
+            'status' => 'required|boolean',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $customer = Customer::create([
+                'sku' => $req->sku,//(new Customer)->generateSku($req->company_name != null ? $req->company_name[0] : $req->customer_name[0]),
+                'name' => $req->customer_name,
+                'phone' => $req->phone_number,
+                'status' => $req->status,
+                'company_name' => $req->company_name ?? $req->customer_name,
+                'email' => $req->email,
+            ]);
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                'customer' => $customer,
+            ], HttpFoundationResponse::HTTP_OK);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -329,7 +370,8 @@ class CustomerController extends Controller
 
             if ($req->location_id != null) {
                 $order_idx = array_filter($req->location_id, function ($val) {
-                    return $val != null; });
+                    return $val != null;
+                });
                 CustomerLocation::where('customer_id', $req->customer_id)->whereNotIn('id', $order_idx ?? [])->delete();
             }
 

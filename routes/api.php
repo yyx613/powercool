@@ -59,26 +59,31 @@ Route::prefix('v1')->group(function () {
             Route::get('/get-raw-material-and-sparepart', 'getRawMaterialAndSparepart');
             Route::get('/get-sale-person-cancelled-products', 'getSalePersonCancelledProducts');
         });
-        // Customer
-        Route::controller(CustomerController::class)->prefix('customer')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('customer.sync');
-        });
-        // Supplier
-        Route::controller(SupplierController::class)->prefix('supplier')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('supplier.sync');
-        });
-        // Grn
-        Route::controller(GRNController::class)->prefix('grn')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('grn.sync');
-        });
-        // Invoice
-        Route::controller(SaleController::class)->prefix('invoice')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('invoice.sync');
-        });
-        // Product
-        Route::controller(ProductController::class)->prefix('product')->group(function () {
-            Route::get('/sync/{company}', 'sync')->name('product.sync');
-        });
-    });
 
+    });
+    // Customer
+    Route::controller(CustomerController::class)->prefix('customer')->group(function () {
+        Route::get('/sync/{company}', 'sync')->name('customer.sync');
+        Route::post('/create', 'createNewCustomer')->name('customer.createNewCustomer');
+    });
+    // Supplier
+    Route::controller(SupplierController::class)->prefix('supplier')->group(function () {
+        Route::get('/sync/{company}', 'sync')->name('supplier.sync');
+        Route::post('/create', action: 'createNewSupplier')->name('supplier.createNewSupplier');
+
+    });
+    // Grn
+    Route::controller(GRNController::class)->prefix('grn')->group(function () {
+        Route::get('/sync/{company}', 'sync')->name('grn.sync');
+    });
+    // Invoice
+    Route::controller(SaleController::class)->prefix('invoice')->group(function () {
+        Route::get('/sync/{company}', 'sync')->name('invoice.sync');
+    });
+    // Product
+    Route::controller(ProductController::class)->prefix('product')->group(function () {
+        Route::get('/sync/{company}', 'sync')->name('product.sync');
+        Route::post('/create', action: 'createNewProduct')->name('product.createNewProduct');
+
+    });
 });
