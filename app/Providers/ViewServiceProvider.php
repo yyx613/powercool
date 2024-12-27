@@ -12,12 +12,14 @@ use App\Models\Dealer;
 use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
 use App\Models\InventoryCategory;
+use App\Models\Invoice;
 use App\Models\MaterialUse;
 use App\Models\Milestone;
 use App\Models\MsicCode;
 use App\Models\Platform;
 use App\Models\Priority;
 use App\Models\Product;
+use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\ProjectType;
 use App\Models\Promotion;
@@ -206,7 +208,7 @@ class ViewServiceProvider extends ServiceProvider
             if (str_contains(Route::currentRouteName(), '.technician.')) {
                 $services = Service::where('is_active', true)->orderBy('id', 'desc')->get();
                 $sale_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
-                $sale_products = SaleProduct::with('product')->orderBy('id', 'desc')->get();
+                $sale_products = SaleProduct::with('product.children')->orderBy('id', 'desc')->get();
 
                 $view->with([
                     'services' => $services,
@@ -244,6 +246,19 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             $view->with('customers', $customers);
+        });
+        View::composer(['ticket.form'], function (ViewView $view) {
+            $sale_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
+            $invoices = Invoice::orderBy('id', 'desc')->get();
+            $products = Product::get();
+            $product_children = ProductChild::get();
+
+            $view->with([
+                'sale_orders' => $sale_orders,
+                'invoices' => $invoices,
+                'products' => $products,
+                'product_children' => $product_children,
+            ]);
         });
         View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'target.form', 'supplier.form', 'customer.form_step.info'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {

@@ -323,6 +323,8 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/edit/{ticket}', 'edit')->name('edit')->middleware(['can:ticket.edit']);
         Route::post('/update/{ticket}', 'update')->name('update');
         Route::get('/delete/{ticket}', 'delete')->name('delete')->middleware(['can:ticket.delete']);
+        Route::get('/get-products', 'getProducts')->name('get_products');
+        Route::get('/get-product-children', 'getProductChildren')->name('get_product_children');
     });
     // Report
     Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function () {
