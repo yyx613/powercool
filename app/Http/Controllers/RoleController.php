@@ -2,15 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\RoleExport;
-use App\Models\Role as ModelsRole;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
-use Maatwebsite\Excel\Facades\Excel;
 
 class RoleController extends Controller
 {
@@ -23,12 +19,8 @@ class RoleController extends Controller
     {
         $records = Role::orderBy('id', 'desc');
 
-        if (config('app.env') != 'local') {
-            $records = $records->whereNot('id', ModelsRole::SUPERADMIN);
-        }
-
         if ($request->has('keyword') && $request->input('keyword') != '') {
-            $records = $records->where('name', 'like', '%' . $request->input('keyword') . '%');
+            $records = $records->where('name', 'like', '%'.$request->input('keyword').'%');
         }
 
         $records = $records->get();
@@ -41,18 +33,20 @@ class RoleController extends Controller
                 'user_count_under_role' => User::withWhereHas('roles', function ($query) use ($record) {
                     $query->where('id', $record->id);
                 })->count(),
-                'id' => $record->id
+                'id' => $record->id,
             ];
         }
 
         return $data;
     }
 
-    public function create() {
+    public function create()
+    {
         return view('role_management.form');
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:250|unique:roles',
         ]);
@@ -64,7 +58,7 @@ class RoleController extends Controller
             DB::beginTransaction();
 
             $role = Role::create([
-                'name' => $request->input('name')
+                'name' => $request->input('name'),
             ]);
 
             $selected_permissions = $request->except(['_token', 'name']);
@@ -97,7 +91,7 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:250|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:250|unique:roles,name,'.$role->id,
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -119,6 +113,7 @@ class RoleController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
+
             return back()->with('error', 'Failed to update the role.');
         }
     }
