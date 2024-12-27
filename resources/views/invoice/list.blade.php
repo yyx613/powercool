@@ -18,8 +18,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between">
-        <x-app.page-title>{{ __('Invoice') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
+        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.billing.convert')
             <a href="{{ route('billing.to_billing') }}" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
@@ -57,10 +57,15 @@
                     <th>
                         <input type="checkbox" id="select-all">
                     </th>
-                    <th>{{ __('Invoice ID') }}</th>
-                    <th>{{ __('Company') }}</th>
-                    <th>{{ __('Invoice Date') }}</th>
-                    <th>{{ __('Convert To') }}</th>
+                    <th>{{ __('Doc No.') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Transfer From') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Agent') }}</th>
+                    <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Created By') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -77,14 +82,10 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function(){
-            dt.draw()
-        })
-
         $('#data-table').on('draw.dt', function() {
             $('.order-checkbox').each(function() {
                 let invoiceId = $(this).data('id');
-                
+
                 if (selectedInvoices.some(invoice => invoice.id === invoiceId)) {
                     $(this).prop('checked', true);
                 } else {
@@ -105,10 +106,15 @@
             order: [],
             columns: [
                 { data: 'id' },
-                { data: 'sku' },
-                { data: 'company' },
-                { data: 'invoice_date' },
-                { data: 'convert_to' },
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'transfer_from' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'total' },
+                { data: 'created_by' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -123,31 +129,28 @@
                         return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-company="${row.company}" ${disabled} ${style}>`;
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 1,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 3,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 4,
                     orderable: false,
@@ -155,9 +158,47 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 7,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 8,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `RM ${data}`
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
@@ -166,18 +207,18 @@
                         return data
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets":6,
+                    "targets": 11,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
-                            <a href="{{ config('app.url') }}/download?file=${row.filename}&type=inv" class="rounded-full p-2 bg-green-200 inline-block" target="_blank">
+                            <a href="{{ config('app.url') }}/download?file=${row.filename}&type=inv" class="rounded-full p-2 bg-green-200 inline-block" target="_blank" title="{!! __('Download') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M17.974,7.146c-.332-.066-.603-.273-.742-.569-1.552-3.271-5.143-5.1-8.735-4.438-3.272,.6-5.837,3.212-6.384,6.501-.162,.971-.15,1.943,.033,2.89,.06,.309-.073,.653-.346,.901-1.145,1.041-1.801,2.524-1.801,4.07,0,3.032,2.467,5.5,5.5,5.5h11c4.136,0,7.5-3.364,7.5-7.5,0-3.565-2.534-6.658-6.026-7.354Zm-1.474,12.854H5.5c-1.93,0-3.5-1.57-3.5-3.5,0-.983,.418-1.928,1.146-2.59,.786-.715,1.155-1.773,.963-2.763-.138-.712-.146-1.445-.024-2.181,.403-2.422,2.365-4.421,4.771-4.862,.385-.07,.768-.104,1.145-.104,2.312,0,4.406,1.289,5.422,3.434,.414,.872,1.2,1.481,2.158,1.673,2.559,.511,4.417,2.778,4.417,5.394,0,3.032-2.467,5.5-5.5,5.5Zm-1.379-6.707c.391,.391,.391,1.023,0,1.414l-2.707,2.707c-.387,.387-.896,.582-1.405,.584l-.009,.002-.009-.002c-.509-.002-1.018-.197-1.405-.584l-2.707-2.707c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l1.707,1.707v-5c0-.553,.448-1,1-1s1,.447,1,1v5l1.707-1.707c.391-.391,1.023-.391,1.414,0Z"/></svg>
                             </a>
                             ${
                                 row.status == 1 ? '' :
-                                `<button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="Cancel">
+                                `<button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="{!! __('Cancel') !!}">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
                                 </button>`
                             }
@@ -189,7 +230,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('invoice.get_data') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
@@ -207,10 +248,10 @@
         })
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
-            
+
             getOtherInvolvedInv(id);
         })
-        
+
         function getOtherInvolvedInv(inv_id) {
             $('#do-inv-cancel-modal .cancellation-hint').remove()
 
@@ -222,14 +263,12 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'GET', 
+                type: 'GET',
                 contentType: 'application/json',
                 success: function(res) {
-                    console.debug(res)
-
                     for (const key in res.involved) {
                         const element = res.involved[key];
-                        
+
                         let clone = $('#do-inv-cancel-modal #info-template')[0].cloneNode(true);
 
                         $(clone).find('#main').text(key)
@@ -245,6 +284,7 @@
                         $('#do-inv-cancel-modal #info-body-container').append(clone)
                     }
 
+                    $('#do-inv-cancel-modal #warning-txt').text("{!! __('Following INV, DO & SO will be cancelled') !!}")
                     $('#do-inv-cancel-modal #yes-btn').attr('href', `{{ config('app.url') }}/invoice/cancel?involved_inv_skus=${JSON.stringify(res.involved_inv_skus)}&involved_do_skus=${JSON.stringify(res.involved_do_skus)}&involved_so_skus=${JSON.stringify(res.involved_so_skus)}`)
                     $('#do-inv-cancel-modal').addClass('show-modal')
                 }
@@ -307,9 +347,9 @@
         });
 
         function submitEinvoice(){
-            const loadingIndicator = document.getElementById('loading-indicator'); 
+            const loadingIndicator = document.getElementById('loading-indicator');
             loadingIndicator.style.display = 'flex';
-            
+
             let url = "{{ config('app.url') }}";
             url = `${url}/e-invoice/submit`;
             $.ajax({
@@ -317,7 +357,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'POST', 
+                type: 'POST',
                 data: JSON.stringify({ invoices: selectedInvoices , company: firstCompany}),
                 contentType: 'application/json',
                 success: function(response) {
@@ -334,7 +374,7 @@
                         try {
                             response.errorDetails.forEach(function(document) {
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                                
+
                                 document.details.forEach(function(detail) {
                                     errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
                                 });
@@ -345,8 +385,8 @@
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError: ${document.error}\n`;
                             });
                         }
-                        
-                        
+
+
                         alert(errorMessage);
                     } else {
                         alert(response.message || "Submit success");
@@ -355,7 +395,7 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
 
-                    
+
                     let errorMessage = "An error occurred.";
 
                     if (error.responseJSON) {
@@ -379,7 +419,7 @@
                             const overdueInvoices = error.responseJSON.overdue_invoices;
 
                             const container = document.getElementById('overdue-invoices-container');
-                            container.innerHTML = ''; 
+                            container.innerHTML = '';
 
                             overdueInvoices.forEach((invoice, index) => {
                                 const label = document.createElement('label');
@@ -390,7 +430,7 @@
                                 input.type = 'datetime-local';
                                 input.name = `invoice_date_${index}`;
                                 input.id = `invoice-date-${index}`;
-                                input.value = new Date(invoice.date).toISOString().slice(0, 16); 
+                                input.value = new Date(invoice.date).toISOString().slice(0, 16);
 
                                 input.className = 'w-full border rounded-md p-2 mb-2';
 
@@ -402,7 +442,7 @@
                                 modalTitle.textContent = `Update Invoice Date (Should Not More Than 72 hours)`;
                             }
                             $('#update-invoice-date-modal').addClass('show-modal');
-                                           
+
                         }
                     }
 
@@ -419,7 +459,7 @@
                 return;
             }
 
-            const loadingIndicator = document.getElementById('loading-indicator'); 
+            const loadingIndicator = document.getElementById('loading-indicator');
             loadingIndicator.style.display = 'flex';
 
             let url = "{{ config('app.url') }}";
@@ -430,7 +470,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 url: url,
-                type: 'POST', 
+                type: 'POST',
                 data: JSON.stringify({ invoices: selectedInvoices , company: firstCompany}),
                 contentType: 'application/json',
                 success: function(response) {
@@ -440,15 +480,15 @@
                     $('#select-all').prop('checked', false);
                     if (response.errorDetails && response.errorDetails.length > 0) {
                         let errorMessage = "Some documents were rejected:\n";
-                        
+
                         response.errorDetails.forEach(function(document) {
                             errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                            
+
                             document.details.forEach(function(detail) {
                                 errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
                             });
                         });
-                        
+
                         alert(errorMessage);
                     } else {
                         alert(response.message || "Submit success");
@@ -457,7 +497,7 @@
                 error: function(error) {
                     loadingIndicator.style.display = 'none';
                     try {
-                        
+
                         if (error.responseJSON.rejectedDocuments) {
                             error.responseJSON.rejectedDocuments.forEach(function(document) {
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
@@ -486,7 +526,7 @@
                             }
                         }
                     }
-                   
+
 
                     alert(errorMessage);
                 }
@@ -507,7 +547,7 @@
             let validationError = false;
 
             const now = new Date();
-            
+
             const seventyTwoHoursAgo = new Date(now.getTime() - (72 * 60 * 60 * 1000));
 
             container.find('input').each(function (index) {
@@ -517,7 +557,7 @@
                 if (!date) {
                     alert(`Invoice SKU ${sku} date is required.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 const invoiceDate = new Date(date);
@@ -525,13 +565,13 @@
                 if (invoiceDate > now) {
                     alert(`Invoice SKU ${sku} cannot have a future date.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 if (invoiceDate < seventyTwoHoursAgo) {
                     alert(`Invoice SKU ${sku} date cannot be older than 72 hours.`);
                     validationError = true;
-                    return false; 
+                    return false;
                 }
 
                 updatedInvoices.push({ sku, date });

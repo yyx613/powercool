@@ -18,8 +18,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Sale Order') }}</x-app.page-title>
+    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Order') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.sale_order.convert')
             <a href="{{ route('sale_order.to_delivery_order') }}" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
@@ -54,9 +54,15 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('Sale Order ID') }}</th>
-                    <th>{{ __('Total Amount') }}</th>
-                    <th>{{ __('Platform') }}</th>
+                    <th>{{ __('Doc No.') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Transfer To') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Agent') }}</th>
+                    <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Paid Amount') }}</th>
+                    <th>{{ __('Total') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -72,10 +78,6 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function(){
-            dt.draw()
-        })
-
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -85,9 +87,15 @@
             serverSide: true,
             order: [],
             columns: [
-                { data: 'sku' },
-                { data: 'total_amount' },
-                { data: 'platform' }, 
+                { data: 'doc_no' },
+                { data: 'date' },
+                { data: 'debtor_code' },
+                { data: 'transfer_to' },
+                { data: 'debtor_name' },
+                { data: 'agent' },
+                { data: 'curr_code' },
+                { data: 'paid' },
+                { data: 'total' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -107,15 +115,61 @@
                     }
                 },
                 {
-                    "width": '10%', 
+                    "width": '10%',
                     "targets": 2,
                     render: function(data, type, row) {
-                        return data ?? '-';  
+                        return data;
                     }
                 },
                 {
                     "width": '10%',
                     "targets": 3,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 4,
+                    render: function(data, type, row) {
+                        return data;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 5,
+                    render: function(data, type, row) {
+                        return data;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 6,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 7,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `RM ${data}`;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 8,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `RM ${data}`;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 9,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -126,42 +180,45 @@
                             case 2:
                                 return "{!! __('Converted') !!}"
                             case 3:
-                                return `{!! __('Cancelled') !!} ({!! __('Charge') !!}: RM ${row.cancellation_charge})`
+                                if (row.cancellation_charge != null) {
+                                    return `{!! __('Cancelled') !!} ({!! __('Charge') !!}: RM ${row.cancellation_charge})"}`
+                                }
+                                return `{!! __('Cancelled') !!}`
                         }
                     }
                 },
                 {
                     "width": "5%",
-                    "targets": 4,
+                    "targets": 10,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.status != 1 ? '' : `
-                                    <button class="rounded-full p-2 bg-purple-200 inline-block to-production-btns" data-id="${row.id}">
+                                    <button class="rounded-full p-2 bg-purple-200 inline-block to-production-btns" data-id="${row.id}" title="{!! __('To Production') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                             <path d="m22.97,6.251c-.637-.354-1.415-.331-2.1.101l-4.87,3.649v-2.001c0-.727-.395-1.397-1.03-1.749-.637-.354-1.416-.331-2.1.101l-4.87,3.649V2c.553,0,1-.448,1-1s-.447-1-1-1H1C.447,0,0,.448,0,1s.447,1,1,1v17c0,2.757,2.243,5,5,5h13c2.757,0,5-2.243,5-5v-11c0-.727-.395-1.397-1.03-1.749Zm-.97,12.749c0,1.654-1.346,3-3,3H6c-1.654,0-3-1.346-3-3V2h3v9.991c0,.007,0,.014,0,.02v5.989c0,.552.447,1,1,1s1-.448,1-1v-5.5l6-4.5v4c0,.379.214.725.553.895s.743.134,1.047-.094l6.4-4.8v11Zm-8-2v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1Zm2,1v-1c0-.552.448-1,1-1h1c.552,0,1,.448,1,1v1c0,.552-.448,1-1,1h-1c-.552,0-1-.448-1-1Z"/>
                                         </svg>
                                     </button>`
                             }
-                            <a href="{{ config('app.url') }}/sale-order/pdf/${row.id}" class="rounded-full p-2 bg-emerald-200 inline-block" target="_blank" title="View PDF">
+                            <a href="{{ config('app.url') }}/sale-order/pdf/${row.id}" class="rounded-full p-2 bg-emerald-200 inline-block" target="_blank" title="{!! __('View PDF') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0H8A5.006,5.006,0,0,0,3,5V23a1,1,0,0,0,1.564.825L6.67,22.386l2.106,1.439a1,1,0,0,0,1.13,0l2.1-1.439,2.1,1.439a1,1,0,0,0,1.131,0l2.1-1.438,2.1,1.437A1,1,0,0,0,21,23V5A5.006,5.006,0,0,0,16,0Zm3,21.1-1.1-.752a1,1,0,0,0-1.132,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.131,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.129,0L5,21.1V5A3,3,0,0,1,8,2h8a3,3,0,0,1,3,3Z"/><rect x="7" y="8" width="10" height="2" rx="1"/><rect x="7" y="12" width="8" height="2" rx="1"/></svg>
-                            </a>  
+                            </a>
                             ${
                                 row.can_edit ? `
-                                <a href="{{ config('app.url') }}/sale-order/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="Edit">
+                                <a href="{{ config('app.url') }}/sale-order/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('Edit') !!}">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m18.813,10c.309,0,.601-.143.79-.387s.255-.562.179-.861c-.311-1.217-.945-2.329-1.833-3.217l-3.485-3.485c-1.322-1.322-3.08-2.05-4.95-2.05h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h3c.552,0,1-.448,1-1s-.448-1-1-1h-3c-1.654,0-3-1.346-3-3V5c0-1.654,1.346-3,3-3h4.515c.163,0,.325.008.485.023v4.977c0,1.654,1.346,3,3,3h5.813Zm-6.813-3V2.659c.379.218.732.488,1.05.806l3.485,3.485c.314.314.583.668.803,1.05h-4.338c-.551,0-1-.449-1-1Zm11.122,4.879c-1.134-1.134-3.11-1.134-4.243,0l-6.707,6.707c-.755.755-1.172,1.76-1.172,2.829v1.586c0,.552.448,1,1,1h1.586c1.069,0,2.073-.417,2.828-1.172l6.707-6.707c.567-.567.879-1.32.879-2.122s-.312-1.555-.878-2.121Zm-1.415,2.828l-6.708,6.707c-.377.378-.879.586-1.414.586h-.586v-.586c0-.534.208-1.036.586-1.414l6.708-6.707c.377-.378,1.036-.378,1.414,0,.189.188.293.439.293.707s-.104.518-.293.707Z"/></svg>
                                 </a>` : ''
                             }
                             ${
-                                row.can_cancel ? 
-                                `<button class="rounded-full p-2 bg-yellow-200 inline-block cancel-btns" data-id="${row.id}" title="Cancel">
+                                row.can_cancel ?
+                                `<button class="rounded-full p-2 bg-yellow-200 inline-block cancel-btns" data-id="${row.id}" title="{!! __('Cancel') !!}">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
                                 </button>` : ''
                             }
                             ${
                                 row.can_delete ? `
-                                    <button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="Delete">
+                                    <button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="{!! __('Delete') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
                                     </button>` : ''
                             }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryServiceHistory;
+use App\Models\InventoryServiceReminder;
 use App\Models\Product;
 use App\Models\ProductChild;
 use Carbon\Carbon;
@@ -10,20 +10,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
-class InventoryServiceHistoryController extends Controller
+class InventoryServiceReminderController extends Controller
 {
-    protected $inventoryServiceHistory;
+    protected $inventoryServiceReminder;
 
-    public function __construct(InventoryServiceHistory $inventoryServiceHistory) {
-        $this->inventoryServiceHistory = $inventoryServiceHistory;        
+    public function __construct(InventoryServiceReminder $inventoryServiceReminder) {
+        $this->inventoryServiceReminder = $inventoryServiceReminder;        
     }
 
     public function index() {
-        return view('service_history.list');
+        return view('service_reminder.list');
     }
 
     public function getData(Request $req) {
-        $records = $this->inventoryServiceHistory;
+        $records = $this->inventoryServiceReminder;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -49,12 +49,12 @@ class InventoryServiceHistoryController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            $next_service_date = $this->inventoryServiceHistory::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->first();
-            $last_service_date = $this->inventoryServiceHistory::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->skip(1)->first();
+            $next_service_date = $this->inventoryServiceReminder::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->first();
+            $last_service_date = $this->inventoryServiceReminder::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->skip(1)->first();
 
             $data['data'][] = [
                 'id' => Crypt::encrypt($record->id),
-                'sku' => $record->objectable->sku,
+                'sku' => $record->objectable()->withTrashed()->first()->sku,
                 'next_service_date' => Carbon::parse($next_service_date->next_service_date)->format('d M Y'),
                 'last_service_date' => $last_service_date == null ? null : Carbon::parse($last_service_date->next_service_date)->format('d M Y'),
             ];
@@ -64,23 +64,23 @@ class InventoryServiceHistoryController extends Controller
     }
 
     public function create() {
-        return view('service_history.form');
+        return view('service_reminder.form');
     }
 
-    public function view($sh) {
-        $sh = Crypt::decrypt($sh);
+    public function view($sr) {
+        $sr = Crypt::decrypt($sr);
 
-        $sh = $this->inventoryServiceHistory::findOrFail($sh);
+        $sr = $this->inventoryServiceReminder::findOrFail($sr);
 
-        return view('service_history.view', [
-            'sh' => $sh
+        return view('service_reminder.view', [
+            'sr' => $sr
         ]);
     }
 
     public function viewGetData(Request $req) {
-        $record = $this->inventoryServiceHistory::where('id', $req->id)->first();
+        $record = $this->inventoryServiceReminder::where('id', $req->id)->first();
 
-        $records = $this->inventoryServiceHistory::where([
+        $records = $this->inventoryServiceReminder::where([
             ['object_type', $record->object_type],
             ['object_id', $record->object_id],
         ]);
@@ -121,7 +121,7 @@ class InventoryServiceHistoryController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->inventoryServiceHistory::create([
+            $this->inventoryServiceReminder::create([
                 'object_type' => ProductChild::class,
                 'object_id' => $req->product,
                 'next_service_date' => $req->next_service_date,
@@ -132,9 +132,9 @@ class InventoryServiceHistoryController extends Controller
             
             
             if ($req->create_again == true) {
-                return redirect(route('service_history.create'))->with('success', 'Service Date created');
+                return redirect(route('service_reminder.create'))->with('success', 'Service Date created');
             }
-            return redirect(route('service_history.index'))->with('success', 'Service Date created');
+            return redirect(route('service_reminder.index'))->with('success', 'Service Date created');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

@@ -4,38 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\Attachment;
 use App\Models\Branch;
-use App\Models\Supplier;
-use App\Models\CustomerLocation;
 use App\Models\GRN;
 use App\Models\ObjectCreditTerm;
 use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Validation\ValidationException;
 
 class SupplierController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('supplier.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = new Supplier;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('phone', 'like', '%'.$keyword.'%')
+                    ->orWhere('company_name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -58,9 +54,9 @@ class SupplierController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -78,25 +74,31 @@ class SupplierController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('supplier.form');
     }
 
-    public function edit(Supplier $supplier) {
+    public function edit(Supplier $supplier)
+    {
         $supplier->load('pictures');
 
         return view('supplier.form', [
-            'supplier' => $supplier
+            'supplier' => $supplier,
         ]);
     }
 
-    public function delete(Supplier $supplier) {
+    public function delete(Supplier $supplier)
+    {
         $supplier->delete();
 
         return back()->with('success', 'Supplier deleted');
     }
 
-    public function upsert(Request $req, Supplier $supplier) {
+    public function upsert(Request $req, Supplier $supplier)
+    {
+        $is_create = $supplier->id == null;
+
         // Validate request
         $req->validate([
             'prefix' => 'nullable',
@@ -119,7 +121,7 @@ class SupplierController extends Controller
             'area' => 'nullable',
             'debtor_type' => 'nullable',
         ], [], [
-            'picture.*' => 'picture'
+            'picture.*' => 'picture',
         ]);
 
         try {
@@ -174,7 +176,7 @@ class SupplierController extends Controller
                 if ($supplier != null) {
                     Attachment::where([
                         ['object_type', Supplier::class],
-                        ['object_id', $supplier->id]
+                        ['object_id', $supplier->id],
                     ])->delete();
                 }
 
@@ -193,7 +195,7 @@ class SupplierController extends Controller
                 ObjectCreditTerm::where('object_type', Supplier::class)->where('object_id', $supplier->id)->delete();
 
                 $terms = [];
-                for ($i=0; $i < count($req->credit_term); $i++) { 
+                for ($i = 0; $i < count($req->credit_term); $i++) {
                     $terms[] = [
                         'object_type' => Supplier::class,
                         'object_id' => $supplier->id,
@@ -207,7 +209,7 @@ class SupplierController extends Controller
 
             DB::commit();
 
-            return redirect(route('supplier.index'))->with('success', 'Supplier created');
+            return redirect(route('supplier.index'))->with('success', 'Supplier '.($is_create ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -216,22 +218,23 @@ class SupplierController extends Controller
         }
     }
 
-    public function grnHistory(Supplier $supplier) {
+    public function grnHistory(Supplier $supplier)
+    {
         $formatted_grns = [];
         $formatted_products = [];
 
         $grns = GRN::where('supplier_id', $supplier->id)->orderBy('id', 'desc')->get();
 
         $product_ids = [];
-        for ($i=0; $i < count($grns); $i++) { 
-            $formatted_grns[$grns[$i]->product_id][] = $grns[$i];                
+        for ($i = 0; $i < count($grns); $i++) {
+            $formatted_grns[$grns[$i]->product_id][] = $grns[$i];
             $product_ids[] = $grns[$i]->product_id;
         }
         $product_ids = array_unique($product_ids);
 
         $products = Product::withTrashed()->whereIn('id', $product_ids)->get();
-        for ($i=0; $i < count($products); $i++) { 
-            $formatted_products[$products[$i]->id] = $products[$i];            
+        for ($i = 0; $i < count($products); $i++) {
+            $formatted_products[$products[$i]->id] = $products[$i];
         }
 
         return view('supplier.grn_history', [

@@ -6,6 +6,7 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 
 class SaleProduct extends Model
 {
@@ -25,7 +26,18 @@ class SaleProduct extends Model
      * remaining qty to convert to DO
      */
     public function remainingQty() {
-        return $this->qty - DeliveryOrderProduct::where('sale_product_id', $this->id)->sum('qty');
+        $children_count = count($this->children);
+
+        $dops = DeliveryOrderProduct::where('sale_order_id', $this->sale->id)
+            ->where('sale_product_id', $this->id)
+            ->get();
+
+        $do_children_count = 0;
+        for ($i=0; $i < count($dops); $i++) { 
+            $do_children_count += count($dops[$i]->children);
+        }
+
+        return $children_count - $do_children_count;
     }
 
     public function discountAmount() {

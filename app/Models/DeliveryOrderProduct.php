@@ -5,10 +5,11 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DeliveryOrderProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = [];
     protected $casts = [
@@ -22,5 +23,13 @@ class DeliveryOrderProduct extends Model
 
     public function saleProduct() {
         return $this->belongsTo(SaleProduct::class);
+    }
+
+    public function do() {
+        return $this->belongsTo(DeliveryOrder::class, 'delivery_order_id');
+    }
+
+    public function children() {
+        return $this->hasMany(DeliveryOrderProductChild::class);
     }
 }

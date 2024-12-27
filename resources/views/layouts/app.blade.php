@@ -36,6 +36,9 @@
         <!-- Chartjs -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
+        <!-- QR Code -->
+        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">
@@ -43,12 +46,12 @@
             @if (!isCreateLink())
                 @include('layouts.sidebar')
             @endif
-    
+
             <main class="flex-1 overflow-hidden bg-gray-50">
                 @if (!isCreateLink())
                     @include('layouts.navbar')
-                @endif  
-                <div class="p-4 h-full">
+                @endif
+                <div class="p-4 h-full overflow-x-auto">
                     @yield('content')
                 </div>
             </main>
@@ -57,7 +60,7 @@
 
     <script>
         moment.tz.setDefault("Asia/Kuala_Lumpur")
-        
+
         var datepickerParam = {
             singleDatePicker: true,
             showDropdowns: true,
@@ -109,7 +112,7 @@
 
         $('body').on('keyup', '.uppercase-input', function(e) {
             let selector = $(this).find('input')
-            
+
             if (selector.length > 1) {
                 selector = $(this).find("input[type='text']")
             }

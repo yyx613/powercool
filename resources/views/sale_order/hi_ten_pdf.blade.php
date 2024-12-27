@@ -105,7 +105,7 @@
         @foreach ($products as $key => $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;"></td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod->product->sku }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod->desc }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: center;"></td>

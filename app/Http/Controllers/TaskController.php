@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
 use App\Models\Branch;
+use App\Models\Invoice;
 use App\Models\Milestone;
-use App\Models\Role;
+use App\Models\Sale;
 use App\Models\Service;
 use App\Models\Task;
 use App\Models\TaskMilestone;
@@ -18,11 +18,9 @@ use App\Models\UserTask;
 use App\Notifications\MobileAppNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -48,12 +46,14 @@ class TaskController extends Controller
         'custom_milestone' => 'required_without:milestone',
         'amount_to_collect' => 'nullable',
         'attachment' => 'nullable',
-        'attachment.*' => 'file'
+        'attachment.*' => 'file',
     ];
+
     const TECHNICIAN_FORM_RULES = [
         'ticket' => 'nullable',
         'sale_order_id' => 'nullable',
         'product_id' => 'required_with:sale_order_id',
+        'product_child_id' => 'required_with:sale_order_id',
         'task' => 'required',
         'customer' => 'required',
         'name' => 'required|max:250',
@@ -72,14 +72,15 @@ class TaskController extends Controller
         'services' => 'nullable',
     ];
 
-    public function index() {
+    public function index()
+    {
         if (str_contains(Route::currentRouteName(), '.technician.')) {
             $for_role = 'technician';
             $role_id = Task::TYPE_TECHNICIAN;
-        } else if (str_contains(Route::currentRouteName(), '.sale.')) {
+        } elseif (str_contains(Route::currentRouteName(), '.sale.')) {
             $for_role = 'sale';
             $role_id = Task::TYPE_SALE;
-        } else if (str_contains(Route::currentRouteName(), '.driver.')) {
+        } elseif (str_contains(Route::currentRouteName(), '.driver.')) {
             $for_role = 'driver';
             $role_id = Task::TYPE_DRIVER;
         }
@@ -92,10 +93,12 @@ class TaskController extends Controller
             'in_review' => Task::where('type', $role_id)->where('status', Task::STATUS_IN_REVIEW)->count(),
             'completed' => Task::where('type', $role_id)->where('status', Task::STATUS_COMPLETED)->count(),
         ];
+
         return view('task.list', $data);
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $role = null;
 
         switch ($req->role) {
@@ -120,12 +123,12 @@ class TaskController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records->where(function($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('amount_to_collect', 'like', '%' . $keyword . '%');
+            $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('remark', 'like', '%'.$keyword.'%')
+                    ->orWhere('amount_to_collect', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -148,9 +151,9 @@ class TaskController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -158,10 +161,10 @@ class TaskController extends Controller
             if ($role == Task::TYPE_DRIVER && $record->sale_order_id != null) {
                 $driver = $record->users[0];
                 if ($driver->phone_number != null) {
-                    $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
+                    $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
                 }
             }
-            
+
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
@@ -171,32 +174,53 @@ class TaskController extends Controller
                 'status' => $record->status,
                 'can_edit' => hasPermission('task.edit'),
                 'can_delete' => hasPermission('task.delete'),
-                'whatsapp_url' => $whatsapp_url
+                'whatsapp_url' => $whatsapp_url,
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create(Request $req) {
+    public function create(Request $req)
+    {
         $data = [];
 
         if ($req->has('tic_id')) {
             $ticket = Ticket::findOrFail($req->tic_id);
 
             $data['from_ticket'] = $ticket;
+            $data['so_inv'] = $ticket->so_inv == null ? null : explode(',', $ticket->so_inv);
+            $data['so_inv_type'] = $ticket->so_inv_type == null ? null : explode(',', $ticket->so_inv_type);
+            $data['product'] = $ticket->product_id == null ? null : explode(',', $ticket->product_id);
+            $data['product_child'] = $ticket->product_child_id == null ? null : explode(',', $ticket->product_child_id);
+
+            if ($data['so_inv_type'] != null) {
+                $so_inv_labels = [];
+                for ($i = 0; $i < count($data['so_inv_type']); $i++) {
+                    if ($data['so_inv_type'][$i] == 'so') {
+                        $so_inv_labels[] = Sale::where('id', $data['so_inv'][$i])->first();
+                    } elseif ($data['so_inv_type'][$i] == 'inv') {
+                        $so_inv_labels[] = Invoice::where('id', $data['so_inv'][$i])->first();
+                    }
+                }
+
+                $data['so_inv_labels'] = $so_inv_labels;
+                $data['so_inv_idx'] = $req->so_inv_idx ?? 0;
+            }
         }
+        // dd($data);
 
         return view('task.form', $data);
     }
 
-    public function driverStore(Request $req) {
+    public function driverStore(Request $req)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
-            'sale_order_id' => 'sale order'
+            'sale_order_id' => 'sale order',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -229,7 +253,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
 
@@ -240,7 +264,7 @@ class TaskController extends Controller
                 ]);
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
-            if ($req->amount_to_collect > 0 && !array_intersect($req->milestone, getPaymentCollectionIds())) {
+            if ($req->amount_to_collect > 0 && ! array_intersect($req->milestone, getPaymentCollectionIds())) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->where('name', 'Payment Collection')->value('id'),
@@ -271,20 +295,20 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
-            } else if ($req->ticket != null) {
+            } elseif ($req->ticket != null) {
                 $atts = Attachment::where([
                     'object_type' => Ticket::class,
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) {
+                for ($i = 0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+                        $filename = generateRandomAlphabet(40).'.'.$extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
-                        if (!$exists) {
+                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        if (! $exists) {
                             break;
                         }
                     }
@@ -293,7 +317,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
                 }
             }
 
@@ -302,7 +326,7 @@ class TaskController extends Controller
             Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
-                'task_id' => $task->id
+                'task_id' => $task->id,
             ]));
 
             DB::commit();
@@ -316,7 +340,8 @@ class TaskController extends Controller
         }
     }
 
-    public function technicianStore(Request $req) {
+    public function technicianStore(Request $req)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
@@ -338,6 +363,7 @@ class TaskController extends Controller
                 'ticket_id' => $req->ticket,
                 'sale_order_id' => $req->sale_order_id,
                 'product_id' => $req->product_id,
+                'product_child_id' => $req->product_child_id,
                 'task_type' => $req->task,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
@@ -350,9 +376,6 @@ class TaskController extends Controller
             ]);
             (new Branch)->assign(Task::class, $task->id);
 
-            if ($req->ticket != null) {
-                Ticket::where('id', $req->ticket)->delete();
-            }
             // Services
             if ($req->services != null) {
                 foreach ($req->services as $service_id) {
@@ -367,7 +390,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
             // Milestones
@@ -378,7 +401,7 @@ class TaskController extends Controller
                 ]);
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
-            if ($req->amount_to_collect > 0 && !array_intersect($req->milestone, getPaymentCollectionIds())) {
+            if ($req->amount_to_collect > 0 && ! array_intersect($req->milestone, getPaymentCollectionIds())) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => Milestone::where('type', $req->task)->where('name', 'Payment Collection')->value('id'),
@@ -408,20 +431,20 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
-            } else if ($req->ticket != null) {
+            } elseif ($req->ticket != null) {
                 $atts = Attachment::where([
                     'object_type' => Ticket::class,
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) {
+                for ($i = 0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+                        $filename = generateRandomAlphabet(40).'.'.$extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
-                        if (!$exists) {
+                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        if (! $exists) {
                             break;
                         }
                     }
@@ -430,7 +453,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
                 }
             }
 
@@ -439,10 +462,20 @@ class TaskController extends Controller
             Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
-                'task_id' => $task->id
+                'task_id' => $task->id,
             ]));
 
             DB::commit();
+
+            $ticket = Ticket::where('id', $req->ticket)->first();
+            $so_inv_count = count(explode(',', $ticket->so_inv)) ?? null;
+            if ($so_inv_count != null && ($req->so_inv_idx + 1) != $so_inv_count) {
+                return redirect(route('task.technician.create', ['tic_id' => $req->ticket, 'so_inv_idx' => $req->so_inv_idx + 1]))->with('success', 'Task created');
+            }
+
+            if ($req->ticket != null) {
+                Ticket::where('id', $req->ticket)->delete();
+            }
 
             return redirect(route('task.technician.index'))->with('success', 'Task created');
         } catch (\Throwable $th) {
@@ -453,7 +486,8 @@ class TaskController extends Controller
         }
     }
 
-    public function saleStore(Request $req) {
+    public function saleStore(Request $req)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
@@ -488,7 +522,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
 
@@ -522,20 +556,20 @@ class TaskController extends Controller
                         'src' => basename($path),
                     ]);
                 }
-            } else if ($req->ticket != null) {
+            } elseif ($req->ticket != null) {
                 $atts = Attachment::where([
                     'object_type' => Ticket::class,
                     'object_id' => $req->ticket,
                 ])->get();
 
-                for ($i=0; $i < count($atts); $i++) {
+                for ($i = 0; $i < count($atts); $i++) {
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40) . '.' . $extension;
+                        $filename = generateRandomAlphabet(40).'.'.$extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
-                        if (!$exists) {
+                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        if (! $exists) {
                             break;
                         }
                     }
@@ -544,7 +578,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
+                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
                 }
             }
 
@@ -553,7 +587,7 @@ class TaskController extends Controller
             Notification::send(User::whereIn('id', $req->assign)->get(), new MobileAppNotification([
                 'type' => 'task_created',
                 'assigned_by' => Auth::user()->id,
-                'task_id' => $task->id
+                'task_id' => $task->id,
             ]));
 
             DB::commit();
@@ -567,7 +601,8 @@ class TaskController extends Controller
         }
     }
 
-    public function view(Task $task) {
+    public function view(Task $task)
+    {
         $task->load('users', 'milestones', 'attachments', 'logs.doneBy');
 
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');
@@ -582,21 +617,23 @@ class TaskController extends Controller
         ]);
     }
 
-    public function edit(Task $task) {
+    public function edit(Task $task)
+    {
         $task->load('users', 'milestones', 'attachments', 'services');
 
         return view('task.form', [
-            'task' => $task
+            'task' => $task,
         ]);
     }
 
-    public function driverUpdate(Request $req, Task $task) {
+    public function driverUpdate(Request $req, Task $task)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
         $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
-            'sale_order_id' => 'sale order'
+            'sale_order_id' => 'sale order',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -623,7 +660,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
 
@@ -638,7 +675,7 @@ class TaskController extends Controller
                 }
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
-            if ($req->amount_to_collect > 0 && !TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
+            if ($req->amount_to_collect > 0 && ! TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => Milestone::where('type', Milestone::TYPE_DRIVER_TASK)->where('name', 'Payment Collection')->value('id'),
@@ -662,7 +699,7 @@ class TaskController extends Controller
             if ($req->hasFile('attachment')) {
                 Attachment::where([
                     ['object_type', Task::class],
-                    ['object_id', $task->id]
+                    ['object_id', $task->id],
                 ])->delete();
 
                 foreach ($req->file('attachment') as $key => $file) {
@@ -688,7 +725,8 @@ class TaskController extends Controller
         }
     }
 
-    public function technicianUpdate(Request $req, Task $task) {
+    public function technicianUpdate(Request $req, Task $task)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
@@ -709,6 +747,7 @@ class TaskController extends Controller
                 'task_type' => $req->task,
                 'sale_order_id' => $req->sale_order_id,
                 'product_id' => $req->product_id,
+                'product_child_id' => $req->product_child_id,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,
@@ -734,7 +773,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
             // Milestone
@@ -749,7 +788,7 @@ class TaskController extends Controller
                 }
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
-            if ($req->amount_to_collect > 0 && !TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
+            if ($req->amount_to_collect > 0 && ! TaskMilestone::where('task_id', $task->id)->whereIn('milestone_id', getPaymentCollectionIds())->exists()) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => Milestone::where('type', $req->task)->where('name', 'Payment Collection')->value('id'),
@@ -794,7 +833,8 @@ class TaskController extends Controller
         }
     }
 
-    public function saleUpdate(Request $req, Task $task) {
+    public function saleUpdate(Request $req, Task $task)
+    {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
@@ -823,7 +863,7 @@ class TaskController extends Controller
             foreach ($req->assign as $assign_id) {
                 UserTask::create([
                     'user_id' => $assign_id,
-                    'task_id' => $task->id
+                    'task_id' => $task->id,
                 ]);
             }
 
@@ -855,7 +895,7 @@ class TaskController extends Controller
             if ($req->hasFile('attachment')) {
                 Attachment::where([
                     ['object_type', Task::class],
-                    ['object_id', $task->id]
+                    ['object_id', $task->id],
                 ])->delete();
 
                 foreach ($req->file('attachment') as $key => $file) {
@@ -881,7 +921,8 @@ class TaskController extends Controller
         }
     }
 
-    public function delete(Task $task) {
+    public function delete(Task $task)
+    {
         try {
             DB::beginTransaction();
 
@@ -900,7 +941,8 @@ class TaskController extends Controller
         }
     }
 
-    public function generate99ServiceReport(Request $req) {
+    public function generate99ServiceReport(Request $req)
+    {
         $task_ids = explode(',', $req->task_ids);
 
         $photo_equipment_ms_id = Milestone::where('type', Milestone::TYPE_SERVICE_TASK)
@@ -925,11 +967,11 @@ class TaskController extends Controller
         $dates = [];
         $records = [];
 
-        for ($i=0; $i < count($tasks); $i++) { 
+        for ($i = 0; $i < count($tasks); $i++) {
             // Technicians
-            for ($j=0; $j < count($tasks[$i]->users); $j++) { 
+            for ($j = 0; $j < count($tasks[$i]->users); $j++) {
                 $user = $tasks[$i]->users[$j];
-                if (!in_array($user->name, $technicians)) {
+                if (! in_array($user->name, $technicians)) {
                     $technicians[] = $user->name;
                 }
             }
@@ -950,8 +992,8 @@ class TaskController extends Controller
 
         $pdf = Pdf::loadView('task.report_pdf', [
             'records' => $records,
-            'technicians' => join(', ', $technicians),
-            'dates' => join(', ', $dates),
+            'technicians' => implode(', ', $technicians),
+            'dates' => implode(', ', $dates),
             'photo_equipment_ms_id' => $photo_equipment_ms_id,
             'before_service_ms_id' => $before_service_ms_id,
             'afer_service_ms_id' => $afer_service_ms_id,
@@ -961,7 +1003,8 @@ class TaskController extends Controller
         return $pdf->download('99-service-report.pdf');
     }
 
-    private function createLog(Task $task, string $desc) {
+    private function createLog(Task $task, string $desc)
+    {
         $task->load('users', 'milestones', 'attachments');
 
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');

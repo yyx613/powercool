@@ -8,7 +8,7 @@
     <form action="" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="w-1/3">
+            <div class="w-full md:w-1/3">
                 <!-- Product -->
                 <div class="flex flex-col mb-4">
                     <x-app.input.label id="product" class="mb-1">{{ __('Product Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -21,7 +21,7 @@
                     <x-app.message.error id="product_err"/>
                 </div>
             </div>
-            <div class="w-1/2">
+            <div class="w-full md:w-1/2">
                 <!-- Material -->
                 <div class="flex flex-col">
                     <x-app.input.label id="material" class="mb-1">{{ __('Raw Material Use') }} <span class="text-sm text-red-500">*</span></x-app.input.label>

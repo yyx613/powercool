@@ -16,32 +16,37 @@ class Ticket extends Model
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function attachments() {
+    public function attachments()
+    {
         return $this->morphMany(Attachment::class, 'object');
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function generateSku(): string {
+    public function generateSku(): string
+    {
         $sku = null;
-        
+
         while (true) {
-            $sku = 'T' . now()->format('ym') . generateRandomAlphabet();
+            $sku = 'T'.now()->format('ym').generateRandomAlphabet();
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 break;
             }
         }
