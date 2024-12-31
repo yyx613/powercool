@@ -63,6 +63,7 @@
                     <th>{{ __('Curr. Code') }}</th>
                     <th>{{ __('Paid Amount') }}</th>
                     <th>{{ __('Total') }}</th>
+                    <th>{{ __('Payment Status') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -96,6 +97,7 @@
                 { data: 'curr_code' },
                 { data: 'paid' },
                 { data: 'total' },
+                { data: 'payment_status' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -173,6 +175,23 @@
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
+                            case 1:
+                                return "{!! __('Unpaid') !!}"
+                            case 2:
+                                return "{!! __('Partially Paid') !!}"
+                            case 3:
+                                return "{!! __('Paid') !!}"
+                            default:
+                                return data
+                        }
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 10,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        switch (data) {
                             case 0:
                                 return "{!! __('Inactive') !!}"
                             case 1:
@@ -189,7 +208,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 10,
+                    "targets": 11,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

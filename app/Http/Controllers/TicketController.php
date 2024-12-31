@@ -6,10 +6,13 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
+use App\Models\DeliveryOrderProductChild;
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\ProductChild;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
 use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -250,10 +253,19 @@ class TicketController extends Controller
 
     public function getProductChildren(Request $req)
     {
-        $product = Product::where('id', $req->product_id)->first();
+        if ($req->type == 'so') {
+            $sp_ids = SaleProduct::where('sale_id', $req->so_inv_id)->where('product_id', $req->product_id)->pluck('id');
+            $pc_ids = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id');
+        } elseif ($req->type == 'inv') {
+            $inv = Invoice::where('id', $req->so_inv_id)->first();
+            $do_ids = DeliveryOrder::where('invoice_id', $inv->id)->pluck('id')->toArray();
+            $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id')->toArray();
+            $pc_ids = DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->pluck('product_children_id')->toArray();
+        }
+        $product_children = ProductChild::whereIn('id', $pc_ids)->get();
 
         return response()->json([
-            'product_children' => $product->children()->orderBy('id', 'desc')->get(),
+            'product_children' => $product_children,
         ]);
     }
 }

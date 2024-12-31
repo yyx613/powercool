@@ -296,9 +296,11 @@
         $('body').on('change', 'select[name="product[]"]', function() {
             let val = $(this).val()
             let id = $(this).parent().parent().data('id')
+            let type = $(`.items[data-id="${id}"] select[name="so_inv[]"] option:checked`).data('type')
+            let soInvId = $(`.items[data-id="${id}"] select[name="so_inv[]"]`).val()
 
             let url = "{{ config('app.url') }}"
-            url = `${url}/ticket/get-product-children?product_id=${val}`
+            url = `${url}/ticket/get-product-children?type=${type}&so_inv_id=${soInvId}&product_id=${val}`
 
             $.ajax({
                 headers: {

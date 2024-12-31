@@ -192,7 +192,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
-            Route::get('/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
+            Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
         });
 

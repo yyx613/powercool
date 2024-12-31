@@ -45,7 +45,7 @@
                     <x-app.input.label id="model_desc" class="mb-1">{{ __('Model Description') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_desc" id="model_desc" value="{{ old('model_desc', isset($prod) ? $prod->model_desc : ($dup_prod != null ? $dup_prod->model_desc : null)) }}" />
                     <x-input-error :messages="$errors->get('model_desc')" class="mt-1" />
-                </div> 
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="uom" id="uom">
@@ -87,7 +87,16 @@
                     <x-app.input.label id="low_stock_threshold" class="mb-1">{{ __('Low Stock Threshold') }}</x-app.input.label>
                     <x-app.input.input name="low_stock_threshold" id="low_stock_threshold" class="int-input" value="{{ old('low_stock_threshold', isset($prod) ? $prod->low_stock_threshold : ($dup_prod != null ? $dup_prod->low_stock_threshold : null)) }}" />
                     <x-input-error :messages="$errors->get('low_stock_threshold')" class="mt-1" />
-                </div> 
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="min_price" class="mb-1">{{ __('Selling Price') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
+                    <div class="flex gap-4">
+                        <x-app.input.input name="min_price" id="min_price" class="flex-1 decimal-input" placeholder="Min Price" value="{{ old('min_price', $prod->min_price ?? null) }}"/>
+                        <x-app.input.input name="max_price" id="max_price" class="flex-1 decimal-input" placeholder="Max Price" value="{{ old('max_price', $prod->max_price ?? null) }}"/>
+                    </div>
+                    <x-input-error :messages="$errors->get('min_price')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
+                </div>
                 <div class="flex flex-col" id="cost-container">
                     <x-app.input.label id="cost" class="mb-1">{{ __('Cost') }} <span class="text-sm text-red-500 required-star">*</span></x-app.input.label>
                     <x-app.input.input name="cost" id="cost" class="decimal-input flex-1" value="{{ old('cost', isset($prod) ? $prod->cost : ($dup_prod != null ? $dup_prod->cost : null)) }}"/>
@@ -117,7 +126,7 @@
                         @endif
                     </div>
                 </div>
-                
+
                 @if ($is_product == false)
                     <div class="flex flex-col">
                         <x-app.input.label id="supplier_id" class="mb-1">{{ __('Supplier') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -128,7 +137,7 @@
                             @endforeach
                         </x-app.input.select>
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-1" />
-                    </div> 
+                    </div>
                 @endif
             </div>
         </div>
@@ -137,61 +146,46 @@
             <div class="mb-2 flex items-center justify-between">
                 <h6 class="font-medium text-lg">{{ __('Selling Prices') }}</h6>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4 hidden" id="selling-price-template">
+            <div class="grid grid-cols-2 lg:grid-cols-2 gap-8 w-full mb-4 hidden" id="selling-price-template">
                 <div class="flex flex-col col-span-2 lg:col-span-1">
                     <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
                     <x-app.input.input name="selling_price_name[]" id="selling_price_name" />
                     <x-input-error :messages="$errors->get('selling_price_name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
-                    <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('selling_price_min_price')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
-                    <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('selling_price_max_price')" class="mt-1" />
+                    <x-app.input.label id="selling_price" class="mb-1">{{ __('Price') }}</x-app.input.label>
+                    <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input" />
+                    <x-input-error :messages="$errors->get('selling_price')" class="mt-1" />
                 </div>
             </div>
             <div id="selling-price-container">
                 @if (old('selling_price_name') != null)
                     @foreach(old('selling_price_name') as $key => $val)
-                        <div class="grid grid-cols-3 gap-8 w-full mb-4 selling-prices">
+                        <div class="grid grid-cols-2 gap-8 w-full mb-4 selling-prices">
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
                                 <x-app.input.input name="selling_price_name[]" id="selling_price_name" value="{{ old('selling_price_name.' . $key) }}" />
                                 <x-input-error :messages="$errors->get('selling_price_name.' . $key)" class="mt-1" />
                             </div>
                             <div class="flex flex-col">
-                                <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" value="{{ old('selling_price_min_price.' . $key) }}" />
-                                <x-input-error :messages="$errors->get('selling_price_min_price.' . $key)" class="mt-1" />
-                            </div>
-                            <div class="flex flex-col">
-                                <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" value="{{ old('selling_price_max_price.' . $key) }}" />
-                                <x-input-error :messages="$errors->get('selling_price_max_price.' . $key)" class="mt-1" />
+                                <x-app.input.label id="selling_price" class="mb-1">{{ __('Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input" value="{{ old('selling_price.' . $key) }}" />
+                                <x-input-error :messages="$errors->get('selling_price.' . $key)" class="mt-1" />
                             </div>
                         </div>
                     @endforeach
                 @elseif (isset($prod))
                     @foreach($prod->sellingPrices as $sp)
-                        <div class="grid grid-cols-3 gap-8 w-full mb-4 selling-prices">
+                        <div class="grid grid-cols-2 gap-8 w-full mb-4 selling-prices">
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
                                 <x-app.input.input name="selling_price_name[]" id="selling_price_name" value="{{ $sp->name }}" />
                                 <x-input-error :messages="$errors->get('selling_price_name')" class="mt-1" />
                             </div>
                             <div class="flex flex-col">
-                                <x-app.input.label id="selling_price_min_price" class="mb-1">{{ __('Min Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price_min_price[]" id="selling_price_min_price" class="decimal-input" value="{{ $sp->min_price }}" />
-                                <x-input-error :messages="$errors->get('selling_price_min_price')" class="mt-1" />
-                            </div>
-                            <div class="flex flex-col">
-                                <x-app.input.label id="selling_price_max_price" class="mb-1">{{ __('Max Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price_max_price[]" id="selling_price_max_price" class="decimal-input" value="{{ $sp->max_price }}" />
-                                <x-input-error :messages="$errors->get('selling_price_max_price')" class="mt-1" />
+                                <x-app.input.label id="selling_price" class="mb-1">{{ __('Price') }}</x-app.input.label>
+                                <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input" value="{{ $sp->price }}" />
+                                <x-input-error :messages="$errors->get('selling_price')" class="mt-1" />
                             </div>
                         </div>
                     @endforeach
@@ -269,7 +263,7 @@
                     <x-app.input.label id="classification_code" class="mb-1">{{ __('Classification Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="classification_code[]" multiple class="h-36">
                         @foreach ($classificationCodes as $classificationCode)
-                            <option value="{{ $classificationCode->id }}" 
+                            <option value="{{ $classificationCode->id }}"
                                 @selected(in_array($classificationCode->id, old('classification_code', isset($prod) ? $prod->classificationCodes->pluck('id')->toArray() : [])))
                                 >{{ $classificationCode->code }} - {{ $classificationCode->description }}</option>
                         @endforeach
@@ -422,11 +416,11 @@
     })
     $('#add-selling-price-btn').on('click', function() {
         let clone = $('#selling-price-template')[0].cloneNode(true);
-        
+
         $(clone).addClass('selling-prices')
         $(clone).removeClass('hidden')
         $(clone).removeAttr('id')
-        
+
         $('#selling-price-container').append(clone)
     })
     $('#form').one('submit', function(e) {
