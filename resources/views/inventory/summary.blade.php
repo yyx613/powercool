@@ -1,5 +1,22 @@
 @extends('layouts.app')
 
+@vite(['resources/css/jquery.dataTables.min.css'])
+
+@push('styles')
+    <style>
+        #data-table {
+            border: solid 1px rgb(209 213 219);
+        }
+        #data-table thead th,
+        #data-table tbody tr td {
+            border-bottom: solid 1px rgb(209 213 219);
+        }
+        #data-table tbody tr:last-of-type td {
+            border-bottom: none;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="mb-6">
         <x-app.page-title>{{ __('Inventory Summary') }}</x-app.page-title>
@@ -45,7 +62,7 @@
         <!-- Left -->
         <div class="flex-[2] flex flex-col gap-4">
             <!-- Low Quantity Stock (Products) -->
-            <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
+            <div class="border bg-white rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">{{ __('Low Quantity Stock (Products)') }}</h6>
                 @foreach ($products as $pro)
                     @if ($pro->isLowStock())
@@ -53,16 +70,18 @@
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @else
+                                    <x-app.no-image-icon class="p-1"/>
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">{{ __('Remaining Qty:') }} <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">{{ __('Remaining Qty:') }} <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock() }}</span></span>
                         </div>
                     @endif
                 @endforeach
             </div>
             <!-- Low Quantity Stock (Raw Materials) -->
-            <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
+            <div class="border bg-white rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">{{ __('Low Quantity Stock (Raw Materials)') }}</h6>
                 @foreach ($raw_materials as $pro)
                     @if ($pro->isLowStock())
@@ -70,19 +89,47 @@
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @else
+                                    <x-app.no-image-icon class="p-1"/>
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">{{ __('Remaining Qty:') }} <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock($pro->id) }}</span></span>
+                            <span class="flex-1 text-slate-500 text-center flex justify-center items-center">{{ __('Remaining Qty:') }} <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock() }}</span></span>
                         </div>
                     @endif
                 @endforeach
+            </div>
+            <!-- Remaining products qty -->
+            <div class="border bg-white rounded-lg px-2 py-1">
+                <h6 class="font-black text-xl mb-2">{{ __('Quantity Remaining') }}</h6>
+                <div class="p-2">
+                    <!-- Filters -->
+                    <div class="flex max-w-xs w-full mb-4">
+                        <div class="flex-1">
+                            <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
+                                <div class="rounded-md border border-transparent p-1 ml-1">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
+                                </div>
+                            </x-app.input.input>
+                        </div>
+                    </div>
+                    <!-- Table -->
+                    <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('Remaining Qty') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <!-- Right -->
         <div class="flex-1 flex flex-col gap-4">
             <!-- Inventory Summary -->
-            <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
+            <div class="border bg-white rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">{{ __('Inventory Summary') }}</h6>
                 @php
                     $data = [
@@ -112,7 +159,7 @@
                 @endforeach
             </div>
             <!-- Category -->
-            <div class="border-2 border-slate-200 rounded-lg px-2 py-1">
+            <div class="border bg-white rounded-lg px-2 py-1">
                 <h6 class="font-black text-xl mb-2">{{ __('Inventory Category') }}</h6>
                 <canvas id="chart1"></canvas>
             </div>
@@ -145,5 +192,59 @@
             },
         }
         new Chart(ctx, data);
+
+        // Datatable
+        var dt = new DataTable('#data-table', {
+            dom: 'rtip',
+            pagingType: 'numbers',
+            pageLength: 10,
+            processing: true,
+            serverSide: true,
+            order: [],
+            columns: [
+                { data: 'name' },
+                { data: 'remaining_qty' },
+            ],
+            columnDefs: [
+                {
+                    "width": "10%",
+                    "targets": 0,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `
+                            <div class="flex items-center gap-x-2">
+                                <div class="h-8 w-8">
+                                    ${
+                                        row.image != null ? `<img src="${ row.image.url }" class="h-full w-full object-contain" />` :
+                                            `<x-app.no-image-icon class="p-1"/>`
+                                    }
+                                </div>
+                                <span>${data}</span>
+                            </div>
+                        `
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+            ],
+            ajax: {
+                data: function(){
+                    var info = $('#data-table').DataTable().page.info();
+                    var url = "{{ route('inventory_summary.get_remaining_qty') }}"
+
+                    url = `${url}?page=${ info.page + 1 }`
+                    $('#data-table').DataTable().ajax.url(url);
+                },
+            },
+        });
+        $('#filter_search').on('keyup', function() {
+            dt.search($(this).val()).draw()
+        })
     </script>
 @endpush

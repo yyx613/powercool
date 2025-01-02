@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 #[ScopedBy([BranchScope::class])]
 class Product extends Model
@@ -18,14 +16,19 @@ class Product extends Model
     use SoftDeletes;
 
     public const TYPE_PRODUCT = 1;
+
     public const TYPE_RAW_MATERIAL = 2;
 
-    const ITEM_TYPE_PRODUCT_MFG = 1;    
-    const ITEM_TYPE_PRODUCT_HFG = 2;   
-    const ITEM_TYPE_RAW_MATERIAL_MSP = 1;    
-    const ITEM_TYPE_RAW_MATERIAL_HSP = 2;    
+    const ITEM_TYPE_PRODUCT_MFG = 1;
+
+    const ITEM_TYPE_PRODUCT_HFG = 2;
+
+    const ITEM_TYPE_RAW_MATERIAL_MSP = 1;
+
+    const ITEM_TYPE_RAW_MATERIAL_HSP = 2;
 
     protected $guarded = [];
+
     protected $casts = [
         'is_active' => 'integer',
         'created_at' => 'datetime:Y-m-d H:i:s',
@@ -52,19 +55,23 @@ class Product extends Model
         return $this->hasMany(ProductChild::class);
     }
 
-    public function costs() {
+    public function costs()
+    {
         return $this->hasMany(ProductCost::class);
     }
 
-    public function uomUnit() {
+    public function uomUnit()
+    {
         return $this->belongsTo(UOM::class, 'uom');
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function serviceHistories() {
+    public function serviceHistories()
+    {
         return $this->morphMany(InventoryServiceReminder::class, 'object')->orderBy('id', 'desc');
     }
 
@@ -78,27 +85,32 @@ class Product extends Model
         return $this->belongsToMany(ClassificationCode::class, 'classification_code_product');
     }
 
-    public function sellingPrices() {
+    public function sellingPrices()
+    {
         return $this->hasMany(ProductSellingPrice::class);
     }
 
     public function getQtyAttribute($val)
     {
-        if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool)$this->is_sparepart == true)) {
+        if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool) $this->is_sparepart == true)) {
             return ProductChild::where('product_id', $this->id)->count();
         }
+
         return $val;
     }
 
-    public function isRawMaterial(): bool {
+    public function isRawMaterial(): bool
+    {
         return $this->is_sparepart !== null && $this->is_sparepart == false;
     }
 
-    public function warehouseAvailableStock() {
+    public function warehouseAvailableStock()
+    {
         return $this->warehouseStock() - $this->warehouseReservedStock() - $this->warehouseOnHoldStock();
     }
 
-    public function warehouseStock() {
+    public function warehouseStock()
+    {
         if ($this->isRawMaterial()) {
             return $this->qty;
         }
@@ -109,7 +121,8 @@ class Product extends Model
             ->count();
     }
 
-    public function warehouseReservedStock() {
+    public function warehouseReservedStock()
+    {
         if ($this->isRawMaterial()) {
             // Check in Production
             $count = ProductionMilestoneMaterial::where('product_id', $this->id)->where('on_hold', false)->sum('qty');
@@ -147,7 +160,8 @@ class Product extends Model
         return $count;
     }
 
-    public function warehouseOnHoldStock() {
+    public function warehouseOnHoldStock()
+    {
         if ($this->isRawMaterial()) {
             return ProductionMilestoneMaterial::where('product_id', $this->id)->where('on_hold', true)->sum('qty');
         }
@@ -158,7 +172,8 @@ class Product extends Model
         return ProductionMilestoneMaterial::where('on_hold', true)->whereIn('product_child_id', $ids)->count();
     }
 
-    public function productionStock() {
+    public function productionStock()
+    {
         if ($this->isRawMaterial()) {
             return 0;
         }
@@ -166,7 +181,8 @@ class Product extends Model
         return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $this->id)->count();
     }
 
-    public function productionReservedStock() {
+    public function productionReservedStock()
+    {
         if ($this->isRawMaterial()) {
             return 0;
         }
@@ -191,10 +207,12 @@ class Product extends Model
         return $count;
     }
 
-    public function isLowStock(): bool {
-        if ($this->low_stock_threshold != null && $this->qty <= $this->low_stock_threshold) {
+    public function isLowStock(): bool
+    {
+        if ($this->low_stock_threshold != null && $this->warehouseAvailableStock() <= $this->low_stock_threshold) {
             return true;
         }
+
         return false;
     }
 }

@@ -87,6 +87,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     Route::controller(InventoryController::class)->prefix('inventory-summary')->name('inventory_summary.')->middleware(['can:inventory.summary.view'])->group(function () { // Inventory Category
         Route::get('/', 'indexSummary')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-remaining-qty', 'getRemainingQty')->name('get_remaining_qty');
     });
     Route::controller(InventoryController::class)->prefix('inventory-category')->name('inventory_category.')->middleware(['can:inventory.category.view'])->group(function () { // Inventory Category
         Route::get('/', 'index')->name('index');

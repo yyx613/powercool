@@ -13,14 +13,17 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class InventoryController extends Controller
 {
     protected $prod;
+
     protected $prodChild;
+
     protected $invCat;
+
     protected $production;
 
     public function __construct()
@@ -45,7 +48,7 @@ class InventoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -65,9 +68,9 @@ class InventoryController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -77,6 +80,51 @@ class InventoryController extends Controller
                 'status' => $record->is_active,
                 'can_edit' => hasPermission('inventory.category.edit'),
                 'can_delete' => hasPermission('inventory.category.delete'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function getRemainingQty(Request $req)
+    {
+        $records = $this->prod;
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('model_name', 'like', '%'.$keyword.'%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'model_name',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $data['data'][] = [
+                'name' => $record->model_name,
+                'image' => $record->image,
+                'remaining_qty' => $record->warehouseAvailableStock(),
             ];
         }
 
@@ -128,13 +176,14 @@ class InventoryController extends Controller
             if ($req->create_again == true) {
                 return redirect(route('inventory_category.create'))->with('success', 'Inventory Category created');
             }
-            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category ' . ($req->category_id == null ? 'created' : 'updated'));
+
+            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category '.($req->category_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -177,6 +226,7 @@ class InventoryController extends Controller
             $production_stock += $raw_materials[$i]->productionStock($raw_materials[$i]->id);
             $production_reserved_stock += $raw_materials[$i]->productionReservedStock($raw_materials[$i]->id);
         }
+
         return view('inventory.summary', [
             'warehouse_available_stock' => $warehouse_stock,
             'warehouse_reserved_stock' => $warehouse_reserved_stock,
@@ -225,7 +275,7 @@ class InventoryController extends Controller
 
     public function stockOut(Request $req, ProductChild $product_child)
     {
-        if ($req->has('stock_out_to') && $req->stock_out_to !== 'production' && (!$req->has('stock_out_to') || !$req->has('stock_out_to_selection'))) {
+        if ($req->has('stock_out_to') && $req->stock_out_to !== 'production' && (! $req->has('stock_out_to') || ! $req->has('stock_out_to_selection'))) {
             abort(404);
         }
 
@@ -275,7 +325,7 @@ class InventoryController extends Controller
             if ($cloned_cat == null) {
                 $cloned_cat = $cat->replicate();
                 $cloned_cat->save();
-    
+
                 (new Branch)->assign(InventoryCategory::class, $cloned_cat->id, $req->branch);
             }
             // Create supplier for branch to transfer
@@ -291,7 +341,7 @@ class InventoryController extends Controller
                 if ($cloned_supp == null) {
                     $cloned_supp = $supp->replicate();
                     $cloned_supp->save();
-    
+
                     (new Branch)->assign(Supplier::class, $cloned_supp->id, $req->branch);
                     // Create supplier image for branch to transfer
                     for ($i = 0; $i < count($supp->pictures); $i++) {
@@ -316,7 +366,7 @@ class InventoryController extends Controller
                 $cloned_product_image = $product->image->replicate();
                 $cloned_product_image->object_id = $cloned_product->id;
                 $cloned_product_image->save();
-                
+
                 (new Branch)->assign(Product::class, $cloned_product->id, $req->branch);
             }
 
