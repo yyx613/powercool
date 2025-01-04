@@ -15,6 +15,7 @@
         "maatwebsite/excel": "^3.1",
         "picqer/php-barcode-generator": "^3.2",
         "simplesoftwareio/simple-qrcode": "~4",
+        "spatie/laravel-backup": "^9.1",
         "spatie/laravel-permission": "^6.9"
     },
     "require-dev": {

@@ -133,7 +133,7 @@
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} {{ __('Left') }}</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }} {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach
@@ -150,7 +150,7 @@
                                 @endif
                             </div>
                             <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock($pro->id) }} {{ __('Left') }}</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }} {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach

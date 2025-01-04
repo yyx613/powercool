@@ -12,7 +12,7 @@
             @include('quotation.form_step.quotation_details')
             @include('quotation.form_step.product_details')
             @include('quotation.form_step.remarks')
-            
+
             <div class="flex justify-end">
                 @if (isset($sale) && $sale->status == 2)
                     <span class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
@@ -45,6 +45,7 @@
         let prodDesc = []
         let qty = []
         let uom = []
+        let sellingPrice = []
         let unitPrice = []
         let promo = []
         let prodSerialNo = []
@@ -55,7 +56,8 @@
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             uom.push($(this).find('input[name="uom"]').val())
-            unitPrice.push($(this).find('input[name="unit_price"]').val())
+            sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
+            unitPrice.push($(this).find('input[name="unit_price[]"]').val())
             promo.push($(this).find('select[name="promotion[]"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
@@ -90,6 +92,7 @@
                 'product_desc': prodDesc,
                 'qty': qty,
                 'uom': uom,
+                'selling_price': sellingPrice,
                 'unit_price': unitPrice,
                 'promotion_id': promo,
                 'product_serial_no': prodSerialNo,
@@ -99,14 +102,14 @@
             },
             success: function(res) {
                 if (res.data.sale) {
-                    SALE = res.sale
+                    SALE = res.data.sale
                 }
 
                 let product_ids = res.data.product_ids
                 $('#product-details-container .items').each(function(i, obj) {
                     $(this).attr('data-product-id', product_ids[i])
                 })
-                
+
                 setTimeout(() => {
                     $('form #submit-btn').text('Updated')
                     $('form #submit-btn').addClass('bg-green-400 shadow')
@@ -115,7 +118,7 @@
                         $('form #submit-btn').text('Save and Update')
                         $('form #submit-btn').removeClass('bg-green-400')
                         $('form #submit-btn').addClass('bg-yellow-400 shadow')
-                        
+
                         FORM_CAN_SUBMIT = true
                     }, 2000);
                 }, 300);

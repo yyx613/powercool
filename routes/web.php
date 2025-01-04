@@ -87,6 +87,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     Route::controller(InventoryController::class)->prefix('inventory-summary')->name('inventory_summary.')->middleware(['can:inventory.summary.view'])->group(function () { // Inventory Category
         Route::get('/', 'indexSummary')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-remaining-qty', 'getRemainingQty')->name('get_remaining_qty');
     });
     Route::controller(InventoryController::class)->prefix('inventory-category')->name('inventory_category.')->middleware(['can:inventory.category.view'])->group(function () { // Inventory Category
         Route::get('/', 'index')->name('index');
@@ -192,7 +193,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
-            Route::get('/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
+            Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
         });
 

@@ -17,38 +17,40 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
-use Picqer\Barcode\Renderers\HtmlRenderer;
 use Picqer\Barcode\Types\TypeCode128;
 
 class ProductController extends Controller
 {
     protected $prod;
+
     protected $prodChild;
+
     protected $invCat;
+
     protected $production;
+
     protected $productionMsMaterial;
+
     protected $prodCost;
+
     protected $taskMsInventory;
+
     protected $sellingPrice;
 
     public function __construct()
     {
-        $this->prod = new Product();
-        $this->prodChild = new ProductChild();
-        $this->invCat = new InventoryCategory();
-        $this->production = new Production();
-        $this->productionMsMaterial = new ProductionMilestoneMaterial();
-        $this->prodCost = new ProductCost();
-        $this->taskMsInventory = new TaskMilestoneInventory();
-        $this->sellingPrice = new ProductSellingPrice();
+        $this->prod = new Product;
+        $this->prodChild = new ProductChild;
+        $this->invCat = new InventoryCategory;
+        $this->production = new Production;
+        $this->productionMsMaterial = new ProductionMilestoneMaterial;
+        $this->prodCost = new ProductCost;
+        $this->taskMsInventory = new TaskMilestoneInventory;
+        $this->sellingPrice = new ProductSellingPrice;
     }
 
     public function index()
@@ -56,7 +58,8 @@ class ProductController extends Controller
         return view('inventory.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -71,7 +74,7 @@ class ProductController extends Controller
             }
         }
 
-        $records = $this->prod->with(['category' => function($q) {
+        $records = $this->prod->with(['category' => function ($q) {
             $q->withTrashed();
         }]);
 
@@ -92,13 +95,13 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
-                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('min_price', 'like', '%'.$keyword.'%')
+                    ->orWhere('max_price', 'like', '%'.$keyword.'%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
-                        $qq->where('name', 'like', '%' . $keyword . '%');
+                        $qq->where('name', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -126,9 +129,9 @@ class ProductController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -158,7 +161,7 @@ class ProductController extends Controller
         }
 
         return view('inventory.form', [
-            'dup_prod' => $dup_prod ?? null
+            'dup_prod' => $dup_prod ?? null,
         ]);
     }
 
@@ -185,11 +188,12 @@ class ProductController extends Controller
         ]);
     }
 
-    public function viewGetData(Request $req) {
+    public function viewGetData(Request $req)
+    {
         $records = $this->prodChild::where('product_id', $req->product_id);
 
         if ($req->boolean('is_production') == true) {
-            $records = $records->where('location', 'factory');  
+            $records = $records->where('location', 'factory');
         }
 
         // Search
@@ -197,8 +201,8 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('location', 'like', '%' . $keyword . '%');
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('location', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -219,9 +223,9 @@ class ProductController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -232,11 +236,11 @@ class ProductController extends Controller
             $assigned_to = $record->assignedTo();
             if ($assigned_to != null && is_array($assigned_to)) {
                 $skus = [];
-                for ($i=0; $i < count($assigned_to); $i++) { 
+                for ($i = 0; $i < count($assigned_to); $i++) {
                     $skus[] = $assigned_to[$i]->sku;
                 }
-                $assigned_to = join(', ', $skus);
-            } else if ($assigned_to != null) {
+                $assigned_to = implode(', ', $skus);
+            } elseif ($assigned_to != null) {
                 $assigned_to = $assigned_to->sku;
             }
             $data['data'][] = [
@@ -255,7 +259,8 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function viewGetDataRawMaterial(Request $req) {
+    public function viewGetDataRawMaterial(Request $req)
+    {
         $pmm_records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
         $tmi_records = $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $req->product_id)->orderBy('id', 'desc');
 
@@ -263,9 +268,9 @@ class ProductController extends Controller
         $records_ids = $pmm_records->pluck('id')->merge($tmi_records->pluck('id'));
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         $pmm_records_paginator = $pmm_records->simplePaginate(10);
@@ -283,7 +288,7 @@ class ProductController extends Controller
                 $on_hold = $pmm_records_paginator[$pmm_idx]->on_hold;
                 $at = $pmm_records_paginator[$pmm_idx]->updated_at;
                 $pmm_idx++;
-            } else if ($pmm_records_paginator[$pmm_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at < $tmi_records_paginator[$tmi_idx]->created_at) {
+            } elseif ($pmm_records_paginator[$pmm_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at < $tmi_records_paginator[$tmi_idx]->created_at) {
                 $order_id = $tmi_records_paginator[$tmi_idx]->taskMilestone->task->sku;
                 $qty = $tmi_records_paginator[$tmi_idx]->qty;
                 $on_hold = null;
@@ -311,9 +316,9 @@ class ProductController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -329,7 +334,8 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    public function generateBarcode(Request $req) {
+    public function generateBarcode(Request $req)
+    {
         if ($req->has('is_rm')) {
             $products = $this->prod::whereIn('id', [$req->id])->get();
         } else {
@@ -341,19 +347,19 @@ class ProductController extends Controller
             'barcode' => [],
             'renderer' => [],
         ];
-        for ($i=0; $i < count($products); $i++) { 
+        for ($i = 0; $i < count($products); $i++) {
             $prod = $req->has('is_rm') ? $products[$i] : $products[$i]->parent;
 
             $barcode = (new TypeCode128)->getBarcode($products[$i]->sku);
-    
+
             // Output the barcode as HTML in the browser with a HTML Renderer
             $renderer = new DynamicHtmlRenderer;
-            
+
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
-            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
+            $data['dimension'][] = ($prod->length ?? 0).' x '.($prod->width ?? 0).' x '.($prod->height ?? 0).'MM';
             $data['capacity'][] = $prod->capacity;
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
@@ -378,7 +384,7 @@ class ProductController extends Controller
             });
             $req->merge(['serial_no' => $serial_no]);
         }
-        
+
         $rules = [
             'product_id' => 'nullable',
             'initial_for_production' => 'required|max:250',
@@ -389,7 +395,9 @@ class ProductController extends Controller
             'category_id' => 'required',
             'item_type' => 'required',
             'supplier_id' => 'required',
-            'low_stock_threshold' => 'nullable', 
+            'low_stock_threshold' => 'nullable',
+            'min_price' => 'required',
+            'max_price' => 'required',
             'cost' => 'required',
             'status' => 'required',
             'is_sparepart' => 'required',
@@ -398,11 +406,9 @@ class ProductController extends Controller
 
             'selling_price_name' => 'nullable',
             'selling_price_name.*' => 'nullable',
-            'selling_price_min_price' => 'nullable',
-            'selling_price_min_price.*' => 'required_with:selling_price_name.*',
-            'selling_price_max_price' => 'nullable',
-            'selling_price_max_price.*' => 'required_with:selling_price_name.*',
-        
+            'selling_price' => 'nullable',
+            'selling_price.*' => 'required_with:selling_price_name.*',
+
             'weight' => 'nullable',
             'capacity' => 'nullable|max:250',
             'refrigerant' => 'nullable|max:250',
@@ -431,7 +437,7 @@ class ProductController extends Controller
         if ($req->boolean('is_product') == true) {
             $rules['supplier_id'] = 'nullable';
             $rules['is_sparepart'] = 'nullable';
-        } else if (!$req->boolean('is_sparepart')) {
+        } elseif (! $req->boolean('is_sparepart')) {
             $rules['initial_for_production'] = 'nullable';
             $rules['qty'] = 'required';
             $rules['min_price'] = 'nullable';
@@ -445,8 +451,7 @@ class ProductController extends Controller
             'qty' => 'quantity',
             'classification_code' => 'classification codes',
             'selling_price_name.*' => 'name',
-            'selling_price_min_price.*' => 'min price',
-            'selling_price_max_price.*' => 'max price',
+            'selling_price.*' => 'price',
         ]);
 
         // Validate model code is unique in the branch
@@ -460,8 +465,21 @@ class ProductController extends Controller
 
         if ($branch_product != null && $req->product_id != null && $branch_product->id != $req->product_id && $branch_product->sku == $req->model_code) {
             throw ValidationException::withMessages([
-                'model_code' => "The model code has already taken"
+                'model_code' => 'The model code has already taken',
             ]);
+        }
+        // Validate selling price is between min-max price
+        if ($req->selling_price_name != null) {
+            for ($i = 0; $i < count($req->selling_price_name); $i++) {
+                if ($req->selling_price_name[$i] == null) {
+                    continue;
+                }
+                if (! ($req->selling_price[$i] > $req->min_price && $req->selling_price[$i] < $req->max_price) && ! ($req->selling_price[$i] != $req->min_price || $req->selling_price[$i] != $req->max_price)) {
+                    throw ValidationException::withMessages([
+                        'selling_price.'.$i => 'The price is not between '.$req->min_price.' and '.$req->max_price,
+                    ]);
+                }
+            }
         }
 
         try {
@@ -479,6 +497,8 @@ class ProductController extends Controller
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
                     'low_stock_threshold' => $req->low_stock_threshold,
+                    'min_price' => $req->min_price,
+                    'max_price' => $req->max_price,
                     'cost' => $req->cost == null ? 0 : $req->cost,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
@@ -495,10 +515,10 @@ class ProductController extends Controller
                     'lazada_sku' => $req->lazada_sku,
                     'shopee_sku' => $req->shopee_sku,
                     'tiktok_sku' => $req->tiktok_sku,
-                    'woo_commerce_sku' => $req->woo_commerce_sku
+                    'woo_commerce_sku' => $req->woo_commerce_sku,
                 ]);
 
-                (new Branch())->assign(Product::class, $prod->id);
+                (new Branch)->assign(Product::class, $prod->id);
             } else {
                 $prod = $this->prod->where('id', $req->product_id)->first();
 
@@ -512,6 +532,8 @@ class ProductController extends Controller
                     'supplier_id' => $req->supplier_id,
                     'qty' => $req->qty,
                     'low_stock_threshold' => $req->low_stock_threshold,
+                    'min_price' => $req->min_price,
+                    'max_price' => $req->max_price,
                     'cost' => $req->cost == null ? 0 : $req->cost,
                     'weight' => $req->weight,
                     'length' => $req->dimension_length,
@@ -528,7 +550,7 @@ class ProductController extends Controller
                     'lazada_sku' => $req->lazada_sku,
                     'shopee_sku' => $req->shopee_sku,
                     'tiktok_sku' => $req->tiktok_sku,
-                    'woo_commerce_sku' => $req->woo_commerce_sku
+                    'woo_commerce_sku' => $req->woo_commerce_sku,
                 ]);
             }
 
@@ -544,8 +566,7 @@ class ProductController extends Controller
                     $data[] = [
                         'product_id' => $prod->id,
                         'name' => $req->selling_price_name[$i],
-                        'min_price' => $req->selling_price_min_price[$i],
-                        'max_price' => $req->selling_price_max_price[$i],
+                        'price' => $req->selling_price[$i],
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -583,7 +604,7 @@ class ProductController extends Controller
                     });
                     $this->prodChild::where('product_id', $prod->id)->whereNotIn('id', $order_idx ?? [])->delete();
                 }
-    
+
                 $now = now();
                 $data = [];
                 for ($i = 0; $i < count($req->serial_no); $i++) {
@@ -593,7 +614,7 @@ class ProductController extends Controller
 
                     if ($req->order_idx != null && $req->order_idx[$i] != null) {
                         $pc = $this->prodChild::where('id', $req->order_idx[$i])->first();
-    
+
                         $pc->update([
                             'sku' => $req->serial_no[$i],
                         ]);
@@ -620,12 +641,14 @@ class ProductController extends Controller
                 if ($req->create_again == true) {
                     return redirect(route('product.create'))->with('success', 'Product created');
                 }
-                return redirect(route('product.index'))->with('success', 'Product ' . ($req->product_id == null ? 'created' : 'updated'));
+
+                return redirect(route('product.index'))->with('success', 'Product '.($req->product_id == null ? 'created' : 'updated'));
             }
             if ($req->create_again == true) {
                 return redirect(route('raw_material.create'))->with('success', 'Raw Material created');
             }
-            return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
+
+            return redirect(route('raw_material.index'))->with('success', 'Raw Material '.($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

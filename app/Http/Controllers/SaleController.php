@@ -34,6 +34,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
@@ -285,6 +286,9 @@ class SaleController extends Controller
                 'uom' => $products->map(function ($q) {
                     return $q->uom;
                 })->toArray(),
+                'selling_price' => $products->map(function ($q) {
+                    return $q->unit_price;
+                })->toArray(),
                 'unit_price' => $products->map(function ($q) {
                     return $q->unit_price;
                 })->toArray(),
@@ -339,7 +343,8 @@ class SaleController extends Controller
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id', 'sales.sku AS doc_no', 'sales.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
-                'sales.convert_to AS transfer_to', 'users.name AS agent', 'currencies.name AS curr_code', 'sales.status AS status'
+                'sales.convert_to AS transfer_to', 'users.name AS agent', 'currencies.name AS curr_code', 'sales.status AS status',
+                'sales.payment_status'
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
@@ -407,6 +412,7 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'paid' => number_format($paid_amount, 2),
                 'total' => number_format($total_amount, 2),
+                'payment_status' => $record->payment_status,
                 'status' => $record->status,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
@@ -502,6 +508,10 @@ class SaleController extends Controller
     public function toDeliveryOrder(Request $req)
     {
         $step = 1;
+        $enable_by_pass = false;
+        if ($req->by_pass != null && Crypt::decrypt($req->by_pass) == Auth::user()->email) {
+            $enable_by_pass = true;
+        }
 
         if ($req->has('so')) {
             $step = 5;
@@ -543,12 +553,12 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where('payment_term', Session::get('convert_terms'))
-                ->where(function ($q) {
-                    $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
-                        ->orWhere('can_by_pass_conversion', true);
-                })
-                ->has('products.children')
-                ->get();
+                ->has('products.children');
+
+            if (! $enable_by_pass) {
+                $sale_orders = $sale_orders->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID);
+            }
+            $sale_orders = $sale_orders->get();
         } elseif ($req->has('sp')) {
             $step = 3;
 
@@ -559,14 +569,14 @@ class SaleController extends Controller
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
-                ->where(function ($q) {
-                    $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
-                        ->orWhere('can_by_pass_conversion', true);
-                })
                 ->has('products.children')
                 ->whereNotNull('payment_term')
-                ->distinct()
-                ->pluck('payment_term');
+                ->distinct();
+
+            if (! $enable_by_pass) {
+                $term_ids = $term_ids->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID);
+            }
+            $term_ids = $term_ids->pluck('payment_term');
 
             $terms = CreditTerm::whereIn('id', $term_ids)->get();
         } elseif ($req->has('cus')) {
@@ -578,26 +588,37 @@ class SaleController extends Controller
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', $req->cus)
-                ->where(function ($q) {
-                    $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
-                        ->orWhere('can_by_pass_conversion', true);
-                })
                 ->has('products.children')
-                ->distinct()
-                ->pluck('sale_id');
+                ->distinct();
+
+            if (! $enable_by_pass) {
+                $salesperson_ids = $salesperson_ids->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID);
+            }
+            $salesperson_ids = $salesperson_ids->pluck('sale_id');
 
             $salespersons = User::whereIn('id', $salesperson_ids)->get();
         } else {
+            if ($req->by_pass_conversion != null && ! (Hash::check($req->by_pass_conversion, Auth::user()->password))) {
+                return back()->withErrors([
+                    'by_pass_conversion' => 'Invalid password',
+                ]);
+            }
+            if ($req->by_pass_conversion != null) {
+                return redirect(route('sale_order.to_delivery_order', [
+                    'by_pass' => Crypt::encrypt(Auth::user()->email),
+                ]));
+            }
+
             $sales = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
-                ->where(function ($q) {
-                    $q->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID)
-                        ->orWhere('can_by_pass_conversion', true);
-                })
                 ->has('products.children')
-                ->distinct()
-                ->get();
+                ->distinct();
+
+            if (! $enable_by_pass) {
+                $sales = $sales->whereNot('payment_status', Sale::PAYMENT_STATUS_UNPAID);
+            }
+            $sales = $sales->get();
 
             $customer_ids = [];
             for ($i = 0; $i < count($sales); $i++) {
@@ -619,6 +640,7 @@ class SaleController extends Controller
             'products' => $products ?? [],
             'terms' => $terms ?? [],
             'allowed_spc_ids' => $allowed_spc_ids ?? [],
+            'by_pass' => $enable_by_pass ? Crypt::encrypt(Auth::user()->email) : null,
         ]);
     }
 
@@ -766,6 +788,9 @@ class SaleController extends Controller
             'qty.*' => 'required',
             'uom' => 'required',
             'uom.*' => 'required',
+            'selling_price' => 'required',
+            'selling_price.*' => 'required',
+            'unit_price' => 'required',
             'unit_price' => 'required',
             'unit_price.*' => 'required',
             'promotion_id' => 'required',
@@ -806,6 +831,7 @@ class SaleController extends Controller
             'product_desc.*' => 'product description',
             'qty.*' => 'quantity',
             'uom.*' => 'UOM',
+            'selling_price.*' => 'selling price',
             'unit_price.*' => 'unit price',
             'product_serial_no.*' => 'product serial no',
             'warranty_period.*' => 'warranty period',
@@ -1006,6 +1032,8 @@ class SaleController extends Controller
                 'qty.*' => 'required',
                 'uom' => 'required',
                 'uom.*' => 'required',
+                'selling_price' => 'required',
+                'selling_price.*' => 'required',
                 'unit_price' => 'required',
                 'unit_price.*' => 'required',
                 'promotion_id' => 'required',
@@ -1020,6 +1048,7 @@ class SaleController extends Controller
                 'product_desc.*' => 'product description',
                 'qty.*' => 'quantity',
                 'uom.*' => 'UOM',
+                'selling_price.*' => 'selling price',
                 'unit_price.*' => 'unit price',
                 'product_serial_no.*' => 'product serial no',
                 'warranty_period.*' => 'warranty period',
@@ -1069,6 +1098,7 @@ class SaleController extends Controller
                         'qty' => $req->qty[$i],
                         'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
+                        'selling_price_id' => $req->selling_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
@@ -1080,6 +1110,7 @@ class SaleController extends Controller
                         'qty' => $req->qty[$i],
                         'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
+                        'selling_price_id' => $req->selling_price[$i],
                         'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
                     ]);
@@ -1360,6 +1391,10 @@ class SaleController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
+        $path = '/public/storage';
+        if (config('app.env') == 'local') {
+            $path = '/storage';
+        }
         foreach ($records_paginator as $record) {
             $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$record->id."', convert_to)")->get();
             $total_amount = 0;
@@ -1369,6 +1404,9 @@ class SaleController extends Controller
                 $total_amount += $sos[$i]->getTotalAmount();
                 $so_skus[] = $sos[$i]->sku;
             }
+
+            $filename = config('app.url').str_replace('public', $path, self::DELIVERY_ORDER_PATH).'/'.$record->filename;
+            $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url').str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).'/'.$record->transport_ack_filename;
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -1383,8 +1421,8 @@ class SaleController extends Controller
                 'total' => number_format($total_amount, 2),
                 'created_by' => $record->created_by ?? null,
                 'status' => $record->status,
-                'filename' => $record->filename,
-                'transport_ack_filename' => $record->transport_ack_filename,
+                'filename' => $filename,
+                'transport_ack_filename' => $transport_ack_filename,
             ];
         }
 
@@ -2303,9 +2341,6 @@ class SaleController extends Controller
 
         if ($req->has('info')) {
             $errors = [];
-            if ($req->sale == null) {
-                $errors['sale'] = 'Please select a salesperson';
-            }
             if ($req->term == null) {
                 $errors['term'] = 'Please select a term';
             }
@@ -2321,7 +2356,6 @@ class SaleController extends Controller
 
             $step = 3;
 
-            Session::put('billing_saleperson', $req->sale);
             Session::put('billing_term', $req->term);
             Session::put('billing_your_ref', $req->your_ref);
             Session::put('billing_our_do_no', $req->our_do_no);
@@ -2391,7 +2425,6 @@ class SaleController extends Controller
                 'do_filename' => $do_filename,
                 'inv_filename' => $inv_filename,
                 'term_id' => Session::get('billing_term'),
-                'sale_person_id' => Session::get('billing_saleperson'),
                 'our_do_no' => Session::get('billing_our_do_no'),
                 'date' => now(),
             ]);
@@ -2441,7 +2474,6 @@ class SaleController extends Controller
             'your_ref' => Session::get('billing_your_ref'),
             'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-            'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
             'dopcs' => $dopcs,
             'custom_unit_price' => $custom_unit_price,
         ]);
@@ -2459,7 +2491,6 @@ class SaleController extends Controller
             'your_ref' => Session::get('billing_your_ref'),
             'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-            'salesperson' => User::where('id', Session::get('billing_saleperson'))->value('name'),
             'dopcs' => $dopcs,
             'custom_unit_price' => $custom_unit_price,
         ]);

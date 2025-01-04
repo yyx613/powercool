@@ -69,16 +69,6 @@
                                 <input type="text" name="info" class="hidden">
                                 <div class="grid grid-cols-3 gap-8 w-full mb-8">
                                     <div class="flex flex-col">
-                                        <x-app.input.label id="sale" class="mb-1">{{ __('Salesperson') }}</x-app.input.label>
-                                        <x-app.input.select name="sale" id="sale">
-                                            <option value="">{{ __('Select a salesperson') }}</option>
-                                            @foreach ($sales as $sale)
-                                                <option value="{{ $sale->id }}">{{ $sale->name }}</option>
-                                            @endforeach
-                                        </x-app.input.select>
-                                        <x-input-error :messages="$errors->get('sale')" class="mt-1" />
-                                    </div>
-                                    <div class="flex flex-col">
                                         <x-app.input.label id="term" class="mb-1">{{ __('Term') }}</x-app.input.label>
                                         <x-app.input.select name="term" id="term">
                                             <option value="">{{ __('Select a term') }}</option>

@@ -141,11 +141,11 @@
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
-            @if (isset($production) && $production->status != 3)
-            <!-- Not completed -->
-            <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-            </div>
+            @if (!isset($production) || (isset($production) && $production->status != 3))
+                <!-- Not completed -->
+                <div class="mt-8 flex justify-end">
+                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+                </div>
             @endif
         </div>
     </form>
@@ -239,7 +239,7 @@
                             for (let k = 0; k < PRODUCTS.length; k++) {
                                 if (SALES[i].products[j].product_id == PRODUCTS[k].id) {
                                     let opt = new Option(PRODUCTS[k].model_name, PRODUCTS[k].id)
-                                    $('select[name="product"]').append(opt)   
+                                    $('select[name="product"]').append(opt)
                                     break
                                 }
                             }
@@ -282,14 +282,14 @@
             if (INIT_EDIT == false) {
                 $(`.milestone-selection`).addClass('hidden')
                 $('input[name="milestone[]"]').prop('checked', false)
-            } 
+            }
 
             let productId = $(this).val()
 
             for (let i = 0; i < MILESTONES.length; i++) {
                 if (MILESTONES[i].is_custom == false || (MILESTONES[i].is_custom == true && MILESTONES[i].product_id == productId)) {
                     $(`.milestone-selection[data-id="${MILESTONES[i].id}"]`).removeClass('hidden')
-                }                
+                }
             }
 
             updateMilestoneMaterialUseSelection()
@@ -302,7 +302,7 @@
                 if (MATERIAL_USES[i].product_id == $('select[name="product"]').val()) {
                     for (let j = 0; j < MATERIAL_USES[i].materials.length; j++) {
                         let clone = $('#material-use-selection-template')[0].cloneNode(true);
-                        
+
                         $(clone).addClass('material-use-selection')
                         $(clone).find('input').attr('value', MATERIAL_USES[i].materials[j].id)
                         $(clone).find('input').attr('id', MATERIAL_USES[i].materials[j].id)
