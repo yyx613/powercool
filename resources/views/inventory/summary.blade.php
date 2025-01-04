@@ -14,6 +14,9 @@
         #data-table tbody tr:last-of-type td {
             border-bottom: none;
         }
+        .dataTables_wrapper {
+            min-width: auto;
+        }
     </style>
 @endpush
 
