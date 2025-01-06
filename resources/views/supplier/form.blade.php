@@ -5,7 +5,7 @@
         <x-app.page-title url="{{ route('supplier.index') }}">{{ isset($supplier) ? __('Edit Supplier') : __('Create Supplier') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    
+
     <form action="{{ isset($supplier) ? route('supplier.upsert', ['supplier' => $supplier->id]) : route('supplier.upsert') }}" method="POST" enctype="multipart/form-data" id="info-form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
@@ -27,10 +27,22 @@
                         @endif
                     </div>
                 </div> -->
+                @if (isset($supplier))
+                    <div class="flex flex-col">
+                        <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
+                        <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($supplier) ? $supplier->sku : null) }}" disabled="true"/>
+                        <x-input-error :messages="$errors->get('code')" class="mt-2" />
+                    </div>
+                @endif
                 <div class="flex flex-col">
-                    <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
-                    <x-app.input.input name="code" id="code" :hasError="$errors->has('code')" value="{{ old('code', isset($supplier) ? $supplier->sku : null) }}" disabled="true"/>
-                    <x-input-error :messages="$errors->get('code')" class="mt-2" />
+                    <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')" placeholder="{{ __('Select a company group') }}">
+                        <option value="">{{ __('Select a company group') }}</option>
+                        @foreach ($company_group as $key => $value)
+                            <option value="{{ $key }}" @selected(old('company_group', isset($supplier) ? $supplier->company_group : null) == $key)>{{ $value }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-input-error :messages="$errors->get('company_group')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="prefix" class="mb-1">{{ __('Prefix') }}</x-app.input.label>
@@ -175,10 +187,10 @@
         let files = $(this).prop('files');
 
         $('.uploaded-file-preview-container[data-id="picture"]').find('.old-preview').remove()
-    
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            
+
             let clone = $('#uploaded-file-template')[0].cloneNode(true);
             $(clone).find('a').text(file.name)
             $(clone).find('a').attr('href', URL.createObjectURL(file))

@@ -82,7 +82,7 @@
             @if ($step == 3)
                 <div>
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">{{ __('Select delivery order to convert') }}</h5> 
+                        <h5 class="text-md font-semibold">{{ __('Select delivery order to convert') }}</h5>
                     </div>
                     @if (count($delivery_orders) > 0)
                         <ul class="flex flex-wrap gap-4">
@@ -117,7 +117,7 @@
 
         for (let i = 0; i < CUSTOMERS.length; i++) {
             const element = CUSTOMERS[i];
-            
+
             if (element.name.includes(val)) {
                 $(`.customer-selections[data-id="${element.id}"]`).removeClass('hidden')
             }

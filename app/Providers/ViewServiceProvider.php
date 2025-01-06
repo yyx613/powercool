@@ -559,5 +559,15 @@ class ViewServiceProvider extends ServiceProvider
                 'types' => $types,
             ]);
         });
+        View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form'], function (ViewView $view) {
+            $company_group = [
+                1 => 'Powercool',
+                2 => 'Hi-Ten',
+            ];
+
+            $view->with([
+                'company_group' => $company_group,
+            ]);
+        });
     }
 }

@@ -32,6 +32,16 @@
                     </div>
                 @endif
                 <div class="flex flex-col">
+                    <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')" placeholder="{{ __('Select a company group') }}">
+                        <option value="">{{ __('Select a company group') }}</option>
+                        @foreach ($company_group as $key => $value)
+                            <option value="{{ $key }}" @selected(old('company_group', isset($customer) ? $customer->company_group : null) == $key)>{{ $value }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-app.message.error id="company_group_err"/>
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="prefix" class="mb-1">{{ __('Prefix') }}</x-app.input.label>
                     <x-app.input.select2 name="prefix" id="prefix" :hasError="$errors->has('prefix')" placeholder="{{ __('Select a prefix') }}">
                         <option value="">{{ __('Select a prefix') }}</option>
@@ -212,10 +222,10 @@
             let files = $(this).prop('files');
 
             $('.uploaded-file-preview-container[data-id="picture"]').find('.old-preview').remove()
-        
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                
+
                 let clone = $('#uploaded-file-template')[0].cloneNode(true);
                 $(clone).find('a').text(file.name)
                 $(clone).find('a').attr('href', URL.createObjectURL(file))
@@ -255,7 +265,7 @@
                 },
                 url: url,
                 type: 'POST',
-                data: formData,  
+                data: formData,
                 contentType: false,
                 processData: false,
                 success: function(res) {
@@ -264,7 +274,7 @@
                     if (IS_CREATE_LINK) {
                         $('#create-customer-link-created-modal').addClass('show-modal')
                     }
-                    
+
                     setTimeout(() => {
                         $('#info-form #submit-btn').text('Updated')
                         $('#info-form #submit-btn').addClass('bg-green-400 shadow')
@@ -273,7 +283,7 @@
                             $('#info-form #submit-btn').text('Save and Update')
                             $('#info-form #submit-btn').removeClass('bg-green-400')
                             $('#info-form #submit-btn').addClass('bg-yellow-400 shadow')
-                            
+
                             INFO_FORM_CAN_SUBMIT = true
                         }, 2000);
                     }, 300);
@@ -282,7 +292,7 @@
                     setTimeout(() => {
                         if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
                             let errors = err.responseJSON.errors
-    
+
                             for (const key in errors) {
                                 if (key.includes('picture')) {
                                     $(`#info-form #picture_err`).find('p').text(errors[key])

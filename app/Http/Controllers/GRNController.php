@@ -14,37 +14,42 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class GRNController extends Controller
 {
     protected $grn;
+
     protected $prod;
+
     protected $prodChild;
+
     protected $prodCost;
 
-    public function __construct() {
-        $this->grn = new GRN();
-        $this->prod = new Product();
-        $this->prodChild = new ProductChild();
-        $this->prodCost = new ProductCost();
+    public function __construct()
+    {
+        $this->grn = new GRN;
+        $this->prod = new Product;
+        $this->prodChild = new ProductChild;
+        $this->prodCost = new ProductCost;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('grn.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->grn;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%');
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -55,9 +60,9 @@ class GRNController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -66,15 +71,17 @@ class GRNController extends Controller
                 'sku' => $record->sku,
             ];
         }
-                
+
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('grn.form');
     }
 
-    public function edit($sku) {
+    public function edit($sku)
+    {
         $grns = $this->grn::where('sku', $sku)->get();
 
         if (count($grns) <= 0) {
@@ -83,11 +90,12 @@ class GRNController extends Controller
 
         return view('grn.form', [
             'sku' => $sku,
-            'grns' => $grns
+            'grns' => $grns,
         ]);
     }
 
-    public function upsert(Request $req) {
+    public function upsert(Request $req)
+    {
         // Validate form
         $rules = [
             'sku' => 'nullable',
@@ -95,6 +103,7 @@ class GRNController extends Controller
             'term' => 'required',
             'our_po_date' => 'required',
             'supplier' => 'required',
+            'company_group' => 'required',
             'product_id' => 'required',
             'product_id.*' => 'required',
             'qty' => 'required',
@@ -134,13 +143,14 @@ class GRNController extends Controller
                     'our_po_date' => $req->our_po_date,
                     'branch_id' => getCurrentUserBranch(),
                     'supplier_id' => $req->supplier,
+                    'company_group' => $req->company_group,
                     'product_id' => $req->product_id[$i],
                     'qty' => $req->qty[$i],
                     'uom' => $req->uom[$i],
                     'unit_price' => $req->unit_price[$i],
                     'total_price' => $req->total_price[$i],
                 ]);
-                (new Branch())->assign(GRN::class, $grn->id);
+                (new Branch)->assign(GRN::class, $grn->id);
             }
 
             DB::commit();
@@ -153,18 +163,19 @@ class GRNController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function pdf($sku) {
+    public function pdf($sku)
+    {
         $grns = $this->grn::where('sku', $sku)->get();
 
         if (count($grns) <= 0) {
             abort(404);
         }
-        
+
         $pdf = Pdf::loadView('grn.powercool_pdf', [
             'date' => now()->format('d/m/Y'),
             'sku' => $sku,
@@ -180,19 +191,20 @@ class GRNController extends Controller
         return $pdf->stream();
     }
 
-    public function stockIn(Request $req) {
+    public function stockIn(Request $req)
+    {
         try {
             DB::beginTransaction();
 
             $now = now();
             $data = [];
             for ($i = 0; $i < count($req->product); $i++) {
-                if ($req->{'serial_no_' . $req->product[$i]} != null) {
+                if ($req->{'serial_no_'.$req->product[$i]} != null) {
                     $grn = $this->grn::where('sku', $req->sku)->where('product_id', $req->product[$i])->first();
-                    
-                    $serial_no = explode(',', $req->{'serial_no_' . $req->product[$i]});
 
-                    for ($j=0; $j < count($serial_no); $j++) { 
+                    $serial_no = explode(',', $req->{'serial_no_'.$req->product[$i]});
+
+                    for ($j = 0; $j < count($serial_no); $j++) {
                         $data[] = [
                             'product_id' => $req->product[$i],
                             'sku' => $serial_no[$j],
@@ -208,19 +220,19 @@ class GRNController extends Controller
                             'location' => $this->prodChild::LOCATION_WAREHOUSE,
                         ]);
                     }
-                } else if ($req->{'qty_' . $req->product[$i]} != null && $req->{'qty_' . $req->product[$i]} != 0) {
+                } elseif ($req->{'qty_'.$req->product[$i]} != null && $req->{'qty_'.$req->product[$i]} != 0) {
                     $grn = $this->grn::where('sku', $req->sku)->where('product_id', $req->product[$i])->first();
 
                     $data[] = [
                         'product_id' => $req->product[$i],
                         'sku' => null,
-                        'qty' => $req->{'qty_' . $req->product[$i]},
+                        'qty' => $req->{'qty_'.$req->product[$i]},
                         'unit_price' => $grn->unit_price,
                         'total_price' => $grn->total_price,
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
-                    $this->prod::where('id', $req->product[$i])->increment('qty', $req->{'qty_' . $req->product[$i]});
+                    $this->prod::where('id', $req->product[$i])->increment('qty', $req->{'qty_'.$req->product[$i]});
                 }
             }
             $this->prodCost::insert($data);

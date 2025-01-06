@@ -66,6 +66,7 @@
                     <th>{{ __('Curr. Code') }}</th>
                     <th>{{ __('Total') }}</th>
                     <th>{{ __('Created By') }}</th>
+                    <th>{{ __('Company Group') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -115,6 +116,7 @@
                 { data: 'curr_code' },
                 { data: 'total' },
                 { data: 'created_by' },
+                { data: 'company_group' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -201,6 +203,19 @@
                     "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
+                        if (data == 'powercool') {
+                            return 'Powercool'
+                        } else if (data == 'hi_ten') {
+                            return 'Hi-Ten'
+                        }
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 11,
+                    orderable: false,
+                    render: function(data, type, row) {
                         if (data == 1) {
                             return '{!! __("Cancelled") !!}'
                         }
@@ -209,7 +224,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 11,
+                    "targets": 12,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
