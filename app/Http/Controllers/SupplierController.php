@@ -101,6 +101,7 @@ class SupplierController extends Controller
 
         // Validate request
         $req->validate([
+            'company_group' => 'required',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'required|max:250',
@@ -147,6 +148,7 @@ class SupplierController extends Controller
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
+                    'company_group' => $req->company_group,
                 ]);
 
                 (new Branch)->assign(Supplier::class, $supplier->id);
@@ -169,6 +171,7 @@ class SupplierController extends Controller
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
+                    'company_group' => $req->company_group,
                 ]);
             }
 

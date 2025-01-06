@@ -386,6 +386,7 @@ class ProductController extends Controller
         }
 
         $rules = [
+            'company_group' => 'required',
             'product_id' => 'nullable',
             'initial_for_production' => 'required|max:250',
             'model_code' => 'required|max:250',
@@ -487,6 +488,7 @@ class ProductController extends Controller
 
             if ($req->product_id == null) {
                 $prod = $this->prod::create([
+                    'company_group' => $req->company_group,
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
@@ -523,6 +525,7 @@ class ProductController extends Controller
                 $prod = $this->prod->where('id', $req->product_id)->first();
 
                 $prod->update([
+                    'company_group' => $req->company_group,
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
                     'model_name' => $req->model_name,

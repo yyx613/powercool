@@ -42,6 +42,16 @@
                     </x-app.input.select2>
                     <x-app.message.error id="supplier_err"/>
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')" placeholder="{{ __('Select a company group') }}">
+                        <option value="">{{ __('Select a company group') }}</option>
+                        @foreach ($company_group as $key => $value)
+                            <option value="{{ $key }}">{{ $value }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-app.message.error id="company_group_err"/>
+                </div>
             </div>
             <!-- Template -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full mb-4 lg:mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50" id="item-template">
@@ -97,7 +107,7 @@
             </div>
         </div>
     </form>
-    
+
     @if (isset($sku))
         @include('components.app.modal.grn-stock-in-modal', [
             'sku' => $sku,
@@ -125,6 +135,7 @@
                     $(`input[name="our_po_date"]`).val(moment(grn.our_po_date).format('Y-MM-DD')).trigger('change')
                     $(`select[name="term"]`).val(grn.term).trigger('change')
                     $(`select[name="supplier"]`).val(grn.supplier_id).trigger('change')
+                    $(`select[name="company_group"]`).val(grn.company_group).trigger('change')
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(grn.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(grn.qty)
                     $(`.items[data-id="${i+1}"] select[name="uom[]"]`).val(grn.uom)
@@ -143,14 +154,14 @@
 
         $('#add-item-btn').on('click', function() {
             let clone = $('#item-template')[0].cloneNode(true);
-            
+
             ITEMS_COUNT++
             $(clone).attr('data-id', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).addClass('items')
             $(clone).removeClass('hidden')
             $(clone).removeAttr('id')
-            
+
             $('#items-container').append(clone)
             // Build product select2
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
@@ -158,7 +169,7 @@
             })
             for (let i = 0; i < PRODUCTS.length; i++) {
                 const element = PRODUCTS[i];
-                
+
                 let opt = new Option(element.model_name, element.id)
                 $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
             }
@@ -168,13 +179,13 @@
             })
             for (let i = 0; i < UOMS.length; i++) {
                 const element = UOMS[i];
-                
+
                 let opt = new Option(element.name, element.id)
                 $(`.items[data-id="${ITEMS_COUNT}"] select[name="uom[]"]`).append(opt)
             }
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
         })
-        
+
         $('body').on('click', '.delete-item-btns', function() {
             let id = $(this).data('id')
 
@@ -227,6 +238,7 @@
                     'term': $('select[name="term"]').val(),
                     'our_po_date': $('input[name="our_po_date"]').val(),
                     'supplier': $('select[name="supplier"]').val(),
+                    'company_group': $('select[name="company_group"]').val(),
                     'product_id': prodId,
                     'qty': qty,
                     'uom': uom,
@@ -244,7 +256,7 @@
                         //     $('#form #submit-btn').text('Save and Update')
                         //     $('#form #submit-btn').removeClass('bg-green-400')
                         //     $('#form #submit-btn').addClass('bg-yellow-400 shadow')
-                            
+
                         //     FORM_CAN_SUBMIT = true
                         // }, 2000);
                     }, 300);
@@ -279,13 +291,13 @@
         $('#stock-in-btn').on('click', function() {
             $('#stock-in-modal').addClass('show-modal')
         })
-        
+
         $('body').on('keyup', 'input[name="qty"], input[name="unit_price"]', function() {
             let rowId = $(this).closest('.items').data('id')
             let qty = $(`.items[data-id="${rowId}"] input[name="qty"]`).val()
             let unitPrice = $(`.items[data-id="${rowId}"] input[name="unit_price"]`).val()
             let subtotal = (qty * unitPrice)
-            
+
             $(`.items[data-id="${rowId}"] input[name="total_price"]`).val(decimalPlace2(subtotal))
         })
     </script>

@@ -48,7 +48,7 @@
                 <td colspan="2">
                     <p style="margin: 20px 0 0 0; font-size: 12px; text-align: left;">
                         <img src="{{ public_path('images/whatsapp.jpg') }}" alt="" style="height: 10px; width: 10px; margin: 0 5px 0 0;">
-                        Hotline: 6012-3868210
+                        Hotline: 6012-3868250
                     </p>
                     <p style="margin: 0; font-size: 12px; text-align: left;">
                         <img src="{{ public_path('images/wrench-alt.jpg') }}" alt="" style="height: 10px; width: 10px; margin: 0 5px 0 0;">
@@ -59,7 +59,7 @@
             </tr>
         </table>
         @if ($i != count($barcode) -1)
-            <div style="page-break-before:always">&nbsp;</div> 
+            <div style="page-break-before:always">&nbsp;</div>
         @endif
     @endfor
 </body>

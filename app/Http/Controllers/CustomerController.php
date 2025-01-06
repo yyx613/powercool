@@ -10,31 +10,32 @@ use App\Models\ObjectCreditTerm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
-use Illuminate\Support\Facades\Response;
 
 class CustomerController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('customer.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = new Customer;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('phone', 'like', '%'.$keyword.'%')
+                    ->orWhere('company_name', 'like', '%'.$keyword.'%')
                     ->orWhereHas('platform', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%' . $keyword . '%');
+                        $q->where('name', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -59,9 +60,9 @@ class CustomerController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -81,28 +82,33 @@ class CustomerController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('customer.form');
     }
 
-    public function edit(Customer $customer) {
+    public function edit(Customer $customer)
+    {
         $customer->load('pictures', 'locations');
 
         return view('customer.form', [
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
 
-    public function delete(Customer $customer) {
+    public function delete(Customer $customer)
+    {
         $customer->delete();
 
         return back()->with('success', 'Customer deleted');
     }
 
-    public function upsertInfo(Request $req) {
+    public function upsertInfo(Request $req)
+    {
         // Validate request
         $req->validate([
             'customer_id' => 'nullable',
+            'company_group' => 'required',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
@@ -141,7 +147,7 @@ class CustomerController extends Controller
                 },
             ],
         ], [], [
-            'picture.*' => 'picture'
+            'picture.*' => 'picture',
         ]);
 
         try {
@@ -168,7 +174,8 @@ class CustomerController extends Controller
                     'platform_id' => $req->platform,
                     'type' => $req->type,
                     'msic_id' => $req->msic_code,
-                    'sst_number' => $req->sst_number
+                    'sst_number' => $req->sst_number,
+                    'company_group' => $req->company_group,
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -193,7 +200,8 @@ class CustomerController extends Controller
                     'platform_id' => $req->platform,
                     'type' => $req->type,
                     'msic_id' => $req->msic_code,
-                    'sst_number' => $req->sst_number
+                    'sst_number' => $req->sst_number,
+                    'company_group' => $req->company_group,
                 ]);
             }
 
@@ -201,7 +209,7 @@ class CustomerController extends Controller
                 if ($req->customer_id != null) {
                     Attachment::where([
                         ['object_type', Customer::class],
-                        ['object_id', $customer->id]
+                        ['object_id', $customer->id],
                     ])->delete();
                 }
 
@@ -220,7 +228,7 @@ class CustomerController extends Controller
                 ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->delete();
 
                 $terms = [];
-                for ($i=0; $i < count($req->credit_term); $i++) { 
+                for ($i = 0; $i < count($req->credit_term); $i++) {
                     $terms[] = [
                         'object_type' => Customer::class,
                         'object_id' => $customer->id,
@@ -243,12 +251,13 @@ class CustomerController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function upsertLocation(Request $req) {
+    public function upsertLocation(Request $req)
+    {
         // Validate request
         $req->validate([
             'customer_id' => 'required',
@@ -278,18 +287,18 @@ class CustomerController extends Controller
         // Validate only 1 billing address is default or 1 delivery address is default
         $bill_has_default = false;
         $deli_has_default = false;
-        for ($i=0; $i < count($req->address); $i++) {
+        for ($i = 0; $i < count($req->address); $i++) {
             if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING) {
                 if ($bill_has_default == true) {
                     return Response::json([
-                        'is_default' => 'Only 1 default billing address is allow'
+                        'is_default' => 'Only 1 default billing address is allow',
                     ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                 }
                 $bill_has_default = true;
-            } else if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_DELIVERY) {
+            } elseif ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_DELIVERY) {
                 if ($deli_has_default == true) {
                     return Response::json([
-                        'is_default' => 'Only 1 default delivery address is allow'
+                        'is_default' => 'Only 1 default delivery address is allow',
                     ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                 }
                 $deli_has_default = true;
@@ -300,13 +309,15 @@ class CustomerController extends Controller
             DB::beginTransaction();
 
             if ($req->location_id != null) {
-                $order_idx = array_filter($req->location_id, function($val) { return $val != null; });
+                $order_idx = array_filter($req->location_id, function ($val) {
+                    return $val != null;
+                });
                 CustomerLocation::where('customer_id', $req->customer_id)->whereNotIn('id', $order_idx ?? [])->delete();
             }
 
             $now = now();
             $data = [];
-            for ($i=0; $i < count($req->address); $i++) {
+            for ($i = 0; $i < count($req->address); $i++) {
                 if ($req->location_id != null && $req->location_id[$i] != null) {
                     CustomerLocation::where('id', $req->location_id[$i])->update([
                         'address' => $req->address[$i],
@@ -350,12 +361,13 @@ class CustomerController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function getLocation(Request $req) {
+    public function getLocation(Request $req)
+    {
         try {
             DB::beginTransaction();
 
@@ -372,24 +384,25 @@ class CustomerController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function createLink(Request $req) {
+    public function createLink(Request $req)
+    {
         if ($req->branch == null) {
             abort(403);
         }
         $branch = Crypt::decrypt($req->branch);
 
         $branches = [Branch::LOCATION_KL, Branch::LOCATION_PENANG];
-        if (!in_array($branch, $branches, true)) {
+        if (! in_array($branch, $branches, true)) {
             abort(403);
         }
 
         return view('customer.link', [
-            'default_branch' => $branch
+            'default_branch' => $branch,
         ]);
     }
 }

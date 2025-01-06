@@ -1685,6 +1685,7 @@ class SaleController extends Controller
             ->select(
                 'invoices.id AS id', 'invoices.sku AS doc_no', 'invoices.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
                 'users.name AS agent', 'currencies.name AS curr_code', 'invoices.status AS status', 'invoices.filename AS filename', 'created_by.name AS created_by',
+                'invoices.company AS company_group'
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
@@ -1709,6 +1710,7 @@ class SaleController extends Controller
                     ->orWhere('users.name', 'like', '%'.$keyword.'%')
                     ->orWhere('created_by.name', 'like', '%'.$keyword.'%')
                     ->orWhere('currencies.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('invoices.company', 'like', '%'.$keyword.'%')
                     ->orWhereIn('delivery_orders.id', $do_ids);
             });
         }
@@ -1762,6 +1764,7 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($total_amount, 2),
                 'created_by' => $record->created_by ?? null,
+                'company_group' => $record->company_group,
                 'status' => $record->status,
                 'filename' => $record->filename,
             ];
