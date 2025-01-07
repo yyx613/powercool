@@ -16,6 +16,9 @@
                 <div class="flex col-span-4 hidden default-delivery-msg">
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">{{ __('Default Delivery Address') }}</p>
                 </div>
+                <div class="flex col-span-4 hidden default-billing-and-delivery-msg">
+                    <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">{{ __('Default Billing & Delivery Address') }}</p>
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="address" class="mb-1">{{ __('Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="address" id="address" :hasError="$errors->has('address')" />
@@ -42,6 +45,7 @@
                         <option value="">{{ __('Select a type') }}</option>
                         <option value="1">{{ __('Billing') }}</option>
                         <option value="2">{{ __('Delivery') }}</option>
+                        <option value="3">{{ __('Billing & Delivery') }}</option>
                     </x-app.input.select>
                     <x-app.message.error id="type_err"/>
                 </div>
@@ -94,7 +98,8 @@
 
                 if (loc.is_default == true) {
                     if (loc.type == 1) $(`.items[data-id="${i+1}"] .default-billing-msg`).removeClass('hidden')
-                    else $(`.items[data-id="${i+1}"] .default-delivery-msg`).removeClass('hidden')
+                    else if (loc.type == 2) $(`.items[data-id="${i+1}"] .default-delivery-msg`).removeClass('hidden')
+                    else $(`.items[data-id="${i+1}"] .default-billing-and-delivery-msg`).removeClass('hidden')
                 }
             }
 
@@ -105,14 +110,14 @@
     })
     $('#add-item-btn').on('click', function() {
         let clone = $('#item-template')[0].cloneNode(true);
-        
+
         ITEMS_COUNT++
         $(clone).attr('data-id', ITEMS_COUNT)
         $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
         $(clone).addClass('items')
         $(clone).removeClass('hidden')
         $(clone).removeAttr('id')
-        
+
         $('#items-container').append(clone)
     })
     $('body').on('click', '.delete-item-btns', function() {
@@ -191,12 +196,16 @@
                     if (res.default_delivery_address_id != null) {
                         $(`#location-form .items[data-location-id="${res.default_delivery_address_id}"] .default-delivery-msg`).removeClass('hidden')
                     }
+                    $(`#location-form .items .default-billing-and-delivery-msg`).addClass('hidden')
+                    if (res.default_billing_and_delivery_address_id != null) {
+                        $(`#location-form .items[data-location-id="${res.default_billing_and_delivery_address_id}"] .default-billing-and-delivery-msg`).removeClass('hidden')
+                    }
 
                     setTimeout(() => {
                         $('#location-form #submit-btn').text('Save and Update')
                         $('#location-form #submit-btn').removeClass('bg-green-400')
                         $('#location-form #submit-btn').addClass('bg-yellow-400 shadow')
-                        
+
                         LOCATION_FORM_CAN_SUBMIT = true
                     }, 2000);
                 }, 300);

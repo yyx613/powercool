@@ -108,7 +108,7 @@
             </div>
         </div>
     </div>
-    
+
     @if (!$is_production)
     <div class="flex justify-end mb-4">
         <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
@@ -117,7 +117,7 @@
         </div>
     </div>
     @endif
-    
+
     <div id="data-table-container">
         @if ($is_production || $is_product || $prod->is_sparepart == true)
             <div>
@@ -140,7 +140,7 @@
                         </a>
                     </div>
                 </div>
-    
+
                 <!-- Table -->
                 <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
                     <thead>
@@ -157,9 +157,13 @@
                     <tbody></tbody>
                 </table>
             </div>
-    
+
             <x-app.modal.stock-in-modal/>
-            <x-app.modal.stock-out-modal/>
+            @if ($prod->company_group == 1)
+                <x-app.modal.stock-out-to-hi-ten-modal/>
+            @else
+                <x-app.modal.stock-out-modal/>
+            @endif
             <x-app.modal.transfer-modal/>
         @else
             <!-- Table -->
@@ -204,6 +208,8 @@
         IS_PRODUCTION = @json($is_production ?? null);
         PRODUCT = @json($prod ?? null);
         CHECKED_CHECKBOXES = []
+
+        console.debug(PRODUCT)
 
         $(document).ready(function() {
             // Auto search if url provided 'search' keyword
@@ -399,7 +405,7 @@
                 },
             });
         }
-       
+
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
         })
@@ -421,10 +427,16 @@
         $('body').on('click', '.stock-out-btns', function() {
             let productChildId = $(this).data('id')
             let serialNo = $(this).data('serial-no')
+            let modal = PRODUCT.company_group == 2 ? 'stock-out-modal' : 'stock-out-to-hi-ten-modal'
+            console.debug(modal)
 
-            $('#stock-out-modal #date').text(moment().format('D MMM YYYY HH:mm'))
-            $('#stock-out-modal #serial-no').text(serialNo)
-            $('#stock-out-modal').addClass('show-modal')
+            $(`#${modal} #date`).text(moment().format('D MMM YYYY HH:mm'))
+            $(`#${modal} #serial-no`).text(serialNo)
+            if (PRODUCT.company_group == 1) {
+                $(`#${modal} #stock-out-to`).text(PRODUCT.stock_hi_ten.model_name)
+                $(`#${modal} #yes-btn`).attr('href', `{{ config('app.url') }}/inventory-category/stock-out/${productChildId}`)
+            }
+            $(`#${modal}`).addClass('show-modal')
 
             let url = "{{ config('app.url') }}"
             url = `${url}/inventory-category/stock-out/${productChildId}`
@@ -522,7 +534,7 @@
                     data: function(){
                         var info = $('#cost-table').DataTable().page.info();
                         var url = "{{ route('product.view_get_data_cost') }}"
-    
+
                         url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }`
                         $('#cost-table').DataTable().ajax.url(url);
                     },

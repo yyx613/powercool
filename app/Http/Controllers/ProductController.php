@@ -176,7 +176,7 @@ class ProductController extends Controller
 
     public function view(Product $product)
     {
-        $product->load('image');
+        $product->load('image', 'stockHiTen');
 
         return view('inventory.view', [
             'prod' => $product,
@@ -404,6 +404,7 @@ class ProductController extends Controller
             'is_sparepart' => 'required',
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
+            'hi_ten_stock_code' => 'required_if:company_group,==,2',
 
             'selling_price_name' => 'nullable',
             'selling_price_name.*' => 'nullable',
@@ -518,6 +519,7 @@ class ProductController extends Controller
                     'shopee_sku' => $req->shopee_sku,
                     'tiktok_sku' => $req->tiktok_sku,
                     'woo_commerce_sku' => $req->woo_commerce_sku,
+                    'hi_ten_stock_code' => $req->hi_ten_stock_code,
                 ]);
 
                 (new Branch)->assign(Product::class, $prod->id);
@@ -554,6 +556,7 @@ class ProductController extends Controller
                     'shopee_sku' => $req->shopee_sku,
                     'tiktok_sku' => $req->tiktok_sku,
                     'woo_commerce_sku' => $req->woo_commerce_sku,
+                    'hi_ten_stock_code' => $req->hi_ten_stock_code,
                 ]);
             }
 

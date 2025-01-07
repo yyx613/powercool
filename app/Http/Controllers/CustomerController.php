@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class CustomerController extends Controller
@@ -109,15 +110,16 @@ class CustomerController extends Controller
         $req->validate([
             'customer_id' => 'nullable',
             'company_group' => 'required',
+            'category' => 'required',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
-            'email' => 'nullable|email|max:250',
+            'email' => 'required|email|max:250',
             'website' => 'nullable|max:250',
             'currency' => 'nullable',
-            'tin_number' => 'nullable|max:250',
+            'tin_number' => 'required_if:category,==,1|max:250',
             'status' => 'required',
             'picture' => 'nullable',
             'picture.*' => 'file|extensions:jpg,png,jpeg',
@@ -126,29 +128,40 @@ class CustomerController extends Controller
             'area' => 'nullable',
             'debtor_type' => 'nullable',
             'platform' => 'nullable',
-            'type' => 'nullable',
-            'msic_code' => 'nullable',
-            'company_registration_number' => [
-                'nullable',
-                'max:250',
-                function ($attribute, $value, $fail) use ($req) {
-                    if ($value && $req->sst_number) {
-                        $fail(__('Company Registration Number and SST Number cannot both be filled.'));
-                    }
-                },
-            ],
-            'sst_number' => [
-                'nullable',
-                'max:250',
-                function ($attribute, $value, $fail) use ($req) {
-                    if ($value && $req->company_registration_number) {
-                        $fail(__('SST Number and Company Registration Number cannot both be filled.'));
-                    }
-                },
-            ],
-        ], [], [
+            'local_oversea' => 'required_if:category,==,1',
+            'msic_code' => 'required_unless:category,!=,2',
+            'business_activity_desc' => 'required_unless:category,!=,2',
+            'company_registration_number' => 'required_unless:category,!=,2|max:250',
+            'sst_number' => 'nullable|max:250',
+            'category' => 'required|max:250',
+            'business_activity_desc' => 'required|max:250',
+            'tourism_tax_reg_no' => 'nullable|max:250',
+            'prev_gst_reg_no' => 'nullable|max:250',
+            'registered_name' => 'required|max:250',
+            'trade_name' => 'nullable|max:250',
+            'identity_type' => 'required_if:category,==,2|max:250',
+            'identity_no' => 'nullable|max:250',
+        ], [
+            'required_if' => 'The :attribute is required',
+            'required_unless' => 'The :attribute is required',
+        ], [
             'picture.*' => 'picture',
+            'company_number' => 'business reg no',
+            'email' => 'email address',
+            'tin_number' => 'TIN',
+            'msic_code' => 'MSIC code',
+            'local_oversea' => 'type',
         ]);
+
+        // Validate tin with hasil
+        $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
+        if ($res->status() != 200) {
+            $err = json_decode($res->getData()->message);
+
+            throw ValidationException::withMessages([
+                'tin_number' => $err->title,
+            ]);
+        }
 
         try {
             DB::beginTransaction();
@@ -167,15 +180,23 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
-                    'tin_number' => $req->type == 2 ? 'EI000000000020' : $req->tin_number,
+                    'tin_number' => $req->tin_number,
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
-                    'type' => $req->type,
+                    'type' => $req->local_oversea,
                     'msic_id' => $req->msic_code,
                     'sst_number' => $req->sst_number,
                     'company_group' => $req->company_group,
+                    'category' => $req->category,
+                    'business_act_desc' => $req->business_activity_desc,
+                    'tourism_tax_reg_no' => $req->tourism_tax_reg_no,
+                    'prev_gst_reg_no' => $req->prev_gst_reg_no,
+                    'registered_name' => $req->registered_name,
+                    'trade_name' => $req->trade_name,
+                    'identity_type' => $req->identity_type,
+                    'identity_no' => $req->identity_no,
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -193,15 +214,23 @@ class CustomerController extends Controller
                     'prefix' => $req->prefix,
                     'email' => $req->email,
                     'remark' => $req->remark,
-                    'tin_number' => $req->type == 2 ? 'EI000000000020' : $req->tin_number,
+                    'tin_number' => $req->tin_number,
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
-                    'type' => $req->type,
+                    'type' => $req->local_oversea,
                     'msic_id' => $req->msic_code,
                     'sst_number' => $req->sst_number,
                     'company_group' => $req->company_group,
+                    'category' => $req->category,
+                    'business_act_desc' => $req->business_activity_desc,
+                    'tourism_tax_reg_no' => $req->tourism_tax_reg_no,
+                    'prev_gst_reg_no' => $req->prev_gst_reg_no,
+                    'registered_name' => $req->registered_name,
+                    'trade_name' => $req->trade_name,
+                    'identity_type' => $req->identity_type,
+                    'identity_no' => $req->identity_no,
                 ]);
             }
 
@@ -285,24 +314,37 @@ class CustomerController extends Controller
         ]);
 
         // Validate only 1 billing address is default or 1 delivery address is default
+        $bill_and_deli_has_default = false;
         $bill_has_default = false;
         $deli_has_default = false;
         for ($i = 0; $i < count($req->address); $i++) {
-            if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING) {
+            if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING_ADN_DELIVERY) {
+                if ($bill_and_deli_has_default == true) {
+                    return Response::json([
+                        'is_default' => 'Only 1 default Billing & Delivery address is allow',
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                }
+                $bill_and_deli_has_default = true;
+            } elseif ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING) {
                 if ($bill_has_default == true) {
                     return Response::json([
-                        'is_default' => 'Only 1 default billing address is allow',
+                        'is_default' => 'Only 1 default Billing address is allow',
                     ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                 }
                 $bill_has_default = true;
             } elseif ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_DELIVERY) {
                 if ($deli_has_default == true) {
                     return Response::json([
-                        'is_default' => 'Only 1 default delivery address is allow',
+                        'is_default' => 'Only 1 default Delivery address is allow',
                     ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                 }
                 $deli_has_default = true;
             }
+        }
+        if ($bill_and_deli_has_default && ($bill_has_default || $deli_has_default)) {
+            return Response::json([
+                'is_default' => 'Billing & Delivery is selected as default, Please make sure not default is set on Billing or Delivery',
+            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -353,6 +395,7 @@ class CustomerController extends Controller
             return Response::json([
                 'result' => true,
                 'location_ids' => $new_loc_ids,
+                'default_billing_and_delivery_address_id' => CustomerLocation::where('customer_id', $req->customer_id)->where('type', CustomerLocation::TYPE_BILLING_ADN_DELIVERY)->where('is_default', true)->value('id'),
                 'default_billing_address_id' => CustomerLocation::where('customer_id', $req->customer_id)->where('type', CustomerLocation::TYPE_BILLING)->where('is_default', true)->value('id'),
                 'default_delivery_address_id' => CustomerLocation::where('customer_id', $req->customer_id)->where('type', CustomerLocation::TYPE_DELIVERY)->where('is_default', true)->value('id'),
             ], HttpFoundationResponse::HTTP_OK);

@@ -136,7 +136,6 @@
                         @endif
                     </div>
                 </div>
-
                 @if ($is_product == false)
                     <div class="flex flex-col">
                         <x-app.input.label id="supplier_id" class="mb-1">{{ __('Supplier') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -147,6 +146,18 @@
                             @endforeach
                         </x-app.input.select>
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-1" />
+                    </div>
+                @endif
+                @if ($is_product == true)
+                    <div class="flex flex-col hidden" id="hi_ten_stock_code-container">
+                        <x-app.input.label id="hi_ten_stock_code" class="mb-1">{{ __('Hi-Ten stock code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select2 name="hi_ten_stock_code" id="hi_ten_stock_code" :hasError="$errors->has('hi_ten_stock_code')" placeholder="{{ __('Select a Hi-Ten stock code') }}">
+                            <option value="">{{ __('Select a Hi-Ten stock code') }}</option>
+                            @foreach ($hi_ten_products as $hi_ten_prod)
+                                <option value="{{ $hi_ten_prod->id }}" @selected(old('hi_ten_stock_code', isset($prod) ? $prod->hi_ten_stock_code : null) == $hi_ten_prod->id)>{{ $hi_ten_prod->model_name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('hi_ten_stock_code')" class="mt-1" />
                     </div>
                 @endif
             </div>
@@ -355,6 +366,9 @@
                 addSerialNo(child.sku, child.id)
             }
             $('select[name="is_sparepart"]').trigger('change')
+            if (PRODUCT.company_group == 1) {
+                $('#hi_ten_stock_code-container').removeClass('hidden')
+            }
 
             if (PRODUCT.selling_prices.length == 0) $('#add-selling-price-btn').trigger('click')
         } else {
@@ -447,6 +461,16 @@
         $('#selling-price-template').remove()
 
         $(this).submit()
+    })
+    $('select[name="company_group"]').on('change', function() {
+        let val = $(this).val()
+
+        if (val == 2) {
+            $('#hi_ten_stock_code-container').addClass('hidden')
+            $('select[name="hi_ten_stock_code"]').val(null).trigger('change')
+        } else {
+            $('#hi_ten_stock_code-container').removeClass('hidden')
+        }
     })
 
     function addSerialNo(val, order_id=null) {
