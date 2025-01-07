@@ -354,6 +354,8 @@ class ViewServiceProvider extends ServiceProvider
                     Product::ITEM_TYPE_PRODUCT_MFG => 'MFG',
                     Product::ITEM_TYPE_PRODUCT_HFG => 'HFG',
                 ];
+                $hi_ten_products = Product::where('type', Product::TYPE_PRODUCT)->where('company_group', 2)->latest()->get();
+                $view->with('hi_ten_products', $hi_ten_products);
             }
 
             $view->with([
@@ -510,11 +512,14 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
-            $msics = MsicCode::all();
 
             $view->with('platforms', $platforms);
-            $view->with('msics', $msics);
             $view->with('is_create_link', isCreateLink());
+        });
+        View::composer(['customer.form_step.info', 'supplier.form'], function (ViewView $view) {
+            $msics = MsicCode::all();
+
+            $view->with('msics', $msics);
         });
         View::composer(['billing.convert'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {
@@ -567,6 +572,17 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'company_group' => $company_group,
+            ]);
+        });
+        View::composer(['customer.form_step.info', 'supplier.form'], function (ViewView $view) {
+            $business_types = [
+                1 => 'Business',
+                2 => 'Individual',
+                3 => 'Government',
+            ];
+
+            $view->with([
+                'business_types' => $business_types,
             ]);
         });
     }

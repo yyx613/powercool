@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class SupplierController extends Controller
 {
@@ -108,10 +109,9 @@ class SupplierController extends Controller
             'company_registration_number' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
-            'email' => 'nullable|email|max:250',
+            'email' => 'required|email|max:250',
             'website' => 'nullable|max:250',
             'currency' => 'required',
-            'tin_number' => 'nullable|max:250',
             'status' => 'required',
             'type' => 'nullable',
             'picture' => 'nullable',
@@ -121,9 +121,42 @@ class SupplierController extends Controller
             'sale_agent' => 'nullable',
             'area' => 'nullable',
             'debtor_type' => 'nullable',
-        ], [], [
+            'category' => 'required',
+            'tin_number' => 'required_if:category,==,1|max:250',
+            'local_oversea' => 'required_if:category,==,1',
+            'msic_code' => 'required_unless:category,!=,2',
+            'business_activity_desc' => 'required_unless:category,!=,2',
+            'company_registration_number' => 'required_unless:category,!=,2|max:250',
+            'sst_number' => 'nullable|max:250',
+            'category' => 'required|max:250',
+            'business_activity_desc' => 'required|max:250',
+            'tourism_tax_reg_no' => 'nullable|max:250',
+            'prev_gst_reg_no' => 'nullable|max:250',
+            'registered_name' => 'required|max:250',
+            'trade_name' => 'nullable|max:250',
+            'identity_type' => 'required_if:category,==,2|max:250',
+            'identity_no' => 'nullable|max:250',
+        ], [
+            'required_if' => 'The :attribute is required',
+            'required_unless' => 'The :attribute is required',
+        ], [
             'picture.*' => 'picture',
+            'company_number' => 'business reg no',
+            'email' => 'email address',
+            'tin_number' => 'TIN',
+            'msic_code' => 'MSIC code',
+            'local_oversea' => 'type',
         ]);
+
+        // Validate tin with hasil
+        $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
+        if ($res->status() != 200) {
+            $err = json_decode($res->getData()->message);
+
+            throw ValidationException::withMessages([
+                'tin_number' => $err->title,
+            ]);
+        }
 
         try {
             DB::beginTransaction();
@@ -136,7 +169,7 @@ class SupplierController extends Controller
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
-                    'type' => $req->type,
+                    'type' => $req->local_oversea,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
@@ -148,7 +181,17 @@ class SupplierController extends Controller
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
+                    'msic_id' => $req->msic_code,
+                    'sst_number' => $req->sst_number,
                     'company_group' => $req->company_group,
+                    'category' => $req->category,
+                    'business_act_desc' => $req->business_activity_desc,
+                    'tourism_tax_reg_no' => $req->tourism_tax_reg_no,
+                    'prev_gst_reg_no' => $req->prev_gst_reg_no,
+                    'registered_name' => $req->registered_name,
+                    'trade_name' => $req->trade_name,
+                    'identity_type' => $req->identity_type,
+                    'identity_no' => $req->identity_no,
                 ]);
 
                 (new Branch)->assign(Supplier::class, $supplier->id);
@@ -159,7 +202,7 @@ class SupplierController extends Controller
                     'mobile_number' => $req->mobile_number,
                     'currency_id' => $req->currency,
                     'is_active' => $req->boolean('status'),
-                    'type' => $req->type,
+                    'type' => $req->local_oversea,
                     'company_name' => $req->company_name,
                     'company_registration_number' => $req->company_registration_number,
                     'website' => $req->website,
@@ -171,7 +214,17 @@ class SupplierController extends Controller
                     'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
+                    'msic_id' => $req->msic_code,
+                    'sst_number' => $req->sst_number,
                     'company_group' => $req->company_group,
+                    'category' => $req->category,
+                    'business_act_desc' => $req->business_activity_desc,
+                    'tourism_tax_reg_no' => $req->tourism_tax_reg_no,
+                    'prev_gst_reg_no' => $req->prev_gst_reg_no,
+                    'registered_name' => $req->registered_name,
+                    'trade_name' => $req->trade_name,
+                    'identity_type' => $req->identity_type,
+                    'identity_no' => $req->identity_no,
                 ]);
             }
 

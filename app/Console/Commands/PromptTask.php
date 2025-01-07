@@ -34,12 +34,12 @@ class PromptTask extends Command
 
         $tasks = Task::where('prompted', false)->where('start_date', '<=', $date_to_notify)->get();
 
-        for ($i=0; $i < count($tasks); $i++) { 
+        for ($i = 0; $i < count($tasks); $i++) {
             $to_notify = UserTask::where('task_id', $tasks[$i]->id)->pluck('user_id')->toArray();
 
             Notification::send(User::whereIn('id', $to_notify)->get(), new MobileAppNotification([
                 'type' => 'task_prompt',
-                'task_id' => $tasks[$i]->id
+                'task_id' => $tasks[$i]->id,
             ]));
 
             $tasks[$i]->prompted = true;

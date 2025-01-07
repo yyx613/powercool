@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Mail\EInvoiceEmail;
 use App\Models\Billing;
-use App\Models\Branch;
 use App\Models\ClassificationCode;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
@@ -21,35 +20,44 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Services\EInvoiceXmlGenerator;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use DOMDocument;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class EInvoiceController extends Controller
 {
     protected $endpoint;
-    protected $powerCoolId;
-    protected $powerCoolSecret;
-    protected $hitenId;
-    protected $hitenSecret;
-    protected $msic = '01111';
-    protected $xmlGenerator;
-    protected $accessTokenPowerCool;
-    protected $accessTokenHiten;
-    protected $powerCoolTin;
-    protected $hitenTin;
 
+    protected $powerCoolId;
+
+    protected $powerCoolSecret;
+
+    protected $hitenId;
+
+    protected $hitenSecret;
+
+    protected $msic = '01111';
+
+    protected $xmlGenerator;
+
+    protected $accessTokenPowerCool;
+
+    protected $accessTokenHiten;
+
+    protected $powerCoolTin;
+
+    protected $hitenTin;
 
     public function __construct()
     {
@@ -58,19 +66,19 @@ class EInvoiceController extends Controller
         $this->hitenId = config('e-invoices.hiten_client_id');
         $this->hitenSecret = config('e-invoices.hiten_client_secret');
         $this->endpoint = 'https://preprod-api.myinvois.hasil.gov.my';
-        $this->xmlGenerator = new EInvoiceXmlGenerator();
+        $this->xmlGenerator = new EInvoiceXmlGenerator;
         $this->accessTokenPowerCool = $this->getAccessToken('powercool');
         $this->accessTokenHiten = $this->accessTokenPowerCool;
 
-        $this->powerCoolTin = "IG26663185010";
-        $this->hitenTin = "IG26663185010";
+        $this->powerCoolTin = 'IG26663185010';
+        $this->hitenTin = 'IG26663185010';
     }
 
     public function getAccessToken($company)
     {
         $cacheKey = "access_token_{$company}";
         $accessTokenData = Cache::get($cacheKey);
-        
+
         if ($accessTokenData) {
             $expiresAt = $accessTokenData['expires_at'];
             if (now()->addMinute()->lt($expiresAt)) {
@@ -80,15 +88,14 @@ class EInvoiceController extends Controller
 
         $response = $this->login($company);
 
-
         if ($response->status() === 200) {
             $accessToken = $response->getData()->access_token;
             $expiresIn = $response->getData()->expires_in;
-            
+
             $expiresAt = now()->addSeconds($expiresIn);
             Cache::put($cacheKey, [
                 'access_token' => $accessToken,
-                'expires_at' => $expiresAt
+                'expires_at' => $expiresAt,
             ], $expiresAt);
 
             return $accessToken;
@@ -100,11 +107,11 @@ class EInvoiceController extends Controller
     public function login($company)
     {
         try {
-            $path = "/connect/token";
-            $url = $this->endpoint . $path;
+            $path = '/connect/token';
+            $url = $this->endpoint.$path;
 
-            $clientId = $company == "powercool" ? $this->powerCoolId : $this->hitenId;
-            $clientSecret = $company == "powercool" ? $this->powerCoolSecret : $this->hitenSecret;
+            $clientId = $company == 'powercool' ? $this->powerCoolId : $this->hitenId;
+            $clientSecret = $company == 'powercool' ? $this->powerCoolSecret : $this->hitenSecret;
 
             $response = Http::asForm()->post($url, [
                 'client_id' => $clientId,
@@ -136,7 +143,6 @@ class EInvoiceController extends Controller
         }
     }
 
-
     public function validateTIN($tin, $idType, $idValue, $company)
     {
         try {
@@ -146,7 +152,7 @@ class EInvoiceController extends Controller
                 'Accept' => 'application/json',
                 'Accept-Language' => 'en',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' .$company == "powercool" ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
 
             $response = Http::withHeaders($headers)->get($url);
@@ -156,8 +162,7 @@ class EInvoiceController extends Controller
                     'message' => 'TIN validation successful',
                     'data' => $response->json(),
                 ]);
-            } 
-            else {
+            } else {
                 return response()->json([
                     'error' => 'TIN validation failed',
                     'message' => $response->body(),
@@ -193,8 +198,8 @@ class EInvoiceController extends Controller
         ]);
     }
 
-
-    public function submit(Request $request){
+    public function submit(Request $request)
+    {
         $request->validate([
             'invoices' => 'required|array',
             'invoices.*.id' => 'required|integer',
@@ -207,7 +212,7 @@ class EInvoiceController extends Controller
         $overdueInvoices = [];
         foreach ($selectedInvoices as $invoiceData) {
             $invoice = Invoice::find($invoiceData['id']);
-            if (!$invoice) {
+            if (! $invoice) {
                 continue;
             }
 
@@ -220,22 +225,22 @@ class EInvoiceController extends Controller
             }
         }
 
-        if (!empty($overdueInvoices)) {
+        if (! empty($overdueInvoices)) {
             return response()->json([
                 'message' => 'Some invoices are overdue by more than 72 hours.',
                 'overdue_invoices' => $overdueInvoices,
             ], 400);
         }
 
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
 
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
-            'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten, 
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
         ];
-        
+
         $documents = [];
         foreach ($selectedInvoices as $invoice) {
             $invoice = Invoice::find($invoice['id']);
@@ -261,29 +266,30 @@ class EInvoiceController extends Controller
                 foreach ($acceptedDocuments as $document) {
                     $uuid = $document['uuid'];
                     $invoiceCodeNumber = $document['invoiceCodeNumber'];
-                    
+
                     $documentDetails = $this->getDocumentDetails($uuid, $company);
                     if (isset($documentDetails['error'])) {
                         $errorDetails[] = [
                             'invoiceCodeNumber' => $invoiceCodeNumber,
                             'error' => $documentDetails['error'],
                         ];
+
                         continue;
                     }
 
                     $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
 
-                    if (!$invoice->einvoice) {
+                    if (! $invoice->einvoice) {
                         $invoice->einvoice()->create([
                             'uuid' => $uuid,
                             'status' => 'Valid',
-                            'submission_date' => Carbon::now()
+                            'submission_date' => Carbon::now(),
                         ]);
                     } else {
                         $invoice->einvoice->update([
                             'uuid' => $uuid,
                             'status' => 'Valid',
-                            'submission_date' => Carbon::now()
+                            'submission_date' => Carbon::now(),
                         ]);
                     }
                     $successfulDocuments[] = $invoiceCodeNumber;
@@ -293,7 +299,7 @@ class EInvoiceController extends Controller
                     }
                 }
 
-                if (!empty($rejectedDocuments)) {
+                if (! empty($rejectedDocuments)) {
                     $errorDetails = [];
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
@@ -313,10 +319,10 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                }else{
+                } else {
                     DB::commit();
                 }
-                
+
                 return response()->json([
                     'message' => 'Document submission completed',
                     'successfulDocuments' => $successfulDocuments,
@@ -325,6 +331,7 @@ class EInvoiceController extends Controller
 
             } catch (\Throwable $th) {
                 DB::rollBack();
+
                 return response()->json([
                     'error' => 'Document submission failed',
                     'message' => $th->getMessage(),
@@ -336,7 +343,7 @@ class EInvoiceController extends Controller
                 'message' => $response->body(),
             ], $response->status());
         }
-        
+
     }
 
     public function submitConsolidated(Request $request)
@@ -348,61 +355,62 @@ class EInvoiceController extends Controller
         $invoices = $request->input('invoices');
         $company = $request->input('company');
 
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
-            'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten), 
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
         ];
         $documents = [];
 
         $sku = (new ConsolidatedEInvoice)->generateSku();
 
         DB::beginTransaction();
-        
+
         try {
             $consolidated = ConsolidatedEInvoice::create([
-                'sku' => $sku
+                'sku' => $sku,
             ]);
-            
+
             $document = $this->xmlGenerator->generateConsolidatedXml($invoices, $consolidated, $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
-            
+
             $documents[] = [
                 'format' => 'XML',
                 'document' => base64_encode($document),
                 'documentHash' => hash('sha256', $document),
                 'codeNumber' => $sku,
             ];
-            
+
             $payload = [
                 'documents' => $documents,
             ];
 
             $response = Http::withHeaders($headers)->post($url, $payload);
             if ($response->successful()) {
-                
+
                 $consolidated->invoices()->sync(array_column($invoices, 'id'));
                 $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
                 $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
-        
+
                 foreach ($acceptedDocuments as $document) {
                     $uuid = $document['uuid'];
-                    
+
                     $invoiceCodeNumber = $document['invoiceCodeNumber'];
                     $documentDetails = $this->getDocumentDetails($uuid, $company);
-                    
+
                     if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
                         $consolidated->update(['uuid' => $uuid, 'status' => 'valid']);
                         $generatedPdf = $this->generateAndSaveConsolidatedPdf($documentDetails, $invoiceCodeNumber);
                     } else {
                         DB::rollBack();
+
                         return $documentDetails;
                     }
                 }
 
                 $errorDetails = [];
-                if (!empty($rejectedDocuments)) {
+                if (! empty($rejectedDocuments)) {
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
                             'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
@@ -421,48 +429,49 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                }else{
+                } else {
                     DB::commit();
                 }
-        
+
                 return response()->json([
                     'message' => 'Document submission successful',
                     'acceptedDocuments' => $acceptedDocuments,
                     'errorDetails' => $errorDetails,
                 ]);
-        
+
             } else {
                 DB::rollBack();
+
                 return response()->json([
                     'error' => 'Document submission failed',
                     'message' => $response->body(),
                 ], $response->status());
             }
-            
+
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd([ $th]);
+            dd([$th]);
         }
     }
-    
-    public function getDocumentDetails($uuid,$company)
+
+    public function getDocumentDetails($uuid, $company)
     {
         try {
             $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documents/{$uuid}/details";
 
             $headers = [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
 
-            $maxRetries = 10; 
+            $maxRetries = 10;
             $retryCount = 0;
-            $delay = 2; 
+            $delay = 2;
             while ($retryCount < $maxRetries) {
                 $response = Http::withHeaders($headers)->get($url);
                 if ($response->successful()) {
                     $validationResults = $response->json()['validationResults'] ?? null;
-    
+
                     if ($validationResults) {
                         if ($validationResults['status'] === 'Invalid') {
                             $validationSteps = $validationResults['validationSteps'] ?? [];
@@ -476,9 +485,9 @@ class EInvoiceController extends Controller
                             }
                         }
                     }
-    
+
                     $longId = $response->json()['longId'] ?? null;
-                    if (!empty($longId)) {
+                    if (! empty($longId)) {
                         return [
                             'uuid' => $response->json()['uuid'] ?? null,
                             'longId' => $longId,
@@ -487,9 +496,9 @@ class EInvoiceController extends Controller
                 } else {
                     return ['error' => $response->body(), 'message' => $response->body()];
                 }
-    
+
                 $retryCount++;
-                sleep($delay); 
+                sleep($delay);
             }
         } catch (\Throwable $th) {
             dd($th);
@@ -516,29 +525,31 @@ class EInvoiceController extends Controller
             $sale = $saleProduct->sale;
 
             $customer = $sale->customer;
-            $validationLink = $this->generateValidationLink($uuid,$longId);
+            $validationLink = $this->generateValidationLink($uuid, $longId);
 
-            $pdf = Pdf::loadView('invoice.pdf.' . $invoice->company. '_inv_pdf', [
+            $pdf = Pdf::loadView('invoice.pdf.'.$invoice->company.'_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $invoiceCodeNumber,
-                'do_sku' => join(', ', $do_sku),
+                'do_sku' => implode(', ', $do_sku),
                 'dos' => '$dos',
                 'do_products' => $deliveryProduct,
                 'customer' => $customer,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
-                'terms' => '', 
+                'terms' => '',
                 'validationLink' => $validationLink,
-                'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+                'delivery_address' => CustomerLocation::find($sale->delivery_address_id),
             ]);
-            
+
             $pdf->setPaper('A4', 'letter');
-            
+
             $content = $pdf->download()->getOriginalContent();
-            
+
             $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf', $content);
+
             return $e;
         } catch (\Throwable $th) {
             dd($th);
+
             return false;
         }
     }
@@ -555,10 +566,9 @@ class EInvoiceController extends Controller
                 break;
             }
         }
+
         return $is_hi_ten ? 'hi_ten' : 'powercool';
     }
-
-   
 
     public function generateAndSaveConsolidatedPdf($documentDetails, $consolidatedSku)
     {
@@ -580,10 +590,10 @@ class EInvoiceController extends Controller
 
             $validationLink = $this->generateValidationLink($uuid, $longId);
 
-            $do_skus = $invoices->map(function($invoice) {
+            $do_skus = $invoices->map(function ($invoice) {
                 return DeliveryOrder::where('invoice_id', $invoice->id)->first()->sku ?? '';
             })->filter()->toArray();
-            $do_ids = $invoices->map(function($invoice) {
+            $do_ids = $invoices->map(function ($invoice) {
                 return DeliveryOrder::where('invoice_id', $invoice->id)->first()->id ?? '';
             })->filter()->toArray();
             $sale_products = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
@@ -594,137 +604,138 @@ class EInvoiceController extends Controller
                 'do_sku' => implode(', ', $do_skus),
                 'dos' => $invoices,
                 'do_products' => $deliveryProducts,
-                'terms' => '', 
+                'terms' => '',
                 'validationLink' => $validationLink,
             ]);
 
             $pdf->setPaper('A4', 'letter');
-            
+
             $content = $pdf->download()->getOriginalContent();
-            Storage::put('public/e-invoices/pdf/consolidated/' . 'consolidated_e_invoice_'.$uuid . '.pdf', $content);
+            Storage::put('public/e-invoices/pdf/consolidated/'.'consolidated_e_invoice_'.$uuid.'.pdf', $content);
 
             return true;
         } catch (\Throwable $th) {
             dd($th);
+
             return false;
         }
     }
 
-    public function sendEmail(Request $req){
+    public function sendEmail(Request $req)
+    {
         $id = $req->input('id');
         $type = $req->input('type');
         $isSent = false;
         try {
-            if($type == 'eInvoice'){
+            if ($type == 'eInvoice') {
                 $einvoice = EInvoice::find($id);
                 $invoice = $einvoice->einvoiceable;
                 $deliveryOrder = $invoice->deliveryOrders->first();
                 $customer = Customer::findOrFail($deliveryOrder->customer_id);
                 $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
+                $path = public_path('storage/e-invoices/pdf/e-invoices/'.'e_invoice_'.$einvoice->uuid.'.pdf');
                 Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
                 $isSent = true;
-            }
-            else if($type == 'credit'){
+            } elseif ($type == 'credit') {
                 $creditNote = CreditNote::find($id);
-                if($creditNote->eInvoices->count() > 0){
-                    if($creditNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                if ($creditNote->eInvoices->count() > 0) {
+                    if ($creditNote->eInvoices->first()->einvoiceable instanceof Invoice) {
                         $customer = $creditNote->eInvoices()
-                        ->with('einvoiceable.deliveryOrders.customer')
-                        ->get()
-                        ->pluck('einvoiceable.deliveryOrders')
-                        ->flatten()
-                        ->pluck('customer')
-                        ->first();
-        
+                            ->with('einvoiceable.deliveryOrders.customer')
+                            ->get()
+                            ->pluck('einvoiceable.deliveryOrders')
+                            ->flatten()
+                            ->pluck('customer')
+                            ->first();
+
                         $company = $creditNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                    }else{
+                    } else {
                         $customer = null;
                         $company = 'PowerCool';
                     }
-                   
-                    $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
+
+                    $path = public_path('storage/e-invoices/pdf/credit_note/'.'credit_note_'.$creditNote->uuid.'.pdf');
                     Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
                     $isSent = true;
-                }  
-            }
-            else if($type == 'debit'){
+                }
+            } elseif ($type == 'debit') {
                 $debitNote = DebitNote::find($id);
-                if($debitNote->eInvoices->count() > 0){
-                    if($debitNote->eInvoices->first()->einvoiceable instanceof Invoice){
+                if ($debitNote->eInvoices->count() > 0) {
+                    if ($debitNote->eInvoices->first()->einvoiceable instanceof Invoice) {
                         $customer = $debitNote->eInvoices()
-                        ->with('einvoiceable.deliveryOrders.customer')
-                        ->get()
-                        ->pluck('einvoiceable.deliveryOrders')
-                        ->flatten()
-                        ->pluck('customer')
-                        ->first();
+                            ->with('einvoiceable.deliveryOrders.customer')
+                            ->get()
+                            ->pluck('einvoiceable.deliveryOrders')
+                            ->flatten()
+                            ->pluck('customer')
+                            ->first();
                         $company = $debitNote->einvoices()->first()->einvoiceable->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                    }else{
+                    } else {
                         $customer = null;
                         $company = 'PowerCool';
                     }
-                    
-                    $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
+
+                    $path = public_path('storage/e-invoices/pdf/debit_note/'.'debit_note_'.$debitNote->uuid.'.pdf');
                     Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
                     $isSent = true;
                 }
             }
-            if($isSent == true){
+            if ($isSent == true) {
                 return response()->json(['message' => 'email sent']);
-            }else{
+            } else {
                 return response()->json(['message' => 'email sent failed']);
             }
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()]);
         }
-        
+
     }
-    
 
     public function generateValidationLink($uuid, $longId)
     {
         $envbaseurl = 'https://preprod.myinvois.hasil.gov.my';
         $validationLink = "{$envbaseurl}/{$uuid}/share/{$longId}";
+
         return $validationLink;
     }
 
     public function generateQrCode($uuid, $longId)
     {
-        $qrCode = QrCode::size(100)->generate($this->generateValidationLink($uuid,$longId));
+        $qrCode = QrCode::size(100)->generate($this->generateValidationLink($uuid, $longId));
+
         return $qrCode;
     }
-  
+
     public function download(Request $req)
     {
         $uuid = $req->input('uuid');
         $type = $req->input('type');
-        if($type == 'consolidated'){
-            $path = '/public/e-invoices/pdf/consolidated/consolidated_e_invoice_' . $uuid . '.pdf';
+        if ($type == 'consolidated') {
+            $path = '/public/e-invoices/pdf/consolidated/consolidated_e_invoice_'.$uuid.'.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
             } else {
                 return response()->json(['error' => '文件未找到'], 404);
             }
-        }else if($type == 'eInvoice'){
-            $path = '/public/e-invoices/pdf/e-invoices/e_invoice_' . $uuid . '.pdf';
+        } elseif ($type == 'eInvoice') {
+            $path = '/public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
             } else {
                 return response()->json(['error' => '文件未找到'], 404);
             }
-        }else if($type == 'credit'){
-            $path = '/public/e-invoices/pdf/credit_note/credit_note_' . $uuid . '.pdf';
+        } elseif ($type == 'credit') {
+            $path = '/public/e-invoices/pdf/credit_note/credit_note_'.$uuid.'.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
             } else {
                 return response()->json(['error' => '文件未找到'], 404);
             }
-        }else if($type == 'debit'){
-            $path = '/public/e-invoices/pdf/debit_note/debit_note_' . $uuid . '.pdf';
+        } elseif ($type == 'debit') {
+            $path = '/public/e-invoices/pdf/debit_note/debit_note_'.$uuid.'.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
@@ -733,7 +744,7 @@ class EInvoiceController extends Controller
             }
         }
     }
-    
+
     public function submitNote(Request $request)
     {
         $noteType = Session::get('note_type');
@@ -758,27 +769,27 @@ class EInvoiceController extends Controller
                     $eInvoice = ConsolidatedEInvoice::where('uuid', $invoiceUuid)->first();
                 }
 
-                if ($eInvoice && !in_array($eInvoice->id, $eInvoiceIds)) {
+                if ($eInvoice && ! in_array($eInvoice->id, $eInvoiceIds)) {
                     $eInvoiceIds[] = $eInvoice->id;
                 }
-                if($fromBilling){
+                if ($fromBilling) {
                     $billing = $eInvoice->einvoiceable;
                 }
                 foreach ($invoice['items'] as $item) {
-                    if($fromBilling){
+                    if ($fromBilling) {
                         $saleProduct = $billing->saleProducts()->where('sale_product_id', $item['product_id'])->first();
-                    }else{
+                    } else {
                         $saleProduct = SaleProduct::find($item['product_id']);
                     }
-                    
-                    if (!$saleProduct) {
+
+                    if (! $saleProduct) {
                         continue;
                     }
-                    
+
                     $saleId = $saleProduct->sale->id;
-                    $amount = (int) $item['qty'] * (float)  $item['price'];
-                    
-                    if (!isset($totals[$saleId])) {
+                    $amount = (int) $item['qty'] * (float) $item['price'];
+
+                    if (! isset($totals[$saleId])) {
                         $totals[$saleId] = 0;
                     }
                     $totals[$saleId] += $amount;
@@ -791,10 +802,10 @@ class EInvoiceController extends Controller
                         $qtyDifferences[] = [
                             'id' => $item['product_id'],
                             'diff' => $qtyDifference == 0 ? $saleProduct->qty : $qtyDifference,
-                            'price' => $item['price']
+                            'price' => $item['price'],
                         ];
                     }
-                    if($fromBilling){
+                    if ($fromBilling) {
                         $saleProduct->update([
                             'qty' => $item['qty'],
                         ]);
@@ -802,13 +813,12 @@ class EInvoiceController extends Controller
                         $billing->saleProducts()->updateExistingPivot($saleProduct->id, [
                             'custom_unit_price' => $item['price'],
                         ]);
-                    }else{
+                    } else {
                         $saleProduct->update([
                             'qty' => $item['qty'],
-                            'unit_price' => $item['price']
+                            'unit_price' => $item['price'],
                         ]);
                     }
-                    
 
                     $customer = $fromBilling ? null : $saleProduct->sale->customer;
                 }
@@ -819,7 +829,7 @@ class EInvoiceController extends Controller
                 ]);
             }
 
-            if(!$fromBilling){
+            if (! $fromBilling) {
                 foreach ($totals as $saleId => $totalAmount) {
                     Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
                 }
@@ -841,14 +851,15 @@ class EInvoiceController extends Controller
 
             $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
 
-            $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin,$customer,$fromBilling);
-            
-            $result = $this->syncNote($document, $note, $qtyDifferences, $company,$type);
-            if(!empty($result->original['errorDetails'])){
+            $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin, $customer, $fromBilling);
+
+            $result = $this->syncNote($document, $note, $qtyDifferences, $company, $type);
+            if (! empty($result->original['errorDetails'])) {
                 DB::rollBack();
-            }else{
+            } else {
                 DB::commit();
             }
+
             return $result;
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -856,15 +867,14 @@ class EInvoiceController extends Controller
         }
     }
 
-
-    public function syncNote($document, $note, $qtyDifferences, $company,$type)
+    public function syncNote($document, $note, $qtyDifferences, $company, $type)
     {
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
-            'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten), 
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
         ];
 
         $documents = [];
@@ -899,6 +909,7 @@ class EInvoiceController extends Controller
                             'invoiceCodeNumber' => $invoiceCodeNumber,
                             'error' => $documentDetails['error'],
                         ];
+
                         continue;
                     }
 
@@ -907,7 +918,7 @@ class EInvoiceController extends Controller
                         if ($note) {
                             $note->update([
                                 'uuid' => $uuid,
-                                'status' => 'valid'
+                                'status' => 'valid',
                             ]);
                         }
                     } else {
@@ -915,7 +926,7 @@ class EInvoiceController extends Controller
                         if ($note) {
                             $note->update([
                                 'uuid' => $uuid,
-                                'status' => 'valid'
+                                'status' => 'valid',
                             ]);
                         }
                     }
@@ -923,12 +934,11 @@ class EInvoiceController extends Controller
                     $successfulDocuments[] = $invoiceCodeNumber;
 
                     if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
-                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences,$type);
+                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences, $type);
                     }
                 }
 
-                
-                if (!empty($rejectedDocuments)) {
+                if (! empty($rejectedDocuments)) {
                     $errorDetails = [];
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
@@ -952,7 +962,7 @@ class EInvoiceController extends Controller
                     //     'error' => 'Some documents were rejected',
                     //     'rejectedDocuments' => $errorDetails,
                     // ], 400);
-                }else{
+                } else {
                     DB::commit();
                 }
 
@@ -964,6 +974,7 @@ class EInvoiceController extends Controller
 
             } else {
                 DB::rollBack();
+
                 return response()->json([
                     'error' => 'Document submission failed',
                     'message' => $response->body(),
@@ -976,8 +987,7 @@ class EInvoiceController extends Controller
         }
     }
 
-
-    public function generateAndSaveNotePdf($documentDetails, $note,$items,$type)
+    public function generateAndSaveNotePdf($documentDetails, $note, $items, $type)
     {
         try {
             $uuid = $documentDetails['uuid'];
@@ -1003,94 +1013,94 @@ class EInvoiceController extends Controller
                 }
             }
 
-            if($type == 'eInvoice'){
+            if ($type == 'eInvoice') {
                 $eInvoices = $note->eInvoices;
-            
+
                 if ($eInvoices->isNotEmpty()) {
                     $eInvoice = $eInvoices->first();
-            
+
                     $invoice = $eInvoice->einvoiceable;
-                    if($invoice instanceof Invoice){
+                    if ($invoice instanceof Invoice) {
                         $deliveryOrder = $invoice->deliveryOrders->first();
-            
+
                         $customer = Customer::find($deliveryOrder->customer_id);
-        
+
                         $sale = $deliveryOrder->products->first()->saleProduct->sale;
-                    }else{
-    
+                    } else {
+
                     }
-                    
+
                 } else {
                     $customer = null;
                 }
-            }else{
+            } else {
                 $eInvoices = $note->consolidatedEInvoices;
-            
+
                 if ($eInvoices->isNotEmpty()) {
                     $eInvoice = $eInvoices->first();
-            
+
                     $invoice = $eInvoice->invoices;
-                    if($invoice instanceof Invoice){
+                    if ($invoice instanceof Invoice) {
                         $deliveryOrder = $invoice->deliveryOrders->first();
-            
+
                         $customer = null;
-        
+
                         $sale = $deliveryOrder->products->first()->saleProduct->sale;
-                    }else{
-    
+                    } else {
+
                     }
-                    
+
                 } else {
                     $customer = null;
                 }
             }
-            
-           
-          
-            $saleProductIds = array_column($items, 'id');
-            $validationLink = $this->generateValidationLink($uuid,$longId);
 
-            if($invoice instanceof Invoice){
-                $pdf = Pdf::loadView('invoice.pdf.note.' . $invoice->company . '_inv_pdf', [
+            $saleProductIds = array_column($items, 'id');
+            $validationLink = $this->generateValidationLink($uuid, $longId);
+
+            if ($invoice instanceof Invoice) {
+                $pdf = Pdf::loadView('invoice.pdf.note.'.$invoice->company.'_inv_pdf', [
                     'date' => now()->format('d/m/Y'),
                     'sku' => $note->sku,
                     'productDetails' => $productDetails,
                     'total' => $total,
                     'customer' => $customer,
                     'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
-                    'terms' => '', 
+                    'terms' => '',
                     'type' => $note instanceof CreditNote ? 'CREDIT NOTE' : 'DEBIT NOTE',
                     'validationLink' => $validationLink,
-                    'delivery_address' => CustomerLocation::find($sale->delivery_address_id)
+                    'delivery_address' => CustomerLocation::find($sale->delivery_address_id),
                 ]);
-                 
+
                 $pdf->setPaper('A4', 'letter');
-                
+
                 $content = $pdf->download()->getOriginalContent();
                 $type = $note instanceof CreditNote ? 'credit_note' : 'debit_note';
+
                 return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
-            }else{
+            } else {
                 $pdf = Pdf::loadView('invoice.pdf.billing.note_pdf', [
                     'date' => now()->format('d/m/Y'),
                     'sku' => $note->sku,
                     'productDetails' => $productDetails,
                     'total' => $total,
-                    'terms' => '', 
+                    'terms' => '',
                     'type' => $note instanceof CreditNote ? 'CREDIT NOTE' : 'DEBIT NOTE',
                     'validationLink' => $validationLink,
                 ]);
-                 
+
                 $pdf->setPaper('A4', 'letter');
-                
+
                 $content = $pdf->download()->getOriginalContent();
                 $type = $note instanceof CreditNote ? 'credit_note' : 'debit_note';
+
                 return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
             }
             dd($validationLink);
-            
-           
+
         } catch (\Throwable $th) {
-            dd($th,$items);
+            dd($th, $items);
+
             return false;
         }
     }
@@ -1098,15 +1108,15 @@ class EInvoiceController extends Controller
     public function toNote(Request $req)
     {
         $type = $req->input('from');
-        if($type){
-            Session::put('invoice_type',$type);
+        if ($type) {
+            Session::put('invoice_type', $type);
         }
         $step = 1;
         if ($req->has('invs') || $step == 5) {
             $step = 6;
             $selectedInvoiceIds = explode(',', $req->invs);
 
-            if (!$selectedInvoiceIds || !is_array($selectedInvoiceIds)) {
+            if (! $selectedInvoiceIds || ! is_array($selectedInvoiceIds)) {
                 return response()->json(['error' => 'Invalid invoice IDs provided'], 400);
             }
 
@@ -1115,7 +1125,7 @@ class EInvoiceController extends Controller
                 foreach ($selectedInvoiceIds as $invoiceId) {
                     $eInvoice = EInvoice::find($invoiceId);
                     $invoice = $eInvoice->einvoiceable;
-                    
+
                     if ($invoice) {
                         $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
                         if ($delivery) {
@@ -1129,15 +1139,15 @@ class EInvoiceController extends Controller
                                     'price' => $saleProduct->unit_price,
                                 ];
                             }
-    
+
                             $results[] = [
                                 'invoice_uuid' => $eInvoice->uuid,
-                                'items' => $invoiceItems
+                                'items' => $invoiceItems,
                             ];
                         }
                     }
                 }
-            }else if (Session::get('invoice_type') == 'eInvoice' && Session::get('fromBilling') == true) {
+            } elseif (Session::get('invoice_type') == 'eInvoice' && Session::get('fromBilling') == true) {
                 foreach ($selectedInvoiceIds as $invoiceId) {
                     $eInvoice = EInvoice::find($invoiceId);
                     $billing = $eInvoice->einvoiceable;
@@ -1149,22 +1159,21 @@ class EInvoiceController extends Controller
                                 'name' => $saleProduct->product->model_name,
                                 'qty' => $saleProduct->qty,
                                 'price' => $saleProduct->pivot->custom_unit_price,
-                            ];  
+                            ];
                         }
                         $results[] = [
                             'invoice_uuid' => $eInvoice->uuid,
-                            'items' => $invoiceItems
+                            'items' => $invoiceItems,
                         ];
                     }
                 }
-            }
-            else{    
-                if (!$selectedInvoiceIds || !is_array($selectedInvoiceIds)) {
+            } else {
+                if (! $selectedInvoiceIds || ! is_array($selectedInvoiceIds)) {
                     return response()->json(['error' => 'Invalid invoice IDs provided'], 400);
                 }
-                
+
                 $results = [];
-        
+
                 foreach ($selectedInvoiceIds as $invoiceId) {
                     $eInvoice = ConsolidatedEInvoice::find($invoiceId);
                     $invoices = $eInvoice->invoices;
@@ -1172,7 +1181,7 @@ class EInvoiceController extends Controller
                     if ($invoices) {
                         foreach ($invoices as $invoice) {
                             $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
-        
+
                             if ($delivery) {
                                 $invoiceItems = [];
                                 foreach ($delivery->products()->get() as $product) {
@@ -1184,18 +1193,18 @@ class EInvoiceController extends Controller
                                         'price' => $saleProduct->unit_price,
                                     ];
                                 }
-        
+
                                 $results[] = [
                                     'invoice_uuid' => $eInvoice->uuid,
-                                    'items' => $invoiceItems
+                                    'items' => $invoiceItems,
                                 ];
                             }
                         }
                     }
                 }
             }
-           
-        } else if ($req->has('cus')) {
+
+        } elseif ($req->has('cus')) {
             $step = 5;
             $customerId = $req->cus;
             $eInvoices = EInvoice::whereHasMorph('einvoiceable', [Invoice::class], function ($query) use ($customerId) {
@@ -1205,55 +1214,54 @@ class EInvoiceController extends Controller
                     $doQuery->where('company', $company);
                 });
             })->get();
-        }else if ($req->has('type')) {
+        } elseif ($req->has('type')) {
             Session::put('note_type', $req->type);
             if (Session::get('invoice_type') == 'eInvoice') {
                 $step = 4;
-                $customers = Customer::whereHas('deliveryOrders.invoice', function($query) {
+                $customers = Customer::whereHas('deliveryOrders.invoice', function ($query) {
                     $query->whereHas('eInvoice');
                     if (Session::get('company') == 'powercool') {
                         $query->where('company', 'powercool');
-                    }else{
+                    } else {
                         $query->where('company', 'hi_ten');
                     }
                 })->get();
             } else {
                 $step = 5;
-                $eInvoices = ConsolidatedEInvoice::all(); 
+                $eInvoices = ConsolidatedEInvoice::all();
             }
-        }
-        else if ($req->has('company')) {
+        } elseif ($req->has('company')) {
             Session::put('company', $req->company);
             $step = 3;
-        }
-        else if ($req->has('fromBilling')) {
-            if($req->fromBilling == 'true'){
+        } elseif ($req->has('fromBilling')) {
+            if ($req->fromBilling == 'true') {
                 Session::put('fromBilling', true);
                 $step = 5;
                 $eInvoices = EInvoice::whereHasMorph(
-                    'einvoiceable', 
+                    'einvoiceable',
                     [Billing::class]
                 )->get();
-            }else{
+            } else {
                 $step = 2;
                 Session::put('fromBilling', false);
             }
-        }else {
+        } else {
             $step = 1;
-            if($type == 'cons'){
+            if ($type == 'cons') {
                 $step = 2;
-            }   
+            }
         }
 
         return view('invoice.convert', [
             'step' => $step,
             'customers' => $customers ?? [],
             'eInvoices' => $eInvoices ?? [],
-            'results' => $results ?? []
+            'results' => $results ?? [],
         ]);
     }
 
-    public function cancelEInvoice(Request $req){
+    public function cancelEInvoice(Request $req)
+    {
         $uuid = $req->input('uuid');
         $reason = $req->input('reason');
         $eInvoice = EInvoice::where('uuid', $uuid)->first();
@@ -1267,16 +1275,17 @@ class EInvoiceController extends Controller
         DB::beginTransaction();
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $eInvoice->einvoiceable->company == "powercool" ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer '.$eInvoice->einvoiceable->company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
                 'Content-Type' => 'application/json',
             ])->put($url, $body);
-        
+
             if ($response->successful()) {
                 $data = $response->json();
                 $eInvoice->update([
-                    'status' => $data['status']
+                    'status' => $data['status'],
                 ]);
                 DB::commit();
+
                 return [
                     'uuid' => $data['uuid'] ?? null,
                     'status' => $data['status'] ?? 'Unknown',
@@ -1292,31 +1301,32 @@ class EInvoiceController extends Controller
         }
     }
 
-    public function resubmitEInvoice(Request $request){
+    public function resubmitEInvoice(Request $request)
+    {
         $request->validate([
-            'uuid' => 'required'
+            'uuid' => 'required',
         ]);
 
-        $eInvoice = EInvoice::where('uuid',$request->input('uuid'))->first();
+        $eInvoice = EInvoice::where('uuid', $request->input('uuid'))->first();
         $invoice = $eInvoice->einvoiceable;
         $company = $invoice->company;
-        
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
 
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
-            'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . $invoice instanceof Invoice ? ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten) : $this->accessTokenPowerCool, 
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.$invoice instanceof Invoice ? ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten) : $this->accessTokenPowerCool,
         ];
 
         $documents = [];
-        if($invoice instanceof Invoice){
+        if ($invoice instanceof Invoice) {
             $document = $this->xmlGenerator->generateXml($invoice->id, $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
-        }else{
+        } else {
             $document = $this->xmlGenerator->generateBillingEInvoiceXml($invoice, $this->powerCoolTin);
         }
-        
+
         $documents[] = [
             'format' => 'XML',
             'document' => base64_encode($document),
@@ -1339,62 +1349,63 @@ class EInvoiceController extends Controller
                 foreach ($acceptedDocuments as $document) {
                     $uuid = $document['uuid'];
                     $invoiceCodeNumber = $document['invoiceCodeNumber'];
-                    
+
                     $documentDetails = $this->getDocumentDetails($uuid, $company);
                     if (isset($documentDetails['error'])) {
                         $errorDetails[] = [
                             'invoiceCodeNumber' => $invoiceCodeNumber,
                             'error' => $documentDetails['error'],
                         ];
+
                         continue;
                     }
-                    if($invoice instanceof Invoice){
+                    if ($invoice instanceof Invoice) {
                         $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
 
-                        if (!$invoice->einvoice) {
+                        if (! $invoice->einvoice) {
                             $invoice->einvoice()->create([
                                 'uuid' => $uuid,
                                 'status' => 'Valid',
-                                'submission_date' => Carbon::now()
+                                'submission_date' => Carbon::now(),
                             ]);
                         } else {
                             $invoice->einvoice->update([
                                 'uuid' => $uuid,
                                 'status' => 'Valid',
-                                'submission_date' => Carbon::now()
+                                'submission_date' => Carbon::now(),
                             ]);
                         }
-    
+
                         $successfulDocuments[] = $invoiceCodeNumber;
-    
+
                         if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
                             $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
                         }
-                    }else{
+                    } else {
                         $billing = Billing::where('sku', $invoiceCodeNumber)->first();
 
-                        if (!$billing->einvoice) {
+                        if (! $billing->einvoice) {
                             $billing->einvoice()->create([
                                 'uuid' => $uuid,
                                 'status' => 'Valid',
-                                'submission_date' => Carbon::now()
+                                'submission_date' => Carbon::now(),
                             ]);
                         } else {
                             $billing->einvoice->update([
                                 'uuid' => $uuid,
                                 'status' => 'Valid',
-                                'submission_date' => Carbon::now()
+                                'submission_date' => Carbon::now(),
                             ]);
                         }
                         $successfulDocuments[] = $invoiceCodeNumber;
-    
+
                         if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
                             $generatedPdf = $this->generateAndSaveBillingEInvoicePdf($documentDetails, $invoiceCodeNumber);
                         }
-                    }             
+                    }
                 }
 
-                if (!empty($rejectedDocuments)) {
+                if (! empty($rejectedDocuments)) {
                     $errorDetails = [];
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
@@ -1415,6 +1426,7 @@ class EInvoiceController extends Controller
                     }
                     DB::rollBack();
                     dd($response->json());
+
                     return response()->json([
                         'error' => 'Some documents were rejected',
                         'rejectedDocuments' => $errorDetails,
@@ -1440,20 +1452,20 @@ class EInvoiceController extends Controller
             ], $response->status());
         }
     }
-    
+
     public function syncClassificationCodes()
     {
         $url = 'https://sdk.myinvois.hasil.gov.my/codes/classification-codes/';
 
         try {
             $response = Http::get($url);
-            
+
             if ($response->failed()) {
                 return response()->json(['message' => 'Failed to fetch classification codes.'], 500);
             }
 
             $htmlContent = $response->body();
-            $dom = new DOMDocument();
+            $dom = new DOMDocument;
 
             libxml_use_internal_errors(true);
             $dom->loadHTML($htmlContent);
@@ -1486,7 +1498,7 @@ class EInvoiceController extends Controller
                 'syncedCount' => $syncedCount,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error syncing classification codes: ' . $e->getMessage());
+            Log::error('Error syncing classification codes: '.$e->getMessage());
 
             return response()->json([
                 'message' => 'An error occurred while syncing classification codes.',
@@ -1498,34 +1510,34 @@ class EInvoiceController extends Controller
     public function syncMsicCodes()
     {
         $response = Http::get('https://sdk.myinvois.hasil.gov.my/files/MSICSubCategoryCodes.json');
-    
+
         if ($response->ok()) {
             $data = $response->json();
-    
-            $totalCodes = count($data); 
-            $storedCodes = 0; 
-    
+
+            $totalCodes = count($data);
+            $storedCodes = 0;
+
             foreach ($data as $item) {
                 $msicCode = MsicCode::updateOrCreate(
                     ['code' => $item['Code']],
                     ['description' => $item['Description']]
                 );
-    
+
                 if ($msicCode->wasRecentlyCreated) {
                     $storedCodes++;
                 }
             }
-    
+
             return response()->json([
                 'message' => 'Data successfully fetched and stored',
                 'total_codes' => $totalCodes,
                 'stored_codes' => $storedCodes,
             ], 200);
         }
-    
+
         return response()->json(['message' => 'Failed to fetch data'], 500);
     }
-    
+
     public function updateBillingDate(Request $request)
     {
         $validated = $request->validate([
@@ -1547,20 +1559,21 @@ class EInvoiceController extends Controller
             'updated_billing' => $updatedBilling,
         ]);
     }
-    
-    public function billingSubmit(Request $request){
+
+    public function billingSubmit(Request $request)
+    {
         $request->validate([
             'billings' => 'required|array',
             'billings.*' => 'required|integer',
         ]);
         $selectedBillings = $request->input('billings');
-        
+
         $now = now();
 
         $overdueBilling = [];
         foreach ($selectedBillings as $billingId) {
             $billing = Billing::find($billingId);
-            if (!$billing) {
+            if (! $billing) {
                 continue;
             }
 
@@ -1573,26 +1586,26 @@ class EInvoiceController extends Controller
             }
         }
 
-        if (!empty($overdueBilling)) {
+        if (! empty($overdueBilling)) {
             return response()->json([
                 'message' => 'Some billing are overdue by more than 72 hours.',
                 'overdue_billing' => $overdueBilling,
             ], 400);
         }
 
-        $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions";
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
 
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
-            'Content-Type' => 'application/json', 
-            'Authorization' => 'Bearer ' . $this->accessTokenPowerCool, 
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.$this->accessTokenPowerCool,
         ];
-       
+
         foreach ($selectedBillings as $billingId) {
             $billing = Billing::find($billingId);
             $document = $this->xmlGenerator->generateBillingEInvoiceXml($billing, $this->powerCoolTin);
-            
+
             $documents[] = [
                 'format' => 'XML',
                 'document' => base64_encode($document),
@@ -1616,29 +1629,30 @@ class EInvoiceController extends Controller
                 foreach ($acceptedDocuments as $document) {
                     $uuid = $document['uuid'];
                     $invoiceCodeNumber = $document['invoiceCodeNumber'];
-                    
-                    $documentDetails = $this->getDocumentDetails($uuid, "powercool");
+
+                    $documentDetails = $this->getDocumentDetails($uuid, 'powercool');
                     if (isset($documentDetails['error'])) {
                         $errorDetails[] = [
                             'invoiceCodeNumber' => $invoiceCodeNumber,
                             'error' => $documentDetails['error'],
                         ];
+
                         continue;
                     }
 
                     $billing = Billing::where('sku', $invoiceCodeNumber)->first();
 
-                    if (!$billing->einvoice) {
+                    if (! $billing->einvoice) {
                         $billing->einvoice()->create([
                             'uuid' => $uuid,
                             'status' => 'Valid',
-                            'submission_date' => Carbon::now()
+                            'submission_date' => Carbon::now(),
                         ]);
                     } else {
                         $billing->einvoice->update([
                             'uuid' => $uuid,
                             'status' => 'Valid',
-                            'submission_date' => Carbon::now()
+                            'submission_date' => Carbon::now(),
                         ]);
                     }
                     $successfulDocuments[] = $invoiceCodeNumber;
@@ -1648,7 +1662,7 @@ class EInvoiceController extends Controller
                     }
                 }
 
-                if (!empty($rejectedDocuments)) {
+                if (! empty($rejectedDocuments)) {
                     $errorDetails = [];
                     foreach ($rejectedDocuments as $rejectedDoc) {
                         $errorDetails[] = [
@@ -1668,10 +1682,10 @@ class EInvoiceController extends Controller
                         ];
                     }
                     DB::rollBack();
-                }else{
+                } else {
                     DB::commit();
                 }
-                
+
                 return response()->json([
                     'message' => 'Document submission completed',
                     'successfulDocuments' => $successfulDocuments,
@@ -1680,6 +1694,7 @@ class EInvoiceController extends Controller
 
             } catch (\Throwable $th) {
                 DB::rollBack();
+
                 return response()->json([
                     'error' => 'Document submission failed',
                     'message' => $th->getMessage(),
@@ -1691,7 +1706,7 @@ class EInvoiceController extends Controller
                 'message' => $response->body(),
             ], $response->status());
         }
-        
+
     }
 
     public function generateAndSaveBillingEInvoicePdf($documentDetails, $invoiceCodeNumber)
@@ -1699,9 +1714,9 @@ class EInvoiceController extends Controller
         try {
             $uuid = $documentDetails['uuid'];
             $longId = $documentDetails['longId'];
-            $billing = Billing::where('sku',$invoiceCodeNumber)->first();
-            $validationLink = $this->generateValidationLink($uuid,$longId);
-            
+            $billing = Billing::where('sku', $invoiceCodeNumber)->first();
+            $validationLink = $this->generateValidationLink($uuid, $longId);
+
             $pdf = Pdf::loadView('invoice.pdf.billing.inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $invoiceCodeNumber,
@@ -1712,15 +1727,16 @@ class EInvoiceController extends Controller
                 'validationLink' => $validationLink,
             ]);
             $pdf->setPaper('A4', 'letter');
-            
+
             $content = $pdf->download()->getOriginalContent();
-            
+
             $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf', $content);
+
             return $e;
         } catch (\Throwable $th) {
             dd($th);
+
             return false;
         }
     }
-
 }
