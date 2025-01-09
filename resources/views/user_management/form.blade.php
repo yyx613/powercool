@@ -149,10 +149,10 @@
             let files = $(this).prop('files');
 
             $('.uploaded-file-preview-container[data-id="picture"]').find('.old-preview').remove()
-        
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                
+
                 let clone = $('#uploaded-file-template')[0].cloneNode(true);
                 $(clone).find('a').text(file.name)
                 $(clone).find('a').attr('href', URL.createObjectURL(file))

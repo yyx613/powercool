@@ -7,6 +7,9 @@
     @include('components.app.alert.parent')
     <form action="{{ isset($supplier) ? route('supplier.upsert', ['supplier' => $supplier->id]) : route('supplier.upsert') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-8">
         @csrf
+        @if (count($errors->get('tin_number_hasil')) > 0 )
+            <input type="hidden" name="neglect_tin_validation" value="false">
+        @endif
         <!-- 1st Panel -->
         <div class="bg-white p-4 rounded-md shadow">
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-4">
@@ -44,19 +47,14 @@
                     <x-app.input.select2 name="msic_code" id="msic_code" :hasError="$errors->has('msic_code')" placeholder="{{ __('Select a MSIC Code') }}">
                         <option value="">{{ __('Select a Msic Code') }}</option>
                         @foreach ($msics as $msic)
-                            <option value="{{ $msic->id }}" @selected(old('msic_code', isset($supplier->msicCode->id) ? $supplier->msicCode->id == $msic->id : null))>{{ $msic->code }} - {{ $msic->description }}</option>
+                            <option value="{{ $msic->id }}" @selected(old('msic_code', $supplier->msicCode->id ?? null) == $msic->id)>{{ $msic->code }} - {{ $msic->description }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('msic_code')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
                     <x-app.input.label id="business_activity_desc" class="mb-1">{{ __('Business Activity Desc.') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="business_activity_desc" id="business_activity_desc" :hasError="$errors->has('business_activity_desc')" placeholder="{{ __('Select a business activity desc') }}">
-                        <option value="">{{ __('Select a business activity desc') }}</option>
-                        @foreach ($msics as $msic)
-                            <option value="{{ $msic->description }}" @selected(old('business_activity_desc', isset($supplier) ? $supplier->business_act_desc : null) == $msic->description )>{{ $msic->description }}</option>
-                        @endforeach
-                    </x-app.input.select>
+                    <x-app.input.input name="business_activity_desc" id="business_activity_desc" :hasError="$errors->has('business_activity_desc')" value="{{ old('business_activity_desc', $supplier->business_act_desc ?? null) }}"  :disabled="true" />
                     <x-input-error :messages="$errors->get('business_activity_desc')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
@@ -247,16 +245,31 @@
             </div>
         </div>
     </form>
+
+    <x-app.modal.tin-info-modal />
 @endsection
 
 @push('scripts')
 <script>
     SUPPLIER = @json($supplier ?? null);
+    SHOW_TIN_INFO_MODAL = @json($errors->get('tin_number_hasil') ?? null);
+    TIN_INFO_MODAL_ERR_MSG = @json($errors->get('tin_number') ?? null);
+    MSIC_CODES = @json($msics ?? null);
 
     $(document).ready(function() {
         $('select[name="category"]').trigger('change')
+
+        if (SHOW_TIN_INFO_MODAL.length > 0) {
+            $('#tin-info-modal #msg').text(`TIN: '${ $('input[name="tin_number"]').val() }' did not pass LHDN validation. Are you sure you want to save it?`)
+            $('#tin-info-modal').addClass('show-modal')
+        }
     })
 
+    $('#tin-info-modal #yes-btn').on('click', function() {
+        $('input[name="neglect_tin_validation"]').val(true)
+        $('form').submit()
+        $('#tin-info-modal').removeClass('show-modal')
+    })
     $('input[name="picture[]"]').on('change', function() {
         let files = $(this).prop('files');
 
@@ -276,7 +289,16 @@
             $('.uploaded-file-preview-container[data-id="picture"]').removeClass('hidden')
         }
     })
+    $('select[name="msic_code"]').on('change', function() {
+        let val = $(this).val()
 
+        for (i = 0; i < MSIC_CODES.length; i++) {
+            if (MSIC_CODES[i].id == val) {
+                $('input[name="business_activity_desc"]').val(MSIC_CODES[i].description)
+                break
+            }
+        }
+    })
     $('select[name="local_oversea"]').on('change', function() {
             let val = $(this).val()
 

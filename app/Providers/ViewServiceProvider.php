@@ -221,9 +221,12 @@ class ViewServiceProvider extends ServiceProvider
                 ]);
             }
             if (str_contains(Route::currentRouteName(), '.driver.')) {
-                $sales_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
-
-                $view->with('sales_orders', $sales_orders);
+                $view->with([
+                    'task_types' => [
+                        Milestone::TYPE_DRIVER_TASK => 'Delivery',
+                        Milestone::TYPE_DRIVER_OTHER_TASK => 'Others',
+                    ],
+                ]);
             }
 
             $view->with([
@@ -566,7 +569,7 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form'], function (ViewView $view) {
             $company_group = [
-                1 => 'Powercool',
+                1 => 'Power Cool',
                 2 => 'Hi-Ten',
             ];
 

@@ -173,7 +173,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/convert-to-sale-order', 'converToSaleOrder')->name('convert_to_sale_order');
         });
 
-        //Pending
+        // Pending
         Route::prefix('pending-order')->name('pending_order.')->group(function () {
             Route::get('/', 'indexPendingOrder')->name('index');
             Route::get('/get-data', 'getDataPendingOrder')->name('get_data');
@@ -380,6 +380,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert-info', 'upsertInfo')->name('upsert_info')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::post('/upsert-location', 'upsertLocation')->name('upsert_location')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::get('/get-location', 'getLocation')->name('get_location');
+        Route::get('/get-so-do/{cus}', 'getSaleAndDeliveryOrder')->name('get_so_do');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {
@@ -542,14 +543,14 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     });
 });
 
-//Lazada
+// Lazada
 Route::prefix('lazada')->group(function () {
     Route::post('/webhook', [LazadaController::class, 'handleLazadaWebhook']);
     Route::get('/get-access-token/{code}', [LazadaController::class, 'getAccessTokenLazada']);
     Route::get('/refresh-access-token', [LazadaController::class, 'refreshAccessTokenLazada']);
 });
 
-//Shopee
+// Shopee
 Route::prefix('shopee')->group(function () {
     Route::post('/webhook', [ShopeeController::class, 'handleShopeeWebhook']);
     Route::get('/generate-auth-link', [ShopeeController::class, 'generateAuthLinkShopee']);
@@ -557,14 +558,14 @@ Route::prefix('shopee')->group(function () {
     Route::get('/refresh-access-token', [ShopeeController::class, 'refreshAccessTokenShopee']);
 });
 
-//Tiktok
+// Tiktok
 Route::prefix('tiktok')->group(function () {
     Route::post('/webhook', [TiktokController::class, 'handleTiktokWebhook']);
     Route::get('/get-access-token/{code}', [TiktokController::class, 'getAccessTokenTiktok']);
     Route::get('/refresh-access-token', [TiktokController::class, 'refreshAccessTokenTiktok']);
 });
 
-//WooCommerce
+// WooCommerce
 Route::prefix('woo-commerce')->group(function () {
     Route::post('/order-created/webhook', [WooCommerceController::class, 'handleWooCommerceOrderCreated']);
     Route::post('/order-updated/webhook', [WooCommerceController::class, 'handleWooCommerceOrderUpdated']);

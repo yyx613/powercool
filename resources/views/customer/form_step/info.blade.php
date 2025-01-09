@@ -40,19 +40,14 @@
                 <x-app.input.select2 name="msic_code" id="msic_code" :hasError="$errors->has('msic_code')" placeholder="{{ __('Select a MSIC Code') }}">
                     <option value="">{{ __('Select a Msic Code') }}</option>
                     @foreach ($msics as $msic)
-                        <option value="{{ $msic->id }}" @selected(old('msic_code', isset($customer->msicCode->id) ? $customer->msicCode->id == $msic->id : null))>{{ $msic->code }} - {{ $msic->description }}</option>
+                        <option value="{{ $msic->id }}" @selected(old('msic_code', $customer->msicCode->id ?? null) == $msic->id)>{{ $msic->code }} - {{ $msic->description }}</option>
                     @endforeach
                 </x-app.input.select2>
                 <x-app.message.error id="msic_code_err"/>
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
-                <x-app.input.label id="business_activity_desc" class="mb-1">{{ __('Business Activity Desc.') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                <x-app.input.select2 name="business_activity_desc" id="business_activity_desc" :hasError="$errors->has('business_activity_desc')" placeholder="{{ __('Select a business activity desc') }}">
-                    <option value="">{{ __('Select a business activity desc') }}</option>
-                    @foreach ($msics as $msic)
-                        <option value="{{ $msic->description }}" @selected(old('business_activity_desc', isset($customer) ? $customer->business_act_desc : null) == $msic->description )>{{ $msic->description }}</option>
-                    @endforeach
-                </x-app.input.select>
+                <x-app.input.label id="business_activity_desc" class="mb-1">{{ __('Business Activity Desc.') }}</x-app.input.label>
+                <x-app.input.input name="business_activity_desc" id="business_activity_desc" :hasError="$errors->has('business_activity_desc')" value="{{ $customer->business_act_desc ?? null }}"  :disabled="true" />
                 <x-app.message.error id="business_activity_desc_err"/>
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
@@ -93,6 +88,7 @@
             <div class="flex flex-col">
                 <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')" value="{{ old('phone_number', isset($customer) ? $customer->phone : null) }}"/>
+                <span class="text-sm text-slate-500">{{ __('"+6" is not required') }}</span>
                 <x-app.message.error id="phone_number_err"/>
             </div>
             <div class="flex flex-col">
@@ -274,12 +270,16 @@
     </div>
 </form>
 
+<x-app.modal.tin-info-modal/>
+
 
 @push('scripts')
     <script>
         INFO_FORM_CAN_SUBMIT = true
         DEFAULT_BRANCH = @json($default_branch ?? null);
         IS_CREATE_LINK = @json($is_create_link ?? null);
+        MSIC_CODES = @json($msics ?? null);
+        NEGLECT_TIN_VALIDATION = false
 
         $(document).ready(function() {
             $('select[name="category"]').trigger('change')
@@ -313,6 +313,16 @@
                 $('input[name="tin_number"]').val(null)
             }
         })
+        $('select[name="msic_code"]').on('change', function() {
+            let val = $(this).val()
+
+            for (i = 0; i < MSIC_CODES.length; i++) {
+                if (MSIC_CODES[i].id == val) {
+                    $('input[name="business_activity_desc"]').val(MSIC_CODES[i].description)
+                    break
+                }
+            }
+        })
         $('select[name="category"]').on('change', function() {
             let val = $(this).val()
 
@@ -336,6 +346,12 @@
                 $('.non-individual-fields-container').removeClass('hidden')
             }
         })
+        $('#tin-info-modal #yes-btn').on('click', function() {
+            NEGLECT_TIN_VALIDATION  = true
+
+            $('#info-form').submit()
+            $('#tin-info-modal').removeClass('show-modal')
+        })
 
         $('#info-form').on('submit', function(e) {
             e.preventDefault()
@@ -352,6 +368,7 @@
 
             var formData = new FormData(this);
             formData.append('customer_id', CUSTOMER != null ? CUSTOMER.id : null)
+            formData.append('neglect_tin_validation', NEGLECT_TIN_VALIDATION)
 
             // let picture = $('input[name="picture[]"]').prop('files')
             // if (picture.length > 0) formData.append('picture[]', picture)
@@ -388,11 +405,14 @@
                     }, 300);
                 },
                 error: function(err) {
-                    setTimeout(() => {
-                        if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
-                            let errors = err.responseJSON.errors
+                    if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
+                        let errors = err.responseJSON.errors
 
-                            for (const key in errors) {
+                        for (const key in errors) {
+                            if (key == 'tin_number_hasil') {
+                                $('#tin-info-modal #msg').text(`TIN: '${ $('input[name="tin_number"]').val() }' did not pass LHDN validation. Are you sure you want to save it?`)
+                                $('#tin-info-modal').addClass('show-modal')
+                            } else {
                                 if (key.includes('picture')) {
                                     $(`#info-form #picture_err`).find('p').text(errors[key])
                                     $(`#info-form #picture_err`).removeClass('hidden')
@@ -402,6 +422,10 @@
                                 }
                             }
                         }
+                    }
+
+
+                    setTimeout(() => {
                         $('#info-form #submit-btn').text('Save and Update')
                         $('#info-form #submit-btn').addClass('bg-yellow-400 shadow')
 

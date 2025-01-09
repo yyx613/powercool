@@ -70,28 +70,28 @@
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 1,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 2,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "5%",
                     "targets": 3,
                     orderable: false,
@@ -119,7 +119,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('invoice.get_data_debit-note') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },

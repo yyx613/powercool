@@ -45,6 +45,13 @@
             <x-app.message.error id="attention_to_err"/>
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select id="billing_address" name="billing_address">
+                <option value="">{{ __('Select a billing address') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="billing_address_err"/>
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
@@ -72,7 +79,7 @@
 
             for (let i = 0; i < CUSTOMERS.length; i++) {
                 const element = CUSTOMERS[i];
-                
+
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
                     if (!INIT_EDIT) {
@@ -88,7 +95,7 @@
 
                     for (let i = 0; i < element.credit_terms.length; i++) {
                         const term = element.credit_terms[i];
-                    
+
                         let opt = new Option(term.credit_term.name, term.credit_term.id)
                         $(`select[name="payment_term"]`).append(opt)
                     }
@@ -108,17 +115,17 @@
                 type: 'GET',
                 async: false,
                 success: function(res) {
-                    $('#delivery-form select[name="delivery_address"] option').remove()
+                    $('select[name="billing_address"] option').remove()
 
                     // Default option
-                    let opt = new Option("{!! __('Select an address') !!}", null)
-                    $('#delivery-form select[name="delivery_address"]').append(opt)
+                    let opt = new Option("{!! __('Select a billing address') !!}", null)
+                    $('select[name="billing_address"]').append(opt)
 
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
-                        
-                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id == SALE.delivery_address_id)
-                        $('#delivery-form select[name="delivery_address"]').append(opt)
+
+                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id == SALE.billing_address_id)
+                        $('select[name="billing_address"]').append(opt)
                     }
                 },
             });
@@ -157,7 +164,7 @@
         //             if (typeof SALE !== 'undefined') {
         //                 SALE = res.sale
         //             }
-                    
+
         //             setTimeout(() => {
         //                 $('#quotation-form #submit-btn').text('Updated')
         //                 $('#quotation-form #submit-btn').addClass('bg-green-400 shadow')
@@ -166,7 +173,7 @@
         //                     $('#quotation-form #submit-btn').text('Save and Update')
         //                     $('#quotation-form #submit-btn').removeClass('bg-green-400')
         //                     $('#quotation-form #submit-btn').addClass('bg-yellow-400 shadow')
-                            
+
         //                     QUOTATION_FORM_CAN_SUBMIT = true
         //                 }, 2000);
         //             }, 300);
@@ -175,7 +182,7 @@
         //             setTimeout(() => {
         //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
         //                     let errors = err.responseJSON.errors
-    
+
         //                     for (const key in errors) {
         //                         $(`#quotation-form #${key}_err`).find('p').text(errors[key])
         //                         $(`#quotation-form #${key}_err`).removeClass('hidden')

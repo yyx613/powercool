@@ -149,13 +149,16 @@ class SupplierController extends Controller
         ]);
 
         // Validate tin with hasil
-        $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
-        if ($res->status() != 200) {
-            $err = json_decode($res->getData()->message);
+        if ($req->boolean('neglect_tin_validation') == false) {
+            $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
+            if ($res->status() != 200) {
+                $err = json_decode($res->getData()->message);
 
-            throw ValidationException::withMessages([
-                'tin_number' => $err->title,
-            ]);
+                throw ValidationException::withMessages([
+                    'tin_number' => $err->title,
+                    'tin_number_hasil' => true,
+                ]);
+            }
         }
 
         try {

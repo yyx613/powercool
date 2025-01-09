@@ -12,7 +12,6 @@
             @include('sale_order.form_step.quotation_details')
             @include('sale_order.form_step.product_details')
             @include('sale_order.form_step.payment_details')
-            @include('sale_order.form_step.delivery_schedule')
             @include('sale_order.form_step.remarks')
 
             <div class="flex justify-end">
@@ -86,6 +85,7 @@
                 'quo_id': QUO != null ? QUO.id : null,
                 'sale': $('select[name="sale"]').val(),
                 'customer': $('select[name="customer"]').val(),
+                'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $('select[name="billing_address"]').val(),
                 'reference': $('input[name="reference"]').val(),
                 'status': $('select[name="status"]').val(),
                 'report_type': $('select[name="report_type"]').val(),
@@ -109,12 +109,12 @@
                 'payment_remark': $('input[name="payment_remark"]').val(),
                 'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
 
-                'driver': $('select[name="driver"]').val(),
-                'delivery_date': $('input[name="delivery_date"]').val(),
-                'delivery_time': $('input[name="delivery_time"]').val(),
-                'delivery_instruction': $('input[name="delivery_instruction"]').val(),
-                'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
-                'delivery_status': $('select[name="delivery_status"]').val(),
+                // 'driver': $('select[name="driver"]').val(),
+                // 'delivery_date': $('input[name="delivery_date"]').val(),
+                // 'delivery_time': $('input[name="delivery_time"]').val(),
+                // 'delivery_instruction': $('input[name="delivery_instruction"]').val(),
+                // 'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
+                // 'delivery_status': $('select[name="delivery_status"]').val(),
 
                 'remark': $('textarea[name="remark"]').val(),
             },

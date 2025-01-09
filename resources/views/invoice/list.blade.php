@@ -204,7 +204,7 @@
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 'powercool') {
-                            return 'Powercool'
+                            return 'Power Cool'
                         } else if (data == 'hi_ten') {
                             return 'Hi-Ten'
                         }

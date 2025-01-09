@@ -6,7 +6,9 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\DeliveryOrder;
 use App\Models\ObjectCreditTerm;
+use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -134,7 +136,6 @@ class CustomerController extends Controller
             'company_registration_number' => 'required_unless:category,!=,2|max:250',
             'sst_number' => 'nullable|max:250',
             'category' => 'required|max:250',
-            'business_activity_desc' => 'required|max:250',
             'tourism_tax_reg_no' => 'nullable|max:250',
             'prev_gst_reg_no' => 'nullable|max:250',
             'registered_name' => 'required|max:250',
@@ -154,13 +155,17 @@ class CustomerController extends Controller
         ]);
 
         // Validate tin with hasil
-        $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
-        if ($res->status() != 200) {
-            $err = json_decode($res->getData()->message);
+        if ($req->boolean('neglect_tin_validation') == false) {
+            $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
+            if ($res->status() != 200) {
+                $err = json_decode($res->getData()->message);
+                dd($err);
 
-            throw ValidationException::withMessages([
-                'tin_number' => $err->title,
-            ]);
+                throw ValidationException::withMessages([
+                    'tin_number' => $err->title,
+                    'tin_number_hasil' => true,
+                ]);
+            }
         }
 
         try {
@@ -414,9 +419,15 @@ class CustomerController extends Controller
         try {
             DB::beginTransaction();
 
-            $locations = CustomerLocation::where('customer_id', $req->customer_id)
-                ->where('type', CustomerLocation::TYPE_DELIVERY)
-                ->get();
+            if ($req->type == 'delivery') {
+                $locations = CustomerLocation::where('customer_id', $req->customer_id)
+                    ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])
+                    ->get();
+            } else {
+                $locations = CustomerLocation::where('customer_id', $req->customer_id)
+                    ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_BILLING])
+                    ->get();
+            }
 
             return Response::json([
                 'result' => true,
@@ -447,5 +458,36 @@ class CustomerController extends Controller
         return view('customer.link', [
             'default_branch' => $branch,
         ]);
+    }
+
+    public function getSaleAndDeliveryOrder(Request $req, Customer $cus)
+    {
+        try {
+            if (str_contains($req->type, 'so')) {
+                $sale_orders = Sale::select('id', 'sku')->where('type', Sale::TYPE_SO)->where('customer_id', $cus->id)->get();
+            }
+            if (str_contains($req->type, 'do')) {
+                $convert_to = Sale::where('type', Sale::TYPE_SO)->whereNotNull('convert_to')->where('customer_id', $cus->id)->pluck('convert_to');
+                $do_ids = collect();
+
+                for ($i = 0; $i < count($convert_to); $i++) {
+                    $con = collect(explode(',', $convert_to[$i]));
+                    $do_ids->push($con);
+                }
+                $delivery_orders = DeliveryOrder::select('id', 'sku')->whereIn('id', $do_ids->flatten()->toArray())->get();
+            }
+
+            return Response::json([
+                'result' => true,
+                'so' => $sale_orders ?? [],
+                'do' => $delivery_orders ?? [],
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

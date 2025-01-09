@@ -264,7 +264,7 @@ class SaleController extends Controller
                 'type' => 'so',
                 'report_type' => $req->report_type,
             ]);
-            $res = $this->upsertQuoDetails($request)->getData();
+            $res = $this->upsertQuoDetails($request, false, true)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create quotation');
             }
@@ -513,7 +513,14 @@ class SaleController extends Controller
             $enable_by_pass = true;
         }
 
-        if ($req->has('so')) {
+        if ($req->has('product_children')) {
+            $step = 6;
+
+            Session::put('convert_product_children', $req->product_children);
+
+            $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
+            $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
+        } elseif ($req->has('so')) {
             $step = 5;
 
             Session::put('convert_sale_order_id', $req->so);
@@ -641,15 +648,18 @@ class SaleController extends Controller
             'terms' => $terms ?? [],
             'allowed_spc_ids' => $allowed_spc_ids ?? [],
             'by_pass' => $enable_by_pass ? Crypt::encrypt(Auth::user()->email) : null,
+            'delivery_addresses' => $delivery_addresses ?? [],
         ]);
     }
 
     public function converToDeliveryOrder(Request $req)
     {
-        $spc_ids = explode(',', $req->product_children);
+        $spc_ids = explode(',', Session::get('convert_product_children'));
 
         try {
             DB::beginTransaction();
+
+            $delivery_address = CustomerLocation::where('id', $req->delivery_address)->first()->formatAddress();
 
             $products = collect();
             foreach (SaleProduct::whereIn('id', SaleProductChild::whereIn('id', $spc_ids)->pluck('sale_product_id'))->cursor() as $sp) {
@@ -671,6 +681,8 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'filename' => $filename,
                 'created_by' => Auth::user()->id,
+                'delivery_address_id' => $req->delivery_address,
+                'delivery_address' => $delivery_address,
             ]);
             (new Branch)->assign(DeliveryOrder::class, $do->id);
 
@@ -698,21 +710,6 @@ class SaleController extends Controller
                 $soc_alter_qty[$sp->id] = count($spcs);
                 $sale_orders->push($sp->sale);
             }
-            // Prepare delivery address
-            $deli_addresses = [];
-            $deli_address_not_same = false;
-            for ($i = 0; $i < count($sale_orders); $i++) {
-                if ($sale_orders[$i]->delivery_address_id != null) {
-                    if (in_array($sale_orders[$i]->delivery_address_id, $deli_addresses)) {
-                        $deli_address_not_same = true;
-                    }
-                    $deli_addresses[] = $sale_orders[$i]->delivery_address_id;
-                }
-
-                if ($deli_address_not_same) {
-                    break;
-                }
-            }
 
             // Create PDF
             $dopcs = collect();
@@ -727,7 +724,7 @@ class SaleController extends Controller
                 'sale_orders' => $sale_orders,
                 'dopcs' => $dopcs,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
-                'delivery_address' => ! $deli_address_not_same || count($deli_addresses) <= 0 ? null : CustomerLocation::where('type', CustomerLocation::TYPE_DELIVERY)->where('id', $deli_addresses[0])->first(),
+                'delivery_address' => CustomerLocation::where('id', $req->delivery_address)->first(),
                 'terms' => Session::get('convert_terms'),
             ]);
             $pdf->setPaper('A4', 'letter');
@@ -777,6 +774,7 @@ class SaleController extends Controller
             'cc' => 'nullable|max:250',
             'status' => 'required',
             'report_type' => 'required',
+            'billing_address' => 'required',
             // upsertProDetails
             'product_order_id' => 'nullable',
             'product_order_id.*' => 'nullable',
@@ -814,13 +812,6 @@ class SaleController extends Controller
             $rules['payment_status'] = 'required';
             $rules['payment_remark'] = 'nullable|max:250';
             $rules['by_pass_conversion'] = 'nullable';
-            // upsertDelSchedule
-            $rules['driver'] = 'required';
-            $rules['delivery_date'] = 'required';
-            $rules['delivery_time'] = 'required';
-            $rules['delivery_instruction'] = 'nullable|max:250';
-            $rules['delivery_address'] = 'nullable';
-            $rules['delivery_status'] = 'required';
         }
         $req->validate($rules, [], [
             // upsertQuoDetails
@@ -900,11 +891,6 @@ class SaleController extends Controller
                 if ($res->can_by_pass_conversion) {
                     $data['can_by_pass_conversion'] = $res->can_by_pass_conversion;
                 }
-
-                $res = $this->upsertDelSchedule($req, true)->getData();
-                if ($res->result == false) {
-                    throw new \Exception('upsertDelSchedule failed');
-                }
             }
 
             $res = $this->upsertRemark($req, true)->getData();
@@ -928,7 +914,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated = false)
+    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false)
     {
         if (! $validated) {
             // Validate form
@@ -942,9 +928,13 @@ class SaleController extends Controller
                 'cc' => 'nullable|max:250',
                 'status' => 'required',
                 'report_type' => 'required',
+                'billing_address' => 'required',
             ];
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
+            }
+            if ($convert_from_quo) {
+                $rules['billing_address'] = 'nullable';
             }
             $req->validate($rules, [], [
                 'report_type' => 'type',
@@ -954,6 +944,10 @@ class SaleController extends Controller
 
         try {
             DB::beginTransaction();
+
+            if ($req->billing_address != null) {
+                $loc = CustomerLocation::where('id', $req->billing_address)->first();
+            }
 
             if ($req->sale_id == null) {
                 $products = Product::whereIn('id', $req->product_id)->get();
@@ -971,6 +965,8 @@ class SaleController extends Controller
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
                     'report_type' => $req->report_type,
+                    'billing_address_id' => $req->billing_address,
+                    'billing_address' => isset($loc) ? $loc->formatAddress() : null,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);
@@ -993,6 +989,8 @@ class SaleController extends Controller
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
                     'report_type' => $req->report_type,
+                    'billing_address_id' => $req->billing_address,
+                    'billing_address' => isset($loc) ? $loc->formatAddress() : null,
                 ]);
             }
 
@@ -2691,7 +2689,7 @@ class SaleController extends Controller
 
                 $dealer_name = $dealer->name;
             } elseif ($req->dealer == '-1') {
-                $dealer_name = 'Powercool';
+                $dealer_name = 'Power Cool';
             } elseif ($req->dealer == '-2') {
                 $dealer_name = 'Hi Ten Trading';
             }

@@ -11,11 +11,18 @@ class Milestone extends Model
     use HasFactory;
 
     const TYPE_SERVICE_TASK = 1;
+
     const TYPE_DRIVER_TASK = 2;
+
     const TYPE_DRIVER_RETURN_TASK = 3;
+
     const TYPE_INSTALLER_TASK = 4;
+
     const TYPE_SITE_VISIT = 5;
+
     const TYPE_PRODUCTION = 6;
+
+    const TYPE_DRIVER_OTHER_TASK = 7;
 
     const LIST = [
         self::TYPE_SERVICE_TASK => [
@@ -26,7 +33,7 @@ class Milestone extends Model
             'Service From Cop Sign',
             'Part Replacement',
             'Payment Collection',
-            'Check Out'
+            'Check Out',
         ],
         self::TYPE_DRIVER_TASK => [
             'Pick Up at Warehouse',
@@ -46,7 +53,7 @@ class Milestone extends Model
             'Feedback from Customer',
             'Customer Sign',
             'Payment Collection',
-            'Check Out'
+            'Check Out',
         ],
         self::TYPE_INSTALLER_TASK => [
             'Check In',
@@ -61,20 +68,23 @@ class Milestone extends Model
             'Measurement Remark (Attach Photo)',
             'Survey Feedback',
             'Check Out',
-        ]
+        ],
     ];
 
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function tasks() {
+    public function tasks()
+    {
         return $this->belongsToMany(Task::class, 'task_milestone', 'milestone_id', 'task_id')
             ->withPivot('address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
             ->using(TaskMilestone::class);
