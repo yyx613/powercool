@@ -12,23 +12,26 @@ class UOMController extends Controller
 {
     protected $uom;
 
-    public function __construct() {
-        $this->uom = new UOM();
+    public function __construct()
+    {
+        $this->uom = new UOM;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('uom.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->uom;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -48,15 +51,16 @@ class UOMController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'company_group' => $record->company_group,
                 'status' => $record->is_active,
             ];
         }
@@ -64,11 +68,13 @@ class UOMController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('uom.form');
     }
 
-    public function store(Request $req) {
+    public function store(Request $req)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
@@ -94,6 +100,7 @@ class UOMController extends Controller
             if ($req->create_again == true) {
                 return redirect(route('uom.create'))->with('success', 'UOM created');
             }
+
             return redirect(route('uom.index'))->with('success', 'UOM created');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -103,13 +110,15 @@ class UOMController extends Controller
         }
     }
 
-    public function edit(UOM $uom) {
+    public function edit(UOM $uom)
+    {
         return view('uom.form', [
-            'uom' => $uom
+            'uom' => $uom,
         ]);
     }
 
-    public function update(Request $req, UOM $uom) {
+    public function update(Request $req, UOM $uom)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',

@@ -12,6 +12,7 @@ use App\Models\Dealer;
 use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
 use App\Models\InventoryCategory;
+use App\Models\InventoryType;
 use App\Models\Invoice;
 use App\Models\MaterialUse;
 use App\Models\Milestone;
@@ -351,18 +352,16 @@ class ViewServiceProvider extends ServiceProvider
             $classificationCodes = ClassificationCode::withoutGlobalScope(BranchScope::class)->get();
 
             if (str_contains(Route::currentRouteName(), 'raw_material.')) {
-                $inventory_types = [
-                    Product::ITEM_TYPE_RAW_MATERIAL_MSP => 'MSP',
-                    Product::ITEM_TYPE_RAW_MATERIAL_HSP => 'HSP',
-                ];
+                $its = InventoryType::where('is_active', true)->where('type', InventoryType::TYPE_RAW_MATERIAL)->get();
             } else {
-                $inventory_types = [
-                    Product::ITEM_TYPE_PRODUCT_MFG => 'MFG',
-                    Product::ITEM_TYPE_PRODUCT_HFG => 'HFG',
-                ];
+                $its = InventoryType::where('is_active', true)->where('type', InventoryType::TYPE_PRODUCT)->get();
+
                 $hi_ten_products = Product::where('type', Product::TYPE_PRODUCT)->where('company_group', 2)->latest()->get();
                 $view->with('hi_ten_products', $hi_ten_products);
             }
+            $inventory_types = $its->mapWithKeys(function ($item) {
+                return [$item->id => $item->name];
+            })->all();
 
             $view->with([
                 'inv_cats' => $inv_cats,
@@ -570,7 +569,7 @@ class ViewServiceProvider extends ServiceProvider
                 'types' => $types,
             ]);
         });
-        View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form', 'uom.form'], function (ViewView $view) {
+        View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form', 'uom.form', 'inventory_category.form', 'inventory_type.form'], function (ViewView $view) {
             $company_group = [
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',
@@ -589,6 +588,16 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'business_types' => $business_types,
+            ]);
+        });
+        View::composer(['inventory_type.form'], function (ViewView $view) {
+            $inventory_types = [
+                InventoryType::TYPE_PRODUCT => 'Product',
+                InventoryType::TYPE_RAW_MATERIAL => 'Raw Material / Sparepart',
+            ];
+
+            $view->with([
+                'inventory_types' => $inventory_types,
             ]);
         });
     }
