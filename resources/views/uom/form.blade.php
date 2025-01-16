@@ -15,6 +15,16 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="company_group" id="company_group" :hasError="$errors->has('company_group')">
+                        <option value="">{{ __('Select a company group') }}</option>
+                        @foreach ($company_group as $key => $val)
+                            <option value="{{ $key }}" @selected(old('company_group', isset($uom) ? $uom->company_group : null) === $key)>{{ $val }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('company_group')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
@@ -22,7 +32,7 @@
                         <option value="0" @selected(old('status', isset($uom) ? $uom->is_active : null) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
-                </div>    
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
                 @if (!isset($uom))

@@ -114,6 +114,11 @@
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>
             </tr>
+            <tr>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
+            </tr>
             @php
                 $total += ($prod->qty * $prod->unit_price) - $prod->discountAmount();
             @endphp
@@ -154,7 +159,7 @@
                 2. Please remit your payment to : <span style="font-weight: 700;">PUBLIC BANK Account No.: 3983 23 3530 CIMB Account No.: 8603 16 3872</span><br>
                 3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
                 4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase<br>
-                5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be entertained. 
+                5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be entertained.
             </td>
         </tr>
         <tr>
@@ -163,6 +168,6 @@
             <td style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">Account Department</td>
         </tr>
     </table>
-    
+
 </body>
 </html>

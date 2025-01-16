@@ -45,6 +45,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('By Pass Conversion') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -72,11 +73,12 @@
             order: [],
             columns: [
                 { data: 'name' },
+                { data: 'by_pass_conversion' },
                 { data: 'status' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
@@ -84,8 +86,16 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "10%",
                     "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data == 0 ? 'No' : 'Yes'
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -96,9 +106,9 @@
                         }
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets": 2,
+                    "targets": 3,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -113,7 +123,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('credit_term.get_data') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },

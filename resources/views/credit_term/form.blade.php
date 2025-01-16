@@ -15,6 +15,15 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="by_pass_conversion" class="mb-1">{{ __('By Pass Conversion') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="by_pass_conversion" id="by_pass_conversion" :hasError="$errors->has('by_pass_conversion')">
+                        <option value="">{{ __('Select a Active/Inactive') }}</option>
+                        <option value="1" @selected(old('status', isset($credit) ? $credit->by_pass_conversion : null) == 1)>{{ __('Yes') }}</option>
+                        <option value="0" @selected(old('status', isset($credit) ? $credit->by_pass_conversion : null) === 0)>{{ __('No') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('by_pass_conversion')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
@@ -22,7 +31,7 @@
                         <option value="0" @selected(old('status', isset($credit) ? $credit->is_active : null) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
-                </div>    
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
                 @if (!isset($credit))

@@ -104,6 +104,11 @@
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>
             </tr>
+            <tr>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
+            </tr>
             @php
                 $total += ($prod->qty * $prod->unit_price) - $prod->discountAmount();
             @endphp
@@ -164,6 +169,6 @@
             <td></td>
         </tr>
     </table>
-    
+
 </body>
 </html>

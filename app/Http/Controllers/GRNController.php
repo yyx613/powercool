@@ -131,8 +131,8 @@ class GRNController extends Controller
                 $sku = $req->sku;
 
                 $ids = $this->grn::where('sku', $sku)->pluck('id')->toArray();
-                Branch::where('object_type', GRN::class)->whereIn('object_id', $ids)->delete();
                 $this->grn::where('sku', $sku)->delete();
+                Branch::where('object_type', GRN::class)->whereIn('object_id', $ids)->delete();
             }
 
             for ($i = 0; $i < count($req->product_id); $i++) {

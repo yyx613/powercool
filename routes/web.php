@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
@@ -59,6 +60,12 @@ Route::controller(CustomerController::class)->name('customer.')->group(function 
     Route::get('/create-customer-link', 'createLink')->name('create_link');
 });
 
+Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function () {
+    Route::prefix('driver')->name('driver.')->group(function () {
+        Route::get('/redirect-to-whatsapp/{task}', 'redirectToWhatsapp')->name('redirect_to_whatsapp');
+    });
+});
+
 // Change language
 Route::get('/change-language/{lang}', function ($locale) {
     Session::put('selected_lang', $locale);
@@ -78,6 +85,13 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/read/{id}', 'read')->name('read');
+    });
+    // Approval
+    Route::controller(ApprovalController::class)->prefix('/approval')->name('approval.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/approve/{approval}', 'approve')->name('approve');
+        Route::get('/reject/{approval}', 'reject')->name('reject');
     });
     // Dashboard
     Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->group(function () {
@@ -100,6 +114,14 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in');
         Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
         Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
+    });
+    Route::controller(InventoryController::class)->prefix('inventory-type')->name('inventory_type.')->group(function () { // Inventory Category
+        Route::get('/', 'indexType')->name('index');
+        Route::get('/get-data', 'getDataType')->name('get_data');
+        Route::get('/create', 'createType')->name('create');
+        Route::get('/edit/{type}', 'editType')->name('edit');
+        Route::post('/upsert', 'upsertType')->name('upsert');
+        Route::get('/delete/{type}', 'deleteType')->name('delete');
     });
     // Warranty
     Route::controller(WarrantyController::class)->prefix('warranty')->name('warranty.')->middleware(['can:warranty.view'])->group(function () {

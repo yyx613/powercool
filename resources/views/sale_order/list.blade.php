@@ -79,6 +79,9 @@
 
 @push('scripts')
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const PROVIDED_SKU = urlParams.get('sku')
+
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -250,7 +253,11 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('sale_order.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }`
+                    if (PROVIDED_SKU != null) {
+                        url = `${url}?page=${ info.page + 1 }&sku=${PROVIDED_SKU}`
+                    } else {
+                        url = `${url}?page=${ info.page + 1 }`
+                    }
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },

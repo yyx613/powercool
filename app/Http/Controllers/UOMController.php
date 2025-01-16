@@ -60,7 +60,7 @@ class UOMController extends Controller
                 'status' => $record->is_active,
             ];
         }
-                
+
         return response()->json($data);
     }
 
@@ -72,6 +72,7 @@ class UOMController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'company_group' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -83,6 +84,7 @@ class UOMController extends Controller
 
             $dt = $this->uom::create([
                 'name' => $req->name,
+                'company_group' => $req->company_group,
                 'is_active' => $req->status,
             ]);
             (new Branch)->assign(UOM::class, $dt->id);
@@ -111,6 +113,7 @@ class UOMController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'company_group' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -122,6 +125,7 @@ class UOMController extends Controller
 
             $uom->update([
                 'name' => $req->name,
+                'company_group' => $req->company_group,
                 'is_active' => $req->status,
             ]);
 

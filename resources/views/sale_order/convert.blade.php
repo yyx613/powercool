@@ -55,19 +55,6 @@
             <!-- Step 1 -->
             @if ($step == 1)
                 <div>
-                    @can('sale.sale_order.by_pass_conversion')
-                        <div class="pb-6 mb-6 border-b">
-                            <form action="{{ route('sale_order.to_delivery_order') }}" method="POST">
-                                @csrf
-                                <x-app.input.label id="by_pass_conversion" class="mb-1">{{ __('By Pass Conversion') }} <span class="text-xs mt-1 text-slate-500">({{ __('Enter your login password') }})</span></x-app.input.label>
-                                <div class="flex items-center gap-4">
-                                    <x-app.input.input name="by_pass_conversion" id="by_pass_conversion" :hasError="$errors->has('by_pass_conversion')" type="password" class="flex-1" />
-                                    <x-app.button.submit class="shadow-none h-full">{{ __('Enable') }}</x-app.button.submit>
-                                </div>
-                                <x-input-error :messages="$errors->get('by_pass_conversion')" class="mt-1" />
-                            </form>
-                        </div>
-                    @endcan
                     <div class="mb-2">
                         <h5 class="text-md font-semibold">Select a customer to proceed</h5>
                     </div>
@@ -78,10 +65,7 @@
                         <ul>
                             @foreach ($customers as $cus)
                                 <li class="mb-4 rounded-md cursor-pointer transition duration-300 border border-slate-100 hover:border-black customer-selections" data-id="{{ $cus->id }}">
-                                    @php
-                                        $url = $by_pass == null ? route('sale_order.to_delivery_order', ['cus' => $cus->id]) : route('sale_order.to_delivery_order', ['by_pass' => $by_pass, 'cus' => $cus->id]);
-                                    @endphp
-                                    <a href="{{ $url  }}" class="text-sm flex items-center justify-between p-2 font-semibold">
+                                    <a href="{{ route('sale_order.to_delivery_order', ['cus' => $cus->id]) }}" class="text-sm flex items-center justify-between p-2 font-semibold">
                                         {{ $cus->name }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm22,0A10,10,0,1,1,12,2,10.011,10.011,0,0,1,22,12Z"/><path d="M16,12a2.993,2.993,0,0,1-.752,1.987c-.291.327-.574.637-.777.84L11.647,17.7a1,1,0,1,1-1.426-1.4L13.05,13.42c.187-.188.441-.468.7-.759a1,1,0,0,0,0-1.323c-.258-.29-.512-.57-.693-.752L10.221,7.7a1,1,0,1,1,1.426-1.4l2.829,2.879c.2.2.48.507.769.833A2.99,2.99,0,0,1,16,12Z"/></svg>
                                     </a>
@@ -105,11 +89,8 @@
                     @if (count($salespersons) > 0)
                         <ul>
                             @foreach ($salespersons as $sp)
-                                @php
-                                    $url = $by_pass == null ? route('sale_order.to_delivery_order', ['sp' => $sp->id]) : route('sale_order.to_delivery_order', ['by_pass' => $by_pass, 'sp' => $sp->id]);
-                                @endphp
                                 <li class="mb-4 rounded-md cursor-pointer transition duration-300 border border-slate-100 hover:border-black salesperson-selections" data-id="{{ $sp->id }}">
-                                    <a href="{{ $url }}" class="text-sm flex items-center justify-between p-2 font-semibold">
+                                    <a href="{{ route('sale_order.to_delivery_order', ['sp' => $sp->id]) }}" class="text-sm flex items-center justify-between p-2 font-semibold">
                                         {{ $sp->name }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm22,0A10,10,0,1,1,12,2,10.011,10.011,0,0,1,22,12Z"/><path d="M16,12a2.993,2.993,0,0,1-.752,1.987c-.291.327-.574.637-.777.84L11.647,17.7a1,1,0,1,1-1.426-1.4L13.05,13.42c.187-.188.441-.468.7-.759a1,1,0,0,0,0-1.323c-.258-.29-.512-.57-.693-.752L10.221,7.7a1,1,0,1,1,1.426-1.4l2.829,2.879c.2.2.48.507.769.833A2.99,2.99,0,0,1,16,12Z"/></svg>
                                     </a>
@@ -130,11 +111,8 @@
                     @if (count($terms) > 0)
                         <ul>
                             @foreach ($terms as $term)
-                                @php
-                                    $url = $by_pass == null ? route('sale_order.to_delivery_order', ['term' => $term->id]) : route('sale_order.to_delivery_order', ['by_pass' => $by_pass, 'term' => $term->id]);
-                                @endphp
                                 <li class="mb-4 rounded-md cursor-pointer transition duration-300 border border-slate-100 hover:border-black">
-                                    <a href="{{ $url }}" class="text-sm flex items-center justify-between p-2 font-semibold">
+                                    <a href="{{ route('sale_order.to_delivery_order', ['term' => $term->id]) }}" class="text-sm flex items-center justify-between p-2 font-semibold">
                                         {{ $term->name }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm22,0A10,10,0,1,1,12,2,10.011,10.011,0,0,1,22,12Z"/><path d="M16,12a2.993,2.993,0,0,1-.752,1.987c-.291.327-.574.637-.777.84L11.647,17.7a1,1,0,1,1-1.426-1.4L13.05,13.42c.187-.188.441-.468.7-.759a1,1,0,0,0,0-1.323c-.258-.29-.512-.57-.693-.752L10.221,7.7a1,1,0,1,1,1.426-1.4l2.829,2.879c.2.2.48.507.769.833A2.99,2.99,0,0,1,16,12Z"/></svg>
                                     </a>

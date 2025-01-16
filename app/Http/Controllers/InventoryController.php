@@ -91,12 +91,22 @@ class InventoryController extends Controller
         $records = $this->prod;
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        if ($req->has('keyword') && $req->keyword != '') {
+            $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('model_name', 'like', '%'.$keyword.'%');
             });
+        }
+        // Category
+        if ($req->has('category') && $req->category != null) {
+            if ($req->category == 'product') {
+                $records = $records->where('type', Product::TYPE_PRODUCT);
+            } elseif ($req->category == 'raw_material') {
+                $records = $records->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+            } elseif ($req->category == 'sparepart') {
+                $records = $records->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+            }
         }
         // Order
         if ($req->has('order')) {

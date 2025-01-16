@@ -6,26 +6,28 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Log;
 
 class SaleProduct extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
     /**
      * remaining qty to convert to DO
      */
-    public function remainingQty() {
+    public function remainingQty()
+    {
         $children_count = count($this->children);
 
         $dops = DeliveryOrderProduct::where('sale_order_id', $this->sale->id)
@@ -33,51 +35,61 @@ class SaleProduct extends Model
             ->get();
 
         $do_children_count = 0;
-        for ($i=0; $i < count($dops); $i++) { 
+        for ($i = 0; $i < count($dops); $i++) {
             $do_children_count += count($dops[$i]->children);
         }
 
         return $children_count - $do_children_count;
     }
 
-    public function discountAmount() {
+    public function discountAmount()
+    {
+        $amount = 0;
+
         if ($this->promotion_id != null) {
             $promo = Promotion::where('id', $this->promotion_id)->first();
 
             if ($promo->type == 'val') {
-                return $promo->amount;
-            } else if ($promo->type == 'perc') {
-                return ($this->qty * $this->amount) * $promo->amount / 100;
+                $amount += $promo->amount;
+            } elseif ($promo->type == 'perc') {
+                $amount += ($this->qty * $this->unit_price) * $promo->amount / 100;
             }
         }
 
-        return null;
+        $amount += ($this->discount ?? 0);
+
+        return $amount;
     }
 
-    public function attachedToDO(): bool {
+    public function attachedToDO(): bool
+    {
         return DeliveryOrderProduct::where('sale_product_id', $this->id)->exists();
     }
 
-    public function sale() {
+    public function sale()
+    {
         return $this->belongsTo(Sale::class);
     }
 
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
-    public function children() {
+    public function children()
+    {
         return $this->hasMany(SaleProductChild::class);
     }
 
-    public function warrantyPeriod() {
+    public function warrantyPeriod()
+    {
         return $this->belongsTo(WarrantyPeriod::class);
     }
 
     public function billings()
     {
         return $this->belongsToMany(Billing::class, 'billing_sale_product', 'sale_product_id', 'billing_id')
-            ->withPivot('custom_unit_price') 
+            ->withPivot('custom_unit_price')
             ->withTimestamps();
     }
 }

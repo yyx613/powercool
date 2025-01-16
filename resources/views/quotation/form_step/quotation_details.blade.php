@@ -80,7 +80,14 @@
 
 @push('scripts')
     <script>
+        INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
+
+        $(document).ready(function() {
+            $('select[name="customer"]').trigger('change')
+
+            INIT_EDIT = false
+        })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
         $('input[name="open_until"]').on('apply.daterangepicker', function(ev, picker) {

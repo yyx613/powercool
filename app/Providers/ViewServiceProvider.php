@@ -62,6 +62,7 @@ class ViewServiceProvider extends ServiceProvider
             $permissions = Permission::get();
             // Format permissions into group
             $permissions_group = [
+                'approval' => [],
                 'inventory.summary' => [],
                 'inventory.category' => [],
                 'inventory.product' => [],
@@ -87,7 +88,9 @@ class ViewServiceProvider extends ServiceProvider
             ];
 
             for ($i = 0; $i < count($permissions); $i++) {
-                if (str_contains($permissions[$i], 'inventory.summary')) {
+                if (str_contains($permissions[$i], 'approval')) {
+                    array_push($permissions_group['approval'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'inventory.summary')) {
                     array_push($permissions_group['inventory.summary'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.category')) {
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
@@ -567,7 +570,7 @@ class ViewServiceProvider extends ServiceProvider
                 'types' => $types,
             ]);
         });
-        View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form'], function (ViewView $view) {
+        View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form', 'uom.form'], function (ViewView $view) {
             $company_group = [
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',

@@ -29,6 +29,11 @@
             </x-app.input.select>
             <x-app.message.error id="selling_price_err"/>
         </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="override_selling_price" class="mb-1">{{ __('Override Selling Price') }}</x-app.input.label>
+            <x-app.input.input name="override_selling_price" id="override_selling_price" :hasError="$errors->has('override_selling_price')" class="decimal-input" />
+            <x-app.message.error id="override_selling_price_err"/>
+        </div>
         <input type="hidden" name="unit_price[]" value="">
         <div class="flex flex-col">
             <x-app.input.label id="amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
@@ -53,17 +58,29 @@
             <x-app.message.error id="promotion_err"/>
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="discount" class="mb-1">{{ __('Discount') }} <span class="text-xs text-red-400 font-semibold mt-1 hidden" id="discount-hint"></span></x-app.input.label>
+            <x-app.input.input name="discount" id="discount" :hasError="$errors->has('discount')" class="decimal-input" />
+            <x-app.message.error id="discount_err"/>
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="warranty_period" class="mb-1">{{ __('Warranty Period') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="warranty_period[]">
                 <option value=""></option>
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err"/>
         </div>
-        <div class="flex flex-col col-span-2 md:col-span-4">
-            <x-app.input.label id="product_serial_no" class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
-            <x-app.input.select name="product_serial_no[]" multiple class="h-36">
-            </x-app.input.select>
-            <x-app.message.error id="product_serial_no_err"/>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
+            <div class="flex flex-col flex-1 col-span-2">
+                <x-app.input.label id="product_serial_no" class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
+                <x-app.input.select name="product_serial_no[]" multiple class="h-36 md:h-full">
+                </x-app.input.select>
+                <x-app.message.error id="product_serial_no_err"/>
+            </div>
+            <div class="flex flex-col flex-1 col-span-2">
+                <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" />
+                <x-app.message.error id="remark_err"/>
+            </div>
         </div>
     </div>
     <div id="items-container"></div>
@@ -89,6 +106,11 @@
                     <td>{{ __('Promo') }}</td>
                     <td class="w-4 text-center">:</td>
                     <td id="promo-amount">0.00</td>
+                </tr>
+                <tr>
+                    <td>{{ __('Discount') }}</td>
+                    <td class="w-4 text-center">:</td>
+                    <td id="discount-amount">0.00</td>
                 </tr>
                 <tr>
                     <td>{{ __('Tax') }}</td>
@@ -130,6 +152,9 @@
                 $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger('change')
                 $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
                 $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
+                $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
+                $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
+                $(`.items[data-id="${i+1}"] input[name="override_selling_price"]`).val(sp.override_selling_price)
                 setTimeout(() => {
                     $(`.items[data-id="${i+1}"] select[name="promotion[]"]`).val(sp.promotion_id).trigger('change')
                 }, 1);
@@ -202,10 +227,6 @@
         let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
         let val = $(this).val()
 
-        console.debug(idx)
-        console.debug(productId)
-        console.debug(val)
-
         for (let i = 0; i < PRODUCTS.length; i++) {
             if (PRODUCTS[i].id == productId) {
                 for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
@@ -218,7 +239,7 @@
             }
         }
     })
-    $('body').on('keyup', 'input[name="qty"]', function() {
+    $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]', function() {
         let idx = $(this).parent().parent().parent().data('id')
 
         calItemTotal(idx)
@@ -285,56 +306,13 @@
         let qty = $(`.items[data-id="${idx}"] input[name="qty"]`).val()
         let sellingPrice = $(`.items[data-id="${idx}"] select[name="selling_price[]"]`).val()
         let promo = $(`.items[data-id="${idx}"] select[name="promotion[]"]`).val()
+        let discount = $(`.items[data-id="${idx}"] input[name="discount"]`).val()
+        let overrideSellingPrice = $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val()
 
         let unitPrice = 0
-        for (let i = 0; i < PRODUCTS.length; i++) {
-            if (PRODUCTS[i].id == productId) {
-                for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                    if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                        unitPrice = PRODUCTS[i].selling_prices[j].price
-                        break
-                    }
-                }
-                break;
-            }
-        }
-        let subtotal = (qty * unitPrice)
-
-        // Apply Promotion
-        let discountAmount = 0
-        if (promo != '') {
-            for (let i = 0; i < PROMOTIONS.length; i++) {
-                const element = PROMOTIONS[i];
-
-                if (element.id == promo) {
-                    if (element.type == 'val') {
-                        discountAmount = element.amount
-                    } else if (element.type == 'perc') {
-                        discountAmount = subtotal * element.amount / 100
-                    }
-                    $(`.items[data-id="${idx}"] #promo-hint`).text(`( -${priceFormat(discountAmount)} )`)
-                    $(`.items[data-id="${idx}"] #promo-hint`).removeClass('hidden')
-                    break
-                }
-            }
+        if (overrideSellingPrice != '') {
+            unitPrice = overrideSellingPrice
         } else {
-            $(`.items[data-id="${idx}"] #promo-hint`).addClass('hidden')
-        }
-
-        $(`.items[data-id="${idx}"] input[name="amount"]`).val(priceFormat(subtotal - discountAmount))
-
-        calSummary()
-    }
-    function calSummary() {
-        let overallSubtotal = 0
-        let overallDiscountAmount = 0
-
-        $('.items').each(function(i, obj) {
-            let productId = $(this).find('select[name="product_id[]"]').val()
-            let qty = $(this).find('input[name="qty"]').val()
-            let promo = $(this).find('select[name="promotion[]"]').val()
-            let sellingPrice = $(this).find(`select[name="selling_price[]"]`).val()
-            let unitPrice = 0
             for (let i = 0; i < PRODUCTS.length; i++) {
                 if (PRODUCTS[i].id == productId) {
                     for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
@@ -346,32 +324,105 @@
                     break;
                 }
             }
+        }
+        let subtotal = (qty * unitPrice)
+
+        // Apply Promotion
+        let promoAmount = 0
+        if (promo != '') {
+            for (let i = 0; i < PROMOTIONS.length; i++) {
+                const element = PROMOTIONS[i];
+
+                if (element.id == promo) {
+                    if (element.type == 'val') {
+                        promoAmount = element.amount
+                    } else if (element.type == 'perc') {
+                        promoAmount = subtotal * element.amount / 100
+                    }
+                    $(`.items[data-id="${idx}"] #promo-hint`).text(`( -${priceFormat(promoAmount)} )`)
+                    $(`.items[data-id="${idx}"] #promo-hint`).removeClass('hidden')
+                    break
+                }
+            }
+        } else {
+            $(`.items[data-id="${idx}"] #promo-hint`).addClass('hidden')
+        }
+        // Apply Discount
+        let discountAmount = 0
+        if (discount != '' && discount != null) {
+            discountAmount = discount
+            $(`.items[data-id="${idx}"] #discount-hint`).text(`( -${priceFormat(discountAmount)} )`)
+            $(`.items[data-id="${idx}"] #discount-hint`).removeClass('hidden')
+        } else {
+            $(`.items[data-id="${idx}"] #discount-hint`).addClass('hidden')
+        }
+
+        $(`.items[data-id="${idx}"] input[name="amount"]`).val(priceFormat(subtotal - promoAmount - discountAmount))
+
+        calSummary()
+    }
+    function calSummary() {
+        let overallSubtotal = 0
+        let overallPromoAmount = 0
+        let overallDiscountAmount = 0
+
+        $('.items').each(function(i, obj) {
+            let productId = $(this).find('select[name="product_id[]"]').val()
+            let qty = $(this).find('input[name="qty"]').val()
+            let promo = $(this).find('select[name="promotion[]"]').val()
+            let discount = $(this).find('input[name="discount"]').val()
+            let sellingPrice = $(this).find(`select[name="selling_price[]"]`).val()
+            let overrideSellingPrice = $(this).find(`input[name="override_selling_price"]`).val()
+
+            let unitPrice = 0
+            if (overrideSellingPrice != '') {
+                unitPrice = overrideSellingPrice
+            } else {
+                for (let i = 0; i < PRODUCTS.length; i++) {
+                    if (PRODUCTS[i].id == productId) {
+                        for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
+                            if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
+                                unitPrice = PRODUCTS[i].selling_prices[j].price
+                                break
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
             let subtotal = (qty * unitPrice)
 
             // Apply Promotion
-            let discountAmount = 0
+            let promoAmount = 0
             if (promo != '') {
                 for (let i = 0; i < PROMOTIONS.length; i++) {
                     const element = PROMOTIONS[i];
 
                     if (element.id == promo) {
                         if (element.type == 'val') {
-                            discountAmount = element.amount
+                            promoAmount = element.amount
                         } else if (element.type == 'perc') {
-                            discountAmount = subtotal * element.amount / 100
+                            promoAmount = subtotal * element.amount / 100
                         }
                         break
                     }
                 }
             }
+            // Apply Discount
+            let discountAmount = 0
+            if (discount != '' && discount != null) {
+                discountAmount = discount
+            }
 
             overallSubtotal += (subtotal * 1)
+            overallPromoAmount += (promoAmount * 1)
             overallDiscountAmount += (discountAmount * 1)
         })
 
         $('#subtotal').text(priceFormat(overallSubtotal))
-        $('#promo-amount').text(priceFormat(overallDiscountAmount))
-        $('#total').text(priceFormat(overallSubtotal - overallDiscountAmount))
+        $('#promo-amount').text(priceFormat(overallPromoAmount))
+        $('#discount-amount').text(priceFormat(overallDiscountAmount))
+        $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount))
     }
     function buildWarrantyPeriodSelect2(item_id) {
         $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).select2({

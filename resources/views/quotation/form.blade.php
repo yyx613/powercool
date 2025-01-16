@@ -48,8 +48,10 @@
         let sellingPrice = []
         let unitPrice = []
         let promo = []
+        let discount = []
         let prodSerialNo = []
         let warrantyPeriod = []
+        let remark = []
         $('#product-details-container .items').each(function(i, obj) {
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
@@ -59,6 +61,8 @@
             sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
             unitPrice.push($(this).find('input[name="unit_price[]"]').val())
             promo.push($(this).find('select[name="promotion[]"]').val())
+            discount.push($(this).find('input[name="discount"]').val())
+            remark.push($(this).find('textarea[name="remark"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
             } else {
@@ -86,6 +90,7 @@
                 'cc': $('input[name="cc"]').val(),
                 'status': $('select[name="status"]').val(),
                 'report_type': $('select[name="report_type"]').val(),
+                'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $('select[name="billing_address"]').val(),
 
                 'product_order_id': prodOrderId,
                 'product_id': prodId,
@@ -97,6 +102,8 @@
                 'promotion_id': promo,
                 'product_serial_no': prodSerialNo,
                 'warranty_period': warrantyPeriod,
+                'discount': discount,
+                'product_remark': remark,
 
                 'remark': $('textarea[name="remark"]').val(),
             },

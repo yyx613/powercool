@@ -7,12 +7,16 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ScopedBy([BranchScope::class])]
-class ActivityLog extends Model
+class InventoryType extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    const TYPE_PRODUCT = 1;
+
+    const TYPE_RAW_MATERIAL = 2;
 
     protected $guarded = [];
 
@@ -29,22 +33,5 @@ class ActivityLog extends Model
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');
-    }
-
-    public function doneBy()
-    {
-        return $this->belongsTo(User::class, 'done_by');
-    }
-
-    public function store($class, $class_id, $desc, $data = null, $done_by = null, $branch_loc = null)
-    {
-        $data = self::create([
-            'object_type' => $class,
-            'object_id' => $class_id,
-            'desc' => $desc,
-            'data' => $data,
-            'done_by' => $done_by ?? Auth::user()->id,
-        ]);
-        (new Branch)->assign(ActivityLog::class, $data->id, $branch_loc);
     }
 }
