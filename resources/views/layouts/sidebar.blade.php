@@ -25,6 +25,15 @@
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Notification</span>
                     </a>
                 </li>
+                <!-- Approval -->
+                <li>
+                    <a href="{{ route('approval.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'approval.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="m8,11h-3c-.552,0-1-.448-1-1s.448-1,1-1h3c.552,0,1,.448,1,1s-.448,1-1,1Zm15.759,12.651c-.198.23-.478.349-.76.349-.23,0-.462-.079-.65-.241l-2.509-2.151c-1.041.868-2.379,1.391-3.84,1.391-3.314,0-6-2.686-6-6s2.686-6,6-6,6,2.686,6,6c0,1.13-.318,2.184-.862,3.087l2.513,2.154c.419.359.468.991.108,1.41Zm-6.78-4.325l2.703-2.614c.398-.383.411-1.016.029-1.414-.383-.399-1.017-.41-1.414-.029l-2.713,2.624c-.143.141-.379.144-.522.002l-1.354-1.331c-.396-.388-1.028-.381-1.414.014-.387.395-.381,1.027.014,1.414l1.354,1.332c.46.449,1.062.674,1.663.674s1.201-.225,1.653-.671Zm-5.979,3.674c0,.552-.448,1-1,1h-5c-2.757,0-5-2.243-5-5V5C0,2.243,2.243,0,5,0h4.515c1.87,0,3.627.728,4.95,2.05l3.485,3.485c.888.888,1.521,2,1.833,3.217.077.299.011.617-.179.861s-.481.387-.79.387h-5.813c-1.654,0-3-1.346-3-3V2.023c-.16-.015-.322-.023-.485-.023h-4.515c-1.654,0-3,1.346-3,3v14c0,1.654,1.346,3,3,3h5c.552,0,1,.448,1,1Zm1-16c0,.551.449,1,1,1h4.338c-.219-.382-.489-.736-.803-1.05l-3.485-3.485c-.318-.318-.671-.587-1.05-.806v4.341Zm-5,6h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Zm0,4h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Approval') }}</span>
+                    </a>
+                </li>
                 <!-- Dashboard -->
                 <li>
                     <a href="{{ route('dashboard.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dashboard.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -437,6 +446,11 @@
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('inventory_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
+                                    </a>
+                                </li>
                                 @can('inventory.category.view')
                                 <li>
                                     <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -525,6 +539,18 @@
                             <!-- Tooltip -->
                             <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
                                 <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Notification') }}</span>
+                            </div>
+                        </a>
+                    </li>
+                    <!-- Approval -->
+                    <li>
+                        <a href="{{ route('approval.index') }}" class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                <path d="m8,11h-3c-.552,0-1-.448-1-1s.448-1,1-1h3c.552,0,1,.448,1,1s-.448,1-1,1Zm15.759,12.651c-.198.23-.478.349-.76.349-.23,0-.462-.079-.65-.241l-2.509-2.151c-1.041.868-2.379,1.391-3.84,1.391-3.314,0-6-2.686-6-6s2.686-6,6-6,6,2.686,6,6c0,1.13-.318,2.184-.862,3.087l2.513,2.154c.419.359.468.991.108,1.41Zm-6.78-4.325l2.703-2.614c.398-.383.411-1.016.029-1.414-.383-.399-1.017-.41-1.414-.029l-2.713,2.624c-.143.141-.379.144-.522.002l-1.354-1.331c-.396-.388-1.028-.381-1.414.014-.387.395-.381,1.027.014,1.414l1.354,1.332c.46.449,1.062.674,1.663.674s1.201-.225,1.653-.671Zm-5.979,3.674c0,.552-.448,1-1,1h-5c-2.757,0-5-2.243-5-5V5C0,2.243,2.243,0,5,0h4.515c1.87,0,3.627.728,4.95,2.05l3.485,3.485c.888.888,1.521,2,1.833,3.217.077.299.011.617-.179.861s-.481.387-.79.387h-5.813c-1.654,0-3-1.346-3-3V2.023c-.16-.015-.322-.023-.485-.023h-4.515c-1.654,0-3,1.346-3,3v14c0,1.654,1.346,3,3,3h5c.552,0,1,.448,1,1Zm1-16c0,.551.449,1,1,1h4.338c-.219-.382-.489-.736-.803-1.05l-3.485-3.485c-.318-.318-.671-.587-1.05-.806v4.341Zm-5,6h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Zm0,4h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Z"/>
+                            </svg>
+                            <!-- Tooltip -->
+                            <div class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Approval') }}</span>
                             </div>
                         </a>
                     </li>
@@ -942,6 +968,11 @@
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('inventory_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
+                    </a>
+                </li>
                 @can('inventory.category.view')
                 <li>
                     <a href="{{ route('inventory_category.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_category.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1014,6 +1045,15 @@
                             </span>
                         </div>
                         <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">Notification</span>
+                    </a>
+                </li>
+                <!-- Approval-->
+                <li>
+                    <a href="{{ route('approval.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'approval.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                            <path d="m8,11h-3c-.552,0-1-.448-1-1s.448-1,1-1h3c.552,0,1,.448,1,1s-.448,1-1,1Zm15.759,12.651c-.198.23-.478.349-.76.349-.23,0-.462-.079-.65-.241l-2.509-2.151c-1.041.868-2.379,1.391-3.84,1.391-3.314,0-6-2.686-6-6s2.686-6,6-6,6,2.686,6,6c0,1.13-.318,2.184-.862,3.087l2.513,2.154c.419.359.468.991.108,1.41Zm-6.78-4.325l2.703-2.614c.398-.383.411-1.016.029-1.414-.383-.399-1.017-.41-1.414-.029l-2.713,2.624c-.143.141-.379.144-.522.002l-1.354-1.331c-.396-.388-1.028-.381-1.414.014-.387.395-.381,1.027.014,1.414l1.354,1.332c.46.449,1.062.674,1.663.674s1.201-.225,1.653-.671Zm-5.979,3.674c0,.552-.448,1-1,1h-5c-2.757,0-5-2.243-5-5V5C0,2.243,2.243,0,5,0h4.515c1.87,0,3.627.728,4.95,2.05l3.485,3.485c.888.888,1.521,2,1.833,3.217.077.299.011.617-.179.861s-.481.387-.79.387h-5.813c-1.654,0-3-1.346-3-3V2.023c-.16-.015-.322-.023-.485-.023h-4.515c-1.654,0-3,1.346-3,3v14c0,1.654,1.346,3,3,3h5c.552,0,1,.448,1,1Zm1-16c0,.551.449,1,1,1h4.338c-.219-.382-.489-.736-.803-1.05l-3.485-3.485c-.318-.318-.671-.587-1.05-.806v4.341Zm-5,6h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Zm0,4h-2c-.552,0-1,.448-1,1s.448,1,1,1h2c.552,0,1-.448,1-1s-.448-1-1-1Z"/>
+                        </svg>
+                        <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Approval') }}</span>
                     </a>
                 </li>
                 <!-- Dashboard -->
@@ -1426,6 +1466,11 @@
                                 <li>
                                     <a href="{{ route('material_use.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('inventory_type.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
                                     </a>
                                 </li>
                                 @can('inventory.category.view')

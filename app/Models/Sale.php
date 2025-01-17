@@ -71,6 +71,11 @@ class Sale extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
+    public function approval()
+    {
+        return $this->morphOne(Approval::class, 'object');
+    }
+
     public function getReferenceAttribute($val)
     {
         if ($this->type == self::TYPE_QUO) {

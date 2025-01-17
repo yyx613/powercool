@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\InventoryCategory;
+use App\Models\InventoryType;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
@@ -24,6 +25,8 @@ class InventoryController extends Controller
 
     protected $invCat;
 
+    protected $invType;
+
     protected $production;
 
     public function __construct()
@@ -31,6 +34,7 @@ class InventoryController extends Controller
         $this->prod = new Product;
         $this->prodChild = new ProductChild;
         $this->invCat = new InventoryCategory;
+        $this->invType = new InventoryType;
         $this->production = new Production;
     }
 
@@ -77,6 +81,7 @@ class InventoryController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'company_group' => $record->company_group,
                 'status' => $record->is_active,
                 'can_edit' => hasPermission('inventory.category.edit'),
                 'can_delete' => hasPermission('inventory.category.delete'),
@@ -91,12 +96,22 @@ class InventoryController extends Controller
         $records = $this->prod;
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        if ($req->has('keyword') && $req->keyword != '') {
+            $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('model_name', 'like', '%'.$keyword.'%');
             });
+        }
+        // Category
+        if ($req->has('category') && $req->category != null) {
+            if ($req->category == 'product') {
+                $records = $records->where('type', Product::TYPE_PRODUCT);
+            } elseif ($req->category == 'raw_material') {
+                $records = $records->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+            } elseif ($req->category == 'sparepart') {
+                $records = $records->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+            }
         }
         // Order
         if ($req->has('order')) {
@@ -149,6 +164,7 @@ class InventoryController extends Controller
         $req->validate([
             'category_id' => 'nullable',
             'name' => 'required|max:250',
+            'company_group' => 'required',
             'status' => 'required',
         ]);
 
@@ -158,6 +174,7 @@ class InventoryController extends Controller
             if ($req->category_id == null) {
                 $cat = $this->invCat::create([
                     'name' => $req->name,
+                    'company_group' => $req->company_group,
                     'is_active' => $req->boolean('status'),
                 ]);
 
@@ -167,6 +184,7 @@ class InventoryController extends Controller
 
                 $cat->update([
                     'name' => $req->name,
+                    'company_group' => $req->company_group,
                     'is_active' => $req->boolean('status'),
                 ]);
             }
@@ -192,7 +210,7 @@ class InventoryController extends Controller
     {
         $cat->delete();
 
-        return back()->with('success', 'Category deleted');
+        return back()->with('success', 'Product Category deleted');
     }
 
     public function indexSummary()
@@ -398,5 +416,127 @@ class InventoryController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    public function indexType()
+    {
+        return view('inventory_type.list');
+    }
+
+    public function getDataType(Request $req)
+    {
+        $records = $this->invType;
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%'.$keyword.'%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'name',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'name' => $record->name,
+                'company_group' => $record->company_group,
+                'type' => $record->type,
+                'status' => $record->is_active,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function createType()
+    {
+        return view('inventory_type.form');
+    }
+
+    public function editType(InventoryType $type)
+    {
+        return view('inventory_type.form', [
+            'type' => $type,
+        ]);
+    }
+
+    public function upsertType(Request $req)
+    {
+        // Validate request
+        $req->validate([
+            'category_id' => 'nullable',
+            'name' => 'required|max:250',
+            'company_group' => 'required',
+            'type' => 'required',
+            'status' => 'required',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($req->type_id == null) {
+                $cat = $this->invType::create([
+                    'name' => $req->name,
+                    'company_group' => $req->company_group,
+                    'type' => $req->type,
+                    'is_active' => $req->boolean('status'),
+                ]);
+
+                (new Branch)->assign(InventoryType::class, $cat->id);
+            } else {
+                $cat = $this->invCat->where('id', $req->category_id)->first();
+
+                $cat->update([
+                    'name' => $req->name,
+                    'company_group' => $req->company_group,
+                    'type' => $req->type,
+                    'is_active' => $req->boolean('status'),
+                ]);
+            }
+
+            DB::commit();
+
+            if ($req->create_again == true) {
+                return redirect(route('inventory_type.create'))->with('success', 'Inventory Type created');
+            }
+
+            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type '.($req->type_id == null ? 'created' : 'updated'));
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function deleteType(InventoryType $type)
+    {
+        $type->delete();
+
+        return back()->with('success', 'Product Type deleted');
     }
 }

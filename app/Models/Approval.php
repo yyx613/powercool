@@ -7,12 +7,18 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-#[ScopedBy([BranchScope::class])]
-class ActivityLog extends Model
+#[ScopedBy(BranchScope::class)]
+class Approval extends Model
 {
     use HasFactory;
+
+    const STATUS_PENDING_APPROVAL = 0;
+
+    const STATUS_APPROVED = 1;
+
+    const STATUS_REJECTED = 2;
 
     protected $guarded = [];
 
@@ -31,20 +37,8 @@ class ActivityLog extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function doneBy()
+    public function object(): MorphTo
     {
-        return $this->belongsTo(User::class, 'done_by');
-    }
-
-    public function store($class, $class_id, $desc, $data = null, $done_by = null, $branch_loc = null)
-    {
-        $data = self::create([
-            'object_type' => $class,
-            'object_id' => $class_id,
-            'desc' => $desc,
-            'data' => $data,
-            'done_by' => $done_by ?? Auth::user()->id,
-        ]);
-        (new Branch)->assign(ActivityLog::class, $data->id, $branch_loc);
+        return $this->morphTo();
     }
 }

@@ -19,14 +19,6 @@ class Product extends Model
 
     public const TYPE_RAW_MATERIAL = 2;
 
-    const ITEM_TYPE_PRODUCT_MFG = 1;
-
-    const ITEM_TYPE_PRODUCT_HFG = 2;
-
-    const ITEM_TYPE_RAW_MATERIAL_MSP = 1;
-
-    const ITEM_TYPE_RAW_MATERIAL_HSP = 2;
-
     protected $guarded = [];
 
     protected $casts = [

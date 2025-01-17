@@ -12,7 +12,6 @@
             @include('sale_order.form_step.quotation_details')
             @include('sale_order.form_step.product_details')
             @include('sale_order.form_step.payment_details')
-            @include('sale_order.form_step.delivery_schedule')
             @include('sale_order.form_step.remarks')
 
             <div class="flex justify-end">
@@ -53,8 +52,11 @@
         let sellingPrice = []
         let unitPrice = []
         let promo = []
+        let discount = []
         let prodSerialNo = []
         let warrantyPeriod = []
+        let remark = []
+        let overrideSellingPrice = []
         $('#product-details-container .items').each(function(i, obj) {
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
@@ -64,6 +66,9 @@
             sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
             unitPrice.push($(this).find('input[name="unit_price[]"]').val())
             promo.push($(this).find('select[name="promotion[]"]').val())
+            discount.push($(this).find('input[name="discount"]').val())
+            remark.push($(this).find('textarea[name="remark"]').val())
+            overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
             } else {
@@ -86,6 +91,7 @@
                 'quo_id': QUO != null ? QUO.id : null,
                 'sale': $('select[name="sale"]').val(),
                 'customer': $('select[name="customer"]').val(),
+                'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $('select[name="billing_address"]').val(),
                 'reference': $('input[name="reference"]').val(),
                 'status': $('select[name="status"]').val(),
                 'report_type': $('select[name="report_type"]').val(),
@@ -100,6 +106,9 @@
                 'promotion_id': promo,
                 'product_serial_no': prodSerialNo,
                 'warranty_period': warrantyPeriod,
+                'discount': discount,
+                'product_remark': remark,
+                'override_selling_price': overrideSellingPrice,
 
                 'payment_term': $('select[name="payment_term"]').val(),
                 'payment_method': $('select[name="payment_method"]').val(),
@@ -109,12 +118,12 @@
                 'payment_remark': $('input[name="payment_remark"]').val(),
                 'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
 
-                'driver': $('select[name="driver"]').val(),
-                'delivery_date': $('input[name="delivery_date"]').val(),
-                'delivery_time': $('input[name="delivery_time"]').val(),
-                'delivery_instruction': $('input[name="delivery_instruction"]').val(),
-                'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
-                'delivery_status': $('select[name="delivery_status"]').val(),
+                // 'driver': $('select[name="driver"]').val(),
+                // 'delivery_date': $('input[name="delivery_date"]').val(),
+                // 'delivery_time': $('input[name="delivery_time"]').val(),
+                // 'delivery_instruction': $('input[name="delivery_instruction"]').val(),
+                // 'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
+                // 'delivery_status': $('select[name="delivery_status"]').val(),
 
                 'remark': $('textarea[name="remark"]').val(),
             },

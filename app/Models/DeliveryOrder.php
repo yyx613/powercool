@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
-#[ScopedBy([BranchScope::class])]
+#[ScopedBy([BranchScope::class, ApprovedScope::class])]
 class DeliveryOrder extends Model
 {
     use HasFactory, SoftDeletes;
@@ -43,6 +44,11 @@ class DeliveryOrder extends Model
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');
+    }
+
+    public function approval()
+    {
+        return $this->morphOne(Approval::class, 'object');
     }
 
     public function invoice()

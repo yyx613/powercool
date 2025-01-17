@@ -13,6 +13,8 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            'approval.view',
+
             'inventory.summary.view',
 
             'inventory.category.view',
@@ -55,7 +57,6 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.cancel',
             'sale.sale_order.delete',
             'sale.sale_order.convert',
-            'sale.sale_order.by_pass_conversion',
 
             'sale.delivery_order.view',
             'sale.delivery_order.convert',

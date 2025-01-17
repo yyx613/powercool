@@ -60,6 +60,13 @@
             <x-app.message.error id="attention_to_err"/>
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select id="billing_address" name="billing_address">
+                <option value="">{{ __('Select a billing address') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="billing_address_err"/>
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
@@ -73,7 +80,14 @@
 
 @push('scripts')
     <script>
+        INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
+
+        $(document).ready(function() {
+            $('select[name="customer"]').trigger('change')
+
+            INIT_EDIT = false
+        })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
         $('input[name="open_until"]').on('apply.daterangepicker', function(ev, picker) {
@@ -85,13 +99,39 @@
 
             for (let i = 0; i < CUSTOMERS.length; i++) {
                 const element = CUSTOMERS[i];
-                
+
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
                     $('select[name="sale"]').val(element.sale_agent).trigger('change')
                     break
                 }
             }
+
+            let url = '{{ route("customer.get_location") }}'
+            url = `${url}?customer_id=${val}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    $('select[name="billing_address"] option').remove()
+
+                    // Default option
+                    let opt = new Option("{!! __('Select a billing address') !!}", null)
+                    $('select[name="billing_address"]').append(opt)
+
+                    for (let i = 0; i < res.locations.length; i++) {
+                        const loc = res.locations[i];
+
+                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id == SALE.billing_address_id)
+                        $('select[name="billing_address"]').append(opt)
+                    }
+                },
+            });
         })
 
         // $('#quotation-form').on('submit', function(e) {
@@ -129,7 +169,7 @@
         //             if (typeof SALE !== 'undefined') {
         //                 SALE = res.sale
         //             }
-                    
+
         //             setTimeout(() => {
         //                 $('#quotation-form #submit-btn').text('Updated')
         //                 $('#quotation-form #submit-btn').addClass('bg-green-400 shadow')
@@ -138,7 +178,7 @@
         //                     $('#quotation-form #submit-btn').text('Save and Update')
         //                     $('#quotation-form #submit-btn').removeClass('bg-green-400')
         //                     $('#quotation-form #submit-btn').addClass('bg-yellow-400 shadow')
-                            
+
         //                     QUOTATION_FORM_CAN_SUBMIT = true
         //                 }, 2000);
         //             }, 300);
@@ -147,7 +187,7 @@
         //             setTimeout(() => {
         //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
         //                     let errors = err.responseJSON.errors
-    
+
         //                     for (const key in errors) {
         //                         $(`#quotation-form #${key}_err`).find('p').text(errors[key])
         //                         $(`#quotation-form #${key}_err`).removeClass('hidden')

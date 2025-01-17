@@ -45,6 +45,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Company Group') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -72,11 +73,12 @@
             order: [],
             columns: [
                 { data: 'name' },
+                { data: 'company_group' },
                 { data: 'status' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
@@ -84,8 +86,21 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "10%",
                     "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        if (data == 1){
+                            return 'Power Cool'
+                        } else if (data == 2) {
+                            return 'Hi-Ten'
+                        }
+                        return data
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -96,9 +111,9 @@
                         }
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets": 2,
+                    "targets": 3,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -113,7 +128,7 @@
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('uom.get_data') }}"
-                    
+
                     url = `${url}?page=${ info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
                 },

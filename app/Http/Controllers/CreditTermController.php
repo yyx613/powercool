@@ -12,23 +12,26 @@ class CreditTermController extends Controller
 {
     protected $credit;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->credit = new CreditTerm;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('credit_term.list');
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->credit;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -48,30 +51,34 @@ class CreditTermController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'by_pass_conversion' => $record->by_pass_conversion,
                 'status' => $record->is_active,
             ];
         }
-                
+
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('credit_term.form');
     }
 
-    public function store(Request $req) {
+    public function store(Request $req)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'by_pass_conversion' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -83,6 +90,7 @@ class CreditTermController extends Controller
 
             $ct = $this->credit::create([
                 'name' => $req->name,
+                'by_pass_conversion' => $req->by_pass_conversion,
                 'is_active' => $req->status,
             ]);
             (new Branch)->assign(CreditTerm::class, $ct->id);
@@ -92,6 +100,7 @@ class CreditTermController extends Controller
             if ($req->create_again == true) {
                 return redirect(route('credit_term.create'))->with('success', 'Credit Term created');
             }
+
             return redirect(route('credit_term.index'))->with('success', 'Credit Term created');
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -101,16 +110,19 @@ class CreditTermController extends Controller
         }
     }
 
-    public function edit(CreditTerm $credit) {
+    public function edit(CreditTerm $credit)
+    {
         return view('credit_term.form', [
-            'credit' => $credit
+            'credit' => $credit,
         ]);
     }
 
-    public function update(Request $req, CreditTerm $credit) {
+    public function update(Request $req, CreditTerm $credit)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'by_pass_conversion' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -122,6 +134,7 @@ class CreditTermController extends Controller
 
             $credit->update([
                 'name' => $req->name,
+                'by_pass_conversion' => $req->by_pass_conversion,
                 'is_active' => $req->status,
             ]);
 

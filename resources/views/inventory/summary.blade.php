@@ -107,13 +107,21 @@
                 <h6 class="font-black text-xl mb-2">{{ __('Quantity Remaining') }}</h6>
                 <div class="p-2">
                     <!-- Filters -->
-                    <div class="flex max-w-xs w-full mb-4">
+                    <div class="flex max-w-screen-sm w-full mb-4 gap-4">
                         <div class="flex-1">
                             <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                                 <div class="rounded-md border border-transparent p-1 ml-1">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
                                 </div>
                             </x-app.input.input>
+                        </div>
+                        <div class="flex-1">
+                            <x-app.input.select name="filter_category" id="filter_category" class="w-full">
+                                <option value="">{{ __('Select a category') }}</option>
+                                <option value="product">{{ __('Product') }}</option>
+                                <option value="raw_material">{{ __('Raw Material') }}</option>
+                                <option value="sparepart">{{ __('Sparepart') }}</option>
+                            </x-app.input.select>
                         </div>
                     </div>
                     <!-- Table -->
@@ -173,6 +181,10 @@
 @push('scripts')
     <script>
         CATEGORIES = @json($categories);
+        FILTER = {
+            'search' : '',
+            'category': ''
+        }
         // Chart 1
         const ctx = document.getElementById('chart1');
         const data = {
@@ -241,13 +253,20 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('inventory_summary.get_remaining_qty') }}"
 
-                    url = `${url}?page=${ info.page + 1 }`
+                    url = `${url}?page=${ info.page + 1 }&keyword=${FILTER['search']}&category=${FILTER['category']}`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
         });
         $('#filter_search').on('keyup', function() {
-            dt.search($(this).val()).draw()
+            FILTER['search'] = $(this).val()
+
+            dt.draw()
+        })
+        $('#filter_category').on('change', function() {
+            FILTER['category'] = $(this).val()
+
+            dt.draw()
         })
     </script>
 @endpush

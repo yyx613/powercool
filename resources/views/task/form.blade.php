@@ -25,12 +25,12 @@
                 @if ($for_role == 'technician')
                     <div class="flex flex-col">
                         <x-app.input.label id="sale_order_id" class="mb-1">{{ __('Sale Order ID') }}</x-app.input.label>
-                        <x-app.input.select2 name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')" placeholder="{{ __('Select a sale order') }}">
+                        <x-app.input.select name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')">
                             <option value="">{{ __('Select a sale order') }}</option>
                             @foreach ($sale_orders as $so)
                                 <option value="{{ $so->id }}" @selected(old('sale_order_id', isset($task) ? $task->sale_order_id : null) == $so->id)>{{ $so->sku }}</option>
                             @endforeach
-                        </x-app.input.select2>
+                        </x-app.input.select>
                         <x-input-error :messages="$errors->get('sale_order_id')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
@@ -75,14 +75,35 @@
                 </div>
                 @if ($for_role == 'driver')
                     <div class="flex flex-col">
-                        <x-app.input.label id="sale_order_id" class="mb-1">{{ __('Sale Order') }}</x-app.input.label>
-                        <x-app.input.select2 name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')" placeholder="{{ __('Select a sale order') }}">
-                            <option value="">{{ __('Select a sale order') }}</option>
-                            @foreach ($sales_orders as $sales_order)
-                                <option value="{{ $sales_order->id }}" @selected(old('sale_order_id', isset($task) ? $task->sale_order_id : null) == $sales_order->id)>{{ $sales_order->sku }}</option>
+                        <x-app.input.label id="task" class="mb-1">{{ __('Task') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select2 name="task" id="task" :hasError="$errors->has('task')" placeholder="{{ __('Select a task') }}">
+                            <option value="">{{ __('Select a task') }}</option>
+                            @foreach ($task_types as $key => $val)
+                                <option value="{{ $key }}" @selected(old('task', isset($task) ? $task->task_type : null) == $key)>{{ $val }}</option>
                             @endforeach
                         </x-app.input.select2>
+                        <x-input-error :messages="$errors->get('task')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="delivery_order_id" class="mb-1">{{ __('Delivery Order') }}</x-app.input.label>
+                        <x-app.input.select name="delivery_order_id" id="delivery_order_id" :hasError="$errors->has('delivery_order_id')">
+                            <option value="">{{ __('Select a delivery order') }}</option>
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('delivery_order_id')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="sale_order_id" class="mb-1">{{ __('Sale Order') }}</x-app.input.label>
+                        <x-app.input.select name="sale_order_id" id="sale_order_id" :hasError="$errors->has('sale_order_id')">
+                            <option value="">{{ __('Select a sale order') }}</option>
+                        </x-app.input.select>
                         <x-input-error :messages="$errors->get('sale_order_id')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select name="delivery_address" id="delivery_address" :hasError="$errors->has('delivery_address')">
+                            <option value="">{{ __('Select a delivery address') }}</option>
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('delivery_address')" class="mt-1" />
                     </div>
                 @endif
                 <div class="flex flex-col col-span-1 lg:col-span-2">
@@ -205,6 +226,7 @@
 
 @push('scripts')
     <script>
+        FOR_ROLE = @json($for_role ?? null);
         TASK = @json($task ?? null);
         SERVICES = @json($services ?? null);
         SALE_PRODUCTS = @json($sale_products ?? null);
@@ -214,6 +236,10 @@
         SO_INV_TYPE = @json($so_inv_type ?? null);
         SO_INV_PRODUCT = @json($product ?? null);
         SO_INV_PRODUCT_CHILDREN = @json($product_child ?? null);
+        OLD_DELIVERY_ADDRESS_ID = @json(old('delivery_address') ?? null);
+        if (OLD_DELIVERY_ADDRESS_ID == null && TASK != null) {
+            OLD_DELIVERY_ADDRESS_ID = TASK.delivery_address_id;
+        }
 
         $(document).ready(function() {
             if (TASK != null) {
@@ -233,6 +259,10 @@
                 } else if (SO_INV_TYPE[SO_INV_IDX] == 'inv') {
                 }
             }
+
+            $('select[name="customer"]').trigger('change')
+
+
             INIT_EDIT = false
         })
 
@@ -252,6 +282,43 @@
         $('input[name="due_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
+
+
+        $('select[name="customer"]').on('change', function() {
+            let val = $(this).val()
+
+            $('select[name="sale_order_id"]').val(null)
+
+            let url = '{{ config("app.url") }}'
+            url = `${url}/customer/get-so-do/${val}?type=so,do`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    if (res.do) {
+                        $('select[name="delivery_order_id"] option:not(:first)').remove()
+
+                        for (let i = 0; i < res.do.length; i++) {
+                            let opt = new Option(res.do[i].sku, res.do[i].id)
+                            $('select[name="delivery_order_id"]').append(opt)
+                        }
+                    }
+                    if (res.so) {
+                        $('select[name="sale_order_id"] option:not(:first)').remove()
+
+                        for (let i = 0; i < res.so.length; i++) {
+                            let opt = new Option(res.so[i].sku, res.so[i].id)
+                            $('select[name="sale_order_id"]').append(opt)
+                        }
+                    }
+                },
+            });
+        })
 
         $('input[name="attachment[]"]').on('change', function() {
             let files = $(this).prop('files');
@@ -305,22 +372,27 @@
         $('select[name="sale_order_id"]').on('change', function() {
             let val = $(this).val()
 
-            $(`select[name="product_id"]`).find('option').not(':first').remove();
-            $(`select[name="product_child_id"]`).find('option').not(':first').remove();
+            if (FOR_ROLE == 'technician') {
+                $(`select[name="product_id"]`).find('option').not(':first').remove();
+                $(`select[name="product_child_id"]`).find('option').not(':first').remove();
 
-            for (let i = 0; i < SALE_PRODUCTS.length; i++) {
-                if (SALE_PRODUCTS[i].sale_id == val) {
+                for (let i = 0; i < SALE_PRODUCTS.length; i++) {
+                    if (SALE_PRODUCTS[i].sale_id == val) {
 
-                    let opt = new Option(`${SALE_PRODUCTS[i].product.model_name} (${SALE_PRODUCTS[i].product.sku})`, SALE_PRODUCTS[i].product_id)
-                    $(`select[name="product_id"]`).append(opt)
+                        let opt = new Option(`${SALE_PRODUCTS[i].product.model_name} (${SALE_PRODUCTS[i].product.sku})`, SALE_PRODUCTS[i].product_id)
+                        $(`select[name="product_id"]`).append(opt)
 
-                    // Append children
-                    for (let j = 0; j < SALE_PRODUCTS[i].product.children.length; j++) {
-                        let opt = new Option(`${SALE_PRODUCTS[i].product.children[j].sku}`, SALE_PRODUCTS[i].product.children[j].id)
-                        $(`select[name="product_child_id"]`).append(opt)
+                        // Append children
+                        for (let j = 0; j < SALE_PRODUCTS[i].product.children.length; j++) {
+                            let opt = new Option(`${SALE_PRODUCTS[i].product.children[j].sku}`, SALE_PRODUCTS[i].product.children[j].id)
+                            $(`select[name="product_child_id"]`).append(opt)
+                        }
                     }
                 }
             }
+        })
+        $('select[name="delivery_order_id"]').on('change', function() {
+            let val = $(this).val()
         })
 
         // Prevent form submit when hitting 'Enter' key

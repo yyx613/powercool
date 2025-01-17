@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
 use App\Models\Branch;
+use App\Models\CustomerLocation;
 use App\Models\Invoice;
 use App\Models\Milestone;
 use App\Models\Sale;
@@ -25,12 +26,15 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class TaskController extends Controller
 {
     const DRIVER_SALE_FORM_RULES = [
         'ticket' => 'nullable',
+        'delivery_order_id' => 'nullable',
         'sale_order_id' => 'nullable',
+        'delivery_address' => 'nullable',
         'customer' => 'required',
         'name' => 'required|max:250',
         'desc' => 'required|max:250',
@@ -161,7 +165,7 @@ class TaskController extends Controller
             if ($role == Task::TYPE_DRIVER && $record->sale_order_id != null) {
                 $driver = $record->users[0];
                 if ($driver->phone_number != null) {
-                    $whatsapp_url = 'https://wa.me/'.$record->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $record->estimated_time, Carbon::parse($record->start_date)->format('d/m/y'));
+                    $whatsapp_url = route('task.driver.redirect_to_whatsapp', ['task' => $record->id]);
                 }
             }
 
@@ -175,6 +179,7 @@ class TaskController extends Controller
                 'can_edit' => hasPermission('task.edit'),
                 'can_delete' => hasPermission('task.delete'),
                 'whatsapp_url' => $whatsapp_url,
+                'whatsapp_click_count' => $record->whatsapp_click_count ?? 0,
             ];
         }
 
@@ -208,7 +213,6 @@ class TaskController extends Controller
                 $data['so_inv_idx'] = $req->so_inv_idx ?? 0;
             }
         }
-        // dd($data);
 
         return view('task.form', $data);
     }
@@ -219,21 +223,36 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
+        $rules = self::DRIVER_SALE_FORM_RULES;
+        $rules['task'] = 'required';
+        $validator = Validator::make($req->all(), $rules, [], [
             'sale_order_id' => 'sale order',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
+        if ($req->delivery_order_id != null && $req->sale_order_id != null) {
+            throw ValidationException::withMessages([
+                'delivery_order_id' => 'Select either Delivery Order or Sale Order',
+                'sale_order_id' => 'Select either Delivery Order or Sale Order',
+            ]);
+        }
 
         try {
             DB::beginTransaction();
+
+            if ($req->delivery_address != null) {
+                $loc = CustomerLocation::where('id', $req->delivery_address)->first();
+            }
 
             $task = Task::create([
                 'sku' => (new Task)->generateSku(),
                 'type' => Task::TYPE_DRIVER,
                 'ticket_id' => $req->ticket,
                 'sale_order_id' => $req->sale_order_id,
+                'delivery_order_id' => $req->delivery_order_id,
+                'delivery_address_id' => $req->delivery_address,
+                'delivery_address' => isset($loc) ? $loc->formatAddress() : null,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,
@@ -243,6 +262,7 @@ class TaskController extends Controller
                 'remark' => $req->remark,
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
+                'task_type' => $req->task,
             ]);
             (new Branch)->assign(Task::class, $task->id);
 
@@ -632,19 +652,34 @@ class TaskController extends Controller
             $req->merge(['amount_to_collect' => 0]);
         }
         // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES, [], [
+        $rules = self::DRIVER_SALE_FORM_RULES;
+        $rules['task'] = 'required';
+        $validator = Validator::make($req->all(), $rules, [], [
             'sale_order_id' => 'sale order',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
+        if ($req->delivery_order_id != null && $req->sale_order_id != null) {
+            throw ValidationException::withMessages([
+                'delivery_order_id' => 'Select either Delivery Order or Sale Order',
+                'sale_order_id' => 'Select either Delivery Order or Sale Order',
+            ]);
+        }
 
         try {
             DB::beginTransaction();
 
+            if ($req->delivery_address != null) {
+                $loc = CustomerLocation::where('id', $req->delivery_address)->first();
+            }
+
             $task->update([
                 'ticket_id' => $req->ticket,
                 'sale_order_id' => $req->sale_order_id,
+                'delivery_order_id' => $req->delivery_order_id,
+                'delivery_address_id' => $req->delivery_address,
+                'delivery_address' => isset($loc) ? $loc->formatAddress() : null,
                 'customer_id' => $req->customer,
                 'name' => $req->name,
                 'desc' => $req->desc,
@@ -654,6 +689,7 @@ class TaskController extends Controller
                 'remark' => $req->remark,
                 'status' => $req->status,
                 'amount_to_collect' => $req->amount_to_collect,
+                'task_type' => $req->task,
             ]);
 
             UserTask::where('task_id', $task->id)->delete();
@@ -1001,6 +1037,48 @@ class TaskController extends Controller
         $pdf->setPaper('A4', 'letter');
 
         return $pdf->download('99-service-report.pdf');
+    }
+
+    public function redirectToWhatsapp(Request $req, Task $task)
+    {
+        try {
+            $whatsapp_url = null;
+            if ($task->sale_order_id != null) {
+                if ($req->has('date') && $req->has('driver_id')) {
+                    $driver = User::where('id', $req->driver_id)->first();
+                } else {
+                    $driver = $task->users[0];
+                }
+                if ($driver->phone_number != null) {
+                    if ($req->has('date') && $req->has('driver_id')) {
+                        $new_delivery_date = Carbon::createFromFormat('d/m/Y', $req->date)->format('d-m-Y');
+
+                        $whatsapp_url = 'https://wa.me/+6'.$task->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($new_delivery_date)->format('d/m/y'));
+
+                        (new ActivityLog)->store(Task::class, $task->id, 'Driver ('.$driver->name.') has sent Whatsapp Message', json_encode([
+                            'delivery_date' => $new_delivery_date,
+                        ]), $driver->id, $driver->branch->location);
+                    } else {
+                        $whatsapp_url = 'https://wa.me/+6'.$task->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($task->start_date)->format('d/m/y'));
+                    }
+                }
+            }
+
+            if ($whatsapp_url == null) {
+                abort(404);
+            }
+
+            if ($task->whatsapp_click_count == null) {
+                $task->whatsapp_click_count = 1;
+            } else {
+                $task->increment('whatsapp_click_count');
+            }
+            $task->save();
+
+            return redirect()->away($whatsapp_url);
+        } catch (\Throwable $th) {
+            abort(500);
+        }
     }
 
     private function createLog(Task $task, string $desc)

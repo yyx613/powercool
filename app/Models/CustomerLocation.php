@@ -36,12 +36,12 @@ class CustomerLocation extends Model
 
     public function defaultBillingAddress($customer_id)
     {
-        return self::whereIn('type', [self::TYPE_BILLING, self::TYPE_BILLING_ADN_DELIVERY])->where('customer_id', $customer_id)->first();
+        return self::whereIn('type', [self::TYPE_BILLING, self::TYPE_BILLING_ADN_DELIVERY])->where('customer_id', $customer_id)->where('is_default', true)->first();
     }
 
     public function defaultDeliveryAddress($customer_id)
     {
-        return self::whereIn('type', [self::TYPE_DELIVERY, self::TYPE_BILLING_ADN_DELIVERY])->where('customer_id', $customer_id)->first();
+        return self::whereIn('type', [self::TYPE_DELIVERY, self::TYPE_BILLING_ADN_DELIVERY])->where('customer_id', $customer_id)->where('is_default', true)->first();
     }
 
     public function countrySubentityCode()
@@ -67,5 +67,25 @@ class CustomerLocation extends Model
         ];
 
         return $stateCodes[$this->state] ?? '17';
+    }
+
+    public function formatAddress()
+    {
+        $addr = null;
+
+        if ($this->address != null) {
+            $addr .= $this->address.'<br>';
+        }
+        if ($this->city != null) {
+            $addr .= $this->city.'<br>';
+        }
+        if ($this->postcode != null) {
+            $addr .= $this->postcode.'<br>';
+        }
+        if ($this->state != null) {
+            $addr .= $this->state.'<br>';
+        }
+
+        return $addr;
     }
 }
