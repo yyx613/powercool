@@ -1739,4 +1739,27 @@ class EInvoiceController extends Controller
             return false;
         }
     }
+
+    public function sync(Request $request)
+    {
+        $request->validate([
+            'invoices' => 'required|array',
+            'invoices.*.id' => 'required|integer',
+        ]);
+
+        $selectedInvoices = $request->input('invoices');
+
+        foreach ($selectedInvoices as $invoiceData) {
+            $invoice = Invoice::find($invoiceData['id']);
+            if ($invoice) {
+                $invoice->sync = 0;
+                $invoice->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'Invoices updated successfully.',
+        ]);
+    }
+
 }

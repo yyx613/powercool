@@ -103,6 +103,7 @@ class GRNController extends Controller
             'term' => 'required',
             'our_po_date' => 'required',
             'supplier' => 'required',
+            'supplier_do_no' => 'required',
             'company_group' => 'required',
             'product_id' => 'required',
             'product_id.*' => 'required',
@@ -143,6 +144,7 @@ class GRNController extends Controller
                     'our_po_date' => $req->our_po_date,
                     'branch_id' => getCurrentUserBranch(),
                     'supplier_id' => $req->supplier,
+                    'supplier_do_no' => $req->supplier_do_no,
                     'company_group' => $req->company_group,
                     'product_id' => $req->product_id[$i],
                     'qty' => $req->qty[$i],
@@ -246,5 +248,27 @@ class GRNController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    public function sync(Request $request)
+    {
+        $request->validate([
+            'grns' => 'required|array',
+            'grns.*.sku' => 'required',
+        ]);
+
+        $selectedInvoices = $request->input('grns');
+
+        foreach ($selectedInvoices as $invoiceData) {
+            $invoice = GRN::where('sku', $invoiceData['sku'])->first();
+            if ($invoice) {
+                $invoice->sync = 0;
+                $invoice->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'GRNs updated successfully.',
+        ]);
     }
 }

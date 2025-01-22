@@ -21,12 +21,18 @@
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Supplier') }}</x-app.page-title>
         @can('supplier.create')
+        <div class="flex gap-x-2">
+        <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="sync-btn">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"><g><path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z"/><path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z"/></g></svg>
+                <span>{{ __('Sync to Autocount') }}</span>
+            </a>
         <a href="{{ route('supplier.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
                 <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
             </svg>
             {{ __('New') }}
         </a>
+        </div>
         @endcan
     </div>
     @include('components.app.alert.parent')
@@ -46,6 +52,9 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>
+                        <input type="checkbox" id="select-all">
+                    </th>
                     <th>{{ __('Code') }}</th>
                     <th>{{ __('Name') }}</th>
                     <th>{{ __('Phone Number') }}</th>
@@ -58,6 +67,9 @@
     </div>
 
     <x-app.modal.delete-modal/>
+    <div id="loading-indicator" style="display: none;">
+        <span class="loader"></span>
+    </div>
 @endsection
 
 @push('scripts')
@@ -73,6 +85,7 @@
             serverSide: true,
             order: [],
             columns: [
+                { data: 'id' },
                 { data: 'sku' },
                 { data: 'name' },
                 { data: 'phone_number' },
@@ -81,10 +94,13 @@
             ],
             columnDefs: [
                 {
-                    "width": "10%",
+                    "width": "2%",
                     "targets": 0,
+                    orderable: false,
                     render: function(data, type, row) {
-                        return data
+                        var disabled = row.enable ? 'disabled' : '';
+                        var style = row.enable ? 'style="opacity: 0.5; cursor: not-allowed;"' : '';
+                        return `<input type="checkbox" class="order-checkbox" data-id="${data}" ${disabled} ${style}>`;
                     }
                 },
                 {
@@ -109,8 +125,15 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 5,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -153,5 +176,120 @@
             $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/supplier/delete/${id}`)
             $('#delete-modal').addClass('show-modal')
         })
+
+        let selectedSupplier = [];
+
+        $(document).on('change', '.order-checkbox', function() {
+            let supplierId = $(this).data('id');
+            let isChecked = this.checked;
+
+       
+            if (isChecked) {
+
+                selectedSupplier.push({ id: supplierId });
+            } else {
+                selectedSupplier = selectedSupplier.filter(supplier => supplier.id !== supplierId);
+            }
+
+            checkSelectAllStatus();
+        });
+
+
+        function checkSelectAllStatus() {
+            let enabledCheckboxes = $('.order-checkbox:not(:disabled)').length;
+            let checkedEnabledCheckboxes = $('.order-checkbox:not(:disabled):checked').length;
+
+            let allChecked = enabledCheckboxes > 0 && enabledCheckboxes === checkedEnabledCheckboxes;
+            $('#select-all').prop('checked', allChecked);
+        }
+
+        $('#select-all').on('click', function() {
+            let checked = this.checked;
+            $('.order-checkbox').each(function() {
+                if (!$(this).prop('disabled')) {
+                    $(this).prop('checked', checked).trigger('change');
+                }
+            });
+        });
+
+        $('#sync-btn').on('click', function(e) {
+            e.preventDefault();
+            if (selectedSupplier.length === 0) {
+                alert("Please select at least one order to sync.");
+                return;
+            }
+            syncSupplier()
+        });
+
+        function syncSupplier(){
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.style.display = 'flex';
+
+            let url = "{{ config('app.url') }}";
+            url = `${url}/supplier/sync`;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST',
+                data: JSON.stringify({ suppliers: selectedSupplier }),
+                contentType: 'application/json',
+                success: function(response) {
+                    loadingIndicator.style.display = 'none';
+                    $('.order-checkbox').prop('checked', false);
+                    selectedSupplier = [];
+                    $('#select-all').prop('checked', false);
+                    const modal = document.getElementById('update-invoice-date-modal');
+                    if (modal && modal.classList.contains('show-modal')) {
+                        modal.classList.remove('show-modal');
+                    }
+                    alert("Sync successful Autocount will be updated within few minutes");
+                },
+                error: function(error) {
+                    loadingIndicator.style.display = 'none';
+
+                    let errorMessage = "An error occurred.";
+
+                    alert(errorMessage);
+                }
+            });
+        }
     </script>
+@endpush
+@push('styles')
+<style>
+    #loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #FFF;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
 @endpush
