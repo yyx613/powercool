@@ -87,6 +87,11 @@ class Product extends Model
         return $this->belongsTo(Product::class, 'hi_ten_stock_code');
     }
 
+    public function itemType()
+    {
+        return $this->belongsTo(InventoryType::class, 'item_type');
+    }
+
     public function getQtyAttribute($val)
     {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool) $this->is_sparepart == true)) {

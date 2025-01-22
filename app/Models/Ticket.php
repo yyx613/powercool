@@ -32,6 +32,11 @@ class Ticket extends Model
         return $this->morphMany(Attachment::class, 'object');
     }
 
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');

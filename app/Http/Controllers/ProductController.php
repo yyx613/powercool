@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\InventoryCategory;
@@ -17,9 +18,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
 use Picqer\Barcode\Types\TypeCode128;
 
@@ -668,5 +671,14 @@ class ProductController extends Controller
         $product->delete();
 
         return back()->with('success', 'Product deleted');
+    }
+
+    public function export()
+    {
+        if (str_contains(Route::currentRouteName(), 'product.')) {
+            return Excel::download(new ProductExport(true), 'product.xlsx');
+        } elseif (str_contains(Route::currentRouteName(), 'raw_material.')) {
+            return Excel::download(new ProductExport(false), 'product.xlsx');
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CustomerExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class CustomerController extends Controller
@@ -489,5 +491,10 @@ class CustomerController extends Controller
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new CustomerExport, 'user.xlsx');
     }
 }
