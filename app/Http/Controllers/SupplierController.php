@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SupplierExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\GRN;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
@@ -323,5 +325,10 @@ class SupplierController extends Controller
         return response()->json([
             'message' => 'Suppliers updated successfully.',
         ]);
+    }
+
+    public function export()
+    {
+        return Excel::download(new SupplierExport, 'supplier.xlsx');
     }
 }

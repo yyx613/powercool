@@ -19,6 +19,10 @@ class Supplier extends Model
 
     const TYPE_OVERSEA = 2;
 
+    const STATUS_INACTIVE = 0;
+
+    const STATUS_ACTIVE = 1;
+
     protected $guarded = [];
 
     protected $casts = [

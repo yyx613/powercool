@@ -143,6 +143,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     Route::controller(InventoryServieHistoryController::class)->prefix('service-history')->name('service_history.')->middleware(['can:service_history.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/export', 'export')->name('export');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
@@ -168,6 +169,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
+        Route::get('/export', 'export')->name('export');
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -181,6 +183,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
+        Route::get('/export', 'export')->name('export');
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
@@ -332,6 +335,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+        Route::get('/export', 'export')->name('export');
     });
     // Production Material
     Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
@@ -349,6 +353,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{ticket}', 'delete')->name('delete')->middleware(['can:ticket.delete']);
         Route::get('/get-products', 'getProducts')->name('get_products');
         Route::get('/get-product-children', 'getProductChildren')->name('get_product_children');
+        Route::get('/export', 'export')->name('export');
     });
     // Report
     Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function () {
@@ -405,6 +410,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/get-location', 'getLocation')->name('get_location');
         Route::get('/get-so-do/{cus}', 'getSaleAndDeliveryOrder')->name('get_so_do');
         Route::post('/sync', 'sync')->name('sync');
+        Route::get('/export', 'export')->name('export');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {
@@ -416,6 +422,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
         Route::get('/grn-history/{supplier}', 'grnHistory')->name('grn_history');
         Route::post('/sync', 'sync')->name('sync');
+        Route::get('/export', 'export')->name('export');
     });
     // Dealer
     Route::controller(DealerController::class)->prefix('dealer')->name('dealer.')->middleware(['can:dealer.view'])->group(function () {
@@ -425,6 +432,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/edit/{dealer}', 'edit')->name('edit')->middleware(['can:dealer.edit']);
         Route::get('/delete/{dealer}', 'delete')->name('delete')->middleware(['can:dealer.delete']);
         Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
+        Route::get('/export', 'export')->name('export');
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function () {
