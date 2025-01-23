@@ -45,6 +45,7 @@ class SaleProduct extends Model
     public function discountAmount()
     {
         $amount = 0;
+        $price = $this->qty * ($this->override_selling_price ?? $this->unit_price);
 
         if ($this->promotion_id != null) {
             $promo = Promotion::where('id', $this->promotion_id)->first();
@@ -52,11 +53,29 @@ class SaleProduct extends Model
             if ($promo->type == 'val') {
                 $amount += $promo->amount;
             } elseif ($promo->type == 'perc') {
-                $amount += ($this->qty * $this->unit_price) * $promo->amount / 100;
+                $amount += $price * $promo->amount / 100;
             }
         }
 
         $amount += ($this->discount ?? 0);
+
+        return $amount;
+    }
+
+    public function promotionAmount()
+    {
+        $amount = 0;
+        $price = $this->qty * ($this->override_selling_price ?? $this->unit_price);
+
+        if ($this->promotion_id != null) {
+            $promo = Promotion::where('id', $this->promotion_id)->first();
+
+            if ($promo->type == 'val') {
+                $amount += $promo->amount;
+            } elseif ($promo->type == 'perc') {
+                $amount += $price * $promo->amount / 100;
+            }
+        }
 
         return $amount;
     }
@@ -91,5 +110,10 @@ class SaleProduct extends Model
         return $this->belongsToMany(Billing::class, 'billing_sale_product', 'sale_product_id', 'billing_id')
             ->withPivot('custom_unit_price')
             ->withTimestamps();
+    }
+
+    public function promotion()
+    {
+        return $this->belongsTo(Promotion::class, 'promotion_id');
     }
 }
