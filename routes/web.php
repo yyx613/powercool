@@ -153,6 +153,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
+        Route::post('/sync', 'sync')->name('sync');
     });
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
@@ -403,6 +404,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::post('/upsert-location', 'upsertLocation')->name('upsert_location')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::get('/get-location', 'getLocation')->name('get_location');
         Route::get('/get-so-do/{cus}', 'getSaleAndDeliveryOrder')->name('get_so_do');
+        Route::post('/sync', 'sync')->name('sync');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {
@@ -413,6 +415,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/delete/{supplier}', 'delete')->name('delete')->middleware(['can:supplier.delete']);
         Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
         Route::get('/grn-history/{supplier}', 'grnHistory')->name('grn_history');
+        Route::post('/sync', 'sync')->name('sync');
     });
     // Dealer
     Route::controller(DealerController::class)->prefix('dealer')->name('dealer.')->middleware(['can:dealer.view'])->group(function () {
@@ -611,6 +614,7 @@ Route::prefix('e-invoice')->group(function () {
     Route::post('/billing-submit', [EInvoiceController::class, 'billingSubmit']);
     Route::post('/update-invoice-date', [EInvoiceController::class, 'updateInvoiceDate'])->name('update_invoice_date');
     Route::post('/update-billing-date', [EInvoiceController::class, 'updateBillingDate'])->name('update_billing_date');
+    Route::post('/sync', [EInvoiceController::class, 'sync']);
 });
 Route::get('/sync-msic-codes', [EInvoiceController::class, 'syncMsicCodes']);
 

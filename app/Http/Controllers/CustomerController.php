@@ -490,4 +490,26 @@ class CustomerController extends Controller
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function sync(Request $request)
+    {
+        $request->validate([
+            'customers' => 'required|array',
+            'customers.*.id' => 'required|integer',
+        ]);
+
+        $selectedInvoices = $request->input('customers');
+
+        foreach ($selectedInvoices as $invoiceData) {
+            $invoice = Customer::find($invoiceData['id']);
+            if ($invoice) {
+                $invoice->sync = 0;
+                $invoice->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'Customers updated successfully.',
+        ]);
+    }
 }

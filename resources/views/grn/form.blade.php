@@ -43,6 +43,11 @@
                     <x-app.message.error id="supplier_err"/>
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="supplier_do_no" class="mb-1">{{ __('Supplier DO No') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="supplier_do_no" id="supplier_do_no" />
+                    <x-app.message.error id="supplier_do_no_err"/>
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')" placeholder="{{ __('Select a company group') }}">
                         <option value="">{{ __('Select a company group') }}</option>
@@ -135,6 +140,7 @@
                     $(`input[name="our_po_date"]`).val(moment(grn.our_po_date).format('Y-MM-DD')).trigger('change')
                     $(`select[name="term"]`).val(grn.term).trigger('change')
                     $(`select[name="supplier"]`).val(grn.supplier_id).trigger('change')
+                    $(`input[name="supplier_do_no"]`).val(grn.supplier_do_no).trigger('change')
                     $(`select[name="company_group"]`).val(grn.company_group).trigger('change')
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(grn.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(grn.qty)
@@ -238,6 +244,7 @@
                     'term': $('select[name="term"]').val(),
                     'our_po_date': $('input[name="our_po_date"]').val(),
                     'supplier': $('select[name="supplier"]').val(),
+                    'supplier_do_no': $('input[name="supplier_do_no"]').val(),
                     'company_group': $('select[name="company_group"]').val(),
                     'product_id': prodId,
                     'qty': qty,

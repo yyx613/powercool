@@ -302,4 +302,26 @@ class SupplierController extends Controller
             'formatted_products' => $formatted_products,
         ]);
     }
+
+    public function sync(Request $request)
+    {
+        $request->validate([
+            'suppliers' => 'required|array',
+            'suppliers.*.id' => 'required|integer',
+        ]);
+
+        $selectedInvoices = $request->input('suppliers');
+
+        foreach ($selectedInvoices as $invoiceData) {
+            $invoice = Supplier::find($invoiceData['id']);
+            if ($invoice) {
+                $invoice->sync = 0;
+                $invoice->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'Suppliers updated successfully.',
+        ]);
+    }
 }
