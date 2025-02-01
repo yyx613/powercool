@@ -230,8 +230,9 @@
 
                     for (let i = 0; i < res.products.length; i++) {
                         const elem = res.products[i];
+                        console.debug(elem)
 
-                        let opt = new Option(elem.product.model_name, elem.product.id)
+                        let opt = new Option(elem.model_name, elem.id)
                         $('#to-production-modal select').append(opt)
                     }
 

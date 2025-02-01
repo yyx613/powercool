@@ -366,7 +366,7 @@
                 addSerialNo(child.sku, child.id)
             }
             $('select[name="is_sparepart"]').trigger('change')
-            if (PRODUCT.company_group == 1) {
+            if (PRODUCT.company_group == 2) {
                 $('#hi_ten_stock_code-container').removeClass('hidden')
             }
 
@@ -465,7 +465,7 @@
     $('select[name="company_group"]').on('change', function() {
         let val = $(this).val()
 
-        if (val == 2) {
+        if (val == 1) {
             $('#hi_ten_stock_code-container').addClass('hidden')
             $('select[name="hi_ten_stock_code"]').val(null).trigger('change')
         } else {

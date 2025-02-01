@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Exports\ProductExport;
 use App\Models\Attachment;
 use App\Models\Branch;
+use App\Models\DeliveryOrder;
+use App\Models\DeliveryOrderProduct;
 use App\Models\InventoryCategory;
+use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductSellingPrice;
+use App\Models\SaleProduct;
 use App\Models\TaskMilestoneInventory;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -44,6 +48,12 @@ class ProductController extends Controller
 
     protected $sellingPrice;
 
+    protected $saleProduct;
+
+    protected $deliveryOrderProduct;
+
+    protected $invoice;
+
     public function __construct()
     {
         $this->prod = new Product;
@@ -54,6 +64,9 @@ class ProductController extends Controller
         $this->prodCost = new ProductCost;
         $this->taskMsInventory = new TaskMilestoneInventory;
         $this->sellingPrice = new ProductSellingPrice;
+        $this->saleProduct = new SaleProduct;
+        $this->deliveryOrderProduct = new DeliveryOrderProduct;
+        $this->invoice = new Invoice;
     }
 
     public function index()
@@ -264,6 +277,9 @@ class ProductController extends Controller
 
     public function viewGetDataRawMaterial(Request $req)
     {
+        $sp_records = $this->saleProduct::where('product_id', $req->product_id)->orderBy('id', 'desc');
+        $dop_records = $this->deliveryOrderProduct::whereIn('sale_product_id', $sp_records->pluck('id'))->orderBy('id', 'desc');
+        $inv_records = $this->invoice::whereIn('id', DeliveryOrder::whereIn('id', $dop_records->pluck('delivery_order_id')->toArray())->pluck('invoice_id'))->orderBy('id', 'desc');
         $pmm_records = $this->productionMsMaterial::where('product_id', $req->product_id)->orderBy('id', 'desc');
         $tmi_records = $this->taskMsInventory::where('inventory_type', Product::class)->where('inventory_id', $req->product_id)->orderBy('id', 'desc');
 
@@ -276,22 +292,84 @@ class ProductController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
+        $sp_records_paginator = $sp_records->simplePaginate(10);
+        $dop_records_paginator = $dop_records->simplePaginate(10);
+        $inv_records_paginator = $inv_records->simplePaginate(10);
         $pmm_records_paginator = $pmm_records->simplePaginate(10);
         $tmi_records_paginator = $tmi_records->simplePaginate(10);
+        $sp_idx = 0;
+        $dop_idx = 0;
+        $inv_idx = 0;
         $pmm_idx = 0;
         $tmi_idx = 0;
 
         while (count($data['data']) < 10) {
-            if ($pmm_records_paginator[$pmm_idx] == null && $tmi_records_paginator[$tmi_idx] == null) {
+            if (
+                $sp_records_paginator[$sp_idx] == null && $dop_records_paginator[$dop_idx] == null && $inv_records_paginator[$inv_idx] == null &&
+                $pmm_records_paginator[$pmm_idx] == null && $tmi_records_paginator[$tmi_idx] == null
+            ) {
                 break;
             }
-            if ($tmi_records_paginator[$tmi_idx] == null || ($pmm_records_paginator[$pmm_idx] != null && $pmm_records_paginator[$pmm_idx]->created_at >= $tmi_records_paginator[$tmi_idx]->created_at)) {
+
+            $category = null;
+            $sp_created_at = $sp_records_paginator[$sp_idx] != null ? $sp_records_paginator[$sp_idx]->created_at : null;
+            $dop_created_at = $dop_records_paginator[$dop_idx] != null ? $dop_records_paginator[$dop_idx]->created_at : null;
+            $inv_created_at = $inv_records_paginator[$inv_idx] != null ? $inv_records_paginator[$inv_idx]->created_at : null;
+            $pmm_created_at = $pmm_records_paginator[$pmm_idx] != null ? $pmm_records_paginator[$pmm_idx]->created_at : null;
+            $tmi_created_at = $tmi_records_paginator[$tmi_idx] != null ? $tmi_records_paginator[$tmi_idx]->created_at : null;
+
+            if ($sp_created_at > $dop_created_at && $sp_created_at > $inv_created_at && $sp_created_at > $pmm_created_at && $sp_created_at > $tmi_created_at) {
+                $category = 'sp';
+            } elseif ($dop_created_at > $sp_created_at && $dop_created_at > $inv_created_at && $dop_created_at > $pmm_created_at && $dop_created_at > $tmi_created_at) {
+                $category = 'dop';
+            } elseif ($inv_created_at > $sp_created_at && $inv_created_at > $dop_created_at && $inv_created_at > $pmm_created_at && $inv_created_at > $tmi_created_at) {
+                $category = 'inv';
+            } elseif ($pmm_created_at > $sp_created_at && $pmm_created_at > $dop_created_at && $pmm_created_at > $inv_created_at && $pmm_created_at > $tmi_created_at) {
+                $category = 'pmm';
+            } elseif ($tmi_created_at > $sp_created_at && $tmi_created_at > $dop_created_at && $tmi_created_at > $inv_created_at && $tmi_created_at > $pmm_created_at) {
+                $category = 'tmi';
+            }
+
+            if ($category == 'sp') {
+                $remaining_qty = $sp_records_paginator[$sp_idx]->remainingQtyForRM();
+
+                if ($remaining_qty == 0) {
+                    $sp_idx++;
+
+                    continue;
+                }
+
+                $order_id = $sp_records_paginator[$sp_idx]->sale->sku;
+                $qty = $remaining_qty;
+                $on_hold = null;
+                $at = $sp_records_paginator[$sp_idx]->updated_at;
+                $sp_idx++;
+            } elseif ($category == 'dop') {
+                if ($dop_records_paginator[$dop_idx]->do->invoice_id != null) {
+                    $dop_idx++;
+
+                    continue;
+                }
+                $order_id = $dop_records_paginator[$dop_idx]->do->sku;
+                $qty = $dop_records_paginator[$dop_idx]->qty;
+                $on_hold = null;
+                $at = $dop_records_paginator[$dop_idx]->updated_at;
+                $dop_idx++;
+            } elseif ($category == 'inv') {
+                $do_ids = DeliveryOrder::where('invoice_id', $inv_records_paginator[$inv_idx]->id)->pluck('id')->toArray();
+
+                $order_id = $inv_records_paginator[$inv_idx]->sku;
+                $qty = $this->deliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->sum('qty');
+                $on_hold = null;
+                $at = $inv_records_paginator[$inv_idx]->updated_at;
+                $inv_idx++;
+            } elseif ($category == 'pmm') {
                 $order_id = $pmm_records_paginator[$pmm_idx]->productionMilestone->production->sku;
                 $qty = $pmm_records_paginator[$pmm_idx]->qty;
                 $on_hold = $pmm_records_paginator[$pmm_idx]->on_hold;
                 $at = $pmm_records_paginator[$pmm_idx]->updated_at;
                 $pmm_idx++;
-            } elseif ($pmm_records_paginator[$pmm_idx] == null || $pmm_records_paginator[$pmm_idx]->created_at < $tmi_records_paginator[$tmi_idx]->created_at) {
+            } elseif ($category == 'tmi') {
                 $order_id = $tmi_records_paginator[$tmi_idx]->taskMilestone->task->sku;
                 $qty = $tmi_records_paginator[$tmi_idx]->qty;
                 $on_hold = null;
@@ -450,7 +528,9 @@ class ProductController extends Controller
             $rules['cost'] = 'nullable';
         }
         // Validate request
-        $req->validate($rules, [], [
+        $req->validate($rules, [
+            'hi_ten_stock_code.required_if' => 'The Hi-Ten stock code field is required',
+        ], [
             'model_desc' => 'model description',
             'category_id' => 'category',
             'qty' => 'quantity',

@@ -42,6 +42,14 @@ class SaleProduct extends Model
         return $children_count - $do_children_count;
     }
 
+    /**
+     * remaining qty for raw material
+     */
+    public function remainingQtyForRM()
+    {
+        return $this->qty - DeliveryOrderProduct::where('sale_product_id', $this->id)->sum('qty');
+    }
+
     public function discountAmount()
     {
         $amount = 0;

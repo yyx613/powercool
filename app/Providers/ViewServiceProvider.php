@@ -317,10 +317,6 @@ class ViewServiceProvider extends ServiceProvider
             }])
                 ->with('sellingPrices')
                 ->where('is_active', true)
-                ->where('type', Product::TYPE_PRODUCT)
-                ->orWhere(function ($q) {
-                    $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-                })
                 ->orderBy('id', 'desc')
                 ->get();
 
