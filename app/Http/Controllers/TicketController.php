@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TicketExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\DeliveryOrder;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
@@ -267,5 +269,10 @@ class TicketController extends Controller
         return response()->json([
             'product_children' => $product_children,
         ]);
+    }
+
+    public function export()
+    {
+        return Excel::download(new TicketExport, 'ticket.xlsx');
     }
 }

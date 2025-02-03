@@ -50,7 +50,7 @@
                         <td style="font-size: 14px;">:</td>
                         <td style="font-size: 14px;"></td>
                     </tr>
-                    
+
                 </table>
             </td>
         </tr>
@@ -116,16 +116,16 @@
             $total = 0;
         @endphp
         <!-- Product List -->
-        @foreach ($dopcs as $key => $prod)
+        @foreach ($products as $key => $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->parent->desc }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod['desc'] }}</td>
                 <td style="font-size: 14px; text-align: right;"></td>
-                <td style="font-size: 14px; text-align: right;">1</td>
+                <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
             </tr>
             @php
-                $total += 1;
+                $total += $prod['qty'];
             @endphp
         @endforeach
         <!-- Remark -->
@@ -162,6 +162,6 @@
             <td style="width: 20%; font-size: 14px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">Driver Signature</td>
         </tr>
     </table>
-    
+
 </body>
 </html>

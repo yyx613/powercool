@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DealerExport;
 use App\Models\Branch;
 use App\Models\Dealer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DealerController extends Controller
 {
@@ -112,5 +114,10 @@ class DealerController extends Controller
 
             return back()->with('error', 'Something went wrong, Please contact administrator');
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new DealerExport, 'dealer.xlsx');
     }
 }

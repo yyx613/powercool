@@ -118,7 +118,10 @@ class Sale extends Model
 
         $sps = $this->products;
         for ($j = 0; $j < count($sps); $j++) {
-            if ($sps[$j]->remainingQty() > 0) {
+            if ($sps[$j]->product->isRawMaterial() && $sps[$j]->remainingQtyForRM() > 0) {
+                $fully_converted = false;
+                break;
+            } elseif (! $sps[$j]->product->isRawMaterial() && $sps[$j]->remainingQty() > 0) {
                 $fully_converted = false;
                 break;
             }

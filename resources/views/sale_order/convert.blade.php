@@ -156,34 +156,38 @@
                     @if (count($products) > 0)
                         <div class="flex flex-col gap-4 flex-1">
                             @foreach ($products as $pro)
-                                @if ($pro->remainingQty() > 0)
-                                    <div class="p-2 rounded-md border border-slate-200 products">
-                                        <div class="flex-1 flex justify-between items-start">
-                                            <div>
-                                                <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}</h6>
-                                                <p class="text-xs text-slate-500">{{ __('SKU') }}: {{ $pro->sku }}</p>
-                                                <p class="text-xs text-slate-500">{{ __('Description') }}: {{ $pro->desc }}</p>
-                                            </div>
-                                            <div class="flex flex-col items-end">
-                                                <span class="text-slate-500 text-xs">{{ __('From SO') }}</span>
-                                                <span>{{ $pro->sale->sku }}</span>
-                                            </div>
+                                <div class="p-2 rounded-md border border-slate-200 products" data-is-raw-material="{{ $pro->product->isRawMaterial() }}" data-sp-id="{{ $pro->id }}">
+                                    <div class="flex-1 flex justify-between items-start">
+                                        <div>
+                                            <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}</h6>
+                                            <p class="text-xs text-slate-500">{{ __('SKU') }}: {{ $pro->sku }}</p>
+                                            <p class="text-xs text-slate-500">{{ __('Description') }}: {{ $pro->desc }}</p>
                                         </div>
-                                        <div class="border-t pt-2 mt-2">
+                                        <div class="flex flex-col items-end">
+                                            <span class="text-slate-500 text-xs">{{ __('From SO') }}</span>
+                                            <span>{{ $pro->sale->sku }}</span>
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('sp_id_' . $pro->id)" class="mt-1" />
+                                    <div class="border-t pt-4 mt-4">
+                                        @if (!$pro->product->isRawMaterial() && $pro->remainingQty() > 0)
                                             @foreach ($pro->children as $pc)
                                                 @php
                                                     if (!in_array($pc->product_children_id, $allowed_spc_ids)) {
                                                         continue;
                                                     }
                                                 @endphp
-                                                <label for="{{ $pc->id }}" class="w-full block my-1">
-                                                    <input type="checkbox" name="product_children" id="{{ $pc->id }}" value="{{ $pc->id }}" class="rounded mr-1">
+                                                <label for="{{ $pc->id }}" class="w-full block">
+                                                    <input type="checkbox" name="product_children" id="{{ $pc->id }}" value="{{ $pc->id }}" class="rounded mr-1 border-gray-300">
                                                     <span>{{ $pc->productChild->sku }}</span>
                                                 </label>
                                             @endforeach
-                                        </div>
+                                        @elseif ($pro->product->isRawMaterial() && $pro->remainingQtyForRM() > 0)
+                                            <x-app.input.input type="text" name="qty" class="int-input" placeholder="{{ __('Enter quantity') }}" />
+                                            <p class="text-xs text-slate-500 mt-1 ml-1">{{ __('Quantity Left: ') . $pro->remainingQtyForRM() }}</p>
+                                        @endif
                                     </div>
-                                @endif
+                                </div>
                             @endforeach
                         </div>
                         <div class="flex justify-end mt-8">
@@ -231,6 +235,7 @@
     CUSTOMERS = @json($customers ?? null);
     SALESPERSONS = @json($salespersons ?? null);
     SELECTED_SOS = []
+    SELECTED_SALE_PRODUCTS = {};
 
     $('input[name="search_customer"]').on('keyup', function() {
         let val = $(this).val()
@@ -291,36 +296,18 @@
         window.location.href = url
     })
     $('.products input[type="checkbox"]').on('change', function() {
-        let canConvert = false
-        $('.products input[type="checkbox"]').each(function() {
-            if ($(this).is(':checked')) {
-                canConvert = true
-            }
-        })
-
-        if (canConvert) {
-            $('#step-5-confirm-btn').addClass('bg-green-200')
-            $('#step-5-confirm-btn').removeClass('bg-slate-100')
-        } else {
-            $('#step-5-confirm-btn').removeClass('bg-green-200')
-            $('#step-5-confirm-btn').addClass('bg-slate-100')
-        }
+        canConfirmStep5()
+    })
+    $('.products input[type="text"]').on('keyup', function() {
+        canConfirmStep5()
     })
     $('#step-5-confirm-btn').on('click', function(e) {
         e.preventDefault()
 
-        let productChildIds = []
-        let canConvert = false
-        $('.products input[type="checkbox"]').each(function() {
-            if ($(this).is(':checked')) {
-                productChildIds.push($(this).attr('value'))
-                canConvert = true
-            }
-        })
-        if (!canConvert) return
+        if (!canConfirmStep5()) return
 
         let url = $(this).attr('href')
-        url = `${url}?product_children=${productChildIds}`
+        url = `${url}?pc=${JSON.stringify(SELECTED_SALE_PRODUCTS) }`
 
         window.location.href = url
     })
@@ -346,5 +333,38 @@
 
         window.location.href = url
     })
+    function canConfirmStep5() {
+        let canConvert = false
+
+        SELECTED_SALE_PRODUCTS = {}
+        $('.products').each(function(i, obj) {
+            if ($(this).data('is-raw-material') && $(this).find('input[type="text"]').val() != null && $(this).find('input[type="text"]').val() != '') {
+                canConvert = true;
+
+                SELECTED_SALE_PRODUCTS[$(this).data('sp-id')] = $(this).find('input[type="text"]').val()
+            } else if (!$(this).data('is-raw-material')) {
+                var spId = $(this).data('sp-id')
+                SELECTED_SALE_PRODUCTS[spId] = []
+
+                $(this).find('input[type="checkbox"]').each(function() {
+                    if ($(this).is(':checked')) {
+                        canConvert = true
+
+                        SELECTED_SALE_PRODUCTS[spId].push( $(this).attr('id') )
+                    }
+                })
+            }
+        })
+
+        if (canConvert) {
+            $('#step-5-confirm-btn').addClass('bg-green-200')
+            $('#step-5-confirm-btn').removeClass('bg-slate-100')
+        } else {
+            $('#step-5-confirm-btn').removeClass('bg-green-200')
+            $('#step-5-confirm-btn').addClass('bg-slate-100')
+        }
+
+        return canConvert
+    }
 </script>
 @endpush

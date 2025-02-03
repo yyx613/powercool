@@ -89,6 +89,7 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">U/Price<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Discount<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Promotion<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Total<br>(RM)</td>
         </tr>
         @php
@@ -101,7 +102,8 @@
                 <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discount ?? 0, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->promotionAmount() ?? 0, 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}</td>
             </tr>
             <tr>

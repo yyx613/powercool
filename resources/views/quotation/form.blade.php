@@ -132,12 +132,11 @@
             },
             error: function(err) {
                 setTimeout(() => {
-                    if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
+                    if (err.status == StatusCodes.UNPROCESSABLE_ENTITY || err.status == StatusCodes.BAD_REQUEST) {
                         let errors = err.responseJSON.errors
 
                         for (const key in errors) {
                             if (key.includes('.')) {
-
                                 let field = key.split('.')[0]
                                 let idx = key.split('.')[1]
                                 idx++

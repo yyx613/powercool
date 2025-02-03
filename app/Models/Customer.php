@@ -74,6 +74,21 @@ class Customer extends Model
         return $this->belongsTo(Currency::class);
     }
 
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
+    }
+
+    public function debtorType()
+    {
+        return $this->belongsTo(DebtorType::class);
+    }
+
+    public function saleAgent()
+    {
+        return $this->belongsTo(User::class, 'sale_agent');
+    }
+
     public function generateSku(string $company_first_alphabet): string
     {
         $sku = null;

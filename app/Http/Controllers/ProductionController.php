@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductionExport;
 use App\Models\Branch;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
@@ -16,21 +17,28 @@ use App\Models\UserProduction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ProductionController extends Controller
 {
     protected $prod;
+
     protected $userProd;
+
     protected $ms;
+
     protected $prodMs;
+
     protected $prodMsMaterial;
+
     protected $product;
+
     protected $productChild;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->prod = new Production;
         $this->userProd = new UserProduction;
         $this->ms = new Milestone;
@@ -40,7 +48,8 @@ class ProductionController extends Controller
         $this->productChild = new ProductChild;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('production.list', [
             'productin_left' => $this->prod::where('due_date', now()->format('Y-m-d'))->count(),
             'to_do' => $this->prod::where('status', $this->prod::STATUS_TO_DO)->count(),
@@ -49,22 +58,23 @@ class ProductionController extends Controller
         ]);
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->prod;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('start_date', 'like', '%' . $keyword . '%')
-                    ->orWhere('due_date', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('priority', function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('start_date', 'like', '%'.$keyword.'%')
+                    ->orWhere('due_date', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('priority', function ($q) use ($keyword) {
                         $q->where('name', 'like', '%'.$keyword.'%');
                     })
-                    ->orWhereHas('productChild', function($q) use ($keyword) {
+                    ->orWhereHas('productChild', function ($q) use ($keyword) {
                         $q->where('sku', 'like', '%'.$keyword.'%');
                     });
             });
@@ -89,9 +99,9 @@ class ProductionController extends Controller
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
@@ -114,7 +124,8 @@ class ProductionController extends Controller
         return response()->json($data);
     }
 
-    public function create(Request $req) {
+    public function create(Request $req)
+    {
         $data = [];
         // Duplicate
         if ($req->id != null) {
@@ -138,7 +149,8 @@ class ProductionController extends Controller
         return view('production.form', $data);
     }
 
-    public function edit(Production $production) {
+    public function edit(Production $production)
+    {
         if ($production->status == $this->prod::STATUS_TRANSFERRED) {
             return redirect(route('production.index'))->with('warning', 'Not allow to edit.');
         }
@@ -150,7 +162,8 @@ class ProductionController extends Controller
         ]);
     }
 
-    public function view(Production $production) {
+    public function view(Production $production)
+    {
         $production->load('users', 'milestones', 'product');
         $production->formatted_created_at = Carbon::parse($production->created_at)->format('d M Y');
         $production->status = ($this->prod)->statusToHumanRead($production->status);
@@ -160,7 +173,7 @@ class ProductionController extends Controller
 
         $involved_pc_ids = getInvolvedProductChild($production->id);
 
-        $production->milestones->each(function($q) use ($involved_pc_ids) {
+        $production->milestones->each(function ($q) use ($involved_pc_ids) {
             if ($q->pivot->material_use_product_id == null) {
                 $mu_product_ids = [];
             } else {
@@ -168,13 +181,13 @@ class ProductionController extends Controller
             }
 
             if (count($mu_product_ids) > 0) {
-                $q->pivot->material_use_products = MaterialUseProduct::with(['material' => function($q) use ($involved_pc_ids) {
-                    $q->with(['children' => function($q) use ($involved_pc_ids) {
+                $q->pivot->material_use_products = MaterialUseProduct::with(['material' => function ($q) use ($involved_pc_ids) {
+                    $q->with(['children' => function ($q) use ($involved_pc_ids) {
                         $q->whereNull('status')->whereNotIn('id', $involved_pc_ids)->where('location', ProductChild::LOCATION_WAREHOUSE);
                     }]);
                 }])
-                ->whereIn('id', $mu_product_ids)
-                ->get();
+                    ->whereIn('id', $mu_product_ids)
+                    ->get();
             }
         });
 
@@ -182,7 +195,7 @@ class ProductionController extends Controller
         $pmms = $this->prodMsMaterial::whereIn('production_milestone_id', $pm_ids)->whereNotNull('product_child_id')->get();
 
         $production_milestone_materials = [];
-        for ($i=0; $i < count($pmms); $i++) { 
+        for ($i = 0; $i < count($pmms); $i++) {
             $production_milestone_materials[$pmms[$i]->production_milestone_id][] = $pmms[$i]->product_child_id;
         }
 
@@ -192,7 +205,8 @@ class ProductionController extends Controller
         ]);
     }
 
-    public function delete(Production $production) {
+    public function delete(Production $production)
+    {
         if ($production->status == $this->prod::STATUS_TRANSFERRED) {
             return redirect(route('production.index'))->with('warning', 'Not allow to delete.');
         }
@@ -215,7 +229,8 @@ class ProductionController extends Controller
         }
     }
 
-    public function upsert(Request $req, Production $production) {
+    public function upsert(Request $req, Production $production)
+    {
         $rules = [
             'name' => 'required|max:250',
             'desc' => 'required|max:250',
@@ -277,7 +292,7 @@ class ProductionController extends Controller
                 ]);
             }
             $this->product::where('id', $req->product)->update([
-                'in_production' => true
+                'in_production' => true,
             ]);
 
             // Assign
@@ -287,7 +302,7 @@ class ProductionController extends Controller
                 if ($up == null) {
                     $this->userProd::create([
                         'user_id' => $assign_id,
-                        'production_id' => $production->id
+                        'production_id' => $production->id,
                     ]);
                 }
             }
@@ -300,9 +315,9 @@ class ProductionController extends Controller
                     $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $ms_id)->first();
 
                     $ms_material_use_product = null;
-                    for ($i=0; $i < count($material_use_product); $i++) { 
+                    for ($i = 0; $i < count($material_use_product); $i++) {
                         if ($material_use_product[$i]->is_custom == false && $material_use_product[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
-                            $ms_material_use_product = join(',', $material_use_product[$i]->value);
+                            $ms_material_use_product = implode(',', $material_use_product[$i]->value);
                             break;
                         }
                     }
@@ -323,9 +338,9 @@ class ProductionController extends Controller
             if ($req->custom_milestone != null) {
                 foreach ($req->custom_milestone as $key => $ms) {
                     $ms_material_use_product = null;
-                    for ($i=0; $i < count($material_use_product); $i++) { 
+                    for ($i = 0; $i < count($material_use_product); $i++) {
                         if ($material_use_product[$i]->is_custom == true && $material_use_product[$i]->id == ($key + 1)) {
-                            $ms_material_use_product = join(',', $material_use_product[$i]->value);
+                            $ms_material_use_product = implode(',', $material_use_product[$i]->value);
                             break;
                         }
                     }
@@ -334,7 +349,7 @@ class ProductionController extends Controller
                         'type' => $this->ms::TYPE_PRODUCTION,
                         'name' => $ms,
                         'is_custom' => true,
-                        'product_id' => $req->product
+                        'product_id' => $req->product,
                     ]);
                     $this->prodMs::create([
                         'production_id' => $production->id,
@@ -355,7 +370,8 @@ class ProductionController extends Controller
         }
     }
 
-    public function checkInMilestone(Request $req) {
+    public function checkInMilestone(Request $req)
+    {
         $rules = [
             'production_milestone_id' => 'required',
             'datetime' => 'required',
@@ -370,15 +386,15 @@ class ProductionController extends Controller
 
         if ($pm->material_use_product_id != null) {
             $batch_serial_no_ids = [];
-            
+
             $material_use = MaterialUse::where('product_id', $pm->production->product_id)->first();
             // If no material serial no is provided
             $mu_product_ids = explode(',', $pm->material_use_product_id);
             $product_ids = MaterialUseProduct::whereIn('id', $mu_product_ids)->pluck('product_id');
             $products = Product::whereIn('id', $product_ids)->get();
-            
+
             $has_spare_part = false;
-            for ($i=0; $i < count($products); $i++) { 
+            for ($i = 0; $i < count($products); $i++) {
                 if ($products[$i]->is_sparepart == true) {
                     $has_spare_part = true;
                     break;
@@ -387,25 +403,25 @@ class ProductionController extends Controller
             if ($has_spare_part == true && $req->materials == null) {
                 return Response::json([
                     'errors' => [
-                        'materials' => "Material's serial no is required"
+                        'materials' => "Material's serial no is required",
                     ],
                 ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
             }
             // If qty is not tally
-            for ($i=0; $i < count($products); $i++) { 
+            for ($i = 0; $i < count($products); $i++) {
                 if ($products[$i]->is_sparepart == true) {
                     $material = MaterialUseProduct::where('material_use_id', $material_use->id)->where('product_id', $products[$i]->id)->first();
 
-                    if (!isset($req->materials[$products[$i]->id])) {
+                    if (! isset($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.' . $products[$i]->id => "Material's serial no is required"
+                                'materials.'.$products[$i]->id => "Material's serial no is required",
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
-                    } else if ($material->qty != count($req->materials[$products[$i]->id])) {
+                    } elseif ($material->qty != count($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.' . $products[$i]->id => 'Quantity needed is not tally'
+                                'materials.'.$products[$i]->id => 'Quantity needed is not tally',
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                     }
@@ -426,7 +442,7 @@ class ProductionController extends Controller
             if ($this->prod->getProgress($prod) >= 100) {
                 $prod->status = $this->prod::STATUS_COMPLETED;
                 $prod->save();
-            } else if ($this->prod->getProgress($prod) > 0) {
+            } elseif ($this->prod->getProgress($prod) > 0) {
                 $prod->status = $this->prod::STATUS_DOING;
                 $prod->save();
             }
@@ -434,7 +450,7 @@ class ProductionController extends Controller
             // Materials
             $now = now();
             if ($pm->material_use_product_id != null) {
-                for ($i=0; $i < count($products); $i++) { 
+                for ($i = 0; $i < count($products); $i++) {
                     $data = [];
 
                     $material = MaterialUseProduct::where('material_use_id', $material_use->id)
@@ -447,7 +463,7 @@ class ProductionController extends Controller
                             ->whereNotIn('product_child_id', $batch_serial_no_ids)
                             ->delete();
 
-                        for ($j=0; $j < count($req->materials[$products[$i]->id]); $j++) {
+                        for ($j = 0; $j < count($req->materials[$products[$i]->id]); $j++) {
                             $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)
                                 ->where('product_child_id', $req->materials[$products[$i]->id][$j])
                                 ->first();
@@ -460,7 +476,7 @@ class ProductionController extends Controller
                                 ];
                             }
                         }
-                    } else if ($products[$i]->is_sparepart == false) {
+                    } elseif ($products[$i]->is_sparepart == false) {
                         $pmm = $this->prodMsMaterial::where('production_milestone_id', $pm->id)
                             ->where('product_id', $products[$i]->id)
                             ->first();
@@ -542,8 +558,13 @@ class ProductionController extends Controller
             report($th);
 
             return Response::json([
-                'result' => false
+                'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new ProductionExport, 'production.xlsx');
     }
 }

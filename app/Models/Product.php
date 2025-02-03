@@ -87,6 +87,11 @@ class Product extends Model
         return $this->belongsTo(Product::class, 'hi_ten_stock_code');
     }
 
+    public function itemType()
+    {
+        return $this->belongsTo(InventoryType::class, 'item_type');
+    }
+
     public function getQtyAttribute($val)
     {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool) $this->is_sparepart == true)) {
@@ -101,9 +106,9 @@ class Product extends Model
         return $this->is_sparepart !== null && $this->is_sparepart == false;
     }
 
-    public function warehouseAvailableStock()
+    public function warehouseAvailableStock(?int $exclude_sale_id = null)
     {
-        return $this->warehouseStock() - $this->warehouseReservedStock() - $this->warehouseOnHoldStock();
+        return $this->warehouseStock() - $this->warehouseReservedStock($exclude_sale_id) - $this->warehouseOnHoldStock();
     }
 
     public function warehouseStock()
@@ -118,8 +123,17 @@ class Product extends Model
             ->count();
     }
 
-    public function warehouseReservedStock()
+    public function warehouseReservedStock(?int $exclude_sale_id = null)
     {
+        // Raw Material (not sparepart)
+        if ($this->type == self::TYPE_RAW_MATERIAL && (bool) $this->is_sparepart == false) {
+            if ($exclude_sale_id != null) {
+                return SaleProduct::whereNot('sale_id', $exclude_sale_id)->where('product_id', $this->id)->sum('qty');
+            }
+
+            return SaleProduct::where('product_id', $this->id)->sum('qty');
+        }
+
         if ($this->isRawMaterial()) {
             // Check in Production
             $count = ProductionMilestoneMaterial::where('product_id', $this->id)->where('on_hold', false)->sum('qty');

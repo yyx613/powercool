@@ -28,6 +28,7 @@ use App\Models\SaleProductChild;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
 use App\Models\Target;
+use App\Models\UOM;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -37,7 +38,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -357,6 +357,7 @@ class SaleController extends Controller
                 'sales.payment_status'
             )
             ->where('sales.type', Sale::TYPE_SO)
+            ->whereNull('sales.deleted_at')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('users', 'users.id', '=', 'sales.sale_id');
@@ -523,10 +524,25 @@ class SaleController extends Controller
     {
         $step = 1;
 
-        if ($req->has('product_children')) {
+        if ($req->has('pc')) {
+            $errors = [];
+            $pc_inputs = json_decode($req->pc, true);
+
+            foreach ($pc_inputs as $sp_id => $ipt) {
+                $sp = SaleProduct::where('id', $sp_id)->first();
+                if ($sp->product->isRawMaterial() && $ipt > $sp->remainingQtyForRM()) {
+                    $errors['sp_id_'.$sp_id] = 'The quantity is greater than '.$sp->qty;
+                } elseif (! $sp->product->isRawMaterial() && count($ipt) == 0) {
+                    unset($pc_inputs[$sp_id]);
+                }
+            }
+            if (count($errors) > 0) {
+                throw ValidationException::withMessages($errors);
+            }
+
             $step = 6;
 
-            Session::put('convert_product_children', $req->product_children);
+            Session::put('convert_product_children', $pc_inputs);
 
             $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
             $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
@@ -552,7 +568,18 @@ class SaleController extends Controller
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
-                ->has('products.children')
+                ->where(function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                ->orWhere('type', Product::TYPE_PRODUCT);
+                        })->has('products.children');
+                    })->orWhere(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                        });
+                    });
+                })
                 ->whereIn('id', explode(',', $req->so))
                 ->get();
 
@@ -570,12 +597,23 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where('payment_term', Session::get('convert_terms'))
-                ->where(function($q) {
-                    $q->whereHas('approval', function($q) {
+                ->where(function ($q) {
+                    $q->whereHas('approval', function ($q) {
                         $q->where('status', Approval::STATUS_APPROVED);
                     })->orDoesntHave('approval');
                 })
-                ->has('products.children')
+                ->where(function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                ->orWhere('type', Product::TYPE_PRODUCT);
+                        })->has('products.children');
+                    })->orWhere(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                        });
+                    });
+                })
                 ->get();
         } elseif ($req->has('sp')) {
             $step = 3;
@@ -588,12 +626,23 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->whereNotNull('payment_term')
-                ->where(function($q) {
-                    $q->wherehas('approval', function($q) {
-                        $q->where('status', approval::status_approved);
+                ->where(function ($q) {
+                    $q->wherehas('approval', function ($q) {
+                        $q->where('status', Approval::STATUS_APPROVED);
                     })->ordoesnthave('approval');
                 })
-                ->has('products.children')
+                ->where(function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                ->orWhere('type', Product::TYPE_PRODUCT);
+                        })->has('products.children');
+                    })->orWhere(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                        });
+                    });
+                })
                 ->distinct()
                 ->pluck('payment_term');
 
@@ -607,12 +656,23 @@ class SaleController extends Controller
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
                 ->where('customer_id', $req->cus)
-                ->where(function($q) {
-                    $q->whereHas('approval', function($q) {
+                ->where(function ($q) {
+                    $q->whereHas('approval', function ($q) {
                         $q->where('status', Approval::STATUS_APPROVED);
                     })->orDoesntHave('approval');
                 })
-                ->has('products.children')
+                ->where(function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                ->orWhere('type', Product::TYPE_PRODUCT);
+                        })->has('products.children');
+                    })->orWhere(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                        });
+                    });
+                })
                 ->distinct()
                 ->pluck('sale_id');
 
@@ -621,19 +681,32 @@ class SaleController extends Controller
             $sales = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->where('status', Sale::STATUS_ACTIVE)
-                ->where(function($q) {
-                    $q->whereHas('approval', function($q) {
+                ->where(function ($q) {
+                    $q->whereHas('approval', function ($q) {
                         $q->where('status', Approval::STATUS_APPROVED);
                     })->orDoesntHave('approval');
                 })
-                ->has('products.children')
+                ->where(function ($q) {
+                    $q->whereHas('products.product', function ($q) {
+                        $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                            ->orWhere('type', Product::TYPE_PRODUCT);
+                    })
+                        ->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                        });
+                })
+                ->orderBy('id', 'desc')
                 ->distinct()
                 ->get();
 
             $customer_ids = [];
             for ($i = 0; $i < count($sales); $i++) {
                 for ($j = 0; $j < count($sales[$i]->products); $j++) {
-                    if ($sales[$i]->products[$j]->remainingQty() > 0) {
+                    $is_rm = $sales[$i]->products[$j]->product->isRawMaterial();
+
+                    if ($is_rm && $sales[$i]->products[$j]->remainingQty() > 0) {
+                        $customer_ids[] = $sales[$i]->customer_id;
+                    } elseif (! $is_rm) {
                         $customer_ids[] = $sales[$i]->customer_id;
                     }
                 }
@@ -656,19 +729,24 @@ class SaleController extends Controller
 
     public function converToDeliveryOrder(Request $req)
     {
-        $spc_ids = explode(',', Session::get('convert_product_children'));
+        $sp_ids = [];
+        $pc_inputs = Session::get('convert_product_children');
+
+        foreach ($pc_inputs as $sp_id => $ipt) {
+            $sp_ids[] = $sp_id;
+        }
 
         try {
             DB::beginTransaction();
 
             // Approval
-            $approvel_required = false;
+            $approval_required = false;
             $by_pass_credit_term_ids = CreditTerm::where('by_pass_conversion', true)->pluck('id')->toArray();
 
             $delivery_address = CustomerLocation::where('id', $req->delivery_address)->first()->formatAddress();
 
             $products = collect();
-            foreach (SaleProduct::whereIn('id', SaleProductChild::whereIn('id', $spc_ids)->pluck('sale_product_id'))->cursor() as $sp) {
+            foreach (SaleProduct::whereIn('id', $sp_ids)->cursor() as $sp) {
                 $products->push($sp->product);
             }
 
@@ -693,34 +771,56 @@ class SaleController extends Controller
             (new Branch)->assign(DeliveryOrder::class, $do->id);
 
             // Create DO products
-            foreach (SaleProduct::whereIn('id', SaleProductChild::whereIn('id', $spc_ids)->pluck('sale_product_id'))->cursor() as $sp) {
+            foreach (SaleProduct::whereIn('id', $sp_ids)->cursor() as $sp) {
+                $is_raw_material = $sp->product->isRawMaterial();
+
                 $dop = DeliveryOrderProduct::create([
                     'delivery_order_id' => $do->id,
                     'sale_order_id' => $sp->sale->id,
                     'sale_product_id' => $sp->id,
+                    'qty' => $is_raw_material ? $pc_inputs[$sp->id] : null,
                 ]);
 
-                // Create DO product children
-                $spcs = SaleProductChild::whereIn('id', $spc_ids)->where('sale_product_id', $sp->id)->get();
-                $dopc = [];
-                for ($j = 0; $j < count($spcs); $j++) {
-                    $dopc[] = [
-                        'delivery_order_product_id' => $dop->id,
-                        'product_children_id' => $spcs[$j]->productChild->id,
-                        'created_at' => $do->created_at,
-                        'updated_at' => $do->updated_at,
-                    ];
-                }
-                DeliveryOrderProductChild::insert($dopc);
+                if (! $is_raw_material) {
+                    // Create DO product children
+                    $spcs = SaleProductChild::whereIn('id', $pc_inputs[$sp->id])->where('sale_product_id', $sp->id)->get();
+                    $dopc = [];
+                    for ($j = 0; $j < count($spcs); $j++) {
+                        $dopc[] = [
+                            'delivery_order_product_id' => $dop->id,
+                            'product_children_id' => $spcs[$j]->productChild->id,
+                            'created_at' => $do->created_at,
+                            'updated_at' => $do->updated_at,
+                        ];
+                    }
+                    DeliveryOrderProductChild::insert($dopc);
 
-                $soc_alter_qty[$sp->id] = count($spcs);
+                    $soc_alter_qty[$sp->id] = count($spcs);
+                }
+
                 $sale_orders->push($sp->sale);
             }
 
             // Create PDF
-            $dopcs = collect();
+            $pdf_products = [];
             for ($i = 0; $i < count($do->products); $i++) {
-                $dopcs = $dopcs->merge($do->products[$i]->children);
+                if ($do->products[$i]->saleProduct->product->isRawMaterial()) {
+                    $pdf_products[] = [
+                        'stock_code' => $do->products[$i]->saleProduct->product->sku,
+                        'desc' => $do->products[$i]->saleProduct->product->desc,
+                        'qty' => $do->products[$i]->qty,
+                    ];
+                } else {
+                    $spcs = $do->products[$i]->children;
+
+                    for ($j = 0; $j < count($spcs); $j++) {
+                        $pdf_products[] = [
+                            'stock_code' => $spcs[$j]->productChild->sku,
+                            'desc' => $spcs[$j]->productChild->parent->desc,
+                            'qty' => 1,
+                        ];
+                    }
+                }
             }
             $pdf = Pdf::loadView('sale_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_do_pdf', [
                 'date' => now()->format('d/m/Y'),
@@ -728,7 +828,7 @@ class SaleController extends Controller
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
                 'sale_orders' => $sale_orders,
-                'dopcs' => $dopcs,
+                'products' => $pdf_products,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => CustomerLocation::where('id', $req->delivery_address)->first(),
                 'terms' => Session::get('convert_terms'),
@@ -752,14 +852,14 @@ class SaleController extends Controller
                 $sale_orders[$i]->convert_to = implode(',', $current_do_ids);
                 $sale_orders[$i]->save();
 
-                if ($approvel_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_term, $by_pass_credit_term_ids)) {
-                    $approvel_required = true;
+                if ($approval_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_term, $by_pass_credit_term_ids)) {
+                    $approval_required = true;
                 }
 
                 SaleOrderCancellation::calCancellation($sale_orders[$i], 2, $soc_alter_qty);
             }
 
-            if ($approvel_required) {
+            if ($approval_required) {
                 $approval = Approval::create([
                     'object_type' => DeliveryOrder::class,
                     'object_id' => $do->id,
@@ -820,7 +920,7 @@ class SaleController extends Controller
             'discount.*' => 'nullable',
             'product_remark' => 'required',
             'product_remark.*' => 'nullable|max:250',
-            'override_selling_price' => 'required',
+            'override_selling_price' => 'nullable',
             'override_selling_price.*' => 'nullable',
             // upsertRemark
             'remark' => 'nullable|max:250',
@@ -836,7 +936,6 @@ class SaleController extends Controller
             $rules['payment_amount'] = 'nullable';
             $rules['payment_status'] = 'required';
             $rules['payment_remark'] = 'nullable|max:250';
-            $rules['by_pass_conversion'] = 'nullable';
         }
         $req->validate($rules, [], [
             // upsertQuoDetails
@@ -867,21 +966,28 @@ class SaleController extends Controller
                 $match = array_intersect($serial_no, $req->product_serial_no[$i]);
                 if (count($match) > 0) {
                     return Response::json([
-                        'product_serial_no' => 'Please make sure no duplicate serial no is selected',
+                        'errors' => [
+                            'product_serial_no' => 'Please make sure no duplicate serial no is selected',
+                        ],
                     ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                 }
                 $serial_no = array_merge($serial_no, $req->product_serial_no[$i]);
             }
         }
+        // Check raw material has enough qty (upsertProDetails)
+        for ($i = 0; $i < count($req->product_id); $i++) {
+            $prod = Product::where('id', $req->product_id[$i])->first();
 
-        if ($req->type == 'so') {
-            if ($req->by_pass_conversion != null) {
-                if (! Hash::check($req->by_pass_conversion, Auth::user()->password)) {
+            if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
+                $max_qty = $prod->warehouseAvailableStock($req->sale_id);
+
+                if ($req->qty[$i] > $max_qty) {
                     return Response::json([
                         'errors' => [
-                            'by_pass_conversion' => 'Invalid Password',
+                            'qty.'.$i => 'The quantity has exceed the available quantity ('.$max_qty.')',
                         ],
-                    ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+
                 }
             }
         }
@@ -915,9 +1021,6 @@ class SaleController extends Controller
                 }
                 if ($res->new_payment_amount) {
                     $data['new_payment_amount'] = $res->new_payment_amount;
-                }
-                if ($res->can_by_pass_conversion) {
-                    $data['can_by_pass_conversion'] = $res->can_by_pass_conversion;
                 }
             }
 
@@ -1072,7 +1175,7 @@ class SaleController extends Controller
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
                 'product_remark.*' => 'nullable|max:250',
-                'override_selling_price' => 'required',
+                'override_selling_price' => 'nullable',
                 'override_selling_price.*' => 'nullable',
             ];
             $req->validate($rules, [], [
@@ -1086,7 +1189,7 @@ class SaleController extends Controller
                 'warranty_period.*' => 'warranty period',
                 'discount.*' => 'discount',
                 'product_remark.*' => 'remark',
-                'override_selling_price.*' => 'override selling price'
+                'override_selling_price.*' => 'override selling price',
             ]);
             // Check duplicate serial no is selected
             if (isset($req->product_serial_no)) {
@@ -1105,12 +1208,27 @@ class SaleController extends Controller
                     $serial_no = array_merge($serial_no, $req->product_serial_no[$i]);
                 }
             }
+            // Check raw material has enough qty (upsertProDetails)
+            for ($i = 0; $i < count($req->product_id); $i++) {
+                $prod = Product::where('id', $req->product_id[$i])->first();
+
+                if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
+                    $max_qty = $prod->warehouseAvailableStock($req->sale_id);
+
+                    if ($req->qty[$i] > $max_qty) {
+                        return Response::json([
+                            'errors' => [
+                                'qty.'.$i => 'The quantity has exceed the available quantity ('.$max_qty.')',
+                            ],
+                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+
+                    }
+                }
+            }
         }
 
         try {
             DB::beginTransaction();
-
-            $approval_required = false;
 
             if ($req->product_order_id != null) {
                 $order_idx = array_filter($req->product_order_id, function ($val) {
@@ -1140,7 +1258,7 @@ class SaleController extends Controller
                         'promotion_id' => $req->promotion_id[$i],
                         'discount' => $req->discount[$i],
                         'remark' => $req->product_remark[$i],
-                        'override_selling_price' => $req->override_selling_price[$i],
+                        'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                     ]);
                 } else {
                     $sp = SaleProduct::create([
@@ -1155,14 +1273,14 @@ class SaleController extends Controller
                         'promotion_id' => $req->promotion_id[$i],
                         'discount' => $req->discount[$i],
                         'remark' => $req->product_remark[$i],
-                        'override_selling_price' => $req->override_selling_price[$i],
+                        'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                     ]);
                 }
 
                 $prod = Product::where('id', $req->product_id[$i])->first();
 
-                if ($req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod)) {
-                    if (!Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod)) {
+                    if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
                         $approval = Approval::create([
                             'object_type' => Sale::class,
                             'object_id' => $req->sale_id,
@@ -1173,7 +1291,7 @@ class SaleController extends Controller
                 }
 
                 // Sale product children
-                SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->delete();
+                SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
                 $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
 
                 if (isset($req->product_serial_no) && $req->product_serial_no[$i] != null) {
@@ -1193,8 +1311,6 @@ class SaleController extends Controller
                     SaleProductChild::insert($data);
                 }
             }
-
-            // Approval required
 
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
                 ->pluck('id')
@@ -1261,19 +1377,8 @@ class SaleController extends Controller
                 'payment_amount' => 'nullable',
                 'payment_status' => 'required',
                 'payment_remark' => 'nullable|max:250',
-                'by_pass_conversion' => 'nullable',
             ];
             $req->validate($rules);
-
-            if ($req->by_pass_conversion != null) {
-                if (! Hash::check($req->by_pass_conversion, Auth::user()->password)) {
-                    return Response::json([
-                        'errors' => [
-                            'by_pass_conversion' => 'Invalid Password',
-                        ],
-                    ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
-                }
-            }
         }
 
         try {
@@ -1295,10 +1400,6 @@ class SaleController extends Controller
 
                     $sale->payment_amount = implode(',', $new_amount);
                 }
-                if ($req->by_pass_conversion != null) {
-                    $sale->can_by_pass_conversion = true;
-                }
-
                 $sale->payment_term = $req->payment_term;
                 $sale->payment_method = $req->payment_method;
                 $sale->payment_due_date = $req->payment_due_date;
@@ -1312,7 +1413,6 @@ class SaleController extends Controller
             return Response::json([
                 'result' => true,
                 'new_payment_amount' => $sale->getFormattedPaymentAmount(),
-                'can_by_pass_conversion' => $sale->can_by_pass_conversion,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -1369,8 +1469,18 @@ class SaleController extends Controller
 
     public function getProducts(Sale $sale)
     {
+        $product_ids = SaleProduct::where('sale_id', $sale->id)->pluck('product_id')->toArray();
+        $products = Product::whereIn('id', $product_ids)
+            ->where(function ($q) {
+                $q->where('type', Product::TYPE_PRODUCT)
+                    ->orWhere(function ($q) {
+                        $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+                    });
+            })
+            ->get();
+
         return Response::json([
-            'products' => $sale->products->load('product'),
+            'products' => $products,
         ], HttpFoundationResponse::HTTP_OK);
     }
 
@@ -1572,11 +1682,40 @@ class SaleController extends Controller
             (new Branch)->assign(Invoice::class, $inv->id);
 
             // Create PDF
-            $dopcs = collect();
+            $pdf_products = [];
             $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
-            for ($i = 0; $i < count($dos); $i++) {
-                for ($j = 0; $j < count($dos[$i]->products); $j++) {
-                    $dopcs = $dopcs->merge($dos[$i]->products[$j]->children);
+
+            for ($k = 0; $k < count($dos); $k++) {
+                for ($i = 0; $i < count($dos[$k]->products); $i++) {
+                    if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
+                        $pdf_products[] = [
+                            'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
+                            'model_name' => $dos[$k]->products[$i]->saleProduct->product->model_name,
+                            'qty' => $dos[$k]->products[$i]->qty,
+                            'uom' => UOM::where('id', $dos[$k]->products[$i]->saleProduct->product->uom)->value('name'),
+                            'unit_price' => number_format($dos[$k]->products[$i]->saleProduct->unit_price, 2),
+                            'discount' => number_format($dos[$k]->products[$i]->saleProduct->discount, 2),
+                            'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
+                            'total_discount' => $dos[$k]->products[$i]->saleProduct->discountAmount(),
+                            'total' => number_format(($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount(), 2),
+                        ];
+                    } else {
+                        $dopcs = $dos[$k]->products[$i]->children;
+
+                        for ($j = 0; $j < count($dopcs); $j++) {
+                            $pdf_products[] = [
+                                'stock_code' => $dopcs[$j]->productChild->sku,
+                                'model_name' => $dopcs[$j]->productChild->parent->model_name,
+                                'qty' => 1,
+                                'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
+                                'unit_price' => number_format($dopcs[$j]->doProduct->saleProduct->unit_price, 2),
+                                'discount' => number_format($dopcs[$j]->doProduct->saleProduct->discount, 2),
+                                'promotion' => number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
+                                'total_discount' => $dopcs[$j]->doProduct->saleProduct->discountAmount(),
+                                'total' => number_format(($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount(), 2),
+                            ];
+                        }
+                    }
                 }
             }
             $pdf = Pdf::loadView('delivery_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_inv_pdf', [
@@ -1584,7 +1723,7 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'do_sku' => implode(', ', $do_sku),
                 'dos' => $dos,
-                'dopcs' => $dopcs,
+                'products' => $pdf_products,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'terms' => Session::get('convert_terms'),
