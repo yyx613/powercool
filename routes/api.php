@@ -67,6 +67,7 @@ Route::prefix('sync')->controller(SyncAutoCountController::class)->group(functio
         return response()->json(['message' => 'Hello, API!']);
     });
     Route::post('/syncCreditor',[SyncAutoCountController::class,'syncCreditor']);
+    Route::post('/syncDebtor',[SyncAutoCountController::class,'syncDebtor']);
     //Suppliers
     Route::get('/suppliers/unsynced', [SyncAutoCountController::class, 'getUnsyncedSuppliers']);
     Route::post('/suppliers/updateSupplierSyncStatus', [SyncAutoCountController::class, 'updateSupplierSyncStatus']);

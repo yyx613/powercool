@@ -10,10 +10,12 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\DeliveryOrder;
 use App\Models\Supplier;
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Invoice;
 use App\Models\Sale;
 use App\Models\GRN;
+use App\Models\Currency;
 
 
 class SyncAutoCountController extends Controller
@@ -24,50 +26,112 @@ class SyncAutoCountController extends Controller
     public function syncCreditor(Request $request)
     {
         try {
-            $data = $request->all(); // Retrieve all UOM records from the request
+            $data = $request->json()->all();// Retrieve all UOM records from the request
+            $companyGroup = $request->query('company_group');
 
             foreach ($data as $record) {
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
-                $supplier = DB::table('suppliers')
-                    ->where('sku', $accNo)
-                    ->first();
+                $supplier = Supplier::where('sku', $accNo)->first();
 
-                $CurrencyCode = DB::table('currencies')
-                ->where('name', $record['CurrencyCode'])
-                ->first();
+                // Retrieve or create currency
+                $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
 
-                if (!$currency) {
-                    $currencyId = DB::table('currencies')->insertGetId([
+                if (!$CurrencyCode) {
+                    $currencyId = Currency::create([
                         'name' => $record['CurrencyCode'],
                         'is_active' => '1',
                         'created_at' => now(),
                         'updated_at' => now()
-                    ]);
+                    ])->id;
                 } else {
-                    $currencyId = $currency->id;
+                    $currencyId = $CurrencyCode->id;
                 }
 
                 if ($supplier) {
+                    // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
                         'name' => $record['CompanyName'],
-                        'phone' => $record['Phone'],
+                        'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
+                        'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
-                        'location' => $record['Address1'] + $record['Address2'] + $record['Address3'],
+                        'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
                         'updated_at' => now()
                     ]);
-                }
-                else{
-                    DB::table('suppliers')->insert([
+                } else {
+                    // Insert new supplier
+                    Supplier::create([
                         'sku' => $record['AccNo'],
-                        'name' => $record['Name'],
-                        'phone' => $record['Phone'],
+                        'name' => $record['CompanyName'],
+                        'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
+                        'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
+                        'currency_id' => $currencyId,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+            }
+            return response()->json(['message' => 'Batch processed successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function syncDebtor(Request $request)
+    {
+        try {
+            $data = $request->json()->all(); // Retrieve all UOM records from the request
+            $companyGroup = $request->query('company_group');
+
+
+            foreach ($data as $record) {
+                $accNo = $record['AccNo'];
+
+                // Retrieve product_id using itemCode from products table
+                $supplier = Customer::where('sku', $accNo)->first();
+
+                // Retrieve or create currency
+                $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
+
+                if (!$CurrencyCode) {
+                    $currencyId = Currency::create([
+                        'name' => $record['CurrencyCode'],
+                        'is_active' => '1',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ])->id;
+                } else {
+                    $currencyId = $CurrencyCode->id;
+                }
+
+                if ($supplier) {
+                    // Since $supplier is now an Eloquent model, we can use update()
+                    $supplier->update([
+                        'name' => $record['CompanyName'],
+                        'phone' => $record['Phone'] ?? "-",
+                        'company_name' => $record['CompanyName'],
+                        'company_group' => $companyGroup,
+                        'company_registration_number' => $record['RegisterNo'],
+                        // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
+                        'currency_id' => $currencyId,
+                        'updated_at' => now()
+                    ]);
+                } else {
+                    // Insert new supplier
+                    Customer::create([
+                        'sku' => $record['AccNo'],
+                        'name' => $record['CompanyName'],
+                        'phone' => $record['Phone'] ?? "-",
+                        'company_name' => $record['CompanyName'],
+                        'company_group' => $companyGroup,
+                        'company_registration_number' => $record['RegisterNo'],
+                        // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
                         'created_at' => now(),
                         'updated_at' => now()
