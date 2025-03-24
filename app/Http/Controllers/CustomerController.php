@@ -161,10 +161,9 @@ class CustomerController extends Controller
             $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
             if ($res->status() != 200) {
                 $err = json_decode($res->getData()->message);
-                dd($err);
 
                 throw ValidationException::withMessages([
-                    'tin_number' => $err->title,
+                    'tin_number' => $err->title ?? $err->message,
                     'tin_number_hasil' => true,
                 ]);
             }

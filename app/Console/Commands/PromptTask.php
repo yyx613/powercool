@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Scopes\BranchScope;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserTask;
@@ -37,7 +38,7 @@ class PromptTask extends Command
         for ($i = 0; $i < count($tasks); $i++) {
             $to_notify = UserTask::where('task_id', $tasks[$i]->id)->pluck('user_id')->toArray();
 
-            Notification::send(User::whereIn('id', $to_notify)->get(), new MobileAppNotification([
+            Notification::send(User::withoutGlobalScope(BranchScope::class)->whereIn('id', $to_notify)->get(), new MobileAppNotification([
                 'type' => 'task_prompt',
                 'task_id' => $tasks[$i]->id,
             ]));

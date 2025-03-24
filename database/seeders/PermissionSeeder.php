@@ -69,6 +69,9 @@ class PermissionSeeder extends Seeder
             'sale.billing.view',
             'sale.billing.convert',
 
+            'sale.invoice_return.view',
+            'sale.invoice_return.return',
+
             'task.view',
             'task.create',
             'task.edit',
@@ -78,6 +81,7 @@ class PermissionSeeder extends Seeder
             'production.create',
             'production.edit',
             'production.delete',
+            'production.complete_notification',
 
             'production_material.view',
 

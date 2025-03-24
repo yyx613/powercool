@@ -128,6 +128,13 @@
                                     </a>
                                 </li>
                                 @endcan
+                                @can('sale.invoice_return.view')
+                                <li>
+                                    <a href="{{ route('invoice_return.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice_return.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice Return') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
                                 @can('sale.billing.view')
                                 <li>
                                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -486,6 +493,11 @@
                                 <li>
                                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -776,6 +788,13 @@
                     </a>
                 </li>
                 @endcan
+                @can('sale.invoice_return.view')
+                <li>
+                    <a href="{{ route('invoice_return.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice_return.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice Return') }}</span>
+                    </a>
+                </li>
+                @endcan
                 @can('sale.billing.view')
                 <li>
                     <a href="{{ route('billing.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'billing.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1011,6 +1030,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                     </a>
@@ -1147,6 +1171,13 @@
                                 <li>
                                     <a href="{{ route('invoice.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice') }}</span>
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('sale.invoice_return.view')
+                                <li>
+                                    <a href="{{ route('invoice_return.index') }}" class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice_return.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Invoice Return') }}</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -1511,6 +1542,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('warranty_period.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                                     </a>
@@ -1552,7 +1588,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.') || CURRENT_ROUTE_NAME.includes('invoice_return.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes('grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes('raw_material.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
@@ -1589,7 +1625,7 @@
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.')) {
+                } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.') || CURRENT_ROUTE_NAME.includes('invoice_return.')) {
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes('grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes('raw_material.')) {
                     $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()

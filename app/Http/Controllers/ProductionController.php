@@ -13,10 +13,14 @@ use App\Models\Production;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\Sale;
+use App\Models\Scopes\BranchScope;
+use App\Models\User;
 use App\Models\UserProduction;
+use App\Notifications\ProductionCompleteNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -544,6 +548,17 @@ class ProductionController extends Controller
                 $this->prodMsMaterial::whereIn('production_milestone_id', $production_ms_ids)->update([
                     'on_hold' => false,
                 ]);
+            }
+
+            if ($this->prod->getProgress($prod) >= 100) {
+                $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
+                    $q->whereIn('name', ['production.complete_notification']);
+                })->get();
+
+                Notification::send($receivers, new ProductionCompleteNotification([
+                    'production_id' => $prod->id,
+                    'desc' => 'The production is completed',
+                ]));
             }
 
             DB::commit();

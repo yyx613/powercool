@@ -174,6 +174,8 @@ class SaleController extends Controller
             $products->push($sps[$i]->product);
         }
 
+        $sale->saleperson = User::withoutGlobalScope(BranchScope::class)->where('id', $sale->sale_id)->first();
+
         $pdf = Pdf::loadView('quotation.'.(isHiTen($products) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,

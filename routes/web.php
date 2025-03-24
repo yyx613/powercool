@@ -13,6 +13,7 @@ use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventoryServiceReminderController;
 use App\Http\Controllers\InventoryServieHistoryController;
+use App\Http\Controllers\InvoiceReturnController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UOMController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
@@ -261,19 +263,19 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/get-cancellation-involved-inv/{inv}', 'getCancellationInvolvedInv')->name('get_cancellation_involved_inv');
         });
         // Invoice
-        Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
-            Route::get('/', 'indexInvoice')->name('index');
-            Route::get('/get-data', 'getDataInvoice')->name('get_data');
-            Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
-            Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
-            Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
-            Route::get('/get-data-consolidated-e-invoice', 'getDataConsolidatedEInvoice')->name('get_data_consolidated-e-invoice');
-            Route::get('/credit-note', 'indexCreditNote')->name('credit-note.index');
-            Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
-            Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
-            Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
-            Route::get('/cancel', 'cancelInvoice')->name('cancel');
-        });
+        // Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
+        //     Route::get('/', 'indexInvoice')->name('index');
+        //     Route::get('/get-data', 'getDataInvoice')->name('get_data');
+        //     Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
+        //     Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
+        //     Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
+        //     Route::get('/get-data-consolidated-e-invoice', 'getDataConsolidatedEInvoice')->name('get_data_consolidated-e-invoice');
+        //     Route::get('/credit-note', 'indexCreditNote')->name('credit-note.index');
+        //     Route::get('/get-data-credit-note', 'getDataCreditNote')->name('get_data_credit-note');
+        //     Route::get('/debit-note', 'indexDebitNote')->name('debit-note.index');
+        //     Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
+        //     Route::get('/cancel', 'cancelInvoice')->name('cancel');
+        // });
 
         Route::get('/download', 'download')->name('download');
 
@@ -293,6 +295,14 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/to-invoice-billing', 'toBilling')->name('to_billing');
             Route::get('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
         });
+    });
+    // Invoice Return
+    Route::controller(InvoiceReturnController::class)->prefix('invoice-return')->name('invoice_return.')->middleware(['can:sale.invoice_return.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/product-selection/{inv}', 'productSelection')->name('product_selection');
+        Route::get('/product-selection-submit/{inv}', 'productSelectionSubmit')->name('product_selection_submit');
+        Route::get('/view-product-selection/{inv}', 'productSelectionView')->name('view_product_selection');
     });
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->middleware(['can:task.view'])->group(function () {
@@ -436,6 +446,14 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function () {
+        // Vehicle
+        Route::controller(VehicleController::class)->prefix('vehicle')->name('vehicle.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::get('/edit/{vehicle}', 'edit')->name('edit');
+            Route::post('/upsert/{vehicle?}', 'upsert')->name('upsert');
+        });
         // Material Use
         Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function () {
             Route::get('/', 'index')->name('index');

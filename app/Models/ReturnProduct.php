@@ -5,11 +5,10 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DeliveryOrderProductChild extends Model
+class ReturnProduct extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $guarded = [];
 
@@ -21,15 +20,5 @@ class DeliveryOrderProductChild extends Model
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
-    }
-
-    public function doProduct()
-    {
-        return $this->belongsTo(DeliveryOrderProduct::class, 'delivery_order_product_id');
-    }
-
-    public function productChild()
-    {
-        return $this->belongsTo(ProductChild::class, 'product_children_id');
     }
 }
