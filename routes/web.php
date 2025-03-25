@@ -58,6 +58,10 @@ Route::get('/', function () {
     return redirect(route('login'));
 });
 
+Route::get('/privacy-policy', function () {
+    return view('privacy_policy');
+});
+
 Route::controller(CustomerController::class)->name('customer.')->group(function () {
     Route::get('/create-customer-link', 'createLink')->name('create_link');
 });
