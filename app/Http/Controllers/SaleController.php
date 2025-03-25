@@ -185,7 +185,7 @@ class SaleController extends Controller
         ]);
         $pdf->setPaper('A4', 'letter');
 
-        return $pdf->stream();
+        return $pdf->stream($sale->sku.'.pdf');
     }
 
     public function toSaleOrder(Request $req)
@@ -519,7 +519,7 @@ class SaleController extends Controller
         ]);
         $pdf->setPaper('A4', 'letter');
 
-        return $pdf->stream();
+        return $pdf->stream($sale->sku.'.pdf');
     }
 
     public function toDeliveryOrder(Request $req)
@@ -689,13 +689,16 @@ class SaleController extends Controller
                     })->orDoesntHave('approval');
                 })
                 ->where(function ($q) {
-                    $q->whereHas('products.product', function ($q) {
-                        $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                            ->orWhere('type', Product::TYPE_PRODUCT);
-                    })
-                        ->whereHas('products.product', function ($q) {
+                    $q->where(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
+                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                ->orWhere('type', Product::TYPE_PRODUCT);
+                        })->has('products.children');
+                    })->orWhere(function ($q) {
+                        $q->whereHas('products.product', function ($q) {
                             $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
                         });
+                    });
                 })
                 ->orderBy('id', 'desc')
                 ->distinct()
@@ -2631,9 +2634,9 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $sku = (new Billing)->generateSku();
-            $do_filename = $sku.'DO.pdf';
-            $inv_filename = $sku.'INV.pdf';
+            $sku = generateSku('', Billing::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray(), true);
+            $do_filename = 'BDO-'.$sku.'.pdf';
+            $inv_filename = 'BINV-'.$sku.'.pdf';
 
             $bill = Billing::create([
                 'sku' => $sku,
@@ -2666,8 +2669,8 @@ class SaleController extends Controller
                 }
             }
 
-            $this->generateDeliveryOrderBillingPDF($sku, $do_filename, $dopcs, $req->all());
-            $this->generateInvoiceBillingPDF($sku, $inv_filename, $dopcs, $req->all());
+            $this->generateDeliveryOrderBillingPDF('BDO-'.$sku, $do_filename, $dopcs, $req->all());
+            $this->generateInvoiceBillingPDF('BINV-'.$sku, $inv_filename, $dopcs, $req->all());
 
             DB::commit();
 
@@ -2836,7 +2839,7 @@ class SaleController extends Controller
         ]);
         $pdf->setPaper('A4', 'letter');
 
-        return $pdf->stream();
+        return $pdf->stream($sale->sku.'.pdf');
     }
 
     public function getSalePerson(Request $request)

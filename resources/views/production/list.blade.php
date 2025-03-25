@@ -60,6 +60,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Production ID') }}</th>
+                    <th>{{ __('Old Production ID') }}</th>
                     <th>{{ __('Product Serial No') }}</th>
                     <th>{{ __('Start Date') }}</th>
                     <th>{{ __('Due Date') }}</th>
@@ -89,6 +90,7 @@
             order: [],
             columns: [
                 { data: 'sku' },
+                { data: 'old_production_sku' },
                 { data: 'product_serial_no' },
                 { data: 'start_date' },
                 { data: 'due_date' },
@@ -117,6 +119,7 @@
                 {
                     "width": "10%",
                     "targets": 2,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -138,6 +141,13 @@
                 {
                     "width": "10%",
                     "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
                         return data == null ? '-' : data.name
@@ -145,7 +155,7 @@
                 },
                 {
                     "width": '10%',
-                    "targets": 6,
+                    "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -157,12 +167,14 @@
                                 return "{!! __('Completed') !!}"
                             case 4:
                                 return "{!! __('Transferred') !!}"
+                            case 5:
+                                return "{!! __('Modified') !!}"
                         }
                     }
                 },
                 {
                     "width": "10%",
-                    "targets": 7,
+                    "targets": 8,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
@@ -170,9 +182,17 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 8,
+                    "targets": 9,
                     "orderable": false,
                     render: function (data, type, row) {
+                        if (row.status == 5) {
+                            return  `<div class="flex items-center justify-end gap-x-2 px-2">
+                                <a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
+                                </a>
+                            </div>`
+                        }
+
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.status == 4 ?
@@ -185,6 +205,14 @@
                                     </a>
                                 ` :
                                 `
+                                    ${
+                                        row.progress < 100 ? `` : `
+                                        <a href="{{ config('app.url') }}/production/create?id=${row.id}&is_modify=true" class="rounded-full p-2 bg-purple-200 inline-block" title="{!! __('Modify Product Code') !!}">
+                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                                <path d="m3.688,24c-.032,0-.063,0-.095,0-1.022-.027-1.963-.462-2.649-1.224-1.269-1.409-1.157-3.784.244-5.185l5.868-5.867c.253-.254.344-.631.241-1.009-.358-1.318-.393-2.676-.102-4.036C7.903,3.364,10.626.735,13.972.137c1.006-.18,2.015-.184,3.002-.007.731.129,1.299.625,1.52,1.325.251.799-.003,1.681-.682,2.359l-2.247,2.217c-.658.658-.758,1.69-.222,2.345.308.378.742.598,1.222.622.472.02.936-.155,1.271-.489l2.58-2.55c.539-.539,1.332-.735,2.07-.501.723.227,1.254.828,1.385,1.567h0c.175.987.172,1.998-.007,3.003-.6,3.347-3.229,6.07-6.544,6.777-1.363.291-2.721.256-4.036-.103-.377-.104-.754-.012-1.008.241l-5.976,5.975c-.69.69-1.637,1.081-2.612,1.081ZM15.61,1.993c-.422,0-.854.035-1.286.112-2.554.457-4.634,2.463-5.174,4.991-.224,1.045-.198,2.086.076,3.093.29,1.062,0,2.191-.756,2.948l-5.868,5.867c-.65.65-.732,1.81-.171,2.433.315.35.747.55,1.215.562.461.019.909-.163,1.241-.494l5.975-5.975c.755-.755,1.885-1.047,2.948-.757,1.004.274,2.045.3,3.093.076,2.528-.539,4.534-2.618,4.992-5.174.138-.772.14-1.547.006-2.301v-.007s-2.655,2.559-2.655,2.559c-.729.729-1.744,1.136-2.781,1.068-1.036-.052-2.009-.545-2.669-1.353-1.179-1.439-1.021-3.649.361-5.03l2.247-2.217c.179-.18.191-.314.184-.341-.315-.039-.643-.062-.976-.062Z"/>
+                                            </svg>
+                                        </a>`
+                                    }
                                     <a href="{{ config('app.url') }}/production/create?id=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m19,0h-6c-2.757,0-5,2.243-5,5v6c0,2.757,2.243,5,5,5h6c2.757,0,5-2.243,5-5v-6c0-2.757-2.243-5-5-5Zm3,11c0,1.654-1.346,3-3,3h-6c-1.654,0-3-1.346-3-3v-6c0-1.654,1.346-3,3-3h6c1.654,0,3,1.346,3,3v6Zm-6,8c0,2.757-2.243,5-5,5h-6c-2.757,0-5-2.243-5-5v-6c0-2.757,2.243-5,5-5,.553,0,1,.448,1,1s-.447,1-1,1c-1.654,0-3,1.346-3,3v6c0,1.654,1.346,3,3,3h6c1.654,0,3-1.346,3-3,0-.552.447-1,1-1s1,.448,1,1Z"/></svg>
                                     </a>

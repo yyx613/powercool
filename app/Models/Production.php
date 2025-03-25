@@ -23,6 +23,8 @@ class Production extends Model
 
     const STATUS_TRANSFERRED = 4;
 
+    const STATUS_MODIFIED = 5;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -58,6 +60,11 @@ class Production extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function oldProduction()
+    {
+        return $this->belongsTo(Production::class, 'old_production');
     }
 
     public function milestones()

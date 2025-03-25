@@ -112,12 +112,14 @@
                                             <div class="w-full p-3 rounded-md border border-slate-100">
                                                 <h6 class="leading-none">{{ $pro['product_name'] }}</h6>
                                                 <p class="text-sm text-slate-400">{{ $pro['product_desc'] }}</p>
-                                                @foreach ($pro['serial_no'] as $val)
-                                                    <div class="flex justify-between">
-                                                        <span class="text-sm text-slate-600 mt-2">Serial No: {{ $val['serial_no'] }}</span>
-                                                        <span class="text-sm text-slate-600 mt-2 unit-price-label" data-id="{{ $key }}">U/Price: RM {{ number_format($val['unit_price'], 2) }}</span>
-                                                    </div>
-                                                @endforeach
+                                                @if (isset($pro['serial_no']))
+                                                    @foreach ($pro['serial_no'] as $val)
+                                                        <div class="flex justify-between">
+                                                            <span class="text-sm text-slate-600 mt-2">Serial No: {{ $val['serial_no'] }}</span>
+                                                            <span class="text-sm text-slate-600 mt-2 unit-price-label" data-id="{{ $key }}">U/Price: RM {{ number_format($val['unit_price'], 2) }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
                                                 <div class="border-t pt-4 mt-4">
                                                     <x-app.input.input name="custom-unit-price-{{ $key }}" placeholder="Enter customer unit price here" class="text-sm decimal-input border-slate-200 custom-unit-price" data-id="{{ $key }}" />
                                                 </div>

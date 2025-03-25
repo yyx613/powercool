@@ -338,7 +338,11 @@ if (! function_exists('generateSku')) {
             while (strlen($digits) < $digits_length) {
                 $digits = '0'.$digits;
             }
-            $sku = strtoupper($formatted_prefix.'-'.$digits);
+            if ($formatted_prefix == '') {
+                $sku = strtoupper($digits);
+            } else {
+                $sku = strtoupper($formatted_prefix.'-'.$digits);
+            }
 
             if (! in_array($sku, $existing_skus)) {
                 break;

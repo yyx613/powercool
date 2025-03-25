@@ -30,8 +30,11 @@ class InvoiceReturnController extends Controller
 
             for ($j = 0; $j < count($dops); $j++) {
                 $temp = [];
-
                 $product = Product::where('id', SaleProduct::where('id', $dops[$j]->sale_product_id)->value('product_id'))->first();
+
+                if ($dops[$j]->qty == null && count($dops[$j]->children) <= 0) {
+                    continue;
+                }
 
                 // If product appears before
                 $product_appears_before = false;

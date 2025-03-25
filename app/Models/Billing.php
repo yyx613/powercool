@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 #[ScopedBy([BranchScope::class])]
 class Billing extends Model
@@ -16,16 +15,19 @@ class Billing extends Model
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
@@ -44,21 +46,5 @@ class Billing extends Model
         return $this->belongsToMany(SaleProduct::class, 'billing_sale_product', 'billing_id', 'sale_product_id')
             ->withPivot('custom_unit_price')
             ->withTimestamps();
-    }
-
-    public function generateSku(): string {
-        $sku = null;
-        
-        while (true) {
-            $sku = 'Bill' . now()->format('ym') . generateRandomAlphabet();
-
-            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
-
-            if (!$exists) {
-                break;
-            }
-        }
-
-        return $sku;
     }
 }

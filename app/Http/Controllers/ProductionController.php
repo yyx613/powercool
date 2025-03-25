@@ -87,9 +87,9 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
-                2 => 'name',
-                3 => 'start_date',
-                4 => 'due_date',
+                3 => 'name',
+                4 => 'start_date',
+                5 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -112,6 +112,7 @@ class ProductionController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'old_production_sku' => $record->oldProduction->sku ?? null,
                 'product_serial_no' => $record->productChild->sku,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
@@ -134,11 +135,16 @@ class ProductionController extends Controller
         // Duplicate
         if ($req->id != null) {
             $production = $this->prod::where('id', $req->id)->first();
+            $production->load('users', 'milestones');
 
             $data = [
                 'production' => $production,
                 'is_duplicate' => true,
             ];
+
+            if ($req->is_modify != null) {
+                $data['modify_from'] = $req->id;
+            }
         }
         if ($req->sale_id != null && $req->product_id != null) {
             $sale = Sale::where('id', $req->sale_id)->first();
@@ -280,7 +286,13 @@ class ProductionController extends Controller
                     'due_date' => $req->due_date,
                     'status' => $req->status,
                     'priority_id' => $req->priority,
+                    'old_production' => $req->modify_from == null ? null : $req->modify_from,
                 ]);
+                if ($req->modify_from != null) {
+                    $this->prod::where('id', $req->modify_from)->update([
+                        'status' => Production::STATUS_MODIFIED,
+                    ]);
+                }
                 (new Branch)->assign(Production::class, $production->id);
             } else {
                 $production->update([
