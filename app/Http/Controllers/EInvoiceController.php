@@ -206,7 +206,6 @@ class EInvoiceController extends Controller
         ]);
         $selectedInvoices = $request->input('invoices');
         $company = $request->input('company');
-
         $now = now();
 
         $overdueInvoices = [];
@@ -266,7 +265,6 @@ class EInvoiceController extends Controller
                 foreach ($acceptedDocuments as $document) {
                     $uuid = $document['uuid'];
                     $invoiceCodeNumber = $document['invoiceCodeNumber'];
-
                     $documentDetails = $this->getDocumentDetails($uuid, $company);
                     if (isset($documentDetails['error'])) {
                         $errorDetails[] = [
@@ -463,15 +461,14 @@ class EInvoiceController extends Controller
                 'Accept' => 'application/json',
                 'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
-
             $maxRetries = 10;
             $retryCount = 0;
-            $delay = 2;
+            $delay = 3;
             while ($retryCount < $maxRetries) {
+                sleep($delay);
                 $response = Http::withHeaders($headers)->get($url);
                 if ($response->successful()) {
                     $validationResults = $response->json()['validationResults'] ?? null;
-
                     if ($validationResults) {
                         if ($validationResults['status'] === 'Invalid') {
                             $validationSteps = $validationResults['validationSteps'] ?? [];
@@ -498,7 +495,7 @@ class EInvoiceController extends Controller
                 }
 
                 $retryCount++;
-                sleep($delay);
+                
             }
         } catch (\Throwable $th) {
             dd($th);
@@ -1096,7 +1093,7 @@ class EInvoiceController extends Controller
 
                 return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
             }
-            dd($validationLink);
+            // dd($validationLink);
 
         } catch (\Throwable $th) {
             dd($th, $items);

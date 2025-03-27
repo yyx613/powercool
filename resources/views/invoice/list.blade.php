@@ -132,7 +132,7 @@
                     render: function(data, type, row) {
                         var disabled = row.enable ? 'disabled' : '';
                         var style = row.enable ? 'style="opacity: 0.5; cursor: not-allowed;"' : '';
-                        return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-company="${row.company}" ${disabled} ${style}>`;
+                        return `<input type="checkbox" class="order-checkbox" data-id="${data}" data-company="${row.company_group}" ${disabled} ${style}>`;
                     }
                 },
                 {
@@ -564,7 +564,6 @@
                         if (error.responseJSON.rejectedDocuments) {
                             error.responseJSON.rejectedDocuments.forEach(function(document) {
                                 errorMessage += `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-                                console.log(1)
                                 document.details.forEach(function(detail) {
                                     errorMessage += ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
                                 });
@@ -575,7 +574,6 @@
                             if (error.responseJSON.error) {
                                 errorMessage = error.responseJSON.error;
                             }
-                            console.log(2)
 
                             if (error.responseJSON.message) {
                                 try {

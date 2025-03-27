@@ -36,13 +36,10 @@ class EInvoiceXmlGenerator
 
         $paymentMode = $this->getPaymentModeCode($sale->payment_method);
 
-        $sellerIDType = "";
-        $sellerIDValue = ""; 
         $sellerTIN = $tin;
         $buyerTIN = $customer->type == 1 ? $customer->tin_number : 'EI000000000020';
         $buyerIDValue = $customer->company_registration_number; 
-        // $this->validateTIN($sellerTIN,$sellerIDType,$sellerIDValue);
-        // $this->validateTIN($sellerTIN,$buyerIDType,$buyerIDValue);
+
         // 创建 XML DOMDocument 实例
         $xml = new \DOMDocument('1.0', 'UTF-8');
         $xml->formatOutput = true;
