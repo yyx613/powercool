@@ -103,26 +103,38 @@
                             <h5 class="text-md font-semibold">{{ __('Confirm products to convert') }}</h5>
                         </div>
                         @if (count($products) > 0)
-                            <form action="{{ route('billing.convert_to_billing') }}">
+                            <form action="{{ route('billing.convert_to_billing') }}" id="product-info-form">
                                 @csrf
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-4">
                                     @foreach ($products as $key => $pro)
-                                        <div>
-                                            <input type="text" name="product_id[]" value="{{ $key }}" class="hidden">
-                                            <div class="w-full p-3 rounded-md border border-slate-100">
-                                                <h6 class="leading-none">{{ $pro['product_name'] }}</h6>
-                                                <p class="text-sm text-slate-400">{{ $pro['product_desc'] }}</p>
-                                                @if (isset($pro['serial_no']))
-                                                    @foreach ($pro['serial_no'] as $val)
-                                                        <div class="flex justify-between">
-                                                            <span class="text-sm text-slate-600 mt-2">Serial No: {{ $val['serial_no'] }}</span>
-                                                            <span class="text-sm text-slate-600 mt-2 unit-price-label" data-id="{{ $key }}">U/Price: RM {{ number_format($val['unit_price'], 2) }}</span>
-                                                        </div>
-                                                    @endforeach
-                                                @endif
-                                                <div class="border-t pt-4 mt-4">
-                                                    <x-app.input.input name="custom-unit-price-{{ $key }}" placeholder="Enter customer unit price here" class="text-sm decimal-input border-slate-200 custom-unit-price" data-id="{{ $key }}" />
+                                        <div class="w-full p-3 rounded-md border border-slate-200">
+                                            <div class="flex justify-between">
+                                                <h6 class="leading-none">{{ $pro->product->model_name }}</h6>
+                                                <p class="text-sm">SKU: {{ $pro->product->sku }}</p>
+                                            </div>
+                                            <p class="text-sm text-slate-400">{{ $pro->product->model_desc }}</p>
+                                            <div class="border-t pt-4 mt-4">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <p class="text-sm font-medium mb-2">Total Qty: {{ $pro->qty }}</p>
+                                                    <button type="button" class="add-item-btns bg-blue-500 rounded-md aspect-square w-7 flex items-center justify-center" data-product-id="{{ $pro->product->id }}">
+                                                        <svg class="h-4 w-4 fill-white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                                                            <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+                                                        </svg>
+                                                    </button>
                                                 </div>
+
+                                                <div class="item-row-template items flex items-center gap-4 hidden" data-product-id="{{ $pro->product->id }}">
+                                                    <x-app.input.input name="qty_{{ $pro->product->id }}[]" placeholder="Enter quantity" class="int-input text-sm flex-1" />
+                                                    <x-app.input.input name="price_{{ $pro->product->id }}[]" placeholder="Enter price" class="decimal-input text-sm flex-1" />
+                                                    <button type="button" class="bg-red-500 rounded-md aspect-square w-7 flex items-center justify-center">
+                                                        <svg class="h-4 w-4 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
+                                                    </button>
+                                                </div>
+
+                                                <div class="item-container flex flex-col gap-4" data-product-id="{{ $pro->product->id }}">
+                                                </div>
+
+                                                <x-app.message.error id="row_{{ $pro->product->id }}_err"/>
                                             </div>
                                         </div>
                                     @endforeach
@@ -168,6 +180,7 @@
 
 @push('scripts')
 <script>
+    PRODUCTS = @json($products ?? []);
     SELECTED_INVS = []
 
     $('.inv-selections').on('click', function() {
@@ -206,6 +219,67 @@
         let id = $(this).parent().data('id')
 
         $(`.unit-price-label[data-id="${id}"]`).text(`U/Price: RM ${ priceFormat($(this).val()) }`)
+    })
+    // Step 3
+    $('#product-info-form').on('submit', function(e) {
+        e.preventDefault()
+
+        $('.err_msg').addClass('hidden')
+
+        let data = {}
+        let productIds = []
+        for (i = 0; i < PRODUCTS.length; i++) {
+            productIds.push(PRODUCTS[i].product.id)
+            $(`.item-row-template[data-product-id="${PRODUCTS[i].product.id}"]`).remove()
+
+            let qty = []
+            let price = []
+            $(`.item-container[data-product-id="${PRODUCTS[i].product.id}"] .items`).each(function(idx, obj) {
+                let qtyVal = $(this).find(`input[name="qty_${PRODUCTS[i].product.id}[]"]`).val()
+                let priceVal = $(this).find(`input[name="price_${PRODUCTS[i].product.id}[]"]`).val()
+
+                qty.push( qtyVal == '' ? null : qtyVal )
+                price.push( priceVal == '' ? null : priceVal )
+            })
+            data[`qty_${PRODUCTS[i].product.id}`] = qty
+            data[`price_${PRODUCTS[i].product.id}`] = price
+        }
+        data['product_ids'] = productIds.join(',')
+
+        // Submit form
+        let url = $(this).attr('action')
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: url,
+            type: 'POST',
+            data: data,
+            success: function(res) {
+                window.location.href = "{{ route('billing.index') }}";
+            },
+            error: function(xhr, status, error) {
+                let err = JSON.parse(xhr.responseText)
+
+                for (key in err) {
+                    $(`#${key}_err`).find('p').text(err[key])
+                    $(`#${key}_err`).removeClass('hidden')
+                }
+            }
+        });
+    })
+    $('.add-item-btns').on('click', function() {
+        let productId = $(this).data('product-id')
+        let clone = $(`.item-row-template[data-product-id="${productId}"]`)[0].cloneNode(true)
+
+        $(clone).removeClass('item-row-template hidden')
+        $(`.item-container[data-product-id="${productId}"]`).append(clone)
+    })
+
+    $(document).ready(function() {
+        for (i = 0; i < PRODUCTS.length; i++) {
+            $(`.add-item-btns[data-product-id="${PRODUCTS[i].product.id}"]`).click()
+        }
     })
 </script>
 @endpush

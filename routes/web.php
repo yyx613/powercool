@@ -297,7 +297,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/', 'indexBilling')->name('index');
             Route::get('/get-data', 'getDataBilling')->name('get_data');
             Route::get('/to-invoice-billing', 'toBilling')->name('to_billing');
-            Route::get('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
+            Route::post('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
         });
     });
     // Invoice Return
