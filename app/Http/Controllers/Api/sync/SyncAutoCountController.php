@@ -58,12 +58,27 @@ class SyncAutoCountController extends Controller
                         'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
+                        'status' => '1',
                         'currency_id' => $currencyId,
                         'updated_at' => now()
                     ]);
+
+                    $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
+
+                    $branch = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Supplier', $supplier->id, $branchNo
+                    ]);
+    
+                    if (!$branch) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
+                            'App\Models\Supplier', $supplier->id, $branchNo, now(), now()
+                        ]);
+                    }
+
                 } else {
                     // Insert new supplier
-                    Supplier::create([
+                    $supplier = Supplier::create([
                         'sku' => $record['AccNo'],
                         'name' => $record['CompanyName'],
                         'phone' => $record['Phone'] ?? "-",
@@ -72,9 +87,23 @@ class SyncAutoCountController extends Controller
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
+                        'status' => '1',
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+
+                    $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
+
+                    $branch = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Supplier', $supplier->id, $branchNo
+                    ]);
+    
+                    if (!$branch) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
+                            'App\Models\Supplier', $supplier->id, $branchNo, now(), now()
+                        ]);
+                    }
                 }
             }
             return response()->json(['message' => 'Batch processed successfully.'], 200);
@@ -119,12 +148,27 @@ class SyncAutoCountController extends Controller
                         'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
+                        'status' => '1',
                         'currency_id' => $currencyId,
                         'updated_at' => now()
                     ]);
+
+                    $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
+
+                    $branch = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Customer', $supplier->id, $branchNo
+                    ]);
+    
+                    if (!$branch) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
+                            'App\Models\Customer', $supplier->id, $branchNo, now(), now()
+                        ]);
+                    }
+
                 } else {
                     // Insert new supplier
-                    Customer::create([
+                    $supplier = Customer::create([
                         'sku' => $record['AccNo'],
                         'name' => $record['CompanyName'],
                         'phone' => $record['Phone'] ?? "-",
@@ -132,10 +176,24 @@ class SyncAutoCountController extends Controller
                         'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
+                        'status' => '1',
                         'currency_id' => $currencyId,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+
+                    $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
+
+                    $branch = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Customer', $supplier->id, $branchNo
+                    ]);
+    
+                    if (!$branch) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
+                            'App\Models\Customer', $supplier->id, $branchNo, now(), now()
+                        ]);
+                    }
                 }
             }
             return response()->json(['message' => 'Batch processed successfully.'], 200);
