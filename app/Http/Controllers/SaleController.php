@@ -29,6 +29,7 @@ use App\Models\SaleProductChild;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
 use App\Models\Target;
+use App\Models\TransportAcknowledgement;
 use App\Models\UOM;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -2970,6 +2971,118 @@ class SaleController extends Controller
             DB::commit();
 
             return redirect(route('delivery_order.index'))->with('success', 'Transport Acknowledgement generated');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong, Please contact administrator');
+        }
+    }
+
+    public function indexTransportAck()
+    {
+        return view('transport_ack.list');
+    }
+
+    public function getDataTransportAck(Request $req)
+    {
+        $records = TransportAcknowledgement::orderBy('id', 'desc');
+
+        $records_count = count($records->get());
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        $path = '/public/storage';
+        if (config('app.env') == 'local') {
+            $path = '/storage';
+        }
+        foreach ($records_paginator as $record) {
+            $transport_ack_filename = $record->filename == null ? null : config('app.url').str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).'/'.$record->filename;
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'created_by' => $record->createdBy == null ? null : $record->createdBy->name,
+                'filename' => $transport_ack_filename,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function transportAcknowledgementTransportAck()
+    {
+        return view('transport_ack.generate');
+    }
+
+    public function generateTransportAcknowledgementTransportAck(Request $req)
+    {
+        // Validate form
+        $rules = [
+            'do_id' => 'required|max:250',
+            'date' => 'required',
+            'delivery_to' => 'required',
+            'dealer' => 'required',
+            'type' => 'required',
+            'product' => 'required',
+            'product.*' => 'required',
+            'qty' => 'required',
+            'qty.*' => 'required',
+        ];
+        $req->validate($rules, [
+            'product.*.required' => 'The product at row :position is required',
+            'qty.*.required' => 'The qty at row :position is required',
+        ], [
+            'do_id' => 'Delivery Order ID',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($req->dealer != '-1' && $req->dealer != '-2') {
+                $dealer = Dealer::where('id', $req->dealer)->first();
+
+                $dealer_name = $dealer->name;
+            } elseif ($req->dealer == '-1') {
+                $dealer_name = 'Power Cool';
+            } elseif ($req->dealer == '-2') {
+                $dealer_name = 'Hi Ten Trading';
+            }
+
+            $items = [];
+            for ($i = 0; $i < count($req->product); $i++) {
+                $items[] = [
+                    'product' => Product::where('id', $req->product[$i])->first(),
+                    'qty' => $req->qty[$i],
+                ];
+            }
+
+            $pdf = Pdf::loadView('transport_ack.transport_acknowledgement', [
+                'date' => Carbon::createFromFormat('Y-m-d', $req->date)->format('d/m/Y'),
+                'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
+                'do_sku' => $req->do_id,
+                'address' => $req->delivery_to,
+                'dealer_name' => $dealer_name,
+                'items' => $items,
+            ]);
+            $pdf->setPaper('A4', 'letter');
+            $content = $pdf->download()->getOriginalContent();
+            $filename = 'transport-ack-'.generateRandomAlphabet(10).'-'.Auth::user()->id.'.pdf';
+            Storage::put(self::TRANSPORT_ACKNOWLEDGEMENT_PATH.$filename, $content);
+
+            TransportAcknowledgement::create([
+                'filename' => $filename,
+                'generated_by' => Auth::user()->id,
+            ]);
+
+            DB::commit();
+
+            return redirect(route('transport_ack.index'))->with('success', 'Transport Acknowledgement generated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

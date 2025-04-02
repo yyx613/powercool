@@ -251,6 +251,13 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/generate-transport-acknowledgement', 'transportAcknowledgement')->name('transport_acknowledgement');
             Route::post('/generate-transport-acknowledgement', 'generateTransportAcknowledgement')->name('generate_transport_acknowledgement');
         });
+        // Transport Acknowledgement
+        Route::prefix('transport-acknowledgement')->name('transport_ack.')->middleware(['can:sale.transport_acknowledgement.view'])->group(function () {
+            Route::get('/', 'indexTransportAck')->name('index');
+            Route::get('/get-data', 'getDataTransportAck')->name('get_data');
+            Route::get('/generate', 'transportAcknowledgementTransportAck')->name('transport_acknowledgement');
+            Route::post('/generate', 'generateTransportAcknowledgementTransportAck')->name('generate_transport_acknowledgement');
+        });
         // Invoice
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
             Route::get('/', 'indexInvoice')->name('index');
