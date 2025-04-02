@@ -61,6 +61,8 @@ class PermissionSeeder extends Seeder
             'sale.delivery_order.view',
             'sale.delivery_order.convert',
 
+            'sale.transport_acknowledgement.view',
+
             'sale.invoice.view',
 
             'sale.target.view',

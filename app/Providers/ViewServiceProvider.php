@@ -75,6 +75,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
                 'sale.delivery_order' => [],
+                'sale.transport_acknowledgement' => [],
                 'sale.invoice' => [],
                 'sale.target' => [],
                 'sale.billing' => [],
@@ -114,6 +115,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.sale_order'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.delivery_order')) {
                     array_push($permissions_group['sale.delivery_order'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'sale.transport_acknowledgement')) {
+                    array_push($permissions_group['sale.transport_acknowledgement'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.invoice_return')) {
                     array_push($permissions_group['sale.invoice_return'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.invoice')) {
@@ -564,6 +567,20 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'delivery_orders' => $delivery_orders,
+                'dealers' => $dealers,
+                'types' => $types,
+            ]);
+        });
+        View::composer(['transport_ack.generate'], function (ViewView $view) {
+            $products = Product::orderBy('id', 'desc')->get();
+            $dealers = Dealer::orderBy('id', 'desc')->get();
+            $types = [
+                DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',
+                DeliveryOrder::TRANSPORT_ACK_TYPE_COLLECTION => 'Collection',
+            ];
+
+            $view->with([
+                'products' => $products,
                 'dealers' => $dealers,
                 'types' => $types,
             ]);
