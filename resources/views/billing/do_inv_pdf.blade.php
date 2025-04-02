@@ -50,7 +50,7 @@
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td>
-                            <table style="width: 100%; border-collapse: collapse;"> 
+                            <table style="width: 100%; border-collapse: collapse;">
                                 <tr>
                                     <td style="font-size: 14px;">Your Ref</td>
                                     <td style="font-size: 14px;">:</td>
@@ -94,27 +94,19 @@
         @php
             $total = 0;
         @endphp
-        @foreach ($dopcs as $key => $prod)
+        @foreach ($bill_products as $key => $bp)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->productChild->parent->model_name }}</td>
-                <td style="font-size: 14px; text-align: right;">1</td>
-                <td style="font-size: 14px; text-align: right;">{{ $prod->doProduct->saleProduct->uom }}</td>
-                <td style="font-size: 14px; text-align: right;">
-                    @php
-                        $unit_price = $prod->doProduct->saleProduct->unit_price;
-                        if ($custom_unit_price['custom-unit-price-' . $prod->productChild->parent->id] != null) {
-                            $unit_price = $custom_unit_price['custom-unit-price-' . $prod->productChild->parent->id];
-                        }
-                    @endphp
-                    {{ number_format($unit_price, 2) }}
-                </td>
+                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->sku }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->model_name }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ $bp['qty'] }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ $bp['product']->uomUnit->name }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($bp['price'], 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(0, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($bp['qty'] * $bp['price'], 2) }}</td>
             </tr>
             @php
-                $total += ($unit_price);
+                $total += ($bp['qty'] * $bp['price']);
             @endphp
         @endforeach
     </table>

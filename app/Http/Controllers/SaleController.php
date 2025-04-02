@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Approval;
 use App\Models\Billing;
+use App\Models\BillingProduct;
 use App\Models\Branch;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
@@ -35,7 +36,6 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -2580,38 +2580,34 @@ class SaleController extends Controller
 
             $inv_ids = Session::get('invoice_ids');
             $do_ids = DeliveryOrder::whereIn('invoice_id', explode(',', $inv_ids))->pluck('id');
-
             $dops = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->get();
 
             $products = [];
-            $existing_product_ids = [];
             foreach ($dops as $dop) {
-                $sp = $dop->saleProduct;
+                $is_raw_material = $dop->qty != null;
+                $prod = Product::where('id', $dop->saleProduct->product->id)->first();
 
-                if (in_array($sp->product->id, $existing_product_ids)) {
-                    $dopcs = $dop->children->pluck('productChild.sku')->toArray();
-                    for ($i = 0; $i < count($dopcs); $i++) {
-                        $products[$sp->product->id]['serial_no'][] = [
-                            'unit_price' => $sp->unit_price,
-                            'serial_no' => $dopcs[$i],
-                        ];
-                    }
-                } else {
-                    $products[$sp->product->id] = [
-                        'product_name' => $sp->product->model_name,
-                        'product_desc' => $sp->product->model_desc,
-                    ];
-
-                    $dopcs = $dop->children->pluck('productChild.sku')->toArray();
-                    for ($i = 0; $i < count($dopcs); $i++) {
-                        $products[$sp->product->id]['serial_no'][] = [
-                            'unit_price' => $sp->unit_price,
-                            'serial_no' => $dopcs[$i],
-                        ];
-                    }
+                if (! $is_raw_material) {
+                    $dpc_count = DeliveryOrderProductChild::where('delivery_order_product_id', $dop->id)->count();
                 }
 
-                $existing_product_ids[] = $sp->product->id;
+                $product_appears_before = false;
+                for ($i = 0; $i < count($products); $i++) {
+                    if ($products[$i]->product->id == $prod->id) {
+                        $products[$i]->qty += ! $is_raw_material ? $dpc_count : $dop->qty;
+
+                        $product_appears_before = true;
+                        break;
+                    }
+                }
+                if ($product_appears_before) {
+                    continue;
+                }
+
+                $products[] = (object) [
+                    'product' => $prod,
+                    'qty' => ! $is_raw_material ? $dpc_count : $dop->qty,
+                ];
             }
         } elseif ($req->has('inv')) {
             $step = 2;
@@ -2620,6 +2616,8 @@ class SaleController extends Controller
         } else {
             $invoices = Invoice::whereNull('status')->orderBy('id', 'desc')->get();
         }
+
+        // dd($products);
 
         return view('billing.convert', [
             'step' => $step,
@@ -2631,6 +2629,37 @@ class SaleController extends Controller
 
     public function convertToBilling(Request $req)
     {
+        // Validate
+        $bill_products = [];
+        $errors = [];
+        $product_ids = explode(',', $req->product_ids);
+
+        for ($i = 0; $i < count($product_ids); $i++) {
+            $qty = $req->input('qty_'.$product_ids[$i]);
+            $price = $req->input('price_'.$product_ids[$i]);
+
+            for ($j = 0; $j < count($qty); $j++) {
+                if ($qty[$j] == null && $price[$j] == null) {
+                    continue;
+                }
+                if ($qty[$j] == null) {
+                    $errors['row_'.$product_ids[$i]] = 'Quantity is required at row '.($i + 1);
+                } elseif ($price[$j] == null) {
+                    $errors['row_'.$product_ids[$i]] = 'Price is required at row '.($i + 1);
+                }
+                if ($qty[$j] != null && $price[$j] != null) {
+                    $bill_products[] = [
+                        'product_id' => $product_ids[$i],
+                        'qty' => $qty[$j],
+                        'price' => $price[$j],
+                    ];
+
+                }
+            }
+        }
+        if (count($errors) > 0 || count($bill_products) <= 0) {
+            return response()->json($errors, 400);
+        }
         try {
             DB::beginTransaction();
 
@@ -2646,44 +2675,47 @@ class SaleController extends Controller
                 'our_do_no' => Session::get('billing_our_do_no'),
                 'date' => now(),
             ]);
+            (new Branch)->assign(Billing::class, $bill->id);
 
             $invoiceIds = explode(',', Session::get('invoice_ids'));
             $bill->invoices()->attach($invoiceIds);
 
-            $saleProducts = $req->input('sale_product_id', []);
-            $pivotData = [];
-            foreach ($saleProducts as $saleProductId) {
-                $customUnitPrice = $req->input("custom-unit-price-{$saleProductId}", 0);
-                $pivotData[$saleProductId] = ['custom_unit_price' => $customUnitPrice];
+            for ($i = 0; $i < count($bill_products); $i++) {
+                $bill_products[$i]['billing_id'] = $bill->id;
             }
-            $bill->saleProducts()->attach($pivotData);
+            BillingProduct::insert($bill_products);
 
-            (new Branch)->assign(Billing::class, $bill->id);
+            for ($i = 0; $i < count($product_ids); $i++) {
+                $product = Product::where('id', $product_ids[$i])->first();
 
-            // Prepare dopcs
-            $dopcs = collect();
-            $dos = DeliveryOrder::whereIn('invoice_id', $invoiceIds)->get();
-            for ($i = 0; $i < count($dos); $i++) {
-                for ($j = 0; $j < count($dos[$i]->products); $j++) {
-                    $dopcs = $dopcs->merge($dos[$i]->products[$j]->children);
+                for ($j = 0; $j < count($bill_products); $j++) {
+                    if ($bill_products[$j]['product_id'] == $product_ids[$i]) {
+                        $bill_products[$j]['product'] = $product;
+                    }
                 }
             }
 
-            $this->generateDeliveryOrderBillingPDF('BDO-'.$sku, $do_filename, $dopcs, $req->all());
-            $this->generateInvoiceBillingPDF('BINV-'.$sku, $inv_filename, $dopcs, $req->all());
+            $this->generateDeliveryOrderBillingPDF('BDO-'.$sku, $do_filename, $bill_products);
+            $this->generateInvoiceBillingPDF('BINV-'.$sku, $inv_filename, $bill_products);
 
             DB::commit();
 
-            return redirect(route('billing.index'))->with('success', 'Billing converted');
+            Session::flash('success', 'Billing converted');
+
+            return response()->json([
+                'msg' => 'Billing converted',
+            ]);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return response()->json([
+                'msg' => 'Something went wrong. Please contact administrator',
+            ], 500);
         }
     }
 
-    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, Collection $dopcs, array $custom_unit_price)
+    private function generateDeliveryOrderBillingPDF(string $sku, string $filename, array $bill_products)
     {
         $pdf = Pdf::loadView('billing.do_inv_pdf', [
             'is_do' => true,
@@ -2692,15 +2724,14 @@ class SaleController extends Controller
             'your_ref' => Session::get('billing_your_ref'),
             'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-            'dopcs' => $dopcs,
-            'custom_unit_price' => $custom_unit_price,
+            'bill_products' => $bill_products,
         ]);
         $pdf->setPaper('A4', 'letter');
         $content = $pdf->download()->getOriginalContent();
         Storage::put(self::BILLING_PATH.$filename, $content);
     }
 
-    private function generateInvoiceBillingPDF(string $sku, string $filename, Collection $dopcs, array $custom_unit_price)
+    private function generateInvoiceBillingPDF(string $sku, string $filename, array $bill_products)
     {
         $pdf = Pdf::loadView('billing.do_inv_pdf', [
             'is_do' => false,
@@ -2709,8 +2740,7 @@ class SaleController extends Controller
             'your_ref' => Session::get('billing_your_ref'),
             'our_do_no' => Session::get('billing_our_do_no'),
             'term' => CreditTerm::where('id', Session::get('billing_term'))->value('name'),
-            'dopcs' => $dopcs,
-            'custom_unit_price' => $custom_unit_price,
+            'bill_products' => $bill_products,
         ]);
         $pdf->setPaper('A4', 'letter');
         $content = $pdf->download()->getOriginalContent();
