@@ -58,7 +58,6 @@ class SyncAutoCountController extends Controller
                         'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
-                        'status' => '1',
                         'currency_id' => $currencyId,
                         'updated_at' => now()
                     ]);
@@ -87,7 +86,6 @@ class SyncAutoCountController extends Controller
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
-                        'status' => '1',
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
