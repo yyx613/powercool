@@ -114,7 +114,7 @@
         let requiredSerialNo = false
         let completed = $(this).data('completed')
         let milestoneCount = PRODUCTION.milestones.length
-        
+
         $('.ms-row').each(function() {
             if ($(this).data('completed') == true) {
                 milestoneCount--
@@ -125,29 +125,29 @@
         $('#serial-no-selection-container .selection').remove()
 
         for (let i = 0; i < PRODUCTION.milestones.length; i++) {
-            if (PRODUCTION.milestones[i].pivot.id == id && PRODUCTION.milestones[i].pivot.material_use_product_id != null) {
-                for (let j = 0; j < PRODUCTION.milestones[i].pivot.material_use_products.length; j++) {
-                    if (PRODUCTION.milestones[i].pivot.material_use_products[j].material.is_sparepart == true) {
-                        var productId = PRODUCTION.milestones[i].pivot.material_use_products[j].material.id
+            if (PRODUCTION.milestones[i].pivot.id == id && PRODUCTION.milestones[i].preview.length > 0) {
+                for (let j = 0; j < PRODUCTION.milestones[i].preview.length; j++) {
+                    if (PRODUCTION.milestones[i].preview[j].product.is_sparepart == true) {
+                        var productId = PRODUCTION.milestones[i].preview[j].product.id
 
                         var clone = $('#serial-no-container #sp-template')[0].cloneNode(true);
 
                         $(clone).removeAttr('id')
                         $(clone).removeClass('hidden')
                         $(clone).addClass('selection')
-                        $(clone).find('#product-name').text(PRODUCTION.milestones[i].pivot.material_use_products[j].material.model_name)
-                        $(clone).find('#qty-needed').text(`Quantity needed: x${PRODUCTION.milestones[i].pivot.material_use_products[j].qty}`)
+                        $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product.model_name)
+                        $(clone).find('#qty-needed').text(`Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
                         $(clone).attr('data-product-id', productId)
-                        $(clone).find('#materials_err').attr('data-mu-id', PRODUCTION.milestones[i].pivot.material_use_products[j].material.id)
+                        $(clone).find('#materials_err').attr('data-product-id', productId)
                         $('#serial-no-selection-container').append(clone)
 
                         // Prepare serial no selection
-                        let children = PRODUCTION.milestones[i].pivot.material_use_products[j].material.children
+                        let children = PRODUCTION.milestones[i].preview[j].children
 
                         let childIdsToHide = []
                         for (const key in PRODUCTION_MILESTONE_MATERIALS) { // Hidden other milestone selected child
                             if (key == id) {
-                                continue   
+                                continue
                             }
                             childIdsToHide = childIdsToHide.concat(PRODUCTION_MILESTONE_MATERIALS[key])
                         }
@@ -157,30 +157,30 @@
                             }
 
                             let spClone = $(`#sp-template .sp-serial-no-container .sp-serial-no-template`)[0].cloneNode(true);
-                            
+
                             $(spClone).data('id', children[k].id)
                             $(spClone).removeAttr('id')
                             $(spClone).removeClass('hidden')
                             $(spClone).find('input').attr('id', children[k].id)
-                            $(spClone).find('input').attr('data-mu-id', PRODUCTION.milestones[i].pivot.material_use_products[j].material.id)
+                            $(spClone).find('input').attr('data-product-id', productId)
                             // $(spClone).find('input').prop('checked', false)
                             $(spClone).find('label').text(children[k].sku)
                             $(spClone).find('label').attr('for', children[k].id)
-                            
+
                             $(`.selection[data-product-id="${productId}"] .sp-serial-no-container`).append(spClone)
                         }
                     } else {
                         var clone = $('#serial-no-container #rm-template')[0].cloneNode(true);
-    
+
                         $(clone).removeAttr('id')
                         $(clone).removeClass('hidden')
                         $(clone).addClass('selection')
-                        $(clone).find('#product-name').text(PRODUCTION.milestones[i].pivot.material_use_products[j].material.model_name)
-                        $(clone).find('#qty-needed').text(`Quantity needed: x${PRODUCTION.milestones[i].pivot.material_use_products[j].qty}`)
+                        $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].model_name)
+                        $(clone).find('#qty-needed').text(`Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
                         $('#serial-no-selection-container').append(clone)
                     }
 
-                    if ((j + 1) < PRODUCTION.milestones[i].pivot.material_use_products.length) {
+                    if ((j + 1) < PRODUCTION.milestones[i].preview.length) {
                         $(clone).addClass('pb-4 border-b')
                     }
                     requiredSerialNo = true
@@ -197,7 +197,7 @@
         if (PRODUCTION_MILESTONE_MATERIALS[id] !== undefined) {
             for (let i = 0; i < PRODUCTION_MILESTONE_MATERIALS[id].length; i++) {
                 const element = PRODUCTION_MILESTONE_MATERIALS[id][i];
-                
+
                 $(`#production-milestone-modal #serial-no-container input[name="serial_no[]"][id="${element}"]`).attr('checked', true)
             }
         }

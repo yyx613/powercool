@@ -1,3 +1,6 @@
+@inject('prodMs', 'App\Models\ProductionMilestone')
+@inject('prodMsMaterialPreview', 'App\Models\ProductionMilestoneMaterialPreview')
+
 @extends('layouts.app')
 
 @section('content')
@@ -91,19 +94,28 @@
                     <x-app.input.input name="custom_milestone" class="mb-2" placeholder="{{ __('Enter custom milestone here') }}" />
                     <p class="text-xs text-end mb-2 text-slate-500">{{ __("'Yes' represent the milestone is required to fill up material use.") }}</p>
                     @foreach($milestones as $stone)
+                        @php
+                            if (isset($production)) {
+                                $productionMilestone = $prodMs::where('production_id', $production->id)->where('milestone_id', $stone->id)->first();
+                                $productionMilestonePreview = [];
+                                if ($productionMilestone != null) {
+                                    $productionMilestonePreview = $prodMsMaterialPreview::where('production_milestone_id', $productionMilestone->id)->get();
+                                }
+                            }
+                        @endphp
                         <div class="flex justify-between mb-2 hidden milestone-selection" data-id="{{ $stone->id }}">
                             <div class="flex items-center gap-x-2">
                                 <input type="checkbox" name="milestone[]" id="{{ $stone->id }}" value="{{ $stone->id }}" class="rounded-sm" @checked(in_array($stone->id, old('milestone', isset($production) ? $production->milestones()->pluck('milestone_id')->toArray() : [])))>
                                 <label for="{{ $stone->id }}" class="text-sm">{{ $stone->name }}</label>
                             </div>
                             <div class="flex items-center">
-                                <button type="button" data-id="{{ $stone->id }}" data-is-custom="false" class="mr-3 view-material-use-selection-btns {{ isset($production) && $production->milestones()->where('milestone_id', $stone->id)->value('material_use_product_id') ? '' : 'hidden'  }}" title="View Material Use Selection">
+                                <button type="button" data-id="{{ $stone->id }}" data-is-custom="false" class="mr-3 view-material-use-selection-btns {{ isset($production) && count($productionMilestonePreview) > 0 ? '' : 'hidden'  }}" title="View Material Use Selection">
                                     <svg class="h-4 w-4 fill-slate-400 hover:fill-black" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                         <path d="M23.707,22.293l-5.969-5.969c1.412-1.725,2.262-3.927,2.262-6.324C20,4.486,15.514,0,10,0S0,4.486,0,10s4.486,10,10,10c2.397,0,4.599-.85,6.324-2.262l5.969,5.969c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414ZM2,10C2,5.589,5.589,2,10,2s8,3.589,8,8-3.589,8-8,8S2,14.411,2,10Zm13.933-1.261c-.825-1.21-2.691-3.239-5.933-3.239s-5.108,2.03-5.933,3.239c-.522,.766-.522,1.755,0,2.521,.825,1.21,2.692,3.24,5.933,3.24s5.108-2.03,5.933-3.239c.522-.766,.522-1.755,0-2.521Zm-1.652,1.395c-.735,1.08-2.075,2.366-4.28,2.366s-3.544-1.287-4.28-2.367c-.056-.081-.056-.185,0-.267,.735-1.08,2.075-2.366,4.28-2.366s3.545,1.287,4.28,2.366h0c.056,.082,.056,.186,0,.268Zm-2.78-.134c0,.829-.671,1.5-1.5,1.5s-1.5-.671-1.5-1.5,.671-1.5,1.5-1.5,1.5,.671,1.5,1.5Z"/>
                                     </svg>
                                 </button>
                                 <label class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
-                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" data-id="{{ $stone->id }}" data-is-custom="false" @checked(isset($production) ? $production->milestones()->where('milestone_id', $stone->id)->value('material_use_product_id') : null) />
+                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" data-id="{{ $stone->id }}" data-is-custom="false" @checked(isset($production) ? count($productionMilestonePreview) > 0 : null) />
                                     <div class="flex items-center w-full">
                                         <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
                                         <span class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
@@ -162,6 +174,7 @@
         PRODUCTS = @json($products ?? null);
         SALES = @json($sales ?? null);
         PRODUCTION = @json($production ?? null);
+        PRODUCTION_MILESTONE_MATERIAL_PREVIEW = @json($production_milestone_material_previews ?? null);
         MILESTONES = @json($milestones ?? null);
         MATERIAL_USES = @json($material_uses ?? null);
         SELECTED_MATERIAL_USES = []
@@ -172,8 +185,18 @@
 
                 for (let i = 0; i < PRODUCTION.milestones.length; i++) {
                     const element = PRODUCTION.milestones[i];
-                    if (element.pivot.material_use_product_id != null) {
-                        SELECTED_MATERIAL_USES[`ms_${element.pivot.milestone_id}`] = element.pivot.material_use_product_id.split(',')
+
+                    for (let j = 0; j < PRODUCTION_MILESTONE_MATERIAL_PREVIEW.length; j++) {
+                        if (element.pivot.id != PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].production_milestone_id) continue
+
+                        if (SELECTED_MATERIAL_USES[`ms_${element.id}`] == undefined) {
+                            SELECTED_MATERIAL_USES[`ms_${element.id}`] = []
+                        }
+
+                        SELECTED_MATERIAL_USES[`ms_${element.id}`].push({
+                            productId: PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].product_id,
+                            qty: PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].qty,
+                        })
                     }
                 }
                 $('select[name="product"]').trigger('change')
@@ -309,6 +332,8 @@
                         $(clone).addClass('material-use-selection')
                         $(clone).find('input').attr('value', MATERIAL_USES[i].materials[j].id)
                         $(clone).find('input').attr('id', MATERIAL_USES[i].materials[j].id)
+                        $(clone).find('input').attr('data-qty', MATERIAL_USES[i].materials[j].qty)
+                        $(clone).find('input').attr('data-product-id', MATERIAL_USES[i].materials[j].product_id)
                         $(clone).find('label').attr('for', MATERIAL_USES[i].materials[j].id)
                         $(clone).find('label #name').text(MATERIAL_USES[i].materials[j].material.model_name)
                         $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USES[i].materials[j].qty}`)
@@ -369,7 +394,7 @@
             for (let i = 0; i < SELECTED_MATERIAL_USES[`${isCustom ? 'custom_ms' : 'ms'}_${id}`].length; i++) {
                 const element = SELECTED_MATERIAL_USES[`${isCustom ? 'custom_ms' : 'ms'}_${id}`][i];
 
-                $(`.material-use-selection input[id="${element}"]`).prop('checked', true)
+                $(`.material-use-selection input[data-qty="${element.qty}"][data-product-id="${element.productId}"]`).prop('checked', true)
             }
 
             $('#production-milestone-material-use-modal #action-container').addClass('hidden')
@@ -395,7 +420,10 @@
 
             let selectedMaterialUseProductId = [];
             $('.material-use-selection input:checked').each(function(i, obj) {
-                selectedMaterialUseProductId.push($(this).val())
+                selectedMaterialUseProductId.push({
+                    productId: $(this).data('product-id'),
+                    qty: $(this).data('qty'),
+                })
             })
             SELECTED_MATERIAL_USES[`${isCustom ? 'custom_ms' : 'ms'}_${id}`] = selectedMaterialUseProductId
 
