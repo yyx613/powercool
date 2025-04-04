@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\BillingProduct;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
 use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\EInvoice;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\SaleProduct;
+use DateInterval;
 use DateTime;
 use DateTimeZone;
 use DOMDocument;
@@ -571,7 +574,8 @@ class EInvoiceXmlGenerator
     public function generateBillingEInvoiceXml($billing, $tin)
     {
         $invoices = $billing->invoices;
-        $saleProducts = $billing->saleProducts;
+        
+        $billingProducts = BillingProduct::where('billing_id',$billing->id)->get();
         $sellerIDType = "";
         $sellerIDValue = ""; 
         $sellerTIN = $tin;
@@ -627,18 +631,14 @@ class EInvoiceXmlGenerator
         $additionalDocumentReference1 = $this->createAdditionalDocumentReference($xml, 'L1', 'CustomsImportForm');
         $invoiceElement->appendChild($additionalDocumentReference1);
 
-        // 附加第二个 AdditionalDocumentReference 节点，包含 DocumentDescription
         $additionalDocumentReference2 = $this->createAdditionalDocumentReference($xml, 'FTA', 'FreeTradeAgreement', 'Sample Description');
         $invoiceElement->appendChild($additionalDocumentReference2);
 
-        // 附加第三个 AdditionalDocumentReference 节点，不包含 DocumentDescription
         $additionalDocumentReference3 = $this->createAdditionalDocumentReference($xml, 'L1', 'K2');
         $invoiceElement->appendChild($additionalDocumentReference3);
 
-        // 附加第四个 AdditionalDocumentReference 节点，仅包含 ID
         $additionalDocumentReference4 = $this->createAdditionalDocumentReference($xml, 'L1');
         $invoiceElement->appendChild($additionalDocumentReference4);
-        // 继续添加其他元素...
 
         $signatureElement = $this->createSignatureElement(
             $xml, 
@@ -659,28 +659,16 @@ class EInvoiceXmlGenerator
         $paymentMeansElement = $this->createPaymentMeansElement($xml);
         $invoiceElement->appendChild($paymentMeansElement);
 
-        // $paymentTermsElement = $this->createPaymentTermsElement($xml);
-        // $invoiceElement->appendChild($paymentTermsElement);
-
-        // $prepaidPaymentElement = $this->createPrepaidPaymentElement($xml);
-        // $invoiceElement->appendChild($prepaidPaymentElement);
-
         $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount on Products', 0);
         $invoiceElement->appendChild($allowanceCharge1);
 
-        // $allowanceCharge2 = $this->createAllowanceChargeElement($xml, true, 'Service charge', 100);
-        // $invoiceElement->appendChild($allowanceCharge2);
-
-        
-
-        foreach ($saleProducts as $saleProduct) {
-            $customUnitPrice = $saleProduct->pivot->custom_unit_price;
-            $quantity = $saleProduct->qty;
+        foreach ($billingProducts as $billingProduct) {
+            $customUnitPrice = $billingProduct->price;
+            $quantity = $billingProduct->qty;
             $productPayment = $quantity * $customUnitPrice;
     
             $totalPayment += $productPayment;
         }
-        
 
         $taxAmount = $totalPayment * 0.1;
         $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount); 
@@ -697,12 +685,10 @@ class EInvoiceXmlGenerator
         );
 
         $invoiceElement->appendChild($legalMonetaryTotal);
-        
-  
-        foreach ($saleProducts as $saleProduct) {
-            $id = $saleProduct->id;
-            $quantity = $saleProduct->qty;
-            $customUnitPrice = $saleProduct->pivot->custom_unit_price;
+        foreach ($billingProducts as $billingProduct) {
+            $id = $billingProduct->product_id;
+            $quantity = $billingProduct->qty;
+            $customUnitPrice = $billingProduct->price;
             $lineExtensionAmount = $quantity * $customUnitPrice;
             $allowanceCharges = [
                 [
@@ -711,19 +697,20 @@ class EInvoiceXmlGenerator
                     'amount' => 0
                 ]
             ];
+            $product = Product::find($billingProduct->product_id);
             $invoiceLine = $this->createInvoiceLineElement(
                 $xml,
                 (string)$id,
                 $quantity,
                 $lineExtensionAmount,
                 $allowanceCharges,
-                $lineExtensionAmount * 0.1, // Tax amount
-                $lineExtensionAmount, // Taxable amount
-                10, // Tax rate
+                $lineExtensionAmount * 0.1, 
+                $lineExtensionAmount, 
+                10, 
                 'Exempt New Means of Transport',
-                $saleProduct->desc ?? 'No Description',
-                'MYS', // Origin country
-                $saleProduct->product->classificationCodes,
+                $product->model_desc ?? 'No Description',
+                'MYS', 
+                $product->classificationCodes,
                 $customUnitPrice,
                 $lineExtensionAmount,
                 true

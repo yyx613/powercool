@@ -127,22 +127,25 @@
             $total = 0;
         @endphp
         @foreach ($products as $key => $prod)
+            @php
+                $product = Product::find($prod->product_id);
+            @endphp
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->product->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $product->sku }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $product->model_name }}</td>
                 <td style="font-size: 14px; text-align: right;"></td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ $prod->product->uom }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ $product->uom }}</td>
                 <td style="font-size: 14px; text-align: right;">
-                    {{ number_format($prod->pivot->custom_unit_price, 2) }}
+                    {{ number_format($prod->price, 2) }}
                 </td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(0, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->qty * $prod->pivot->custom_unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->qty * $prod->price, 2) }}</td>
             </tr>
             @php
-                $total += ($prod->qty * $prod->pivot->custom_unit_price);
+                $total += ($prod->qty * $prod->price);
             @endphp
         @endforeach
     </table>

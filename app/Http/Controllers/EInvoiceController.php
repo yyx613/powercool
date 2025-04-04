@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\EInvoiceEmail;
 use App\Models\Billing;
+use App\Models\BillingProduct;
 use App\Models\ClassificationCode;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
@@ -774,7 +775,9 @@ class EInvoiceController extends Controller
                 }
                 foreach ($invoice['items'] as $item) {
                     if ($fromBilling) {
-                        $saleProduct = $billing->saleProducts()->where('sale_product_id', $item['product_id'])->first();
+                        $billingProducts = BillingProduct::where('billing_id',$billing->id)->get();
+                        //this saleProduct is not saleProduct, it is billingProducts
+                        $saleProduct = $billingProducts->where('product_id', $item['product_id'])->first();
                     } else {
                         $saleProduct = SaleProduct::find($item['product_id']);
                     }
@@ -783,16 +786,18 @@ class EInvoiceController extends Controller
                         continue;
                     }
 
-                    $saleId = $saleProduct->sale->id;
-                    $amount = (int) $item['qty'] * (float) $item['price'];
+                    if (!$fromBilling) {
+                        $saleId = $saleProduct->sale->id;
+                        $amount = (int) $item['qty'] * (float) $item['price'];
 
-                    if (! isset($totals[$saleId])) {
-                        $totals[$saleId] = 0;
+                        if (! isset($totals[$saleId])) {
+                            $totals[$saleId] = 0;
+                        }
+                        $totals[$saleId] += $amount;
                     }
-                    $totals[$saleId] += $amount;
 
                     $qtyDifference = abs($saleProduct->qty - $item['qty']);
-                    $priceDifference = abs(($fromBilling ? $saleProduct->pivot->custom_unit_price : $saleProduct->unit_price) - $item['price']);
+                    $priceDifference = abs(($fromBilling ? $saleProduct->price : $saleProduct->unit_price) - $item['price']);
 
                     if ($qtyDifference != 0 || $priceDifference != 0) {
                         $totalsModified += $qtyDifference * $item['price'];
@@ -802,20 +807,11 @@ class EInvoiceController extends Controller
                             'price' => $item['price'],
                         ];
                     }
-                    if ($fromBilling) {
-                        $saleProduct->update([
-                            'qty' => $item['qty'],
-                        ]);
-                        $billing = $eInvoice->einvoiceable;
-                        $billing->saleProducts()->updateExistingPivot($saleProduct->id, [
-                            'custom_unit_price' => $item['price'],
-                        ]);
-                    } else {
-                        $saleProduct->update([
-                            'qty' => $item['qty'],
-                            'unit_price' => $item['price'],
-                        ]);
-                    }
+
+                    $saleProduct->update([
+                        'qty' => $item['qty'],
+                        'price' => $item['price']
+                    ]);
 
                     $customer = $fromBilling ? null : $saleProduct->sale->customer;
                 }
@@ -1149,13 +1145,17 @@ class EInvoiceController extends Controller
                     $eInvoice = EInvoice::find($invoiceId);
                     $billing = $eInvoice->einvoiceable;
                     $invoices = $billing->invoices;
+                    $billingProducts = BillingProduct::where('billing_id',$billing->id)->get();
+
                     if ($invoices) {
-                        foreach ($billing->saleProducts as $saleProduct) {
+                        foreach ($billingProducts as $billingProduct) {
+                            $product = Product::find($billingProduct->product_id);
+
                             $invoiceItems[] = [
-                                'product_id' => $saleProduct->id,
-                                'name' => $saleProduct->product->model_name,
-                                'qty' => $saleProduct->qty,
-                                'price' => $saleProduct->pivot->custom_unit_price,
+                                'product_id' => $billingProduct->product_id,
+                                'name' => $product->model_name,
+                                'qty' => $billingProduct->qty,
+                                'price' => $billingProduct->price,
                             ];
                         }
                         $results[] = [
@@ -1591,12 +1591,12 @@ class EInvoiceController extends Controller
         }
 
         $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
-
+        $company = 'powercool';
         $headers = [
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$this->accessTokenPowerCool,
+            'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
         ];
 
         foreach ($selectedBillings as $billingId) {
@@ -1720,7 +1720,7 @@ class EInvoiceController extends Controller
                 'our_do_no' => $billing->our_do_no,
                 'term' => CreditTerm::where('id', $billing->term_id)->value('name'),
                 'salesperson' => User::where('id', $billing->sale_person_id)->value('name'),
-                'products' => $billing->saleProducts,
+                'products' => BillingProduct::where('billing_id',$billing->id)->get(),
                 'validationLink' => $validationLink,
             ]);
             $pdf->setPaper('A4', 'letter');
