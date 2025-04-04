@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                             <x-app.message.error id="materials_err" class="mt-2" data-mu-id="" />
-                        </div> 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,11 +67,11 @@
         let materials = {}
         $('#serial-no-container input[name="serial_no[]"]').each(function(i, obj) {
             if ($(this).is(':checked')) {
-                if (materials[$(this).data('mu-id')] === undefined) materials[$(this).data('mu-id')] = []
+                if (materials[$(this).data('product-id')] === undefined) materials[$(this).data('product-id')] = []
 
-                let vals = materials[$(this).data('mu-id')]
+                let vals = materials[$(this).data('product-id')]
                 vals.push($(this).attr('id'))
-                materials[$(this).data('mu-id')] = vals
+                materials[$(this).data('product-id')] = vals
 
                 if (PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')] === undefined) {
                     PRODUCTION_MILESTONE_MATERIALS[$('#production-milestone-modal #yes-btn').attr('data-id')] = []
@@ -92,7 +92,7 @@
                 'production_milestone_id': $('#production-milestone-modal #yes-btn').attr('data-id'),
                 'datetime': $('#production-milestone-modal #date').text(),
                 'materials': materials,
-            },  
+            },
             success: function(res) {
                 $('#production-milestone-modal').removeClass('show-modal')
 
@@ -116,9 +116,9 @@
                             } else {
                                 let field = key.split('.')[0]
                                 let idx = key.split('.')[1]
-    
-                                $(`#production-milestone-modal #${field}_err[data-mu-id="${idx}"]`).find('p').text(errors[key])
-                                $(`#production-milestone-modal #${field}_err[data-mu-id="${idx}"]`).removeClass('hidden') 
+
+                                $(`#production-milestone-modal #${field}_err[data-product-id="${idx}"]`).find('p').text(errors[key])
+                                $(`#production-milestone-modal #${field}_err[data-product-id="${idx}"]`).removeClass('hidden')
                             }
                         }
                     }
