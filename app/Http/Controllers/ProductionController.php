@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Exports\ProductionExport;
 use App\Models\Branch;
 use App\Models\MaterialUse;
-use App\Models\MaterialUseProduct;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
+use App\Models\ProductionMilestoneMaterialPreview;
 use App\Models\Sale;
 use App\Models\Scopes\BranchScope;
 use App\Models\User;
@@ -37,6 +37,8 @@ class ProductionController extends Controller
 
     protected $prodMsMaterial;
 
+    protected $prodMsMaterialPreview;
+
     protected $product;
 
     protected $productChild;
@@ -48,6 +50,7 @@ class ProductionController extends Controller
         $this->ms = new Milestone;
         $this->prodMs = new ProductionMilestone;
         $this->prodMsMaterial = new ProductionMilestoneMaterial;
+        $this->prodMsMaterialPreview = new ProductionMilestoneMaterialPreview;
         $this->product = new Product;
         $this->productChild = new ProductChild;
     }
@@ -167,8 +170,12 @@ class ProductionController extends Controller
 
         $production->load('users', 'milestones');
 
+        $production_milestone_ids = $this->prodMs::where('production_id', $production->id)->pluck('id');
+        $production_milestone_material_previews = $this->prodMsMaterialPreview::whereIn('production_milestone_id', $production_milestone_ids)->get();
+
         return view('production.form', [
             'production' => $production,
+            'production_milestone_material_previews' => $production_milestone_material_previews,
         ]);
     }
 
@@ -183,22 +190,20 @@ class ProductionController extends Controller
 
         $involved_pc_ids = getInvolvedProductChild($production->id);
 
-        $production->milestones->each(function ($q) use ($involved_pc_ids) {
-            if ($q->pivot->material_use_product_id == null) {
-                $mu_product_ids = [];
-            } else {
-                $mu_product_ids = explode(',', $q->pivot->material_use_product_id);
-            }
+        $production->milestones->each(function ($q) use ($involved_pc_ids, $production) {
+            $prodMs = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $q->id)->first();
+            $previews = $this->prodMsMaterialPreview::where('production_milestone_id', $prodMs->id)->get();
 
-            if (count($mu_product_ids) > 0) {
-                $q->pivot->material_use_products = MaterialUseProduct::with(['material' => function ($q) use ($involved_pc_ids) {
-                    $q->with(['children' => function ($q) use ($involved_pc_ids) {
-                        $q->whereNull('status')->whereNotIn('id', $involved_pc_ids)->where('location', ProductChild::LOCATION_WAREHOUSE);
-                    }]);
-                }])
-                    ->whereIn('id', $mu_product_ids)
-                    ->get();
+            $preview = [];
+            for ($i = 0; $i < count($previews); $i++) {
+                $product = Product::where('id', $previews[$i]->product_id)->first();
+                $preview[] = [
+                    'product' => $product,
+                    'qty' => $previews[$i]->qty,
+                    'children' => ProductChild::where('product_id', $product->id)->whereNull('status')->whereNotIn('id', $involved_pc_ids)->where('location', ProductChild::LOCATION_WAREHOUSE)->get(),
+                ];
             }
+            $q->preview = $preview;
         });
 
         // Production Milestone Materials
@@ -265,6 +270,8 @@ class ProductionController extends Controller
         try {
             DB::beginTransaction();
 
+            $now = now();
+
             if ($production->id == null) {
                 // Create product
                 $prod = $this->product::where('id', $req->product)->first();
@@ -330,37 +337,41 @@ class ProductionController extends Controller
                 foreach ($req->milestone as $key => $ms_id) {
                     $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $ms_id)->first();
 
-                    $ms_material_use_product = null;
+                    if ($ms == null) {
+                        $ms = $this->prodMs::create([
+                            'production_id' => $production->id,
+                            'milestone_id' => $ms_id,
+                        ]);
+                    }
+
+                    $ms_material_use_product = [];
                     for ($i = 0; $i < count($material_use_product); $i++) {
                         if ($material_use_product[$i]->is_custom == false && $material_use_product[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
-                            $ms_material_use_product = implode(',', $material_use_product[$i]->value);
+                            for ($j = 0; $j < count($material_use_product[$i]->value); $j++) {
+                                $ms_material_use_product[] = [
+                                    'production_milestone_id' => $ms->id,
+                                    'product_id' => $material_use_product[$i]->value[$j]->productId,
+                                    'qty' => $material_use_product[$i]->value[$j]->qty,
+                                    'created_at' => $now,
+                                ];
+                            }
                             break;
                         }
                     }
 
                     if ($ms == null) {
-                        $this->prodMs::create([
-                            'production_id' => $production->id,
-                            'milestone_id' => $ms_id,
-                            'material_use_product_id' => $ms_material_use_product,
-                        ]);
+                        if (count($ms_material_use_product) > 0) {
+                            $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                        }
                     } else {
-                        $ms->material_use_product_id = $ms_material_use_product;
-                        $ms->save();
+                        $this->prodMsMaterialPreview::where('production_milestone_id', $ms->id)->delete();
+                        $this->prodMsMaterialPreview::insert($ms_material_use_product);
                     }
                 }
             }
             // Create custom milestones
             if ($req->custom_milestone != null) {
                 foreach ($req->custom_milestone as $key => $ms) {
-                    $ms_material_use_product = null;
-                    for ($i = 0; $i < count($material_use_product); $i++) {
-                        if ($material_use_product[$i]->is_custom == true && $material_use_product[$i]->id == ($key + 1)) {
-                            $ms_material_use_product = implode(',', $material_use_product[$i]->value);
-                            break;
-                        }
-                    }
-
                     $custom_ms = $this->ms::create([
                         'type' => $this->ms::TYPE_PRODUCTION,
                         'name' => $ms,
@@ -370,8 +381,26 @@ class ProductionController extends Controller
                     $this->prodMs::create([
                         'production_id' => $production->id,
                         'milestone_id' => $custom_ms->id,
-                        'material_use_product_id' => $ms_material_use_product,
                     ]);
+
+                    $ms_material_use_product = [];
+                    for ($i = 0; $i < count($material_use_product); $i++) {
+                        if ($material_use_product[$i]->is_custom == true && $material_use_product[$i]->id == ($key + 1)) {
+                            for ($j = 0; $j < count($material_use_product[$i]->value); $j++) {
+                                $ms_material_use_product[] = [
+                                    'production_milestone_id' => $ms->id,
+                                    'product_id' => $material_use_product[$i]->value[$j]->productId,
+                                    'qty' => $material_use_product[$i]->value[$j]->qty,
+                                    'created_at' => $now,
+                                ];
+                            }
+                            break;
+                        }
+                    }
+
+                    if (count($ms_material_use_product) > 0) {
+                        $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                    }
                 }
             }
 
@@ -399,14 +428,17 @@ class ProductionController extends Controller
 
         // Validate serial no
         $pm = $this->prodMs::where('id', $req->production_milestone_id)->first();
+        $prodMsMaterialPreview = $this->prodMsMaterialPreview::where('production_milestone_id', $pm->id)->get();
 
-        if ($pm->material_use_product_id != null) {
+        if (count($prodMsMaterialPreview) > 0) {
             $batch_serial_no_ids = [];
+            $product_ids = [];
 
-            $material_use = MaterialUse::where('product_id', $pm->production->product_id)->first();
+            for ($i = 0; $i < count($prodMsMaterialPreview); $i++) {
+                $product_ids[] = $prodMsMaterialPreview[$i]->product_id;
+            }
+
             // If no material serial no is provided
-            $mu_product_ids = explode(',', $pm->material_use_product_id);
-            $product_ids = MaterialUseProduct::whereIn('id', $mu_product_ids)->pluck('product_id');
             $products = Product::whereIn('id', $product_ids)->get();
 
             $has_spare_part = false;
@@ -426,7 +458,13 @@ class ProductionController extends Controller
             // If qty is not tally
             for ($i = 0; $i < count($products); $i++) {
                 if ($products[$i]->is_sparepart == true) {
-                    $material = MaterialUseProduct::where('material_use_id', $material_use->id)->where('product_id', $products[$i]->id)->first();
+                    $qty_needed = 0;
+                    for ($j = 0; $j < count($prodMsMaterialPreview); $j++) {
+                        if ($prodMsMaterialPreview[$j]->product_id == $products[$i]->id) {
+                            $qty_needed = $prodMsMaterialPreview[$j]->qty;
+                            break;
+                        }
+                    }
 
                     if (! isset($req->materials[$products[$i]->id])) {
                         return Response::json([
@@ -434,7 +472,7 @@ class ProductionController extends Controller
                                 'materials.'.$products[$i]->id => "Material's serial no is required",
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
-                    } elseif ($material->qty != count($req->materials[$products[$i]->id])) {
+                    } elseif ($qty_needed != count($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
                                 'materials.'.$products[$i]->id => 'Quantity needed is not tally',
@@ -465,13 +503,9 @@ class ProductionController extends Controller
 
             // Materials
             $now = now();
-            if ($pm->material_use_product_id != null) {
+            if (count($prodMsMaterialPreview) > 0) {
                 for ($i = 0; $i < count($products); $i++) {
                     $data = [];
-
-                    $material = MaterialUseProduct::where('material_use_id', $material_use->id)
-                        ->where('product_id', $products[$i]->id)
-                        ->first();
 
                     if ($products[$i]->is_sparepart == true && isset($req->materials[$products[$i]->id])) {
                         $this->prodMsMaterial::where('production_milestone_id', $pm->id)
@@ -498,10 +532,18 @@ class ProductionController extends Controller
                             ->first();
 
                         if ($pmm == null) {
+                            $qty = 0;
+                            for ($j = 0; $j < count($prodMsMaterialPreview); $j++) {
+                                if ($prodMsMaterialPreview[$j]->product_id == $products[$i]->id) {
+                                    $qty = $prodMsMaterialPreview[$j]->qty;
+                                    break;
+                                }
+                            }
+
                             $data[] = [
                                 'production_milestone_id' => $pm->id,
                                 'product_id' => $products[$i]->id,
-                                'qty' => $material->qty,
+                                'qty' => $qty,
                                 'created_at' => $now,
                                 'updated_at' => $now,
                             ];
