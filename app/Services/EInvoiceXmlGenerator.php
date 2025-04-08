@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BillingProduct;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
+use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\DeliveryOrder;
 use App\Models\EInvoice;
@@ -479,8 +480,7 @@ class EInvoiceXmlGenerator
 
         $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,$customer,$buyerIDValue,$fromBilling);
         $invoiceElement->appendChild($accountingCustomerParty);
-
-        $deliveryElement = $this->createDeliveryElement($xml);
+        $deliveryElement = $this->createDeliveryElement($xml,null,$fromBilling);
         $invoiceElement->appendChild($deliveryElement);
 
         $paymentMeansElement = $this->createPaymentMeansElement($xml);
@@ -529,7 +529,11 @@ class EInvoiceXmlGenerator
         ];
         
         foreach ($items as $item) {
-            $saleProduct = SaleProduct::find($item['id']);
+            if($fromBilling){
+                $saleProduct = Product::find($item['id']);
+            }else{
+                $saleProduct = SaleProduct::find($item['id']);
+            }
             $id = $item['id']; 
             $invoicedQuantity = $item['diff']; 
             $lineExtensionAmount = $item['diff'] * $item['price']; 
@@ -537,9 +541,9 @@ class EInvoiceXmlGenerator
             $taxableAmount = $lineExtensionAmount; 
             $taxPercent = 6.00;
             $taxExemptionReason = 'Exempt New Means of Transport';
-            $description = $saleProduct->desc ?? 'No Description'; 
+            $description = ($fromBilling ? $saleProduct->model_desc : $saleProduct->desc) ?? 'No Description'; 
             $originCountryCode = 'MYS'; 
-            $itemClassificationCode = $saleProduct->product->classificationCodes; 
+            $itemClassificationCode = $fromBilling ? $saleProduct->classificationCodes : $saleProduct->product->classificationCodes; 
             $priceAmount = $item['price'];
             $itemPriceExtensionAmount = $lineExtensionAmount;
             $allowanceCharges = []; 
@@ -653,7 +657,7 @@ class EInvoiceXmlGenerator
         $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml,$buyerTIN,null,$buyerIDValue,true);
         $invoiceElement->appendChild($accountingCustomerParty);
 
-        $deliveryElement = $this->createDeliveryElement($xml);
+        $deliveryElement = $this->createDeliveryElement($xml,null,true);
         $invoiceElement->appendChild($deliveryElement);
 
         $paymentMeansElement = $this->createPaymentMeansElement($xml);
@@ -1209,10 +1213,17 @@ class EInvoiceXmlGenerator
         return $accountingCustomerParty;
     }
 
-    public function createDeliveryElement($xml,$sale = null)
+    public function createDeliveryElement($xml,$sale = null, $fromBilling = false)
     {
-        // 创建 Delivery 元素
-        $customer = $sale ? $sale->customer : null;
+        if($fromBilling){
+            $customer = new Customer();
+            $customer->name = "HI-TEN TRADING SDN BHD";
+            $customer->tin_number = "C11901266090";
+            $customer->company_registration_number = "200501027542";
+        }else{
+            $customer = $sale ? $sale->customer : null;
+        }
+
         $delivery = $xml->createElement('cac:Delivery');
 
         // 创建 DeliveryParty 节点
@@ -1234,15 +1245,27 @@ class EInvoiceXmlGenerator
 
         // 添加 PostalAddress
         $address = null;
+        
         if($customer){
-            $address = (new CustomerLocation)->defaultDeliveryAddress($customer->id);
+            if($fromBilling){
+                $address= new CustomerLocation();
+                $address->city = "SERENDAH";
+                $address->zip_code = "48200";
+            }else{
+                $address = (new CustomerLocation)->defaultDeliveryAddress($customer->id);
+            }
         }
+
         $postalAddress = $xml->createElement('cac:PostalAddress');
         $postalAddress->appendChild($xml->createElement('cbc:CityName', $address->city ?? 'NA'));
         $postalAddress->appendChild($xml->createElement('cbc:PostalZone', $address->zip_code ?? 'NA'));
-        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', $address ? ($address->countrySubentityCode() ?? '17') : '17'));
-
-        $addressLines = [$address->address ?? 'NA'];
+        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', $address ? ($fromBilling ? '10' : ($address->countrySubentityCode() ?? '17')) : '17'));
+        
+        if($fromBilling){
+            $addressLines = ['NO:12,RCI PARK,JALAN KESIDANG 2,', 'KAWASAN PERINDUSTRIAN SUNGAI CHOH,', '48200 SERENDAH,SELANGOR.'];
+        }else{
+            $addressLines = [$address->address ?? 'NA'];
+        }
         foreach ($addressLines as $line) {
             $addressLine = $xml->createElement('cac:AddressLine');
             $lineElement = $xml->createElement('cbc:Line', $line);

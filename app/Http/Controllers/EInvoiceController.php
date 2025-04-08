@@ -846,8 +846,8 @@ class EInvoiceController extends Controller
 
             $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin, $customer, $fromBilling);
 
-            $result = $this->syncNote($document, $note, $qtyDifferences, $company, $type);
-            if (! empty($result->original['errorDetails'])) {
+            $result = $this->syncNote($document, $note, $qtyDifferences, $company, $type, $fromBilling);
+            if (! empty($result->original['errorDetails']) || !empty($result->original['error'])) {
                 DB::rollBack();
             } else {
                 DB::commit();
@@ -860,7 +860,7 @@ class EInvoiceController extends Controller
         }
     }
 
-    public function syncNote($document, $note, $qtyDifferences, $company, $type)
+    public function syncNote($document, $note, $qtyDifferences, $company, $type, $fromBilling)
     {
         $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
         $headers = [
@@ -927,7 +927,7 @@ class EInvoiceController extends Controller
                     $successfulDocuments[] = $invoiceCodeNumber;
 
                     if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
-                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences, $type);
+                        $this->generateAndSaveNotePdf($documentDetails, $note, $qtyDifferences, $type, $fromBilling);
                     }
                 }
 
@@ -980,7 +980,7 @@ class EInvoiceController extends Controller
         }
     }
 
-    public function generateAndSaveNotePdf($documentDetails, $note, $items, $type)
+    public function generateAndSaveNotePdf($documentDetails, $note, $items, $type, $fromBilling)
     {
         try {
             $uuid = $documentDetails['uuid'];
@@ -990,14 +990,18 @@ class EInvoiceController extends Controller
             $productDetails = [];
 
             foreach ($items as $key => $item) {
-                $saleProduct = SaleProduct::find($item['id']);
+                if($fromBilling){
+                    $saleProduct = Product::find($item['id']);
+                }else{
+                    $saleProduct = SaleProduct::find($item['id']);
+                }
 
                 if ($saleProduct) {
                     $productDetails[] = [
                         'index' => $key + 1,
-                        'model_name' => $saleProduct->product->model_name ?? '',
+                        'model_name' => ($fromBilling ? $saleProduct->model_name : $saleProduct->product->model_name) ?? '',
                         'qty' => $item['diff'],
-                        'uom' => $saleProduct->product->uom ?? '',
+                        'uom' => ($fromBilling ? $saleProduct->uom : $saleProduct->product->uom) ?? '',
                         'unit_price' => $item['price'],
                         'subtotal' => $item['diff'] * $item['price'],
                     ];
@@ -1057,7 +1061,7 @@ class EInvoiceController extends Controller
                     'sku' => $note->sku,
                     'productDetails' => $productDetails,
                     'total' => $total,
-                    'customer' => $customer,
+                    'customer' => $customer, 
                     'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
                     'terms' => '',
                     'type' => $note instanceof CreditNote ? 'CREDIT NOTE' : 'DEBIT NOTE',

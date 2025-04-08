@@ -128,7 +128,7 @@
         @endphp
         @foreach ($products as $key => $prod)
             @php
-                $product = Product::find($prod->product_id);
+                $product = \App\Models\Product::find($prod->product_id);
             @endphp
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>

@@ -2148,6 +2148,7 @@ class SaleController extends Controller
                 'uuid' => $record->uuid,
                 'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
                 'status' => $record->status,
+                'date' => $record->created_at->format('Y-m-d H:i:s'),
             ];
         }
 
@@ -2203,6 +2204,7 @@ class SaleController extends Controller
                 'uuid' => $record->uuid,
                 'from' => $record->einvoices->count() > 0 ? 'E-Invoice' : 'Consolidated E-Invoice',
                 'status' => $record->status,
+                'date' => $record->created_at->format('Y-m-d H:i:s'),
             ];
         }
 
