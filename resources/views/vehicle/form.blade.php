@@ -54,6 +54,16 @@
                     <x-app.input.input name="tarikh_pendaftaran" id="tarikh_pendaftaran" :hasError="$errors->has('tarikh_pendaftaran')" value="{{ old('tarikh_pendaftaran', isset($vehicle) ? $vehicle->tarikh_pendaftaran : null) }}" />
                     <x-input-error :messages="$errors->get('tarikh_pendaftaran')" class="mt-1" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="department" class="mb-1">{{ __('Department') }}</x-app.input.label>
+                    <x-app.input.input name="department" id="department" :hasError="$errors->has('department')" value="{{ old('department', isset($vehicle) ? $vehicle->department : null) }}" />
+                    <x-input-error :messages="$errors->get('department')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="area_control" class="mb-1">{{ __('Area Control') }}</x-app.input.label>
+                    <x-app.input.input name="area_control" id="area_control" :hasError="$errors->has('area_control')" value="{{ old('area_control', isset($vehicle) ? $vehicle->area_control : null) }}" />
+                    <x-input-error :messages="$errors->get('area_control')" class="mt-1" />
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
                 @if (!isset($vehicle))

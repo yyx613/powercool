@@ -107,6 +107,9 @@ class PermissionSeeder extends Seeder
             'dealer.edit',
             'dealer.delete',
 
+            'vehicle.view',
+            'vehicle_service.reminder',
+
             'setting.view',
         ];
         $now = now();
