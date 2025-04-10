@@ -15,6 +15,17 @@ class VehicleService extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const types = [
+        1 => 'Insurance',
+        2 => 'Roadtax',
+        3 => 'Inspection',
+        4 => 'Mileage',
+        5 => 'Repair Item',
+        6 => 'Service Item',
+        7 => 'Petrol',
+        8 => 'Toll',
+    ];
+
     protected $guarded = [];
 
     protected $casts = [
@@ -42,37 +53,12 @@ class VehicleService extends Model
         return $this->hasMany(VehicleServiceItem::class);
     }
 
-    public function getInsuranceDateAttribute($val)
+    public function getDateAttribute($val)
     {
         return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
     }
 
-    public function getInsuranceRemindAtAttribute($val)
-    {
-        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
-    }
-
-    public function getRoadtaxDateAttribute($val)
-    {
-        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
-    }
-
-    public function getRoadtaxRemindAtAttribute($val)
-    {
-        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
-    }
-
-    public function getInspectionDateAttribute($val)
-    {
-        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
-    }
-
-    public function getInspectionRemindAtAttribute($val)
-    {
-        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
-    }
-
-    public function getMileageRemindAtAttribute($val)
+    public function getRemindAtAttribute($val)
     {
         return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
     }

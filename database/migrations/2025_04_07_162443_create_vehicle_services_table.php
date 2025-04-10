@@ -14,17 +14,10 @@ return new class extends Migration
         Schema::create('vehicle_services', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('vehicle_id');
-            $table->timestamp('insurance_date')->nullable();
-            $table->timestamp('insurance_remind_at')->nullable();
-            $table->decimal('insurance_amount')->nullable();
-            $table->timestamp('roadtax_date')->nullable();
-            $table->timestamp('roadtax_remind_at')->nullable();
-            $table->decimal('roadtax_amount')->nullable();
-            $table->timestamp('inspection_date')->nullable();
-            $table->timestamp('inspection_remind_at')->nullable();
-            $table->timestamp('mileage_remind_at')->nullable();
-            $table->decimal('petrol')->nullable();
-            $table->decimal('toll')->nullable();
+            $table->integer('type');
+            $table->timestamp('date')->nullable();
+            $table->timestamp('remind_at')->nullable();
+            $table->decimal('amount')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

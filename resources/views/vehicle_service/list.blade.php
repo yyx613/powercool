@@ -45,11 +45,10 @@
             <thead>
                 <tr>
                     <th>{{ __('Vehicle Plate Number') }}</th>
-                    <th>{{ __('Insurance Date') }}</th>
-                    <th>{{ __('Roadtax Date') }}</th>
-                    <th>{{ __('Inspection Date') }}</th>
-                    <th>{{ __('Petrol') }}</th>
-                    <th>{{ __('Toll') }}</th>
+                    <th>{{ __('Service') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Reminder Date') }}</th>
+                    <th>{{ __('Amount') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -76,11 +75,10 @@
             order: [],
             columns: [
                 { data: 'vehicle_plate_number' },
-                { data: 'insurance_date' },
-                { data: 'roadtax_date' },
-                { data: 'inspection_date' },
-                { data: 'petrol' },
-                { data: 'toll' },
+                { data: 'service' },
+                { data: 'date' },
+                { data: 'reminder_date' },
+                { data: 'amount' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -125,16 +123,8 @@
                     }
                 },
                 {
-                    "width": "10%",
-                    "targets": 5,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
                     "width": "5%",
-                    "targets": 6,
+                    "targets": 5,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

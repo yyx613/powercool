@@ -36,17 +36,13 @@ class VehicleServiceReminder extends Command
 
         $now = now()->format('Y-m-d');
 
-        $data = VehicleService::orWhere('insurance_remind_at', 'like', '%'.$now.'%')
-            ->orWhere('roadtax_remind_at', 'like', '%'.$now.'%')
-            ->orWhere('inspection_remind_at', 'like', '%'.$now.'%')
-            ->orWhere('mileage_remind_at', 'like', '%'.$now.'%')
-            ->get();
+        $data = VehicleService::where('remind_at', 'like', '%'.$now.'%')->get();
 
         for ($i = 0; $i < count($data); $i++) {
             Notification::send($receivers, new VehicleServiceNotification([
                 'type' => 'vehicle_service',
                 'vehicle_service_id' => $data[$i]->id,
-                'desc' => 'The service date for vehicle ('.$data[$i]->vehicle->plate_number.') is '.now()->format('d M Y'),
+                'desc' => VehicleService::types[$data[$i]->type].' service reminder for vehicle ('.$data[$i]->vehicle->plate_number.')',
             ]));
         }
     }

@@ -59,11 +59,10 @@ class VehicleServiceController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'vehicle_plate_number' => $record->vehicle->plate_number,
-                'insurance_date' => Carbon::parse($record->insurance_date)->format('Y M d'),
-                'roadtax_date' => Carbon::parse($record->roadtax_date)->format('Y M d'),
-                'inspection_date' => Carbon::parse($record->inspection_date)->format('Y M d'),
-                'petrol' => $record->petrol,
-                'toll' => $record->toll,
+                'service' => VehicleService::types[$record->type],
+                'date' => $record->date == null ? null : Carbon::parse($record->date)->format('Y M d'),
+                'reminder_date' => $record->remind_at == null ? null : Carbon::parse($record->remind_at)->format('Y M d'),
+                'amount' => $record->amount == null ? null : number_format($record->amount, 2),
             ];
         }
 
@@ -86,27 +85,43 @@ class VehicleServiceController extends Controller
 
     public function upsert(Request $req, ?VehicleService $service = null)
     {
-        // Validate request
-        $validator = Validator::make($req->all(), [
+        $rules = [
             'vehicle' => 'required',
-            'insurance_date' => 'nullable',
-            'insurance_reminder' => 'nullable',
-            'insurance_amount' => 'nullable',
-            'roadtax_date' => 'nullable',
-            'roadtax_reminder' => 'nullable',
-            'roadtax_amount' => 'nullable',
-            'inspection_date' => 'nullable',
-            'inspection_reminder' => 'nullable',
-            'mileage_reminder' => 'nullable',
-            'petrol' => 'nullable',
-            'toll' => 'nullable',
+            'service' => 'required',
             'name' => 'required',
-            'name.*' => 'required',
+            'name.*' => 'nullable',
             'amount' => 'required',
-            'amount.*' => 'required',
-        ], [
+            'amount.*' => 'nullable',
+        ];
+        if ($req->service != null) {
+            if ($req->service == 1 || $req->service == 2) {
+                $rules['date'] = 'required';
+                $rules['reminder_date'] = 'required';
+                $rules['service_amount'] = 'required';
+            } elseif ($req->service == 3) {
+                $rules['date'] = 'required';
+                $rules['reminder_date'] = 'required';
+                $rules['service_amount'] = 'nullable';
+            } elseif ($req->service == 4) {
+                $rules['date'] = 'nullable';
+                $rules['reminder_date'] = 'required';
+                $rules['service_amount'] = 'nullable';
+            } elseif ($req->service == 5 || $req->service == 6) {
+                $rules['date'] = 'nullable';
+                $rules['reminder_date'] = 'nullable';
+                $rules['service_amount'] = 'nullable';
+            } elseif ($req->service == 7 || $req->service == 8) {
+                $rules['date'] = 'nullable';
+                $rules['reminder_date'] = 'nullable';
+                $rules['service_amount'] = 'required';
+            }
+        }
+        // Validate request
+        $validator = Validator::make($req->all(), $rules, [
             'name.*.required' => 'The name at row :position is required',
             'amount.*.required' => 'The amount at row :position is required',
+        ], [
+            'service_amount' => 'amount',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -118,33 +133,19 @@ class VehicleServiceController extends Controller
             if ($service == null) {
                 $new_service = $this->vs::create([
                     'vehicle_id' => $req->vehicle,
-                    'insurance_date' => $req->insurance_date,
-                    'insurance_remind_at' => $req->insurance_reminder,
-                    'insurance_amount' => $req->insurance_amount,
-                    'roadtax_date' => $req->roadtax_date,
-                    'roadtax_remind_at' => $req->roadtax_reminder,
-                    'roadtax_amount' => $req->roadtax_amount,
-                    'inspection_date' => $req->inspection_date,
-                    'inspection_remind_at' => $req->inspection_reminder,
-                    'mileage_remind_at' => $req->mileage_reminder,
-                    'petrol' => $req->petrol,
-                    'toll' => $req->toll,
+                    'type' => $req->service,
+                    'date' => $req->date,
+                    'remind_at' => $req->reminder_date,
+                    'amount' => $req->service_amount,
                 ]);
                 (new Branch)->assign(VehicleService::class, $new_service->id);
             } else {
                 $service->update([
                     'vehicle_id' => $req->vehicle,
-                    'insurance_date' => $req->insurance_date,
-                    'insurance_remind_at' => $req->insurance_reminder,
-                    'insurance_amount' => $req->insurance_amount,
-                    'roadtax_date' => $req->roadtax_date,
-                    'roadtax_remind_at' => $req->roadtax_reminder,
-                    'roadtax_amount' => $req->roadtax_amount,
-                    'inspection_date' => $req->inspection_date,
-                    'inspection_remind_at' => $req->inspection_reminder,
-                    'mileage_remind_at' => $req->mileage_reminder,
-                    'petrol' => $req->petrol,
-                    'toll' => $req->toll,
+                    'type' => $req->service,
+                    'date' => $req->date,
+                    'remind_at' => $req->reminder_date,
+                    'amount' => $req->service_amount,
                 ]);
             }
             // Items
@@ -152,6 +153,10 @@ class VehicleServiceController extends Controller
 
             $data = [];
             for ($i = 0; $i < count($req->name); $i++) {
+                if ($req->name[$i] == null && $req->amount[$i] == null) {
+                    continue;
+                }
+
                 $data[] = [
                     'vehicle_service_id' => $new_service->id ?? $service->id,
                     'name' => $req->name[$i],
