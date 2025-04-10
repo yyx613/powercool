@@ -35,6 +35,7 @@ use App\Models\Ticket;
 use App\Models\UOM;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleService;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -622,9 +623,11 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['vehicle_service.form'], function (ViewView $view) {
             $vehicles = Vehicle::orderBy('id', 'desc')->get();
+            $services = VehicleService::types;
 
             $view->with([
                 'vehicles' => $vehicles,
+                'services' => $services,
             ]);
         });
     }

@@ -24,59 +24,29 @@
                     <x-input-error :messages="$errors->get('vehicle')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="insurance_date" class="mb-1">{{ __('Insurance Date') }}</x-app.input.label>
-                    <x-app.input.input name="insurance_date" id="insurance_date" :hasError="$errors->has('insurance_date')" value="{{ old('insurance_date', isset($service) ? $service->insurance_date : null) }}" />
-                    <x-input-error :messages="$errors->get('insurance_date')" class="mt-1" />
+                    <x-app.input.label id="service" class="mb-1">{{ __('Service') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="service" id="service" :hasError="$errors->has('service')" placeholder="{{ __('Select a service') }}">
+                        <option value="">{{ __('Select a service') }}</option>
+                        @foreach ($services as $key => $val)
+                            <option value="{{ $key }}" @selected(old('service', isset($service) ? $service->type : null) == $key)>{{ $val }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-input-error :messages="$errors->get('service')" class="mt-1" />
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="insurance_reminder" class="mb-1">{{ __('Insurance Reminder') }}</x-app.input.label>
-                    <x-app.input.input name="insurance_reminder" id="insurance_reminder" :hasError="$errors->has('insurance_reminder')" value="{{ old('insurance_reminder', isset($service) ? $service->insurance_remind_at : null) }}" />
-                    <x-input-error :messages="$errors->get('insurance_reminder')" class="mt-1" />
+                <div class="flex flex-col hidden" id="date_container">
+                    <x-app.input.label id="date" class="mb-1">{{ __('Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="date" id="date" :hasError="$errors->has('date')" value="{{ old('date', isset($service) ? $service->date : null) }}" />
+                    <x-input-error :messages="$errors->get('date')" class="mt-1" />
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="insurance_amount" class="mb-1">{{ __('Insurance Amount') }}</x-app.input.label>
-                    <x-app.input.input name="insurance_amount" id="insurance_amount" :hasError="$errors->has('insurance_amount')" value="{{ old('insurance_amount', isset($service) ? $service->insurance_amount : null) }}" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('insurance_amount')" class="mt-1" />
+                <div class="flex flex-col hidden" id="reminder_date_container">
+                    <x-app.input.label id="reminder_date" class="mb-1">{{ __('Reminder Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="reminder_date" id="reminder_date" :hasError="$errors->has('reminder_date')" value="{{ old('reminder_date', isset($service) ? $service->remind_at : null) }}" />
+                    <x-input-error :messages="$errors->get('reminder_date')" class="mt-1" />
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="roadtax_date" class="mb-1">{{ __('Roadtax Date') }}</x-app.input.label>
-                    <x-app.input.input name="roadtax_date" id="roadtax_date" :hasError="$errors->has('roadtax_date')" value="{{ old('roadtax_date', isset($service) ? $service->roadtax_date : null) }}" />
-                    <x-input-error :messages="$errors->get('roadtax_date')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="roadtax_reminder" class="mb-1">{{ __('Roadtax Reminder') }}</x-app.input.label>
-                    <x-app.input.input name="roadtax_reminder" id="roadtax_reminder" :hasError="$errors->has('roadtax_reminder')" value="{{ old('roadtax_reminder', isset($service) ? $service->roadtax_remind_at : null) }}" />
-                    <x-input-error :messages="$errors->get('roadtax_reminder')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="roadtax_amount" class="mb-1">{{ __('Roadtax Amount') }}</x-app.input.label>
-                    <x-app.input.input name="roadtax_amount" id="roadtax_amount" :hasError="$errors->has('roadtax_amount')" value="{{ old('roadtax_amount', isset($service) ? $service->roadtax_amount : null) }}" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('roadtax_amount')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="inspection_date" class="mb-1">{{ __('Inspection Date') }}</x-app.input.label>
-                    <x-app.input.input name="inspection_date" id="inspection_date" :hasError="$errors->has('inspection_date')" value="{{ old('inspection_date', isset($service) ? $service->inspection_date : null) }}" />
-                    <x-input-error :messages="$errors->get('inspection_date')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="inspection_reminder" class="mb-1">{{ __('Inspection Reminder') }}</x-app.input.label>
-                    <x-app.input.input name="inspection_reminder" id="inspection_reminder" :hasError="$errors->has('inspection_reminder')" value="{{ old('inspection_reminder', isset($service) ? $service->inspection_remind_at : null) }}" />
-                    <x-input-error :messages="$errors->get('inspection_reminder')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="mileage_reminder" class="mb-1">{{ __('Mileage Reminder') }}</x-app.input.label>
-                    <x-app.input.input name="mileage_reminder" id="mileage_reminder" :hasError="$errors->has('mileage_reminder')" value="{{ old('mileage_reminder', isset($service) ? $service->mileage_remind_at : null) }}" />
-                    <x-input-error :messages="$errors->get('mileage_reminder')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="petrol" class="mb-1">{{ __('Petrol') }}</x-app.input.label>
-                    <x-app.input.input name="petrol" id="petrol" :hasError="$errors->has('petrol')" value="{{ old('petrol', isset($service) ? $service->petrol : null) }}" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('petrol')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="toll" class="mb-1">{{ __('Toll') }}</x-app.input.label>
-                    <x-app.input.input name="toll" id="toll" :hasError="$errors->has('mileage_reminder')" value="{{ old('toll', isset($service) ? $service->toll : null) }}" class="decimal-input" />
-                    <x-input-error :messages="$errors->get('toll')" class="mt-1" />
+                <div class="flex flex-col hidden" id="amount_container">
+                    <x-app.input.label id="service_amount" class="mb-1">{{ __('Amount') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="service_amount" id="service_amount" :hasError="$errors->has('service_amount')" value="{{ old('service_amount', isset($service) ? $service->service_amount : null) }}" class="decimal-input" />
+                    <x-input-error :messages="$errors->get('service_amount')" class="mt-1" />
                 </div>
             </div>
         </div>
@@ -175,45 +145,23 @@
     <script>
         ITEM_ID = 1
 
-        $('input[name="insurance_date"]').daterangepicker(datepickerParam)
-        $('input[name="insurance_date"]').on('apply.daterangepicker', function(ev, picker) {
+        $('input[name="date"]').daterangepicker(datepickerParam)
+        $('input[name="date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
-        $('input[name="insurance_reminder"]').daterangepicker(datepickerParam)
-        $('input[name="insurance_reminder"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="roadtax_date"]').daterangepicker(datepickerParam)
-        $('input[name="roadtax_date"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="roadtax_reminder"]').daterangepicker(datepickerParam)
-        $('input[name="roadtax_reminder"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="inspection_date"]').daterangepicker(datepickerParam)
-        $('input[name="inspection_date"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="inspection_reminder"]').daterangepicker(datepickerParam)
-        $('input[name="inspection_reminder"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="insurance_reminder"]').daterangepicker(datepickerParam)
-        $('input[name="insurance_reminder"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="mileage_reminder"]').daterangepicker(datepickerParam)
-        $('input[name="mileage_reminder"]').on('apply.daterangepicker', function(ev, picker) {
+        $('input[name="reminder_date"]').daterangepicker(datepickerParam)
+        $('input[name="reminder_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
 
         $(document).ready(function() {
-            if ($('input[name="old_val_count"]').val() <= 0) {
+            if ($('input[name="old_val_count"]').length <= 0 || $('input[name="old_val_count"]').val() <= 0) {
                 $('#add-item-btn').click()
             } else {
                 ITEM_ID = $('input[name="old_val_count"]').val() + 1
             }
+
+            $('select[name="service"]').change()
         })
 
         $('#add-item-btn').on('click', function() {
@@ -236,6 +184,31 @@
             $('#item-template').remove()
 
             $(this).submit()
+        })
+        $('select[name="service"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 1 || val == 2) {
+                $('#date_container').removeClass('hidden')
+                $('#reminder_date_container').removeClass('hidden')
+                $('#amount_container').removeClass('hidden')
+            } else if (val == 3) {
+                $('#date_container').removeClass('hidden')
+                $('#reminder_date_container').removeClass('hidden')
+                $('#amount_container').addClass('hidden')
+            } else if (val == 4) {
+                $('#date_container').addClass('hidden')
+                $('#reminder_date_container').removeClass('hidden')
+                $('#amount_container').addClass('hidden')
+            } else if (val == 5 || val == 6) {
+                $('#date_container').addClass('hidden')
+                $('#reminder_date_container').addClass('hidden')
+                $('#amount_container').addClass('hidden')
+            } else if (val == 7 || val == 8) {
+                $('#date_container').addClass('hidden')
+                $('#reminder_date_container').addClass('hidden')
+                $('#amount_container').removeClass('hidden')
+            }
         })
     </script>
 @endpush
