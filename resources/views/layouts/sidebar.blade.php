@@ -520,7 +520,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'vehicle_service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                                     </a>
                                 </li>
@@ -1085,7 +1085,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'vehicle_service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                     </a>
                 </li>
@@ -1626,7 +1626,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'vehicle_service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                                     </a>
                                 </li>
@@ -1677,13 +1677,17 @@
         CURRENT_ROUTE_NAME = '{{ Route::currentRouteName() }}'
         IS_SIDEBAR_EXPAND = localStorage.getItem('is_sidebar_expand')
 
+        console.debug(CURRENT_ROUTE_NAME)
+
         $(document).ready(function(){
             getTimeSection()
 
 
             if ($(window).width() >= 1024) {
                 if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
-                    if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
+                    if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
+                        $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
+                    } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
@@ -1693,7 +1697,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') || CURRENT_ROUTE_NAME.includes('target.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('report.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
@@ -1720,26 +1724,28 @@
                     }, 100);
                 }
             } else {
-                if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
+                if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('transport_ack.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.') || CURRENT_ROUTE_NAME.includes('invoice_return.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes('grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes('raw_material.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') || CURRENT_ROUTE_NAME.includes('target.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('report.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                 }
             }
         })
