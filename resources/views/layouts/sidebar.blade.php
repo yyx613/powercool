@@ -525,6 +525,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
                                     </a>
@@ -1090,6 +1095,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
                     </a>
@@ -1631,18 +1641,13 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('vehicle_service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -1703,7 +1708,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
@@ -1742,7 +1747,7 @@
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()

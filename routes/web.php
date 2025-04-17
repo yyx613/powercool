@@ -31,6 +31,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UOMController;
@@ -482,6 +483,10 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/edit/{material}', 'edit')->name('edit');
             Route::get('/delete/{material}', 'delete')->name('delete');
             Route::post('/upsert', 'upsert')->name('upsert');
+        });
+        // Sync
+        Route::controller(SyncController::class)->prefix('sync')->name('sync.')->group(function () {
+            Route::get('/', 'index')->name('index');
         });
         // Warranty Period
         Route::controller(WarrantyPeriodController::class)->prefix('warranty-period')->name('warranty_period.')->group(function () {
