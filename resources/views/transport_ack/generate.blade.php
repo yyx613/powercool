@@ -16,7 +16,7 @@
                 </div>
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                     <div class="flex flex-col">
-                        <x-app.input.label id="do_id" class="mb-1">{{ __('Delivery Order ID') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label id="do_id" class="mb-1">{{ __('Delivery Order ID') }}</x-app.input.label>
                         <x-app.input.input name="do_id" id="do_id" :hasError="$errors->has('do_id')" value="{{ old('do_id') ?? null }}" />
                         <x-input-error :messages="$errors->get('do_id')" class="mt-1" />
                     </div>
