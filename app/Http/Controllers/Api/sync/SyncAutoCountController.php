@@ -147,6 +147,7 @@ class SyncAutoCountController extends Controller
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'status' => '1',
+                        'type' => $record['DebtorType'],
                         'currency_id' => $currencyId,
                         'updated_at' => now()
                     ]);
@@ -175,6 +176,7 @@ class SyncAutoCountController extends Controller
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'status' => '1',
+                        'type' => $record['DebtorType'],
                         'currency_id' => $currencyId,
                         'created_at' => now(),
                         'updated_at' => now()

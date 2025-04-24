@@ -81,7 +81,7 @@ class Customer extends Model
 
     public function debtorType()
     {
-        return $this->belongsTo(DebtorType::class);
+        return $this->belongsTo(DebtorType::class, 'type');
     }
 
     public function saleAgent()
