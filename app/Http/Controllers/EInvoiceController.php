@@ -242,107 +242,114 @@ class EInvoiceController extends Controller
         ];
 
         $documents = [];
-        foreach ($selectedInvoices as $invoice) {
-            $invoice = Invoice::find($invoice['id']);
-            $document = $this->xmlGenerator->generateXml($invoice['id'], $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
-            $documents[] = [
-                'format' => 'XML',
-                'document' => base64_encode($document),
-                'documentHash' => hash('sha256', $document),
-                'codeNumber' => $invoice->sku,
+        try {
+            foreach ($selectedInvoices as $invoice) {
+                $invoice = Invoice::find($invoice['id']);
+                $document = $this->xmlGenerator->generateXml($invoice['id'], $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
+                $documents[] = [
+                    'format' => 'XML',
+                    'document' => base64_encode($document),
+                    'documentHash' => hash('sha256', $document),
+                    'codeNumber' => $invoice->sku,
+                ];
+            }
+            $payload = [
+                'documents' => $documents,
             ];
-        }
-        $payload = [
-            'documents' => $documents,
-        ];
-        $response = Http::withHeaders($headers)->post($url, $payload);
-        if ($response->successful()) {
-            DB::beginTransaction();
-            try {
-                $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
-                $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
-                $errorDetails = [];
-                $successfulDocuments = [];
-                foreach ($acceptedDocuments as $document) {
-                    $uuid = $document['uuid'];
-                    $invoiceCodeNumber = $document['invoiceCodeNumber'];
-                    $documentDetails = $this->getDocumentDetails($uuid, $company);
-                    if (isset($documentDetails['error'])) {
-                        $errorDetails[] = [
-                            'invoiceCodeNumber' => $invoiceCodeNumber,
-                            'error' => $documentDetails['error'],
-                        ];
-
-                        continue;
-                    }
-
-                    $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
-
-                    if (! $invoice->einvoice) {
-                        $invoice->einvoice()->create([
-                            'uuid' => $uuid,
-                            'status' => 'Valid',
-                            'submission_date' => Carbon::now(),
-                        ]);
-                    } else {
-                        $invoice->einvoice->update([
-                            'uuid' => $uuid,
-                            'status' => 'Valid',
-                            'submission_date' => Carbon::now(),
-                        ]);
-                    }
-                    $successfulDocuments[] = $invoiceCodeNumber;
-
-                    if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
-                        $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
-                    }
-                }
-
-                if (! empty($rejectedDocuments)) {
+            $response = Http::withHeaders($headers)->post($url, $payload);
+            if ($response->successful()) {
+                DB::beginTransaction();
+                try {
+                    $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                    $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
                     $errorDetails = [];
-                    foreach ($rejectedDocuments as $rejectedDoc) {
-                        $errorDetails[] = [
-                            'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
-                            'error_code' => $rejectedDoc['error']['code'],
-                            'error_message' => $rejectedDoc['error']['message'],
-                            'error_target' => $rejectedDoc['error']['target'],
-                            'property_path' => $rejectedDoc['error']['propertyPath'],
-                            'details' => array_map(function ($detail) {
-                                return [
-                                    'code' => $detail['code'],
-                                    'message' => $detail['message'],
-                                    'target' => $detail['target'],
-                                    'propertyPath' => $detail['propertyPath'],
-                                ];
-                            }, $rejectedDoc['error']['details'] ?? []),
-                        ];
+                    $successfulDocuments = [];
+                    foreach ($acceptedDocuments as $document) {
+                        $uuid = $document['uuid'];
+                        $invoiceCodeNumber = $document['invoiceCodeNumber'];
+                        $documentDetails = $this->getDocumentDetails($uuid, $company);
+                        if (isset($documentDetails['error'])) {
+                            $errorDetails[] = [
+                                'invoiceCodeNumber' => $invoiceCodeNumber,
+                                'error' => $documentDetails['error'],
+                            ];
+    
+                            continue;
+                        }
+    
+                        $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+    
+                        if (! $invoice->einvoice) {
+                            $invoice->einvoice()->create([
+                                'uuid' => $uuid,
+                                'status' => 'Valid',
+                                'submission_date' => Carbon::now(),
+                            ]);
+                        } else {
+                            $invoice->einvoice->update([
+                                'uuid' => $uuid,
+                                'status' => 'Valid',
+                                'submission_date' => Carbon::now(),
+                            ]);
+                        }
+                        $successfulDocuments[] = $invoiceCodeNumber;
+    
+                        if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                            $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
+                        }
                     }
+    
+                    if (! empty($rejectedDocuments)) {
+                        $errorDetails = [];
+                        foreach ($rejectedDocuments as $rejectedDoc) {
+                            $errorDetails[] = [
+                                'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                                'error_code' => $rejectedDoc['error']['code'],
+                                'error_message' => $rejectedDoc['error']['message'],
+                                'error_target' => $rejectedDoc['error']['target'],
+                                'property_path' => $rejectedDoc['error']['propertyPath'],
+                                'details' => array_map(function ($detail) {
+                                    return [
+                                        'code' => $detail['code'],
+                                        'message' => $detail['message'],
+                                        'target' => $detail['target'],
+                                        'propertyPath' => $detail['propertyPath'],
+                                    ];
+                                }, $rejectedDoc['error']['details'] ?? []),
+                            ];
+                        }
+                        DB::rollBack();
+                    } else {
+                        DB::commit();
+                    }
+    
+                    return response()->json([
+                        'message' => 'Document submission completed',
+                        'successfulDocuments' => $successfulDocuments,
+                        'errorDetails' => $errorDetails,
+                    ]);
+    
+                } catch (\Throwable $th) {
                     DB::rollBack();
-                } else {
-                    DB::commit();
+    
+                    return response()->json([
+                        'error' => 'Document submission failed',
+                        'message' => $th->getMessage(),
+                    ]);
                 }
-
-                return response()->json([
-                    'message' => 'Document submission completed',
-                    'successfulDocuments' => $successfulDocuments,
-                    'errorDetails' => $errorDetails,
-                ]);
-
-            } catch (\Throwable $th) {
-                DB::rollBack();
-
+            } else {
                 return response()->json([
                     'error' => 'Document submission failed',
-                    'message' => $th->getMessage(),
-                ]);
+                    'message' => $response->body(),
+                ], $response->status());
             }
-        } else {
+        } catch (\Throwable $th) {
             return response()->json([
                 'error' => 'Document submission failed',
-                'message' => $response->body(),
-            ], $response->status());
+                'message' => $th->getMessage(),
+            ]);
         }
-
+        
     }
 
     public function submitConsolidated(Request $request)
