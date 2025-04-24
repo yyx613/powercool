@@ -1899,7 +1899,7 @@ class SaleController extends Controller
     {
         $records = DB::table('invoices')
             ->select(
-                'invoices.id AS id', 'invoices.sku AS doc_no', 'invoices.created_at AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
+                'invoices.id AS id', 'invoices.sku AS doc_no', 'invoices.date AS date', 'customers.sku AS debtor_code', 'customers.name AS debtor_name',
                 'users.name AS agent', 'currencies.name AS curr_code', 'invoices.status AS status', 'invoices.filename AS filename', 'created_by.name AS created_by',
                 'invoices.company AS company_group'
             )
@@ -1920,7 +1920,7 @@ class SaleController extends Controller
 
             $records = $records->where(function ($q) use ($keyword, $do_ids) {
                 $q->where('invoices.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('invoices.created_at', 'like', '%'.$keyword.'%')
+                    ->orWhere('invoices.date', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.name', 'like', '%'.$keyword.'%')
                     ->orWhere('users.name', 'like', '%'.$keyword.'%')
@@ -1934,7 +1934,7 @@ class SaleController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'invoices.sku',
-                2 => 'invoices.created_at',
+                2 => 'invoices.date',
                 3 => 'customers.sku',
                 5 => 'customers.name',
                 6 => 'users.name',

@@ -282,13 +282,13 @@
             <div class="grid grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col col-span-4">
                     <x-app.input.label id="classification_code" class="mb-1">{{ __('Classification Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="classification_code[]" multiple class="h-36">
+                    <x-app.input.select2 name="classification_code[]" multiple>
                         @foreach ($classificationCodes as $classificationCode)
                             <option value="{{ $classificationCode->id }}"
                                 @selected(in_array($classificationCode->id, old('classification_code', isset($prod) ? $prod->classificationCodes->pluck('id')->toArray() : [])))
                                 >{{ $classificationCode->code }} - {{ $classificationCode->description }}</option>
                         @endforeach
-                    </x-app.input.select>
+                    </x-app.input.select2>
                     <x-input-error :messages="$errors->get('classification_code')" class="mt-1" />
                 </div>
             </div>
