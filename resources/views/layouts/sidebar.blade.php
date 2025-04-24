@@ -79,6 +79,33 @@
                         </div>
                     </div>
                 </li>
+                <!-- Vehicle -->
+                @can('vehicle.view')
+                    <li>
+                        <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="11">
+                            <button class="p-2 flex items-center rounded-md w-full">
+                                <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,13a3,3,0,0,0-3-3h-.478L15.84,3.285A3,3,0,0,0,13.379,2h-7A3.016,3.016,0,0,0,3.575,3.937l-2.6,6.848A2.994,2.994,0,0,0,0,13v5H2v.5a3.5,3.5,0,0,0,7,0V18h6v.5a3.5,3.5,0,0,0,7,0V18h2ZM14.2,4.428,18.084,10H11V4h2.379A1,1,0,0,1,14.2,4.428Zm-8.753.217A1,1,0,0,1,6.381,4H9v6H3.416ZM7,18.5a1.5,1.5,0,0,1-3,0V18H7Zm13,0a1.5,1.5,0,0,1-3,0V18h3ZM22,16H2V13a1,1,0,0,1,1-1H21a1,1,0,0,1,1,1Z"/></svg>
+                                <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle') }}</span>
+                            </button>
+                        </div>
+                        <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="11">
+                            <div class="overflow-hidden">
+                                <ul>
+                                    <li>
+                                        <a href="{{ route('vehicle.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('vehicle_service.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'vehicle_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle Service') }}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                @endcan
                 <!-- Sale & Invoice -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="3">
@@ -493,18 +520,18 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -591,6 +618,13 @@
                             <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
                         </button>
                     </li>
+                    <!-- Vehicle -->
+                    <li class="expand-sub-menu-triggers" data-type="vehicle">
+                        <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
+                            <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,13a3,3,0,0,0-3-3h-.478L15.84,3.285A3,3,0,0,0,13.379,2h-7A3.016,3.016,0,0,0,3.575,3.937l-2.6,6.848A2.994,2.994,0,0,0,0,13v5H2v.5a3.5,3.5,0,0,0,7,0V18h6v.5a3.5,3.5,0,0,0,7,0V18h2ZM14.2,4.428,18.084,10H11V4h2.379A1,1,0,0,1,14.2,4.428Zm-8.753.217A1,1,0,0,1,6.381,4H9v6H3.416ZM7,18.5a1.5,1.5,0,0,1-3,0V18H7Zm13,0a1.5,1.5,0,0,1-3,0V18h3ZM22,16H2V13a1,1,0,0,1,1-1H21a1,1,0,0,1,1,1Z"/></svg>
+                        </button>
+                    </li>
+
                     <!-- Sale & Invoice -->
                     <li class="expand-sub-menu-triggers" data-type="sale">
                         <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
@@ -698,6 +732,28 @@
                 @endcan
             </ul>
         </div>
+        <!-- Vehicle -->
+        @can('vehicle.view')
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="vehicle">
+            <div class="mb-4 p-2 border-b">
+                <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Vehicle') }}</h6>
+            </div>
+            <ul>
+                <li>
+                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('vehicle_service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+        @endcan
+
         <!-- Inventory -->
         <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content" data-type="inventory">
             <div class="mb-4 p-2 border-b">
@@ -1034,18 +1090,18 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
                     </a>
                 </li>
                 <li>
@@ -1139,6 +1195,33 @@
                         </div>
                     </div>
                 </li>
+                <!-- Vehicle -->
+                @can('vehicle.view')
+                <li>
+                    <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="11">
+                        <button class="p-2 flex items-center rounded-md w-full">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,13a3,3,0,0,0-3-3h-.478L15.84,3.285A3,3,0,0,0,13.379,2h-7A3.016,3.016,0,0,0,3.575,3.937l-2.6,6.848A2.994,2.994,0,0,0,0,13v5H2v.5a3.5,3.5,0,0,0,7,0V18h6v.5a3.5,3.5,0,0,0,7,0V18h2ZM14.2,4.428,18.084,10H11V4h2.379A1,1,0,0,1,14.2,4.428Zm-8.753.217A1,1,0,0,1,6.381,4H9v6H3.416ZM7,18.5a1.5,1.5,0,0,1-3,0V18H7Zm13,0a1.5,1.5,0,0,1-3,0V18h3ZM22,16H2V13a1,1,0,0,1,1-1H21a1,1,0,0,1,1,1Z"/></svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle') }}</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-rows-[0fr] opacity-0 transition-all duration-500 sidebar-accordions" data-accordionid="11">
+                        <div class="overflow-hidden">
+                            <ul>
+                                <li>
+                                    <a href="{{ route('vehicle.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('vehicle_service.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'vehicle_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Vehicle Service') }}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+                @endcan
                 <!-- Sale & Invoice -->
                 <li>
                     <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger" data-accordionstriggerid="3">
@@ -1553,18 +1636,18 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                    <a href="{{ route('service.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('sync.index') }}" class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{{ route('uom.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                         <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('vehicle.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'vehicle.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle') }}</span>
                                     </a>
                                 </li>
                                 <li>
@@ -1599,13 +1682,17 @@
         CURRENT_ROUTE_NAME = '{{ Route::currentRouteName() }}'
         IS_SIDEBAR_EXPAND = localStorage.getItem('is_sidebar_expand')
 
+        console.debug(CURRENT_ROUTE_NAME)
+
         $(document).ready(function(){
             getTimeSection()
 
 
             if ($(window).width() >= 1024) {
                 if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
-                    if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
+                    if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
+                        $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
+                    } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
@@ -1615,13 +1702,13 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') || CURRENT_ROUTE_NAME.includes('target.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('report.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
@@ -1642,26 +1729,28 @@
                     }, 100);
                 }
             } else {
-                if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
+                if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('quotation.') || CURRENT_ROUTE_NAME.includes('pending_order.') || CURRENT_ROUTE_NAME.includes('sale_order.') || CURRENT_ROUTE_NAME.includes('delivery_order.') || CURRENT_ROUTE_NAME.includes('transport_ack.') || CURRENT_ROUTE_NAME.includes('invoice.') || CURRENT_ROUTE_NAME.includes('billing.') || CURRENT_ROUTE_NAME.includes('invoice_return.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes('grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes('raw_material.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') || CURRENT_ROUTE_NAME.includes('target.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes('service_reminder.') || CURRENT_ROUTE_NAME.includes('warranty.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="7"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('report.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
+                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
-                    $('#mobile-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
+                    $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                 }
             }
         })

@@ -31,11 +31,13 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UOMController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleServiceController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
@@ -457,6 +459,14 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
     });
     // Setting
     Route::middleware(['can:setting.view'])->group(function () {
+        // Vehicle Service
+        Route::controller(VehicleServiceController::class)->prefix('vehicle-service')->name('vehicle_service.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::get('/edit/{service}', 'edit')->name('edit');
+            Route::post('/upsert/{service?}', 'upsert')->name('upsert');
+        });
         // Vehicle
         Route::controller(VehicleController::class)->prefix('vehicle')->name('vehicle.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -473,6 +483,10 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
             Route::get('/edit/{material}', 'edit')->name('edit');
             Route::get('/delete/{material}', 'delete')->name('delete');
             Route::post('/upsert', 'upsert')->name('upsert');
+        });
+        // Sync
+        Route::controller(SyncController::class)->prefix('sync')->name('sync.')->group(function () {
+            Route::get('/', 'index')->name('index');
         });
         // Warranty Period
         Route::controller(WarrantyPeriodController::class)->prefix('warranty-period')->name('warranty_period.')->group(function () {

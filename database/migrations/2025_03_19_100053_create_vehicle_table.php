@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
             $table->string('plate_number');
-            $table->string('chasis');
-            $table->string('buatan_nama_model');
-            $table->string('keupayaan_enjin');
-            $table->string('bahan_bakar');
-            $table->string('status_asal');
-            $table->string('kelas_kegunaan');
-            $table->string('jenis_badan');
-            $table->string('tarikh_pendaftaran');
+            $table->string('chasis')->nullable();
+            $table->string('buatan_nama_model')->nullable();
+            $table->string('keupayaan_enjin')->nullable();
+            $table->string('bahan_bakar')->nullable();
+            $table->string('status_asal')->nullable();
+            $table->string('kelas_kegunaan')->nullable();
+            $table->string('jenis_badan')->nullable();
+            $table->string('tarikh_pendaftaran')->nullable();
+            $table->string('department')->nullable();
+            $table->string('area_control')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

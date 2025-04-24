@@ -3026,7 +3026,7 @@ class SaleController extends Controller
     {
         // Validate form
         $rules = [
-            'do_id' => 'required|max:250',
+            'do_id' => 'nullable|max:250',
             'date' => 'required',
             'delivery_to' => 'required',
             'dealer' => 'required',
@@ -3067,7 +3067,7 @@ class SaleController extends Controller
             $pdf = Pdf::loadView('transport_ack.transport_acknowledgement', [
                 'date' => Carbon::createFromFormat('Y-m-d', $req->date)->format('d/m/Y'),
                 'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
-                'do_sku' => $req->do_id,
+                'do_sku' => $req->do_id ?? null,
                 'address' => $req->delivery_to,
                 'dealer_name' => $dealer_name,
                 'items' => $items,

@@ -135,6 +135,11 @@ if (! function_exists('getWhatsAppContent')) {
 if (! function_exists('priceToWord')) {
     function priceToWord($num = false, $currency = 'myr')
     {
+        $is_negative = false;
+        if ($num[0] == '-') {
+            $num = str_replace('-', '', $num);
+            $is_negative = true;
+        }
         $num = str_replace([',', ' '], '', trim($num));
         if (! $num) {
             return false;
@@ -247,6 +252,9 @@ if (! function_exists('priceToWord')) {
         $cent = implode(' ', $words);
         if ($cent != '') {
             $cent = 'and '.$cent.($currency == 'myr' ? ' sen' : ' cent');
+        }
+        if ($is_negative) {
+            return 'negative '.$ringgit.$cent;
         }
 
         return $ringgit.$cent;

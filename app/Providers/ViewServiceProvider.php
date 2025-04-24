@@ -34,6 +34,8 @@ use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\UOM;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleService;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -87,6 +89,7 @@ class ViewServiceProvider extends ServiceProvider
                 'customer' => [],
                 'supplier' => [],
                 'dealer' => [],
+                'vehicle' => [],
                 'setting' => [],
             ];
 
@@ -139,6 +142,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['supplier'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'dealer')) {
                     array_push($permissions_group['dealer'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'vehicle')) {
+                    array_push($permissions_group['vehicle'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'setting')) {
                     array_push($permissions_group['setting'], $permissions[$i]);
                 }
@@ -614,6 +619,15 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'inventory_types' => $inventory_types,
+            ]);
+        });
+        View::composer(['vehicle_service.form'], function (ViewView $view) {
+            $vehicles = Vehicle::orderBy('id', 'desc')->get();
+            $services = VehicleService::types;
+
+            $view->with([
+                'vehicles' => $vehicles,
+                'services' => $services,
             ]);
         });
     }

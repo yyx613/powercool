@@ -39,7 +39,9 @@ class VehicleController extends Controller
                     ->orWhere('status_asal', 'like', '%'.$keyword.'%')
                     ->orWhere('kelas_kegunaan', 'like', '%'.$keyword.'%')
                     ->orWhere('jenis_badan', 'like', '%'.$keyword.'%')
-                    ->orWhere('tarikh_pendaftaran', 'like', '%'.$keyword.'%');
+                    ->orWhere('tarikh_pendaftaran', 'like', '%'.$keyword.'%')
+                    ->orWhere('department', 'like', '%'.$keyword.'%')
+                    ->orWhere('area_control', 'like', '%'.$keyword.'%');
             });
         }
         $records = $records->orderBy('id', 'desc');
@@ -66,6 +68,8 @@ class VehicleController extends Controller
                 'kelas_kegunaan' => $record->kelas_kegunaan,
                 'jenis_badan' => $record->jenis_badan,
                 'tarikh_pendaftaran' => $record->tarikh_pendaftaran,
+                'department' => $record->department,
+                'area_control' => $record->area_control,
             ];
         }
 
@@ -97,6 +101,8 @@ class VehicleController extends Controller
             'kelas_kegunaan' => 'nullable|max:250',
             'jenis_badan' => 'nullable|max:250',
             'tarikh_pendaftaran' => 'nullable|max:250',
+            'department' => 'nullable|max:250',
+            'area_control' => 'nullable|max:250',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -116,6 +122,8 @@ class VehicleController extends Controller
                     'kelas_kegunaan' => $req->kelas_kegunaan,
                     'jenis_badan' => $req->jenis_badan,
                     'tarikh_pendaftaran' => $req->tarikh_pendaftaran,
+                    'department' => $req->department,
+                    'area_control' => $req->area_control,
                 ]);
                 (new Branch)->assign(Vehicle::class, $new_vehicle->id);
             } else {
@@ -129,6 +137,8 @@ class VehicleController extends Controller
                     'kelas_kegunaan' => $req->kelas_kegunaan,
                     'jenis_badan' => $req->jenis_badan,
                     'tarikh_pendaftaran' => $req->tarikh_pendaftaran,
+                    'department' => $req->department,
+                    'area_control' => $req->area_control,
                 ]);
             }
 
