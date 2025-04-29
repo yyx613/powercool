@@ -41,6 +41,11 @@ use App\Http\Controllers\VehicleServiceController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
+use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\Dealer;
+use App\Models\DebtorType;
+use App\Models\Scopes\BranchScope;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -55,6 +60,20 @@ use Illuminate\Support\Facades\Session;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+Route::get('/auto-dealer', function () {
+    $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
+    $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
+
+    for ($i = 0; $i < count($customers); $i++) {
+        $new_dealer = Dealer::create([
+            'name' => $customers[$i]->name,
+            'sku' => (new Dealer)->generateSku(),
+        ]);
+        (new Branch)->assign(Dealer::class, $new_dealer->id);
+    }
+    dd('done');
+});
 
 Route::get('/', function () {
     return redirect(route('login'));
