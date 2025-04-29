@@ -7,9 +7,12 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\Dealer;
+use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
 use App\Models\ObjectCreditTerm;
 use App\Models\Sale;
+use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +80,7 @@ class CustomerController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
+                'debt_type' => $record->debtorType->name ?? '-',
                 'platform' => $record->platform->name ?? '-',
                 'status' => $record->status == Customer::STATUS_INACTIVE ? 'Inactive' : ($record->status == Customer::STATUS_ACTIVE ? 'Active' : 'Pending Fill Up Info'),
                 'can_edit' => hasPermission('customer.edit'),
@@ -238,6 +242,20 @@ class CustomerController extends Controller
                     'identity_type' => $req->identity_type,
                     'identity_no' => $req->identity_no,
                 ]);
+            }
+
+            // Create dealer if debtor type is dealer
+            if ($req->debtor_type != null) {
+                $debt_type_name = DebtorType::withoutGlobalScope(BranchScope::class)->where('id', $req->debtor_type)->value('name');
+                $dealer_exists = Dealer::where('name', $req->customer_name)->exists();
+
+                if (strtolower($debt_type_name) == 'dealer' && ! $dealer_exists) {
+                    $new_dealer = Dealer::create([
+                        'name' => $req->customer_name,
+                        'sku' => (new Dealer)->generateSku(),
+                    ]);
+                    (new Branch)->assign(Dealer::class, $new_dealer->id);
+                }
             }
 
             if ($req->hasFile('picture')) {
