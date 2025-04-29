@@ -81,6 +81,7 @@ class CustomerController extends Controller
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
                 'debt_type' => $record->debtorType->name ?? '-',
+                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'platform' => $record->platform->name ?? '-',
                 'status' => $record->status == Customer::STATUS_INACTIVE ? 'Inactive' : ($record->status == Customer::STATUS_ACTIVE ? 'Active' : 'Pending Fill Up Info'),
                 'can_edit' => hasPermission('customer.edit'),

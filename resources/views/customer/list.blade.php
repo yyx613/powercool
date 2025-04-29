@@ -68,6 +68,7 @@
                     <th>{{ __('Phone Number') }}</th>
                     <th>{{ __('Company Name') }}</th>
                     <th>{{ __('Debt Type') }}</th>
+                    <th>{{ __('Company Group') }}</th>
                     <th>{{ __('Platform') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
@@ -107,6 +108,7 @@
                 { data: 'phone_number' },
                 { data: 'company_name' },
                 { data: 'debt_type' },
+                { data: 'company_group' },
                 { data: 'platform' },
                 { data: 'status' },
                 { data: 'action' },
@@ -175,8 +177,16 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 8,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 9,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
