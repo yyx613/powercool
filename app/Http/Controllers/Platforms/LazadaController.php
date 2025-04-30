@@ -30,8 +30,8 @@ class LazadaController extends Controller
         $this->appKey = config('platforms.lazada.app_key');
         $this->appSecret = config('platforms.lazada.secret_key');
         $this->endpoint = 'https://api.lazada.com.my/rest';
-        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
         $this->platform = Platform::where('name','Lazada')->first();
+        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
     }
 
     public function handleLazadaWebhook(Request $request)
@@ -46,7 +46,6 @@ class LazadaController extends Controller
 
         $base = $appKey . $messageBody;
         $expectedSignature = $this->generateWebhookSignature($base, $appSecret);
-
         if (!hash_equals($expectedSignature, $receivedSignature)) {
             Log::warning('Signature mismatch', [
                 'expectedSignature' => $expectedSignature,
@@ -73,8 +72,7 @@ class LazadaController extends Controller
                 ]);
             } else {
                 Log::info('Order not found, fetching Lazada order items', ['orderId' => $orderId]);
-                $this->getLazadaOrderItems($orderId, $status);
-                return response()->json(['message' => 'Webhook received and processed successfully'], 200);
+                return $this->getLazadaOrderItems($orderId, $status);
             }
         } catch (\Throwable $th) {
             Log::error('Error handling Lazada Webhook', [
@@ -109,8 +107,9 @@ class LazadaController extends Controller
             'code' => $code, 
         ];
 
-        $params['sign'] = $this->generateSignature($params, $appSecret, '/auth/token/create');
         try {
+            $params['sign'] = $this->generateSignature($params, $appSecret, '/auth/token/create');
+
             $response = Http::get($endpoint, $params);
             if ($response->successful()) {
                 $data = $response->json();
@@ -134,7 +133,8 @@ class LazadaController extends Controller
             }
         }catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
+            Log::error(['Failed to token from Lazada API', 'message' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to token from Lazada API', 'message' => $e->getMessage()], 500);
         }
         
     }
@@ -301,12 +301,13 @@ class LazadaController extends Controller
             Log::info('Updated sale record', ['sale_id' => $sale->id, 'order_id' => $orderId]);
             
             DB::commit();
+            return response()->json(['message' => 'Webhook received and processed successfully'], 200);
         } catch (\Exception $e) {
-            dd($e);
             DB::rollBack();
             Log::error('Failed to fetch order data from Lazada', [
                 'order_id' => $orderId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'response' => $response->json()
             ]);
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
         }
@@ -331,7 +332,6 @@ class LazadaController extends Controller
 
         try {
             $response = Http::get($url,$params);
-
             $data = json_decode($response->getBody()->getContents(), true);
 
             $skuMap = [];
@@ -392,13 +392,13 @@ class LazadaController extends Controller
             }
             DB::commit();
             Log::info('Successfully processed Lazada order items', ['order_id' => $orderId]);
-            $this->getLazadaOrder($orderId,$sale);
+            return $this->getLazadaOrder($orderId,$sale);
         }catch (\Exception $e) {
-            dd($e);
             DB::rollBack();
             Log::error('Failed to fetch Lazada order items', [
                 'order_id' => $orderId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'response' => $response->json()
             ]);
             
             return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
