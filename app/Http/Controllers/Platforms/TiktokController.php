@@ -32,8 +32,9 @@ class TiktokController extends Controller
         $this->appKey = config('platforms.tiktok.app_key');
         $this->appSecret = config('platforms.tiktok.app_secret');
         $this->endpoint = 'https://open-api.tiktokglobalshop.com';
-        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
         $this->platform = Platform::where('name','Tiktok')->first();
+        $platformToken = PlatformTokens::where('platform_id',$this->platform->id)->first();
+        $this->accessToken = $platformToken ? $platformToken->access_token : null;
     }
 
     public function handleTiktokWebhook(Request $request)

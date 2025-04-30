@@ -31,7 +31,8 @@ class LazadaController extends Controller
         $this->appSecret = config('platforms.lazada.secret_key');
         $this->endpoint = 'https://api.lazada.com.my/rest';
         $this->platform = Platform::where('name','Lazada')->first();
-        $this->accessToken = $this->platform ? PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token : null;
+        $platformToken = PlatformTokens::where('platform_id',$this->platform->id)->first();
+        $this->accessToken = $platformToken ? $platformToken->access_token : null;
     }
 
     public function handleLazadaWebhook(Request $request)
