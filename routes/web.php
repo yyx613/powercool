@@ -632,6 +632,8 @@ Route::prefix('shopee')->group(function () {
     Route::get('/generate-auth-link', [ShopeeController::class, 'generateAuthLinkShopee']);
     Route::get('/get-access-token/{code}', [ShopeeController::class, 'getAccessTokenShopee']);
     Route::get('/refresh-access-token', [ShopeeController::class, 'refreshAccessTokenShopee']);
+    Route::get('/storeShopeeCode', [ShopeeController::class, 'storeShopeeCode']);
+    Route::post('/storeShopeeCode', [ShopeeController::class, 'storeShopeeCode']);
 });
 
 // Tiktok

@@ -151,14 +151,14 @@ class ShopeeController extends Controller
         }
     }
 
-
     public function generateAuthLinkShopee()
     {
         // 参数配置
         $partnerId = $this->partnerId; // 替换为你的 partner_id
         $partnerKey = $this->partnerKey; // 替换为你的 partner_key
         $redirectUrl = 'https://powercool.at-eases.com'; // 替换为你的重定向URL
-        $host = 'https://partner.test-stable.shopeemobile.com';
+        // $host = 'https://partner.test-stable.shopeemobile.com'; //sandbox
+        $host = 'https://partner.shopeemobile.com'; //producttion
         $path = '/api/v2/shop/auth_partner';
 
         // 获取当前的 Unix 时间戳
@@ -188,6 +188,11 @@ class ShopeeController extends Controller
         return response()->json([
             'auth_url' => $authUrl,
         ]);
+    }
+
+    public function storeShopeeCode(Request $request)
+    {
+        Log::info(['Shopee Code:', $request->json()]);
     }
 
     public function handleShopeeWebhook(Request $request)
