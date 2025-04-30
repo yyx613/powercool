@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::table('platform_tokens', function (Blueprint $table) {
-        //     $table->dropColumn('platform');
+        Schema::table('platform_tokens', function (Blueprint $table) {
+            $table->dropColumn('platform');
 
-        //     $table->unsignedBigInteger('platform_id')->after('id');
-        //     $table->foreign('platform_id')->references('id')->on('platforms')->onDelete('cascade');
-        // });
+            $table->unsignedBigInteger('platform_id')->after('id');
+            $table->foreign('platform_id')->references('id')->on('platforms')->onDelete('cascade');
+        });
     }
 
     public function down(): void
