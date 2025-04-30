@@ -125,7 +125,7 @@
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod['modal_name'] }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $prod['model_name'] }}</td>
                 <td style="font-size: 14px; text-align: right;"></td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['uom'] }}</td>

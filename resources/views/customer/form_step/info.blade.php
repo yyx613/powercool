@@ -25,7 +25,7 @@
                 </x-app.input.select>
                 <x-app.message.error id="local_oversea_err"/>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN') }} <span class="text-sm text-red-500" id="tin_number_required_star">*</span></x-app.input.label>
                 <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')" value="{{ old('tin_number', isset($customer) ? $customer->tin_number : null) }}" />
                 <x-app.message.error id="tin_number_err"/>
@@ -75,23 +75,23 @@
                 <x-app.input.input name="identity_no" id="identity_no" :hasError="$errors->has('identity_no')" value="{{ old('identity_no', isset($customer) ? $customer->identity_no : null) }}"/>
                 <x-app.message.error id="identity_no_err"/>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="registered_name" class="mb-1">{{ __('Registered Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.input name="registered_name" id="registered_name" :hasError="$errors->has('registered_name')" value="{{ old('registered_name', isset($customer) ? $customer->registered_name : null) }}"/>
                 <x-app.message.error id="registered_name_err"/>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }}</x-app.input.label>
                 <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')" value="{{ old('trade_name', isset($customer) ? $customer->trade_name: null) }}"/>
                 <x-app.message.error id="trade_name_err"/>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')" value="{{ old('phone_number', isset($customer) ? $customer->phone : null) }}"/>
                 <span class="text-sm text-slate-500">{{ __('"+6" is not required') }}</span>
                 <x-app.message.error id="phone_number_err"/>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="email" class="mb-1">{{ __('Email Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.input name="email" id="email" type="email" :hasError="$errors->has('email')" value="{{ old('email', isset($customer) ? $customer->email : null) }}"/>
                 <x-app.message.error id="email_err"/>
@@ -271,9 +271,12 @@
         IS_CREATE_LINK = @json($is_create_link ?? null);
         MSIC_CODES = @json($msics ?? null);
         NEGLECT_TIN_VALIDATION = false
+        INIT_DONE = false
 
         $(document).ready(function() {
             $('select[name="category"]').trigger('change')
+
+            INIT_DONE = true
         })
 
         $('input[name="picture[]"]').on('change', function() {
@@ -335,6 +338,10 @@
                 $('#tin_number_required_star').addClass('hidden')
                 $('.individual-fields-container').addClass('hidden')
                 $('.non-individual-fields-container').removeClass('hidden')
+            }
+
+            if (INIT_DONE) {
+                $('.for-all').removeClass('hidden')
             }
         })
         $('#tin-info-modal #yes-btn').on('click', function() {

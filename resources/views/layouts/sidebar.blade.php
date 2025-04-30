@@ -57,7 +57,7 @@
                                 @can('customer.view')
                                 <li>
                                     <a href="{{ route('customer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Customer') }}</span>
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Debtor') }}</span>
                                     </a>
                                 </li>
                                 @endcan
@@ -712,7 +712,7 @@
                 @can('customer.view')
                 <li>
                     <a href="{{ route('customer.index') }}" class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Customer') }}</span>
+                        <span class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor') }}</span>
                     </a>
                 </li>
                 @endcan
@@ -1173,7 +1173,7 @@
                                 @can('customer.view')
                                 <li>
                                     <a href="{{ route('customer.index') }}" class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'customer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Customer') }}</span>
+                                        <span class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Debtor') }}</span>
                                     </a>
                                 </li>
                                 @endcan
