@@ -200,7 +200,7 @@ class ShopeeController extends Controller
     {        
         $data = $request->input('data');
 
-        if (!$data) {
+        if (!isset($data['ordersn'])) {
             Log::warning('Shopee webhook received with no data.');
             return response()->json(['message' => 'No data provided'], 200);
         }
