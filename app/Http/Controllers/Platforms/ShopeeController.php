@@ -197,12 +197,11 @@ class ShopeeController extends Controller
     }
 
     public function handleShopeeWebhook(Request $request)
-    {
+    {        
         $data = $request->input('data');
-        Log::warning('Shopee webhook received with no data.',$data);
 
         if (!$data) {
-            Log::warning('Shopee webhook received with no data.',$data);
+            Log::warning('Shopee webhook received with no data.');
             return response()->json(['message' => 'No data provided'], 200);
         }
 
