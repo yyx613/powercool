@@ -33,7 +33,8 @@ class ShopeeController extends Controller
         $this->shopId = (int) config('platforms.shopee.shop_id');
         $this->endpoint = 'https://partner.shopeemobile.com';
         $this->platform = Platform::where('name','Shopee')->first();
-        $this->accessToken = PlatformTokens::where('platform_id',$this->platform->id)->first()->access_token;
+        $platformToken = PlatformTokens::where('platform_id',$this->platform->id)->first();
+        $this->accessToken = $platformToken ? $platformToken->access_token : null;
     }
 
     public function getAccessTokenShopee($code)

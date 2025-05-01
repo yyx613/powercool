@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -31,8 +32,9 @@ class RefreshLazadaToken extends Command
     {
         $appKey = config('platforms.lazada.app_key');
         $appSecret = config('platforms.lazada.app_secret');
-        $token = PlatformTokens::where('platform', 'Lazada')->first();
-        $refreshToken = $token->refresh_token;
+        $platform = Platform::where('name', 'Lazada')->first();
+        $platformToken = PlatformTokens::where('platform_id', $platform->id)->first();
+        $refreshToken = $platformToken->refresh_token;
 
         $url = 'https://auth.lazada.com/rest';
 
@@ -60,7 +62,7 @@ class RefreshLazadaToken extends Command
                 $expiresIn = $data['expires_in'];
                 $refreshExpiresIn = $data['refresh_expires_in'];
 
-                PlatformTokens::where('platform', 'Lazada')->update([
+                $platformToken->update([
                     'access_token' => $newAccessToken,
                     'refresh_token' => $newRefreshToken,
                     'access_token_expires_at' => Carbon::now()->addSeconds($expiresIn),
