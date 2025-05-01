@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -31,8 +32,9 @@ class RefreshTikTokToken extends Command
     {
         $appKey = config('platforms.tiktok.app_key');
         $appSecret = config('platforms.tiktok.app_secret');
-        $token = PlatformTokens::where('platform','Tiktok')->first();
-        $refreshToken = $token->refresh_token; 
+        $platform = Platform::where('name', 'Tiktok')->first();
+        $platformToken = PlatformTokens::where('platform_id', $platform->id)->first();
+        $refreshToken = $platformToken->refresh_token;
 
         // 定义请求 URL
         $url = 'https://auth.tiktok-shops.com/api/v2/token/refresh';
@@ -57,7 +59,7 @@ class RefreshTikTokToken extends Command
             $newRefreshTokenExpireAt = Carbon::createFromTimestamp($newRefreshTokenExpire)->toDateTimeString();
 
 
-            $token->update([
+            $platformToken->update([
                 'access_token' => $newAccessToken,
                 'refresh_token' => $newRefreshToken,
                 'access_token_expires_at' => $newAccessTokenExpireAt,

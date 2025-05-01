@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Platform;
 use App\Models\PlatformTokens;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -31,7 +32,9 @@ class RefreshShopeeToken extends Command
     {
         $partnerId = config('platforms.shopee.partner_id');
         $partnerKey = config('platforms.shopee.partner_key');
-        $refreshToken = PlatformTokens::where('platform', 'Shopee')->first()->refresh_token; 
+        $platform = Platform::where('name', 'Shopee')->first();
+        $platformToken = PlatformTokens::where('platform_id', $platform->id)->first();
+        $refreshToken = $platformToken->refresh_token;
         $shopId = config('platforms.shopee.shop_id'); 
         $timestamp = Carbon::now()->timestamp;
 
@@ -55,7 +58,7 @@ class RefreshShopeeToken extends Command
                 $newRefreshToken = $data['refresh_token'];
                 $expiresIn = $data['expire_in']; 
 
-                PlatformTokens::where('platform', 'Shopee')->update([
+                $platformToken->update([
                     'access_token' => $newAccessToken,
                     'refresh_token' => $newRefreshToken,
                     'access_token_expires_at' => Carbon::now()->addSeconds($expiresIn),
