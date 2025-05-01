@@ -43,7 +43,7 @@ class TiktokController extends Controller
 
         if (!$data) {
             Log::warning('TikTok webhook received without data');
-            return response()->json(['message' => 'No data provided'], 400);
+            return response()->json(['message' => 'No data provided'], 200);
         }
 
         $orderId = $data['order_id'] ?? null;
@@ -137,7 +137,7 @@ class TiktokController extends Controller
             DB::rollBack();
             Log::error('Exception during TikTok access token request', ['error' => $e->getMessage()]);
 
-            return response()->json(['error' => 'Failed to fetch access token'], 500);
+            return response()->json(['error' => 'Failed to fetch access token'], 200);
         }
     }
 
@@ -188,7 +188,7 @@ class TiktokController extends Controller
             DB::rollBack();
             Log::error('Exception during TikTok token refresh', ['error' => $e->getMessage()]);
 
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 200);
         }
     }
 
@@ -310,7 +310,7 @@ class TiktokController extends Controller
             DB::rollBack();
             Log::error('Failed to process TikTok order', ['error' => $e->getMessage()]);
 
-            return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 200);
         }
 
     }

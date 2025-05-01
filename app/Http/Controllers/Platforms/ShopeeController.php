@@ -70,7 +70,7 @@ class ShopeeController extends Controller
             $responseData = $response->json();
             if (!$response->successful() || !isset($responseData['access_token'])) {
                 Log::error('Failed to retrieve access token from Shopee API', ['response' => $responseData]);
-                return response()->json(['error' => 'Failed to retrieve access token'], 500);
+                return response()->json(['error' => 'Failed to retrieve access token'], 200);
             }
 
             DB::beginTransaction();
@@ -148,7 +148,7 @@ class ShopeeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Exception occurred while refreshing Shopee access token', ['error' => $e->getMessage()]);
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 200);
         }
     }
 
@@ -202,7 +202,7 @@ class ShopeeController extends Controller
 
         if (!$data) {
             Log::warning('Shopee webhook received with no data.');
-            return response()->json(['message' => 'No data provided'], 400);
+            return response()->json(['message' => 'No data provided'], 200);
         }
 
         $orderSN = $data['ordersn'] ?? null;
@@ -232,7 +232,7 @@ class ShopeeController extends Controller
                 'status' => $data['status'],
                 'shopId' => $shopId
             ]);
-            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 200);
         }
 
     }
@@ -360,7 +360,7 @@ class ShopeeController extends Controller
             DB::rollBack();
             
             Log::error('Error in getShopeeOrder', ['error' => $e->getMessage(), 'order_id' => $orderId]);
-            return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to fetch data from Lazada API', 'message' => $e->getMessage()], 200);
         }
 
     }
@@ -404,7 +404,7 @@ class ShopeeController extends Controller
             
         } catch (\Exception $e) {
             dd($e);
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage()], 200);
         }
 
     }
