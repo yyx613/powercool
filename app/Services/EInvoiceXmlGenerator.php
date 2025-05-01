@@ -149,7 +149,7 @@ class EInvoiceXmlGenerator
         // $invoiceElement->appendChild($allowanceCharge2);
 
         $company = $invoice->company;
-        $paymentAmount = $sale->payment_amount;
+        $paymentAmount = $sale->getTotalAmount();
         $taxAmount = $company == 'powercool' ? $paymentAmount * 0.1 : 0;
         $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount);
         $invoiceElement->appendChild($taxTotal);
@@ -268,7 +268,7 @@ class EInvoiceXmlGenerator
             $saleProduct = $deliveryProduct->saleProduct;
             $sale = $saleProduct->sale;
             $saleProducts = $sale->products;
-            $totalPayment += $sale->payment_amount;
+            $totalPayment += $sale->getTotalAmount();
 
             $deliveryProducts = $delivery->products();
             foreach ($saleProducts as $sp) {
