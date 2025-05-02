@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
 </head>
+<style>
+.footer {
+    position: fixed;
+    bottom: 0px;
+    height: 200px;
+}
+</style>
 <body>
     <!-- Title -->
     <h1 style="font-size: 22px; text-transform: uppercase;">Transport Acknowledgement</h1>
@@ -64,7 +71,7 @@
         @endforeach
     </table>
     <!-- behalf -->
-    <table style="width: 100%; border-collapse: collapse; margin: 20px 0 0 0;">
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0 0 0;" class="footer">
         <tr>
             <td colspan="2" style="font-size: 16px; text-transform: uppercase; padding: 5px; font-family: sans-serif; font-weight: 700;">{{ $is_delivery ? 'Delivery' : 'Collection' }} behalf of {{ $dealer_name }}</td>
         </tr>
