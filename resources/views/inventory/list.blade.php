@@ -114,12 +114,10 @@
                 render: function(data, type, row) {
                     return `
                         <div class="flex items-center gap-x-2">
-                            <div class="h-10 w-10">
                                 ${
-                                    row.image != null ? `<img src="${ row.image.url }" class="h-full w-full object-contain" />` :
-                                        `<x-app.no-image-icon class="p-1.5"/>`
+                                    row.image != null ? `<img src="${ row.image.url }" class="h-10 w-10 object-contain" />` :
+                                        `<x-app.no-image-icon class="p-1.5 h-10 w-10"/>`
                                 }
-                            </div>
                             <span>${data}</span>
                         </div>
                     `
