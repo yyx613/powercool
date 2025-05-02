@@ -36,7 +36,7 @@ class RefreshLazadaToken extends Command
         $platformToken = PlatformTokens::where('platform_id', $platform->id)->first();
         $refreshToken = $platformToken->refresh_token;
 
-        $url = 'https://auth.lazada.com/rest';
+        $url = 'https://auth.lazada.com/rest/auth/token/refresh';
 
         $timestamp = now()->timestamp * 1000; 
 
