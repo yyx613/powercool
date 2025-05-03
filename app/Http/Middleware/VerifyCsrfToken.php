@@ -17,6 +17,8 @@ class VerifyCsrfToken extends Middleware
         'tiktok/webhook',
         'woo-commerce/order-created/webhook',
         'woo-commerce/order-updated/webhook',
+        'woo-commerce/order-deleted/webhook',
+        'woo-commerce/order-restored/webhook',
         'test',
         '/mock/document-submission',
         '/mock/consolidated-document-submission'
