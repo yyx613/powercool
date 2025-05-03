@@ -194,6 +194,7 @@ class ShopeeController extends Controller
     public function storeShopeeCode(Request $request)
     {
         Log::info(['Shopee Code:', $request->json(),$request->input()]);
+        $this->getAccessTokenShopee($request->code);
     }
 
     public function handleShopeeWebhook(Request $request)
