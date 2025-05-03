@@ -16,6 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use function PHPUnit\Framework\isEmpty;
+
 class WooCommerceController extends Controller
 {
     protected $platform;
@@ -27,6 +29,12 @@ class WooCommerceController extends Controller
 
     public function handleWooCommerceOrderCreated(Request $request){   
         $data = $request->input();
+
+        if(!isset($data['id']) || !isset($data['status'])){
+            Log::warning('Woo Commerce webhook received with no data.');
+            return response()->json(['message' => 'No data provided'], 200);
+        }
+
         Log::info('Received WooCommerce order', ['order_id' => $data['id'], 'status' => $data['status']]);
 
         try {
@@ -148,6 +156,10 @@ class WooCommerceController extends Controller
 
     public function handleWooCommerceOrderUpdated(Request $request){
         $data = $request->input();
+        if(!isset($data['id']) || !isset($data['status'])){
+            Log::warning('Woo Commerce webhook received with no data.');
+            return response()->json(['message' => 'No data provided'], 200);
+        }
         try {
             DB::beginTransaction();
 
@@ -245,6 +257,10 @@ class WooCommerceController extends Controller
 
     public function handleWooCommerceOrderDeleted(Request $request){
         $data = $request->input();
+        if(!isset($data['id'])){
+            Log::warning('Woo Commerce webhook received with no data.');
+            return response()->json(['message' => 'No data provided'], 200);
+        }
         try {
             DB::beginTransaction();
 
@@ -276,6 +292,11 @@ class WooCommerceController extends Controller
 
     public function handleWooCommerceOrderRestored(Request $request){
         $data = $request->input();
+        if(!isset($data['id'])){
+            Log::warning('Woo Commerce webhook received with no data.');
+            return response()->json(['message' => 'No data provided'], 200);
+        }
+        
         try {
             DB::beginTransaction();
 
