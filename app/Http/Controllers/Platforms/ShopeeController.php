@@ -46,7 +46,7 @@ class ShopeeController extends Controller
         $url = $this->endpoint.$path;
 
         $bodyParams = [
-            'shop_id' => $this->shopId,
+            'main_account_id' => $this->shopId,
             'code' => $code,
             'partner_id' => $partnerId
         ];
