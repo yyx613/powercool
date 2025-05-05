@@ -126,7 +126,8 @@ class ShopeeController extends Controller
             
             if ($response->successful()) {
                 DB::beginTransaction();
-
+                Log::info('Shopee access token refreshed successfully', ['response_data' => $response->json()]);
+                
                 $responseData = $response->json();
                 $platformToken->access_token = $responseData['access_token'];
                 $platformToken->refresh_token = $responseData['refresh_token'];
