@@ -77,6 +77,14 @@ class DealerController extends Controller
         ]);
     }
 
+    public function view(Dealer $dealer)
+    {
+        return view('dealer.form', [
+            'dealer' => $dealer,
+            'mode' => 'view',
+        ]);
+    }
+
     public function delete(Dealer $dealer)
     {
         $dealer->delete();

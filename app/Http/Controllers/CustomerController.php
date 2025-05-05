@@ -106,6 +106,16 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function view(Customer $customer)
+    {
+        $customer->load('pictures', 'locations');
+
+        return view('customer.form', [
+            'customer' => $customer,
+            'mode' => 'view',
+        ]);
+    }
+
     public function delete(Customer $customer)
     {
         $customer->delete();

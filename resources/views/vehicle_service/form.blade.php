@@ -33,7 +33,7 @@
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('service')" class="mt-1" />
                 </div>
-                <div class="flex flex-col hidden" id="date_container">
+                <div class="flex flex-col" id="date_container">
                     <x-app.input.label id="date" class="mb-1">{{ __('Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="date" id="date" :hasError="$errors->has('date')" value="{{ old('date', isset($service) ? $service->date : null) }}" />
                     <x-input-error :messages="$errors->get('date')" class="mt-1" />
@@ -189,23 +189,18 @@
             let val = $(this).val()
 
             if (val == 1 || val == 2) {
-                $('#date_container').removeClass('hidden')
                 $('#reminder_date_container').removeClass('hidden')
                 $('#amount_container').removeClass('hidden')
             } else if (val == 3) {
-                $('#date_container').removeClass('hidden')
                 $('#reminder_date_container').removeClass('hidden')
                 $('#amount_container').addClass('hidden')
             } else if (val == 4) {
-                $('#date_container').addClass('hidden')
                 $('#reminder_date_container').removeClass('hidden')
                 $('#amount_container').addClass('hidden')
             } else if (val == 5 || val == 6) {
-                $('#date_container').addClass('hidden')
                 $('#reminder_date_container').addClass('hidden')
                 $('#amount_container').addClass('hidden')
             } else if (val == 7 || val == 8) {
-                $('#date_container').addClass('hidden')
                 $('#reminder_date_container').addClass('hidden')
                 $('#amount_container').removeClass('hidden')
             }
