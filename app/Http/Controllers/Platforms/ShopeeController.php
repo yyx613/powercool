@@ -25,12 +25,14 @@ class ShopeeController extends Controller
     protected $accessToken;
     protected $shopId;
     protected $platform;
+    protected $mainAccountId;
 
     public function __construct()
     {
         $this->partnerId = (int) config('platforms.shopee.partner_id');
         $this->partnerKey = config('platforms.shopee.partner_key');
-        $this->shopId = (int) 1544540;
+        $this->mainAccountId = (int) 1544540;
+        $this->shopId = (int) config('platforms.shopee.shop_id');
         $this->endpoint = 'https://partner.shopeemobile.com';
         $this->platform = Platform::where('name','Shopee')->first();
         $platformToken = PlatformTokens::where('platform_id',$this->platform->id)->first();
@@ -46,7 +48,7 @@ class ShopeeController extends Controller
         $url = $this->endpoint.$path;
 
         $bodyParams = [
-            'main_account_id' => $this->shopId,
+            'main_account_id' => $this->mainAccountId,
             'code' => $code,
             'partner_id' => $partnerId
         ];
@@ -109,7 +111,7 @@ class ShopeeController extends Controller
         $body = [
             'partner_id' => $this->partnerId,
             'refresh_token' => $refreshToken,
-            'main_account_id' => $this->shopId
+            'shop_id' => $this->shopId
         ];
         $baseString = sprintf("%s%s%s", $this->partnerId, $path, $timestamp);
         $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
@@ -127,7 +129,7 @@ class ShopeeController extends Controller
             if ($response->successful()) {
                 DB::beginTransaction();
                 Log::info('Shopee access token refreshed successfully', ['response_data' => $response->json()]);
-                
+
                 $responseData = $response->json();
                 $platformToken->access_token = $responseData['access_token'];
                 $platformToken->refresh_token = $responseData['refresh_token'];
