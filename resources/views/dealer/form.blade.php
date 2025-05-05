@@ -22,9 +22,11 @@
                         <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($dealer) ? $dealer->name : null) }}" />
                     </div>
                 </div>
-                <div class="mt-8 flex justify-end">
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                </div>
+                @if (!isset($mode))
+                    <div class="mt-8 flex justify-end">
+                        <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+                    </div>
+                @endif
             </div>
         </form>
     </div>

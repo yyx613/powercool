@@ -446,6 +446,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create')->middleware(['can:customer.create']);
         Route::get('/edit/{customer}', 'edit')->name('edit')->middleware(['can:customer.edit']);
+        Route::get('/view/{customer}', 'view')->name('view');
         Route::get('/delete/{customer}', 'delete')->name('delete')->middleware(['can:customer.delete']);
         Route::post('/upsert-info', 'upsertInfo')->name('upsert_info')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
         Route::post('/upsert-location', 'upsertLocation')->name('upsert_location')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
@@ -472,6 +473,7 @@ Route::middleware('auth', 'select_lang', 'notification')->group(function () {
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create')->middleware(['can:dealer.create']);
         Route::get('/edit/{dealer}', 'edit')->name('edit')->middleware(['can:dealer.edit']);
+        Route::get('/view/{dealer}', 'view')->name('view');
         Route::get('/delete/{dealer}', 'delete')->name('delete')->middleware(['can:dealer.delete']);
         Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
         Route::get('/export', 'export')->name('export');
