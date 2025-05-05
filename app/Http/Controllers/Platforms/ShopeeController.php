@@ -109,7 +109,7 @@ class ShopeeController extends Controller
         $body = [
             'partner_id' => $this->partnerId,
             'refresh_token' => $refreshToken,
-            'shop_id' => $this->shopId
+            'main_account_id' => $this->shopId
         ];
         $baseString = sprintf("%s%s%s", $this->partnerId, $path, $timestamp);
         $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
