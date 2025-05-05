@@ -30,7 +30,7 @@ class ShopeeController extends Controller
     {
         $this->partnerId = (int) config('platforms.shopee.partner_id');
         $this->partnerKey = config('platforms.shopee.partner_key');
-        $this->shopId = (int) config('platforms.shopee.shop_id');
+        $this->shopId = (int) 1544540;
         $this->endpoint = 'https://partner.shopeemobile.com';
         $this->platform = Platform::where('name','Shopee')->first();
         $platformToken = PlatformTokens::where('platform_id',$this->platform->id)->first();
