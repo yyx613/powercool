@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\Platforms\ShopeeController;
 use App\Models\Platform;
 use App\Models\PlatformTokens;
 use Carbon\Carbon;
@@ -30,6 +31,7 @@ class RefreshShopeeToken extends Command
      */
     public function handle()
     {
+        (new ShopeeController())->refreshAccessTokenShopee();
         $partnerId = config('platforms.shopee.partner_id');
         $partnerKey = config('platforms.shopee.partner_key');
         $platform = Platform::where('name', 'Shopee')->first();
