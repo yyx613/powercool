@@ -48,18 +48,32 @@ class SyncAutoCountController extends Controller
                 } else {
                     $currencyId = $CurrencyCode->id;
                 }
+                $msicResult  = DB::select("SELECT id FROM msic_codes WHERE code = ? ", [
+                    $record['MSIC']
+                ]);
 
                 if ($supplier) {
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
-                        'name' => $record['CompanyName'],
+                        'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
-                        'updated_at' => now()
+                        'updated_at' => now(),
+
+                        'registered_name' => $record['CompanyName'],
+                        'tin_number' => $record['TIN'],
+                        'email' => $record['EmailAddress'],
+                        'category' => $record['Category'],
+                        'msic_id' => isset($msicResult[0]) ? $msicResult[0]->id : '1',
+                        'identity_no' => $record['identityNo'],
+                        'prev_gst_reg_no' => $record['GSTRegisterNo'],
+                        'sst_number' => $record['SSTRegisterNo'],
+                        'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
+                        'trade_name' => $record['TradeName']
                     ]);
 
                     $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
@@ -79,7 +93,7 @@ class SyncAutoCountController extends Controller
                     // Insert new supplier
                     $supplier = Supplier::create([
                         'sku' => $record['AccNo'],
-                        'name' => $record['CompanyName'],
+                        'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup,
@@ -87,7 +101,18 @@ class SyncAutoCountController extends Controller
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
+
+                        'registered_name' => $record['CompanyName'],
+                        'tin_number' => $record['TIN'],
+                        'email' => $record['EmailAddress'],
+                        'category' => $record['Category'],
+                        'msic_id' => isset($msicResult[0]) ? $msicResult[0]->id : '1',
+                        'identity_no' => $record['identityNo'],
+                        'prev_gst_reg_no' => $record['GSTRegisterNo'],
+                        'sst_number' => $record['SSTRegisterNo'],
+                        'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
+                        'trade_name' => $record['TradeName']
                     ]);
 
                     $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
@@ -136,11 +161,14 @@ class SyncAutoCountController extends Controller
                 } else {
                     $currencyId = $CurrencyCode->id;
                 }
+                $msicResult  = DB::select("SELECT id FROM msic_codes WHERE code = ? ", [
+                    $record['MSIC']
+                ]);
 
                 if ($supplier) {
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
-                        'name' => $record['CompanyName'],
+                        'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup,
@@ -149,7 +177,18 @@ class SyncAutoCountController extends Controller
                         'status' => '1',
                         'debtor_type_id' => $record['DebtorType'],
                         'currency_id' => $currencyId,
-                        'updated_at' => now()
+                        'updated_at' => now(),
+                        
+                        'registered_name' => $record['CompanyName'],
+                        'tin_number' => $record['TIN'],
+                        'email' => $record['EmailAddress'],
+                        'category' => $record['Category'],
+                        'msic_id' => isset($msicResult[0]) ? $msicResult[0]->id : '1',
+                        'identity_no' => $record['identityNo'],
+                        'prev_gst_reg_no' => $record['GSTRegisterNo'],
+                        'sst_number' => $record['SSTRegisterNo'],
+                        'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
+                        'trade_name' => $record['TradeName']
                     ]);
 
                     $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
@@ -165,11 +204,30 @@ class SyncAutoCountController extends Controller
                         ]);
                     }
 
+                    $custLocation = DB::select("SELECT * FROM customer_locations WHERE customer_id = ? AND is_default = ?", [
+                        $supplier->id, 1
+                    ]);
+    
+                    if($record['TIN'] != null){
+                        if (!$custLocation) {
+                            // Insert new branch entry
+                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address, city, state, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                 $supplier->id, 1, 1, $record['Address'], $record['City'], $record['State'], $record['PostCode'], now(), now()
+                            ]);
+                        }else{
+                            // Update existing branch entry
+                            DB::update("UPDATE customer_locations SET address = ?, city = ?, state = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
+                                $record['Address'], $record['City'], $record['State'], $record['PostCode'], $supplier->id, 1
+                            ]);
+                        }
+                    }
+                   
+
                 } else {
                     // Insert new supplier
                     $supplier = Customer::create([
                         'sku' => $record['AccNo'],
-                        'name' => $record['CompanyName'],
+                        'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup,
@@ -179,7 +237,18 @@ class SyncAutoCountController extends Controller
                         'debtor_type_id' => $record['DebtorType'],
                         'currency_id' => $currencyId,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
+
+                        'registered_name' => $record['CompanyName'],
+                        'tin_number' => $record['TIN'],
+                        'email' => $record['EmailAddress'],
+                        'category' => $record['Category'],
+                        'msic_id' => isset($msicResult[0]) ? $msicResult[0]->id : '1',
+                        'identity_no' => $record['identityNo'],
+                        'prev_gst_reg_no' => $record['GSTRegisterNo'],
+                        'sst_number' => $record['SSTRegisterNo'],
+                        'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
+                        'trade_name' => $record['TradeName']
                     ]);
 
                     $branchNo = ($companyGroup == 1 || 2) ? '1' : '2';
@@ -193,6 +262,18 @@ class SyncAutoCountController extends Controller
                         DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
                             'App\Models\Customer', $supplier->id, $branchNo, now(), now()
                         ]);
+                    }
+
+                    $custLocation = DB::select("SELECT * FROM customer_locations WHERE customer_id = ? AND is_default = ?", [
+                        $supplier->id, 1
+                    ]);
+                    if($record['TIN'] != null){
+                        if (!$custLocation) {
+                            // Insert new branch entry
+                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address, city, state, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                 $supplier->id, 1, 1, $record['Address'], $record['City'], $record['State'], $record['PostCode'], now(), now()
+                            ]);
+                        }
                     }
                 }
             }
