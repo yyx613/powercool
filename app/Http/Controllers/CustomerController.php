@@ -50,17 +50,16 @@ class CustomerController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
-                1 => 'name',
-                2 => 'phone',
-                3 => 'company_name',
-                4 => 'platform',
+                1 => 'sku',
+                2 => 'name',
+                3 => 'phone',
+                4 => 'company_name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('company_name', 'asc');
         }
 
         $records_count = $records->count();
