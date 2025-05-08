@@ -12,8 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('vehicles', function (Blueprint $table) {
-            $table->string('department')->nullable()->after('tarikh_pendaftaran');
-            $table->string('area_control')->nullable()->after('department');
             $table->unsignedBigInteger('vehicle_setting_id')->nullable()->after('area_control');
         });
     }
