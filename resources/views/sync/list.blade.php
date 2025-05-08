@@ -22,7 +22,7 @@
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Sync') }}</x-app.page-title>
     </div>
     <div class="flex gap-2">
-        <a href="https://powercool.at-eases.com/sync-msic-codes" target="_blank" class="bg-amber-200 font-semibold rounded-md py-2 px-4 text-sm">{{ __('Sync MSIC') }}</a>
-        <a href="https://powercool.at-eases.com/sync-classification-codes" target="_blank" class="bg-amber-200 font-semibold rounded-md py-2 px-4 text-sm">{{ __('Sync Classification Code') }}</a>
+        <a href="{{ config('app.url') }}/sync-msic-codes" target="_blank" class="bg-amber-200 font-semibold rounded-md py-2 px-4 text-sm">{{ __('Sync MSIC') }}</a>
+        <a href="{{ config('app.url') }}/sync-classification-codes" target="_blank" class="bg-amber-200 font-semibold rounded-md py-2 px-4 text-sm">{{ __('Sync Classification Code') }}</a>
     </div>
 @endsection

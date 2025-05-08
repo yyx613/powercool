@@ -150,9 +150,9 @@
                 @endif
                 @if ($is_product == true)
                     <div class="flex flex-col hidden" id="hi_ten_stock_code-container">
-                        <x-app.input.label id="hi_ten_stock_code" class="mb-1">{{ __('Hi-Ten stock code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.label id="hi_ten_stock_code" class="mb-1">{{ __('Power Cool stock code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select2 name="hi_ten_stock_code" id="hi_ten_stock_code" :hasError="$errors->has('hi_ten_stock_code')" placeholder="{{ __('Select a Hi-Ten stock code') }}">
-                            <option value="">{{ __('Select a Hi-Ten stock code') }}</option>
+                            <option value="">{{ __('Select a Power Cool stock code') }}</option>
                             @foreach ($hi_ten_products as $hi_ten_prod)
                                 <option value="{{ $hi_ten_prod->id }}" @selected(old('hi_ten_stock_code', isset($prod) ? $prod->hi_ten_stock_code : null) == $hi_ten_prod->id)>{{ $hi_ten_prod->model_name }}</option>
                             @endforeach
@@ -377,7 +377,11 @@
     })
     $('#submit-create-btn').on('click', function(e) {
         let url = $('#form').attr('action')
-        url = `${url}?create_again=true`
+        if (url.includes('?')) {
+            url = `${url}&create_again=true`
+        } else {
+            url = `${url}?create_again=true`
+        }
 
         $('#form').attr('action', url)
     })

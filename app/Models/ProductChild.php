@@ -126,7 +126,7 @@ class ProductChild extends Model
     {
         $init_idx = 1;
         $sku = null;
-        $min_char = 7;
+        $min_char = 6;
         $existing_skus = self::pluck('sku')->toArray();
 
         while (true) {
@@ -134,7 +134,7 @@ class ProductChild extends Model
             while (strlen($str_init_idx) < $min_char) { // make it $min_char digits
                 $str_init_idx = '0'.$str_init_idx;
             }
-            $sku = $parent_prefix.$str_init_idx;
+            $sku = $parent_prefix . '-' . now()->format('ymd') . '-' . $str_init_idx;
 
             if (! in_array($sku, $existing_skus)) {
                 break;
