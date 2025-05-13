@@ -32,7 +32,6 @@ class CustomerController extends Controller
     public function getData(Request $req)
     {
         $records = new Customer;
-
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -46,6 +45,12 @@ class CustomerController extends Controller
                         $q->where('name', 'like', '%'.$keyword.'%');
                     });
             });
+        }
+        if ($req->has('debt_type') && $req->debt_type != null && $req->debt_type != '') {
+            $records = $records->where('debtor_type_id', $req->debt_type);
+        }
+        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
+            $records = $records->where('company_group', $req->company_group);
         }
         // Order
         if ($req->has('order')) {
