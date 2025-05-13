@@ -267,6 +267,7 @@ class CustomerController extends Controller
                 if (strtolower($debt_type_name) == 'dealer' && ! $dealer_exists) {
                     $new_dealer = Dealer::create([
                         'name' => $req->customer_name,
+                        'company_group' => $req->company_group,
                         'sku' => (new Dealer)->generateSku(),
                     ]);
                     (new Branch)->assign(Dealer::class, $new_dealer->id);
