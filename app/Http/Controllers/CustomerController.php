@@ -52,6 +52,9 @@ class CustomerController extends Controller
         if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
             $records = $records->where('company_group', $req->company_group);
         }
+        if ($req->has('category') && $req->category != null && $req->category != '') {
+            $records = $records->where('category', $req->category);
+        }
         // Order
         if ($req->has('order')) {
             $map = [
@@ -77,11 +80,13 @@ class CustomerController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
+        
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
                 'code' => $record->sku,
                 'name' => $record->name,
+                'category' => $record->category == null ? null : Customer::BUSINESS_TYPES[$record->category],
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
                 'debt_type' => $record->debtorType->name ?? '-',

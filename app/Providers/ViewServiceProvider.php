@@ -531,6 +531,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('debtor_types', $debtor_types);
             $view->with('company_group', $company_group);
+            $view->with('business_types', Customer::BUSINESS_TYPES);
         });
         View::composer(['dealer.form'], function (ViewView $view) {
             $company_group = [

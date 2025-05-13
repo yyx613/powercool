@@ -46,7 +46,7 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex gap-2 max-w-2xl w-full mb-4">
+        <div class="flex gap-2 max-w-4xl w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                     <div class="rounded-md border border-transparent p-1 ml-1">
@@ -70,6 +70,14 @@
                     @endforeach
                 </x-app.input.select>
             </div>
+            <div class="flex-1 flex">
+                <x-app.input.select name='filter_category' id='filter_category' class="w-full capitalize">
+                    <option value="">Select a category</option>
+                    @foreach ($business_types as $key => $val)
+                        <option value="{{ $key }}">{{ $val }}</option>
+                    @endforeach
+                </x-app.input.select>
+            </div>
         </div>
 
         <!-- Table -->
@@ -81,6 +89,7 @@
                     </th>
                     <th>{{ __('Code') }}</th>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Category') }}</th>
                     <th>{{ __('Phone Number') }}</th>
                     <th>{{ __('Company Name') }}</th>
                     <th>{{ __('Debt Type') }}</th>
@@ -106,6 +115,7 @@
         TABLE_FILTER = {
             'debt_type': '',
             'company_group': '',
+            'category': '',
         }
         FOR_ROLE = @json($for_role ?? null);
 
@@ -125,6 +135,7 @@
                 { data: 'id' },
                 { data: 'code' },
                 { data: 'name' },
+                { data: 'category' },
                 { data: 'phone_number' },
                 { data: 'company_name' },
                 { data: 'debt_type' },
@@ -161,6 +172,7 @@
                 {
                     "width": "10%",
                     "targets": 3,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -205,8 +217,16 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 10,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -234,7 +254,7 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('customer.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }&debt_type=${ TABLE_FILTER['debt_type'] }&company_group=${ TABLE_FILTER['company_group'] }`
+                    url = `${url}?page=${ info.page + 1 }&debt_type=${ TABLE_FILTER['debt_type'] }&company_group=${ TABLE_FILTER['company_group'] }&category=${ TABLE_FILTER['category'] }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
@@ -249,6 +269,11 @@
         })
         $('#filter_company_group').on('change', function() {
             TABLE_FILTER['company_group'] = $(this).val()
+
+            dt.draw()
+        })
+        $('#filter_category').on('change', function() {
+            TABLE_FILTER['category'] = $(this).val()
 
             dt.draw()
         })
