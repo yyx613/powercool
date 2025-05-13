@@ -21,6 +21,12 @@ class Customer extends Model
 
     const STATUS_PENDING_FILL_UP_INFO = 2;
 
+    const BUSINESS_TYPES = [
+        1 => 'Business',
+        2 => 'Individual',
+        3 => 'Government',
+    ];
+
     protected $guarded = [];
 
     protected $casts = [
