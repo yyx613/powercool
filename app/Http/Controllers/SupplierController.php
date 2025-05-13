@@ -37,6 +37,9 @@ class SupplierController extends Controller
                     ->orWhere('company_name', 'like', '%'.$keyword.'%');
             });
         }
+        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
+            $records = $records->where('company_group', $req->company_group);
+        }
         // Order
         if ($req->has('order')) {
             $map = [
@@ -69,6 +72,7 @@ class SupplierController extends Controller
                 'name' => $record->name,
                 'phone_number' => $record->phone,
                 'company_name' => $record->company_name,
+                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'can_edit' => hasPermission('supplier.edit'),
                 'can_delete' => hasPermission('supplier.delete'),
             ];

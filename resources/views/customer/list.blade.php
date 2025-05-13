@@ -46,13 +46,29 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex max-w-xs w-full mb-4">
+        <div class="flex gap-2 max-w-2xl w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
                     <div class="rounded-md border border-transparent p-1 ml-1">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
                     </div>
                 </x-app.input.input>
+            </div>
+            <div class="flex-1 flex">
+                <x-app.input.select name='filter_debt_type' id='filter_debt_type' class="w-full capitalize">
+                    <option value="">Select a debt type</option>
+                    @foreach ($debtor_types as $key => $type)
+                        <option value="{{ $key }}">{{ $type->name }}</option>
+                    @endforeach
+                </x-app.input.select>
+            </div>
+            <div class="flex-1 flex">
+                <x-app.input.select name='filter_company_group' id='filter_company_group' class="w-full capitalize">
+                    <option value="">Select a company group</option>
+                    @foreach ($company_group as $key => $val)
+                        <option value="{{ $key }}">{{ $val }}</option>
+                    @endforeach
+                </x-app.input.select>
             </div>
         </div>
 
@@ -87,6 +103,10 @@
 
 @push('scripts')
     <script>
+        TABLE_FILTER = {
+            'debt_type': '',
+            'company_group': '',
+        }
         FOR_ROLE = @json($for_role ?? null);
 
         $(document).ready(function(){
@@ -214,13 +234,23 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('customer.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }`
+                    url = `${url}?page=${ info.page + 1 }&debt_type=${ TABLE_FILTER['debt_type'] }&company_group=${ TABLE_FILTER['company_group'] }`
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
         });
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
+        })
+        $('#filter_debt_type').on('change', function() {
+            TABLE_FILTER['debt_type'] = $(this).val()
+
+            dt.draw()
+        })
+        $('#filter_company_group').on('change', function() {
+            TABLE_FILTER['company_group'] = $(this).val()
+
+            dt.draw()
         })
 
         $('#data-table').on('click', '.delete-btns', function() {

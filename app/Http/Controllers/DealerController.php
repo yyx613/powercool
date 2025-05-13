@@ -29,6 +29,9 @@ class DealerController extends Controller
                     ->orWhere('sku', 'like', '%'.$keyword.'%');
             });
         }
+        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
+            $records = $records->where('company_group', $req->company_group);
+        }
         // Order
         if ($req->has('order')) {
             $map = [
@@ -57,6 +60,7 @@ class DealerController extends Controller
                 'id' => $record->id,
                 'code' => $record->sku,
                 'name' => $record->name,
+                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'can_edit' => hasPermission('dealer.edit'),
                 'can_delete' => hasPermission('dealer.delete'),
             ];
@@ -96,6 +100,7 @@ class DealerController extends Controller
     {
         $req->validate([
             'name' => 'required|max:250',
+            'company_group' => 'required',
         ]);
 
         try {
@@ -104,12 +109,14 @@ class DealerController extends Controller
             if ($dealer->id == null) {
                 $new_dealer = Dealer::create([
                     'name' => $req->name,
+                    'company_group' => $req->company_group,
                     'sku' => (new Dealer)->generateSku(),
                 ]);
 
                 (new Branch)->assign(Dealer::class, $new_dealer->id);
             } else {
                 $dealer->name = $req->name;
+                $dealer->company_group = $req->company_group;
                 $dealer->save();
             }
 

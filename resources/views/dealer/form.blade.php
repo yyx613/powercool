@@ -21,6 +21,16 @@
                         <x-app.input.label id="name" class="mb-1">{{ __('Dealer Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($dealer) ? $dealer->name : null) }}" />
                     </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')" placeholder="{{ __('Select a company group') }}">
+                            <option value="">{{ __('Select a company group') }}</option>
+                            @foreach ($company_group as $key => $value)
+                                <option value="{{ $key }}" @selected(old('company_group', isset($dealer) ? $dealer->company_group : null) == $key)>{{ $value }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-app.message.error id="company_group_err"/>
+                    </div>
                 </div>
                 @if (!isset($mode))
                     <div class="mt-8 flex justify-end">

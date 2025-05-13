@@ -522,6 +522,24 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('areas', $areas);
             $view->with('debtor_types', $debtor_types);
         });
+        View::composer(['customer.list', 'supplier.list', 'dealer.list'], function (ViewView $view) {
+            $debtor_types = DebtorType::where('is_active', true)->orderBy('id', 'desc')->get();
+            $company_group = [
+                1 => 'Power Cool',
+                2 => 'Hi-Ten',
+            ];
+
+            $view->with('debtor_types', $debtor_types);
+            $view->with('company_group', $company_group);
+        });
+        View::composer(['dealer.form'], function (ViewView $view) {
+            $company_group = [
+                1 => 'Power Cool',
+                2 => 'Hi-Ten',
+            ];
+
+            $view->with('company_group', $company_group);
+        });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
 
