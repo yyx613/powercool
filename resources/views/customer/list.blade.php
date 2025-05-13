@@ -58,7 +58,7 @@
                 <x-app.input.select name='filter_debt_type' id='filter_debt_type' class="w-full capitalize">
                     <option value="">Select a debt type</option>
                     @foreach ($debtor_types as $key => $type)
-                        <option value="{{ $key }}">{{ $type->name }}</option>
+                        <option value="{{ $key->id }}">{{ $type->name }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>
