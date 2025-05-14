@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,7 +20,12 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        return view('supplier.list');
+        if (Session::get('supplier-company_group') != null) {
+            $company_group = Session::get('supplier-company_group');
+        }
+        return view('supplier.list', [
+            'default_company_group' => $company_group ?? null,
+        ]);
     }
 
     public function getData(Request $req)
@@ -31,14 +37,21 @@ class SupplierController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('phone', 'like', '%'.$keyword.'%')
-                    ->orWhere('company_name', 'like', '%'.$keyword.'%');
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
             });
         }
-        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
-            $records = $records->where('company_group', $req->company_group);
+        if ($req->has('company_group')) {
+            if ($req->company_group == null) {
+                Session::remove('supplier-company_group');
+            } else {
+                $records = $records->where('company_group', $req->company_group);
+                Session::put('supplier-company_group', $req->company_group);
+            }
+        } else if (Session::get('dealer-company_group') != null) {
+            $records = $records->where('company_group', Session::get('supplier-company_group'));
         }
         // Order
         if ($req->has('order')) {
@@ -274,7 +287,7 @@ class SupplierController extends Controller
 
             DB::commit();
 
-            return redirect(route('supplier.index'))->with('success', 'Supplier '.($is_create ? 'created' : 'updated'));
+            return redirect(route('supplier.index'))->with('success', 'Supplier ' . ($is_create ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
