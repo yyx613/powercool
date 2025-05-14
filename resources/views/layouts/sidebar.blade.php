@@ -1682,8 +1682,6 @@
         CURRENT_ROUTE_NAME = '{{ Route::currentRouteName() }}'
         IS_SIDEBAR_EXPAND = localStorage.getItem('is_sidebar_expand')
 
-        console.debug(CURRENT_ROUTE_NAME)
-
         $(document).ready(function(){
             getTimeSection()
 
