@@ -16,7 +16,9 @@ use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
@@ -26,7 +28,21 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        return view('customer.list');
+        if (Session::get('debtor-debt_type') != null) {
+            $debt_type = Session::get('debtor-debt_type');
+        }
+        if (Session::get('debtor-company_group') != null) {
+            $company_group = Session::get('debtor-company_group');
+        }
+        if (Session::get('debtor-category') != null) {
+            $category = Session::get('debtor-category');
+        }
+
+        return view('customer.list', [
+            'default_debt_type' => $debt_type ?? null,
+            'default_company_group' => $company_group ?? null,
+            'default_category' => $category ?? null,
+        ]);
     }
 
     public function getData(Request $req)
@@ -37,24 +53,47 @@ class CustomerController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('phone', 'like', '%'.$keyword.'%')
-                    ->orWhere('company_name', 'like', '%'.$keyword.'%')
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
                     ->orWhereHas('platform', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%'.$keyword.'%');
+                        $q->where('name', 'like', '%' . $keyword . '%');
                     });
             });
         }
-        if ($req->has('debt_type') && $req->debt_type != null && $req->debt_type != '') {
-            $records = $records->where('debtor_type_id', $req->debt_type);
+
+        if ($req->has('debt_type')) {
+            if ($req->debt_type == null) {
+                Session::remove('debtor-debt_type');
+            } else {
+                $records = $records->where('debtor_type_id', $req->debt_type);
+                Session::put('debtor-debt_type', $req->debt_type);
+            }
+        } else if (Session::get('debtor-debt_type') != null) {
+            $records = $records->where('debtor_type_id', Session::get('debtor-debt_type'));
         }
-        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
-            $records = $records->where('company_group', $req->company_group);
+        if ($req->has('company_group')) {
+            if ($req->company_group == null) {
+                Session::remove('debtor-company_group');
+            } else {
+                $records = $records->where('company_group', $req->company_group);
+                Session::put('debtor-company_group', $req->company_group);
+            }
+        } else if (Session::get('debtor-company_group') != null) {
+            $records = $records->where('company_group', Session::get('debtor-company_group'));
         }
-        if ($req->has('category') && $req->category != null && $req->category != '') {
-            $records = $records->where('category', $req->category);
+        if ($req->has('category')) {
+            if ($req->category == null) {
+                Session::remove('debtor-category');
+            } else {
+                $records = $records->where('category', $req->category);
+                Session::put('debtor-category', $req->category);
+            }
+        } else if (Session::get('debtor-category') != null) {
+            $records = $records->where('category', Session::get('debtor-category'));
         }
+
         // Order
         if ($req->has('order')) {
             $map = [
@@ -80,7 +119,7 @@ class CustomerController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
-        
+
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,

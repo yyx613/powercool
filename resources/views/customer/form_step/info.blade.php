@@ -328,7 +328,7 @@
         INIT_DONE = false
 
         $(document).ready(function() {
-            if (CUSTOMER != null) {
+            if (CUSTOMER != null && CUSTOMER.category != null) {
                 $('select[name="category"]').trigger('change')
             }
             INIT_DONE = true

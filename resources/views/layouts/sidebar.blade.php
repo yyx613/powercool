@@ -1685,7 +1685,6 @@
         $(document).ready(function(){
             getTimeSection()
 
-
             if ($(window).width() >= 1024) {
                 if (IS_SIDEBAR_EXPAND == 'true' || IS_SIDEBAR_EXPAND == null) {
                     if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
@@ -1706,7 +1705,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                    } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_type.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
@@ -1745,7 +1744,7 @@
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="5"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes('role_management.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
+                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CCURRENT_ROUTE_NAME.includes('inventory_type.') || CURRENT_ROUTE_NAME.includes('inventory_category.') || CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes('production_material.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()

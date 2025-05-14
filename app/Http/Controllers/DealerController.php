@@ -7,13 +7,19 @@ use App\Models\Branch;
 use App\Models\Dealer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DealerController extends Controller
 {
     public function index()
     {
-        return view('dealer.list');
+        if (Session::get('dealer-company_group') != null) {
+            $company_group = Session::get('dealer-company_group');
+        }
+        return view('dealer.list', [
+            'default_company_group' => $company_group ?? null,
+        ]);
     }
 
     public function getData(Request $req)
@@ -25,12 +31,19 @@ class DealerController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('sku', 'like', '%'.$keyword.'%');
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%');
             });
         }
-        if ($req->has('company_group') && $req->company_group != null && $req->company_group != '') {
-            $records = $records->where('company_group', $req->company_group);
+        if ($req->has('company_group')) {
+            if ($req->company_group == null) {
+                Session::remove('dealer-company_group');
+            } else {
+                $records = $records->where('company_group', $req->company_group);
+                Session::put('dealer-company_group', $req->company_group);
+            }
+        } else if (Session::get('dealer-company_group') != null) {
+            $records = $records->where('company_group', Session::get('dealer-company_group'));
         }
         // Order
         if ($req->has('order')) {
@@ -122,7 +135,7 @@ class DealerController extends Controller
 
             DB::commit();
 
-            return redirect(route('dealer.index'))->with('success', 'Dealer '.(isset($new_dealer) && $new_dealer != null ? 'created' : 'updated'));
+            return redirect(route('dealer.index'))->with('success', 'Dealer ' . (isset($new_dealer) && $new_dealer != null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

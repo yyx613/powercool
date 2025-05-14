@@ -4,15 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class NotificationController extends Controller
 {
-    const TYPES = [
-        1 => 'Reminder',
-        2 => 'Approval',
-    ];
-
     const STATUSES = [
         1 => 'Unread',
         2 => 'Read',
@@ -20,9 +16,12 @@ class NotificationController extends Controller
 
     public function index(Request $request)
     {
+        if (Session::get('notification-status') != null) {
+            $status = Session::get('notification-status');
+        }
         return view('notification.list', [
-            'types' => self::TYPES,
             'statuses' => self::STATUSES,
+            'default_status' => $status ?? null,
         ]);
     }
 
@@ -31,20 +30,24 @@ class NotificationController extends Controller
         $user = $request->user();
         $records = $user->notifications()->orderBy('created_at', 'desc');
 
-        if ($request->has('type') && $request->input('type') != null) {
-            if ($request->input('type') == 1) {
-                $records = $records->where('type', 'reminder');
-            } elseif ($request->input('type') == 2) {
-                $records = $records->where('type', 'approval');
-            }
-        }
-        if ($request->has('status') && $request->input('status') != null) {
-            if ($request->input('status') == 1) {
+        if ($request->has('status')) {
+            if ($request->status == null) {
+                Session::remove('notification-status');
+            } else if ($request->status == 1) {
                 $records = $records->whereNull('read_at');
-            } elseif ($request->input('status') == 2) {
+                Session::put('notification-status', $request->status);
+            } elseif ($request->status == 2) {
+                $records = $records->whereNotNull('read_at');
+                Session::put('notification-status', $request->status);
+            }
+        } else if (Session::get('notification-status') != null) {
+            if (Session::get('notification-status') == 1) {
+                $records = $records->whereNull('read_at');
+            } elseif (Session::get('notification-status') == 2) {
                 $records = $records->whereNotNull('read_at');
             }
         }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);

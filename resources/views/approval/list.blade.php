@@ -7,19 +7,24 @@
         #data-table {
             border: solid 1px rgb(209 213 219);
         }
+
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
+
         #data-table tbody tr td:nth-of-type(2) {
             text-transform: capitalize;
         }
+
         #data-table tbody tr:last-of-type td {
             border-bottom: none;
         }
+
         #data-table tbody tr[data-unread="true"] {
             font-weight: bold;
         }
+
         #data-table tbody tr[data-unread="false"] {
             color: grey;
         }
@@ -40,7 +45,7 @@
                     <x-app.input.select name='filter_status' id='filter_status' class="w-full capitalize">
                         <option value="">Select a status</option>
                         @foreach ($statuses as $key => $status)
-                            <option value="{{ $key }}">{{ $status }}</option>
+                            <option value="{{ $key }}" @selected(isset($default_status) && $default_status == $key)>{{ $status }}</option>
                         @endforeach
                     </x-app.input.select>
                 </div>
@@ -66,8 +71,9 @@
 
 @push('scripts')
     <script>
+        DEFAULT_STATUS = @json($default_status ?? null);
         TABLE_FILTER = {
-            'status': '',
+            'status': DEFAULT_STATUS ?? '',
         }
 
         // Datatable
@@ -78,16 +84,26 @@
             processing: true,
             serverSide: true,
             order: [],
-            columns: [
-                { data: 'no' },
-                { data: 'type' },
-                { data: 'object_sku' },
-                { data: 'date' },
-                { data: 'status' },
-                { data: 'action' },
-            ],
-            columnDefs: [
+            columns: [{
+                    data: 'no'
+                },
                 {
+                    data: 'type'
+                },
+                {
+                    data: 'object_sku'
+                },
+                {
+                    data: 'date'
+                },
+                {
+                    data: 'status'
+                },
+                {
+                    data: 'action'
+                },
+            ],
+            columnDefs: [{
                     "width": "10%",
                     "targets": 0,
                     'orderable': false,
@@ -100,7 +116,8 @@
                     "targets": 1,
                     'orderable': false,
                     render: function(data, type, row) {
-                        return data == null ? null : data.includes('DeliveryOrder') ? 'Delivery Order' : 'Sale Order'
+                        return data == null ? null : data.includes('DeliveryOrder') ? 'Delivery Order' :
+                            'Sale Order'
                     }
                 },
                 {
@@ -138,13 +155,13 @@
                     "width": "5%",
                     "targets": 5,
                     "orderable": false,
-                    render: function (data, type, row) {
-                       return  `<div class="flex items-center justify-end gap-x-2 px-2">
+                    render: function(data, type, row) {
+                        return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.rejected ? '' :
                             `<a href="${row.view_url}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('View') !!}">
-                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
-                            </a>`
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
+                                </a>`
                             }
                             <button class="rounded-full p-2 bg-red-200 inline-block ${row.pending_approval ? '' : 'hidden'} reject-btns" data-id="${row.id}" title="{!! __('Reject') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
@@ -156,12 +173,12 @@
                     }
                 },
             ],
-            fnCreatedRow: function( nRow, aData, iDataIndex ) {
+            fnCreatedRow: function(nRow, aData, iDataIndex) {
                 $(nRow).attr('data-noti-id', aData.id);
                 $(nRow).attr('data-unread', aData.pending_approval == true);
             },
             ajax: {
-                data: function(){
+                data: function() {
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('approval.get_data') }}"
 
@@ -183,7 +200,7 @@
         // Approve action
         $('body').on('click', '.approve-btns', function() {
             let id = $(this).data('id')
-            let url = '{{ config("app.url") }}'
+            let url = '{{ config('app.url') }}'
             url = `${url}/approval/approve/${id}`
 
             $.ajax({
@@ -204,7 +221,7 @@
         // Reject action
         $('body').on('click', '.reject-btns', function() {
             let id = $(this).data('id')
-            let url = '{{ config("app.url") }}'
+            let url = '{{ config('app.url') }}'
             url = `${url}/approval/reject/${id}`
 
             $.ajax({

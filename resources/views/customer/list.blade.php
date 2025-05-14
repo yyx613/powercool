@@ -58,7 +58,7 @@
                 <x-app.input.select name='filter_debt_type' id='filter_debt_type' class="w-full capitalize">
                     <option value="">Select a debt type</option>
                     @foreach ($debtor_types as $key => $type)
-                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        <option value="{{ $type->id }}" @selected(isset($default_debt_type) && $default_debt_type == $type->id)>{{ $type->name }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>
@@ -66,7 +66,7 @@
                 <x-app.input.select name='filter_company_group' id='filter_company_group' class="w-full capitalize">
                     <option value="">Select a company group</option>
                     @foreach ($company_group as $key => $val)
-                        <option value="{{ $key }}">{{ $val }}</option>
+                        <option value="{{ $key }}" @selected(isset($default_company_group) && $default_company_group == $key)>{{ $val }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>
@@ -74,7 +74,7 @@
                 <x-app.input.select name='filter_category' id='filter_category' class="w-full capitalize">
                     <option value="">Select a category</option>
                     @foreach ($business_types as $key => $val)
-                        <option value="{{ $key }}">{{ $val }}</option>
+                        <option value="{{ $key }}" @selected(isset($default_category) && $default_category == $key)>{{ $val }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>
@@ -111,17 +111,16 @@
 @endsection
 
 @push('scripts')
-    <script>
-        TABLE_FILTER = {
-            'debt_type': '',
-            'company_group': '',
-            'category': '',
-        }
+    <script> 
+        DEFAULT_DEBT_TYPE = @json($default_debt_type ?? null);
+        DEFAULT_COMPANY_GROUP = @json($default_company_group ?? null);
+        DEFAULT_CATEGORY = @json($default_category ?? null);
         FOR_ROLE = @json($for_role ?? null);
-
-        $(document).ready(function(){
-            dt.draw()
-        })
+        TABLE_FILTER = {
+            'debt_type': DEFAULT_DEBT_TYPE ?? '',
+            'company_group': DEFAULT_COMPANY_GROUP ?? '',
+            'category': DEFAULT_CATEGORY ?? '',
+        }
 
         // Datatable
         var dt = new DataTable('#data-table', {

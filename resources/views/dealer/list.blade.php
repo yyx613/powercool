@@ -50,7 +50,7 @@
                 <x-app.input.select name='filter_company_group' id='filter_company_group' class="w-full capitalize">
                     <option value="">Select a company group</option>
                     @foreach ($company_group as $key => $val)
-                        <option value="{{ $key }}">{{ $val }}</option>
+                        <option value="{{ $key }}" @selected(isset($default_company_group) && $default_company_group == $key)>{{ $val }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>
@@ -75,8 +75,9 @@
 
 @push('scripts')
     <script>
+        DEFAULT_COMPANY_GROUP = @json($default_company_group ?? null);
         TABLE_FILTER = {
-            'company_group': '',
+            'company_group': DEFAULT_COMPANY_GROUP ?? '',
         }
         // Datatable
         var dt = new DataTable('#data-table', {

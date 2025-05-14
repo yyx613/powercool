@@ -9,6 +9,7 @@ use App\Models\Scopes\ApprovedScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ApprovalController extends Controller
@@ -21,8 +22,12 @@ class ApprovalController extends Controller
 
     public function index()
     {
+        if (Session::get('approval-status') != null) {
+            $status = Session::get('approval-status');
+        }
         return view('approval.list', [
             'statuses' => self::STATUSES,
+            'default_status' => $status ?? null,
         ]);
     }
 
@@ -30,15 +35,29 @@ class ApprovalController extends Controller
     {
         $records = Approval::latest();
 
-        if ($request->has('status') && $request->input('status') != null) {
-            if ($request->input('status') == 0) {
+        if ($request->has('status')) {
+            if ($request->status == null) {
+                Session::remove('approval-status');
+            } else if ($request->status == 0) {
                 $records = $records->where('status', Approval::STATUS_PENDING_APPROVAL);
-            } elseif ($request->input('status') == 1) {
+                Session::put('approval-status', $request->status);
+            } elseif ($request->status == 1) {
+                $records = $records->where('status', Approval::STATUS_APPROVED);
+                Session::put('approval-status', $request->status);
+            } elseif ($request->status == 2) {
+                $records = $records->where('status', Approval::STATUS_REJECTED);
+                Session::put('approval-status', $request->status);
+            }
+        } else if (Session::get('approval-status') != null) {
+            if (Session::get('approval-status') == 0) {
                 $records = $records->where('status', Approval::STATUS_PENDING_APPROVAL);
-            } elseif ($request->input('status') == 2) {
+            } elseif (Session::get('approval-status') == 1) {
+                $records = $records->where('status', Approval::STATUS_APPROVED);
+            } elseif (Session::get('approval-status') == 2) {
                 $records = $records->where('status', Approval::STATUS_REJECTED);
             }
         }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
@@ -97,7 +116,7 @@ class ApprovalController extends Controller
             $approval->save();
 
             if (get_class($obj) == DeliveryOrder::class) {
-                $sale_orders = Sale::whereRaw('find_in_set('.$obj->id.', convert_to)')->get();
+                $sale_orders = Sale::whereRaw('find_in_set(' . $obj->id . ', convert_to)')->get();
 
                 for ($i = 0; $i < count($sale_orders); $i++) {
                     $sale_orders[$i]->status = Sale::STATUS_ACTIVE;
@@ -111,7 +130,6 @@ class ApprovalController extends Controller
                     $obj->delete();
                 }
             } elseif (get_class($obj) == Sale::class) {
-
             }
 
             DB::commit();
