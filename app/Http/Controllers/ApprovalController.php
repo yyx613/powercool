@@ -85,6 +85,7 @@ class ApprovalController extends Controller
                 'type' => $obj == null ? null : get_class($obj),
                 'object_sku' => $obj == null ? null : $obj->sku,
                 'date' => $record->created_at,
+                'data' => $record->data == null ? null : json_decode($record->data),
                 'pending_approval' => $record->status == Approval::STATUS_PENDING_APPROVAL,
                 'rejected' => $record->status == Approval::STATUS_REJECTED,
                 'view_url' => $view_url,
