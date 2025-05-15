@@ -82,15 +82,36 @@ class Production extends Model
     public function generateSku(): string
     {
         $sku = null;
+        $staring_num = 1;
+        $digits_length = 6;
+        $formatted_prefix = 'PO';
+        $user_branch = getCurrentUserBranch();
+        $existing_skus = self::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
+
+        if ($user_branch != null) {
+            if ($user_branch == Branch::LOCATION_PENANG) {
+                $formatted_prefix = 'P' . $formatted_prefix;
+            } elseif ($user_branch == Branch::LOCATION_KL) {
+                $formatted_prefix = 'W' . $formatted_prefix;
+            }
+        }
 
         while (true) {
-            $sku = 'PO'.now()->format('ym').generateRandomAlphabet();
+            $digits = (string) $staring_num;
 
-            $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
+            while (strlen($digits) < $digits_length) {
+                $digits = '0' . $digits;
+            }
+            if ($formatted_prefix == '') {
+                $sku = strtoupper($digits);
+            } else {
+                $sku = strtoupper($formatted_prefix . '-' . $digits);
+            }
 
-            if (! $exists) {
+            if (! in_array($sku, $existing_skus)) {
                 break;
             }
+            $staring_num++;
         }
 
         return $sku;
