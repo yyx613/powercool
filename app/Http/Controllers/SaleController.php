@@ -1293,6 +1293,7 @@ class SaleController extends Controller
                             'object_type' => Sale::class,
                             'object_id' => $req->sale_id,
                             'status' => Approval::STATUS_PENDING_APPROVAL,
+                            'data' => $req->type == 'quo' ? json_encode(['is_quo' => true]) : null
                         ]);
                         (new Branch)->assign(Approval::class, $approval->id);
                     }

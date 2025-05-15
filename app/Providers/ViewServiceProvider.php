@@ -405,6 +405,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['production.form'], function (ViewView $view) {
+            $req = app(\Illuminate\Http\Request::class);
             $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
             $material_uses = MaterialUse::with('materials.material')->get();
             $sales = Sale::with('products')->orderBy('id', 'desc')->get();
@@ -414,14 +415,18 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::PRODUCTION_STAFF);
             })->orderBy('id', 'desc')->get();
 
-            $products = Product::where('type', Product::TYPE_PRODUCT)
-                ->orWhere(function ($q) {
-                    $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-                })
-                ->withCount('materialUse')
-                ->having('material_use_count', '>', 0)
-                ->orderBy('id', 'desc')
-                ->get();
+            if ($req->product_id != null) {
+                $products = Product::where('id', $req->product_id)->get();
+            } else {
+                $products = Product::where('type', Product::TYPE_PRODUCT)
+                    ->orWhere(function ($q) {
+                        $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+                    })
+                    ->withCount('materialUse')
+                    ->having('material_use_count', '>', 0)
+                    ->orderBy('id', 'desc')
+                    ->get();
+            }
 
             $view->with('users', $users);
             $view->with('milestones', $milestones);
