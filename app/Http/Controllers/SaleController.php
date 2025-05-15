@@ -267,6 +267,9 @@ class SaleController extends Controller
                 'status' => true,
                 'type' => 'so',
                 'report_type' => $req->report_type,
+                'product_id' => $products->map(function ($q) {
+                    return $q->product_id;
+                })->toArray()
             ]);
             $res = $this->upsertQuoDetails($request, false, true)->getData();
             if ($res->result != true) {
@@ -911,8 +914,8 @@ class SaleController extends Controller
             'qty.*' => 'required',
             'uom' => 'required',
             'uom.*' => 'required',
-            'selling_price' => 'required',
-            'selling_price.*' => 'required',
+            'selling_price' => 'nullable',
+            'selling_price.*' => 'nullable',
             'unit_price' => 'required',
             'unit_price' => 'required',
             'unit_price.*' => 'required',
@@ -1167,8 +1170,8 @@ class SaleController extends Controller
                 'qty.*' => 'required',
                 'uom' => 'required',
                 'uom.*' => 'required',
-                'selling_price' => 'required',
-                'selling_price.*' => 'required',
+                'selling_price' => 'nullable',
+                'selling_price.*' => 'nullable',
                 'unit_price' => 'required',
                 'unit_price.*' => 'required',
                 'promotion_id' => 'required',
@@ -1285,7 +1288,7 @@ class SaleController extends Controller
 
                 $prod = Product::where('id', $req->product_id[$i])->first();
 
-                if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod)) {
+                if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                     if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
                         $approval = Approval::create([
                             'object_type' => Sale::class,

@@ -1,64 +1,80 @@
 <div class="bg-white p-4 border rounded-md">
     <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
-        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512"
+            height="512">
+            <path
+                d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z" />
+            <path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z" />
+            <circle cx="12" cy="6.5" r="1.5" />
+        </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
-            <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')" value="{{ isset($sale) ? $sale->reference : null }}" />
-            <x-app.message.error id="reference_err"/>
+            <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')"
+                placeholder="{{ __('Select a company') }}">
+                <option value="">{{ __('Select a company') }}</option>
+                @foreach ($customers as $cu)
+                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }}</option>
+                @endforeach
+            </x-app.input.select2>
+            <x-app.message.error id="customer_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="sale" class="mb-1">{{ __('Assigned To') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')" placeholder="{{ __('Select a sale') }}">
+            <x-app.input.label id="sale" class="mb-1">{{ __('Assigned To') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
+                placeholder="{{ __('Select a sale') }}">
                 <option value="">{{ __('Select a sale') }}</option>
                 @foreach ($sales as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
             </x-app.input.select2>
-            <x-app.message.error id="sale_err"/>
+            <x-app.message.error id="sale_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="report_type" class="mb-1">{{ __('Type') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
+            <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')"
+                value="{{ isset($sale) ? $sale->reference : null }}" />
+            <x-app.message.error id="reference_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="report_type" class="mb-1">{{ __('Type') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
                 <option value="">{{ __('Select a type') }}</option>
                 @foreach ($report_types as $type)
                     <option value="{{ $type->id }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $type->id)>{{ $type->name }}</option>
                 @endforeach
             </x-app.input.select>
-            <x-app.message.error id="report_type_err"/>
+            <x-app.message.error id="report_type_err" />
         </div>
-        <div class="flex flex-col">
-            <x-app.input.label id="customer" class="mb-1">{{ __('Company')}} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="{{ __('Select a company') }}">
-                <option value="">{{ __('Select a company') }}</option>
-                @foreach ($customers as $cu)
-                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }}</option>
-                @endforeach
-            </x-app.input.select2>
-            <x-app.message.error id="customer_err"/>
-        </div>
+
         <div class="flex flex-col">
             <x-app.input.label id="attention_to" class="mb-1">{{ __('Attention To') }}</x-app.input.label>
-            <x-app.input.input name="attention_to" id="attention_to" :hasError="$errors->has('attention_to')" value="{{ isset($sale) ? $sale->quo_cc : null }}" disabled="true" />
-            <x-app.message.error id="attention_to_err"/>
+            <x-app.input.input name="attention_to" id="attention_to" :hasError="$errors->has('attention_to')"
+                value="{{ isset($sale) ? $sale->quo_cc : null }}" disabled="true" />
+            <x-app.message.error id="attention_to_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
-            <x-app.message.error id="billing_address_err"/>
+            <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
                 <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
                 <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
             </x-app.input.select>
-            <x-app.message.error id="status_err"/>
+            <x-app.message.error id="status_err" />
         </div>
     </div>
 </div>
@@ -104,7 +120,7 @@
                 }
             }
 
-            let url = '{{ route("customer.get_location") }}'
+            let url = '{{ route('customer.get_location') }}'
             url = `${url}?customer_id=${val}`
 
             $.ajax({
@@ -124,7 +140,8 @@
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
 
-                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id == SALE.billing_address_id)
+                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
+                            SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
                 },

@@ -41,12 +41,14 @@ class UserController extends Controller
         'picture.*' => 'file|extensions:jpg,png,jpeg'
     ];
 
-    public function index() {
+    public function index()
+    {
         return view('user_management.list');
     }
 
-    public function getData(Request $req) {
-        $records = User::with('roles')->whereHas('roles', function($q) {
+    public function getData(Request $req)
+    {
+        $records = User::with('roles')->whereHas('roles', function ($q) {
             $q->whereNot('id', ModelsRole::SUPERADMIN);
         });
 
@@ -54,7 +56,7 @@ class UserController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('name', 'like', '%' . $keyword . '%')
                     ->orWhere('email', 'like', '%' . $keyword . '%');
@@ -89,18 +91,20 @@ class UserController extends Controller
                 'name' => $record->name,
                 'email' => $record->email,
                 'role' => getUserRole($record),
-                'branch' => (new Branch)->keyToLabel($record->branch->location),
+                'branch' => $record->branch == null ? null : (new Branch)->keyToLabel($record->branch->location),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('user_management.form');
     }
 
-    public function store(Request $req) {
+    public function store(Request $req)
+    {
         $validator = Validator::make($req->all(), self::FORM_RULES);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -148,12 +152,13 @@ class UserController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
-            
+
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
 
-    public function edit($user) {
+    public function edit($user)
+    {
         if ($user == 1) {
             abort(404);
         }
@@ -167,10 +172,11 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(Request $req, User $user) {
+    public function update(Request $req, User $user)
+    {
         $rules = self::FORM_RULES;
         $rules['password'] = 'nullable|confirmed';
-        
+
         unset($rules['email']);
         $validator = Validator::make($req->all(), $rules, [], [
             'picture.*' => 'picture'
@@ -217,19 +223,20 @@ class UserController extends Controller
             }
 
             (new Branch)->assign(User::class, $user->id, $req->branch);
-            
+
             DB::commit();
 
             return redirect()->route('user_management.index')->with('success', 'User updated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
-            
+
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
 
-    public function delete(User $user) {
+    public function delete(User $user)
+    {
         try {
             DB::beginTransaction();
 
@@ -247,7 +254,8 @@ class UserController extends Controller
         }
     }
 
-    public function asBranch(Request $req) {
+    public function asBranch(Request $req)
+    {
         Session::put('as_branch', $req->branch);
     }
 }

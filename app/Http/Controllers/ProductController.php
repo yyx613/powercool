@@ -485,7 +485,7 @@ class ProductController extends Controller
             'is_sparepart' => 'required',
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
-            'hi_ten_stock_code' => 'required_if:company_group,==,2',
+            'hi_ten_stock_code' => 'nullable',
 
             'selling_price_name' => 'nullable',
             'selling_price_name.*' => 'nullable',
