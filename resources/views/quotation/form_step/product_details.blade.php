@@ -49,7 +49,6 @@
                 class="decimal-input" />
             <x-app.message.error id="override_selling_price_err" />
         </div>
-
         <input type="hidden" name="unit_price[]" value="">
         <div class="flex flex-col">
             <x-app.input.label id="amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
@@ -207,6 +206,7 @@
                 if (SALE.products.length <= 0) $('#add-item-btn').click()
 
                 $('select[name="promotion_id"]').trigger('change')
+                $('input[name="override_selling_price"]').trigger('keyup')
             } else {
                 $('#add-item-btn').click()
             }
@@ -277,12 +277,17 @@
                 }
             }
         })
-        $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',
-        function() {
+        $('body').on('keyup', 'input[name="override_selling_price"]', function() {
             let idx = $(this).parent().parent().parent().data('id')
 
-            calItemTotal(idx)
+            $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val($(this).val())
         })
+        $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',
+            function() {
+                let idx = $(this).parent().parent().parent().data('id')
+
+                calItemTotal(idx)
+            })
         $('body').on('change', 'select[name="promotion[]"], select[name="selling_price[]"]', function() {
             let idx = $(this).parent().parent().data('id')
 
