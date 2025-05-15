@@ -13,6 +13,8 @@ use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductionMilestoneMaterialPreview;
 use App\Models\Sale;
+use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
 use App\Models\Scopes\BranchScope;
 use App\Models\User;
 use App\Models\UserProduction;
@@ -74,15 +76,15 @@ class ProductionController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('start_date', 'like', '%'.$keyword.'%')
-                    ->orWhere('due_date', 'like', '%'.$keyword.'%')
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('start_date', 'like', '%' . $keyword . '%')
+                    ->orWhere('due_date', 'like', '%' . $keyword . '%')
                     ->orWhereHas('priority', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%'.$keyword.'%');
+                        $q->where('name', 'like', '%' . $keyword . '%');
                     })
                     ->orWhereHas('productChild', function ($q) use ($keyword) {
-                        $q->where('sku', 'like', '%'.$keyword.'%');
+                        $q->where('sku', 'like', '%' . $keyword . '%');
                     });
             });
         }
@@ -469,13 +471,13 @@ class ProductionController extends Controller
                     if (! isset($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.'.$products[$i]->id => "Material's serial no is required",
+                                'materials.' . $products[$i]->id => "Material's serial no is required",
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                     } elseif ($qty_needed != count($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.'.$products[$i]->id => 'Quantity needed is not tally',
+                                'materials.' . $products[$i]->id => 'Quantity needed is not tally',
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                     }
@@ -605,6 +607,17 @@ class ProductionController extends Controller
             }
 
             if ($this->prod->getProgress($prod) >= 100) {
+                // Auto Assign product child to assigned Order
+                if ($prod->sale_id != null) {
+                    SaleProductChild::create([
+                        'sale_product_id' => SaleProduct::where('sale_id', $prod->sale_id)->where('product_id', $prod->product_id)->value('id'),
+                        'product_children_id' => $prod->product_child_id,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                // Send notification
                 $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
                     $q->whereIn('name', ['production.complete_notification']);
                 })->get();

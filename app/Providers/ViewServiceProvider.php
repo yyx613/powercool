@@ -416,7 +416,10 @@ class ViewServiceProvider extends ServiceProvider
             })->orderBy('id', 'desc')->get();
 
             if ($req->product_id != null) {
-                $products = Product::where('id', $req->product_id)->get();
+                $products = Product::where('id', $req->product_id)
+                    ->withCount('materialUse')
+                    ->having('material_use_count', '>', 0)
+                    ->get();
             } else {
                 $products = Product::where('type', Product::TYPE_PRODUCT)
                     ->orWhere(function ($q) {
