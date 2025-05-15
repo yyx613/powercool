@@ -30,6 +30,22 @@ class SyncAutoCountController extends Controller
             $companyGroup = $request->query('company_group');
 
             foreach ($data as $record) {
+                $registeredName = $record['CompanyName'];
+
+                if (in_array($companyGroup, [1, 3])) {
+                    $targetGroup = $companyGroup === 1 ? 2 : 4;
+
+                    $conflictSupplier = Supplier::where('registered_name', $registeredName)
+                        ->where('company_group', $targetGroup)
+                        ->first();
+
+                    if ($conflictSupplier) {
+                        Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
+                        continue; // skip this record
+                    }
+                }
+
+
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
@@ -64,6 +80,7 @@ class SyncAutoCountController extends Controller
                         'currency_id' => $currencyId,
                         'updated_at' => now(),
 
+                        'type' => '1',
                         'registered_name' => $record['CompanyName'],
                         'tin_number' => $record['TIN'],
                         'email' => $record['EmailAddress'],
@@ -143,6 +160,21 @@ class SyncAutoCountController extends Controller
 
 
             foreach ($data as $record) {
+                $registeredName = $record['CompanyName'];
+
+                if (in_array($companyGroup, [1, 3])) {
+                    $targetGroup = $companyGroup === 1 ? 2 : 4;
+
+                    $conflictSupplier = Customer::where('registered_name', $registeredName)
+                        ->where('company_group', $targetGroup)
+                        ->first();
+
+                    if ($conflictSupplier) {
+                        //Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
+                        continue; // skip this record
+                    }
+                }
+
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
@@ -179,6 +211,7 @@ class SyncAutoCountController extends Controller
                         'currency_id' => $currencyId,
                         'updated_at' => now(),
                         
+                        'type' => '1',
                         'registered_name' => $record['CompanyName'],
                         'tin_number' => $record['TIN'],
                         'email' => $record['EmailAddress'],
