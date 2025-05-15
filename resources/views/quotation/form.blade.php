@@ -52,6 +52,7 @@
         let prodSerialNo = []
         let warrantyPeriod = []
         let remark = []
+        let overrideSellingPrice = []
         $('#product-details-container .items').each(function(i, obj) {
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
@@ -63,6 +64,7 @@
             promo.push($(this).find('select[name="promotion[]"]').val())
             discount.push($(this).find('input[name="discount"]').val())
             remark.push($(this).find('textarea[name="remark"]').val())
+            overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
             if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
             } else {
@@ -104,6 +106,7 @@
                 'warranty_period': warrantyPeriod,
                 'discount': discount,
                 'product_remark': remark,
+                'override_selling_price': overrideSellingPrice,
 
                 'remark': $('textarea[name="remark"]').val(),
             },

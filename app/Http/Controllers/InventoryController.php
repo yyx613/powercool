@@ -52,7 +52,7 @@ class InventoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%');
+                $q->where('name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -100,7 +100,7 @@ class InventoryController extends Controller
             $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('model_name', 'like', '%'.$keyword.'%');
+                $q->where('model_name', 'like', '%' . $keyword . '%');
             });
         }
         // Category
@@ -195,7 +195,7 @@ class InventoryController extends Controller
                 return redirect(route('inventory_category.create'))->with('success', 'Inventory Category created');
             }
 
-            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category '.($req->category_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category ' . ($req->category_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -432,7 +432,7 @@ class InventoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%');
+                $q->where('name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -486,7 +486,7 @@ class InventoryController extends Controller
     {
         // Validate request
         $req->validate([
-            'category_id' => 'nullable',
+            'type_id' => 'nullable',
             'name' => 'required|max:250',
             'company_group' => 'required',
             'type' => 'required',
@@ -506,7 +506,7 @@ class InventoryController extends Controller
 
                 (new Branch)->assign(InventoryType::class, $cat->id);
             } else {
-                $cat = $this->invCat->where('id', $req->category_id)->first();
+                $cat = $this->invType->where('id', $req->type_id)->first();
 
                 $cat->update([
                     'name' => $req->name,
@@ -522,14 +522,12 @@ class InventoryController extends Controller
                 return redirect(route('inventory_type.create'))->with('success', 'Inventory Type created');
             }
 
-            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type '.($req->type_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type ' . ($req->type_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return Response::json([
-                'result' => false,
-            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return redirect(route('inventory_type.create'))->with('error', 'Something went wrong');
         }
     }
 
