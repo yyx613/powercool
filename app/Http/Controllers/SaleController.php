@@ -917,7 +917,6 @@ class SaleController extends Controller
             'selling_price' => 'nullable',
             'selling_price.*' => 'nullable',
             'unit_price' => 'required',
-            'unit_price' => 'required',
             'unit_price.*' => 'required',
             'promotion_id' => 'required',
             'promotion_id.*' => 'nullable',
@@ -2622,8 +2621,6 @@ class SaleController extends Controller
         } else {
             $invoices = Invoice::whereNull('status')->orderBy('id', 'desc')->get();
         }
-
-        // dd($products);
 
         return view('billing.convert', [
             'step' => $step,

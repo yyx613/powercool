@@ -58,6 +58,7 @@
         let remark = []
         let overrideSellingPrice = []
         $('#product-details-container .items').each(function(i, obj) {
+            console.debug(i)
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
