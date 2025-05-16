@@ -223,6 +223,7 @@
     <script>
         INIT_EDIT = false
         PRODUCTS = @json($products ?? null);
+        DEFAULT_PRODUCT = @json($default_product ?? null);
         SALES = @json($sales ?? null);
         PRODUCTION = @json($production ?? null);
         PRODUCTION_MILESTONE_MATERIAL_PREVIEW = @json($production_milestone_material_previews ?? null);
@@ -234,10 +235,10 @@
             if (PRODUCTION != null) {
                 INIT_EDIT = true
 
-                for (let i = 0; i < PRODUCTION.milestones.length; i++) {
-                    const element = PRODUCTION.milestones[i];
+                if (PRODUCTION_MILESTONE_MATERIAL_PREVIEW != null) {
+                    for (let i = 0; i < PRODUCTION.milestones.length; i++) {
+                        const element = PRODUCTION.milestones[i];
 
-                    if (PRODUCTION_MILESTONE_MATERIAL_PREVIEW != null) {
                         for (let j = 0; j < PRODUCTION_MILESTONE_MATERIAL_PREVIEW.length; j++) {
                             if (element.pivot.id != PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j]
                                 .production_milestone_id) continue
@@ -256,6 +257,9 @@
                 $('select[name="product"]').trigger('change')
 
                 INIT_EDIT = false
+            }
+            if (DEFAULT_PRODUCT != null) {
+                $('select[name="product"]').trigger('change')
             }
         })
 

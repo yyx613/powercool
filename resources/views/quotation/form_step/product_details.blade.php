@@ -342,7 +342,6 @@
             if (overrideSellingPrice != '') {
                 unitPrice = overrideSellingPrice
             } else {
-
                 for (let i = 0; i < PRODUCTS.length; i++) {
                     if (PRODUCTS[i].id == productId) {
                         for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
@@ -403,16 +402,21 @@
                 let promo = $(this).find('select[name="promotion[]"]').val()
                 let discount = $(this).find('input[name="discount"]').val()
                 let sellingPrice = $(this).find(`select[name="selling_price[]"]`).val()
+                let overrideSellingPrice = $(this).find(`input[name="override_selling_price"]`).val()
                 let unitPrice = 0
-                for (let i = 0; i < PRODUCTS.length; i++) {
-                    if (PRODUCTS[i].id == productId) {
-                        for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                            if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                                unitPrice = PRODUCTS[i].selling_prices[j].price
-                                break
+                if (overrideSellingPrice != '') {
+                    unitPrice = overrideSellingPrice
+                } else {
+                    for (let i = 0; i < PRODUCTS.length; i++) {
+                        if (PRODUCTS[i].id == productId) {
+                            for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
+                                if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
+                                    unitPrice = PRODUCTS[i].selling_prices[j].price
+                                    break
+                                }
                             }
+                            break;
                         }
-                        break;
                     }
                 }
                 let subtotal = (qty * unitPrice)

@@ -303,6 +303,15 @@ class ProductionController extends Controller
                     ]);
                 }
                 (new Branch)->assign(Production::class, $production->id);
+                // Auto Assign product child to assigned Order
+                if ($production->sale_id != null) {
+                    SaleProductChild::create([
+                        'sale_product_id' => SaleProduct::where('sale_id', $production->sale_id)->where('product_id', $production->product_id)->value('id'),
+                        'product_children_id' => $production->product_child_id,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
             } else {
                 $production->update([
                     'product_id' => $req->product,
@@ -607,16 +616,6 @@ class ProductionController extends Controller
             }
 
             if ($this->prod->getProgress($prod) >= 100) {
-                // Auto Assign product child to assigned Order
-                if ($prod->sale_id != null) {
-                    SaleProductChild::create([
-                        'sale_product_id' => SaleProduct::where('sale_id', $prod->sale_id)->where('product_id', $prod->product_id)->value('id'),
-                        'product_children_id' => $prod->product_child_id,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-                }
-
                 // Send notification
                 $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
                     $q->whereIn('name', ['production.complete_notification']);
