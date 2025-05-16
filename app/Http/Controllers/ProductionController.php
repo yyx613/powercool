@@ -354,13 +354,14 @@ class ProductionController extends Controller
                             'milestone_id' => $ms_id,
                         ]);
                     }
+                    $ms_id = $this->prodMs::where('production_id', $ms->production_id)->where('milestone_id', $ms->milestone_id)->value('id');
 
                     $ms_material_use_product = [];
                     for ($i = 0; $i < count($material_use_product); $i++) {
                         if ($material_use_product[$i]->is_custom == false && $material_use_product[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
                             for ($j = 0; $j < count($material_use_product[$i]->value); $j++) {
                                 $ms_material_use_product[] = [
-                                    'production_milestone_id' => $ms->id,
+                                    'production_milestone_id' => $ms_id,
                                     'product_id' => $material_use_product[$i]->value[$j]->productId,
                                     'qty' => $material_use_product[$i]->value[$j]->qty,
                                     'created_at' => $now,
@@ -375,7 +376,7 @@ class ProductionController extends Controller
                             $this->prodMsMaterialPreview::insert($ms_material_use_product);
                         }
                     } else {
-                        $this->prodMsMaterialPreview::where('production_milestone_id', $ms->id)->delete();
+                        $this->prodMsMaterialPreview::where('production_milestone_id', $ms_id)->delete();
                         $this->prodMsMaterialPreview::insert($ms_material_use_product);
                     }
                 }
