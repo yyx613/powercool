@@ -33,7 +33,7 @@
                     <x-input-error :messages="$errors->get('desc')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="start_date" class="mb-1">{{ __('State Date') }} <span
+                    <x-app.input.label id="start_date" class="mb-1">{{ __('Start Date') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="start_date" id="start_date" :hasError="$errors->has('start_date')"
                         value="{{ old('start_date', isset($production) ? $production->start_date : null) }}" />
@@ -390,10 +390,10 @@
 
                         $(clone).addClass('material-use-selection')
                         $(clone).find('input').attr('value', MATERIAL_USES[i].materials[j].id)
-                        $(clone).find('input').attr('id', MATERIAL_USES[i].materials[j].id)
+                        $(clone).find('input').attr('id', `material-use-${MATERIAL_USES[i].materials[j].id}`)
                         $(clone).find('input').attr('data-qty', MATERIAL_USES[i].materials[j].qty)
                         $(clone).find('input').attr('data-product-id', MATERIAL_USES[i].materials[j].product_id)
-                        $(clone).find('label').attr('for', MATERIAL_USES[i].materials[j].id)
+                        $(clone).find('label').attr('for', `material-use-${MATERIAL_USES[i].materials[j].id}`)
                         $(clone).find('label #name').text(MATERIAL_USES[i].materials[j].material.model_name)
                         $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USES[i].materials[j].qty}`)
                         $(clone).removeClass('hidden')
@@ -411,6 +411,11 @@
         }
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {
+            // Hide unselected options
+            $('.material-use-selection').each(function(i, obj) {
+                $(this).removeClass('hidden')
+            })
+
             let id = $(this).data('id')
             let isCustom = $(this).data('is-custom')
 
@@ -448,7 +453,6 @@
                     $(this).prop('checked', false)
                 }
             })
-
             let id = $(this).data('id')
             let isCustom = $(this).data('is-custom')
 
@@ -458,6 +462,12 @@
                 $(`.material-use-selection input[data-qty="${element.qty}"][data-product-id="${element.productId}"]`)
                     .prop('checked', true)
             }
+            // Hide unselected options
+            $('.material-use-selection').each(function(i, obj) {
+                if ($(this).find('input[type="checkbox"]').is(':checked') == false) {
+                    $(this).addClass('hidden')
+                }
+            })
 
             $('#production-milestone-material-use-modal #action-container').addClass('hidden')
             $('#production-milestone-material-use-modal #action2-container').removeClass('hidden')

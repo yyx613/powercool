@@ -100,7 +100,7 @@ class PriorityController extends Controller
 
     public function edit(Priority $priority) {
         return view('priority.form', [
-            'debtor' => $priority
+            'priority' => $priority
         ]);
     }
 
@@ -108,7 +108,6 @@ class PriorityController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
-            'status' => 'required',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -119,7 +118,6 @@ class PriorityController extends Controller
 
             $priority->update([
                 'name' => $req->name,
-                'is_active' => $req->status,
             ]);
 
             DB::commit();
