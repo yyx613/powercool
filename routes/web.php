@@ -102,7 +102,7 @@ Route::get('/change-language/{lang}', function ($locale) {
     return back();
 })->name('change_language');
 
-Route::middleware('auth', 'select_lang', 'notification')->group(function () {
+Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(function () {
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';

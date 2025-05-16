@@ -7,6 +7,7 @@ use App\Models\DeliveryOrder;
 use App\Models\Sale;
 use App\Models\Scopes\ApprovedScope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
@@ -98,12 +99,36 @@ class ApprovalController extends Controller
 
     public function approve(Approval $approval)
     {
-        $approval->status = Approval::STATUS_APPROVED;
-        $approval->save();
+        try {
+            DB::beginTransaction();
 
-        return Response::json([
-            'result' => true,
-        ], HttpFoundationResponse::HTTP_OK);
+            $approval->status = Approval::STATUS_APPROVED;
+            $approval->save();
+            // Check approval count
+            $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
+            Cache::put('unread_approval_count', $pending_approval_count);
+            // Update respective QUO/SO/DO
+            if (get_class($approval->object) == Sale::class) {
+                $approval->object->status = Sale::STATUS_APPROVAL_APPROVED;
+                $approval->object->save();
+            } else if (get_class($approval->object) == DeliveryOrder::class) {
+                $approval->object->status = DeliveryOrder::STATUS_APPROVAL_APPROVED;
+                $approval->object->save();
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function reject(Approval $approval)
@@ -131,6 +156,17 @@ class ApprovalController extends Controller
                     $obj->delete();
                 }
             } elseif (get_class($obj) == Sale::class) {
+            }
+            // Check approval count
+            $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
+            Cache::put('unread_approval_count', $pending_approval_count);
+            // Update respective QUO/SO/DO
+            if (get_class($approval->object) == Sale::class) {
+                $approval->object->status = Sale::STATUS_APPROVAL_REJECTED;
+                $approval->object->save();
+            } else if (get_class($approval->object) == DeliveryOrder::class) {
+                $approval->object->status = DeliveryOrder::STATUS_APPROVAL_REJECTED;
+                $approval->object->save();
             }
 
             DB::commit();

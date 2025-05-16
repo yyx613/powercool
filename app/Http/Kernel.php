@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\ApprovalMiddleware;
 use App\Http\Middleware\NotificationMiddleware;
 use App\Http\Middleware\SelectLang;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -68,5 +69,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'select_lang' => SelectLang::class,
         'notification' => NotificationMiddleware::class,
+        'approval' => ApprovalMiddleware::class,
     ];
 }

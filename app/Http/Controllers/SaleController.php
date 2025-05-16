@@ -216,7 +216,7 @@ class SaleController extends Controller
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where(function ($q) {
@@ -234,7 +234,7 @@ class SaleController extends Controller
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', $req->cus)
                 ->where(function ($q) {
                     $q->whereHas('approval', function ($q) {
@@ -250,7 +250,7 @@ class SaleController extends Controller
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where(function ($q) {
                     $q->whereHas('approval', function ($q) {
                         $q->where('status', Approval::STATUS_APPROVED);
@@ -594,7 +594,7 @@ class SaleController extends Controller
             Session::put('convert_sale_order_id', $req->so);
 
             // Allowed spc ids
-            $so_ids = Sale::where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_ACTIVE)->pluck('id');
+            $so_ids = Sale::where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
             $sp_ids = SaleProduct::whereIn('sale_id', $so_ids)->pluck('id');
             $spc_ids = SaleProductChild::distinct()
                 ->whereIn('sale_product_id', $sp_ids)
@@ -609,7 +609,7 @@ class SaleController extends Controller
             $products = collect();
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where(function ($q) {
                     $q->where(function ($q) {
                         $q->whereHas('products.product', function ($q) {
@@ -635,7 +635,7 @@ class SaleController extends Controller
 
             $sale_orders = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where('payment_term', Session::get('convert_terms'))
@@ -664,7 +664,7 @@ class SaleController extends Controller
 
             $term_ids = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->whereNotNull('payment_term')
@@ -696,7 +696,7 @@ class SaleController extends Controller
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', $req->cus)
                 ->where(function ($q) {
                     $q->whereHas('approval', function ($q) {
@@ -722,7 +722,7 @@ class SaleController extends Controller
         } else {
             $sales = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->where('status', Sale::STATUS_ACTIVE)
+                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where(function ($q) {
                     $q->whereHas('approval', function ($q) {
                         $q->where('status', Approval::STATUS_APPROVED);
@@ -852,7 +852,7 @@ class SaleController extends Controller
                 if ($do->products[$i]->saleProduct->product->isRawMaterial()) {
                     $pdf_products[] = [
                         'stock_code' => $do->products[$i]->saleProduct->product->sku,
-                        'desc' => $do->products[$i]->saleProduct->product->desc,
+                        'desc' => $do->products[$i]->saleProduct->product->model_desc,
                         'qty' => $do->products[$i]->qty,
                     ];
                 } else {
@@ -861,7 +861,7 @@ class SaleController extends Controller
                     for ($j = 0; $j < count($spcs); $j++) {
                         $pdf_products[] = [
                             'stock_code' => $spcs[$j]->productChild->sku,
-                            'desc' => $spcs[$j]->productChild->parent->desc,
+                            'desc' => $spcs[$j]->productChild->parent->model_desc,
                             'qty' => 1,
                         ];
                     }
@@ -911,6 +911,9 @@ class SaleController extends Controller
                     'status' => Approval::STATUS_PENDING_APPROVAL,
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);
+                // Update QUO/SO status
+                $do->status = DeliveryOrder::STATUS_APPROVAL_PENDING;
+                $do->save();
             }
 
             DB::commit();
@@ -1285,6 +1288,7 @@ class SaleController extends Controller
             }
 
             $now = now();
+            $updated_sale_status = false;
             for ($i = 0; $i < count($req->product_id); $i++) {
                 if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                     $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
@@ -1330,6 +1334,13 @@ class SaleController extends Controller
                             'data' => $req->type == 'quo' ? json_encode(['is_quo' => true]) : null
                         ]);
                         (new Branch)->assign(Approval::class, $approval->id);
+                        if (!$updated_sale_status) {
+                            // Update QUO/SO status
+                            Sale::where('id', $req->sale_id)->update([
+                                'status' => Sale::STATUS_APPROVAL_PENDING
+                            ]);
+                            $updated_sale_status = true;
+                        }
                     }
                 }
 
@@ -1559,7 +1570,6 @@ class SaleController extends Controller
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->where('branches.object_type', DeliveryOrder::class)
-            ->where('branches.location', getCurrentUserBranch())
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
@@ -1567,6 +1577,10 @@ class SaleController extends Controller
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
             ->leftJoin('invoices', 'invoices.id', '=', 'delivery_orders.invoice_id')
             ->leftJoin('branches', 'branches.object_id', '=', 'delivery_orders.id');
+
+        if (getCurrentUserBranch() != null) {
+            $records = $records->where('branches.location', getCurrentUserBranch());
+        }
 
         if (! $req->has('sku')) {
             $records = $records->where(function ($q) {
@@ -1638,8 +1652,8 @@ class SaleController extends Controller
                 $so_skus[] = $sos[$i]->sku;
             }
 
-            $filename = config('app.url') . str_replace('public', $path, self::DELIVERY_ORDER_PATH) . '/' . $record->filename;
-            $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url') . str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH) . '/' . $record->transport_ack_filename;
+            $filename = config('app.url') . str_replace('public', $path, self::DELIVERY_ORDER_PATH) . $record->filename;
+            $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url') . str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH) . $record->transport_ack_filename;
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -1758,7 +1772,7 @@ class SaleController extends Controller
                         $dopcs = $dos[$k]->products[$i]->children;
 
                         for ($j = 0; $j < count($dopcs); $j++) {
-                            $subtotal = ($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount(); 
+                            $subtotal = ($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount();
                             $pdf_products[] = [
                                 'stock_code' => $dopcs[$j]->productChild->sku,
                                 'model_name' => $dopcs[$j]->productChild->parent->model_name,
