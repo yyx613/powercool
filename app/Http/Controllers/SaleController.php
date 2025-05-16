@@ -1735,11 +1735,13 @@ class SaleController extends Controller
 
             // Create PDF
             $pdf_products = [];
+            $overall_total = 0;
             $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
 
             for ($k = 0; $k < count($dos); $k++) {
                 for ($i = 0; $i < count($dos[$k]->products); $i++) {
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
+                        $subtotal = ($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount();
                         $pdf_products[] = [
                             'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
                             'model_name' => $dos[$k]->products[$i]->saleProduct->product->model_name,
@@ -1749,12 +1751,14 @@ class SaleController extends Controller
                             'discount' => number_format($dos[$k]->products[$i]->saleProduct->discount, 2),
                             'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
                             'total_discount' => $dos[$k]->products[$i]->saleProduct->discountAmount(),
-                            'total' => number_format(($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount(), 2),
+                            'total' => number_format($subtotal, 2),
                         ];
+                        $overall_total += $subtotal;
                     } else {
                         $dopcs = $dos[$k]->products[$i]->children;
 
                         for ($j = 0; $j < count($dopcs); $j++) {
+                            $subtotal = ($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount(); 
                             $pdf_products[] = [
                                 'stock_code' => $dopcs[$j]->productChild->sku,
                                 'model_name' => $dopcs[$j]->productChild->parent->model_name,
@@ -1764,8 +1768,9 @@ class SaleController extends Controller
                                 'discount' => number_format($dopcs[$j]->doProduct->saleProduct->discount, 2),
                                 'promotion' => number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
                                 'total_discount' => $dopcs[$j]->doProduct->saleProduct->discountAmount(),
-                                'total' => number_format(($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount(), 2),
+                                'total' => number_format($subtotal, 2),
                             ];
+                            $overall_total += $subtotal;
                         }
                     }
                 }
@@ -1779,6 +1784,7 @@ class SaleController extends Controller
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'terms' => Session::get('convert_terms'),
+                'overall_total' => $overall_total,
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();

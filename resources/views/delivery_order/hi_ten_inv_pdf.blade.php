@@ -86,9 +86,6 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Promotion<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Total<br>(RM)</td>
         </tr>
-        @php
-            $total = 0;
-        @endphp
         @foreach ($products as $key => $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
@@ -101,16 +98,13 @@
                 <td style="font-size: 14px; text-align: right;">{{ $prod['promotion'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['total'] }}</td>
             </tr>
-            @php
-                $total += ($prod['qty'] * $prod['unit_price']) - $prod['total_discount'];
-            @endphp
         @endforeach
     </table>
     <!-- Item Summary -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
-            <td style="font-size: 14px; padding: 10px 0 0 0; border-top: solid 1px black; text-transform: uppercase;">{{ priceToWord(number_format($total, 2)) }}</td>
-            <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%; vertical-align: text-top;">Total {{ number_format($total, 2) }}</td>
+            <td style="font-size: 14px; padding: 10px 0 0 0; border-top: solid 1px black; text-transform: uppercase;">{{ priceToWord(number_format($overall_total, 2)) }}</td>
+            <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%; vertical-align: text-top;">Total {{ number_format($overall_total, 2) }}</td>
         </tr>
     </table>
     <!-- Footer -->

@@ -282,6 +282,13 @@ if (! function_exists('hasUnreadNotifications')) {
     }
 }
 
+if (! function_exists('hasUnreadNotifications')) {
+    function hasUnreadNotifications()
+    {
+        return Session::get('unread_noti_count') > 0;
+    }
+}
+
 if (! function_exists('getInvolvedProductChild')) {
     function getInvolvedProductChild(?int $production_id = null): array
     {
