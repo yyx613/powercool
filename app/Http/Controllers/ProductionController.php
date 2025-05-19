@@ -202,7 +202,7 @@ class ProductionController extends Controller
                 $preview[] = [
                     'product' => $product,
                     'qty' => $previews[$i]->qty,
-                    'children' => ProductChild::where('product_id', $product->id)->whereNull('status')->whereNotIn('id', $involved_pc_ids)->where('location', ProductChild::LOCATION_WAREHOUSE)->get(),
+                    'children' => ProductChild::where('product_id', $product->id)->whereNull('status')->whereNotIn('id', $involved_pc_ids)->where('location', ProductChild::LOCATION_FACTORY)->get(),
                 ];
             }
             $q->preview = $preview;
@@ -231,9 +231,14 @@ class ProductionController extends Controller
         try {
             DB::beginTransaction();
 
+            $product_child_id = $production->product_child_id;
+
             $pm_ids = $this->prodMs::where('production_id', $production->id)->pluck('id');
             $this->prodMsMaterial::whereIn('production_milestone_id', $pm_ids)->delete();
             $production->delete();
+
+            SaleProductChild::where('product_children_id', $product_child_id)->delete();
+            ProductChild::where('id', $product_child_id)->delete();
 
             DB::commit();
 

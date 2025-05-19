@@ -282,10 +282,10 @@ if (! function_exists('hasUnreadNotifications')) {
     }
 }
 
-if (! function_exists('hasUnreadNotifications')) {
-    function hasUnreadNotifications()
+if (! function_exists('hasUnreadApprovals')) {
+    function hasUnreadApprovals()
     {
-        return Session::get('unread_noti_count') > 0;
+        return Cache::get('unread_approval_count') > 0;
     }
 }
 

@@ -14,7 +14,7 @@
         method="POST" enctype="multipart/form-data" id="info-form">
         @csrf
         @if (isset($modify_from))
-            <input type="text" name="modify_from" value="{{ $production->id }}">
+            <input type="hidden" name="modify_from" value="{{ $production->id }}">
         @endif
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-2 md:grid-cols-3 gap-8 w-full mb-4">

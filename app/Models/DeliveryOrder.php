@@ -17,11 +17,11 @@ class DeliveryOrder extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_CANCELLED = 1;
-
     const STATUS_CONVERTED = 2;
-
+    const STATUS_APPROVAL_PENDING = 4;
+    const STATUS_APPROVAL_APPROVED = 5;
+    const STATUS_APPROVAL_REJECTED = 6;
     const TRANSPORT_ACK_TYPE_DELIVERY = 1;
-
     const TRANSPORT_ACK_TYPE_COLLECTION = 2;
 
     protected $guarded = [];
@@ -71,7 +71,7 @@ class DeliveryOrder extends Model
         $sku = null;
 
         while (true) {
-            $sku = 'DO'.now()->format('ym').generateRandomAlphabet();
+            $sku = 'DO' . now()->format('ym') . generateRandomAlphabet();
 
             $exists = self::withoutGlobalScope(BranchScope::class)->where(DB::raw('BINARY `sku`'), $sku)->exists();
 

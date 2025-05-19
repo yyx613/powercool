@@ -15,23 +15,17 @@ class Sale extends Model
     use HasFactory, SoftDeletes;
 
     const TYPE_QUO = 1; // QUOTATION id
-
     const TYPE_SO = 2; // SALE ORDER id
-
     const TYPE_PENDING = 3; // PENDING ASSIGN SALE PERSON
-
     const STATUS_INACTIVE = 0;
-
     const STATUS_ACTIVE = 1;
-
     const STATUS_CONVERTED = 2;
-
     const STATUS_CANCELLED = 3;
-
+    const STATUS_APPROVAL_PENDING = 4;
+    const STATUS_APPROVAL_APPROVED = 5;
+    const STATUS_APPROVAL_REJECTED = 6;
     const PAYMENT_STATUS_UNPAID = 1;
-
     const PAYMENT_STATUS_PARTIALLY_PAID = 2;
-
     const PAYMENT_STATUS_PAID = 3;
 
     protected $guarded = [];
