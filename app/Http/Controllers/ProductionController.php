@@ -169,6 +169,8 @@ class ProductionController extends Controller
             $data = [
                 'default_product' => $product,
                 'default_sale' => $sale,
+                'default_start_date' => $sale->open_until == null ? null : Carbon::parse($sale->open_until)->format('Y-m-d'),
+                'default_due_date' => $sale->open_until == null ? null : Carbon::parse($sale->open_until)->addWeekdays(3)->format('Y-m-d'),
                 'customer_name' => $customer_name
             ];
         }

@@ -35,7 +35,7 @@
                     <x-app.input.label id="start_date" class="mb-1">{{ __('Start Date') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="start_date" id="start_date" :hasError="$errors->has('start_date')"
-                        value="{{ old('start_date', isset($production) ? $production->start_date : null) }}" />
+                        value="{{ old('start_date', isset($production) ? $production->start_date : (isset($default_start_date) ? $default_start_date : null)) }}" />
                     <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-1 md:col-span-2">
@@ -48,7 +48,7 @@
                     <x-app.input.label id="due_date" class="mb-1">{{ __('Due Date') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="due_date" id="due_date" :hasError="$errors->has('due_date')"
-                        value="{{ old('due_date', isset($production) ? $production->due_date : null) }}" />
+                        value="{{ old('due_date', isset($production) ? $production->due_date : (isset($default_due_date) ? $default_due_date : null)) }}" />
                     <x-input-error :messages="$errors->get('due_date')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
@@ -56,7 +56,7 @@
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a status') }}</option>
-                        <option value="1" @selected(old('status', isset($production) ? $production->status : null) == 1)>{{ __('To Do') }}</option>
+                        <option value="1" @selected(old('status', isset($production) ? $production->status : (isset($customer_name) ? 1 : null)) == 1)>{{ __('To Do') }}</option>
                         <option value="2" @selected(old('status', isset($production) ? $production->status : null) == 2)>{{ __('Doing') }}</option>
                         <option value="3" @selected(old('status', isset($production) ? $production->status : null) == 3)>{{ __('Completed') }}</option>
                     </x-app.input.select>

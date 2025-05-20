@@ -389,8 +389,11 @@
                 <div id="milestone-list-container">
                     {{-- Template --}}
                     <div class="flex justify-between mb-2 hidden" id="milestone-template">
-                        <span class="text-sm ms-name"></span>
-                        <div class="flex items-center">
+                        <div class="flex items-center gap-2 first-half">
+                            <input type="checkbox" class="rounded-sm">
+                            <label class="text-sm ms-name"></label>
+                        </div>
+                        <div class="flex items-center second-half">
                             <button type="button" class="mr-3 view-material-use-selection-btns hidden"
                                 title="View Material Use Selection">
                                 <svg class="h-4 w-4 fill-slate-400 hover:fill-black" xmlns="http://www.w3.org/2000/svg"
@@ -576,7 +579,14 @@
             // Prepare selling price
             $('#selling-price-template').remove()
             // Milestones
-            $('input[name="milestones"]').val(JSON.stringify(MILESTONES))
+            let temp = {}
+            for (const key in MILESTONES) {
+                if (MILESTONES[key].is_checked) {
+                    temp[key] = MILESTONES[key].material_use_product_ids
+                }
+            }
+
+            $('input[name="milestones"]').val(JSON.stringify(temp))
 
             $(this).submit()
         })
@@ -593,6 +603,23 @@
         $('select[name="category_id"], select[name="item_type"]').on('change', function() {
             getMilestones()
         })
+        $('body').on('change', '.first-half input', function() {
+            let isChecked = $(this).is(':checked')
+            let milestoneId = $(this).parent().parent().data('milestone-id')
+
+            if (MILESTONES[milestoneId] == undefined) {
+                MILESTONES[milestoneId] = {
+                    material_use_product_ids: [],
+                    is_checked: false,
+                }
+            }
+
+            if (isChecked) {
+                MILESTONES[milestoneId]['is_checked'] = true
+            } else {
+                MILESTONES[milestoneId]['is_checked'] = false
+            }
+        })
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {
             let milestoneId = $(this).data('milestone-id')
@@ -603,7 +630,6 @@
 
                 for (let i = 0; i < MATERIAL_USE.length; i++) {
                     for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
-                        console.debug(MATERIAL_USE[i].materials[j])
                         let clone = $('#material-use-selection-template')[0].cloneNode(true);
 
                         $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
@@ -638,7 +664,8 @@
 
             for (let i = 0; i < MATERIAL_USE.length; i++) {
                 for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
-                    if (!MILESTONES[milestoneId].includes(MATERIAL_USE[i].materials[j].id)) {
+                    if (!MILESTONES[milestoneId]['material_use_product_ids'].includes(MATERIAL_USE[i].materials[j]
+                            .material.id)) {
                         continue
                     }
 
@@ -688,9 +715,13 @@
             $('.material-use-selections input[type="checkbox"]').each(function(i, obj) {
                 if ($(this).is(':checked')) {
                     if (MILESTONES[SELECTED_MILESTONE_ID] == undefined) {
-                        MILESTONES[SELECTED_MILESTONE_ID] = []
+                        MILESTONES[SELECTED_MILESTONE_ID] = {
+                            material_use_product_ids: [],
+                            is_checked: false,
+                        }
                     }
-                    MILESTONES[SELECTED_MILESTONE_ID].push($(this).parent().data('material-use-product-id'))
+                    MILESTONES[SELECTED_MILESTONE_ID]['material_use_product_ids'].push($(this).parent()
+                        .data('material-use-product-id'))
                 }
             })
 
@@ -743,7 +774,9 @@
 
                         let clone = $('#milestone-template')[0].cloneNode(true);
                         $(clone).find('.ms-name').text(ms.name)
-                        $(clone).find('input').attr('data-milestone-id', ms.id)
+                        $(clone).find('.ms-name').attr('for', `ms-${ms.id}`)
+                        $(clone).find('.first-half input').attr('id', `ms-${ms.id}`)
+                        $(clone).find('.second-half input').attr('data-milestone-id', ms.id)
                         $(clone).attr('data-milestone-id', ms.id)
                         $(clone).removeClass('hidden')
                         $(clone).addClass('milestones')
@@ -753,12 +786,19 @@
                     }
                     // Initiate product milestones
                     for (let i = 0; i < PRODUCT.milestones.length; i++) {
-                        $(`input[name="required_serial_no[]"][data-milestone-id="${PRODUCT.milestones[i].milestone_id}"`)
+                        $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .first-half input`)
                             .attr('checked', true)
-                        $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .view-material-use-selection-btns`)
-                            .removeClass('hidden')
-                        MILESTONES[PRODUCT.milestones[i].milestone_id] = PRODUCT.milestones[i]
-                            .material_use_product_id
+                        if (PRODUCT.milestones[i].material_use_product_id.length > 0) {
+                            $(`input[name="required_serial_no[]"][data-milestone-id="${PRODUCT.milestones[i].milestone_id}"`)
+                                .attr('checked', true)
+                            $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .view-material-use-selection-btns`)
+                                .removeClass('hidden')
+                        }
+                        MILESTONES[PRODUCT.milestones[i].milestone_id] = {
+                            material_use_product_ids: PRODUCT.milestones[i]
+                                .material_use_product_id,
+                            is_checked: true,
+                        }
                     }
                 },
             });
