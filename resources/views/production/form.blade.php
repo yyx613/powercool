@@ -392,7 +392,7 @@
             for (let i = 0; i < MATERIAL_USE.length; i++) {
                 for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
                     if (!MILESTONES[milestoneId]['material_use_product_ids'].includes(MATERIAL_USE[i].materials[j]
-                            .id)) {
+                            .product_id)) {
                         continue
                     }
 
@@ -492,10 +492,13 @@
                     for (let i = 0; i < res.product_milestones.length; i++) {
                         $(`.milestones[data-milestone-id="ms-${res.product_milestones[i].milestone_id}"] .first-half input`)
                             .attr('checked', true)
-                        $(`input[name="required_serial_no[]"][data-milestone-id="ms-${res.product_milestones[i].milestone_id}"`)
-                            .attr('checked', true)
-                        $(`.milestones[data-milestone-id="ms-${res.product_milestones[i].milestone_id}"] .view-material-use-selection-btns`)
-                            .removeClass('hidden')
+
+                        if (res.product_milestones[i].material_use_product_id.length > 0) {
+                            $(`input[name="required_serial_no[]"][data-milestone-id="ms-${res.product_milestones[i].milestone_id}"`)
+                                .attr('checked', true)
+                            $(`.milestones[data-milestone-id="ms-${res.product_milestones[i].milestone_id}"] .view-material-use-selection-btns`)
+                                .removeClass('hidden')
+                        }
                         MILESTONES[`ms-${res.product_milestones[i].milestone_id}`] = {
                             material_use_product_ids: res
                                 .product_milestones[i]
