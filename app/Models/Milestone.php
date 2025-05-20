@@ -85,10 +85,6 @@ class Milestone extends Model
             ->using(TaskMilestone::class);
     }
 
-    public function inventoryCategory()
-    {
-        return $this->belongsTo(InventoryCategory::class);
-    }
     public function inventoryType()
     {
         return $this->belongsTo(InventoryType::class);

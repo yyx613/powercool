@@ -147,7 +147,7 @@
             })
 
             // Prepare milestone modal material's content
-            let requiredSerialNo = rebuildMaterialTemplate()
+            let requiredSerialNo = rebuildMaterialTemplate(null, completed != null && completed != '')
 
             $('#production-milestone-modal #checked-in-by-container').addClass('hidden')
             if (completed != null && completed != '') {
@@ -219,7 +219,7 @@
             return name
         }
 
-        function rebuildMaterialTemplate(search_product_id = null) {
+        function rebuildMaterialTemplate(search_product_id = null, completed = false) {
             $('#serial-no-selection-container .selection').remove()
 
             let requiredSerialNo = false
@@ -230,6 +230,7 @@
                     for (let j = 0; j < PRODUCTION.milestones[i].preview.length; j++) {
                         if (PRODUCTION.milestones[i].preview[j].product.is_sparepart == true) {
                             var productId = PRODUCTION.milestones[i].preview[j].product.id
+                            console.debug(productId)
 
                             var clone = $('#serial-no-container #sp-template')[0].cloneNode(true);
 
@@ -252,12 +253,11 @@
                             let children = PRODUCTION.milestones[i].preview[j].children
 
                             let childIdsToHide = []
-                            for (const key in
-                                    PRODUCTION_MILESTONE_MATERIALS) { // Hidden other milestone selected child
-                                if (key == id) {
-                                    continue
+                            if (completed == false) {
+                                for (const key in
+                                        PRODUCTION_MILESTONE_MATERIALS) { // Hidden other milestone selected child
+                                    childIdsToHide = childIdsToHide.concat(PRODUCTION_MILESTONE_MATERIALS[key])
                                 }
-                                childIdsToHide = childIdsToHide.concat(PRODUCTION_MILESTONE_MATERIALS[key])
                             }
                             for (let k = 0; k < children.length; k++) {
                                 if (childIdsToHide.includes(children[k].id)) {

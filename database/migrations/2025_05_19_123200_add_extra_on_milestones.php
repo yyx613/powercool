@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('milestones', function (Blueprint $table) {
-            $table->unsignedBigInteger('inventory_category_id')->nullable()->after('product_id');
+            $table->longText('inventory_category_id')->nullable()->after('product_id');
             $table->unsignedBigInteger('inventory_type_id')->nullable()->after('inventory_category_id');
+            $table->integer('batch')->nullable()->after('inventory_type_id');
             $table->softDeletes();
         });
     }

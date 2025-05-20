@@ -597,8 +597,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getData')->name('get_data');
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{category_id}/{type_id}', 'edit')->name('edit');
-            Route::post('/update/{category_id}/{type_id}', 'update')->name('update');
+            Route::get('/edit/{batch}', 'edit')->name('edit');
+            Route::post('/update/{batch}', 'update')->name('update');
             Route::get('/get/{category_id}/{type_id}', 'get')->name('get');
         });
         // UOM

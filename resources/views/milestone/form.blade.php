@@ -6,23 +6,11 @@
             url="{{ route('milestone.index') }}">{{ isset($milestones) ? __('Edit Milestone') : __('Create Milestone') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form
-        action="{{ isset($milestones) ? route('milestone.update', ['category_id' => $category_id, 'type_id' => $type_id]) : route('milestone.store') }}"
+    <form action="{{ isset($milestones) ? route('milestone.update', ['batch' => $batch]) : route('milestone.store') }}"
         method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
-                <div class="flex flex-col">
-                    <x-app.input.label id="category" class="mb-1">{{ __('Inventory Category') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="category" id="category" :hasError="$errors->has('category')">
-                        <option value="">{{ __('Select a Category') }}</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->id }}" @selected(old('category', isset($category_id) ? $category_id : null) == $cat->id)>{{ $cat->name }}</option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-input-error :messages="$errors->get('category')" class="mt-1" />
-                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="type" class="mb-1">{{ __('Inventory Type') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -30,6 +18,16 @@
                         <option value="">{{ __('Select a Type') }}</option>
                         @foreach ($types as $type)
                             <option value="{{ $type->id }}" @selected(old('type', isset($type_id) ? $type_id : null) == $type->id)>{{ $type->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('category')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="category" class="mb-1">{{ __('Inventory Category') }} <span
+                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="category[]" id="category" :hasError="$errors->has('category')" multiple>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" @selected(isset($category_ids) && in_array($cat->id, $category_ids))>{{ $cat->name }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('category')" class="mt-1" />
@@ -64,9 +62,12 @@
         MILESTONE_IDX = 0
         MILESTONES = {} // idx : value
         EDIT_MILESTONES = @json($milestones ?? null);
+        EXISTING_MILESTONES = @json($existing_milestones ?? null);
 
         $(document).ready(function() {
             if (EDIT_MILESTONES == null) return
+
+            $('select[name="type"]').trigger('change')
 
             for (i = 0; i < EDIT_MILESTONES.length; i++) {
                 MILESTONE_IDX++
@@ -120,6 +121,22 @@
 
             $(`#milestone-list-container .milestones[data-idx=${idx}]`).remove()
             delete MILESTONES[idx]
+        })
+        $('select[name="type"]').on('change', function() {
+            $(`#category option`).removeAttr('selected')
+            $(`#category option`).removeClass('hidden')
+
+            let val = $(this).val()
+            for (let i = 0; i < EXISTING_MILESTONES.length; i++) {
+                if (EXISTING_MILESTONES[i].inventory_type_id == val) {
+                    let categoryToHide = EXISTING_MILESTONES[i].inventory_category_id.split(',')
+
+                    for (let j = 0; j < categoryToHide.length; j++) {
+                        $(`#category option[value="${categoryToHide[j]}"]`).addClass('hidden')
+                    }
+                    break
+                }
+            }
         })
     </script>
 @endpush

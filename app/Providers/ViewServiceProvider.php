@@ -660,10 +660,12 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['milestone.form'], function (ViewView $view) {
             $categories = InventoryCategory::orderBy('name', 'asc')->get();
             $types = InventoryType::orderBy('name', 'asc')->get();
+            $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->whereNotNull('batch')->get();
 
             $view->with([
                 'categories' => $categories,
                 'types' => $types,
+                'existing_milestones' => $milestones,
             ]);
         });
     }

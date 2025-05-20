@@ -164,7 +164,7 @@ class ProductionController extends Controller
         if ($req->sale_id != null && $req->product_id != null) {
             $sale = Sale::where('id', $req->sale_id)->first();
             $product = $this->product::where('id', $req->product_id)->first();
-            $customer_name = $sale->customer->name;
+            $customer_name = $sale->customer->company_name;
 
             $data = [
                 'default_product' => $product,
