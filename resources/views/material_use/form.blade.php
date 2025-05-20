@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('material_use.index') }}">{{ isset($material) ? __('Edit Material Use') : __('Create Material Use') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('material_use.index') }}">{{ isset($material) ? __('Edit B.O.M Material Use') : __('Create B.O.M Material Use') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="" method="POST" enctype="multipart/form-data">

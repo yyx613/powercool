@@ -1,4 +1,4 @@
-<x-app.modal.base-modal id="production-milestone-material-use-modal">
+<x-app.modal.base-modal id="product-material-use-modal">
     <div class="aspect-[2/1] flex flex-col">
         <div class="py-2 px-4 bg-slate-100 flex items-center">
             <h6 class="text-lg font-black">{{ __('Material Use Selection') }}</h6>
@@ -27,8 +27,8 @@
 
 @push('scripts')
 <script>
-    $('#production-milestone-material-use-modal #ok-btn').on('click', function() {
-        $('#production-milestone-material-use-modal').removeClass('show-modal')
+    $('#product-material-use-modal #ok-btn').on('click', function() {
+        $('#product-material-use-modal').removeClass('show-modal')
     })
 </script>
 @endpush

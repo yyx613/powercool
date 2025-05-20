@@ -9,11 +9,13 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\InventoryCategory;
 use App\Models\Invoice;
+use App\Models\MaterialUse;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
+use App\Models\ProductMilestone;
 use App\Models\ProductSellingPrice;
 use App\Models\SaleProduct;
 use App\Models\TaskMilestoneInventory;
@@ -22,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -111,13 +114,13 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_name', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_desc', 'like', '%'.$keyword.'%')
-                    ->orWhere('min_price', 'like', '%'.$keyword.'%')
-                    ->orWhere('max_price', 'like', '%'.$keyword.'%')
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
+                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
+                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
-                        $qq->where('name', 'like', '%'.$keyword.'%');
+                        $qq->where('name', 'like', '%' . $keyword . '%');
                     });
             });
         }
@@ -183,10 +186,12 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load('image', 'children', 'sellingPrices');
+        $product->load('image', 'children', 'sellingPrices', 'milestones');
+        $material_use = MaterialUse::with('materials.material')->where('product_id', $product->id)->get();
 
         return view('inventory.form', [
             'prod' => $product,
+            'material_use' => $material_use
         ]);
     }
 
@@ -217,8 +222,8 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('location', 'like', '%'.$keyword.'%');
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('location', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -440,7 +445,7 @@ class ProductController extends Controller
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
-            $data['dimension'][] = ($prod->length ?? 0).' x '.($prod->width ?? 0).' x '.($prod->height ?? 0).'MM';
+            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
             $data['capacity'][] = $prod->capacity;
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
@@ -561,7 +566,7 @@ class ProductController extends Controller
                 }
                 if (! ($req->selling_price[$i] > $req->min_price && $req->selling_price[$i] < $req->max_price) && ! ($req->selling_price[$i] != $req->min_price || $req->selling_price[$i] != $req->max_price)) {
                     throw ValidationException::withMessages([
-                        'selling_price.'.$i => 'The price is not between '.$req->min_price.' and '.$req->max_price,
+                        'selling_price.' . $i => 'The price is not between ' . $req->min_price . ' and ' . $req->max_price,
                     ]);
                 }
             }
@@ -685,6 +690,22 @@ class ProductController extends Controller
                 }
             }
 
+            // Milestones
+            $data = [];
+            $milestones = json_decode($req->milestones);
+            foreach ($milestones as $key => $value) {
+                $data[] = [
+                    'product_id' => $prod->id,
+                    'milestone_id' => $key,
+                    'material_use_product_id' => json_encode($value),
+                    'created_at' => now(),
+                ];
+            }
+            if (count($data) > 0) {
+                ProductMilestone::where('product_id', $prod->id)->delete();
+                ProductMilestone::insert($data);
+            }
+
             // Serial No
             if ($req->serial_no != null) {
                 if ($req->order_idx != null) {
@@ -731,13 +752,13 @@ class ProductController extends Controller
                     return redirect(route('product.create'))->with('success', 'Product created');
                 }
 
-                return redirect(route('product.index'))->with('success', 'Product '.($req->product_id == null ? 'created' : 'updated'));
+                return redirect(route('product.index'))->with('success', 'Product ' . ($req->product_id == null ? 'created' : 'updated'));
             }
             if ($req->create_again == true) {
                 return redirect(route('raw_material.create'))->with('success', 'Raw Material created');
             }
 
-            return redirect(route('raw_material.index'))->with('success', 'Raw Material '.($req->product_id == null ? 'created' : 'updated'));
+            return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -760,5 +781,15 @@ class ProductController extends Controller
         } elseif (str_contains(Route::currentRouteName(), 'raw_material.')) {
             return Excel::download(new ProductExport(false), 'product.xlsx');
         }
+    }
+
+    public function get(Product $product)
+    {
+        $material_use = MaterialUse::with('materials.material')->where('product_id', $product->id)->get();
+
+        return Response::json([
+            'product_milestones' => $product->milestones->load('milestone'),
+            'product_material_use' => $material_use,
+        ]);
     }
 }

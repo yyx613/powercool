@@ -15,6 +15,7 @@ use App\Http\Controllers\InventoryServiceReminderController;
 use App\Http\Controllers\InventoryServieHistoryController;
 use App\Http\Controllers\InvoiceReturnController;
 use App\Http\Controllers\MaterialUseController;
+use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\Platforms\LazadaController;
@@ -197,6 +198,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
+        Route::get('/get/{product}', 'get')->name('get')->withoutMiddleware(['can:inventory.product.view']);
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -589,6 +591,16 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{debtor}', 'update')->name('update');
             Route::get('/delete/{debtor}', 'delete')->name('delete');
         });
+        // Milestone 
+        Route::controller(MilestoneController::class)->prefix('milestone')->name('milestone.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{category_id}/{type_id}', 'edit')->name('edit');
+            Route::post('/update/{category_id}/{type_id}', 'update')->name('update');
+            Route::get('/get/{category_id}/{type_id}', 'get')->name('get');
+        });
         // UOM
         Route::controller(UOMController::class)->prefix('uom')->name('uom.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -627,6 +639,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/delete/{user}', 'delete')->name('delete');
 
             Route::get('as-branch', 'asBranch')->name('as_branch');
+            Route::post('/get/{user_id}', 'get')->name('get_user');
         });
         // Role Management
         Route::controller(RoleController::class)->prefix('role-management')->name('role_management.')->group(function () {
@@ -708,4 +721,4 @@ Route::get('/email', function () {
 //     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 // });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

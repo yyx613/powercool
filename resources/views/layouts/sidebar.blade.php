@@ -658,6 +658,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('material_use.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -679,10 +686,10 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('material_use.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <a href="{{ route('milestone.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -1434,6 +1441,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('material_use.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('credit_term.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
@@ -1455,10 +1469,10 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('material_use.index') }}"
-                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                    <a href="{{ route('milestone.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
-                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                     </a>
                 </li>
                 <li>
@@ -2191,6 +2205,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('material_use.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -2212,10 +2233,10 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{{ route('material_use.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                        <a href="{{ route('milestone.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Material Use') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                                         </a>
                                     </li>
                                     <li>

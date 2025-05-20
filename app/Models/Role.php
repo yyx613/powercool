@@ -15,5 +15,6 @@ class Role extends Model
     const SALE = 2;
     const TECHNICIAN = 3;
     const DRIVER = 4;
-    const PRODUCTION_STAFF = 5;
+    const PRODUCTION_WORKER = 5;
+    const PRODUCTION_ADMIN = 6;
 }

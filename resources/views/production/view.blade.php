@@ -68,7 +68,8 @@
                 <ul>
                     @foreach ($production->milestones as $ms)
                         <li class="flex items-center gap-x-2 py-1 ms-row transition duration-300 hover:bg-slate-50"
-                            data-id="{{ $ms->pivot->id }}" data-completed="{{ $ms->pivot->submitted_at != null }}">
+                            data-id="{{ $ms->pivot->id }}" data-completed="{{ $ms->pivot->submitted_at }}"
+                            data-completed-by="{{ $ms->pivot->submitted_by }}">
                             <svg class="h-5 w-5 fill-blue-500 not-completed-icon {{ $ms->pivot->submitted_at != null ? 'hidden' : '' }}"
                                 xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
                                 width="512" height="512">
@@ -126,96 +127,36 @@
     <script>
         PRODUCTION = @json($production);
         PRODUCTION_MILESTONE_MATERIALS = @json($production_milestone_materials);
+        SELECTED_PRODUCTION_MILESTONE_ID = null
+        SPAREPART_KEYWORD = {} // productId: keyword
 
         $('.ms-row').on('click', function(e) {
             e.preventDefault()
 
             let id = $(this).data('id')
-            let requiredSerialNo = false
+            SELECTED_PRODUCTION_MILESTONE_ID = id
             let completed = $(this).data('completed')
+            let completedBy = $(this).data('completed-by')
             let milestoneCount = PRODUCTION.milestones.length
 
             $('.ms-row').each(function() {
-                if ($(this).data('completed') == true) {
+                if ($(this).data('completed') != null && $(this).data['completed'] != '') {
                     milestoneCount--
                 }
             })
 
             // Prepare milestone modal material's content
-            $('#serial-no-selection-container .selection').remove()
+            let requiredSerialNo = rebuildMaterialTemplate()
 
-            for (let i = 0; i < PRODUCTION.milestones.length; i++) {
-                if (PRODUCTION.milestones[i].pivot.id == id && PRODUCTION.milestones[i].preview.length > 0) {
-                    for (let j = 0; j < PRODUCTION.milestones[i].preview.length; j++) {
-                        if (PRODUCTION.milestones[i].preview[j].product.is_sparepart == true) {
-                            var productId = PRODUCTION.milestones[i].preview[j].product.id
-
-                            var clone = $('#serial-no-container #sp-template')[0].cloneNode(true);
-
-                            $(clone).removeAttr('id')
-                            $(clone).removeClass('hidden')
-                            $(clone).addClass('selection')
-                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product
-                                .model_name)
-                            $(clone).find('#qty-needed').text(
-                                `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
-                            $(clone).attr('data-product-id', productId)
-                            $(clone).find('#materials_err').attr('data-product-id', productId)
-                            $('#serial-no-selection-container').append(clone)
-
-                            // Prepare serial no selection
-                            let children = PRODUCTION.milestones[i].preview[j].children
-
-                            let childIdsToHide = []
-                            for (const key in
-                                PRODUCTION_MILESTONE_MATERIALS) { // Hidden other milestone selected child
-                                if (key == id) {
-                                    continue
-                                }
-                                childIdsToHide = childIdsToHide.concat(PRODUCTION_MILESTONE_MATERIALS[key])
-                            }
-                            for (let k = 0; k < children.length; k++) {
-                                if (childIdsToHide.includes(children[k].id)) {
-                                    continue
-                                }
-
-                                let spClone = $(`#sp-template .sp-serial-no-container .sp-serial-no-template`)[0]
-                                    .cloneNode(true);
-
-                                $(spClone).data('id', children[k].id)
-                                $(spClone).removeAttr('id')
-                                $(spClone).removeClass('hidden')
-                                $(spClone).find('input').attr('id', children[k].id)
-                                $(spClone).find('input').attr('data-product-id', productId)
-                                // $(spClone).find('input').prop('checked', false)
-                                $(spClone).find('label').text(children[k].sku)
-                                $(spClone).find('label').attr('for', children[k].id)
-
-                                $(`.selection[data-product-id="${productId}"] .sp-serial-no-container`).append(
-                                    spClone)
-                            }
-                        } else {
-                            var clone = $('#serial-no-container #rm-template')[0].cloneNode(true);
-
-                            $(clone).removeAttr('id')
-                            $(clone).removeClass('hidden')
-                            $(clone).addClass('selection')
-                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].model_name)
-                            $(clone).find('#qty-needed').text(
-                                `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
-                            $('#serial-no-selection-container').append(clone)
-                        }
-
-                        if ((j + 1) < PRODUCTION.milestones[i].preview.length) {
-                            $(clone).addClass('pb-4 border-b')
-                        }
-                        requiredSerialNo = true
-                    }
-                    break
-                }
+            $('#production-milestone-modal #checked-in-by-container').addClass('hidden')
+            if (completed != null && completed != '') {
+                let by = getCompletedByUser(completedBy)
+                $('#production-milestone-modal #date').text(moment(completed).format('D MMM YYYY HH:mm'))
+                $('#production-milestone-modal #checked-in-by-container').removeClass('hidden')
+                $('#production-milestone-modal #checked-in-by').text(by)
+            } else {
+                $('#production-milestone-modal #date').text(moment().format('D MMM YYYY HH:mm'))
             }
-
-            $('#production-milestone-modal #date').text(moment().format('D MMM YYYY HH:mm'))
             $('#production-milestone-modal #yes-btn').attr('data-id', id)
             if (requiredSerialNo) $('#production-milestone-modal #serial-no-container').removeClass('hidden')
             else $('#production-milestone-modal #serial-no-container').addClass('hidden')
@@ -245,5 +186,122 @@
 
             $('#production-milestone-modal').addClass('show-modal')
         })
+
+        $('body').on('keyup', '.filter-search', function() {
+            let productId = $(this).attr('id')
+            let keyword = $(this).val()
+            if (keyword == '') keyword = null
+            SPAREPART_KEYWORD[productId] = keyword
+
+            rebuildMaterialTemplate(productId)
+        })
+
+        function getCompletedByUser(user_id) {
+            let name = null
+            let url = "{{ config('app.url') }}";
+            url = `${url}/user-management/get/${user_id}`;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                async: false,
+                success: function(res) {
+                    if (res.user) {
+                        name = res.user.name
+                    }
+                },
+            });
+
+            return name
+        }
+
+        function rebuildMaterialTemplate(search_product_id=null) {
+            $('#serial-no-selection-container .selection').remove()
+
+            let requiredSerialNo = false
+
+            for (let i = 0; i < PRODUCTION.milestones.length; i++) {
+                if (PRODUCTION.milestones[i].pivot.id == SELECTED_PRODUCTION_MILESTONE_ID && PRODUCTION.milestones[i]
+                    .preview.length > 0) {
+                    for (let j = 0; j < PRODUCTION.milestones[i].preview.length; j++) {
+                        if (PRODUCTION.milestones[i].preview[j].product.is_sparepart == true) {
+                            var productId = PRODUCTION.milestones[i].preview[j].product.id
+
+                            var clone = $('#serial-no-container #sp-template')[0].cloneNode(true);
+
+                            $(clone).removeAttr('id')
+                            $(clone).removeClass('hidden')
+                            $(clone).addClass('selection')
+                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product
+                                .model_name)
+                            $(clone).find('.filter-search').attr('name', productId)
+                            $(clone).find('.filter-search').attr('id', productId)
+                            $(clone).find('.filter-search').val(SPAREPART_KEYWORD[productId])
+                            $(clone).find('#qty-needed').text(
+                                `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
+                            $(clone).attr('data-product-id', productId)
+                            $(clone).find('#materials_err').attr('data-product-id', productId)
+                            $('#serial-no-selection-container').append(clone)
+
+                            // Prepare serial no selection
+                            let children = PRODUCTION.milestones[i].preview[j].children
+
+                            let childIdsToHide = []
+                            for (const key in
+                                    PRODUCTION_MILESTONE_MATERIALS) { // Hidden other milestone selected child
+                                if (key == id) {
+                                    continue
+                                }
+                                childIdsToHide = childIdsToHide.concat(PRODUCTION_MILESTONE_MATERIALS[key])
+                            }
+                            for (let k = 0; k < children.length; k++) {
+                                if (childIdsToHide.includes(children[k].id)) {
+                                    continue
+                                }
+                                if (SPAREPART_KEYWORD[productId] != undefined && !children[k].sku.includes(SPAREPART_KEYWORD[productId])) {
+                                    continue
+                                }
+
+                                let spClone = $(`#sp-template .sp-serial-no-container .sp-serial-no-template`)[0]
+                                    .cloneNode(true);
+
+                                $(spClone).data('id', children[k].id)
+                                $(spClone).removeAttr('id')
+                                $(spClone).removeClass('hidden')
+                                $(spClone).find('input').attr('id', children[k].id)
+                                $(spClone).find('input').attr('data-product-id', productId)
+                                // $(spClone).find('input').prop('checked', false)
+                                $(spClone).find('label').text(children[k].sku)
+                                $(spClone).find('label').attr('for', children[k].id)
+
+                                $(`.selection[data-product-id="${productId}"] .sp-serial-no-container`).append(
+                                    spClone)
+                            }
+                            $(`.filter-search[id="${search_product_id}"]`).focus()
+                        } else {
+                            var clone = $('#serial-no-container #rm-template')[0].cloneNode(true);
+
+                            $(clone).removeAttr('id')
+                            $(clone).removeClass('hidden')
+                            $(clone).addClass('selection')
+                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].model_name)
+                            $(clone).find('#qty-needed').text(
+                                `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
+                            $('#serial-no-selection-container').append(clone)
+                        }
+
+                        if ((j + 1) < PRODUCTION.milestones[i].preview.length) {
+                            $(clone).addClass('pb-4 border-b')
+                        }
+                        requiredSerialNo = true
+                    }
+                    break
+                }
+            }
+            return requiredSerialNo
+        }
     </script>
 @endpush

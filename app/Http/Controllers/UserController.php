@@ -6,11 +6,13 @@ use App\Exports\UserExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Role as ModelsRole;
+use App\Models\Scopes\BranchScope;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -257,5 +259,13 @@ class UserController extends Controller
     public function asBranch(Request $req)
     {
         Session::put('as_branch', $req->branch);
+    }
+
+    public function get($user_id)
+    {
+        $user = User::withoutGlobalScope(BranchScope::class)->where('id', $user_id)->first();
+        return Response::json([
+            'user' => $user
+        ]);
     }
 }

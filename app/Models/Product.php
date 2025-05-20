@@ -86,6 +86,10 @@ class Product extends Model
     {
         return $this->belongsTo(Product::class, 'hi_ten_stock_code');
     }
+    public function milestones()
+    {
+        return $this->hasMany(ProductMilestone::class);
+    }
 
     public function itemType()
     {
