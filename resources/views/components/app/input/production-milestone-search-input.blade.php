@@ -10,13 +10,12 @@
     </button>
 </div>
 
-<x-app.modal.qr-scanner-modal/>
-
 @push('scripts')
 <script>
     var html5QrCode
 
     $('body').on('click', '.scanner-btn', function() {
+        var productId = $(this).data('product-id')
         // This method will trigger user permission
         Html5Qrcode.getCameras().then(devices => {
         /**
@@ -34,7 +33,7 @@
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
                 /* handle success */
-                $('.filter-search').val(decodedText).trigger('keyup')
+                $(`.filter-search[id="${productId}"]`).val(decodedText).trigger('keyup')
                 // stop scanning
                 html5QrCode.stop().then((ignore) => {
                     // QR Code scanning is stopped.
