@@ -121,6 +121,7 @@
     </div>
 
     <x-app.modal.production-milestone-modal />
+    <x-app.modal.qr-scanner-modal />
 @endsection
 
 @push('scripts')
@@ -218,7 +219,7 @@
             return name
         }
 
-        function rebuildMaterialTemplate(search_product_id=null) {
+        function rebuildMaterialTemplate(search_product_id = null) {
             $('#serial-no-selection-container .selection').remove()
 
             let requiredSerialNo = false
@@ -240,6 +241,7 @@
                             $(clone).find('.filter-search').attr('name', productId)
                             $(clone).find('.filter-search').attr('id', productId)
                             $(clone).find('.filter-search').val(SPAREPART_KEYWORD[productId])
+                            $(clone).find('.scanner-btn').attr('data-product-id', productId)
                             $(clone).find('#qty-needed').text(
                                 `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
                             $(clone).attr('data-product-id', productId)
@@ -261,7 +263,8 @@
                                 if (childIdsToHide.includes(children[k].id)) {
                                     continue
                                 }
-                                if (SPAREPART_KEYWORD[productId] != undefined && !children[k].sku.includes(SPAREPART_KEYWORD[productId])) {
+                                if (SPAREPART_KEYWORD[productId] != undefined && !children[k].sku.includes(
+                                        SPAREPART_KEYWORD[productId])) {
                                     continue
                                 }
 
