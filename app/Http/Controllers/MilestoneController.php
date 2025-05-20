@@ -33,7 +33,12 @@ class MilestoneController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function ($q) use ($keyword) {
+            $ids = InventoryCategory::where('name', 'like', '%' . $keyword . '%')->pluck('id')->toArray();
+
+            $records = $records->where(function ($q) use ($keyword, $ids) {
+                for ($i = 0; $i < count($ids); $i++) {
+                    $q->orWhereRaw('FIND_IN_SET(?, inventory_category_id)', [$ids[$i]]);
+                }
                 $q->orWhereHas('inventoryType', function ($q) use ($keyword) {
                     $q->where('name', 'like', '%' . $keyword . '%');
                 });
@@ -99,7 +104,8 @@ class MilestoneController extends Controller
             DB::beginTransaction();
 
             $milestones = explode(',', $req->milestones);
-            $batch = Milestone::max('batch') ?? 1;
+            $batch = Milestone::max('batch') ?? 0;
+            $batch++;
 
             for ($i = 0; $i < count($milestones); $i++) {
                 $ms = $this->ms::create([
@@ -161,7 +167,8 @@ class MilestoneController extends Controller
 
             // Create
             $milestones = explode(',', $req->milestones);
-            $batch = Milestone::max('batch') ?? 1;
+            $batch = Milestone::max('batch') ?? 0;
+            $batch++;
 
             for ($i = 0; $i < count($milestones); $i++) {
                 $ms = $this->ms::create([
