@@ -39,7 +39,7 @@ class Production extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'user_production', 'production_id', 'user_id');
+        return $this->belongsToMany(User::class, 'user_production', 'production_id', 'user_id')->withoutGlobalScope(BranchScope::class);
     }
 
     public function product()
@@ -70,7 +70,7 @@ class Production extends Model
     public function milestones()
     {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
-            ->withPivot('id', 'submitted_at')
+            ->withPivot('id', 'submitted_at', 'submitted_by')
             ->using(ProductionMilestone::class);
     }
 

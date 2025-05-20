@@ -5,23 +5,18 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Milestone extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     const TYPE_SERVICE_TASK = 1;
-
     const TYPE_DRIVER_TASK = 2;
-
     const TYPE_DRIVER_RETURN_TASK = 3;
-
     const TYPE_INSTALLER_TASK = 4;
-
     const TYPE_SITE_VISIT = 5;
-
     const TYPE_PRODUCTION = 6;
-
     const TYPE_DRIVER_OTHER_TASK = 7;
 
     const LIST = [
@@ -88,5 +83,14 @@ class Milestone extends Model
         return $this->belongsToMany(Task::class, 'task_milestone', 'milestone_id', 'task_id')
             ->withPivot('address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
             ->using(TaskMilestone::class);
+    }
+
+    public function inventoryCategory()
+    {
+        return $this->belongsTo(InventoryCategory::class);
+    }
+    public function inventoryType()
+    {
+        return $this->belongsTo(InventoryType::class);
     }
 }

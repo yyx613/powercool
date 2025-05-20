@@ -406,13 +406,13 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['production.form'], function (ViewView $view) {
             $req = app(\Illuminate\Http\Request::class);
-            $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
-            $material_uses = MaterialUse::with('materials.material')->get();
+            // $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
+            // $material_uses = MaterialUse::with('materials.material')->get();
             $sales = Sale::with('products')->orderBy('id', 'desc')->get();
             $priorities = Priority::orderBy('id', 'desc')->get();
 
             $users = User::whereHas('roles', function ($q) {
-                $q->where('id', Role::PRODUCTION_STAFF);
+                $q->where('id', Role::PRODUCTION_WORKER);
             })->orderBy('id', 'desc')->get();
 
             if ($req->product_id != null) {
@@ -432,12 +432,12 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             $view->with('users', $users);
-            $view->with('milestones', $milestones);
+            // $view->with('milestones', $milestones);
             $view->with('products', $products);
             $view->with('sales', $sales);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
-            $view->with('material_uses', $material_uses);
+            // $view->with('material_uses', $material_uses);
         });
         View::composer(['material_use.form'], function (ViewView $view) {
             $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
@@ -655,6 +655,15 @@ class ViewServiceProvider extends ServiceProvider
             $view->with([
                 'vehicles' => $vehicles,
                 'services' => $services,
+            ]);
+        });
+        View::composer(['milestone.form'], function (ViewView $view) {
+            $categories = InventoryCategory::orderBy('name', 'asc')->get();
+            $types = InventoryType::orderBy('name', 'asc')->get();
+
+            $view->with([
+                'categories' => $categories,
+                'types' => $types,
             ]);
         });
     }
