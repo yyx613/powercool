@@ -56,7 +56,7 @@
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a status') }}</option>
-                        <option value="1" @selected(old('status', isset($production) ? $production->status : (isset($customer_name) ? 1 : null)) == 1)>{{ __('To Do') }}</option>
+                        <option value="1" @selected(old('status', isset($production) ? $production->status : (isset($customer_name) ? 1 : null)) == 1)>{{ __('New') }}</option>
                         <option value="2" @selected(old('status', isset($production) ? $production->status : null) == 2)>{{ __('Doing') }}</option>
                         <option value="3" @selected(old('status', isset($production) ? $production->status : null) == 3)>{{ __('Completed') }}</option>
                     </x-app.input.select>

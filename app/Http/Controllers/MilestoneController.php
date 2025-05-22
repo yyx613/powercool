@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\InventoryCategory;
 use App\Models\Milestone;
+use App\Models\ProductMilestone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -193,13 +194,22 @@ class MilestoneController extends Controller
         }
     }
 
-    public function get($category_id, $type_id)
+    public function get(Request $req, $category_id, $type_id)
     {
-        $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)
-            ->whereRaw('FIND_IN_SET(?, inventory_category_id)', [$category_id])
-            ->where('inventory_type_id', $type_id)
-            ->orderBy('id', 'desc')
-            ->get();
+        $milestones = Milestone::withTrashed()->where(function ($q) use ($category_id, $type_id) {
+            $q->where('type', Milestone::TYPE_PRODUCTION)
+                ->whereRaw('FIND_IN_SET(?, inventory_category_id)', [$category_id])
+                ->where('inventory_type_id', $type_id)
+                ->whereNull('deleted_at');
+        });
+
+        if ($req->product_id != null) {
+            $product_current_milestone_ids = ProductMilestone::where('product_id', $req->product_id)->pluck('milestone_id')->toArray();
+            $milestones = $milestones->orWhere(function ($q) use ($product_current_milestone_ids) {
+                $q->whereIn('id', $product_current_milestone_ids)->whereNotNull('deleted_at');
+            });
+        }
+        $milestones = $milestones->get();
 
         return Response::json([
             'milestones' => $milestones,

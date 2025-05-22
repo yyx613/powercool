@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -97,16 +98,22 @@ class ProductController extends Controller
             $q->withTrashed();
         }]);
 
-        if ($req->boolean('is_production') != true) {
-            if ($req->boolean('is_product') == true) {
-                $records = $records->where('type', Product::TYPE_PRODUCT);
-            } else {
-                $records = $records->where('type', Product::TYPE_RAW_MATERIAL);
-            }
+        // Type
+        if ($req->boolean('is_product') == true) {
+            $records = $records->where('type', Product::TYPE_PRODUCT);
+        } else {
+            $records = $records->where('type', Product::TYPE_RAW_MATERIAL);
         }
-
+        // Production
         if ($req->boolean('is_production') == true) {
-            $records = $records->where('in_production', true);
+            if ($req->boolean('is_product') == true) {
+                $product_ids = Production::where('status', Production::STATUS_COMPLETED)->pluck('product_id')->toArray();
+                $records = $records->whereIn('id', $product_ids);
+            } else {
+                $records = $records->whereHas('children', function ($q) {
+                    $q->where('location', ProductChild::LOCATION_FACTORY);
+                });
+            }
         }
 
         // Search
@@ -154,13 +161,29 @@ class ProductController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            $qty = 0;
+            if ($req->boolean('is_production') == true) {
+                if ($req->boolean('is_product') == true) {
+                    $qty = Production::where('status', Production::STATUS_COMPLETED)->where('product_id', $record->id)->count();
+                } else {
+                    $pcs = ProductChild::where('product_id', $record->id)->where('location', ProductChild::LOCATION_FACTORY)->get();
+                    for ($i = 0; $i < count($pcs); $i++) {
+                        if ($pcs[$i]->assignedTo() == null) {
+                            $qty++;
+                        }
+                    }
+                }
+            } else {
+                $qty = $record->qty;
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'image' => $record->image ?? null,
                 'model_name' => $record->model_name,
                 'category' => $record->category->name,
-                'qty' => $record->qty,
+                'qty' => $qty,
                 'min_price' => number_format($record->min_price, 2),
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
@@ -786,9 +809,12 @@ class ProductController extends Controller
     public function get(Product $product)
     {
         $material_use = MaterialUse::with('materials.material')->where('product_id', $product->id)->get();
+        $milestones = ProductMilestone::with(['milestone' => function($q) {
+            $q->withTrashed();
+        }])->where('product_id', $product->id)->get();
 
         return Response::json([
-            'product_milestones' => $product->milestones->load('milestone'),
+            'product_milestones' => $milestones,
             'product_material_use' => $material_use,
         ]);
     }

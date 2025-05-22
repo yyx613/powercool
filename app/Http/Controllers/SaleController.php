@@ -19,6 +19,7 @@ use App\Models\DeliveryOrderProductChild;
 use App\Models\EInvoice;
 use App\Models\InventoryServiceReminder;
 use App\Models\Invoice;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Role;
@@ -786,7 +787,7 @@ class SaleController extends Controller
 
             // Approval
             $approval_required = false;
-            $by_pass_credit_term_ids = CreditTerm::where('by_pass_conversion', true)->pluck('id')->toArray();
+            $by_pass_payment_method_ids = PaymentMethod::where('by_pass_conversion', true)->pluck('id')->toArray();
 
             $delivery_address = CustomerLocation::where('id', $req->delivery_address)->first()->formatAddress();
 
@@ -883,6 +884,7 @@ class SaleController extends Controller
             Storage::put(self::DELIVERY_ORDER_PATH . $filename, $content);
 
             // Change SO's status to converted, if SO has no product left to convert
+            $so_for_desc = null;
             for ($i = 0; $i < count($sale_orders); $i++) {
                 if ($sale_orders[$i]->hasNoMoreQtyToConvertDO()) {
                     $sale_orders[$i]->status = Sale::STATUS_CONVERTED;
@@ -897,8 +899,9 @@ class SaleController extends Controller
                 $sale_orders[$i]->convert_to = implode(',', $current_do_ids);
                 $sale_orders[$i]->save();
 
-                if ($approval_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_term, $by_pass_credit_term_ids)) {
+                if ($approval_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_method, $by_pass_payment_method_ids)) {
                     $approval_required = true;
+                    $so_for_desc = $sale_orders[$i]->sku;
                 }
 
                 SaleOrderCancellation::calCancellation($sale_orders[$i], 2, $soc_alter_qty);
@@ -909,6 +912,9 @@ class SaleController extends Controller
                     'object_type' => DeliveryOrder::class,
                     'object_id' => $do->id,
                     'status' => Approval::STATUS_PENDING_APPROVAL,
+                    'data' => json_encode([
+                        'description' => 'The status for ' . $so_for_desc . ' is unpaid and not able to by pass conversion',
+                    ])
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);
                 // Update QUO/SO status
@@ -937,11 +943,13 @@ class SaleController extends Controller
             'sale' => 'required',
             'customer' => 'required',
             'reference' => 'nullable',
+            'store' => 'nullable',
             'from' => 'nullable|max:250',
             'cc' => 'nullable|max:250',
             'status' => 'required',
             'report_type' => 'required',
             'billing_address' => 'required',
+            'payment_term' => 'nullable',
             // upsertProDetails
             'product_order_id' => 'nullable',
             'product_order_id.*' => 'nullable',
@@ -988,6 +996,7 @@ class SaleController extends Controller
             // upsertQuoDetails
             'report_type' => 'type',
             'customer' => 'company',
+            'open_until' => 'validity',
             // upsertProDetails
             'product_id.*' => 'product',
             'product_desc.*' => 'product description',
@@ -1101,11 +1110,13 @@ class SaleController extends Controller
                 'sale' => 'required',
                 'customer' => 'required',
                 'reference' => 'nullable',
+                'store' => 'nullable',
                 'from' => 'nullable|max:250',
                 'cc' => 'nullable|max:250',
                 'status' => 'required',
                 'report_type' => 'required',
                 'billing_address' => 'required',
+                'payment_term' => 'nullable',
             ];
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
@@ -1116,6 +1127,7 @@ class SaleController extends Controller
             $req->validate($rules, [], [
                 'report_type' => 'type',
                 'customer' => 'company',
+                'open_until' => 'validity'
             ]);
         }
 
@@ -1137,6 +1149,7 @@ class SaleController extends Controller
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
+                    'store' => $req->store,
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
@@ -1144,6 +1157,7 @@ class SaleController extends Controller
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address,
                     'billing_address' => isset($loc) ? $loc->formatAddress() : null,
+                    'payment_term' => $req->payment_term,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);
@@ -1162,12 +1176,14 @@ class SaleController extends Controller
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
                     'reference' => $ref,
+                    'store' => $req->store,
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address,
                     'billing_address' => isset($loc) ? $loc->formatAddress() : null,
+                    'payment_term' => $req->payment_term,
                 ]);
             }
 
@@ -1327,11 +1343,15 @@ class SaleController extends Controller
 
                 if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                     if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                        $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
                         $approval = Approval::create([
                             'object_type' => Sale::class,
                             'object_id' => $req->sale_id,
                             'status' => Approval::STATUS_PENDING_APPROVAL,
-                            'data' => $req->type == 'quo' ? json_encode(['is_quo' => true]) : null
+                            'data' => $req->type == 'quo' ? json_encode([
+                                'is_quo' => true,
+                                'description' => 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower')  . ($is_greater ? $prod->max_price : $prod->min_price),
+                            ]) : null
                         ]);
                         (new Branch)->assign(Approval::class, $approval->id);
                         if (!$updated_sale_status) {

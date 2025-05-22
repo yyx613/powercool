@@ -70,7 +70,7 @@
                     <tr>
                         <td style="font-size: 14px;">Store</td>
                         <td style="font-size: 14px;">:</td>
-                        <td style="font-size: 14px;"></td>
+                        <td style="font-size: 14px;">{{ $sale->store }}</td>
                     </tr>
                 </table>
             </td>
@@ -129,16 +129,13 @@
         <tr>
             <td style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%;">Validity</td>
             <td style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 5px;">:</td>
+            <td style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%;">{{ $sale->open_until }}</td>
             <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">Total {{ number_format($total, 2) }}</td>
-        </tr>
-        <tr>
-            <td style="font-size: 14px; font-weight: 700;">Delivery Term</td>
-            <td style="font-size: 14px; font-weight: 700;">:</td>
-            <td></td>
         </tr>
         <tr>
             <td style="font-size: 14px; font-weight: 700;">Payment Term</td>
             <td style="font-size: 14px; font-weight: 700;">:</td>
+            <td style="font-size: 14px; font-weight: 700;">{{ $sale->paymentTerm->name ?? null }}</td>
             <td></td>
         </tr>
     </table>
@@ -155,7 +152,11 @@
                 3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
                 4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase<br>
                 5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be entertained.<br>
-                6. Prices are subjected to change without prior notice.
+                6. Prices are subjected to change without prior notice.<br>
+                7. · 3 Years Compressor Warranty with T&C apply<br>
+                   · 6 months General Service conduct by IMAX<br>
+                   · Limited to 1 time change only<br>
+                8. Wear and tear not included in warranty claim
             </td>
         </tr>
         <tr>

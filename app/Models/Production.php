@@ -16,13 +16,9 @@ class Production extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_TO_DO = 1;
-
     const STATUS_DOING = 2;
-
     const STATUS_COMPLETED = 3;
-
     const STATUS_TRANSFERRED = 4;
-
     const STATUS_MODIFIED = 5;
 
     protected $guarded = [];
@@ -60,6 +56,11 @@ class Production extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function rawMaterialRequest()
+    {
+        return $this->hasOne(RawMaterialRequest::class);
     }
 
     public function oldProduction()

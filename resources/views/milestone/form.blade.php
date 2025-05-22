@@ -20,7 +20,7 @@
                             <option value="{{ $type->id }}" @selected(old('type', isset($type_id) ? $type_id : null) == $type->id)>{{ $type->name }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('category')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('type')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="category" class="mb-1">{{ __('Inventory Category') }} <span
@@ -64,6 +64,9 @@
         EDIT_MILESTONES = @json($milestones ?? null);
         EXISTING_MILESTONES = @json($existing_milestones ?? null);
 
+        console.debug(EDIT_MILESTONES)
+        console.debug(EXISTING_MILESTONES)
+
         $(document).ready(function() {
             if (EDIT_MILESTONES == null) return
 
@@ -83,6 +86,13 @@
                 $(clone).attr('data-idx', MILESTONE_IDX)
                 $('#milestone-list-container').append(clone)
             }
+
+            // Select category
+            let categoryToSelect = EDIT_MILESTONES[0].inventory_category_id.split(',')
+            for (let i = 0; i < categoryToSelect.length; i++) {
+                $(`#category option[value="${categoryToSelect[i]}"]`).attr('selected', true)
+            }
+            
         })
         $('form').on('submit', function(e) {
             if (!CAN_SUBMIT) {

@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\ApprovalMiddleware;
 use App\Http\Middleware\NotificationMiddleware;
+use App\Http\Middleware\ProductionWorkerCanAccessMiddleware;
 use App\Http\Middleware\SelectLang;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -70,5 +71,6 @@ class Kernel extends HttpKernel
         'select_lang' => SelectLang::class,
         'notification' => NotificationMiddleware::class,
         'approval' => ApprovalMiddleware::class,
+        'productionWorkerCanAccess' => ProductionWorkerCanAccessMiddleware::class,
     ];
 }

@@ -55,6 +55,13 @@ if (! function_exists('isSuperAdmin')) {
     }
 }
 
+if (! function_exists('isProductionWorker')) {
+    function isProductionWorker(): bool
+    {
+        return getUserRoleId(Auth::user()) == Role::PRODUCTION_WORKER;
+    }
+}
+
 if (! function_exists('getPaymentCollectionIds')) {
     function getPaymentCollectionIds()
     {

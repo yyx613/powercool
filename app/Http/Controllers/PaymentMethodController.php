@@ -3,35 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
-use App\Models\CreditTerm;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class CreditTermController extends Controller
+class PaymentMethodController extends Controller
 {
-    protected $credit;
+    protected $method;
 
     public function __construct()
     {
-        $this->credit = new CreditTerm;
+        $this->method = new PaymentMethod;
     }
 
     public function index()
     {
-        return view('credit_term.list');
+        return view('payment_method.list');
     }
 
     public function getData(Request $req)
     {
-        $records = $this->credit;
+        $records = $this->method;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%');
+                $q->where('name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -60,7 +60,8 @@ class CreditTermController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
-                'status' => $record->is_active,
+                'by_pass_conversion' => $record->by_pass_conversion,
+                'status' => $record->status,
             ];
         }
 
@@ -69,7 +70,7 @@ class CreditTermController extends Controller
 
     public function create()
     {
-        return view('credit_term.form');
+        return view('payment_method.form');
     }
 
     public function store(Request $req)
@@ -77,6 +78,7 @@ class CreditTermController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'by_pass_conversion' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -86,19 +88,20 @@ class CreditTermController extends Controller
         try {
             DB::beginTransaction();
 
-            $ct = $this->credit::create([
+            $pm = $this->method::create([
                 'name' => $req->name,
-                'is_active' => $req->status,
+                'by_pass_conversion' => $req->by_pass_conversion,
+                'status' => $req->status,
             ]);
-            (new Branch)->assign(CreditTerm::class, $ct->id);
+            (new Branch)->assign(PaymentMethod::class, $pm->id);
 
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('credit_term.create'))->with('success', 'Credit Term created');
+                return redirect(route('payment_method.create'))->with('success', 'Payment Method created');
             }
 
-            return redirect(route('credit_term.index'))->with('success', 'Credit Term created');
+            return redirect(route('payment_method.index'))->with('success', 'Payment Method created');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -107,18 +110,19 @@ class CreditTermController extends Controller
         }
     }
 
-    public function edit(CreditTerm $credit)
+    public function edit(PaymentMethod $method)
     {
-        return view('credit_term.form', [
-            'credit' => $credit,
+        return view('payment_method.form', [
+            'method' => $method,
         ]);
     }
 
-    public function update(Request $req, CreditTerm $credit)
+    public function update(Request $req, PaymentMethod $method)
     {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'by_pass_conversion' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -128,14 +132,15 @@ class CreditTermController extends Controller
         try {
             DB::beginTransaction();
 
-            $credit->update([
+            $method->update([
                 'name' => $req->name,
-                'is_active' => $req->status,
+                'by_pass_conversion' => $req->by_pass_conversion,
+                'status' => $req->status,
             ]);
 
             DB::commit();
 
-            return redirect(route('credit_term.index'))->with('success', 'Credit Term updated');
+            return redirect(route('payment_method.index'))->with('success', 'Payment Method updated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

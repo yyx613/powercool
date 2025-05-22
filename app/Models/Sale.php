@@ -169,4 +169,8 @@ class Sale extends Model
 
         return DeliveryOrder::where('id', $this->convert_to)->pluck('sku')->toArray();
     }
+
+    public function paymentTerm() {
+        return $this->belongsTo(CreditTerm::class, 'payment_term');
+    }
 }

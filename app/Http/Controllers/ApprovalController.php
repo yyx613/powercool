@@ -91,6 +91,7 @@ class ApprovalController extends Controller
                 'rejected' => $record->status == Approval::STATUS_REJECTED,
                 'view_url' => $view_url,
                 'status' => $record->status,
+                'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
             ];
         }
 

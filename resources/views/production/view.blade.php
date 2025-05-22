@@ -56,11 +56,7 @@
                 </div>
                 <div class="mb-4">
                     <h6 class="text-md font-semibold">{{ __('Production Description') }}</h6>
-                    <span class="text-md text-slate-500">{{ $production->desc }}</span>
-                </div>
-                <div class="mb-4">
-                    <h6 class="text-md font-semibold">{{ __('Product') }}</h6>
-                    <span class="text-md text-slate-500">{{ $production->product->model_name }}</span>
+                    <span class="text-md text-slate-500">{{ $production->desc ?? '-' }}</span>
                 </div>
             </div>
             <div class="border-t pt-4 mt-4">
@@ -69,7 +65,7 @@
                     @foreach ($production->milestones as $ms)
                         <li class="flex items-center gap-x-2 py-1 ms-row transition duration-300 hover:bg-slate-50"
                             data-id="{{ $ms->pivot->id }}" data-completed="{{ $ms->pivot->submitted_at }}"
-                            data-completed-by="{{ $ms->pivot->submitted_by }}">
+                            data-completed-by="{{ $ms->pivot->submittedBy }}">
                             <svg class="h-5 w-5 fill-blue-500 not-completed-icon {{ $ms->pivot->submitted_at != null ? 'hidden' : '' }}"
                                 xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
                                 width="512" height="512">
@@ -81,15 +77,23 @@
                                 <path
                                     d="m23.195,14.085l-2.159,2.157v1.722c0,1.654-1.346,3-3,3h-1.721l-2.158,2.157c-.565.566-1.319.879-2.121.879s-1.555-.312-2.121-.879l-2.157-2.157h-1.722c-1.654,0-3-1.346-3-3v-1.722l-2.157-2.157c-1.17-1.169-1.17-3.073,0-4.243l2.157-2.157v-1.721c0-1.654,1.346-3,3-3h1.722l2.157-2.158c1.134-1.135,3.111-1.132,4.243,0l2.157,2.157h1.721c.553,0,1,.448,1,1s-.447,1-1,1h-2.135c-.266,0-.52-.105-.707-.293l-2.451-2.451c-.377-.376-1.034-.378-1.414,0l-2.45,2.451c-.188.188-.441.293-.707.293h-2.136c-.552,0-1,.449-1,1v2.135c0,.265-.105.52-.293.707l-2.45,2.45c-.39.39-.39,1.024,0,1.415l2.45,2.45c.188.188.293.441.293.707v2.136c0,.552.448,1,1,1h2.136c.266,0,.52.105.707.293l2.45,2.45c.379.378,1.037.378,1.413,0l2.452-2.45c.188-.188.441-.293.707-.293h2.135c.552,0,1-.448,1-1v-2.136c0-.266.105-.52.293-.707l2.451-2.45c.39-.39.39-1.025,0-1.415-.39-.391-.39-1.024,0-1.414.391-.39,1.024-.391,1.415,0,1.168,1.169,1.168,3.072,0,4.242Zm-12.474-.423l-3.018-2.988c-.394-.39-1.025-.385-1.415.007-.389.392-.385,1.025.007,1.414l3.019,2.989c.614.608,1.422.913,2.229.913s1.617-.307,2.232-.918l8.93-8.871c.392-.389.394-1.022.004-1.414-.39-.392-1.022-.395-1.414-.005l-8.93,8.872c-.453.451-1.19.45-1.644,0Z" />
                             </svg>
-                            <span class="flex-1 text-md">{{ $ms->name }}</span>
+                            <div class="flex items-center justify-between w-full">
+                                <span class="flex-1 text-md">{{ $ms->name }}</span>
+                                @if ($ms->pivot->submitted_at != null)
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-xs text-slate-600">By {{ $ms->pivot->submittedBy }}</span>
+                                        <span class="text-xs text-slate-600">{{ $ms->pivot->submitted_at }}</span>
+                                    </div>
+                                @endif
+                            </div>
                         </li>
                     @endforeach
                 </ul>
             </div>
         </div>
         <div class="flex-1 pl-4 ml-4 border-l">
-            <div class="bg-blue-900 rounded-lg p-2">
-                <h1 class="font-black text-xl text-white">{{ __('Production ID') }}: {{ $production->sku }}</h1>
+            <div class="rounded-lg">
+                <h1 class="font-black text-xl text-blue-900">{{ __('Production ID') }}: {{ $production->sku }}</h1>
             </div>
             <div class="border-t pt-4 mt-4">
                 <h6 class="text-md font-semibold">{{ __('Assigned') }}</h6>
@@ -115,7 +119,22 @@
             </div>
             <div class="border-t pt-4 mt-4">
                 <h6 class="text-md font-semibold">{{ __('Remark') }}</h6>
-                <p class="text-md text-slate-500">{{ $production->remark ?? 'No Remark' }}</p>
+                <p class="text-sm text-slate-500">{{ $production->remark ?? 'No Remark' }}</p>
+            </div>
+            <div class="border-t pt-4 mt-4">
+                <h6 class="text-md font-semibold">{{ __('Product') }}</h6>
+                <span class="text-sm text-slate-500">{{ $production->product->model_name }}</span>
+            </div>
+            <div class="border-t pt-4 mt-4">
+                <h6 class="text-md font-semibold">{{ __('B.O.M Material Use') }}</h6>
+                <ul>
+                    @foreach ($material_use->materials as $material)
+                        <li class="flex justify-between mt-0.5">
+                            <p class="text-sm text-slate-500">{{ $material->material->model_name }}</p>
+                            <p class="text-sm text-slate-500">x{{ $material->qty }}</p>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         </div>
     </div>
@@ -151,10 +170,9 @@
 
             $('#production-milestone-modal #checked-in-by-container').addClass('hidden')
             if (completed != null && completed != '') {
-                let by = getCompletedByUser(completedBy)
                 $('#production-milestone-modal #date').text(moment(completed).format('D MMM YYYY HH:mm'))
                 $('#production-milestone-modal #checked-in-by-container').removeClass('hidden')
-                $('#production-milestone-modal #checked-in-by').text(by)
+                $('#production-milestone-modal #checked-in-by').text(completedBy)
             } else {
                 $('#production-milestone-modal #date').text(moment().format('D MMM YYYY HH:mm'))
             }
@@ -196,28 +214,6 @@
 
             rebuildMaterialTemplate(productId)
         })
-
-        function getCompletedByUser(user_id) {
-            let name = null
-            let url = "{{ config('app.url') }}";
-            url = `${url}/user-management/get/${user_id}`;
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'POST',
-                contentType: 'application/json',
-                async: false,
-                success: function(res) {
-                    if (res.user) {
-                        name = res.user.name
-                    }
-                },
-            });
-
-            return name
-        }
 
         function rebuildMaterialTemplate(search_product_id = null, completed = false) {
             $('#serial-no-selection-container .selection').remove()

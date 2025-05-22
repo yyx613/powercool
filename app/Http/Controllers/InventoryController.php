@@ -82,6 +82,7 @@ class InventoryController extends Controller
                 'id' => $record->id,
                 'name' => $record->name,
                 'company_group' => $record->company_group,
+                'factory' => $record->factory,
                 'status' => $record->is_active,
                 'can_edit' => hasPermission('inventory.category.edit'),
                 'can_delete' => hasPermission('inventory.category.delete'),
@@ -165,6 +166,7 @@ class InventoryController extends Controller
             'category_id' => 'nullable',
             'name' => 'required|max:250',
             'company_group' => 'required',
+            'factory' => 'required',
             'status' => 'required',
         ]);
 
@@ -175,6 +177,7 @@ class InventoryController extends Controller
                 $cat = $this->invCat::create([
                     'name' => $req->name,
                     'company_group' => $req->company_group,
+                    'factory' => $req->factory,
                     'is_active' => $req->boolean('status'),
                 ]);
 
@@ -185,6 +188,7 @@ class InventoryController extends Controller
                 $cat->update([
                     'name' => $req->name,
                     'company_group' => $req->company_group,
+                    'factory' => $req->factory,
                     'is_active' => $req->boolean('status'),
                 ]);
             }
