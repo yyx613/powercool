@@ -13,6 +13,8 @@ use App\Models\Production;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductionMilestoneMaterialPreview;
+use App\Models\RawMaterialRequest;
+use App\Models\RawMaterialRequestMaterial;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
@@ -25,27 +27,23 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ProductionController extends Controller
 {
     protected $prod;
-
     protected $userProd;
-
     protected $ms;
-
     protected $prodMs;
-
     protected $prodMsMaterial;
-
     protected $prodMsMaterialPreview;
-
     protected $product;
-
     protected $productChild;
 
     public function __construct()
@@ -60,13 +58,39 @@ class ProductionController extends Controller
         $this->productChild = new ProductChild;
     }
 
-    public function index()
+    public function index(Request $req)
     {
+        Session::remove('production-type');
+        if ($req->type != null) {
+            Session::put('production-type', $req->type);
+        }
+
+        if (isProductionWorker()) {
+            $all_count = $this->prod->whereHas('users', function ($q) {
+                $q->where('user_id', Auth::user()->id);
+            })->count();
+            $to_do_count = $this->prod->whereHas('users', function ($q) {
+                $q->where('user_id', Auth::user()->id);
+            })->where('status', $this->prod::STATUS_TO_DO)->count();
+            $doing_count = $this->prod->whereHas('users', function ($q) {
+                $q->where('user_id', Auth::user()->id);
+            })->where('status', $this->prod::STATUS_DOING)->count();
+            $completed_count = $this->prod->whereHas('users', function ($q) {
+                $q->where('user_id', Auth::user()->id);
+            })->where('status', $this->prod::STATUS_COMPLETED)->count();
+        } else {
+            $all_count = $this->prod->count();
+            $to_do_count = $this->prod->where('status', $this->prod::STATUS_TO_DO)->count();
+            $doing_count = $this->prod->where('status', $this->prod::STATUS_DOING)->count();
+            $completed_count = $this->prod->where('status', $this->prod::STATUS_COMPLETED)->count();
+        }
+
         return view('production.list', [
             'productin_left' => $this->prod::where('due_date', now()->format('Y-m-d'))->count(),
-            'to_do' => $this->prod::where('status', $this->prod::STATUS_TO_DO)->count(),
-            'doing' => $this->prod::where('status', $this->prod::STATUS_DOING)->count(),
-            'completed' => $this->prod::where('status', $this->prod::STATUS_COMPLETED)->count(),
+            'all' => $all_count,
+            'to_do' => $to_do_count,
+            'doing' => $doing_count,
+            'completed' => $completed_count,
         ]);
     }
 
@@ -74,11 +98,22 @@ class ProductionController extends Controller
     {
         $records = $this->prod;
 
-        $is_production_worker = getUserRoleId(Auth::user()) == Role::PRODUCTION_WORKER;
+        $is_production_worker = isProductionWorker();
         if ($is_production_worker) {
             $records = $records->whereHas('users', function ($q) {
                 $q->where('user_id', Auth::user()->id);
             });
+        }
+
+        $type = Session::get('production-type');
+        if ($type != null) {
+            if ($type == 'new') {
+                $records = $records->where('status', $this->prod::STATUS_TO_DO);
+            } else if ($type == 'in-progress') {
+                $records = $records->where('status', $this->prod::STATUS_DOING);
+            } else if ($type == 'completed') {
+                $records = $records->where('status', $this->prod::STATUS_COMPLETED);
+            }
         }
 
         // Search
@@ -102,7 +137,6 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
-                3 => 'name',
                 4 => 'start_date',
                 5 => 'due_date',
             ];
@@ -128,16 +162,20 @@ class ProductionController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'old_production_sku' => $record->oldProduction->sku ?? null,
+                'factory' => $record->product->category->factory,
                 'product_serial_no' => $record->productChild->sku,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,
                 'days_left' => Carbon::parse($record->due_date)->addDay()->diffInDays(now()),
                 'progress' => $record->getProgress($record),
+                'request_status' => $record->rawMaterialRequest->status ?? null,
                 'status' => $record->status,
                 'priority' => $record->priority,
                 'can_edit' => hasPermission('production.edit'),
                 'can_delete' => hasPermission('production.delete'),
+                'can_duplicate' => !$is_production_worker,
+                'can_view' => !$is_production_worker || $record->status == Production::STATUS_DOING,
             ];
         }
 
@@ -184,7 +222,10 @@ class ProductionController extends Controller
             return redirect(route('production.index'))->with('warning', 'Not allow to edit.');
         }
 
-        $production->load('users', 'milestones');
+        $production->load('users');
+        $production->load(['milestones' => function ($q) {
+            $q->withTrashed();
+        }]);
 
         $production_milestone_ids = $this->prodMs::where('production_id', $production->id)->pluck('id');
         $production_milestone_material_previews = $this->prodMsMaterialPreview::whereIn('production_milestone_id', $production_milestone_ids)->get();
@@ -197,7 +238,10 @@ class ProductionController extends Controller
 
     public function view(Production $production)
     {
-        $production->load('users', 'milestones', 'product');
+        $production->load('users', 'product');
+        $production->load(['milestones' => function ($q) {
+            $q->withTrashed();
+        }]);
         $production->formatted_created_at = Carbon::parse($production->created_at)->format('d M Y');
         $production->status = ($this->prod)->statusToHumanRead($production->status);
         $production->progress = ($this->prod)->getProgress($production);
@@ -228,6 +272,8 @@ class ProductionController extends Controller
                 ];
             }
             $q->preview = $preview;
+            $q->pivot->submittedBy = $q->pivot->submitted_by == null ? null : User::withoutGlobalScope(BranchScope::class)->where('id', $q->pivot->submitted_by)->value('name');
+            $q->pivot->submitted_at = $q->pivot->submitted_at == null ? null : Carbon::parse($q->pivot->submitted_at)->format('d M Y H:i');
         });
 
         // Production Milestone Materials
@@ -238,9 +284,12 @@ class ProductionController extends Controller
             $production_milestone_materials[$pmms[$i]->production_milestone_id][] = $pmms[$i]->product_child_id;
         }
 
+        $material_use = MaterialUse::with('materials.material')->where('product_id', $production->product_id)->first();
+
         return view('production.view', [
             'production' => $production,
             'production_milestone_materials' => $production_milestone_materials,
+            'material_use' => $material_use
         ]);
     }
 
@@ -448,6 +497,26 @@ class ProductionController extends Controller
                 }
             }
 
+            // Create Raw Material Request
+            $material_use = MaterialUse::with('materials')->where('product_id', $req->product)->first();
+            $rmq = RawMaterialRequest::create([
+                'production_id' => $production->id,
+                'material_use_id' => $material_use->id,
+                'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+            ]);
+            (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
+
+            $data = [];
+            for ($i = 0; $i < count($material_use->materials); $i++) {
+                $data[] = [
+                    'raw_material_request_id' => $rmq->id,
+                    'product_id' => $material_use->materials[$i]->product_id,
+                    'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                    'created_at' => now(),
+                ];
+            }
+            RawMaterialRequestMaterial::insert($data);
+
             DB::commit();
 
             return redirect(route('production.index'))->with('success', isset($prod) ? 'Production created' : 'Production updated');
@@ -652,7 +721,7 @@ class ProductionController extends Controller
             if ($this->prod->getProgress($prod) >= 100) {
                 // Send notification
                 $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
-                    $q->whereIn('name', ['production.complete_notification']);
+                    $q->whereIn('name', ['notification.production_complete_notification']);
                 })->get();
 
                 Notification::send($receivers, new ProductionCompleteNotification([
@@ -681,5 +750,13 @@ class ProductionController extends Controller
     public function export()
     {
         return Excel::download(new ProductionExport, 'production.xlsx');
+    }
+
+    public function toInProgress(Production $production)
+    {
+        $production->status = Production::STATUS_DOING;
+        $production->save();
+
+        return back()->with('success', 'Production is now in progress');
     }
 }

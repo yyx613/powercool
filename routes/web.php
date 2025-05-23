@@ -17,6 +17,7 @@ use App\Http\Controllers\InvoiceReturnController;
 use App\Http\Controllers\MaterialUseController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\Platforms\LazadaController;
 use App\Http\Controllers\Platforms\ShopeeController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\RawMaterialRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
@@ -109,20 +111,20 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         return $log->data ?? 'No Data Found';
     })->name('view_log');
     // Notification
-    Route::controller(NotificationController::class)->prefix('/notification')->name('notification.')->group(function () {
+    Route::controller(NotificationController::class)->prefix('/notification')->name('notification.')->middleware(['can:notification.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/read/{id}', 'read')->name('read');
     });
     // Approval
-    Route::controller(ApprovalController::class)->prefix('/approval')->name('approval.')->group(function () {
+    Route::controller(ApprovalController::class)->prefix('/approval')->name('approval.')->middleware(['can:approval.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/approve/{approval}', 'approve')->name('approve');
         Route::get('/reject/{approval}', 'reject')->name('reject');
     });
     // Dashboard
-    Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->middleware(['can:dashboard.view'])->group(function () {
         Route::get('/', 'index')->name('index');
     });
     // Inventory
@@ -213,6 +215,15 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
+    });
+    Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/view/{rmq}', 'view')->name('view');
+        Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::get('/complete/{rmq}', 'complete')->name('complete');
+        Route::get('/material/complete/{rmqm}', 'materialComplete')->name('material_complete');
+        Route::get('/material/incomplete/{rmqm}', 'materialIncomplete')->name('material_incomplete');
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
@@ -375,11 +386,17 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create')->middleware(['can:production.create']);
         Route::get('/edit/{production}', 'edit')->name('edit')->middleware(['can:production.edit']);
-        Route::get('/view/{production}', 'view')->name('view');
+        Route::get('/view/{production}', 'view')->name('view')->middleware('productionWorkerCanAccess');
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
         Route::get('/export', 'export')->name('export');
+        Route::get('/to-in-progress/{production}', 'toInProgress')->name('to_in_progress');
+    });
+    // Production Finish Good
+    Route::controller(ProductController::class)->prefix('production-finish-good')->name('production_finish_good.')->middleware(['can:production_material.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/view/{product}', 'view')->name('view');
     });
     // Production Material
     Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
@@ -400,7 +417,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/export', 'export')->name('export');
     });
     // Report
-    Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function () {
+    Route::controller(ReportController::class)->prefix('report')->name('report.')->middleware(['can:report.view'])->group(function () {
         Route::prefix('production-report')->name('production_report.')->group(function () {
             Route::get('/', 'indexProduction')->name('index');
             Route::get('/get-data', 'getDataProduction')->name('get_data');
@@ -571,6 +588,16 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{credit}', 'update')->name('update');
             Route::get('/delete/{credit}', 'delete')->name('delete');
         });
+        // Payment Method 
+        Route::controller(PaymentMethodController::class)->prefix('payment-method')->name('payment_method.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{method}', 'edit')->name('edit');
+            Route::post('/update/{method}', 'update')->name('update');
+            Route::get('/delete/{method}', 'delete')->name('delete');
+        });
         // Area
         Route::controller(AreaController::class)->prefix('area')->name('area.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -628,6 +655,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{priority}', 'edit')->name('edit');
             Route::post('/update/{priority}', 'update')->name('update');
         });
+    });
+    Route::middleware(['can:user_role_management.view'])->group(function () {
         // User Management
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {
             Route::get('/', 'index')->name('index');

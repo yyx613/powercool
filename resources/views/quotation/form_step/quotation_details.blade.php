@@ -11,7 +11,7 @@
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="open_until" class="mb-1">{{ __('Open Until') }} <span
+            <x-app.input.label id="open_until" class="mb-1">{{ __('Validity') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.input name="open_until" id="open_until" :hasError="$errors->has('open_until')"
                 value="{{ isset($sale) ? $sale->open_until : null }}" />
@@ -46,6 +46,12 @@
             <x-app.input.input name="cc" id="cc" :hasError="$errors->has('cc')"
                 value="{{ isset($sale) ? $sale->quo_cc : null }}" />
             <x-app.message.error id="cc_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
+            <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
+                value="{{ isset($sale) ? $sale->store : null }}" />
+            <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Assigned To') }} <span
@@ -85,6 +91,14 @@
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
+            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
+                placeholder="{{ __('Select a term') }}">
+                <option value=""></option>
+            </x-app.input.select2>
+            <x-app.message.error id="payment_term_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
@@ -104,6 +118,7 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
+            $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
 
             INIT_EDIT = false
         })
@@ -122,6 +137,20 @@
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
                     $('select[name="sale"]').val(element.sale_agent).trigger('change')
+                    // Payment term
+                    $(`select[name="payment_term"]`).find('option').not(':first').remove();
+
+                    $(`select[name="payment_term"]`).select2({
+                        placeholder: 'Select a term'
+                    })
+
+                    for (let i = 0; i < element.credit_terms.length; i++) {
+                        const term = element.credit_terms[i];
+
+                        let opt = new Option(term.credit_term.name, term.credit_term.id)
+                        $(`select[name="payment_term"]`).append(opt)
+                    }
+
                     break
                 }
             }
@@ -153,73 +182,5 @@
                 },
             });
         })
-
-        // $('#quotation-form').on('submit', function(e) {
-        //     e.preventDefault()
-
-        //     if (!QUOTATION_FORM_CAN_SUBMIT) return
-
-        //     QUOTATION_FORM_CAN_SUBMIT = false
-
-        //     $('#quotation-form #submit-btn').text('Updating')
-        //     $('#quotation-form #submit-btn').removeClass('bg-yellow-400 shadow')
-        //     $('.err_msg').addClass('hidden') // Remove error messages
-        //     // Submit
-        //     let url = ''
-        //     url = `${url}?type=quo`
-
-        //     $.ajax({
-        //         headers: {
-        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //         },
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
-        //             'sale': $('#quotation-form select[name="sale"]').val(),
-        //             'customer': $('#quotation-form select[name="customer"]').val(),
-        //             'open_until': $('#quotation-form input[name="open_until"]').val(),
-        //             'reference': $('#quotation-form input[name="reference"]').val(),
-        //             'from': $('#quotation-form input[name="from"]').val(),
-        //             'cc': $('#quotation-form input[name="cc"]').val(),
-        //             'status': $('#quotation-form select[name="status"]').val(),
-        //             'report_type': $('#quotation-form select[name="report_type"]').val(),
-        //         },
-        //         success: function(res) {
-        //             if (typeof SALE !== 'undefined') {
-        //                 SALE = res.sale
-        //             }
-
-        //             setTimeout(() => {
-        //                 $('#quotation-form #submit-btn').text('Updated')
-        //                 $('#quotation-form #submit-btn').addClass('bg-green-400 shadow')
-
-        //                 setTimeout(() => {
-        //                     $('#quotation-form #submit-btn').text('Save and Update')
-        //                     $('#quotation-form #submit-btn').removeClass('bg-green-400')
-        //                     $('#quotation-form #submit-btn').addClass('bg-yellow-400 shadow')
-
-        //                     QUOTATION_FORM_CAN_SUBMIT = true
-        //                 }, 2000);
-        //             }, 300);
-        //         },
-        //         error: function(err) {
-        //             setTimeout(() => {
-        //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
-        //                     let errors = err.responseJSON.errors
-
-        //                     for (const key in errors) {
-        //                         $(`#quotation-form #${key}_err`).find('p').text(errors[key])
-        //                         $(`#quotation-form #${key}_err`).removeClass('hidden')
-        //                     }
-        //                 }
-        //                 $('#quotation-form #submit-btn').text('Save and Update')
-        //                 $('#quotation-form #submit-btn').addClass('bg-yellow-400 shadow')
-
-        //                 QUOTATION_FORM_CAN_SUBMIT = true
-        //             }, 300);
-        //         },
-        //     });
-        // })
     </script>
 @endpush

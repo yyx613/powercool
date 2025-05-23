@@ -1,52 +1,63 @@
 <div class="bg-white p-4 border rounded-md">
     <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
-        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M14.541,5.472c1.196-1.02,2.459-2.548,2.459-4.472V0H7V1c0,1.924,1.263,3.451,2.459,4.472C4.754,7.149,1,13.124,1,18c0,3.309,2.691,6,6,6h10c3.309,0,6-2.691,6-6,0-4.876-3.754-10.851-8.459-12.528Zm-5.334-3.472h5.583c-.521,1.256-1.89,2.31-2.783,2.852-.752-.46-2.251-1.512-2.799-2.852Zm7.793,20H7c-2.206,0-4-1.794-4-4,0-5.161,4.59-10.983,8.998-10.983s9.002,5.823,9.002,10.983c0,2.206-1.794,4-4,4Zm-7-9c0,.378,.271,.698,.644,.76l3.042,.507c1.341,.223,2.315,1.373,2.315,2.733,0,1.654-1.346,3-3,3v1h-2v-1c-1.654,0-3-1.346-3-3h2c0,.551,.449,1,1,1h2c.551,0,1-.449,1-1,0-.378-.271-.698-.644-.76l-3.042-.507c-1.341-.223-2.315-1.373-2.315-2.733,0-1.654,1.346-3,3-3v-1h2v1c1.654,0,3,1.346,3,3h-2c0-.551-.449-1-1-1h-2c-.551,0-1,.449-1,1Z"/></svg>
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
+            width="512" height="512">
+            <path
+                d="M14.541,5.472c1.196-1.02,2.459-2.548,2.459-4.472V0H7V1c0,1.924,1.263,3.451,2.459,4.472C4.754,7.149,1,13.124,1,18c0,3.309,2.691,6,6,6h10c3.309,0,6-2.691,6-6,0-4.876-3.754-10.851-8.459-12.528Zm-5.334-3.472h5.583c-.521,1.256-1.89,2.31-2.783,2.852-.752-.46-2.251-1.512-2.799-2.852Zm7.793,20H7c-2.206,0-4-1.794-4-4,0-5.161,4.59-10.983,8.998-10.983s9.002,5.823,9.002,10.983c0,2.206-1.794,4-4,4Zm-7-9c0,.378,.271,.698,.644,.76l3.042,.507c1.341,.223,2.315,1.373,2.315,2.733,0,1.654-1.346,3-3,3v1h-2v-1c-1.654,0-3-1.346-3-3h2c0,.551,.449,1,1,1h2c.551,0,1-.449,1-1,0-.378-.271-.698-.644-.76l-3.042-.507c-1.341-.223-2.315-1.373-2.315-2.733,0-1.654,1.346-3,3-3v-1h2v1c1.654,0,3,1.346,3,3h-2c0-.551-.449-1-1-1h-2c-.551,0-1,.449-1,1Z" />
+        </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Payment Details') }}</span>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')" placeholder="{{ __('Select a term') }}">
+            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
+                placeholder="{{ __('Select a term') }}">
                 <option value=""></option>
             </x-app.input.select2>
-            <x-app.message.error id="payment_term_err"/>
+            <x-app.message.error id="payment_term_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')" placeholder="{{ __('Select a method') }}">
+            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
+                placeholder="{{ __('Select a method') }}">
                 <option value=""></option>
-                <option value="cash" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == 'cash')>{{ __('Cash') }}</option>
-                <option value="term" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == 'term')>{{ __('Term') }}</option>
-                <option value="banking" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == 'banking')>{{ __('Banking') }}</option>
-                <option value="tng" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == 'tng')>{{ __('T&G') }}</option>
-                <option value="cheque" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == 'cheque')>{{ __('Cheque') }}</option>
-            </x-app.input.selec2t>
-            <x-app.message.error id="payment_method_err"/>
+                @foreach ($payment_methods as $method)
+                    <option value="{{ $method->id }}" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == $method->id)>{{ $method->name }}</option>
+                @endforeach
+                </x-app.input.selec2t>
+                <x-app.message.error id="payment_method_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.input name="payment_due_date" id="payment_due_date" :hasError="$errors->has('payment_due_date')" value="{{ isset($sale) ? $sale->payment_due_date : null }}" />
-            <x-app.message.error id="payment_due_date_err"/>
+            <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.input name="payment_due_date" id="payment_due_date" :hasError="$errors->has('payment_due_date')"
+                value="{{ isset($sale) ? $sale->payment_due_date : null }}" />
+            <x-app.message.error id="payment_due_date_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_status" class="mb-1">{{ __('Payment Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="payment_status" id="payment_status" :hasError="$errors->has('payment_status')" placeholder="{{ __('Select a status') }}">
+            <x-app.input.label id="payment_status" class="mb-1">{{ __('Payment Status') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="payment_status" id="payment_status" :hasError="$errors->has('payment_status')"
+                placeholder="{{ __('Select a status') }}">
                 <option value=""></option>
                 @foreach ($payment_statuses as $key => $val)
                     <option value="{{ $key }}" @selected(old('payment_status', isset($sale) ? $sale->payment_status : null) == $key)>{{ __($val) }}</option>
                 @endforeach
-            </x-app.input.selec2t>
-            <x-app.message.error id="payment_status_err"/>
+                </x-app.input.selec2t>
+                <x-app.message.error id="payment_status_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="payment_remark" class="mb-1">{{ __('Payment Remark') }}</x-app.input.label>
-            <x-app.input.input name="payment_remark" id="payment_remark" :hasError="$errors->has('payment_remark')" value="{{ isset($sale) ? $sale->payment_remark : null }}" />
-            <x-app.message.error id="payment_remark_err"/>
+            <x-app.input.input name="payment_remark" id="payment_remark" :hasError="$errors->has('payment_remark')"
+                value="{{ isset($sale) ? $sale->payment_remark : null }}" />
+            <x-app.message.error id="payment_remark_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="payment_amount" class="mb-1">{{ __('Payment Amount') }}</x-app.input.label>
             <x-app.input.input name="payment_amount" id="payment_amount" :hasError="$errors->has('payment_amount')" class="decimal-input" />
-            <x-app.message.error id="payment_amount_err"/>
+            <x-app.message.error id="payment_amount_err" />
             <div id="payment-amount-records-container" class="hidden">
                 <span class="font-semibold mb-1 mt-1 text-xs inline-flex">{{ __('Payment History') }}</span>
                 <p class="text-xs" id="template"></p>

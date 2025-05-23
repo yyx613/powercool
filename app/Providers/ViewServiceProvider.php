@@ -14,9 +14,9 @@ use App\Models\DeliveryOrder;
 use App\Models\InventoryCategory;
 use App\Models\InventoryType;
 use App\Models\Invoice;
-use App\Models\MaterialUse;
 use App\Models\Milestone;
 use App\Models\MsicCode;
+use App\Models\PaymentMethod;
 use App\Models\Platform;
 use App\Models\Priority;
 use App\Models\Product;
@@ -65,7 +65,9 @@ class ViewServiceProvider extends ServiceProvider
             $permissions = Permission::get();
             // Format permissions into group
             $permissions_group = [
+                'notification' => [],
                 'approval' => [],
+                'dashboard' => [],
                 'inventory.summary' => [],
                 'inventory.category' => [],
                 'inventory.product' => [],
@@ -90,11 +92,17 @@ class ViewServiceProvider extends ServiceProvider
                 'supplier' => [],
                 'dealer' => [],
                 'vehicle' => [],
+                'report' => [],
+                'user_role_management' => [],
                 'setting' => [],
             ];
 
             for ($i = 0; $i < count($permissions); $i++) {
-                if (str_contains($permissions[$i], 'approval')) {
+                if (str_contains($permissions[$i], 'notification')) {
+                    array_push($permissions_group['notification'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'dashboard')) {
+                    array_push($permissions_group['dashboard'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'approval')) {
                     array_push($permissions_group['approval'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.summary')) {
                     array_push($permissions_group['inventory.summary'], $permissions[$i]);
@@ -144,6 +152,10 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['dealer'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'vehicle')) {
                     array_push($permissions_group['vehicle'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report')) {
+                    array_push($permissions_group['report'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'user_role_management')) {
+                    array_push($permissions_group['user_role_management'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'setting')) {
                     array_push($permissions_group['setting'], $permissions[$i]);
                 }
@@ -381,11 +393,13 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['inventory.list', 'inventory.form', 'inventory.view', 'components.app.modal.stock-in-modal', 'components.app.modal.stock-out-modal'], function (ViewView $view) {
             $is_product = true;
             $is_production = false;
-            if (str_contains(Route::currentRouteName(), 'raw_material.')) {
-                $is_product = false;
-            } elseif (str_contains(Route::currentRouteName(), 'production_material.')) {
-                $is_product = false;
+            if (str_contains(Route::currentRouteName(), 'production_finish_good.') || str_contains(Route::currentRouteName(), 'production_material.')) {
                 $is_production = true;
+            } elseif (str_contains(Route::currentRouteName(), 'raw_material.')) {
+                $is_product = false;
+            }
+            if (str_contains(Route::currentRouteName(), 'production_material.')) {
+                $is_product = false;
             }
 
             $view->with([
@@ -584,9 +598,11 @@ class ViewServiceProvider extends ServiceProvider
                 Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',
                 Sale::PAYMENT_STATUS_PAID => 'Paid',
             ];
+            $payment_methods = PaymentMethod::orderBy('name', 'asc')->get();
 
             $view->with([
                 'payment_statuses' => $payment_statuses,
+                'payment_methods' => $payment_methods,
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
@@ -625,6 +641,16 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'company_group' => $company_group,
+            ]);
+        });
+        View::composer(['inventory_category.form'], function (ViewView $view) {
+            $factories = [
+                InventoryCategory::FACTORY_17 => 'Factory 17',
+                InventoryCategory::FACTORY_22 => 'Factory 22',
+            ];
+
+            $view->with([
+                'factories' => $factories,
             ]);
         });
         View::composer(['customer.form_step.info', 'supplier.form'], function (ViewView $view) {

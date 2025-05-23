@@ -88,10 +88,12 @@
                 'customer': $('select[name="customer"]').val(),
                 'open_until': $('input[name="open_until"]').val(),
                 'reference': $('input[name="reference"]').val(),
+                'store': $('input[name="store"]').val(),
                 'from': $('input[name="from"]').val(),
                 'cc': $('input[name="cc"]').val(),
                 'status': $('select[name="status"]').val(),
                 'report_type': $('select[name="report_type"]').val(),
+                'payment_term': $('select[name="payment_term"]').val(),
                 'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $('select[name="billing_address"]').val(),
 
                 'product_order_id': prodOrderId,
@@ -125,12 +127,13 @@
                     $('form #submit-btn').addClass('bg-green-400 shadow')
 
                     setTimeout(() => {
-                        $('form #submit-btn').text('Save and Update')
-                        $('form #submit-btn').removeClass('bg-green-400')
-                        $('form #submit-btn').addClass('bg-yellow-400 shadow')
+                        window.location.href = '{{ route("quotation.index") }}'
+                        // $('form #submit-btn').text('Save and Update')
+                        // $('form #submit-btn').removeClass('bg-green-400')
+                        // $('form #submit-btn').addClass('bg-yellow-400 shadow')
 
-                        FORM_CAN_SUBMIT = true
-                    }, 2000);
+                        // FORM_CAN_SUBMIT = true
+                    }, 1000);
                 }, 300);
             },
             error: function(err) {

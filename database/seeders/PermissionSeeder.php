@@ -13,7 +13,12 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            'notification.view',
+            'notification.production_complete_notification',
+
             'approval.view',
+
+            'dashboard.view',
 
             'inventory.summary.view',
 
@@ -83,7 +88,7 @@ class PermissionSeeder extends Seeder
             'production.create',
             'production.edit',
             'production.delete',
-            'production.complete_notification',
+            'production.export_excel',
 
             'production_material.view',
 
@@ -109,6 +114,10 @@ class PermissionSeeder extends Seeder
 
             'vehicle.view',
             'vehicle_service.reminder',
+
+            'report.view',
+
+            'user_role_management.view',
 
             'setting.view',
         ];

@@ -38,8 +38,8 @@ class RoleSeeder extends Seeder
                 'name' => 'Production Worker',
             ],
             [
-                'id' => Role::PRODUCTION_ADMIN,
-                'name' => 'Production Admin',
+                'id' => Role::PRODUCTION_SUPERVISOR,
+                'name' => 'Production Supervisor',
             ],
         ];
         $permissions = Permission::get();
