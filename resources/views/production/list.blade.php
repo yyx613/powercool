@@ -172,6 +172,8 @@
                                 return "{!! __('Factory 17') !!}"
                             case 2:
                                 return "{!! __('Factory 22') !!}"
+                            default:
+                                return '-'
                         }
                     }
                 },
