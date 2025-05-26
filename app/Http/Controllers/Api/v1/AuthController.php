@@ -65,8 +65,7 @@ class AuthController extends Controller
 
         try {
             $user = User::where('email', $request->input('email'))->first();
-
-            if (!in_array(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN, Role::SALE])) {
+            if (count(array_intersect(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN, Role::SALE])) <= 0) {
                 return Response::json([
                     'email' => ['The account is not authorized']
                 ], HttpFoundationResponse::HTTP_BAD_REQUEST);

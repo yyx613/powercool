@@ -30,7 +30,8 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
-    public function getStatistic(Request $req) {
+    public function getStatistic(Request $req)
+    {
         $user = $req->user();
 
         try {
@@ -40,21 +41,21 @@ class TaskController extends Controller
             $outstanding = 0;
             $monthly_sales = 0;
             $monthly_sales_target = 0;
-            
-            $tasks = Task::where('start_date', now()->format('Y-m-d'))->whereHas('users', function(Builder $q) use ($req) {
+
+            $tasks = Task::where('start_date', now()->format('Y-m-d'))->whereHas('users', function (Builder $q) use ($req) {
                 $q->where('user_id', $req->user()->id);
             })->get();
 
             $today_task_count = count($tasks);
-            
-            for ($i=0; $i < count($tasks); $i++) { 
+
+            for ($i = 0; $i < count($tasks); $i++) {
                 $not_completed = TaskMilestone::where('task_id', $tasks[$i]->id)->whereNull('submitted_at')->exists();
 
                 if (!$not_completed) {
                     $today_completed_task_count++;
                 }
 
-                if (in_array(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN])) {
+                if (count(array_intersect(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN])) > 0) {
                     // Get cash collected
                     foreach ($tasks[$i]->milestones as $task_ms) {
                         if (in_array($task_ms->pivot->milestone_id, getPaymentCollectionIds())) {
@@ -65,11 +66,11 @@ class TaskController extends Controller
                 }
             }
 
-            if (getUserRoleId($user) == Role::SALE) {
+            if (in_array(Role::SALE, getUserRoleId($user))) {
                 $monthly_sales_target = Target::where('sale_id', $user->id)->where('date', now()->format('Y-m-01'))->value('amount');
-                $monthly_sales = Sale::where('type', Sale::TYPE_SO)->where('sale_id', $user->id)->where('created_at', 'like', '%'.now()->format('Y-m').'%')->sum('payment_amount');
+                $monthly_sales = Sale::where('type', Sale::TYPE_SO)->where('sale_id', $user->id)->where('created_at', 'like', '%' . now()->format('Y-m') . '%')->sum('payment_amount');
             }
-            
+
             return Response::json([
                 'cash_collected' => $cash_collected,
                 'outstanding' => $outstanding,
@@ -87,27 +88,26 @@ class TaskController extends Controller
         }
     }
 
-    public function getAll(Request $req) {
+    public function getAll(Request $req)
+    {
         try {
-            $tasks = Task::whereHas('users', function(Builder $q) use ($req) {
+            $tasks = Task::whereHas('users', function (Builder $q) use ($req) {
                 $q->where('user_id', $req->user()->id);
             })->orderBy('id', 'desc');
 
             // Filters
-            if ($req->has('category')) { // By category
-                if ($req->category == 'today') {
-                    $tasks->where(function($q) {
-                        $q->where('start_date', now()->format('Y-m-d'));
-                    });
-                }
+            if ($req->has('category') && $req->category == 'today') { // By category
+                $tasks->where(function ($q) {
+                    $q->where('start_date', now()->format('Y-m-d'));
+                });
             }
             if ($req->has('keyword') && $req->keyword != null && $req->keyword != '') { // By keyword
-                $tasks->where(function($q) use ($req) {
+                $tasks->where(function ($q) use ($req) {
                     $q->where('sku', 'like', '%' . $req->keyword . '%')
                         ->orWhere('name', 'like', '%' . $req->keyword . '%')
                         ->orWhere('desc', 'like', '%' . $req->keyword . '%')
                         ->orWhere('remark', 'like', '%' . $req->keyword . '%')
-                        ->orWhereHas('customer', function($qq) use ($req) {
+                        ->orWhereHas('customer', function ($qq) use ($req) {
                             $qq->where('name', 'like', '%' . $req->keyword . '%')
                                 ->orWhere('phone', 'like', '%' . $req->keyword . '%')
                                 ->orWhere('company_name', 'like', '%' . $req->keyword . '%')
@@ -116,17 +116,18 @@ class TaskController extends Controller
                 });
             }
             if ($req->has('date')) { // By date
-                $tasks->where(function($q) use ($req) {
+                $tasks->where(function ($q) use ($req) {
                     $q->where('start_date', Carbon::parse($req->date)->format('Y-m-d'));
                 });
             }
 
             $tasks = $tasks->simplePaginate();
+            Log::info($tasks);
 
-            $tasks->each(function($q) {
+            $tasks->each(function ($q) {
                 $q->load('milestones');
 
-                $q->milestones->each(function($qq) use ($q) {
+                $q->milestones->each(function ($qq) use ($q) {
                     $task_ms = TaskMilestone::where('task_id', $q->id)->where('milestone_id', $qq->id)->first();
                     $qq->id = $task_ms->id;
                     $qq->pivot->attachments = Attachment::where('object_type', TaskMilestone::class)
@@ -147,11 +148,12 @@ class TaskController extends Controller
         }
     }
 
-    public function getDetail(Task $task) {
+    public function getDetail(Task $task)
+    {
         try {
             $task->load('customer', 'attachments', 'milestones');
 
-            $task->milestones->each(function($q) use ($task) {
+            $task->milestones->each(function ($q) use ($task) {
                 $task_ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $q->id)->first();
                 $q->id = $task_ms->id;
                 $q->pivot->attachments = Attachment::where('object_type', TaskMilestone::class)
@@ -175,7 +177,8 @@ class TaskController extends Controller
         }
     }
 
-    public function updateMilestone(Request $req, TaskMilestone $task_ms) {
+    public function updateMilestone(Request $req, TaskMilestone $task_ms)
+    {
         // Validate form
         $rules = [
             'address' => 'required',
@@ -257,7 +260,7 @@ class TaskController extends Controller
                     if (is_array($value) && count($value) > 0) {
                         $child_ids = $value;
 
-                        for ($i=0; $i < count($child_ids); $i++) { 
+                        for ($i = 0; $i < count($child_ids); $i++) {
                             TaskMilestoneInventory::create([
                                 'task_milestone_id' => $task_ms->id,
                                 'inventory_type' => ProductChild::class,
@@ -297,7 +300,8 @@ class TaskController extends Controller
         }
     }
 
-    private function createLog(TaskMilestone $task_ms, string $desc) {
+    private function createLog(TaskMilestone $task_ms, string $desc)
+    {
         $task = Task::where('id', $task_ms->task_id)->first();
         $task->load('users', 'milestones', 'attachments');
 
@@ -311,11 +315,12 @@ class TaskController extends Controller
         (new ActivityLog)->store(Task::class, $task->id, $desc, $task);
     }
 
-    private function formatTaskMilestoneInventory(TaskMilestone $task_ms): array {
+    private function formatTaskMilestoneInventory(TaskMilestone $task_ms): array
+    {
         $inventories = $task_ms->inventories;
         $newInventories = [];
 
-        for ($i=0; $i < count($inventories); $i++) { 
+        for ($i = 0; $i < count($inventories); $i++) {
             if (get_class($inventories[$i]->inventory) == ProductChild::class) {
                 $newInventories[] = [
                     'product_id' => $inventories[$i]->inventory->parent->id,
