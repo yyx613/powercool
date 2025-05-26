@@ -24,7 +24,7 @@ class UserController extends Controller
 {
     const FORM_RULES = [
         'role' => 'required',
-        'name' => 'required|max:250',
+        'name' => 'required|max:250|unique:users,name',
         'gender' => 'required',
         'address' => 'required',
         'state' => 'nullable',
@@ -107,7 +107,9 @@ class UserController extends Controller
 
     public function store(Request $req)
     {
-        $validator = Validator::make($req->all(), self::FORM_RULES);
+        $validator = Validator::make($req->all(), self::FORM_RULES, [], [
+            'name' => 'username'
+        ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -178,10 +180,12 @@ class UserController extends Controller
     {
         $rules = self::FORM_RULES;
         $rules['password'] = 'nullable|confirmed';
+        $rules['name'] = 'required|max:250|unique:users,name,'.$user->id;
 
         unset($rules['email']);
         $validator = Validator::make($req->all(), $rules, [], [
-            'picture.*' => 'picture'
+            'picture.*' => 'picture',
+            'name' => 'username'
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();

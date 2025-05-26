@@ -25,7 +25,8 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class AuthController extends Controller
 {
-    public function autoLogin(Request $req) {
+    public function autoLogin(Request $req)
+    {
         $token = $req->bearerToken();
 
         if ($token == null) {
@@ -38,9 +39,9 @@ class AuthController extends Controller
 
         if ($pat != null) {
             $user = $pat->tokenable;
-    
+
             $user->role = getUserRole($user);
-    
+
             return Response::json([
                 'user' => $user,
             ], HttpFoundationResponse::HTTP_OK);
@@ -49,14 +50,15 @@ class AuthController extends Controller
         return Response::json([], HttpFoundationResponse::HTTP_BAD_REQUEST);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         // Validate form
         $rules = [
-            'email' => 'required|email|exists:users',
+            'name' => 'required|exists:users,name',
             'password' => 'required',
         ];
         $rule_msg = [
-            'email.exists' => 'The email does not exists' 
+            'name.exists' => 'The username does not exists'
         ];
         $validator = Validator::make($request->all(), $rules, $rule_msg);
         if ($validator->fails()) {
@@ -64,10 +66,10 @@ class AuthController extends Controller
         }
 
         try {
-            $user = User::where('email', $request->input('email'))->first();
+            $user = User::where('name', $request->input('name'))->first();
             if (count(array_intersect(getUserRoleId($user), [Role::DRIVER, Role::TECHNICIAN, Role::SALE])) <= 0) {
                 return Response::json([
-                    'email' => ['The account is not authorized']
+                    'name' => ['The account is not authorized']
                 ], HttpFoundationResponse::HTTP_BAD_REQUEST);
             }
 
@@ -100,11 +102,14 @@ class AuthController extends Controller
         }
     }
 
-    public function update(Request $req) {
+    public function update(Request $req)
+    {
+        $user = $req->user();
+
         // Validate form
         $rules = [
             'profile_picture' => 'nullable|file|mimes:jpeg,jpg,png',
-            'name' => 'required|max:250',
+            'name' => 'required|max:250|unique:users,name' . $user->id,
             'phone_number' => 'required',
             'password' => 'nullable|confirmed|max:250',
             'password_confirmation' => 'required_with:password',
@@ -116,8 +121,6 @@ class AuthController extends Controller
 
         try {
             DB::beginTransaction();
-
-            $user = $req->user();
 
             $data_to_store = [
                 'name' => $req->name,
@@ -136,9 +139,9 @@ class AuthController extends Controller
                     'src' => basename($path),
                 ]);
             }
-            
+
             DB::commit();
-    
+
             return Response::json([
                 'msg' => 'profile updated',
                 'user' => $user,
