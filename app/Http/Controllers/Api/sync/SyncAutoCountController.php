@@ -96,8 +96,8 @@ class SyncAutoCountController extends Controller
 
                     $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
 
-                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ?", [
-                        'App\Models\Supplier', $supplier->id
+                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Supplier', $supplier->id, $branchNo
                     ]);
 
                     if (empty($existing)) {
@@ -141,8 +141,8 @@ class SyncAutoCountController extends Controller
 
                     $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
 
-                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ?", [
-                        'App\Models\Supplier', $supplier->id
+                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Supplier', $supplier->id, $branchNo
                     ]);
 
                     if (empty($existing)) {
@@ -239,9 +239,10 @@ class SyncAutoCountController extends Controller
 
                     $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
                     
-                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ?", [
-                        'App\Models\Customer', $supplier->id
+                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Customer', $supplier->id, $branchNo
                     ]);
+
                     if (empty($existing)) {
                         // No existing record, insert new
                         DB::insert("INSERT INTO branches (object_type, object_id, location, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", [
@@ -304,8 +305,8 @@ class SyncAutoCountController extends Controller
 
                     $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
                     
-                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ?", [
-                        'App\Models\Customer', $supplier->id
+                    $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
+                        'App\Models\Customer', $supplier->id, $branchNo
                     ]);
                     if (empty($existing)) {
                         // No existing record, insert new
