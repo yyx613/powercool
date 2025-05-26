@@ -34,10 +34,9 @@
                 @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="role" class="mb-1">{{ __('Role') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="role" id="role" :hasError="$errors->has('role')">
-                        <option value="">{{ __('Select a role') }}</option>
+                    <x-app.input.select name="role[]" id="role" :hasError="$errors->has('role')" multiple>
                         @foreach ($roles as $role)
-                            <option value="{{ $role->id }}" @selected(old('role', isset($user) ? $user_role_id : null) === $role->id)>{{ $role->name }}</option>
+                            <option value="{{ $role->id }}" @selected(old('role', isset($user) ? in_array($role->id, $user_role_ids) : null))>{{ $role->name }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('role')" class="mt-1" />

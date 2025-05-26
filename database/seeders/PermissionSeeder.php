@@ -37,6 +37,8 @@ class PermissionSeeder extends Seeder
             'inventory.raw_material.edit',
             'inventory.raw_material.delete',
 
+            'inventory.raw_material_request.view',
+
             'grn.view',
             'grn.create',
             'grn.edit',
@@ -91,6 +93,8 @@ class PermissionSeeder extends Seeder
             'production.export_excel',
 
             'production_material.view',
+
+            'production_request.view',
 
             'ticket.view',
             'ticket.create',

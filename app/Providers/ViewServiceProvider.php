@@ -11,6 +11,7 @@ use App\Models\Customer;
 use App\Models\Dealer;
 use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
+use App\Models\Factory;
 use App\Models\InventoryCategory;
 use App\Models\InventoryType;
 use App\Models\Invoice;
@@ -72,6 +73,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.category' => [],
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
+                'inventory.raw_material_request' => [],
                 'grn' => [],
                 'service_reminder' => [],
                 'service_history' => [],
@@ -87,6 +89,7 @@ class ViewServiceProvider extends ServiceProvider
                 'task' => [],
                 'production' => [],
                 'production_material' => [],
+                'production_request' => [],
                 'ticket' => [],
                 'customer' => [],
                 'supplier' => [],
@@ -110,6 +113,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.product')) {
                     array_push($permissions_group['inventory.product'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'inventory.raw_material_request')) {
+                    array_push($permissions_group['inventory.raw_material_request'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.raw_material')) {
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'grn')) {
@@ -138,6 +143,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.billing'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'task')) {
                     array_push($permissions_group['task'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'production_request')) {
+                    array_push($permissions_group['production_request'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production_material')) {
                     array_push($permissions_group['production_material'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production')) {
@@ -644,10 +651,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['inventory_category.form'], function (ViewView $view) {
-            $factories = [
-                InventoryCategory::FACTORY_17 => 'Factory 17',
-                InventoryCategory::FACTORY_22 => 'Factory 22',
-            ];
+            $factories = Factory::orderBy('id', 'desc')->get();
 
             $view->with([
                 'factories' => $factories,
@@ -692,6 +696,13 @@ class ViewServiceProvider extends ServiceProvider
                 'categories' => $categories,
                 'types' => $types,
                 'existing_milestones' => $milestones,
+            ]);
+        });
+        View::composer(['production_request.form'], function (ViewView $view) {
+            $products = Product::orderBy('model_name', 'asc')->get();
+
+            $view->with([
+                'products' => $products,
             ]);
         });
     }

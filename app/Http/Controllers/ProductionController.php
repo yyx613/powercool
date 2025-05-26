@@ -162,7 +162,7 @@ class ProductionController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'old_production_sku' => $record->oldProduction->sku ?? null,
-                'factory' => $record->product->category->factory,
+                'factory' => $record->product->category->fromFactory->name ?? null,
                 'product_serial_no' => $record->productChild->sku,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
@@ -176,6 +176,7 @@ class ProductionController extends Controller
                 'can_delete' => hasPermission('production.delete'),
                 'can_duplicate' => !$is_production_worker,
                 'can_view' => !$is_production_worker || $record->status == Production::STATUS_DOING,
+                'can_start' => in_array(Role::PRODUCTION_SUPERVISOR, getUserRoleId(Auth::user()))
             ];
         }
 

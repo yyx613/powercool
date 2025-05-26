@@ -386,6 +386,8 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
                                             </a>
                                         </li>
+                                    @endcan
+                                    @can('inventory.raw_material_request.view')
                                         <li>
                                             <a href="{{ route('raw_material_request.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -400,7 +402,7 @@
                     </li>
                 @endcan
                 <!-- Production -->
-                @canany(['production.view', 'production_material.view'])
+                @canany(['production.view', 'production_material.view', 'production_request.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="10">
@@ -440,6 +442,15 @@
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('production_request.view')
+                                        <li>
+                                            <a href="{{ route('production_request.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Request') }}</span>
                                             </a>
                                         </li>
                                     @endcan
@@ -723,6 +734,13 @@
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('factory.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -1196,7 +1214,9 @@
                                     class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
                             </a>
                         </li>
-<li>
+                    @endcan
+                    @can('inventory.raw_material_request.view')
+                        <li>
                             <a href="{{ route('raw_material_request.index') }}"
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                 <span
@@ -1208,7 +1228,7 @@
             </div>
         @endcan
         <!-- Production -->
-        @canany(['production.view', 'production_material.view'])
+        @canany(['production.view', 'production_material.view', 'production_request.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="production">
                 <div class="mb-4 p-2 border-b">
@@ -1237,6 +1257,15 @@
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                 <span
                                     class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('production_request.view')
+                        <li>
+                            <a href="{{ route('production_request.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Request') }}</span>
                             </a>
                         </li>
                     @endcan
@@ -1574,6 +1603,13 @@
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('factory.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
                     </a>
                 </li>
                 <li>
@@ -2048,7 +2084,9 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
                                             </a>
                                         </li>
-<li>
+                                    @endcan
+                                    @can('inventory.raw_material_request.view')
+                                        <li>
                                             <a href="{{ route('raw_material_request.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
@@ -2062,7 +2100,7 @@
                     </li>
                 @endcan
                 <!-- Production -->
-                @canany(['production.view', 'production_material.view'])
+                @canany(['production.view', 'production_material.view', 'production_request.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="10">
@@ -2102,6 +2140,15 @@
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('production_request.view')
+                                        <li>
+                                            <a href="{{ route('production_request.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'production_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Request') }}</span>
                                             </a>
                                         </li>
                                     @endcan
@@ -2388,6 +2435,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('factory.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('milestone.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -2547,7 +2601,8 @@
                     } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes(
                             'credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME
                         .includes(
-                            'debtor_type.') || CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME
+                            'debtor_type.') || CURRENT_ROUTE_NAME.includes('factory.') || CURRENT_ROUTE_NAME
+                        .includes('material_use.') || CURRENT_ROUTE_NAME
                         .includes(
                             'milestone.') || CURRENT_ROUTE_NAME.includes('payment_method.') || CURRENT_ROUTE_NAME
                         .includes('inventory_type.') || CURRENT_ROUTE_NAME.includes('inventory_category.') ||
@@ -2557,7 +2612,7 @@
                         CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
-                            'production_material.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
+                            'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                     }
                 } else {
@@ -2608,6 +2663,7 @@
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') ||
                     CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') ||
+                    CURRENT_ROUTE_NAME.includes('factory.') ||
                     CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes(
                         'milestone.') || CURRENT_ROUTE_NAME.includes('payment_method.') || CURRENT_ROUTE_NAME
                     .includes(
@@ -2619,7 +2675,7 @@
                         'uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
-                        'production_material.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
+                        'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                 }
             }

@@ -92,7 +92,7 @@ class UserController extends Controller
                 'id' => $record->id,
                 'name' => $record->name,
                 'email' => $record->email,
-                'role' => getUserRole($record),
+                'role' => join(', ', getUserRole($record)),
                 'branch' => $record->branch == null ? null : (new Branch)->keyToLabel($record->branch->location),
             ];
         }
@@ -132,8 +132,8 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->role)->first();
-            $user->assignRole($selected_role->id);
+            $selected_role = Role::whereIn('id', $req->role)->pluck('id')->toArray();
+            $user->syncRoles($selected_role);
 
             if ($req->hasFile('picture')) {
                 foreach ($req->file('picture') as $key => $file) {
@@ -170,7 +170,7 @@ class UserController extends Controller
 
         return view('user_management.form', [
             'user' => $user,
-            'user_role_id' => $user->load('roles')->roles[0]->id ?? null,
+            'user_role_ids' => getUserRoleId($user),
         ]);
     }
 
@@ -205,8 +205,8 @@ class UserController extends Controller
                 'name' => $req->name,
                 'password' => $req->password == null ? $user->password : Hash::make($req->input('password')),
             ]);
-            $selected_role = Role::where('id', $req->role)->first();
-            $user->syncRoles([$selected_role->id]);
+            $selected_role = Role::whereIn('id', $req->role)->pluck('id')->toArray();
+            $user->syncRoles($selected_role);
 
             if ($req->hasFile('picture')) {
                 Attachment::where([

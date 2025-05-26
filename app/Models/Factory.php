@@ -10,28 +10,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ScopedBy([BranchScope::class])]
-class InventoryCategory extends Model
+class Factory extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const FACTORY_17 = 1;
-    const FACTORY_22 = 2;
-
     protected $guarded = [];
+
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
-    }
-
-    public function fromFactory() {
-        return $this->belongsTo(Factory::class, 'factory');
     }
 }

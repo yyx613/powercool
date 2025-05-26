@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealerController;
 use App\Http\Controllers\DebtorTypeController;
 use App\Http\Controllers\EInvoiceController;
+use App\Http\Controllers\FactoryController;
 use App\Http\Controllers\GRNController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventoryServiceReminderController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Platforms\WooCommerceController;
 use App\Http\Controllers\PriorityController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductionRequestController;
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\RawMaterialRequestController;
@@ -216,7 +218,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
     });
-    Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
+    // Raw Material Request
+    Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material_request.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/view/{rmq}', 'view')->name('view');
@@ -402,6 +405,18 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/view/{product}', 'view')->name('view');
+    });
+    // Production Request
+    Route::controller(ProductionRequestController::class)->prefix('production-request')->name('production_request.')->middleware(['can:production_request.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/view/{pq}', 'view')->name('view');
+        Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::get('/complete/{pq}', 'complete')->name('complete');
+        Route::get('/material/complete/{pqm}', 'materialComplete')->name('material_complete');
+        Route::get('/material/incomplete/{pqm}', 'materialIncomplete')->name('material_incomplete');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->middleware(['can:ticket.view'])->group(function () {
@@ -617,6 +632,15 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{debtor}', 'edit')->name('edit');
             Route::post('/update/{debtor}', 'update')->name('update');
             Route::get('/delete/{debtor}', 'delete')->name('delete');
+        });
+        // Factory 
+        Route::controller(FactoryController::class)->prefix('factory')->name('factory.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{factory}', 'edit')->name('edit');
+            Route::post('/update/{factory}', 'update')->name('update');
         });
         // Milestone 
         Route::controller(MilestoneController::class)->prefix('milestone')->name('milestone.')->group(function () {
