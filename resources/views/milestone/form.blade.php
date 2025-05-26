@@ -41,7 +41,8 @@
                     <x-app.input.input name="milestone" id="milestone" />
                 </div>
                 <div id="milestone-list-container" class="mt-2">
-                    <div class="group hidden justify-between leading-1 hover:bg-slate-50 py-1" id="milestone-template">
+                    <div class="group hidden justify-between leading-1 hover:bg-slate-50 py-1 cursor-grab"
+                        id="milestone-template">
                         <span class="text-sm value"></span>
                         <button type="button"
                             class="text-sm font-semibold text-red-500 px-1.5 rounded hidden group-hover:block remove-btns">Remove</button>
@@ -64,10 +65,14 @@
         EDIT_MILESTONES = @json($milestones ?? null);
         EXISTING_MILESTONES = @json($existing_milestones ?? null);
 
-        console.debug(EDIT_MILESTONES)
-        console.debug(EXISTING_MILESTONES)
-
         $(document).ready(function() {
+            var elem = document.getElementById('milestone-list-container')
+            var sortable = Sortable.create(elem, {
+                onEnd: function(evt) {
+                    sortMilestone()
+                },
+            })
+
             if (EDIT_MILESTONES == null) return
 
             $('select[name="type"]').trigger('change')
@@ -92,7 +97,7 @@
             for (let i = 0; i < categoryToSelect.length; i++) {
                 $(`#category option[value="${categoryToSelect[i]}"]`).attr('selected', true)
             }
-            
+
         })
         $('form').on('submit', function(e) {
             if (!CAN_SUBMIT) {
@@ -130,6 +135,7 @@
             let idx = $(this).parent().data('idx')
 
             $(`#milestone-list-container .milestones[data-idx=${idx}]`).remove()
+
             delete MILESTONES[idx]
         })
         $('select[name="type"]').on('change', function() {
@@ -148,5 +154,13 @@
                 }
             }
         })
+
+        function sortMilestone() {
+            MILESTONES = {}
+            $('.milestones').each(function(i, obj) {
+                $(this).attr('data-idx', i + 1)
+                MILESTONES[i + 1] = $(this).find('.value').text()
+            })
+        }
     </script>
 @endpush

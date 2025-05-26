@@ -428,76 +428,82 @@ class ProductionController extends Controller
 
             // Create milestone
             $this->prodMs::where('production_id', $production->id)->whereNotIn('milestone_id', $old_ms_ids ?? [])->delete();
-            for ($i = 0; $i < count($milestones); $i++) {
-                if ($milestones[$i]->is_custom == true) {
-                    continue;
-                }
+            for ($k = 0; $k < count((array) $milestones); $k++) {
+                for ($i = 0; $i < count($milestones); $i++) {
+                    if ($milestones[$i]->is_custom == true || $k + 1 != $milestones[$i]->sequence) { // Allow for non-custom and sequence matched
+                        continue;
+                    }
 
-                $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $milestones[$i]->id)->first();
-                if ($ms == null) {
-                    $ms = $this->prodMs::create([
-                        'production_id' => $production->id,
-                        'milestone_id' => $milestones[$i]->id,
+                    $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $milestones[$i]->id)->first();
+                    if ($ms == null) {
+                        $ms = $this->prodMs::create([
+                            'production_id' => $production->id,
+                            'milestone_id' => $milestones[$i]->id,
+                        ]);
+                    }
+                    $ms_id = $this->prodMs::where('production_id', $ms->production_id)->where('milestone_id', $ms->milestone_id)->value('id');
+
+                    $ms_material_use_product = [];
+                    if ($milestones[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
+                        for ($j = 0; $j < count($milestones[$i]->value); $j++) {
+                            $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
+
+                            $ms_material_use_product[] = [
+                                'production_milestone_id' => $ms_id,
+                                'product_id' => $milestones[$i]->value[$j],
+                                'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
+                                'created_at' => $now,
+                            ];
+                        }
+                    }
+                    if ($ms == null) {
+                        if (count($ms_material_use_product) > 0) {
+                            $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                        }
+                    } else {
+                        $this->prodMsMaterialPreview::where('production_milestone_id', $ms_id)->delete();
+                        $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                    }
+                    break;
+                }
+            }
+
+            // Create custom milestones
+            for ($k = 0; $k < count((array) $milestones); $k++) {
+                for ($i = 0; $i < count($milestones); $i++) {
+                    if ($milestones[$i]->is_custom == false || $k + 1 != $milestones[$i]->sequence) { // Allow for custom and sequence matched
+                        continue;
+                    }
+
+                    $custom_ms = $this->ms::create([
+                        'type' => $this->ms::TYPE_PRODUCTION,
+                        'name' => $milestones[$i]->title,
+                        'is_custom' => true,
+                        'product_id' => $req->product,
                     ]);
-                }
-                $ms_id = $this->prodMs::where('production_id', $ms->production_id)->where('milestone_id', $ms->milestone_id)->value('id');
+                    $pms = $this->prodMs::create([
+                        'production_id' => $production->id,
+                        'milestone_id' => $custom_ms->id,
+                    ]);
 
-                $ms_material_use_product = [];
-                if ($milestones[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
+                    $ms_material_use_product = [];
                     for ($j = 0; $j < count($milestones[$i]->value); $j++) {
                         $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
 
                         $ms_material_use_product[] = [
-                            'production_milestone_id' => $ms_id,
+                            'production_milestone_id' => $this->prodMs::where('production_id', $production->id)->where('milestone_id', $custom_ms->id)->value('id'),
                             'product_id' => $milestones[$i]->value[$j],
                             'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
                             'created_at' => $now,
                         ];
                     }
-                }
-                if ($ms == null) {
+
                     if (count($ms_material_use_product) > 0) {
                         $this->prodMsMaterialPreview::insert($ms_material_use_product);
                     }
-                } else {
-                    $this->prodMsMaterialPreview::where('production_milestone_id', $ms_id)->delete();
-                    $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                    break;
                 }
             }
-            // Create custom milestones
-            for ($i = 0; $i < count($milestones); $i++) {
-                if ($milestones[$i]->is_custom == false) {
-                    continue;
-                }
-
-                $custom_ms = $this->ms::create([
-                    'type' => $this->ms::TYPE_PRODUCTION,
-                    'name' => $milestones[$i]->title,
-                    'is_custom' => true,
-                    'product_id' => $req->product,
-                ]);
-                $pms = $this->prodMs::create([
-                    'production_id' => $production->id,
-                    'milestone_id' => $custom_ms->id,
-                ]);
-
-                $ms_material_use_product = [];
-                for ($j = 0; $j < count($milestones[$i]->value); $j++) {
-                    $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
-
-                    $ms_material_use_product[] = [
-                        'production_milestone_id' => $this->prodMs::where('production_id', $production->id)->where('milestone_id', $custom_ms->id)->value('id'),
-                        'product_id' => $milestones[$i]->value[$j],
-                        'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
-                        'created_at' => $now,
-                    ];
-                }
-
-                if (count($ms_material_use_product) > 0) {
-                    $this->prodMsMaterialPreview::insert($ms_material_use_product);
-                }
-            }
-
             // Create Raw Material Request
             $material_use = MaterialUse::with('materials')->where('product_id', $req->product)->first();
             $rmq = RawMaterialRequest::create([

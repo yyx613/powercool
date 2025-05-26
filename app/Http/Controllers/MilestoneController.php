@@ -58,8 +58,8 @@ class MilestoneController extends Controller
         }
         $records = $records->groupBy('batch');
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('batch');
+        $records_count = count($records_ids);
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -204,15 +204,29 @@ class MilestoneController extends Controller
         });
 
         if ($req->product_id != null) {
-            $product_current_milestone_ids = ProductMilestone::where('product_id', $req->product_id)->pluck('milestone_id')->toArray();
+            $product_milestones = ProductMilestone::where('product_id', $req->product_id)->get();
+            $product_current_milestone_ids = $product_milestones->pluck('milestone_id')->toArray();
             $milestones = $milestones->orWhere(function ($q) use ($product_current_milestone_ids) {
                 $q->whereIn('id', $product_current_milestone_ids)->whereNotNull('deleted_at');
             });
         }
         $milestones = $milestones->get();
+        // Sort order
+        if ($req->product_id != null && isset($product_milestones)) {
+            $sorted_milestones = [];
+
+            for ($i = 0; $i < count($product_milestones); $i++) {
+                for ($j = 0; $j < count($milestones); $j++) {
+                    if ($product_milestones[$i]->milestone_id == $milestones[$j]->id) {
+                        $sorted_milestones[] = $milestones[$j];
+                        break;
+                    }
+                }
+            }
+        }
 
         return Response::json([
-            'milestones' => $milestones,
+            'milestones' => $sorted_milestones ?? $milestones,
         ]);
     }
 }

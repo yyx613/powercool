@@ -716,14 +716,20 @@ class ProductController extends Controller
             // Milestones
             $data = [];
             $milestones = json_decode($req->milestones);
-            foreach ($milestones as $key => $value) {
-                $data[] = [
-                    'product_id' => $prod->id,
-                    'milestone_id' => $key,
-                    'material_use_product_id' => json_encode($value),
-                    'created_at' => now(),
-                ];
+            for ($i = 0; $i < count((array)$milestones); $i++) {
+                foreach ($milestones as $key => $value) {
+                    if ($value->sequence == $i + 1) {
+                        $data[] = [
+                            'product_id' => $prod->id,
+                            'milestone_id' => $key,
+                            'material_use_product_id' => json_encode($value->material_use_product_ids),
+                            'created_at' => now(),
+                        ];
+                        break;
+                    }
+                }
             }
+
             if (count($data) > 0) {
                 ProductMilestone::where('product_id', $prod->id)->delete();
                 ProductMilestone::insert($data);
@@ -809,7 +815,7 @@ class ProductController extends Controller
     public function get(Product $product)
     {
         $material_use = MaterialUse::with('materials.material')->where('product_id', $product->id)->get();
-        $milestones = ProductMilestone::with(['milestone' => function($q) {
+        $milestones = ProductMilestone::with(['milestone' => function ($q) {
             $q->withTrashed();
         }])->where('product_id', $product->id)->get();
 

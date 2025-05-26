@@ -42,7 +42,7 @@
                     <x-input-error :messages="$errors->get('role')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="name" class="mb-1">{{ __('Username') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" value="{{ old('name', isset($user) ? $user->name : null) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>

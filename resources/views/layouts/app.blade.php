@@ -39,6 +39,9 @@
         <!-- QR Code -->
         <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
+        {{-- Sortable --}}
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
         @stack('styles')
     </head>
     <body class="font-sans antialiased overflow-x-hidden">

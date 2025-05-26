@@ -118,7 +118,8 @@
                         {{ __("'Yes' represent the milestone is required to fill up material use.") }}</p>
                     <div id="milestone-list-container">
                         {{-- Template --}}
-                        <div class="flex justify-between mb-2 hidden" id="milestone-template">
+                        <div class="flex justify-between mb-2 hidden cursor-grab hover:bg-slate-50"
+                            id="milestone-template">
                             <div class="flex items-center gap-2 first-half">
                                 <input type="checkbox" class="rounded-sm">
                                 <label class="text-sm ms-name"></label>
@@ -154,7 +155,7 @@
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
-            @if (!(isset($production) && $production->status == 3) || (isset($is_duplicate) && $is_duplicate == true))
+            @if (!isset($production) || (isset($is_duplicate) && $is_duplicate == true))
                 <!-- Not completed -->
                 <div class="mt-8 flex justify-end">
                     <x-app.button.submit type="button" id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
@@ -181,6 +182,15 @@
         CUSTOM_MILESTONE_IDX = 0
 
         $(document).ready(function() {
+            if (PRODUCTION == null) {
+                var elem = document.getElementById('milestone-list-container')
+                var sortable = Sortable.create(elem, {
+                    onEnd: function(evt) {
+                        sortMilestone()
+                    },
+                })
+            }
+
             if (PRODUCTION != null) {
                 INIT_EDIT = true
 
@@ -220,6 +230,7 @@
 
                     MILESTONES[`ms-${element.id}`] = {
                         material_use_product_ids: material_use_product_ids,
+                        sequence: i + 1,
                         is_checked: true,
                         title: element.name,
                     }
@@ -271,6 +282,7 @@
 
                 MILESTONES[`cms-${CUSTOM_MILESTONE_IDX}`] = {
                     material_use_product_ids: [],
+                    sequence: $('.milestones').length + 1,
                     is_checked: false,
                     title: val,
                 }
@@ -321,14 +333,16 @@
                         is_custom: true,
                         id: key.replace('cms-', ''),
                         value: MILESTONES[key]['material_use_product_ids'],
-                        title: MILESTONES[key]['title']
+                        title: MILESTONES[key]['title'],
+                        sequence: MILESTONES[key]['sequence']
                     })
                 } else {
                     materialUseProduct.push({
                         is_custom: false,
                         id: key.replace('ms-', ''),
                         value: MILESTONES[key]['material_use_product_ids'],
-                        title: MILESTONES[key]['title']
+                        title: MILESTONES[key]['title'],
+                        sequence: MILESTONES[key]['sequence']
                     })
                 }
             }
@@ -503,12 +517,22 @@
                             material_use_product_ids: res
                                 .product_milestones[i]
                                 .material_use_product_id,
+                            sequence: i + 1,
                             is_checked: true,
                             title: res.product_milestones[i].milestone.name,
                         }
                     }
                 },
             });
+        }
+
+        function sortMilestone() {
+            let sequence = 0
+
+            $('.milestones').each(function(i, obj) {
+                sequence++
+                MILESTONES[$(this).attr('data-milestone-id')].sequence = sequence
+            })
         }
     </script>
 @endpush
