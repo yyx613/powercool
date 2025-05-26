@@ -388,8 +388,8 @@
                 </div>
                 <div id="milestone-list-container">
                     {{-- Template --}}
-                    <div class="flex justify-between mb-2 hidden" id="milestone-template">
-                        <div class="flex items-center gap-2 first-half">
+                    <div class="flex justify-between mb-2 hidden cursor-grab hover:bg-slate-50" id="milestone-template">
+                        <div class="flex items-center first-half">
                             <span title="{{ __('Current milestone') }}">
                                 <svg class="h-4 w-4 fill-blue-400 hidden" xmlns="http://www.w3.org/2000/svg"
                                     id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512"
@@ -479,6 +479,13 @@
         SELECTED_MILESTONE_ID = null
 
         $(document).ready(function() {
+            var elem = document.getElementById('milestone-list-container')
+            var sortable = Sortable.create(elem, {
+                onEnd: function(evt) {
+                    sortMilestone()
+                },
+            })
+
             if (PRODUCT != null) {
                 for (let i = 0; i < PRODUCT.children.length; i++) {
                     const child = PRODUCT.children[i];
@@ -635,7 +642,7 @@
                 $('#product-material-use-modal #action2-container').addClass('hidden')
                 $('#product-material-use-modal').addClass('show-modal')
             } else {
-                delete MILESTONES[SELECTED_MILESTONE_ID]
+                MILESTONES[SELECTED_MILESTONE_ID].material_use_product_ids = []
                 $(`.milestones[data-milestone-id=${SELECTED_MILESTONE_ID}] .view-material-use-selection-btns`)
                     .addClass('hidden')
             }
@@ -647,7 +654,7 @@
 
             for (let i = 0; i < MATERIAL_USE.length; i++) {
                 for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
-                    if (!MILESTONES[milestoneId].includes(MATERIAL_USE[i].materials[j]
+                    if (!MILESTONES[milestoneId].material_use_product_ids.includes(MATERIAL_USE[i].materials[j]
                             .material.id)) {
                         continue
                     }
@@ -694,13 +701,12 @@
                 $('#product-material-use-modal #no-btn').trigger('click')
                 return
             }
-
             $('.material-use-selections input[type="checkbox"]').each(function(i, obj) {
                 if ($(this).is(':checked')) {
                     if (MILESTONES[SELECTED_MILESTONE_ID] == undefined) {
                         MILESTONES[SELECTED_MILESTONE_ID] = []
                     }
-                    MILESTONES[SELECTED_MILESTONE_ID].push($(this).parent()
+                    MILESTONES[SELECTED_MILESTONE_ID].material_use_product_ids.push($(this).parent()
                         .data('material-use-product-id'))
                 }
             })
@@ -763,7 +769,10 @@
 
                         $('#milestone-list-container').append(clone)
 
-                        MILESTONES[ms.id] = []
+                        MILESTONES[ms.id] = {
+                            sequence: i + 1,
+                            material_use_product_ids: []
+                        }
                     }
                     // Initiate product milestones
                     for (let i = 0; i < PRODUCT.milestones.length; i++) {
@@ -771,17 +780,30 @@
                             .attr('checked', true)
                         $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .first-half svg`)
                             .removeClass('hidden')
+                        $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .first-half`)
+                            .addClass('gap-2')
+
                         if (PRODUCT.milestones[i].material_use_product_id.length > 0) {
                             $(`input[name="required_serial_no[]"][data-milestone-id="${PRODUCT.milestones[i].milestone_id}"`)
                                 .attr('checked', true)
                             $(`.milestones[data-milestone-id="${PRODUCT.milestones[i].milestone_id}"] .view-material-use-selection-btns`)
                                 .removeClass('hidden')
                         }
-                        MILESTONES[PRODUCT.milestones[i].milestone_id] = PRODUCT.milestones[i]
+                        MILESTONES[PRODUCT.milestones[i].milestone_id].material_use_product_ids =
+                            PRODUCT.milestones[i]
                             .material_use_product_id
                     }
                 },
             });
+        }
+
+        function sortMilestone() {
+            let sequence = 0
+
+            $('.milestones').each(function(i, obj) {
+                sequence++
+                MILESTONES[$(this).attr('data-milestone-id')].sequence = sequence
+            })
         }
     </script>
 @endpush

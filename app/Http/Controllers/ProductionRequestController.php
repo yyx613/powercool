@@ -121,6 +121,7 @@ class ProductionRequestController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'product_name' => $record->material->model_name ?? null,
+                'production_sku' => $record->production_sku ?? null,
                 'status' => $record->status,
             ];
         }
@@ -136,9 +137,10 @@ class ProductionRequestController extends Controller
         return back()->with('success', 'Request completed');
     }
 
-    public function materialComplete(ProductionRequestMaterial $pqm)
+    public function materialComplete(Request $req, ProductionRequestMaterial $pqm)
     {
         $pqm->status = ProductionRequestMaterial::STATUS_COMPLETED;
+        $pqm->production_sku = $req->production_id ?? null;
         $pqm->save();
 
         return back()->with('success', 'Request completed');

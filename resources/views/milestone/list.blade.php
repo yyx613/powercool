@@ -67,10 +67,6 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function() {
-            dt.draw()
-        })
-
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
