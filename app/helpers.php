@@ -28,16 +28,16 @@ if (! function_exists('generateRandomAlphabet')) {
 }
 
 if (! function_exists('getUserRole')) {
-    function getUserRole(User $user)
+    function getUserRole(User $user): array
     {
-        return $user->getRoleNames()[0] ?? null;
+        return $user->load('roles')->roles->pluck('name')->toArray();
     }
 }
 
 if (! function_exists('getUserRoleId')) {
-    function getUserRoleId(User $user)
+    function getUserRoleId(User $user): array
     {
-        return $user->roles->pluck('id')[0] ?? null;
+        return $user->load('roles')->roles->pluck('id')->toArray();
     }
 }
 
@@ -51,14 +51,14 @@ if (! function_exists('hasPermission')) {
 if (! function_exists('isSuperAdmin')) {
     function isSuperAdmin(): bool
     {
-        return getUserRoleId(Auth::user()) == Role::SUPERADMIN;
+        return in_array(Role::SUPERADMIN, getUserRoleId(Auth::user()));
     }
 }
 
 if (! function_exists('isProductionWorker')) {
     function isProductionWorker(): bool
     {
-        return getUserRoleId(Auth::user()) == Role::PRODUCTION_WORKER;
+        return in_array(Role::PRODUCTION_WORKER, getUserRoleId(Auth::user()));
     }
 }
 
@@ -80,15 +80,15 @@ if (! function_exists('getPaymentCollectionIds')) {
 if (! function_exists('getWhatsAppContent')) {
     function getWhatsAppContent(string $driver_name, string $driver_contact, string $car_plate, string $estimated_time, string $delivery_date)
     {
-        $msg = "【Imax Refrigerator's Delivery Details】".'%0a';
-        $msg .= 'Dear Valued Customer,'.'%0a';
-        $msg .= 'Thank you for your support of Imax Refrigerator Malaysia! We are pleased to inform you that your order has been successfully received. The scheduled delivery date is '.$delivery_date.'.'.'%0a';
+        $msg = "【Imax Refrigerator's Delivery Details】" . '%0a';
+        $msg .= 'Dear Valued Customer,' . '%0a';
+        $msg .= 'Thank you for your support of Imax Refrigerator Malaysia! We are pleased to inform you that your order has been successfully received. The scheduled delivery date is ' . $delivery_date . '.' . '%0a';
         $msg .= '%0a';
-        $msg .= 'Please find the delivery details below:'.'%0a';
-        $msg .= 'Driver Name: '.$driver_name.'%0a';
-        $msg .= 'Contact Number: '.$driver_contact.'%0a';
-        $msg .= 'Vehicle Plate Number: '.$car_plate.'%0a';
-        $msg .= 'Estimated Time of Arrival (ETA): '.$estimated_time.'%0a';
+        $msg .= 'Please find the delivery details below:' . '%0a';
+        $msg .= 'Driver Name: ' . $driver_name . '%0a';
+        $msg .= 'Contact Number: ' . $driver_contact . '%0a';
+        $msg .= 'Vehicle Plate Number: ' . $car_plate . '%0a';
+        $msg .= 'Estimated Time of Arrival (ETA): ' . $estimated_time . '%0a';
         $msg .= '%0a';
         $msg .= 'Kindly note that the delivery time is subject to change due to unforeseen circumstances (e.g., heavy traffic, accidents, or other unexpected events). We sincerely appreciate your understanding and thank you for choosing Imax Refrigerator.';
         $msg .= '%0a';
@@ -97,19 +97,19 @@ if (! function_exists('getWhatsAppContent')) {
         $msg .= '------------------------------------------------------------------------------------';
         $msg .= '【Imax 商用冰柜运输详情】';
         $msg .= '您好，尊敬的客户：';
-        $msg .= '感谢您对大马 Imax 制造商用冰柜的支持！我们已成功收到您的订单，预计送货日期为 '.$delivery_date.'。';
+        $msg .= '感谢您对大马 Imax 制造商用冰柜的支持！我们已成功收到您的订单，预计送货日期为 ' . $delivery_date . '。';
         $msg .= '%0a';
-        $msg .= '以下是您的送货详情：'.'%0a';
-        $msg .= '司机姓名：'.$driver_name.'%0a';
-        $msg .= '联系电话：'.$driver_contact.'%0a';
-        $msg .= '车牌号码：'.$car_plate.'%0a';
-        $msg .= '预计抵达时间：'.$estimated_time.'%0a';
-        $msg .= '预计抵达时间：'.$estimated_time.'%0a';
+        $msg .= '以下是您的送货详情：' . '%0a';
+        $msg .= '司机姓名：' . $driver_name . '%0a';
+        $msg .= '联系电话：' . $driver_contact . '%0a';
+        $msg .= '车牌号码：' . $car_plate . '%0a';
+        $msg .= '预计抵达时间：' . $estimated_time . '%0a';
+        $msg .= '预计抵达时间：' . $estimated_time . '%0a';
         $msg .= '%0a';
         $msg .= '请注意，送货时间可能因特殊情况而有所调整（例如：交通阻塞、车祸或其他不可控因素）。感谢您的谅解，并再次感谢您选择 Imax 商用冰柜！';
         $msg .= '%0a';
-        $msg .= '祝您生活愉快！'.'%0a';
-        $msg .= '来自 Hi-Ten Trading Sdn Bhd'.'%0a';
+        $msg .= '祝您生活愉快！' . '%0a';
+        $msg .= '来自 Hi-Ten Trading Sdn Bhd' . '%0a';
 
         // $msg = 'Dear Valued Customer/Mr/Mrs'.'%0a';
         // $msg .= 'We are delighted to inform you that your order with HiTen has been received successfully. The delivery date is on '.$delivery_date.'%0a';
@@ -205,52 +205,52 @@ if (! function_exists('priceToWord')) {
         $num_length = strlen($ringgit);
         $levels = (int) (($num_length + 2) / 3);
         $max_length = $levels * 3;
-        $ringgit = substr('00'.$ringgit, -$max_length);
+        $ringgit = substr('00' . $ringgit, -$max_length);
         $num_levels = str_split($ringgit, 3);
         for ($i = 0; $i < count($num_levels); $i++) {
             $levels--;
             $hundreds = (int) ($num_levels[$i] / 100);
-            $hundreds = ($hundreds ? ' '.$list1[$hundreds].' hundred'.' ' : '');
+            $hundreds = ($hundreds ? ' ' . $list1[$hundreds] . ' hundred' . ' ' : '');
             $tens = (int) ($num_levels[$i] % 100);
             $singles = '';
             if ($tens < 20) {
-                $tens = ($tens ? ' '.$list1[$tens].' ' : '');
+                $tens = ($tens ? ' ' . $list1[$tens] . ' ' : '');
             } else {
                 $tens = (int) ($tens / 10);
-                $tens = ' '.$list2[$tens].' ';
+                $tens = ' ' . $list2[$tens] . ' ';
                 $singles = (int) ($num_levels[$i] % 10);
-                $singles = ' '.$list1[$singles].' ';
+                $singles = ' ' . $list1[$singles] . ' ';
             }
-            $words[] = $hundreds.$tens.$singles.(($levels && (int) ($num_levels[$i])) ? ' '.$list3[$levels].' ' : '');
+            $words[] = $hundreds . $tens . $singles . (($levels && (int) ($num_levels[$i])) ? ' ' . $list3[$levels] . ' ' : '');
         } // end for loop
         $commas = count($words);
         if ($commas > 1) {
             $commas = $commas - 1;
         }
-        $ringgit = implode(' ', $words).($currency == 'myr' ? ' ringgit ' : ' dollar ');
+        $ringgit = implode(' ', $words) . ($currency == 'myr' ? ' ringgit ' : ' dollar ');
 
         // Cent
         $words = [];
         $num_length = strlen($cent);
         $levels = (int) (($num_length + 2) / 3);
         $max_length = $levels * 3;
-        $cent = substr('00'.$cent, -$max_length);
+        $cent = substr('00' . $cent, -$max_length);
         $num_levels = str_split($cent, 3);
         for ($i = 0; $i < count($num_levels); $i++) {
             $levels--;
             $hundreds = (int) ($num_levels[$i] / 100);
-            $hundreds = ($hundreds ? ' '.$list1[$hundreds].' hundred'.' ' : '');
+            $hundreds = ($hundreds ? ' ' . $list1[$hundreds] . ' hundred' . ' ' : '');
             $tens = (int) ($num_levels[$i] % 100);
             $singles = '';
             if ($tens < 20) {
-                $tens = ($tens ? ' '.$list1[$tens].' ' : '');
+                $tens = ($tens ? ' ' . $list1[$tens] . ' ' : '');
             } else {
                 $tens = (int) ($tens / 10);
-                $tens = ' '.$list2[$tens].' ';
+                $tens = ' ' . $list2[$tens] . ' ';
                 $singles = (int) ($num_levels[$i] % 10);
-                $singles = ' '.$list1[$singles].' ';
+                $singles = ' ' . $list1[$singles] . ' ';
             }
-            $words[] = $hundreds.$tens.$singles.(($levels && (int) ($num_levels[$i])) ? ' '.$list3[$levels].' ' : '');
+            $words[] = $hundreds . $tens . $singles . (($levels && (int) ($num_levels[$i])) ? ' ' . $list3[$levels] . ' ' : '');
         } // end for loop
         $commas = count($words);
         if ($commas > 1) {
@@ -258,13 +258,13 @@ if (! function_exists('priceToWord')) {
         }
         $cent = implode(' ', $words);
         if ($cent != '') {
-            $cent = 'and '.$cent.($currency == 'myr' ? ' sen' : ' cent');
+            $cent = 'and ' . $cent . ($currency == 'myr' ? ' sen' : ' cent');
         }
         if ($is_negative) {
-            return 'negative '.$ringgit.$cent;
+            return 'negative ' . $ringgit . $cent;
         }
 
-        return $ringgit.$cent;
+        return $ringgit . $cent;
     }
 }
 
@@ -345,12 +345,12 @@ if (! function_exists('generateSku')) {
         if ($user_branch != null) {
             if (! $is_hi_ten) { // Powercool
                 if ($user_branch == Branch::LOCATION_PENANG) {
-                    $formatted_prefix = 'P'.$formatted_prefix;
+                    $formatted_prefix = 'P' . $formatted_prefix;
                 } elseif ($user_branch == Branch::LOCATION_KL) {
-                    $formatted_prefix = 'W'.$formatted_prefix;
+                    $formatted_prefix = 'W' . $formatted_prefix;
                 }
             } elseif ($user_branch == Branch::LOCATION_PENANG) { // Hi-ten
-                $formatted_prefix = 'PH'.$formatted_prefix;
+                $formatted_prefix = 'PH' . $formatted_prefix;
             }
         }
 
@@ -358,12 +358,12 @@ if (! function_exists('generateSku')) {
             $digits = (string) $staring_num;
 
             while (strlen($digits) < $digits_length) {
-                $digits = '0'.$digits;
+                $digits = '0' . $digits;
             }
             if ($formatted_prefix == '') {
                 $sku = strtoupper($digits);
             } else {
-                $sku = strtoupper($formatted_prefix.'-'.$digits);
+                $sku = strtoupper($formatted_prefix . '-' . $digits);
             }
 
             if (! in_array($sku, $existing_skus)) {

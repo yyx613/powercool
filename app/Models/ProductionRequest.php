@@ -7,15 +7,14 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ScopedBy([BranchScope::class])]
-class InventoryCategory extends Model
+class ProductionRequest extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
-    const FACTORY_17 = 1;
-    const FACTORY_22 = 2;
+    const STATUS_IN_PROGRESS = 1;
+    const STATUS_COMPLETED = 2;
 
     protected $guarded = [];
     protected $casts = [
@@ -23,15 +22,23 @@ class InventoryCategory extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function fromFactory() {
-        return $this->belongsTo(Factory::class, 'factory');
+    public function materials()
+    {
+        return $this->hasMany(ProductionRequestMaterial::class);
+    }
+
+    public function completedMaterials()
+    {
+        return $this->materials->where('status', ProductionRequestMaterial::STATUS_COMPLETED);
     }
 }

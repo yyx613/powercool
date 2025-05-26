@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('raw_material_requests', function (Blueprint $table) {
+        Schema::create('production_requests', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('production_id');
-            $table->unsignedBigInteger('material_use_id');
             $table->integer('status');
+            $table->longText('remark');
             $table->timestamps();
         });
-        Schema::create('raw_material_request_materials', function (Blueprint $table) {
+        Schema::create('production_request_materials', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('raw_material_request_id');
+            $table->unsignedBigInteger('production_request_id');
             $table->unsignedBigInteger('product_id')->comment('raw material');
             $table->integer('status');
             $table->timestamps();
@@ -32,7 +31,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('raw_material_requests');
-        Schema::dropIfExists('raw_material_request_materials');
+        Schema::dropIfExists('production_requests');
+        Schema::dropIfExists('production_request_materials');
     }
 };

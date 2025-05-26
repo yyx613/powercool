@@ -125,11 +125,6 @@
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
-                        if (data == 1) {
-                            return 'Factory 17'
-                        } else if (data == 2) {
-                            return 'Factory 22'
-                        }
                         return data
                     }
                 },

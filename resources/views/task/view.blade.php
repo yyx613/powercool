@@ -82,7 +82,7 @@
                                 </div>
                             </span>
                             <span class="flex-1 text-md">{{ $u->name }}</span>
-                            <span class="text-md">{{ getUserRole($u) }}</span>
+                            <span class="text-md">{{ join(', ', getUserRole($u)) }}</span>
                         </li>
                     @endforeach
                 </ul>

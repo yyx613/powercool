@@ -40,7 +40,7 @@
                         <x-app.input.select name="factory" id="factory" :hasError="$errors->has('factory')">
                             <option value="">{{ __('Select a factory') }}</option>
                             @foreach ($factories as $key => $val)
-                                <option value="{{ $key }}" @selected(old('factory', isset($cat) ? $cat->factory : null) === $key)>{{ $val }}
+                                <option value="{{ $val->id }}" @selected(old('factory', isset($cat) ? $cat->factory : null) === $val->id)>{{ $val->name }}
                                 </option>
                             @endforeach
                         </x-app.input.select>

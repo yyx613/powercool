@@ -82,7 +82,7 @@ class InventoryController extends Controller
                 'id' => $record->id,
                 'name' => $record->name,
                 'company_group' => $record->company_group,
-                'factory' => $record->factory,
+                'factory' => $record->fromFactory->name ?? null,
                 'status' => $record->is_active,
                 'can_edit' => hasPermission('inventory.category.edit'),
                 'can_delete' => hasPermission('inventory.category.delete'),
