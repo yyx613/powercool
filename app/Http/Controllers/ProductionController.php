@@ -176,7 +176,7 @@ class ProductionController extends Controller
                 'can_delete' => hasPermission('production.delete'),
                 'can_duplicate' => !$is_production_worker,
                 'can_view' => !$is_production_worker || $record->status == Production::STATUS_DOING,
-                'can_start' => in_array(Role::PRODUCTION_SUPERVISOR, getUserRoleId(Auth::user()))
+                'can_start' => count(array_intersect([Role::SUPERADMIN, Role::PRODUCTION_SUPERVISOR], getUserRoleId(Auth::user()))) > 0 && $record->status == Production::STATUS_TO_DO,
             ];
         }
 
@@ -203,7 +203,7 @@ class ProductionController extends Controller
         if ($req->sale_id != null && $req->product_id != null) {
             $sale = Sale::where('id', $req->sale_id)->first();
             $product = $this->product::where('id', $req->product_id)->first();
-            $customer_name = $sale->customer->company_name;
+            $customer_name = $sale->customer->company_name ?? null;
 
             $data = [
                 'default_product' => $product,
