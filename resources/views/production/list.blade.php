@@ -87,7 +87,7 @@
                     <th>{{ __('Due Date') }}</th>
                     <th>{{ __('Days Left') }}</th>
                     <th>{{ __('Priority') }}</th>
-                    <th>{{ __('Request Status') }}</th>
+                    <th>{{ __('Material Status') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th>{{ __('Progress') }}</th>
                     <th></th>
