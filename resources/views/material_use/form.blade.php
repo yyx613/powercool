@@ -70,6 +70,14 @@
     ITEMS_COUNT = 0
 
     $(document).ready(function(){
+        // Prepare raw materials options
+        for (let i = 0; i < MATERIALS.length; i++) {
+            const m = MATERIALS[i];
+         
+            let opt = new Option(m.model_name, m.id)
+            $('#material-template select[name="material[]"]').append(opt)
+        }
+        
         if (MATERIAL != null) {
             $('select[name="product"]').val(MATERIAL.product_id).trigger('change')
 
@@ -79,7 +87,7 @@
                 $('#add-material-btn').click()
 
                 $(`.items[data-id="${i+1}"]`).attr('data-order-idx', m.id)
-                $(`.items[data-id="${i+1}"] select[name="material[]"]`).val(m.product_id)
+                $(`.items[data-id="${i+1}"] select[name="material[]"]`).val(m.product_id).trigger('change')
                 $(`.items[data-id="${i+1}"] input[name="qty[]"]`).val(m.qty)
             }
             if (MATERIAL.materials.length <= 0) $('#add-item-btn').click()
@@ -213,13 +221,6 @@
         $(`.items[data-id="${item_id}"] select[name="material[]"]`).select2({
             placeholder: "{!! __('Select a material') !!}"
         })
-
-        for (let i = 0; i < MATERIALS.length; i++) {
-            const m = MATERIALS[i];
-         
-            let opt = new Option(m.model_name, m.id)
-            $(`.items[data-id="${item_id}"] select[name="material[]"]`).append(opt)
-        }
         $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
     }
 </script>

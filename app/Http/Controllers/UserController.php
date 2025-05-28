@@ -50,9 +50,7 @@ class UserController extends Controller
 
     public function getData(Request $req)
     {
-        $records = User::with('roles')->whereHas('roles', function ($q) {
-            $q->whereNot('id', ModelsRole::SUPERADMIN);
-        });
+        $records = User::with('roles');
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {

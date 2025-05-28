@@ -100,19 +100,19 @@
                 <ul>
                     @foreach ($production->users as $u)
                         <li class="flex items-center gap-x-4 my-2">
-                            <span>
-                                <div class="h-8 w-8 rounded-full border overflow-hidden">
-                                    @if (count($u->pictures) > 0)
-                                        <img src="{{ $u->latest_picture->url }}" alt=""
-                                            class="h-full w-full object-cover">
-                                    @else
-                                        <img src="{{ asset('images/avatar.jpg') }}" alt="Avatar image"
-                                            class="h-full w-full object-cover">
-                                    @endif
-                                </div>
-                            </span>
-                            <span class="flex-1 text-md">{{ $u->name }}</span>
-                            <span class="text-md">{{ join(', ', getUserRole($u)) }}</span>
+                            <div class="h-8 w-8 rounded-full border overflow-hidden">
+                                @if (count($u->pictures) > 0)
+                                    <img src="{{ $u->latest_picture->url }}" alt=""
+                                        class="h-full w-full object-cover">
+                                @else
+                                    <img src="{{ asset('images/avatar.jpg') }}" alt="Avatar image"
+                                        class="h-full w-full object-cover">
+                                @endif
+                            </div>
+                            <div>
+                                <p class="flex-1 text-md leading-none font-semibold">{{ $u->name }}</p>
+                                <span class="text-sm text-slate-500 leading-none">{{ join(', ', getUserRole($u)) }}</span>
+                            </div>
                         </li>
                     @endforeach
                 </ul>

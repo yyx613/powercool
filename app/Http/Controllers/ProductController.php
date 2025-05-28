@@ -110,9 +110,10 @@ class ProductController extends Controller
                 $product_ids = Production::where('status', Production::STATUS_COMPLETED)->pluck('product_id')->toArray();
                 $records = $records->whereIn('id', $product_ids);
             } else {
-                $records = $records->whereHas('children', function ($q) {
-                    $q->where('location', ProductChild::LOCATION_FACTORY);
-                });
+                $records = $records->withCount(['children' => function ($q) {
+                    $q->where('location', ProductChild::LOCATION_FACTORY)
+                        ->whereNot('status', ProductChild::STATUS_STOCK_OUT);
+                }])->having('children_count', '>', 0);
             }
         }
 
@@ -166,7 +167,12 @@ class ProductController extends Controller
                 if ($req->boolean('is_product') == true) {
                     $qty = Production::where('status', Production::STATUS_COMPLETED)->where('product_id', $record->id)->count();
                 } else {
-                    $pcs = ProductChild::where('product_id', $record->id)->where('location', ProductChild::LOCATION_FACTORY)->get();
+                    $pcs = ProductChild::where('product_id', $record->id)
+                        ->where(function ($q) {
+                            $q->where('location', ProductChild::LOCATION_FACTORY)
+                                ->whereNot('status', ProductChild::STATUS_STOCK_OUT);
+                        })
+                        ->get();
                     for ($i = 0; $i < count($pcs); $i++) {
                         if ($pcs[$i]->assignedTo() == null) {
                             $qty++;
