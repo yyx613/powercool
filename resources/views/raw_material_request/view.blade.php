@@ -102,6 +102,10 @@
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
+                         if (row.parent_completed == true) {
+                            return ''
+                        }
+
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.is_sparepart && row.status == 1 ? 

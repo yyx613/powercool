@@ -46,7 +46,7 @@ class RawMaterialRequestController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->production->sku ?? null,
-                'qty_to_collect' => $record->materials->count(),
+                'qty_to_collect' => RawMaterialRequestMaterial::where('raw_material_request_id', $record->id)->value(DB::raw('SUM(qty - COALESCE(qty_collected, 0) )')),
                 'qty_collected' => $record->completedMaterials()->count(),
                 'status' => $record->status,
             ];
@@ -89,6 +89,7 @@ class RawMaterialRequestController extends Controller
                         'raw_material_request_id' => $rmq->id,
                         'product_id' => $req->product,
                         'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                        'qty' => 1,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -140,9 +141,10 @@ class RawMaterialRequestController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'product_name' => $record->material->model_name ?? null,
-                'qty' => $record->qty,
+                'qty' => $record->qty - ($record->qty_collected ?? 0),
                 'status' => $record->status,
-                'is_sparepart' => $record->material->is_sparepart
+                'is_sparepart' => $record->material->is_sparepart,
+                'parent_completed' => $record->materialRequest->status == RawMaterialRequest::STATUS_COMPLETED
             ];
         }
 
@@ -160,14 +162,16 @@ class RawMaterialRequestController extends Controller
     public function materialComplete(Request $req, RawMaterialRequestMaterial $rmqm)
     {
         if ($req->has('qty')) {
+            $remaining_qty = ($rmqm->qty - $rmqm->qty_collected ?? 0);
+
             if ($req->qty <= 0) {
                 return back()->with('warning', 'The quantity must be greater than 0');
-            } else if ($req->qty > $rmqm->qty) {
-                return back()->with('warning', 'The quantity must be greater than ' . $rmqm->qty);
+            } else if ($req->qty > $remaining_qty) {
+                return back()->with('warning', 'The quantity must be greater than ' . $remaining_qty);
             }
 
-            $rmqm->qty -= $req->qty;
-            if ($rmqm->qty <= 0) {
+            $rmqm->qty_collected += $req->qty;
+            if ($rmqm->qty - ($rmqm->qty_collected ?? 0) <= 0) {
                 $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED;
             }
             $rmqm->save();

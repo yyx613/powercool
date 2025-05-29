@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('raw_material_request_materials', function (Blueprint $table) {
             $table->integer('qty')->nullable()->after('status');
+            $table->integer('qty_collected')->nullable()->after('qty')->comment('For raw material');
         });
     }
 
