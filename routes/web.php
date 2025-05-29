@@ -217,11 +217,15 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/view-get-data-cost', 'viewGetDataCost')->name('view_get_data_cost');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
+        Route::get('/transfer-to-factory', 'transferToFactory')->name('transfer_to_factory');
+        Route::get('/transfer-to-warehouse', 'transferToWarehouse')->name('transfer_to_warehouse');
     });
     // Raw Material Request
     Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material_request.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
         Route::get('/view/{rmq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/complete/{rmq}', 'complete')->name('complete');
@@ -405,6 +409,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/view/{product}', 'view')->name('view');
+        Route::get('/record-usage/{frm}', 'recordUsage')->name('record_usage');
+        Route::post('/record-usage/{frm}', 'recordUsageSubmit')->name('record_usage_submit');
+        Route::get('/get-data', 'recordUsageGetData')->name('record_usage_get_data');
     });
     // Production Request
     Route::controller(ProductionRequestController::class)->prefix('production-request')->name('production_request.')->middleware(['can:production_request.view'])->group(function () {

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Product;
 use App\Models\Production;
 use App\Models\RawMaterialRequest;
 use App\Models\RawMaterialRequestMaterial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class RawMaterialRequestController extends Controller
@@ -42,7 +45,7 @@ class RawMaterialRequestController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
-                'sku' => $record->production->sku,
+                'sku' => $record->production->sku ?? null,
                 'qty_to_collect' => $record->materials->count(),
                 'qty_collected' => $record->completedMaterials()->count(),
                 'status' => $record->status,
@@ -50,6 +53,65 @@ class RawMaterialRequestController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function create()
+    {
+        return view('raw_material_request.form');
+    }
+
+    public function store(Request $req)
+    {
+        $rules = [
+            'production_id' => 'nullable',
+            'product' => 'required',
+            'qty' => 'required',
+            'remark' => 'nullable|max:250'
+        ];
+        // Validate request
+        $req->validate($rules);
+
+        try {
+            DB::beginTransaction();
+
+            $product = Product::where('id', $req->product)->first();
+
+            $rmq = RawMaterialRequest::create([
+                'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+                'remark' => $req->remark ?? null
+            ]);
+            (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
+
+            if ($product->is_sparepart == true) {
+                $data = [];
+                for ($i = 0; $i < $req->qty; $i++) {
+                    $data[] = [
+                        'raw_material_request_id' => $rmq->id,
+                        'product_id' => $req->product,
+                        'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                RawMaterialRequestMaterial::insert($data);
+            } else {
+                RawMaterialRequestMaterial::create([
+                    'raw_material_request_id' => $rmq->id,
+                    'product_id' => $req->product,
+                    'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                    'qty' => $req->qty,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect(route('raw_material_request.index'))->with('success', 'Request created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
     }
 
     public function view(RawMaterialRequest $rmq)
@@ -78,7 +140,9 @@ class RawMaterialRequestController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'product_name' => $record->material->model_name ?? null,
+                'qty' => $record->qty,
                 'status' => $record->status,
+                'is_sparepart' => $record->material->is_sparepart
             ];
         }
 
@@ -93,12 +157,32 @@ class RawMaterialRequestController extends Controller
         return back()->with('success', 'Request completed');
     }
 
-    public function materialComplete(RawMaterialRequestMaterial $rmqm)
+    public function materialComplete(Request $req, RawMaterialRequestMaterial $rmqm)
     {
-        $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED;
-        $rmqm->save();
+        if ($req->has('qty')) {
+            if ($req->qty <= 0) {
+                return back()->with('warning', 'The quantity must be greater than 0');
+            } else if ($req->qty > $rmqm->qty) {
+                return back()->with('warning', 'The quantity must be greater than ' . $rmqm->qty);
+            }
 
-        return back()->with('success', 'Request completed');
+            $rmqm->qty -= $req->qty;
+            if ($rmqm->qty <= 0) {
+                $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED;
+            }
+            $rmqm->save();
+
+            if ($rmqm->qty <= 0) {
+                return back()->with('success', 'Request completed');
+            } else {
+                return back()->with('success', 'Request updated');
+            }
+        } else {
+            $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED;
+            $rmqm->save();
+
+            return back()->with('success', 'Request completed');
+        }
     }
 
     public function materialIncomplete(RawMaterialRequestMaterial $rmqm)
