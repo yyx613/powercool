@@ -73,7 +73,7 @@ class MilestoneController extends Controller
 
             $data['data'][] = [
                 'category' => join(', ', $categories),
-                'type' => $record->inventoryType->name,
+                'type' => $record->inventoryType->name ?? null,
                 'batch' => $record->batch,
             ];
         }
