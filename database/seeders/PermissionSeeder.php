@@ -17,6 +17,7 @@ class PermissionSeeder extends Seeder
             'notification.production_complete_notification',
 
             'approval.view',
+            'approval.production_material_transfer_request',
 
             'dashboard.view',
 

@@ -23,6 +23,7 @@ use App\Models\Priority;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
+use App\Models\Production;
 use App\Models\ProjectType;
 use App\Models\Promotion;
 use App\Models\Role;
@@ -698,11 +699,22 @@ class ViewServiceProvider extends ServiceProvider
                 'existing_milestones' => $milestones,
             ]);
         });
-        View::composer(['production_request.form'], function (ViewView $view) {
-            $products = Product::orderBy('model_name', 'asc')->get();
+        View::composer(['production_request.form', 'raw_material_request.form'], function (ViewView $view) {
+            if (str_contains(Route::currentRouteName(), 'raw_material_request.')) {
+                $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_name', 'asc')->get();
+            } else {
+                $products = Product::orderBy('model_name', 'asc')->get();
+            }
 
             $view->with([
                 'products' => $products,
+            ]);
+        });
+        View::composer(['raw_material_request.form'], function (ViewView $view) {
+            $productions = Production::orderBy('id', 'desc')->get();
+
+            $view->with([
+                'productions' => $productions,
             ]);
         });
     }

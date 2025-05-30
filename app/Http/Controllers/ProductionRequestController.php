@@ -91,8 +91,6 @@ class ProductionRequestController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
-
-        dd($req->all());
     }
 
     public function view(ProductionRequest $pq)

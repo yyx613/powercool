@@ -7,10 +7,9 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 
 #[ScopedBy([BranchScope::class])]
-class ActivityLog extends Model
+class FactoryRawMaterial extends Model
 {
     use HasFactory;
 
@@ -31,20 +30,11 @@ class ActivityLog extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function doneBy()
-    {
-        return $this->belongsTo(User::class, 'done_by')->withoutGlobalScope(BranchScope::class);
+    public function records() {
+        return $this->hasMany(FactoryRawMaterialRecord::class);
     }
 
-    public function store($class, $class_id, $desc, $data = null, $done_by = null, $branch_loc = null)
-    {
-        $data = self::create([
-            'object_type' => $class,
-            'object_id' => $class_id,
-            'desc' => $desc,
-            'data' => $data,
-            'done_by' => $done_by ?? Auth::user()->id,
-        ]);
-        (new Branch)->assign(ActivityLog::class, $data->id, $branch_loc);
+    public function remainingQty() {
+        return $this->qty - ($this->to_warehouse_qty ?? 0 )- $this->records->sum('qty');
     }
 }

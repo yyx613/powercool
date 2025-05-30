@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Approval;
 use App\Models\DeliveryOrder;
+use App\Models\FactoryRawMaterial;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Scopes\ApprovedScope;
 use Illuminate\Http\Request;
@@ -58,6 +60,10 @@ class ApprovalController extends Controller
                 $records = $records->where('status', Approval::STATUS_REJECTED);
             }
         }
+        $has = hasPermission('approval.production_material_transfer_request');
+        if (!$has) {
+            $records = $records->whereNot('object_type', FactoryRawMaterial::class);
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -88,10 +94,10 @@ class ApprovalController extends Controller
                 'date' => $record->created_at,
                 'data' => $record->data == null ? null : json_decode($record->data),
                 'pending_approval' => $record->status == Approval::STATUS_PENDING_APPROVAL,
-                'rejected' => $record->status == Approval::STATUS_REJECTED,
                 'view_url' => $view_url,
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
+                'can_view' => get_class($obj) == FactoryRawMaterial::class ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -102,6 +108,8 @@ class ApprovalController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            $obj = $approval->object()->withoutGlobalScope(ApprovedScope::class)->first();
 
             $approval->status = Approval::STATUS_APPROVED;
             $approval->save();
@@ -115,6 +123,17 @@ class ApprovalController extends Controller
             } else if (get_class($approval->object) == DeliveryOrder::class) {
                 $approval->object->status = DeliveryOrder::STATUS_APPROVAL_APPROVED;
                 $approval->object->save();
+            }
+
+            // Production Material Transfer Request
+            if (get_class($obj) == FactoryRawMaterial::class) {
+                $data = json_decode($approval->data);
+                $obj->qty -= $data->qty;
+                $obj->to_warehouse_qty -= $data->qty;
+
+                Product::where('id', $obj->product_id)->increment('qty', $data->qty);
+
+                $obj->save();
             }
 
             DB::commit();
@@ -142,6 +161,7 @@ class ApprovalController extends Controller
             $approval->status = Approval::STATUS_REJECTED;
             $approval->save();
 
+            // QUO/SO/DO
             if (get_class($obj) == DeliveryOrder::class) {
                 $sale_orders = Sale::whereRaw('find_in_set(' . $obj->id . ', convert_to)')->get();
 
@@ -168,6 +188,13 @@ class ApprovalController extends Controller
             } else if (get_class($approval->object) == DeliveryOrder::class) {
                 $approval->object->status = DeliveryOrder::STATUS_APPROVAL_REJECTED;
                 $approval->object->save();
+            }
+
+            // Production Material Transfer Request
+            if (get_class($obj) == FactoryRawMaterial::class) {
+                $data = json_decode($approval->data);
+                $obj->to_warehouse_qty -= $data->qty;
+                $obj->save();
             }
 
             DB::commit();

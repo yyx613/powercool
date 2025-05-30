@@ -519,6 +519,7 @@ class ProductionController extends Controller
                     'raw_material_request_id' => $rmq->id,
                     'product_id' => $material_use->materials[$i]->product_id,
                     'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                    'qty' => $material_use->materials[$i]->material->is_sparepart ? 1 : $material_use->materials[$i]->qty,
                     'created_at' => now(),
                 ];
             }

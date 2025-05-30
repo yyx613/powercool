@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductExport;
+use App\Models\Approval;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
+use App\Models\FactoryRawMaterial;
+use App\Models\FactoryRawMaterialRecord;
 use App\Models\InventoryCategory;
 use App\Models\Invoice;
 use App\Models\MaterialUse;
@@ -19,6 +22,7 @@ use App\Models\ProductMilestone;
 use App\Models\ProductSellingPrice;
 use App\Models\SaleProduct;
 use App\Models\TaskMilestoneInventory;
+use App\Models\UOM;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -29,6 +33,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
@@ -80,7 +85,7 @@ class ProductController extends Controller
 
     public function getData(Request $req)
     {
-        // Search
+        // Search for child
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
@@ -198,8 +203,85 @@ class ProductController extends Controller
                 'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
             ];
         }
+        if ($req->boolean('is_production') == true && $req->boolean('is_product') == false) {
+            $frm_data = $this->getFactoryRawMaterial($req->has('search') && $req->search['value'] != null ? $req->search['value'] : null, $req->order);
+
+            $data['recordsTotal'] += $frm_data['recordsTotal'];
+            $data['recordsFiltered'] += $frm_data['recordsFiltered'];
+            $data['data'] = array_merge($data['data'], $frm_data['data']);
+            $data['records_ids'] = $data['records_ids']->merge($frm_data['records_ids']);
+        }
 
         return response()->json($data);
+    }
+
+    private function getFactoryRawMaterial($keyword = null, $orders = null)
+    {
+        $frms = FactoryRawMaterial::get();
+
+        $records = $this->prod->whereIn('id', $frms->pluck('product_id')->toArray())->with(['category' => function ($q) {
+            $q->withTrashed();
+        }]);
+        // Search
+        if ($keyword != null) {
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
+                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
+                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('category', function ($qq) use ($keyword) {
+                        $qq->where('name', 'like', '%' . $keyword . '%');
+                    });
+            });
+        }
+        // Order
+        if ($orders != null) {
+            $map = [
+                0 => 'sku',
+                1 => 'model_name',
+                2 => 'category',
+                3 => 'qty',
+            ];
+            foreach ($orders as $order) {
+                if ($order['column'] == 2) {
+                    $records = $records->orderBy($this->invCat::select('name')->whereColumn('inventory_categories.id', 'products.inventory_category_id'), $order['dir']);
+                } else {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'sku' => $record->sku,
+                'image' => $record->image ?? null,
+                'model_name' => $record->model_name,
+                'category' => $record->category->name,
+                'qty' => $frms->where('product_id', $record->id)->first()->remainingQty(),
+                'min_price' => number_format($record->min_price, 2),
+                'max_price' => number_format($record->max_price, 2),
+                'is_sparepart' => $record->is_sparepart,
+                'status' => $record->is_active,
+                'can_edit' => false,
+                'can_delete' => false,
+                'frm_id' => $frms->where('product_id', $record->id)->value('id')
+            ];
+        }
+        return $data;
     }
 
     public function create(Request $req)
@@ -829,5 +911,174 @@ class ProductController extends Controller
             'product_milestones' => $milestones,
             'product_material_use' => $material_use,
         ]);
+    }
+
+    public function transferToFactory(Request $req)
+    {
+        $product = Product::where('id', $req->product_id)->first();
+        if ($req->qty <= 0) {
+            return back()->with('warning', 'The quantity must not greater than 0')->withInput();
+        }
+        if ($product->qty < $req->qty) {
+            return back()->with('warning', 'The quantity must not greater than ' . $product->qty)->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Transfer
+            $frm = FactoryRawMaterial::where('product_id', $product->id)->first();
+
+            if ($frm != null) {
+                $frm->qty += $req->qty;
+                $frm->save();
+            } else {
+                $frm = FactoryRawMaterial::create([
+                    'product_id' => $product->id,
+                    'qty' => $req->qty,
+                ]);
+                (new Branch)->assign(FactoryRawMaterial::class, $frm->id);
+            }
+
+            $product->qty -= $req->qty;
+            $product->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Product transferred');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function transferToWarehouse(Request $req)
+    {
+        $product = Product::where('id', $req->product_id)->first();
+        $frm = FactoryRawMaterial::where('id', $req->frm_id)->first();
+        if ($req->qty <= 0) {
+            return back()->with('warning', 'The quantity must not greater than 0')->withInput();
+        }
+        if ($frm->remainingQty() < $req->qty) {
+            return back()->with('warning', 'The quantity must not greater than ' . $frm->remainingQty())->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => FactoryRawMaterial::class,
+                'object_id' => $frm->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'qty' => $req->qty,
+                    'description' => Auth::user()->name . ' has requested to transfer ' . $req->qty . ' ' . $product->model_name . ' (' . $product->sku . ')',
+                    'user_id' => Auth::user()->id
+                ])
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $frm->to_warehouse_qty += $req->qty;
+            $frm->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Transfer request is created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function recordUsage(Request $req, FactoryRawMaterial $frm)
+    {
+        return view('inventory.record_usage', [
+            'frm' => $frm,
+            'date' => now()->format('Y/m/d'),
+            'by' => Auth::user()->name,
+            'uoms' => UOM::orderBy('name', 'asc')->get(),
+            'productions' => Production::orderBy('id', 'desc')->get(),
+        ]);
+    }
+
+    public function recordUsageSubmit(Request $req, FactoryRawMaterial $frm)
+    {
+        // Validate request
+        $validator = Validator::make($req->all(), [
+            'qty' => 'required|max:250',
+            'prodution_id' => 'nullable',
+            'uom' => 'nullable',
+            'remark' => 'nullable|max:250',
+        ], [], [
+            'qty' => 'quantity'
+        ]);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+        if ($req->qty > $frm->qty) {
+            throw ValidationException::withMessages([
+                'qty' => 'The quantity must not greater than ' . $frm->qty,
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            FactoryRawMaterialRecord::create([
+                'factory_raw_material_id' => $frm->id,
+                'qty' => $req->qty,
+                'production_id' => $req->production_id,
+                'uom' => $req->uom,
+                'done_by' => Auth::user()->id,
+                'remark' => $req->remark,
+            ]);
+
+            DB::commit();
+
+            return redirect(route('production_material.index'))->with('success', 'Record created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function recordUsageGetData(Request $req)
+    {
+        $records = new FactoryRawMaterialRecord;
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('qty', 'like', '%' . $keyword . '%');
+            });
+        }
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'qty' => $record->qty,
+                'production' => $record->production->sku ?? null,
+                'uom' => $record->uomObj->name ?? null,
+                'date' => Carbon::parse($record->created_at)->format('Y m d H:i'),
+                'done_by' => $record->doneBy->name ?? null,
+                'remark' => $record->remark ?? null,
+            ];
+        }
+
+        return response()->json($data);
     }
 }
