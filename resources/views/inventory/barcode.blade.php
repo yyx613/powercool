@@ -14,6 +14,7 @@
         margin-left: 15px;
         margin-right: 15px;
     }
+
     body {
         font-family: sans-serif;
     }
@@ -24,8 +25,8 @@
         <table style="width: 100%;">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
-                    <img src="{{ public_path('images/imax.jpg') }}" alt=""
-                        style="height: 35px; width: 100px; margin: 0 0 10px 0;">
+                    <img src="{{ public_path('images/image_1.jpg') }}" alt=""
+                        style="width: 50px; margin: 0 0 10px 0;">
                     <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
                     <p style="margin: 0; font-size: 10px;">{{ $product_name[$i] }}</p>
                 </td>
