@@ -14,6 +14,9 @@
         margin-left: 15px;
         margin-right: 15px;
     }
+    body {
+        font-family: sans-serif;
+    }
 </style>
 
 <body>
@@ -22,42 +25,71 @@
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
                     <img src="{{ public_path('images/imax.jpg') }}" alt=""
-                        style="height: 50px; width: 100px; margin: 0 0 10px 0;">
+                        style="height: 35px; width: 100px; margin: 0 0 10px 0;">
                     <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
                     <p style="margin: 0; font-size: 10px;">{{ $product_name[$i] }}</p>
-                    <p style="margin: 0; font-size: 10px;">{{ $product_code[$i] }} [{{ $barcode[$i] }}]</p>
                 </td>
             </tr>
-            <tr>
-                <td style="padding: 0 0 10px 0;">
-                    <p style="margin: 0; font-size: 10px;">DIMENSION:</p>
-                    <p style="margin: 0; font-size: 10px;">CAPACITY:</p>
-                    <p style="margin: 0; font-size: 10px;">WEIGHT:</p>
-                    <p style="margin: 0; font-size: 10px;">REFRIGERANT:</p>
-                    <p style="margin: 0; font-size: 10px;">POWER INPUT:</p>
-                    <p style="margin: 0; font-size: 10px;">VOLTAGE / FREQUENCY:</p>
-                    <p style="margin: 0; font-size: 10px;">STANDARD FEATURES:</p>
-                </td>
-                <td style="padding: 0 0 10px 0;">
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $dimension[$i] ?? '' }}</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $capacity[$i] ?? '' }}</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $weight[$i] ?? '' }} KG</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $refrigerant[$i] ?? '' }}</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $power_input[$i] ?? '' }}</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $voltage_frequency[$i] ?? '' }}</p>
-                    <p style="margin: 0; font-size: 10px; text-align: right;">{{ $standard_features[$i] ?? '' }}</p>
+            <tr style="width: 100%;">
+                <td colspan="2" style="padding: 0 0 10px 0;">
+                    <table style="width: 100%; border: solid 1px black; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">SERIAL
+                                NO:</td>
+                            <td
+                                style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $product_code[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">DIMENSION:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $dimension[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">CAPACITY:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $capacity[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">WEIGHT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $weight[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">REFRIGERANT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $refrigerant[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER INPUT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $power_input[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">VOLTAGE / FREQUENCY:
+                            </td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $voltage_frequency[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">STANDARD FEATURES:
+                            </td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $standard_features[$i] ?? '' }}</td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
             <tr>
                 <td style="text-align: left;">
                     <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
-                        style="height: 75px; width: 75px; margin: 0 0 5px 0;">
-                    <p style="margin: 0; font-size: 10px;">Warranty Policy</p>
+                        style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                    <p style="margin: 0 0 0 2.5px; font-size: 10px;">Warranty Policy</p>
                 </td>
                 <td style="text-align: right;">
                     <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
-                        style="height: 75px; width: 75px; margin: 0 0 5px 0;">
-                    <p style="margin: 0; font-size: 10px;">User Manual</p>
+                        style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                    <p style="margin: 0 10px 0 0; font-size: 10px;">User Manual</p>
                 </td>
             </tr>
             <tr>
@@ -76,7 +108,7 @@
                     <p style="margin: 5px 0 0 0; font-size: 10px; text-align: center;">
                         Power Cool Equipments (M) Sdn Bhd<br>
                         (Reg no.:199601010696 [383045-D])<br>
-                        No. 12, RCI Park, Jalan Kesidang 2, Kawasan Perindustrian Sungai Choh, 48200 Serendah, Selangor.
+                        No. 12, RCI Park, Jln Kesidang 2, Kws. Perindustrian Sg. Choh, 48200 Serendah, Sel.
                     </p>
                 </td>
             </tr>

@@ -63,7 +63,7 @@ class ApprovalController extends Controller
         }
         $has = hasPermission('approval.production_material_transfer_request');
         if (!$has) {
-            $records = $records->whereNot('object_type', FactoryRawMaterial::class);
+            $records = $records->whereNot('object_type', FactoryRawMaterial::class)->whereNot('object_type', ProductChild::class);
         }
 
         $records_count = $records->count();
