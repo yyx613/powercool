@@ -46,4 +46,9 @@ class RawMaterialRequest extends Model
     {
         return $this->materials->where('status', RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED);
     }
+
+    public function requestedBy()
+    {
+        return $this->belongsTo(User::class, 'requested_by')->withoutGlobalScope(BranchScope::class);
+    }
 }

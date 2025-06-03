@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\InventoryCategory;
@@ -414,6 +415,36 @@ class InventoryController extends Controller
             DB::commit();
 
             return back()->with('success', 'Product is in transit');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function toWarehouse(Request $req, ProductChild $product_child)
+    {
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => ProductChild::class,
+                'object_id' => $product_child->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'description' => Auth::user()->name . ' has requested the product ' . $product_child->parent->model_name . ' with serial number (' . $product_child->sku . ') back to warehouse',
+                    'user_id' => Auth::user()->id,
+                ])
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $product_child->status = ProductChild::STATUS_PENDING_APPROVAL;
+            $product_child->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Transfer Request is created');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

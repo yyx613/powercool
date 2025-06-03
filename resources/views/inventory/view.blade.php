@@ -8,12 +8,14 @@
         #cost-table {
             border: solid 1px rgb(209 213 219);
         }
+
         #data-table thead th,
         #data-table tbody tr td,
         #cost-table thead th,
         #cost-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
+
         #data-table tbody tr:last-of-type td,
         #cost-table tbody tr:last-of-type td {
             border-bottom: none;
@@ -23,7 +25,8 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title url="{{ $is_production ? route('production_material.index') : ($is_product ? route('product.index') : route('raw_material.index')) }}">{{ $is_product ? __('View Product') : ($is_production ? __('View Production Material') : __('View Raw Material')) }}</x-app.page-title>
+        <x-app.page-title
+            url="{{ $is_production ? route('production_material.index') : ($is_product ? route('product.index') : route('raw_material.index')) }}">{{ $is_product ? __('View Product') : ($is_production ? __('View Production Material') : __('View Raw Material')) }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
@@ -78,28 +81,35 @@
         <div class="flex flex-col flex-1">
             <div class="flex items-center mb-2 gap-x-4">
                 <h1 class="text-lg font-semibold leading-none">{{ $prod->model_name }}</h1>
-                <span class="text-xs font-semibold py-1 px-3 rounded-full {{ $prod->is_active ? 'bg-green-300' : 'bg-red-300' }}">{{ $prod->is_active ? 'Active' : 'Inactive' }}</span>
+                <span
+                    class="text-xs font-semibold py-1 px-3 rounded-full {{ $prod->is_active ? 'bg-green-300' : 'bg-red-300' }}">{{ $prod->is_active ? 'Active' : 'Inactive' }}</span>
             </div>
             <div class="flex gap-x-4 mb-1">
                 <span class="text-xs font-semibold text-slate-500">{{ __('Code') }}: {{ $prod->sku }}</span>
-                <span class="text-xs font-semibold text-slate-500">{{ __('Category') }}: {{ $prod->category->name }}</span>
+                <span class="text-xs font-semibold text-slate-500">{{ __('Category') }}:
+                    {{ $prod->category->name }}</span>
                 @if ($prod->low_stock_threshold != null)
-                    <span class="text-xs font-semibold text-slate-500">{{ __('Low Stock Threshold') }}: {{ $prod->low_stock_threshold }}</span>
+                    <span class="text-xs font-semibold text-slate-500">{{ __('Low Stock Threshold') }}:
+                        {{ $prod->low_stock_threshold }}</span>
                 @endif
             </div>
             @if ($prod->length != null || $prod->width != null || $prod->height != null || $prod->weight != null)
                 <div class="flex gap-x-4 mb-1">
                     @if ($prod->length != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ $prod->length }} MM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ $prod->length }}
+                            MM</span>
                     @endif
                     @if ($prod->width != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ $prod->width }} MM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ $prod->width }}
+                            MM</span>
                     @endif
                     @if ($prod->height != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ $prod->height }} MM</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ $prod->height }}
+                            MM</span>
                     @endif
                     @if ($prod->weight != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Weight') }}: {{ $prod->weight }} KG</span>
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Weight') }}: {{ $prod->weight }}
+                            KG</span>
                     @endif
                 </div>
             @endif
@@ -110,12 +120,14 @@
     </div>
 
     @if (!$is_production)
-    <div class="flex justify-end mb-4">
-        <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
-            <button type="button" class="text-sm p-2 font-medium bg-emerald-200" id="view-list-btn">{{ __('View List') }}</button>
-            <button type="button" class="text-sm p-2 font-medium bg-slate-200" id="view-cost-btn">{{ __('View Cost') }}</button>
+        <div class="flex justify-end mb-4">
+            <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
+                <button type="button" class="text-sm p-2 font-medium bg-emerald-200"
+                    id="view-list-btn">{{ __('View List') }}</button>
+                <button type="button" class="text-sm p-2 font-medium bg-slate-200"
+                    id="view-cost-btn">{{ __('View Cost') }}</button>
+            </div>
         </div>
-    </div>
     @endif
 
     <div id="data-table-container">
@@ -124,9 +136,13 @@
                 <!-- Filters -->
                 <div class="flex items-center max-w-screen-sm gap-x-4 w-full mb-4">
                     <div class="flex-1">
-                        <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search') }}">
+                        <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
+                            placeholder="{{ __('Search') }}">
                             <div class="rounded-md border border-transparent p-1 ml-1">
-                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"><path d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z"/></svg>
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24">
+                                    <path
+                                        d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z" />
+                                </svg>
                             </div>
                         </x-app.input.input>
                     </div>
@@ -134,8 +150,13 @@
                         <x-app.qr-scanner />
                     </div>
                     <div class="flex-1">
-                        <a href="{{ $is_product ? route('product.generate_barcode') : route('raw_material.generate_barcode') }}" class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z"/></svg>
+                        <a href="{{ $is_product ? route('product.generate_barcode') : route('raw_material.generate_barcode') }}"
+                            class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                viewBox="0 0 24 24" width="512" height="512">
+                                <path
+                                    d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z" />
+                            </svg>
                             <span class="font-medium">{{ __('Generate Barcode') }}</span>
                         </a>
                     </div>
@@ -158,13 +179,13 @@
                 </table>
             </div>
 
-            <x-app.modal.stock-in-modal/>
+            <x-app.modal.stock-in-modal />
             @if ($prod->company_group == 1)
-                <x-app.modal.stock-out-to-hi-ten-modal/>
+                <x-app.modal.stock-out-to-hi-ten-modal />
             @else
-                <x-app.modal.stock-out-modal/>
+                <x-app.modal.stock-out-modal />
             @endif
-            <x-app.modal.transfer-modal/>
+            <x-app.modal.transfer-modal />
         @else
             <!-- Table -->
             <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
@@ -183,23 +204,23 @@
 
     <!-- Cost Table -->
     @if (!$is_production)
-    <div id="cost-table-container" class="hidden">
-        <table id="cost-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
-            <thead>
-                <tr>
-                    @if ($is_product || $prod->is_sparepart == true)
-                        <th>{{ __('SKU') }}</th>
-                    @else
-                        <th>{{ __('Qty') }}</th>
-                    @endif
-                    <th>{{ __('Unit Price') }}</th>
-                    <th>{{ __('Total Price') }}</th>
-                    <th>{{ __('At') }}</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+        <div id="cost-table-container" class="hidden">
+            <table id="cost-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+                <thead>
+                    <tr>
+                        @if ($is_product || $prod->is_sparepart == true)
+                            <th>{{ __('SKU') }}</th>
+                        @else
+                            <th>{{ __('Qty') }}</th>
+                        @endif
+                        <th>{{ __('Unit Price') }}</th>
+                        <th>{{ __('Total Price') }}</th>
+                        <th>{{ __('At') }}</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     @endif
 @endsection
 
@@ -230,14 +251,20 @@
                 processing: true,
                 serverSide: true,
                 order: [],
-                columns: [
-                    { data: 'order_id' },
-                    { data: 'qty' },
-                    { data: 'on_hold' },
-                    { data: 'at' },
-                ],
-                columnDefs: [
+                columns: [{
+                        data: 'order_id'
+                    },
                     {
+                        data: 'qty'
+                    },
+                    {
+                        data: 'on_hold'
+                    },
+                    {
+                        data: 'at'
+                    },
+                ],
+                columnDefs: [{
                         "width": "10%",
                         "targets": 0,
                         'orderable': false,
@@ -271,7 +298,7 @@
                     },
                 ],
                 ajax: {
-                    data: function(){
+                    data: function() {
                         var info = $('#data-table').DataTable().page.info();
                         var url = "{{ route('product.view_get_data_raw_material') }}"
 
@@ -289,17 +316,29 @@
                 processing: true,
                 serverSide: true,
                 order: [],
-                columns: [
-                    { data: 'checkbox' },
-                    { data: 'sku' },
-                    { data: 'location' },
-                    { data: 'order_id' },
-                    { data: 'status' },
-                    { data: 'done_by' },
-                    { data: 'action' },
-                ],
-                columnDefs: [
+                columns: [{
+                        data: 'checkbox'
+                    },
                     {
+                        data: 'sku'
+                    },
+                    {
+                        data: 'location'
+                    },
+                    {
+                        data: 'order_id'
+                    },
+                    {
+                        data: 'status'
+                    },
+                    {
+                        data: 'done_by'
+                    },
+                    {
+                        data: 'action'
+                    },
+                ],
+                columnDefs: [{
                         "width": "1%",
                         "targets": 0,
                         orderable: false,
@@ -343,6 +382,8 @@
                                     return "{!! __('To Be Received') !!}"
                                 case 4:
                                     return "{!! __('Received') !!}"
+                                case 5:
+                                    return "{!! __('Pending Approval') !!}"
                             }
                             return data ?? '-'
                         }
@@ -352,7 +393,8 @@
                         "targets": 5,
                         orderable: false,
                         render: function(data, type, row) {
-                            if (data != null) return `<span class="text-sm font-semibold">${data.name}</span><br><span class="text-xs">${row.done_at}</span>`
+                            if (data != null)
+                                return `<span class="text-sm font-semibold">${data.name}</span><br><span class="text-xs">${row.done_at}</span>`
                             return data
                         }
                     },
@@ -360,43 +402,53 @@
                         "width": "5%",
                         "targets": 6,
                         orderable: false,
-                        render: function (data, type, row) {
-                            return  `<div class="flex items-center justify-end gap-x-2 px-2">
+                        render: function(data, type, row) {
+                            if (row.status == 5) return ''
+
+                            return `<div class="flex items-center justify-end gap-x-2 px-2">
                                 ${
                                     row.progress >= 100 || row.status == 3 ? `
-                                        <button class="rounded-full py-2 px-3 bg-purple-200 flex items-center gap-x-2 stock-in-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row.order_id != null ? row.order_id.sku : row.order_id}">
-                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,7.121c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l2.293,2.293V1c0-.553,.447-1,1-1s1,.447,1,1v7l2.293-2.293c.391-.391,1.023-.391,1.414,0s.391,1.023,0,1.414l-3.293,3.293c-.387,.387-.896,.582-1.405,.584l-.009,.002-.009-.002c-.509-.002-1.018-.197-1.405-.584l-3.293-3.293Z"/></svg>
-                                            <span class="text-xs font-medium">${ "{!! __('Stock In') !!}" }</span>
-                                        </button>` : ''
+                                                    <button class="rounded-full py-2 px-3 bg-purple-200 flex items-center gap-x-2 stock-in-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row.order_id != null ? row.order_id.sku : row.order_id}">
+                                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,7.121c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l2.293,2.293V1c0-.553,.447-1,1-1s1,.447,1,1v7l2.293-2.293c.391-.391,1.023-.391,1.414,0s.391,1.023,0,1.414l-3.293,3.293c-.387,.387-.896,.582-1.405,.584l-.009,.002-.009-.002c-.509-.002-1.018-.197-1.405-.584l-3.293-3.293Z"/></svg>
+                                                        <span class="text-xs font-medium">${ "{!! __('Stock In') !!}" }</span>
+                                                    </button>` : ''
                                 }
                                 ${
                                     IS_PRODUCTION || row.location == 'factory' || row.status != null ? '' : `
-                                        <button class="rounded-full py-2 px-3 bg-orange-200 flex items-center gap-x-2 stock-out-btns" data-id="${row.id}" data-serial-no="${row.sku}">
-                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,5.293c-.391-.391-.391-1.023,0-1.414L10.586,.586C10.972,.2,11.479,.006,11.986,.003l.014-.003,.014,.003c.508,.003,1.014,.197,1.4,.583l3.293,3.293c.391,.391,.391,1.023,0,1.414-.195,.195-.451,.293-.707,.293s-.512-.098-.707-.293l-2.293-2.293v7c0,.553-.447,1-1,1s-1-.447-1-1V3l-2.293,2.293c-.391,.391-1.023,.391-1.414,0Z"/></svg>
-                                            <span class="text-xs font-medium">${ "{!! __('Stock Out') !!}" }</span>
-                                        </button>`
+                                                    <button class="rounded-full py-2 px-3 bg-orange-200 flex items-center gap-x-2 stock-out-btns" data-id="${row.id}" data-serial-no="${row.sku}">
+                                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,5.293c-.391-.391-.391-1.023,0-1.414L10.586,.586C10.972,.2,11.479,.006,11.986,.003l.014-.003,.014,.003c.508,.003,1.014,.197,1.4,.583l3.293,3.293c.391,.391,.391,1.023,0,1.414-.195,.195-.451,.293-.707,.293s-.512-.098-.707-.293l-2.293-2.293v7c0,.553-.447,1-1,1s-1-.447-1-1V3l-2.293,2.293c-.391,.391-1.023,.391-1.414,0Z"/></svg>
+                                                        <span class="text-xs font-medium">${ "{!! __('Stock Out') !!}" }</span>
+                                                    </button>`
                                 }
                                 ${
                                     IS_PRODUCTION || row.status != null ? '' : `
-                                        <button class="rounded-full py-2 px-3 bg-emerald-200 flex items-center gap-x-2 transfer-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row != null && row.order_id != null ? row.order_id.sku : row.order_id}">
-                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,12.649a5,5,0,0,0-.256-1.581L22.405,7.051A3,3,0,0,0,19.559,5H17V4a3,3,0,0,0-3-3H3A3,3,0,0,0,0,4V19.5a3.517,3.517,0,0,0,6,2.447A3.517,3.517,0,0,0,12,19.5V19h3v.5a3.5,3.5,0,0,0,7,0V19h2ZM19.559,7a1,1,0,0,1,.948.684L21.613,11H17V7ZM2,4A1,1,0,0,1,3,3H14a1,1,0,0,1,1,1V17H2ZM3.5,21A1.5,1.5,0,0,1,2,19.5V19H5v.5A1.5,1.5,0,0,1,3.5,21ZM10,19.5a1.5,1.5,0,0,1-3,0V19h3Zm10,0a1.5,1.5,0,0,1-3,0V19h3ZM17,17V13h5v4Z"/></svg>
-                                            <span class="text-xs font-medium">${ "{!! __('Transfer') !!}" }</span>
-                                        </button>`
+                                                    <button class="rounded-full py-2 px-3 bg-emerald-200 flex items-center gap-x-2 transfer-btns" data-id="${row.id}" data-serial-no="${row.sku}" data-order-id="${row != null && row.order_id != null ? row.order_id.sku : row.order_id}">
+                                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,12.649a5,5,0,0,0-.256-1.581L22.405,7.051A3,3,0,0,0,19.559,5H17V4a3,3,0,0,0-3-3H3A3,3,0,0,0,0,4V19.5a3.517,3.517,0,0,0,6,2.447A3.517,3.517,0,0,0,12,19.5V19h3v.5a3.5,3.5,0,0,0,7,0V19h2ZM19.559,7a1,1,0,0,1,.948.684L21.613,11H17V7ZM2,4A1,1,0,0,1,3,3H14a1,1,0,0,1,1,1V17H2ZM3.5,21A1.5,1.5,0,0,1,2,19.5V19H5v.5A1.5,1.5,0,0,1,3.5,21ZM10,19.5a1.5,1.5,0,0,1-3,0V19h3Zm10,0a1.5,1.5,0,0,1-3,0V19h3ZM17,17V13h5v4Z"/></svg>
+                                                        <span class="text-xs font-medium">${ "{!! __('Transfer') !!}" }</span>
+                                                    </button>`
+                                }
+                                ${
+                                    IS_PRODUCTION  ? `
+                                                    <button class="rounded-full py-2 px-3 bg-purple-200 flex items-center gap-x-2 to-warehouse-btns" data-id="${row.id}">
+                                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,5.293c-.391-.391-.391-1.023,0-1.414L10.586,.586C10.972,.2,11.479,.006,11.986,.003l.014-.003,.014,.003c.508,.003,1.014,.197,1.4,.583l3.293,3.293c.391,.391,.391,1.023,0,1.414-.195,.195-.451,.293-.707,.293s-.512-.098-.707-.293l-2.293-2.293v7c0,.553-.447,1-1,1s-1-.447-1-1V3l-2.293,2.293c-.391,.391-1.023,.391-1.414,0Z"/></svg>
+                                                        <span class="text-xs font-medium">${ "{!! __('To Warehouse') !!}" }</span>
+                                                    </button>` : ''
                                 }
                             </div>`
                         }
                     },
                 ],
                 ajax: {
-                    data: function(){
+                    data: function() {
                         var info = $('#data-table').DataTable().page.info();
                         var url = "{{ route('product.view_get_data') }}"
 
-                        url = `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }&is_production=${IS_PRODUCTION}`
+                        url =
+                            `${url}?page=${ info.page + 1 }&product_id=${ PRODUCT.id }&is_production=${IS_PRODUCTION}`
                         $('#data-table').DataTable().ajax.url(url);
                     },
                 },
-                fnCreatedRow: function( nRow, aData, iDataIndex ) {
+                fnCreatedRow: function(nRow, aData, iDataIndex) {
                     if (CHECKED_CHECKBOXES.includes(aData.id)) {
                         dt.$(`.checkboxes[data-id="${ aData.id }"]`).prop('checked', true)
                     }
@@ -426,13 +478,13 @@
             let productChildId = $(this).data('id')
             let serialNo = $(this).data('serial-no')
             let modal = PRODUCT.company_group == 2 ? 'stock-out-modal' : 'stock-out-to-hi-ten-modal'
-            console.debug(modal)
 
             $(`#${modal} #date`).text(moment().format('D MMM YYYY HH:mm'))
             $(`#${modal} #serial-no`).text(serialNo)
             if (PRODUCT.company_group == 1) {
-                $(`#${modal} #stock-out-to`).text(PRODUCT.stock_hi_ten.model_name)
-                $(`#${modal} #yes-btn`).attr('href', `{{ config('app.url') }}/inventory-category/stock-out/${productChildId}`)
+                $(`#${modal} #stock-out-to`).text(PRODUCT.model_name)
+                $(`#${modal} #yes-btn`).attr('href',
+                    `{{ config('app.url') }}/inventory-category/stock-out/${productChildId}`)
             }
             $(`#${modal}`).addClass('show-modal')
 
@@ -455,6 +507,14 @@
             let url = "{{ config('app.url') }}"
             url = `${url}/inventory-category/transfer/${productChildId}`
             $('#transfer-modal #yes-btn').attr('href', url)
+        })
+        $('body').on('click', '.to-warehouse-btns', function() {
+            let productChildId = $(this).data('id')
+
+            let url = "{{ config('app.url') }}"
+            url = `${url}/inventory-category/to-warehouse/${productChildId}`
+
+            window.location.href = url
         })
         $('body').on('click', '.checkboxes', function() {
             let id = $(this).data('id')
@@ -488,14 +548,20 @@
                 processing: true,
                 serverSide: true,
                 order: [],
-                columns: [
-                    { data: 'qty_sku' },
-                    { data: 'unit_price' },
-                    { data: 'total_price' },
-                    { data: 'at' },
-                ],
-                columnDefs: [
+                columns: [{
+                        data: 'qty_sku'
+                    },
                     {
+                        data: 'unit_price'
+                    },
+                    {
+                        data: 'total_price'
+                    },
+                    {
+                        data: 'at'
+                    },
+                ],
+                columnDefs: [{
                         "width": "10%",
                         "targets": 0,
                         orderable: false,
@@ -529,7 +595,7 @@
                     },
                 ],
                 ajax: {
-                    data: function(){
+                    data: function() {
                         var info = $('#cost-table').DataTable().page.info();
                         var url = "{{ route('product.view_get_data_cost') }}"
 

@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             MilestoneSeeder::class,
             InventoryCategorySeeder::class,
             WarrantyPeriodSeeder::class,
+            DebtorTypeSeeder::class,
+            CurrencySeeder::class,
         ]);
     }
 }

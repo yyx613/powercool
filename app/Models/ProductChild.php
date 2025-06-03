@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,16 +14,13 @@ class ProductChild extends Model
     use HasFactory, SoftDeletes;
 
     const LOCATION_WAREHOUSE = 'warehouse';
-
     const LOCATION_FACTORY = 'factory';
 
     const STATUS_STOCK_OUT = 1;
-
     const STATUS_IN_TRANSIT = 2;
-
     const STATUS_TO_BE_RECEIVED = 3;
-
     const STATUS_RECEIVED = 4;
+    const STATUS_PENDING_APPROVAL = 5;
 
     protected $guarded = [];
 
@@ -58,7 +56,7 @@ class ProductChild extends Model
 
     public function stockOutBy()
     {
-        return $this->belongsTo(User::class, 'stock_out_by');
+        return $this->belongsTo(User::class, 'stock_out_by')->withoutGlobalScope(BranchScope::class);
     }
 
     public function transferredBy()

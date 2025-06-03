@@ -510,6 +510,7 @@ class ProductionController extends Controller
                 'production_id' => $production->id,
                 'material_use_id' => $material_use->id,
                 'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+                'requested_by' => Auth::user()->id,
             ]);
             (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
 
