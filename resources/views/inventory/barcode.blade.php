@@ -107,7 +107,7 @@
                     </p>
                     <p style="margin: 20px 0 0 0; font-size: 10px; text-align: center;">Made In Malaysia</p>
                     <p style="margin: 5px 0 0 0; font-size: 10px; text-align: center;">
-                        Power Cool Equipments (M) Sdn Bhd<br>
+                        <span style="font-weight: 700; font-family: sans-serif;">Power Cool Equipments (M) Sdn Bhd</span><br>
                         (Reg no.:199601010696 [383045-D])<br>
                         No. 12, RCI Park, Jln Kesidang 2, Kws. Perindustrian Sg. Choh, 48200 Serendah, Sel.
                     </p>
