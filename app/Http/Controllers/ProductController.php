@@ -998,6 +998,7 @@ class ProductController extends Controller
             'by' => Auth::user()->name,
             'uoms' => UOM::orderBy('name', 'asc')->get(),
             'productions' => Production::orderBy('id', 'desc')->get(),
+            'product' => Product::where('id', $frm->product_id)->first(),
         ]);
     }
 
@@ -1006,7 +1007,7 @@ class ProductController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'qty' => 'required|max:250',
-            'prodution_id' => 'nullable',
+            'production_id' => 'nullable',
             'uom' => 'nullable',
             'remark' => 'nullable|max:250',
         ], [], [
@@ -1068,6 +1069,7 @@ class ProductController extends Controller
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
+                'no' => $key + 1,
                 'qty' => $record->qty,
                 'production' => $record->production->sku ?? null,
                 'uom' => $record->uomObj->name ?? null,

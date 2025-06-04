@@ -38,22 +38,22 @@
                     <x-input-error :messages="$errors->get('qty')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="prodution_id" class="mb-1">{{ __('Production ID') }}</x-app.input.label>
-                    <x-app.input.select2 name="prodution_id">
+                    <x-app.input.label id="production_id" class="mb-1">{{ __('Production ID') }}</x-app.input.label>
+                    <x-app.input.select2 name="production_id">
                         <option value="">{{ __('Select a production') }}</option>
                         @foreach ($productions as $production)
                             <option value="{{ $production->id }}">{{ $production->sku }}</option>
                         @endforeach
                     </x-app.input.select2>
 
-                    <x-input-error :messages="$errors->get('prodution_id')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('production_id')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }}</x-app.input.label>
                     <x-app.input.select2 name="uom">
                         <option value="">{{ __('Select a UOM') }}</option>
                         @foreach ($uoms as $uom)
-                            <option value="{{ $uom->id }}">{{ $uom->name }}</option>
+                            <option value="{{ $uom->id }}" @selected($product->uom == $uom->id)>{{ $uom->name }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('uom')" class="mt-1" />
@@ -104,6 +104,7 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>{{ __('No.') }}</th>
                     <th>{{ __('Qty') }}</th>
                     <th>{{ __('Production ID') }}</th>
                     <th>{{ __('UOM') }}</th>
@@ -129,6 +130,9 @@
             serverSide: true,
             order: [],
             columns: [{
+                    data: 'no'
+                },
+                {
                     data: 'qty'
                 },
                 {
@@ -148,43 +152,51 @@
                 },
             ],
             columnDefs: [{
-                    "width": "10%",
+                    "width": "0%",
                     "targets": 0,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
-                }, {
-                    "width": "30%",
+                },
+                {
+                    "width": "10%",
                     "targets": 1,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 }, {
-                    "width": "10%",
+                    "width": "30%",
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 }, {
-                    "width": "20%",
+                    "width": "10%",
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 }, {
-                    "width": "15%",
+                    "width": "20%",
                     "targets": 4,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 }, {
-                    "width": "20%",
+                    "width": "15%",
                     "targets": 5,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                }, {
+                    "width": "20%",
+                    "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
