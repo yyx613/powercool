@@ -82,15 +82,15 @@
                 </td>
             </tr>
             <tr>
-                <td style="text-align: left;">
+                <td style="text-align: center;">
                     <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
                         style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                    <p style="margin: 0 0 0 2.5px; font-size: 10px;">Warranty Policy</p>
+                    <p style="margin: 0 0 0 0; font-size: 10px;">Warranty Policy</p>
                 </td>
-                <td style="text-align: right;">
+                <td style="text-align: center;">
                     <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
                         style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                    <p style="margin: 0 10px 0 0; font-size: 10px;">User Manual</p>
+                    <p style="margin: 0 0 0 0; font-size: 10px;">User Manual</p>
                 </td>
             </tr>
             <tr>
