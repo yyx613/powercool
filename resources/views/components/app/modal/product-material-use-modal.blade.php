@@ -4,7 +4,10 @@
             <h6 class="text-lg font-black">{{ __('Material Use Selection') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
-            <span class="font-medium text-sm block mb-2">{{ __('Materials') }}</span>
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-medium text-sm block">{{ __('Materials') }}</span>
+                <input name="search" placeholder="{{ __('Search') }}" class="text-xs rounded border-slate-200 p-1" />
+            </div>
             <div class="border px-2 rounded overflow-y-auto max-h-64" id="material-use-selection-container">
                 <div class="hidden py-2 items-center border-b" id="material-use-selection-template">
                     <input type="checkbox" class="rounded-full border-slate-400">

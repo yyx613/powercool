@@ -21,6 +21,7 @@ class ProductChild extends Model
     const STATUS_TO_BE_RECEIVED = 3;
     const STATUS_RECEIVED = 4;
     const STATUS_PENDING_APPROVAL = 5;
+    const STATUS_TRANSFER_APPROVED = 6;
 
     protected $guarded = [];
 

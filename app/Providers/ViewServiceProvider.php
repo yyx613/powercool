@@ -703,7 +703,7 @@ class ViewServiceProvider extends ServiceProvider
             if (str_contains(Route::currentRouteName(), 'raw_material_request.')) {
                 $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_name', 'asc')->get();
             } else {
-                $products = Product::orderBy('model_name', 'asc')->get();
+                $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('model_name', 'asc')->get();
             }
 
             $view->with([
@@ -711,6 +711,13 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['raw_material_request.form'], function (ViewView $view) {
+            $productions = Production::orderBy('id', 'desc')->get();
+
+            $view->with([
+                'productions' => $productions,
+            ]);
+        });
+        View::composer(['components.app.modal.production-request-complete-modal'], function (ViewView $view) {
             $productions = Production::orderBy('id', 'desc')->get();
 
             $view->with([

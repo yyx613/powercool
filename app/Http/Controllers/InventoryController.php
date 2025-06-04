@@ -268,7 +268,14 @@ class InventoryController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
+            if ($product_child->status == ProductChild::STATUS_TRANSFER_APPROVED) {
+                $product_child->location = ProductChild::LOCATION_WAREHOUSE;
+                $product_child->status = null;
+                $product_child->stock_out_by = null;
+                $product_child->stock_out_to_type = null;
+                $product_child->stock_out_at = null;
+                $product_child->save();
+            } else if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
                 // Update status from transferred child
                 $this->prodChild::where('id', $product_child->transferred_from)->update([
                     'status' => $this->prodChild::STATUS_RECEIVED,

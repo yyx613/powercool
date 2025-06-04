@@ -190,7 +190,7 @@ class Product extends Model
     public function productionStock()
     {
         if ($this->isRawMaterial()) {
-            return 0;
+            return FactoryRawMaterial::where('product_id', $this->id)->first()->remainingQty();
         }
 
         return ProductChild::whereNull('status')->where('location', ProductChild::LOCATION_FACTORY)->where('product_id', $this->id)->count();

@@ -69,7 +69,7 @@
                         :hasError="$errors->has('product')">
                         <option value="">{{ __('Select a product') }}</option>
                         @foreach ($products as $pro)
-                            <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : (isset($default_product) ? $default_product->id : null)) == $pro->id)>{{ $pro->model_name }}
+                            <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : (isset($default_product) ? $default_product->id : null)) == $pro->id)>{{ $pro->sku }}
                             </option>
                         @endforeach
                     </x-app.input.select2>
@@ -446,6 +446,7 @@
             $(`input[name="required_serial_no[]"][data-milestone-id="${SELECTED_MILESTONE_ID}"]`).trigger('click')
 
             $('#production-material-use-modal').removeClass('show-modal')
+            $('#production-material-use-modal input[name="search"]').val(null)
         })
         $('#production-material-use-modal #yes-btn').on('click', function() {
             if ($('.material-use-selections input:checked').length <= 0) {
@@ -466,9 +467,33 @@
             $(`.milestones[data-milestone-id=${SELECTED_MILESTONE_ID}] .view-material-use-selection-btns`)
                 .removeClass('hidden')
 
-
+            $('#production-material-use-modal input[name="search"]').val(null)
             $('#production-material-use-modal').removeClass('show-modal')
         })
+        $('#production-material-use-modal input[name="search"]').on('keyup', function() {
+            let val = $(this).val()
+
+            $(`.material-use-selections`).removeClass('hidden')
+
+            if (val != '') {
+                for (let i = 0; i < MATERIAL_USE.length; i++) {
+                    for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
+                        included = false
+                        if (
+                            MATERIAL_USE[i].materials[j].material.model_name.includes(val) ||
+                            MATERIAL_USE[i].materials[j].material.sku.includes(val)
+                        ) {
+                            included = true
+                        }
+                        if (!included) {
+                            $(`.material-use-selections[data-material-use-product-id=${MATERIAL_USE[i].materials[j].product_id}]`)
+                                .addClass('hidden')
+                        }
+                    }
+                }
+            }
+        })
+
 
         function getProductMilestones(product_id, get_material_use_only = false) {
             let url = '{{ config('app.url') }}'

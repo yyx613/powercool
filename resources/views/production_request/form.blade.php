@@ -18,7 +18,7 @@
                         placeholder="{{ __('Select a product') }}">
                         <option value="">{{ __('Select a product') }}</option>
                         @foreach ($products as $val)
-                            <option value="{{ $val->id }}" @selected(old('product') == $val->id)>{{ $val->model_name }}</option>
+                            <option value="{{ $val->id }}" @selected(old('product') == $val->id)>{{ $val->sku }}</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('product')" class="mt-2" />

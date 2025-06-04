@@ -139,11 +139,7 @@ class ApprovalController extends Controller
 
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
-                $obj->location = ProductChild::LOCATION_WAREHOUSE;
-                $obj->status = null;
-                $obj->stock_out_by = null;
-                $obj->stock_out_to_type = null;
-                $obj->stock_out_at = null;
+                $obj->status = ProductChild::STATUS_TRANSFER_APPROVED;
                 $obj->save();
             }
 

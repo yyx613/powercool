@@ -41,4 +41,9 @@ class ProductionRequest extends Model
     {
         return $this->materials->where('status', ProductionRequestMaterial::STATUS_COMPLETED);
     }
+
+    public function requestedBy()
+    {
+        return $this->belongsTo(User::class, 'requested_by')->withoutGlobalScope(BranchScope::class);
+    }
 }
