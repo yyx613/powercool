@@ -169,7 +169,7 @@
                         <x-app.input.select name="supplier_id" id="supplier_id">
                             <option value="">{{ __('Select a supplier') }}</option>
                             @foreach ($suppliers as $sup)
-                                <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>{{ $sup->name }}
+                                <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>{{ $sup->company_name }}
                                 </option>
                             @endforeach
                         </x-app.input.select>

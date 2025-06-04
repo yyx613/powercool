@@ -211,8 +211,9 @@ class MilestoneController extends Controller
             });
         }
         $milestones = $milestones->get();
+
         // Sort order
-        if ($req->product_id != null && isset($product_milestones)) {
+        if ($req->product_id != null && isset($product_milestones) && count($product_milestones) > 0) {
             $sorted_milestones = [];
 
             for ($i = 0; $i < count($product_milestones); $i++) {
