@@ -230,16 +230,23 @@ class RawMaterialRequestController extends Controller
         return back()->with('success', 'Request incompleted');
     }
 
-    public function viewLogs(RawMaterialRequest $rmq)
+    public function viewLogs(RawMaterialRequestMaterial $rmqm)
     {
+        Session::put('rmq-log-rmqm-id', $rmqm->id);
         return view('raw_material_request.log', [
-            'rmq' => $rmq
+            'rmq' => $rmqm->materialRequest,
+            'rmqm' => $rmqm
         ]);
     }
 
     public function viewLogsGetData(Request $req)
     {
         $records = RawMaterialRequestMaterialCollected::orderBy('id', 'desc');
+
+        $id = Session::get('rmq-log-rmqm-id');
+        if ($id != null) {
+            $records = $records->where('raw_material_request_material_id', $id);
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

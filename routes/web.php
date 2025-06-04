@@ -227,7 +227,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create');
         Route::post('/store', 'store')->name('store');
-        Route::get('/view/{rmq}/logs', 'viewLogs')->name('view_logs');
+        Route::get('/view/{rmqm}/logs', 'viewLogs')->name('view_logs');
         Route::get('/view-logs-get-data', 'viewLogsGetData')->name('view_logs_get_data');
         Route::get('/view/{rmq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
