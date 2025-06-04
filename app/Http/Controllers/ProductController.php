@@ -116,8 +116,7 @@ class ProductController extends Controller
                 $records = $records->whereIn('id', $product_ids);
             } else {
                 $records = $records->withCount(['children' => function ($q) {
-                    $q->where('location', ProductChild::LOCATION_FACTORY)
-                        ->whereNot('status', ProductChild::STATUS_STOCK_OUT);
+                    $q->where('location', ProductChild::LOCATION_FACTORY);
                 }])->having('children_count', '>', 0);
             }
         }
@@ -174,8 +173,7 @@ class ProductController extends Controller
                 } else {
                     $pcs = ProductChild::where('product_id', $record->id)
                         ->where(function ($q) {
-                            $q->where('location', ProductChild::LOCATION_FACTORY)
-                                ->whereNot('status', ProductChild::STATUS_STOCK_OUT);
+                            $q->where('location', ProductChild::LOCATION_FACTORY);
                         })
                         ->get();
                     for ($i = 0; $i < count($pcs); $i++) {

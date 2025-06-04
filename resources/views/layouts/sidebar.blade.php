@@ -12,7 +12,7 @@
                 </svg>
             </button>
             <div class="flex items-center gap-x-2">
-                <img src="{{ asset('/images/image_1.png') }}" alt="Power Cool Logo" class="h-8 ml-4">
+                <img src="{{ asset('/images/image_1.png') }}" alt="Power Cool Logo" class="h-6 ml-4">
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>

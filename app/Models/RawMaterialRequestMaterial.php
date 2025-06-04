@@ -29,6 +29,11 @@ class RawMaterialRequestMaterial extends Model
         return $this->belongsTo(RawMaterialRequest::class, 'raw_material_request_id');
     }
 
+    public function materialCollected()
+    {
+        return $this->hasMany(RawMaterialRequestMaterialCollected::class);
+    }
+
     public function material()
     {
         return $this->belongsTo(Product::class, 'product_id');

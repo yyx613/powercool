@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('production_id');
             $table->unsignedBigInteger('material_use_id');
             $table->integer('status');
+            $table->unsignedBigInteger('requested_by');
             $table->timestamps();
         });
         Schema::create('raw_material_request_materials', function (Blueprint $table) {

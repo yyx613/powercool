@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('production_requests', function (Blueprint $table) {
             $table->id();
             $table->integer('status');
-            $table->longText('remark');
+            $table->longText('remark')->nullable();
             $table->timestamps();
         });
         Schema::create('production_request_materials', function (Blueprint $table) {
