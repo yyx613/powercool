@@ -39,7 +39,7 @@
                                 NO:</td>
                             <td
                                 style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
-                                {{ $product_code[$i] ?? '' }}</td>
+                                {{ $barcode[$i] ?? ($product_code[$i] ?? '') }}</td>
                         </tr>
                         <tr>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">DIMENSION:</td>
