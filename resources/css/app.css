@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
         -webkit-appearance: none;
@@ -20,61 +21,96 @@
     .hide-scrollbar::-webkit-scrollbar {
         width: 0px;
     }
+
+    /* total width */
+    ::-webkit-scrollbar {
+        background-color: #fff;
+        width: 16px;
+    }
+
+    /* background of the scrollbar except button or resizer */
+    ::-webkit-scrollbar-track {
+        background-color: #fff;
+    }
+
+    /* scrollbar itself */
+    ::-webkit-scrollbar-thumb {
+        background-color: #babac0;
+        border-radius: 16px;
+        border: 4px solid #fff;
+    }
+
+    /* set button(top and bottom of the scrollbar) */
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
 }
 
 .select2-container {
-    width: 100%!important;
+    width: 100% !important;
     padding: 5px;
     background-color: white;
 }
+
 .select2-selection--single {
-    border: none!important;
-    display: flex!important;
-    align-items: center!important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
 }
+
 .select2-selection--multiple {
-    border: none!important;
+    border: none !important;
 }
+
 .select2-selection__rendered {
     font-size: 0.875rem;
-    line-height: 1!important;
-    white-space: normal!important;
-    overflow: visible!important;
+    line-height: 1 !important;
+    white-space: normal !important;
+    overflow: visible !important;
 }
+
 .select2-selection__arrow {
-    top: 6px!important;
+    top: 6px !important;
 }
 
 /* Datatable */
 .dataTable {
     background-color: white;
 }
+
 .dataTables_paginate .paginate_button {
-    border: none!important;
-    border-radius: 100px!important;
+    border: none !important;
+    border-radius: 100px !important;
 }
+
 .dataTables_paginate .paginate_button:hover {
-    background: transparent!important;
+    background: transparent !important;
 }
+
 .dataTables_wrapper .dataTables_paginate a:hover {
-    color: black!important;
+    color: black !important;
 }
+
 .dataTables_paginate .current,
 .dataTables_paginate .current:hover {
-    background: rgb(250 204 21)!important;
+    background: rgb(250 204 21) !important;
 }
+
 .dataTables_scroll {
     border: solid 1px rgb(209 213 219);
     border-radius: .5rem;
     overflow: hidden;
 }
+
 .dataTables_scroll .dataTables_scrollHead {
-    border-bottom: solid 1px rgb(209 213 219)!important;
+    border-bottom: solid 1px rgb(209 213 219) !important;
 }
+
 .dataTables_scrollBody,
 .dataTables_scroll thead tr th {
-    border: none!important;
+    border: none !important;
 }
+
 .dataTables_wrapper {
     min-width: 800px;
 }
@@ -83,6 +119,7 @@
     opacity: 1;
     z-index: 2;
 }
+
 .show-modal #modal-inner {
     opacity: 1;
     z-index: 2;

@@ -36,4 +36,9 @@ class ProductionMilestone extends Pivot
     {
         return $this->hasMany(ProductionMilestoneMaterialPreview::class);
     }
+
+    public function rejects()
+    {
+        return $this->belongsTo(ProductionMilestoneReject::class);
+    }
 }
