@@ -61,7 +61,7 @@
     </div>
     <div>
         <!-- Filters -->
-        <div class="flex max-w-xs w-full mb-4">
+        <div class="flex gap-x-4 max-w-screen-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">
@@ -73,12 +73,33 @@
                     </div>
                 </x-app.input.input>
             </div>
+            @if ($can_start_task)
+                <x-app.button.button class="gap-x-2 bg-orange-200" id="start-task-btn">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24">
+                        <path
+                            d="M20.426,10.097c-1.231-1.445-3.415-3.622-6.832-5.779-2.81-1.774-5.311-2.716-6.915-3.194-.9-.268-1.854-.101-2.612,.464-.758,.566-1.193,1.432-1.193,2.377V20.035c0,.945,.436,1.811,1.193,2.377,.521,.388,1.135,.589,1.761,.589,.284,0,.57-.042,.852-.125,1.604-.478,4.105-1.42,6.915-3.194,3.417-2.158,5.601-4.334,6.832-5.78,.938-1.102,.938-2.703,0-3.805Zm-1.523,2.509c-1.141,1.34-3.173,3.362-6.377,5.385-2.616,1.653-4.934,2.526-6.417,2.968-.291,.089-.6,.032-.846-.151-.248-.185-.39-.466-.39-.773V3.965c0-.307,.142-.589,.39-.773,.169-.126,.367-.191,.57-.191,.092,0,.185,.013,.275,.041,1.483,.442,3.801,1.315,6.417,2.968,3.204,2.023,5.236,4.045,6.377,5.384,.299,.352,.299,.861,0,1.212Z" />
+                    </svg>
+                    {{ __('Start Task') }}
+                </x-app.button.button>
+            @endif
+            <x-app.button.button class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                    viewBox="0 0 24 24" width="512" height="512">
+                    <path
+                        d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z" />
+                </svg>
+                <span class="font-medium">{{ __('Generate Barcode') }}</span>
+            </x-app.button.button>
         </div>
 
         <!-- Table -->
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>
+                        <input type="checkbox" id="parent-row-checkbox" />
+                    </th>
                     <th>{{ __('ID') }}</th>
                     <th>{{ __('From ID') }}</th>
                     <th>{{ __('Factory') }}</th>
@@ -111,6 +132,9 @@
             serverSide: true,
             order: [],
             columns: [{
+                    data: 'checkbox'
+                },
+                {
                     data: 'sku'
                 },
                 {
@@ -148,22 +172,22 @@
                 },
             ],
             columnDefs: [{
-                    "width": "10%",
+                    "width": "0%",
                     "targets": 0,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
-                    "width": "10%",
-                    "targets": 1,
                     orderable: false,
                     render: function(data, type, row) {
+                        return `<input type="checkbox" class="row-checkbox" data-production-id="${row.id}" />`
+                    }
+                },
+                {
+                    // "width": "20%",
+                    "targets": 1,
+                    render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "10%",
+                    // "width": "20%",
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
@@ -171,7 +195,7 @@
                     }
                 },
                 {
-                    "width": "10%",
+                    // "width": "10%",
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
@@ -179,38 +203,46 @@
                     }
                 },
                 {
-                    "width": "10%",
+                    // "width": "20%",
                     "targets": 4,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "10%",
+                    // "width": "20%",
                     "targets": 5,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "10%",
+                    // "width": "20%",
                     "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    // "width": "10%",
+                    "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "10%",
-                    "targets": 7,
+                    // "width": "10%",
+                    "targets": 8,
                     orderable: false,
                     render: function(data, type, row) {
                         return data == null ? '-' : data.name
                     }
                 },
                 {
-                    "width": '10%',
-                    "targets": 8,
+                    // "width": '10%',
+                    "targets": 9,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -224,8 +256,8 @@
                     }
                 },
                 {
-                    "width": '10%',
-                    "targets": 9,
+                    // "width": '10%',
+                    "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -239,20 +271,22 @@
                                 return "{!! __('Transferred') !!}"
                             case 5:
                                 return "{!! __('Modified') !!}"
+                            case 6:
+                                return "{!! __('Pending Approval') !!}"
                         }
                     }
                 },
                 {
-                    "width": "10%",
-                    "targets": 10,
+                    // "width": "10%",
+                    "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
                     }
                 },
                 {
-                    "width": "5%",
-                    "targets": 11,
+                    // "width": "5%",
+                    "targets": 12,
                     "orderable": false,
                     render: function(data, type, row) {
                         if (row.status == 5) {
@@ -267,64 +301,56 @@
                             ${
                                 row.status == 4 ?
                                 `
-                                                                                        ${
-                                                                                            row.can_duplicate ? `
+                                                                                                                                                            ${
+                                                                                                                                                                row.can_duplicate ? `
                                             <a href="{{ config('app.url') }}/production/create?id=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">
                                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m19,0h-6c-2.757,0-5,2.243-5,5v6c0,2.757,2.243,5,5,5h6c2.757,0,5-2.243,5-5v-6c0-2.757-2.243-5-5-5Zm3,11c0,1.654-1.346,3-3,3h-6c-1.654,0-3-1.346-3-3v-6c0-1.654,1.346-3,3-3h6c1.654,0,3,1.346,3,3v6Zm-6,8c0,2.757-2.243,5-5,5h-6c-2.757,0-5-2.243-5-5v-6c0-2.757,2.243-5,5-5,.553,0,1,.448,1,1s-.447,1-1,1c-1.654,0-3,1.346-3,3v6c0,1.654,1.346,3,3,3h6c1.654,0,3-1.346,3-3,0-.552.447-1,1-1s1,.448,1,1Z"/></svg>
                                             </a>`: '' 
-                                                                                        }
-                                                                                        ${
-                                                                                            row.can_view ? `
+                                                                                                                                                            }
+                                                                                                                                                            ${
+                                                                                                                                                                row.can_view ? `
                                             <a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
                                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
                                             </a>`:''
-                                                                                        }
-                                                                                                                    
-                                                                            ` :
+                                                                                                                                                            }
+                                                                                                                                                                                        
+                                                                                                                                                ` :
 
                                 `
-                                                                ${
-                                                                                                                        row.can_start ? `
-                                        <a href="{{ config('app.url') }}/production/to-in-progress/${row.id}" class="rounded-full p-2 bg-orange-200 inline-block" title="{!! __('Start') !!}">
-                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                                <path d="M20.426,10.097c-1.231-1.445-3.415-3.622-6.832-5.779-2.81-1.774-5.311-2.716-6.915-3.194-.9-.268-1.854-.101-2.612,.464-.758,.566-1.193,1.432-1.193,2.377V20.035c0,.945,.436,1.811,1.193,2.377,.521,.388,1.135,.589,1.761,.589,.284,0,.57-.042,.852-.125,1.604-.478,4.105-1.42,6.915-3.194,3.417-2.158,5.601-4.334,6.832-5.78,.938-1.102,.938-2.703,0-3.805Zm-1.523,2.509c-1.141,1.34-3.173,3.362-6.377,5.385-2.616,1.653-4.934,2.526-6.417,2.968-.291,.089-.6,.032-.846-.151-.248-.185-.39-.466-.39-.773V3.965c0-.307,.142-.589,.39-.773,.169-.126,.367-.191,.57-.191,.092,0,.185,.013,.275,.041,1.483,.442,3.801,1.315,6.417,2.968,3.204,2.023,5.236,4.045,6.377,5.384,.299,.352,.299,.861,0,1.212Z"/>
-                                            </svg>
-                                        </a>` : ''
-                                                                                                                    }
-                                                                                                                    ${
-                                                                                                                        row.progress < 100 ? `` : `
+                                                                                                                                                                                        ${
+                                                                                                                                                                                            row.progress < 100 ? `` : `
                                         <a href="{{ config('app.url') }}/production/create?id=${row.id}&is_modify=true" class="rounded-full p-2 bg-purple-200 inline-block" title="{!! __('Modify Product Code') !!}">
                                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                                 <path d="m3.688,24c-.032,0-.063,0-.095,0-1.022-.027-1.963-.462-2.649-1.224-1.269-1.409-1.157-3.784.244-5.185l5.868-5.867c.253-.254.344-.631.241-1.009-.358-1.318-.393-2.676-.102-4.036C7.903,3.364,10.626.735,13.972.137c1.006-.18,2.015-.184,3.002-.007.731.129,1.299.625,1.52,1.325.251.799-.003,1.681-.682,2.359l-2.247,2.217c-.658.658-.758,1.69-.222,2.345.308.378.742.598,1.222.622.472.02.936-.155,1.271-.489l2.58-2.55c.539-.539,1.332-.735,2.07-.501.723.227,1.254.828,1.385,1.567h0c.175.987.172,1.998-.007,3.003-.6,3.347-3.229,6.07-6.544,6.777-1.363.291-2.721.256-4.036-.103-.377-.104-.754-.012-1.008.241l-5.976,5.975c-.69.69-1.637,1.081-2.612,1.081ZM15.61,1.993c-.422,0-.854.035-1.286.112-2.554.457-4.634,2.463-5.174,4.991-.224,1.045-.198,2.086.076,3.093.29,1.062,0,2.191-.756,2.948l-5.868,5.867c-.65.65-.732,1.81-.171,2.433.315.35.747.55,1.215.562.461.019.909-.163,1.241-.494l5.975-5.975c.755-.755,1.885-1.047,2.948-.757,1.004.274,2.045.3,3.093.076,2.528-.539,4.534-2.618,4.992-5.174.138-.772.14-1.547.006-2.301v-.007s-2.655,2.559-2.655,2.559c-.729.729-1.744,1.136-2.781,1.068-1.036-.052-2.009-.545-2.669-1.353-1.179-1.439-1.021-3.649.361-5.03l2.247-2.217c.179-.18.191-.314.184-.341-.315-.039-.643-.062-.976-.062Z"/>
                                             </svg>
                                         </a>`
-                                                                                                                    }
-                                                                                                            ${
-                                                                                                            row.can_duplicate ? `
+                                                                                                                                                                                        }
+                                                                                                                                                                                ${
+                                                                                                                                                                                row.can_duplicate ? `
                                             <a href="{{ config('app.url') }}/production/create?id=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">
                                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m19,0h-6c-2.757,0-5,2.243-5,5v6c0,2.757,2.243,5,5,5h6c2.757,0,5-2.243,5-5v-6c0-2.757-2.243-5-5-5Zm3,11c0,1.654-1.346,3-3,3h-6c-1.654,0-3-1.346-3-3v-6c0-1.654,1.346-3,3-3h6c1.654,0,3,1.346,3,3v6Zm-6,8c0,2.757-2.243,5-5,5h-6c-2.757,0-5-2.243-5-5v-6c0-2.757,2.243-5,5-5,.553,0,1,.448,1,1s-.447,1-1,1c-1.654,0-3,1.346-3,3v6c0,1.654,1.346,3,3,3h6c1.654,0,3-1.346,3-3,0-.552.447-1,1-1s1,.448,1,1Z"/></svg>
                                             </a>`:'' 
-                                                                                                            }
-                                                                                                            ${
-                                                                                                            row.can_view ? `<a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
+                                                                                                                                                                                }
+                                                                                                                                                                                ${
+                                                                                                                                                                                row.can_view ? `<a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
                                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
                                                 </a>`:''
-                                                                                                            }
-                                                                                                                    
-                                                                                                                    
-                                                                                                                    ${
-                                                                                                                        row.can_edit ? `
+                                                                                                                                                                                }
+                                                                                                                                                                                        
+                                                                                                                                                                                        
+                                                                                                                                                                                        ${
+                                                                                                                                                                                            row.can_edit ? `
                                     <a href="{{ config('app.url') }}/production/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="Edit" title="{!! __('Edit') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m18.813,10c.309,0,.601-.143.79-.387s.255-.562.179-.861c-.311-1.217-.945-2.329-1.833-3.217l-3.485-3.485c-1.322-1.322-3.08-2.05-4.95-2.05h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h3c.552,0,1-.448,1-1s-.448-1-1-1h-3c-1.654,0-3-1.346-3-3V5c0-1.654,1.346-3,3-3h4.515c.163,0,.325.008.485.023v4.977c0,1.654,1.346,3,3,3h5.813Zm-6.813-3V2.659c.379.218.732.488,1.05.806l3.485,3.485c.314.314.583.668.803,1.05h-4.338c-.551,0-1-.449-1-1Zm11.122,4.879c-1.134-1.134-3.11-1.134-4.243,0l-6.707,6.707c-.755.755-1.172,1.76-1.172,2.829v1.586c0,.552.448,1,1,1h1.586c1.069,0,2.073-.417,2.828-1.172l6.707-6.707c.567-.567.879-1.32.879-2.122s-.312-1.555-.878-2.121Zm-1.415,2.828l-6.708,6.707c-.377.378-.879.586-1.414.586h-.586v-.586c0-.534.208-1.036.586-1.414l6.708-6.707c.377-.378,1.036-.378,1.414,0,.189.188.293.439.293.707s-.104.518-.293.707Z"/></svg>
                                     </a>` : ''
-                                                                                                                    }
-                                                                                                                    ${
-                                                                                                                        row.can_delete ? `
+                                                                                                                                                                                        }
+                                                                                                                                                                                        ${
+                                                                                                                                                                                            row.can_delete ? `
                                     <button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="Delete" title="{!! __('Delete') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
                                     </button>` : ''
-                                                                                                                    }
-                                                                                                                `
+                                                                                                                                                                                        }
+                                                                                                                                                                                    `
                             }
                        </div>`
                     }
@@ -361,6 +387,42 @@
                 url = `${url}?type=${type}`
             }
             window.location.href = url
+        })
+        // Start task btn
+        $('#start-task-btn').on('click', function() {
+            var productionIds = []
+            $('body').find('.row-checkbox:checked').each(function(i, obj) {
+                productionIds.push($(this).data('production-id'))
+            })
+            if (productionIds.length <= 0) return
+
+            let url = '{{ route('production.to_in_progress') }}'
+            url = `${url}?productionIds=${productionIds.join(',')}`
+
+            window.location.href = url
+        })
+        // Generate barcode btn
+        $('#generate-barcode-btn').on('click', function() {
+            var productionIds = []
+            $('body').find('.row-checkbox:checked').each(function(i, obj) {
+                productionIds.push($(this).data('production-id'))
+            })
+            if (productionIds.length <= 0) return
+
+            let url = '{{ route('production.generate_barcode') }}'
+            url = `${url}?productionIds=${productionIds.join(',')}`
+
+            window.location.href = url
+        })
+        // Row Checkbox
+        $('#parent-row-checkbox').on('change', function() {
+            let isChecked = $(this).is(':checked')
+
+            if (isChecked) {
+                $('body').find('.row-checkbox').prop('checked', true)
+            } else {
+                $('body').find('.row-checkbox').prop('checked', false)
+            }
         })
     </script>
 @endpush

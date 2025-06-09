@@ -480,11 +480,13 @@
 
         $(document).ready(function() {
             var elem = document.getElementById('milestone-list-container')
-            var sortable = Sortable.create(elem, {
-                onEnd: function(evt) {
-                    sortMilestone()
-                },
-            })
+            if (elem != null) {
+                var sortable = Sortable.create(elem, {
+                    onEnd: function(evt) {
+                        sortMilestone()
+                    },
+                })
+            }
 
             if (PRODUCT != null) {
                 for (let i = 0; i < PRODUCT.children.length; i++) {
@@ -695,6 +697,7 @@
             $(`input[name="required_serial_no[]"][data-milestone-id="${SELECTED_MILESTONE_ID}"]`).trigger('click')
 
             $('#product-material-use-modal').removeClass('show-modal')
+            $('#product-material-use-modal input[name="search"]').val(null)
         })
         $('#product-material-use-modal #yes-btn').on('click', function() {
             if ($('.material-use-selections input:checked').length <= 0) {
@@ -714,8 +717,31 @@
             $(`.milestones[data-milestone-id=${SELECTED_MILESTONE_ID}] .view-material-use-selection-btns`)
                 .removeClass('hidden')
 
-
+            $('#product-material-use-modal input[name="search"]').val(null)
             $('#product-material-use-modal').removeClass('show-modal')
+        })
+        $('#product-material-use-modal input[name="search"]').on('keyup', function() {
+            let val = $(this).val()
+
+            $(`.material-use-selections`).removeClass('hidden')
+
+            if (val != '') {
+                for (let i = 0; i < MATERIAL_USE.length; i++) {
+                    for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
+                        included = false
+                        if (
+                            MATERIAL_USE[i].materials[j].material.model_name.includes(val) ||
+                            MATERIAL_USE[i].materials[j].material.sku.includes(val)
+                        ) {
+                            included = true
+                        }
+                        if (!included) {
+                            $(`.material-use-selections[data-material-use-product-id=${MATERIAL_USE[i].materials[j].product_id}]`)
+                                .addClass('hidden')
+                        }
+                    }
+                }
+            }
         })
 
         function addSerialNo(val, order_id = null) {

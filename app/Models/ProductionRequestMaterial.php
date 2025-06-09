@@ -29,6 +29,11 @@ class ProductionRequestMaterial extends Model
         return $this->belongsTo(ProductionRequest::class);
     }
 
+    public function production()
+    {
+        return $this->belongsTo(Production::class);
+    }
+
     public function material()
     {
         return $this->belongsTo(Product::class, 'product_id');

@@ -78,9 +78,18 @@ class ProductController extends Controller
         $this->invoice = new Invoice;
     }
 
-    public function index()
+    public function index(Request $req)
     {
-        return view('inventory.list');
+        if ($req->type == 'waiting') {
+            Session::put('type', 'waiting');
+        } else if ($req->type == 'usage') {
+            Session::put('type', 'usage');
+        } else {
+            Session::remove('type');
+        }
+        return view('inventory.list', [
+            'type' => $req->type ?? null
+        ]);
     }
 
     public function getData(Request $req)
@@ -102,6 +111,19 @@ class ProductController extends Controller
         $records = $this->prod->with(['category' => function ($q) {
             $q->withTrashed();
         }]);
+
+        $filter_type = Session::get('type');
+        if ($filter_type == 'waiting') {
+            $frm_ids = Approval::where('object_type', FactoryRawMaterial::class)->pluck('object_id')->toArray();
+            $product_ids_only1 = FactoryRawMaterial::whereIn('id', $frm_ids)->pluck('product_id');
+
+            $pc_ids = Approval::where('object_type', ProductChild::class)->pluck('object_id')->toArray();
+            $product_ids_only2 = ProductChild::whereIn('id', $pc_ids)->pluck('product_id');
+
+            $product_ids_only = $product_ids_only1->merge($product_ids_only2);
+
+            $records = $records->whereIn('id', $product_ids_only);
+        }
 
         // Type
         if ($req->boolean('is_product') == true) {
@@ -202,7 +224,12 @@ class ProductController extends Controller
             ];
         }
         if ($req->boolean('is_production') == true && $req->boolean('is_product') == false) {
-            $frm_data = $this->getFactoryRawMaterial($req->has('search') && $req->search['value'] != null ? $req->search['value'] : null, $req->order);
+            $frm_data = $this->getFactoryRawMaterial(
+                $req->has('search') && $req->search['value'] != null ? $req->search['value'] : null,
+                $req->order,
+                isset($product_ids_only) ? $product_ids_only : null,
+                $filter_type == 'usage' ? true : null,
+            );
 
             $data['recordsTotal'] += $frm_data['recordsTotal'];
             $data['recordsFiltered'] += $frm_data['recordsFiltered'];
@@ -213,13 +240,17 @@ class ProductController extends Controller
         return response()->json($data);
     }
 
-    private function getFactoryRawMaterial($keyword = null, $orders = null)
+    private function getFactoryRawMaterial($keyword = null, $orders = null, $product_ids_only = null, $show_usage = false)
     {
         $frms = FactoryRawMaterial::get();
 
         $records = $this->prod->whereIn('id', $frms->pluck('product_id')->toArray())->with(['category' => function ($q) {
             $q->withTrashed();
         }]);
+
+        if ($product_ids_only != null) {
+            $records = $records->whereIn('id', $product_ids_only);
+        }
         // Search
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
@@ -256,20 +287,22 @@ class ProductController extends Controller
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
 
-        $data = [
-            'recordsTotal' => $records_count,
-            'recordsFiltered' => $records_count,
-            'data' => [],
-            'records_ids' => $records_ids,
-        ];
+        $data = [];
         foreach ($records_paginator as $key => $record) {
+            $qty = $frms->where('product_id', $record->id)->first()->remainingQty();
+            if ($show_usage == true && $qty > 0) {
+                continue;
+            } else if (($show_usage == false || $show_usage == null) && $qty <= 0) {
+                continue;
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'image' => $record->image ?? null,
                 'model_name' => $record->model_name,
                 'category' => $record->category->name,
-                'qty' => $frms->where('product_id', $record->id)->first()->remainingQty(),
+                'qty' => $qty,
                 'min_price' => number_format($record->min_price, 2),
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
@@ -279,6 +312,13 @@ class ProductController extends Controller
                 'frm_id' => $frms->where('product_id', $record->id)->value('id')
             ];
         }
+        $data['recordsTotal'] = isset($data['data']) ? count($data['data']) : 0;
+        $data['recordsFiltered'] = isset($data['data']) ? count($data['data']) : 0;
+        $data['records_ids'] = $records_ids;
+        if (!isset($data['data'])) {
+            $data['data'] = [];
+        }
+
         return $data;
     }
 
@@ -993,6 +1033,7 @@ class ProductController extends Controller
     public function recordUsage(Request $req, FactoryRawMaterial $frm)
     {
         return view('inventory.record_usage', [
+            'filter_usage' => Session::get('type') == 'usage' ? true : false,
             'frm' => $frm,
             'date' => now()->format('Y/m/d'),
             'by' => Auth::user()->name,

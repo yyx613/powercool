@@ -30,11 +30,13 @@ class FactoryRawMaterial extends Model
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function records() {
+    public function records()
+    {
         return $this->hasMany(FactoryRawMaterialRecord::class);
     }
 
-    public function remainingQty() {
-        return $this->qty - ($this->to_warehouse_qty ?? 0 )- $this->records->sum('qty');
+    public function remainingQty()
+    {
+        return $this->qty - ($this->to_warehouse_qty ?? 0) - $this->records->sum('qty');
     }
 }

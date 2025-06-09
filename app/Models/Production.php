@@ -20,6 +20,7 @@ class Production extends Model
     const STATUS_COMPLETED = 3;
     const STATUS_TRANSFERRED = 4;
     const STATUS_MODIFIED = 5;
+    const STATUS_PENDING_APPROVAL = 6;
 
     protected $guarded = [];
 
@@ -31,6 +32,11 @@ class Production extends Model
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
+    }
+
+    public function dueDates()
+    {
+        return $this->hasMany(ProductionDueDate::class)->orderBy('id', 'desc');
     }
 
     public function users()
@@ -118,7 +124,7 @@ class Production extends Model
         return $sku;
     }
 
-    public function statusToHumanRead($val): string
+    public function statusToHumanRead($val): ?string
     {
         switch ($val) {
             case self::STATUS_TO_DO:
@@ -129,7 +135,10 @@ class Production extends Model
                 return 'Completed';
             case self::STATUS_TRANSFERRED:
                 return 'Transferred';
+            case self::STATUS_PENDING_APPROVAL:
+                return 'Pending Approval';
         }
+        return null;
     }
 
     /**

@@ -17,11 +17,23 @@ class ProductionMilestoneMaterial extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function productionMilestone() {
+    public function productionMilestone()
+    {
         return $this->belongsTo(ProductionMilestone::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function productChild()
+    {
+        return $this->belongsTo(ProductChild::class);
     }
 }

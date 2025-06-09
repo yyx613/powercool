@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('production_request_materials', function (Blueprint $table) {
-            $table->unsignedBigInteger('production_id')->nullable()->after('product_id');
+        Schema::table('productions', function (Blueprint $table) {
+            $table->unsignedBigInteger('product_child_id')->nullable()->change();
         });
     }
 

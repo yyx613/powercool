@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('status');
             $table->longText('remark')->nullable();
+            $table->unsignedBigInteger('requested_by');
             $table->timestamps();
         });
         Schema::create('production_request_materials', function (Blueprint $table) {

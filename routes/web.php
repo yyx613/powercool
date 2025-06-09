@@ -400,8 +400,12 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
+        Route::post('/reject-milestone', 'rejectMilestone')->name('reject_milestone');
         Route::get('/export', 'export')->name('export');
-        Route::get('/to-in-progress/{production}', 'toInProgress')->name('to_in_progress');
+        Route::get('/to-in-progress', 'toInProgress')->name('to_in_progress');
+        Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
+        Route::post('/extend-due-date/{production}', 'extendDueDate')->name('extend_due_date');
+        Route::get('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
     });
     // Production Finish Good
     Route::controller(ProductController::class)->prefix('production-finish-good')->name('production_finish_good.')->middleware(['can:production_material.view'])->group(function () {

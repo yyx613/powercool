@@ -4,9 +4,16 @@
             <h6 class="text-lg font-black" id="title">{{ __('Enter Production ID') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
-            <div class="flex-1">
-                <x-app.input.label id="production_id" class="mb-1">{{ __('Production ID') }} <span class="text-sm text-slate-400">(Optional)</span> </x-app.input.label>
-                <x-app.input.input name="production_id" id="production_id" value="" />
+            <div class="flex-1 flex-col">
+                <x-app.input.label id="production_id" class="mb-1">{{ __('Production ID') }} <span
+                        class="text-sm text-red-500">*</span></x-app.input.label>
+                <x-app.input.select2 name="production_id" id="production_id" :hasError="$errors->has('production_id')"
+                    placeholder="{{ __('Select a production') }}">
+                    <option value="">{{ __('Select a production') }}</option>
+                    @foreach ($productions as $p)
+                        <option value="{{ $p->id }}" >{{ $p->sku }}</option>
+                    @endforeach
+                </x-app.input.select2>
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">

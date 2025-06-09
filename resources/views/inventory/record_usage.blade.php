@@ -22,69 +22,80 @@
 @section('content')
     <div class="mb-6">
         <x-app.page-title url="{{ route('production_material.index') }}">
-            {{ __('Record Usage') }}
+            @if (isset($filter_usage) && $filter_usage == 'usage')
+                {{ __('Usage History') }}
+            @else
+                {{ __('Record Usage') }}
+            @endif
         </x-app.page-title>
     </div>
     @include('components.app.alert.parent')
-    <form action="{{ route('production_material.record_usage_submit', ['frm' => $frm->id]) }}" method="POST"
-        enctype="multipart/form-data" id="form">
-        @csrf
-        <div class="bg-white p-4 border rounded-md">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
-                <div class="flex flex-col">
-                    <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="qty" id="qty" value="{{ old('qty') }}" class="int-input" />
-                    <x-input-error :messages="$errors->get('qty')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="production_id" class="mb-1">{{ __('Production ID') }}</x-app.input.label>
-                    <x-app.input.select2 name="production_id">
-                        <option value="">{{ __('Select a production') }}</option>
-                        @foreach ($productions as $production)
-                            <option value="{{ $production->id }}">{{ $production->sku }}</option>
-                        @endforeach
-                    </x-app.input.select2>
 
-                    <x-input-error :messages="$errors->get('production_id')" class="mt-1" />
+    @if (!(isset($filter_usage) && $filter_usage == 'usage'))
+        <form action="{{ route('production_material.record_usage_submit', ['frm' => $frm->id]) }}" method="POST"
+            enctype="multipart/form-data" id="form">
+            @csrf
+            <div class="bg-white p-4 border rounded-md">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
+                    <div class="flex flex-col">
+                        <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.input name="qty" id="qty" value="{{ old('qty') }}" class="int-input" />
+                        <x-input-error :messages="$errors->get('qty')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="production_id" class="mb-1">{{ __('Production ID') }}</x-app.input.label>
+                        <x-app.input.select2 name="production_id">
+                            <option value="">{{ __('Select a production') }}</option>
+                            @foreach ($productions as $production)
+                                <option value="{{ $production->id }}">{{ $production->sku }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+
+                        <x-input-error :messages="$errors->get('production_id')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }}</x-app.input.label>
+                        <x-app.input.select2 name="uom">
+                            <option value="">{{ __('Select a UOM') }}</option>
+                            @foreach ($uoms as $uom)
+                                <option value="{{ $uom->id }}" @selected($product->uom == $uom->id)>{{ $uom->name }}
+                                </option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-input-error :messages="$errors->get('uom')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="date" class="mb-1">{{ __('Date') }}</x-app.input.label>
+                        <x-app.input.input name="date" id="date" value="{{ $date }}" disabled />
+                        <x-input-error :messages="$errors->get('date')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="by" class="mb-1">{{ __('Done By') }}</x-app.input.label>
+                        <x-app.input.input name="by" id="by" value="{{ $by }}" disabled />
+                        <x-input-error :messages="$errors->get('by')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col col-span-3">
+                        <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                        <x-app.input.textarea name="remark" id="remark" />
+                        <x-input-error :messages="$errors->get('remark')" class="mt-1" />
+                    </div>
                 </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="uom" class="mb-1">{{ __('UOM') }}</x-app.input.label>
-                    <x-app.input.select2 name="uom">
-                        <option value="">{{ __('Select a UOM') }}</option>
-                        @foreach ($uoms as $uom)
-                            <option value="{{ $uom->id }}" @selected($product->uom == $uom->id)>{{ $uom->name }}</option>
-                        @endforeach
-                    </x-app.input.select2>
-                    <x-input-error :messages="$errors->get('uom')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="date" class="mb-1">{{ __('Date') }}</x-app.input.label>
-                    <x-app.input.input name="date" id="date" value="{{ $date }}" disabled />
-                    <x-input-error :messages="$errors->get('date')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="by" class="mb-1">{{ __('Done By') }}</x-app.input.label>
-                    <x-app.input.input name="by" id="by" value="{{ $by }}" disabled />
-                    <x-input-error :messages="$errors->get('by')" class="mt-1" />
-                </div>
-                <div class="flex flex-col col-span-3">
-                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
-                    <x-app.input.textarea name="remark" id="remark" />
-                    <x-input-error :messages="$errors->get('remark')" class="mt-1" />
+                <div class="mt-8 flex justify-end gap-x-4">
+                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
             </div>
-            <div class="mt-8 flex justify-end gap-x-4">
-                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-            </div>
-        </div>
-    </form>
+        </form>
+    @endif
     {{-- History --}}
-    <div class="mb-6">
-        <x-app.page-title>
-            {{ __('Record History') }}
-        </x-app.page-title>
-    </div>
+
+    @if (!(isset($filter_usage) && $filter_usage == 'usage'))
+        <div class="mb-6">
+            <x-app.page-title>
+                {{ __('Usage History') }}
+            </x-app.page-title>
+        </div>
+    @endif
     <div>
         <!-- Filters -->
         {{-- <div class="flex max-w-xs w-full mb-4">

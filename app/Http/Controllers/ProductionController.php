@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductionExport;
+use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
@@ -10,9 +11,11 @@ use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
+use App\Models\ProductionDueDate;
 use App\Models\ProductionMilestone;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductionMilestoneMaterialPreview;
+use App\Models\ProductionMilestoneReject;
 use App\Models\RawMaterialRequest;
 use App\Models\RawMaterialRequestMaterial;
 use App\Models\Role;
@@ -23,6 +26,7 @@ use App\Models\Scopes\BranchScope;
 use App\Models\User;
 use App\Models\UserProduction;
 use App\Notifications\ProductionCompleteNotification;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +37,8 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
+use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
+use Picqer\Barcode\Types\TypeCode128;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class ProductionController extends Controller
@@ -41,6 +47,7 @@ class ProductionController extends Controller
     protected $userProd;
     protected $ms;
     protected $prodMs;
+    protected $prodMsReject;
     protected $prodMsMaterial;
     protected $prodMsMaterialPreview;
     protected $product;
@@ -52,6 +59,7 @@ class ProductionController extends Controller
         $this->userProd = new UserProduction;
         $this->ms = new Milestone;
         $this->prodMs = new ProductionMilestone;
+        $this->prodMsReject = new ProductionMilestoneReject;
         $this->prodMsMaterial = new ProductionMilestoneMaterial;
         $this->prodMsMaterialPreview = new ProductionMilestoneMaterialPreview;
         $this->product = new Product;
@@ -85,12 +93,15 @@ class ProductionController extends Controller
             $completed_count = $this->prod->where('status', $this->prod::STATUS_COMPLETED)->count();
         }
 
+        $can_start_task = count(array_intersect([Role::SUPERADMIN, Role::PRODUCTION_SUPERVISOR], getUserRoleId(Auth::user()))) > 0;
+
         return view('production.list', [
             'productin_left' => $this->prod::where('due_date', now()->format('Y-m-d'))->count(),
             'all' => $all_count,
             'to_do' => $to_do_count,
             'doing' => $doing_count,
             'completed' => $completed_count,
+            'can_start_task' => $can_start_task,
         ]);
     }
 
@@ -136,9 +147,9 @@ class ProductionController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
-                4 => 'start_date',
-                5 => 'due_date',
+                1 => 'sku',
+                5 => 'start_date',
+                6 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -163,7 +174,7 @@ class ProductionController extends Controller
                 'sku' => $record->sku,
                 'old_production_sku' => $record->oldProduction->sku ?? null,
                 'factory' => $record->product->category->fromFactory->name ?? null,
-                'product_serial_no' => $record->productChild->sku,
+                'product_serial_no' => $record->productChild->sku ?? null,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,
@@ -172,11 +183,10 @@ class ProductionController extends Controller
                 'request_status' => $record->rawMaterialRequest->status ?? null,
                 'status' => $record->status,
                 'priority' => $record->priority,
-                'can_edit' => hasPermission('production.edit'),
+                'can_edit' => hasPermission('production.edit') && $record->status == Production::STATUS_TO_DO,
                 'can_delete' => hasPermission('production.delete'),
                 'can_duplicate' => !$is_production_worker,
                 'can_view' => !$is_production_worker || $record->status == Production::STATUS_DOING,
-                'can_start' => count(array_intersect([Role::SUPERADMIN, Role::PRODUCTION_SUPERVISOR], getUserRoleId(Auth::user()))) > 0 && $record->status == Production::STATUS_TO_DO,
             ];
         }
 
@@ -239,7 +249,7 @@ class ProductionController extends Controller
 
     public function view(Production $production)
     {
-        $production->load('users', 'product');
+        $production->load('users', 'product', 'dueDates');
         $production->load(['milestones' => function ($q) {
             $q->withTrashed();
         }]);
@@ -275,6 +285,7 @@ class ProductionController extends Controller
             $q->preview = $preview;
             $q->pivot->submittedBy = $q->pivot->submitted_by == null ? null : User::withoutGlobalScope(BranchScope::class)->where('id', $q->pivot->submitted_by)->value('name');
             $q->pivot->submitted_at = $q->pivot->submitted_at == null ? null : Carbon::parse($q->pivot->submitted_at)->format('d M Y H:i');
+            $q->pivot->rejects = $this->prodMsReject::with('rejectedBy', 'submittedBy', 'milestoneMaterials.product', 'milestoneMaterials.productChild.parent')->where('production_milestone_id', $q->pivot->id)->orderBy('id', 'desc')->get();
         });
 
         // Production Milestone Materials
@@ -287,10 +298,13 @@ class ProductionController extends Controller
 
         $material_use = MaterialUse::with('materials.material')->where('product_id', $production->product_id)->first();
 
+        $can_extend_due_date = now()->isBefore($production->due_date);
+
         return view('production.view', [
             'production' => $production,
             'production_milestone_materials' => $production_milestone_materials,
-            'material_use' => $material_use
+            'material_use' => $material_use,
+            'can_extend_due_date' => $can_extend_due_date
         ]);
     }
 
@@ -351,18 +365,9 @@ class ProductionController extends Controller
             $now = now();
 
             if ($production->id == null) {
-                // Create product
-                $prod = $this->product::where('id', $req->product)->first();
-                $prodChild = $this->productChild::create([
-                    'product_id' => $prod->id,
-                    'sku' => ($this->productChild)->generateSku($prod->initial_for_production ?? $prod->sku),
-                    'location' => $this->productChild::LOCATION_FACTORY,
-                ]);
-
                 $production = $this->prod::create([
                     'sku' => $this->prod->generateSku(),
                     'product_id' => $req->product,
-                    'product_child_id' => $prodChild->id,
                     'sale_id' => $req->order,
                     'name' => $req->name,
                     'desc' => $req->desc,
@@ -539,6 +544,17 @@ class ProductionController extends Controller
 
     public function checkInMilestone(Request $req)
     {
+        // Check in is allowed only when production status is 'doing'
+        $pm = $this->prodMs::where('id', $req->production_milestone_id)->first();
+        $prod = $this->prod::where('id', $pm->production_id)->first();
+        if (strtolower($this->prod->statusToHumanRead($prod->status)) != 'doing') {
+            return Response::json([
+                'errors' => [
+                    'general' => 'Milestone is not allow to check in',
+                ],
+            ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $rules = [
             'production_milestone_id' => 'required',
             'datetime' => 'required',
@@ -549,7 +565,6 @@ class ProductionController extends Controller
         $req->validate($rules);
 
         // Validate serial no
-        $pm = $this->prodMs::where('id', $req->production_milestone_id)->first();
         $prodMsMaterialPreview = $this->prodMsMaterialPreview::where('production_milestone_id', $pm->id)->get();
 
         if (count($prodMsMaterialPreview) > 0) {
@@ -743,8 +758,71 @@ class ProductionController extends Controller
 
             return Response::json([
                 'result' => true,
-                'status' => $this->prod->statusToHumanRead($prod->status),
-                'progress' => $this->prod->getProgress($prod),
+                // 'status' => $this->prod->statusToHumanRead($prod->status),
+                // 'progress' => $this->prod->getProgress($prod),
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function rejectMilestone(Request $req)
+    {
+        // Check if reject reason is ticked, when it is spare part
+        $pc_ids = $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
+        for ($i = 0; $i < count($pc_ids); $i++) {
+            if ($req->{'product-child-' . $pc_ids[$i]} == null) {
+                $pc = ProductChild::where('id', $pc_ids[$i])->first();
+
+                return Response::json([
+                    'errors' => [
+                        'materials.' . $pc->parent->id => "Please fill up all reason",
+                    ],
+                ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $pms = $this->prodMs::where('id', $req->production_milestone_id)->first();
+
+            $pms_reject = $this->prodMsReject::create([
+                'production_milestone_id' => $req->production_milestone_id,
+                'submitted_by' => $pms->submitted_by,
+                'submitted_at' => $pms->submitted_at,
+                'rejected_by' => Auth::user()->id,
+            ]);
+            for ($i = 0; $i < count($pc_ids); $i++) {
+                $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->where('product_child_id', $pc_ids[$i])->update([
+                    'reject_reason' => $req->{'product-child-' . $pc_ids[$i]},
+                ]);
+                if ($req->{'product-child-' . $pc_ids[$i]} == 'broken') {
+                    ProductChild::where('id', $pc_ids[$i])->update([
+                        'status' => ProductChild::STATUS_BROKEN,
+                    ]);
+                }
+            }
+            $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->update([
+                'production_milestone_reject_id' => $pms_reject->id,
+                'deleted_at' => now(),
+            ]);
+
+            $pms->submitted_by = null;
+            $pms->submitted_at = null;
+            $pms->save();
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+                // 'status' => $this->prod->statusToHumanRead($prod->status),
+                // 'progress' => $this->prod->getProgress($prod),
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -761,11 +839,133 @@ class ProductionController extends Controller
         return Excel::download(new ProductionExport, 'production.xlsx');
     }
 
-    public function toInProgress(Production $production)
+    public function toInProgress(Request $req)
     {
-        $production->status = Production::STATUS_DOING;
-        $production->save();
+        try {
+            DB::beginTransaction();
 
-        return back()->with('success', 'Production is now in progress');
+            $production_ids = explode(',', $req->productionIds);
+            $productions = Production::whereIn('id', $production_ids)->where('status', Production::STATUS_TO_DO)->get();
+
+            for ($i = 0; $i < count($productions); $i++) {
+                // Create product
+                $prod = $this->product::where('id', $productions[$i]->product_id)->first();
+                $prodChild = $this->productChild::create([
+                    'product_id' => $prod->id,
+                    'sku' => ($this->productChild)->generateSku($prod->initial_for_production ?? $prod->sku),
+                    'location' => $this->productChild::LOCATION_FACTORY,
+                ]);
+
+                $productions[$i]->product_child_id = $prodChild->id;
+                $productions[$i]->status = Production::STATUS_DOING;
+                $productions[$i]->save();
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Production is now in progress');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function generateBarcode(Request $req)
+    {
+        $production_ids = explode(',', $req->productionIds);
+        $product_child_ids = Production::whereIn('id', $production_ids)->whereNotNull('product_child_id')->pluck('product_child_id');
+        $product_children = ProductChild::whereIn('id', $product_child_ids)->get();
+
+        $data = [
+            'barcode' => [],
+            'renderer' => [],
+        ];
+        for ($i = 0; $i < count($product_children); $i++) {
+            $prod = $product_children[$i]->parent;
+
+            $barcode = (new TypeCode128)->getBarcode($product_children[$i]->sku);
+
+            // Output the barcode as HTML in the browser with a HTML Renderer
+            $renderer = new DynamicHtmlRenderer;
+
+            $data['renderer'][] = $renderer->render($barcode);
+            $data['product_name'][] = $prod->model_name;
+            $data['product_code'][] = $prod->sku;
+            $data['barcode'][] = $product_children[$i]->sku;
+            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
+            $data['capacity'][] = $prod->capacity;
+            $data['weight'][] = $prod->weight;
+            $data['refrigerant'][] = $prod->refrigerant;
+            $data['power_input'][] = $prod->power_input;
+            $data['voltage_frequency'][] = $prod->voltage_frequency;
+            $data['standard_features'][] = $prod->standard_features;
+        }
+        $pdf = Pdf::loadView('inventory.barcode', $data);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->stream();
+    }
+
+    public function extendDueDate(Request $req, Production $production)
+    {
+        if ($req->new_due_date == null) {
+            return back()->with('warning', 'Please enter the new due date');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            ProductionDueDate::create([
+                'production_id' => $production->id,
+                'old_date' => $production->due_date,
+                'new_date' => $req->new_due_date,
+                'remark' => $req->remark ?? null,
+                'done_by' => Auth::user()->id,
+            ]);
+
+            $production->due_date = $req->new_due_date;
+            $production->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Due date is extended');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function forceCompleteTask(Request $req, Production $production)
+    {
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => Production::class,
+                'object_id' => $production->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'description' => Auth::user()->name . ' has requested to complete the production (' . $production->sku . ')',
+                    'user_id' => Auth::user()->id,
+                ])
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $production->status = Production::STATUS_PENDING_APPROVAL;
+            $production->save();
+
+            DB::commit();
+
+            return redirect(route('production.view', ['production' => $production->id]))->with('success', 'Complete Task request is created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
     }
 }

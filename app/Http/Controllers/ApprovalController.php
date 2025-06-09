@@ -7,6 +7,7 @@ use App\Models\DeliveryOrder;
 use App\Models\FactoryRawMaterial;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\Production;
 use App\Models\Sale;
 use App\Models\Scopes\ApprovedScope;
 use Illuminate\Http\Request;
@@ -98,7 +99,7 @@ class ApprovalController extends Controller
                 'view_url' => $view_url,
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
-                'can_view' => in_array(get_class($obj), [FactoryRawMaterial::class, ProductChild::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -139,11 +140,12 @@ class ApprovalController extends Controller
 
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
-                $obj->location = ProductChild::LOCATION_WAREHOUSE;
-                $obj->status = null;
-                $obj->stock_out_by = null;
-                $obj->stock_out_to_type = null;
-                $obj->stock_out_at = null;
+                $obj->status = ProductChild::STATUS_TRANSFER_APPROVED;
+                $obj->save();
+            }
+            // Complete Production 
+            if (get_class($obj) == Production::class) {
+                $obj->status = Production::STATUS_COMPLETED;
                 $obj->save();
             }
 
@@ -210,6 +212,11 @@ class ApprovalController extends Controller
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
                 $obj->status = ProductChild::STATUS_STOCK_OUT;
+                $obj->save();
+            }
+            // Complete Production 
+            if (get_class($obj) == Production::class) {
+                $obj->status = Production::STATUS_DOING;
                 $obj->save();
             }
 
