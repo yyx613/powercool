@@ -169,7 +169,7 @@
                     render: function(data, type, row) {
                         if (data == 0) {
                             return 'Pending Approval'
-                        } else if (data == 1) {
+                        } else if (data == 1 || data == 3) {
                             return 'Approved'
                         } else if (data == 2) {
                             return 'Rejected'

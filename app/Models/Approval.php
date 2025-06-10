@@ -15,10 +15,9 @@ class Approval extends Model
     use HasFactory;
 
     const STATUS_PENDING_APPROVAL = 0;
-
     const STATUS_APPROVED = 1;
-
     const STATUS_REJECTED = 2;
+    const STATUS_APPROVED_ACTION_DONE = 3;
 
     protected $guarded = [];
 

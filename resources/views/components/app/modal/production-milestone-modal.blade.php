@@ -17,6 +17,10 @@
                         <p id="date" class="text-sm"></p>
                     </div>
                 </div>
+                <div id="remark-container">
+                    <span class="font-medium text-sm mb-1 block">{{ __('Remark') }}</span>
+                    <x-app.input.textarea name="remark" id="remark" />
+                </div>
                 <div id="serial-no-container">
                     <span class="font-medium text-sm block mb-2">{{ __('Materials') }}</span>
                     <div class="border px-2 py-1.5 rounded overflow-y-auto max-h-64" id="serial-no-selection-container">
@@ -184,7 +188,9 @@
             $('.err_msg').addClass('hidden') // Remove error messages
 
             // Prepare data
-            var data = {}
+            var data = {
+                'remark': $('#production-milestone-modal textarea[name="remark"]').val()
+            }
             $('#production-milestone-modal .second-half').each(function(i, obj) {
                 if ($(this).data('product-child-id') != undefined) {
                     data[`product-child-${$(this).data('product-child-id')}`] = $(this).find(

@@ -166,11 +166,14 @@
 
 @push('scripts')
     <script>
+        TYPE = @json($type ?? null);
         IS_PRODUCT = @json($is_product);
         IS_PRODUCTION = @json($is_production);
         PRODUCT_ID_TO_TRANSFER = null
         FRM_ID_TO_TRANSFER = null
         TRANSFER_TYPE = null
+
+        console.debug(TYPE)
 
         var columns = [{
                 data: 'sku'
@@ -276,6 +279,15 @@
                 "targets": 7,
                 orderable: false,
                 render: function(data, type, row) {
+                    if (TYPE == 'waiting') {
+                        return `<div class="flex items-center justify-end gap-x-2 px-2">
+                                    <a href="{{ config('app.url') }}/approval/stock-in/${row.approval_id}" class="rounded-full py-2 px-3 bg-purple-200 flex items-center gap-x-2 stock-in-btns" data-approval-id="${row.approval_id}">
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-3c-1.103,0-2,.897-2,2s-.897,2-2,2h-4c-1.103,0-2-.897-2-2s-.897-2-2-2H3c-1.654,0-3,1.346-3,3v4c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-4c0-1.654-1.346-3-3-3Zm1,7c0,1.654-1.346,3-3,3H5c-1.654,0-3-1.346-3-3v-4c0-.552,.448-1,1-1l3-.002v.002c0,2.206,1.794,4,4,4h4c2.206,0,4-1.794,4-4h3c.552,0,1,.448,1,1v4ZM7.293,7.121c-.391-.391-.391-1.023,0-1.414s1.023-.391,1.414,0l2.293,2.293V1c0-.553,.447-1,1-1s1,.447,1,1v7l2.293-2.293c.391-.391,1.023-.391,1.414,0s.391,1.023,0,1.414l-3.293,3.293c-.387,.387-.896,.582-1.405,.584l-.009,.002-.009-.002c-.509-.002-1.018-.197-1.405-.584l-3.293-3.293Z"/></svg>
+                                        <span class="text-xs font-medium">${ "{!! __('Stock In') !!}" }</span>
+                                    </a>
+                                </div>`
+                    }
+
                     return IS_PRODUCTION ?
                         `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${

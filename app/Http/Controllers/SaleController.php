@@ -27,6 +27,7 @@ use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\SaleProductWarrantyPeriod;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
 use App\Models\Target;
@@ -157,7 +158,7 @@ class SaleController extends Controller
     public function edit(Sale $sale)
     {
         return view('quotation.form', [
-            'sale' => $sale->load('products.product.children', 'products.children'),
+            'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
         ]);
     }
 
@@ -324,7 +325,7 @@ class SaleController extends Controller
                     return $q->uom;
                 })->toArray(),
                 'selling_price' => $products->map(function ($q) {
-                    return $q->unit_price;
+                    return $q->selling_price_id;
                 })->toArray(),
                 'unit_price' => $products->map(function ($q) {
                     return $q->unit_price;
@@ -336,7 +337,9 @@ class SaleController extends Controller
                     return $q->children->pluck('product_children_id')->toArray();
                 })->toArray(),
                 'warranty_period' => $products->map(function ($q) {
-                    return $q->warranty_period_id;
+                    return $q->warrantyPeriods->map(function ($q) {
+                        return $q->warranty_period_id;
+                    });
                 })->toArray(),
                 'discount' => $products->map(function ($q) {
                     return $q->discount;
@@ -515,6 +518,7 @@ class SaleController extends Controller
         } else {
             $sale->load('products.product.children', 'products.children');
         }
+        $sale->load('products.warrantyPeriods');
 
         $sale->products->each(function ($q) {
             $q->attached_to_do = $q->attachedToDo();
@@ -994,6 +998,7 @@ class SaleController extends Controller
         }
         $req->validate($rules, [], [
             // upsertQuoDetails
+            'sale' => 'sales agent',
             'report_type' => 'type',
             'customer' => 'company',
             'open_until' => 'validity',
@@ -1316,12 +1321,12 @@ class SaleController extends Controller
                         'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
                         'selling_price_id' => $req->selling_price[$i],
-                        'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
                         'discount' => $req->discount[$i],
                         'remark' => $req->product_remark[$i],
                         'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                     ]);
+                    SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
                 } else {
                     $sp = SaleProduct::create([
                         'sale_id' => $req->sale_id,
@@ -1331,13 +1336,22 @@ class SaleController extends Controller
                         'uom' => $req->uom[$i],
                         'unit_price' => $req->unit_price[$i],
                         'selling_price_id' => $req->selling_price[$i],
-                        'warranty_period_id' => $req->warranty_period[$i],
                         'promotion_id' => $req->promotion_id[$i],
                         'discount' => $req->discount[$i],
                         'remark' => $req->product_remark[$i],
                         'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                     ]);
                 }
+                $spwp_data = [];
+                for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
+                    $spwp_data[] = [
+                        'sale_product_id' => $sp->id,
+                        'warranty_period_id' => $req->warranty_period[$i][$j],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                SaleProductWarrantyPeriod::insert($spwp_data);
 
                 $prod = Product::where('id', $req->product_id[$i])->first();
 

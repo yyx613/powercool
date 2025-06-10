@@ -797,6 +797,7 @@ class ProductionController extends Controller
                 'submitted_by' => $pms->submitted_by,
                 'submitted_at' => $pms->submitted_at,
                 'rejected_by' => Auth::user()->id,
+                'remark' => $req->remark ?? null,
             ]);
             for ($i = 0; $i < count($pc_ids); $i++) {
                 $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->where('product_child_id', $pc_ids[$i])->update([
