@@ -72,6 +72,7 @@
             }
             warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
         })
+        console.debug(unitPrice)
         // Submit
         let url = '{{ route("sale.upsert_details") }}'
         url = `${url}?type=quo`

@@ -19,7 +19,6 @@
                 <h6 class="text-sm font-semibold" id="milestone"></h6>
             </div>
             <div class="mb-4 overflow-y-auto max-h-[60vh]" id="record-container">
-
                 <div class="mb-4 border border-slate-200 px-2 py-1.5 rounded hidden" id="record-template">
                     <div class="flex gap-x-2">
                         <div class="flex-1 flex flex-col">
@@ -35,13 +34,18 @@
                             <span class="text-sm" id="submitted-at"></span>
                         </div>
                     </div>
+                    <div class="flex-1 flex flex-col mt-2">
+                        <span class="text-xs text-slate-500">Remark: </span>
+                        <p class="text-sm" id="remark"></p>
+                    </div>
                     <div class="border-t border-slate-200 mt-1.5 pt-1.5" id="material-container">
                         <span class="text-xs text-slate-500">Materials: </span>
                         <div class="hidden mb-2 flex items-center justify-between hover:bg-slate-100 transition duration-200"
                             id="rm-template">
                             <div class="flex items-center">
-                                <svg class="h-3 w-3 mr-2 fill-blue-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
-                                    data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                                <svg class="h-3 w-3 mr-2 fill-blue-400" xmlns="http://www.w3.org/2000/svg"
+                                    id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512"
+                                    height="512">
                                     <path
                                         d="m12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-10c0,2.209-1.791,4-4,4s-4-1.791-4-4,1.791-4,4-4,4,1.791,4,4Z" />
                                 </svg>
@@ -51,8 +55,9 @@
                         </div>
                         <div class="hidden mb-2 hover:bg-slate-100 transition duration-200" id="sp-template">
                             <div class="flex items-center">
-                                <svg class="h-3 w-3 mr-2 fill-blue-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
-                                    data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                                <svg class="h-3 w-3 mr-2 fill-blue-400" xmlns="http://www.w3.org/2000/svg"
+                                    id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512"
+                                    height="512">
                                     <path
                                         d="m12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-10c0,2.209-1.791,4-4,4s-4-1.791-4-4,1.791-4,4-4,4,1.791,4,4Z" />
                                 </svg>

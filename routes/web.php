@@ -124,6 +124,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/approve/{approval}', 'approve')->name('approve');
         Route::get('/reject/{approval}', 'reject')->name('reject');
+        Route::get('/stock-in/{approval}', 'stockIn')->name('stock_in');
     });
     // Dashboard
     Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->middleware(['can:dashboard.view'])->group(function () {

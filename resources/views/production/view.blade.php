@@ -274,11 +274,13 @@
                     $('#production-milestone-modal #yes-btn').text('Update')
                     $('#production-milestone-modal #yes-btn').removeClass('hidden')
                 } else {
+                    $('#production-milestone-modal #remark-container').removeClass('hidden')
                     $('#production-milestone-modal #reject-btn').removeClass('hidden')
                     $('#production-milestone-modal #yes-btn').addClass('hidden')
                 }
                 $('#production-milestone-modal #no-btn').text('Close')
             } else {
+                $('#production-milestone-modal #remark-container').addClass('hidden')
                 $('#production-milestone-modal #yes-btn').text('Confirm')
                 $('#production-milestone-modal #yes-btn').removeClass('hidden')
                 $('#production-milestone-modal #no-btn').text('No')
@@ -433,13 +435,13 @@
                 if (PRODUCTION.milestones[i].pivot.id == productionMilestoneId) {
                     for (let j = 0; j < PRODUCTION.milestones[i].pivot.rejects.length; j++) {
                         var clone = $('#milestone-rejections-modal #record-template')[0].cloneNode(true);
-
                         // Record
                         $(clone).find('#rejected-by').text(PRODUCTION.milestones[i].pivot.rejects[j].rejected_by
                             .name)
                         $(clone).find('#submitted-by').text(PRODUCTION.milestones[i].pivot.rejects[j].submitted_by
                             .name)
                         $(clone).find('#submitted-at').text(PRODUCTION.milestones[i].pivot.rejects[j].submitted_at)
+                        $(clone).find('#remark').text(PRODUCTION.milestones[i].pivot.rejects[j].remark ?? '-')
                         $(clone).addClass('records')
                         $(clone).removeClass('hidden')
                         // Materials

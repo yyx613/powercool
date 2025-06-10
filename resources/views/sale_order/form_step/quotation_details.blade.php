@@ -23,11 +23,11 @@
             <x-app.message.error id="customer_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="sale" class="mb-1">{{ __('Assigned To') }} <span
+            <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
-                placeholder="{{ __('Select a sale') }}">
-                <option value="">{{ __('Select a sale') }}</option>
+                placeholder="{{ __('Select a sales agent') }}">
+                <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
@@ -102,7 +102,6 @@
                         $('select[name="sale"]').val(element.sale_agent).trigger('change')
                     }
                     // Update payment term
-
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
                     $(`select[name="payment_term"]`).select2({
@@ -115,7 +114,6 @@
                         let opt = new Option(term.credit_term.name, term.credit_term.id)
                         $(`select[name="payment_term"]`).append(opt)
                     }
-
                     break
                 }
             }

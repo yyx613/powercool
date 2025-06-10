@@ -20,10 +20,13 @@
             </svg>
         </button>
         <div class="flex flex-col">
-            <x-app.input.label class="mb-1">{{ __('Product Name') }} <span
+            <x-app.input.label class="mb-1">{{ __('Product') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="product_id[]">
                 <option value=""></option>
+                @foreach ($products as $p)
+                    <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_name }}</option>
+                @endforeach
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
         </div>
@@ -84,7 +87,7 @@
         <div class="flex flex-col">
             <x-app.input.label id="warranty_period" class="mb-1">{{ __('Warranty Period') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select name="warranty_period[]">
+            <x-app.input.select name="warranty_period[]" multiple>
                 <option value=""></option>
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err" />
@@ -103,17 +106,6 @@
                 <x-app.message.error id="remark_err" />
             </div>
         </div>
-        <!-- <div class="flex flex-col col-span-2 md:col-span-4"> -->
-        <!--     <x-app.input.label id="product_serial_no" class="mb-1">{{ __('Product Serial No') }}</x-app.input.label> -->
-        <!--     <x-app.input.select name="product_serial_no[]" multiple class="h-36"> -->
-        <!--     </x-app.input.select> -->
-        <!--     <x-app.message.error id="product_serial_no_err"/> -->
-        <!-- </div> -->
-        <!-- <div class="flex flex-col col-span-2 md:col-span-4"> -->
-        <!--     <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label> -->
-        <!--     <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" /> -->
-        <!--     <x-app.message.error id="remark_err"/> -->
-        <!-- </div> -->
     </div>
     <div id="items-container"></div>
     <!-- Add Items -->
@@ -188,11 +180,18 @@
                     $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger(
                         'change')
                     $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
-                    $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(sp.warranty_period_id)
+                    let temp = []
+                    for (let j = 0; j < sp.warranty_periods.length; j++) {
+                        temp.push(sp.warranty_periods[j].warranty_period_id)
+                    }
+                    $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(temp)
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
                     $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
-                    $(`.items[data-id="${i+1}"] input[name="override_selling_price"]`).val(sp
-                        .override_selling_price)
+                    if (sp.override_selling_price != null) {
+                        $(`.items[data-id="${i+1}"] input[name="override_selling_price"]`).val(sp
+                            .override_selling_price).trigger('keyup')
+                    }
+
                     setTimeout(() => {
                         $(`.items[data-id="${i+1}"] select[name="promotion[]"]`).val(sp.promotion_id)
                             .trigger('change')
@@ -206,7 +205,6 @@
                 if (SALE.products.length <= 0) $('#add-item-btn').click()
 
                 $('select[name="promotion_id"]').trigger('change')
-                $('input[name="override_selling_price"]').trigger('keyup')
             } else {
                 $('#add-item-btn').click()
             }
@@ -228,12 +226,12 @@
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
                 placeholder: "{!! __('Select a product') !!}"
             })
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const element = PRODUCTS[i];
+            // for (let i = 0; i < PRODUCTS.length; i++) {
+            //     const element = PRODUCTS[i];
 
-                let opt = new Option(element.model_name, element.id)
-                $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
-            }
+            //     let opt = new Option(element.model_name, element.id)
+            //     $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
+            // }
 
             buildWarrantyPeriodSelect2(ITEMS_COUNT) // Build warranty period select2
             if (!INIT_EDIT) {

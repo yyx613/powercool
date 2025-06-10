@@ -114,8 +114,10 @@ class ProductController extends Controller
 
         $filter_type = Session::get('type');
         if ($filter_type == 'waiting') {
-            $frm_ids = Approval::where('object_type', FactoryRawMaterial::class)->pluck('object_id')->toArray();
-            $product_ids_only1 = FactoryRawMaterial::whereIn('id', $frm_ids)->pluck('product_id');
+            $approvals = Approval::where('object_type', FactoryRawMaterial::class)->where('status', Approval::STATUS_APPROVED)->get();
+            $frm_ids = $approvals->pluck('object_id')->toArray();
+            $frms = FactoryRawMaterial::whereIn('id', $frm_ids)->get();
+            $product_ids_only1 = $frms->pluck('product_id');
 
             $pc_ids = Approval::where('object_type', ProductChild::class)->pluck('object_id')->toArray();
             $product_ids_only2 = ProductChild::whereIn('id', $pc_ids)->pluck('product_id');
@@ -205,7 +207,13 @@ class ProductController extends Controller
                     }
                 }
             } else {
-                $qty = $record->qty;
+                if ($filter_type == 'waiting') {
+                    $frm_id = $frms->where('product_id', $record->id)->value('id');
+                    $d = json_decode($approvals->where('object_id', $frm_id)->value('data'));
+                    $qty = $d->qty;
+                } else {
+                    $qty = $record->qty;
+                }
             }
 
             $data['data'][] = [
@@ -221,6 +229,7 @@ class ProductController extends Controller
                 'status' => $record->is_active,
                 'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
                 'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
+                'approval_id' => $filter_type == 'waiting' ? $approvals->where('object_id', $frm_id)->value('id') : null,
             ];
         }
         if ($req->boolean('is_production') == true && $req->boolean('is_product') == false) {

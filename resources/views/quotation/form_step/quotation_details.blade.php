@@ -54,11 +54,11 @@
             <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="sale" class="mb-1">{{ __('Assigned To') }} <span
+            <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
-                placeholder="{{ __('Select a sale') }}">
-                <option value="">{{ __('Select a sale') }}</option>
+                placeholder="{{ __('Select a sales agent') }}">
+                <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
@@ -118,7 +118,6 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
-            $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
 
             INIT_EDIT = false
         })

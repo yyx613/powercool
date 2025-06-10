@@ -44,13 +44,11 @@ class WarrantyController extends Controller
     public function getData(Request $req) {
         $cus = DB::table('customers')->select('id', 'name');
         $prods = DB::table('products')->select('id', 'model_name');
-        $wars = DB::table('warranty_periods')->select('id', 'name', 'period');
 
         $sps = DB::table('sale_products')
-            ->select('sale_products.id', 'wars.name', 'wars.period')
-            ->leftJoinSub($wars, 'wars', function ($join) {
-                $join->on('sale_products.warranty_period_id', '=', 'wars.id');
-            });
+            ->select('sale_products.id', 'warranty_periods.name', 'warranty_periods.period')
+            ->leftJoin('sale_product_warranty_periods', 'sale_product_warranty_periods.sale_product_id', 'sale_products.id')
+            ->leftJoin('warranty_periods', 'warranty_periods.id', 'sale_product_warranty_periods.warranty_period_id');
 
         $sos = DB::table('sales')
             ->select('sales.id', 'cus.name AS customer_name')

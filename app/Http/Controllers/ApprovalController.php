@@ -133,7 +133,7 @@ class ApprovalController extends Controller
                 $obj->qty -= $data->qty;
                 $obj->to_warehouse_qty -= $data->qty;
 
-                Product::where('id', $obj->product_id)->increment('qty', $data->qty);
+                // Product::where('id', $obj->product_id)->increment('qty', $data->qty);
 
                 $obj->save();
             }
@@ -232,6 +232,31 @@ class ApprovalController extends Controller
             return Response::json([
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function stockIn(Approval $approval)
+    {
+        try {
+            DB::beginTransaction();
+
+            $obj = $approval->object()->withoutGlobalScope(ApprovedScope::class)->first();
+
+            if (get_class($obj) == FactoryRawMaterial::class) {
+                $data = json_decode($approval->data);
+                Product::where('id', $obj->product_id)->increment('qty', $data->qty);
+            }
+            $approval->status = Approval::STATUS_APPROVED_ACTION_DONE;
+            $approval->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Stocked In');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
 }

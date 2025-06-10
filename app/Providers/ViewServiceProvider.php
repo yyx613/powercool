@@ -24,6 +24,7 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Production;
+use App\Models\ProductionRequestMaterial;
 use App\Models\ProjectType;
 use App\Models\Promotion;
 use App\Models\Role;
@@ -718,7 +719,8 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['components.app.modal.production-request-complete-modal'], function (ViewView $view) {
-            $productions = Production::orderBy('id', 'desc')->get();
+            $production_id_to_exclude = ProductionRequestMaterial::whereNotNull('production_id')->pluck('production_id')->toArray();
+            $productions = Production::whereNotIn('id', $production_id_to_exclude)->orderBy('id', 'desc')->get();
 
             $view->with([
                 'productions' => $productions,
