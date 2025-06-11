@@ -7,6 +7,7 @@ use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\CustomerSaleAgent;
 use App\Models\Dealer;
 use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
@@ -151,6 +152,7 @@ class CustomerController extends Controller
 
         return view('customer.form', [
             'customer' => $customer,
+            'sales_agent_ids' => $customer->salesAgents->pluck('sales_agent_id')->toArray(),
         ]);
     }
 
@@ -250,7 +252,6 @@ class CustomerController extends Controller
                     'email' => $req->email,
                     'remark' => $req->remark,
                     'tin_number' => $req->tin_number,
-                    'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
@@ -284,7 +285,6 @@ class CustomerController extends Controller
                     'email' => $req->email,
                     'remark' => $req->remark,
                     'tin_number' => $req->tin_number,
-                    'sale_agent' => $req->sale_agent,
                     'area_id' => $req->area,
                     'debtor_type_id' => $req->debtor_type,
                     'platform_id' => $req->platform,
@@ -302,7 +302,21 @@ class CustomerController extends Controller
                     'identity_no' => $req->identity_no,
                 ]);
             }
+            // Sales agent
+            if ($req->sale_agent != null) {
+                CustomerSaleAgent::where('customer_id', $customer->id)->delete();
 
+                $sales_agent = [];
+                for ($i = 0; $i < count($req->sale_agent); $i++) {
+                    $sales_agent[] = [
+                        'customer_id' => $customer->id,
+                        'sales_agent_id' => $req->sale_agent[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                CustomerSaleAgent::insert($sales_agent);
+            }
             // Create dealer if debtor type is dealer
             if ($req->debtor_type != null) {
                 $debt_type_name = DebtorType::withoutGlobalScope(BranchScope::class)->where('id', $req->debtor_type)->value('name');
@@ -595,5 +609,5 @@ class CustomerController extends Controller
     public function export()
     {
         return Excel::download(new CustomerExport, 'user.xlsx');
-    } 
+    }
 }

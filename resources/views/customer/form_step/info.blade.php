@@ -143,12 +143,12 @@
                         <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                     </div>
                     @if (isset($customer))
-                        @foreach ($customer->pictures as $att)
+@foreach ($customer->pictures as $att)
 <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
                                 <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
                             </div>
 @endforeach
-                    @endif
+@endif
                 </div>
             </div> -->
             @if (isset($customer))
@@ -249,11 +249,11 @@
             @if (!isCreateLink())
                 <div class="flex flex-col">
                     <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }}</x-app.input.label>
-                    <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')"
-                        placeholder="{{ __('Select a sale agent') }}">
+                    <x-app.input.select2 name="sale_agent[]" id="sale_agent" :hasError="$errors->has('sale_agent')"
+                        placeholder="{{ __('Select a sale agent') }}" multiple>
                         <option value="">{{ __('Select a sale agent') }}</option>
                         @foreach ($sales as $sa)
-                            <option value="{{ $sa->id }}" @selected(old('sale', isset($customer) ? $customer->sale_agent : null) == $sa->id)>{{ $sa->name }}
+                            <option value="{{ $sa->id }}" @selected(isset($customer) && isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }}
                             </option>
                         @endforeach
                     </x-app.input.select2>
@@ -460,7 +460,7 @@
                             if (key == 'tin_number_hasil') {
                                 $('#tin-info-modal #msg').text(
                                     `TIN: '${ $('input[name="tin_number"]').val() }' did not pass LHDN validation. Are you sure you want to save it?`
-                                    )
+                                )
                                 $('#tin-info-modal').addClass('show-modal')
                             } else {
                                 if (key.includes('picture')) {

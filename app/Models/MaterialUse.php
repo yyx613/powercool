@@ -35,4 +35,12 @@ class MaterialUse extends Model
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
+
+    public function avgCost() {
+        $cost = 0;
+        for ($i=0; $i < count($this->materials); $i++) { 
+            $cost += $this->materials[$i]->material->avgCost() * $this->materials[$i]->qty;
+        }
+        return $cost;
+    }
 }

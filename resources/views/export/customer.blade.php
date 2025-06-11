@@ -13,7 +13,6 @@
         <td>Currency</td>
         <td>Area</td>
         <td>Debtor Type</td>
-        <td>Sale Agent</td>
         <td>Platform</td>
         <td>Credit Term</td>
         <td>Status</td>
@@ -74,7 +73,6 @@
             <td>{{ $cus->currency->name ?? null }}</td>
             <td>{{ $cus->area->name ?? null }}</td>
             <td>{{ $cus->debtorType->name ?? null }}</td>
-            <td>{{ $cus->saleAgent->name ?? null }}</td>
             <td>{{ $cus->platform->name ?? null }}</td>
             <td>{{ implode(', ', $credit_term_name) }}</td>
             <td>{{ $cus->status == $customer::STATUS_ACTIVE ? 'Active' : 'Inactive' }}</td>

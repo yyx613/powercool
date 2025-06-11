@@ -93,14 +93,14 @@
             <x-app.message.error id="warranty_period_err" />
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
-            <div class="flex flex-col flex-1 col-span-2">
+            {{-- <div class="flex flex-col flex-1 col-span-2">
                 <x-app.input.label id="product_serial_no"
                     class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
                 <x-app.input.select name="product_serial_no[]" multiple class="h-36 md:h-full">
                 </x-app.input.select>
                 <x-app.message.error id="product_serial_no_err" />
-            </div>
-            <div class="flex flex-col flex-1 col-span-2">
+            </div> --}}
+            <div class="flex flex-col flex-1 col-span-4">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                 <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" />
                 <x-app.message.error id="remark_err" />
@@ -488,14 +488,16 @@
                 if (prod.id == product_id) {
                     $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
 
-                    for (let j = 0; j < prod.children.length; j++) {
-                        const child = prod.children[j];
-                        let selected = selectedSerialNo(child.id, sale_product_id)
+                    if (prod.children != undefined) {
+                        for (let j = 0; j < prod.children.length; j++) {
+                            const child = prod.children[j];
+                            let selected = selectedSerialNo(child.id, sale_product_id)
 
-                        let opt = new Option(child.sku, child.id, selected, selected)
-                        opt.selected = selected
-                        opt.value = child.id
-                        $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
+                            let opt = new Option(child.sku, child.id, selected, selected)
+                            opt.selected = selected
+                            opt.value = child.id
+                            $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
+                        }
                     }
                     break
                 }

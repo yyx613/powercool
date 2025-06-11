@@ -56,13 +56,13 @@
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
+            <x-app.input.select name="sale" id="sale" :hasError="$errors->has('sale')"
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
-            </x-app.input.select2>
+            </x-app.input.select>
             <x-app.message.error id="sale_err" />
         </div>
         <div class="flex flex-col">
@@ -130,17 +130,18 @@
         $('select[name="customer"]').on('change', function() {
             let val = $(this).val()
 
+            $('select[name="sale"]').val(null).trigger('change')
+
             for (let i = 0; i < CUSTOMERS.length; i++) {
                 const element = CUSTOMERS[i];
 
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
-                    $('select[name="sale"]').val(element.sale_agent).trigger('change')
-                    // Payment term
+                    // Update payment term
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
                     $(`select[name="payment_term"]`).select2({
-                        placeholder: 'Select a term'
+                        placeholder: '{{ __('Select a term') }}'
                     })
 
                     for (let i = 0; i < element.credit_terms.length; i++) {
@@ -149,7 +150,15 @@
                         let opt = new Option(term.credit_term.name, term.credit_term.id)
                         $(`select[name="payment_term"]`).append(opt)
                     }
-
+                    // Filter Sales agent
+                    $(`select[name="sale"] option`).not(':first').addClass('hidden')
+                    for (let j = 0; j < element.sales_agents.length; j++) {
+                        $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
+                            .removeClass('hidden')
+                    }
+                    if (INIT_EDIT) {
+                        $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                    }
                     break
                 }
             }
