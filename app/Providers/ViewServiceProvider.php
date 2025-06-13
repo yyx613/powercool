@@ -279,9 +279,9 @@ class ViewServiceProvider extends ServiceProvider
                 $is_edit = true;
             }
             if ($is_edit) {
-                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->get();
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->get();
             } else {
-                $customers = Customer::with('creditTerms.creditTerm')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
             }
 
             $view->with('customers', $customers);
@@ -463,9 +463,7 @@ class ViewServiceProvider extends ServiceProvider
             // $view->with('material_uses', $material_uses);
         });
         View::composer(['material_use.form'], function (ViewView $view) {
-            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
-                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-            })->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('id', 'desc')->get();
             $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('id', 'desc')->get();
 
             $view->with('products', $products);
@@ -527,9 +525,7 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('report_types', $report_types);
         });
         View::composer(['promotion.form', 'grn.form'], function (ViewView $view) {
-            $products = Product::where('type', Product::TYPE_PRODUCT)->orWhere(function ($q) {
-                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-            })->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('id', 'desc')->get();
 
             $view->with('products', $products);
         });

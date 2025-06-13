@@ -38,6 +38,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Exception;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -514,11 +515,11 @@ class SaleController extends Controller
                         $q->withTrashed();
                     }]);
                 },
+                'products.warrantyPeriods',
             ]);
         } else {
-            $sale->load('products.product.children', 'products.children');
+            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods');
         }
-        $sale->load('products.warrantyPeriods');
 
         $sale->products->each(function ($q) {
             $q->attached_to_do = $q->attachedToDo();
@@ -526,6 +527,7 @@ class SaleController extends Controller
 
         return view('sale_order.form', [
             'sale' => $sale,
+            'convert_from_quo' => $sale->convertFromQuo(),
         ]);
     }
 
@@ -557,7 +559,7 @@ class SaleController extends Controller
         $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
-            'products' => $sale->products()->withTrashed()->get(),
+            'products' => $sps,
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
@@ -939,6 +941,10 @@ class SaleController extends Controller
 
     public function upsertDetails(Request $req)
     {
+        if ($req->type == 'so') {
+            $sale = Sale::where('id', $req->sale_id)->first();
+            $convert_from_quo = $sale->convertFromQuo();
+        }
         // Validate form
         $rules = [
             // upsertQuoDetails
@@ -954,33 +960,6 @@ class SaleController extends Controller
             'report_type' => 'required',
             'billing_address' => 'required',
             'payment_term' => 'nullable',
-            // upsertProDetails
-            'product_order_id' => 'nullable',
-            'product_order_id.*' => 'nullable',
-            'product_id' => 'required',
-            'product_id.*' => 'required',
-            'product_desc' => 'required',
-            'product_desc.*' => 'nullable|max:250',
-            'qty' => 'required',
-            'qty.*' => 'required',
-            'uom' => 'required',
-            'uom.*' => 'required',
-            'selling_price' => 'nullable',
-            'selling_price.*' => 'nullable',
-            'unit_price' => 'required',
-            'unit_price.*' => 'required',
-            'promotion_id' => 'required',
-            'promotion_id.*' => 'nullable',
-            'product_serial_no' => 'nullable',
-            'product_serial_no.*' => 'nullable',
-            'warranty_period' => 'required',
-            'warranty_period.*' => 'required',
-            'discount' => 'required',
-            'discount.*' => 'nullable',
-            'product_remark' => 'required',
-            'product_remark.*' => 'nullable|max:250',
-            'override_selling_price' => 'nullable',
-            'override_selling_price.*' => 'nullable',
             // upsertRemark
             'remark' => 'nullable|max:250',
         ];
@@ -995,6 +974,35 @@ class SaleController extends Controller
             $rules['payment_amount'] = 'nullable';
             $rules['payment_status'] = 'required';
             $rules['payment_remark'] = 'nullable|max:250';
+            if (isset($convert_from_quo) && !$convert_from_quo) {
+                // upsertProDetails
+                $rules['product_order_id'] = 'nullable';
+                $rules['product_order_id.*'] = 'nullable';
+                $rules['product_id'] = 'required';
+                $rules['product_id.*'] = 'required';
+                $rules['product_desc'] = 'required';
+                $rules['product_desc.*'] = 'nullable|max:250';
+                $rules['qty'] = 'required';
+                $rules['qty.*'] = 'required';
+                $rules['uom'] = 'required';
+                $rules['uom.*'] = 'required';
+                $rules['selling_price'] = 'nullable';
+                $rules['selling_price.*'] = 'nullable';
+                $rules['unit_price'] = 'required';
+                $rules['unit_price.*'] = 'required';
+                $rules['promotion_id'] = 'required';
+                $rules['promotion_id.*'] = 'nullable';
+                $rules['product_serial_no'] = 'nullable';
+                $rules['product_serial_no.*'] = 'nullable';
+                $rules['warranty_period'] = 'required';
+                $rules['warranty_period.*'] = 'required';
+                $rules['discount'] = 'required';
+                $rules['discount.*'] = 'nullable';
+                $rules['product_remark'] = 'required';
+                $rules['product_remark.*'] = 'nullable|max:250';
+                $rules['override_selling_price'] = 'nullable';
+                $rules['override_selling_price.*'] = 'nullable';
+            }
         }
         $req->validate($rules, [], [
             // upsertQuoDetails
@@ -1066,7 +1074,7 @@ class SaleController extends Controller
                 $req->merge(['sale_id' => $res->sale->id]);
             }
 
-            $res = $this->upsertProDetails($req, true)->getData();
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertProDetails failed');
             }
@@ -1212,7 +1220,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertProDetails(Request $req, bool $validated = false)
+    public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false)
     {
         if (! $validated) {
             // Validate form
@@ -1296,107 +1304,138 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->product_order_id != null) {
-                $order_idx = array_filter($req->product_order_id, function ($val) {
-                    return $val != null;
-                });
+            if (!$convert_from_quo) {
+                if ($req->product_order_id != null) {
+                    $order_idx = array_filter($req->product_order_id, function ($val) {
+                        return $val != null;
+                    });
 
-                $sps = SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->get();
-                for ($i = 0; $i < count($sps); $i++) {
-                    SaleProductChild::where('sale_product_id', $sps[$i]->id)->delete();
-                    $sps[$i]->delete();
-                }
-            }
-
-            $now = now();
-            $updated_sale_status = false;
-            for ($i = 0; $i < count($req->product_id); $i++) {
-                if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
-                    $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
-
-                    $sp->update([
-                        'product_id' => $req->product_id[$i],
-                        'desc' => $req->product_desc[$i],
-                        'qty' => $req->qty[$i],
-                        'uom' => $req->uom[$i],
-                        'unit_price' => $req->unit_price[$i],
-                        'selling_price_id' => $req->selling_price[$i],
-                        'promotion_id' => $req->promotion_id[$i],
-                        'discount' => $req->discount[$i],
-                        'remark' => $req->product_remark[$i],
-                        'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
-                    ]);
-                    SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
-                } else {
-                    $sp = SaleProduct::create([
-                        'sale_id' => $req->sale_id,
-                        'product_id' => $req->product_id[$i],
-                        'desc' => $req->product_desc[$i],
-                        'qty' => $req->qty[$i],
-                        'uom' => $req->uom[$i],
-                        'unit_price' => $req->unit_price[$i],
-                        'selling_price_id' => $req->selling_price[$i],
-                        'promotion_id' => $req->promotion_id[$i],
-                        'discount' => $req->discount[$i],
-                        'remark' => $req->product_remark[$i],
-                        'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
-                    ]);
-                }
-                $spwp_data = [];
-                for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
-                    $spwp_data[] = [
-                        'sale_product_id' => $sp->id,
-                        'warranty_period_id' => $req->warranty_period[$i][$j],
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-                SaleProductWarrantyPeriod::insert($spwp_data);
-
-                $prod = Product::where('id', $req->product_id[$i])->first();
-
-                if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
-                    if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
-                        $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
-                        $approval = Approval::create([
-                            'object_type' => Sale::class,
-                            'object_id' => $req->sale_id,
-                            'status' => Approval::STATUS_PENDING_APPROVAL,
-                            'data' => $req->type == 'quo' ? json_encode([
-                                'is_quo' => true,
-                                'description' => 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower')  . ($is_greater ? $prod->max_price : $prod->min_price),
-                            ]) : null
-                        ]);
-                        (new Branch)->assign(Approval::class, $approval->id);
-                        if (!$updated_sale_status) {
-                            // Update QUO/SO status
-                            Sale::where('id', $req->sale_id)->update([
-                                'status' => Sale::STATUS_APPROVAL_PENDING
-                            ]);
-                            $updated_sale_status = true;
-                        }
+                    $sps = SaleProduct::where('sale_id', $req->sale_id)->whereNotIn('id', $order_idx ?? [])->get();
+                    for ($i = 0; $i < count($sps); $i++) {
+                        SaleProductChild::where('sale_product_id', $sps[$i]->id)->delete();
+                        $sps[$i]->delete();
                     }
                 }
 
-                // Sale product children
-                SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
-                $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
+                $now = now();
+                $updated_sale_status = false;
+                for ($i = 0; $i < count($req->product_id); $i++) {
+                    if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
+                        $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
 
-                if (isset($req->product_serial_no) && $req->product_serial_no[$i] != null) {
-                    $data = [];
-                    for ($j = 0; $j < count($req->product_serial_no[$i]); $j++) {
-                        if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
-                            continue;
-                        }
-
-                        $data[] = [
+                        $sp->update([
+                            'product_id' => $req->product_id[$i],
+                            'desc' => $req->product_desc[$i],
+                            'qty' => $req->qty[$i],
+                            'uom' => $req->uom[$i],
+                            'unit_price' => $req->unit_price[$i],
+                            'selling_price_id' => $req->selling_price[$i],
+                            'promotion_id' => $req->promotion_id[$i],
+                            'discount' => $req->discount[$i],
+                            'remark' => $req->product_remark[$i],
+                            'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
+                        ]);
+                        SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
+                    } else {
+                        $sp = SaleProduct::create([
+                            'sale_id' => $req->sale_id,
+                            'product_id' => $req->product_id[$i],
+                            'desc' => $req->product_desc[$i],
+                            'qty' => $req->qty[$i],
+                            'uom' => $req->uom[$i],
+                            'unit_price' => $req->unit_price[$i],
+                            'selling_price_id' => $req->selling_price[$i],
+                            'promotion_id' => $req->promotion_id[$i],
+                            'discount' => $req->discount[$i],
+                            'remark' => $req->product_remark[$i],
+                            'override_selling_price' => $req->override_selling_price == null ? null : $req->override_selling_price[$i],
+                        ]);
+                    }
+                    // Warranty Period
+                    $spwp_data = [];
+                    for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
+                        $spwp_data[] = [
                             'sale_product_id' => $sp->id,
-                            'product_children_id' => $req->product_serial_no[$i][$j],
-                            'created_at' => $now,
-                            'updated_at' => $now,
+                            'warranty_period_id' => $req->warranty_period[$i][$j],
+                            'created_at' => now(),
+                            'updated_at' => now(),
                         ];
                     }
-                    SaleProductChild::insert($data);
+                    SaleProductWarrantyPeriod::insert($spwp_data);
+
+                    $prod = Product::where('id', $req->product_id[$i])->first();
+
+                    if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
+                        if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                            $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
+                            $approval = Approval::create([
+                                'object_type' => Sale::class,
+                                'object_id' => $req->sale_id,
+                                'status' => Approval::STATUS_PENDING_APPROVAL,
+                                'data' => $req->type == 'quo' ? json_encode([
+                                    'is_quo' => true,
+                                    'description' => 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower')  . ($is_greater ? $prod->max_price : $prod->min_price),
+                                ]) : null
+                            ]);
+                            (new Branch)->assign(Approval::class, $approval->id);
+                            if (!$updated_sale_status) {
+                                // Update QUO/SO status
+                                Sale::where('id', $req->sale_id)->update([
+                                    'status' => Sale::STATUS_APPROVAL_PENDING
+                                ]);
+                                $updated_sale_status = true;
+                            }
+                        }
+                    }
+
+                    // Sale product children
+                    SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
+                    $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
+
+                    if (isset($req->product_serial_no) && $req->product_serial_no[$i] != null) {
+                        $data = [];
+                        for ($j = 0; $j < count($req->product_serial_no[$i]); $j++) {
+                            if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
+                                continue;
+                            }
+
+                            $data[] = [
+                                'sale_product_id' => $sp->id,
+                                'product_children_id' => $req->product_serial_no[$i][$j],
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
+                        SaleProductChild::insert($data);
+                    }
+                }
+            } else {
+                $now = now();
+
+                for ($i = 0; $i < count($req->product_id); $i++) {
+                    if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
+                        $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
+                        // Sale product children
+                        SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
+                        $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
+
+                        if (isset($req->product_serial_no) && $req->product_serial_no[$i] != null) {
+                            $data = [];
+                            for ($j = 0; $j < count($req->product_serial_no[$i]); $j++) {
+                                if (in_array($req->product_serial_no[$i][$j], $existing_spc_ids)) {
+                                    continue;
+                                }
+
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'product_children_id' => $req->product_serial_no[$i][$j],
+                                    'created_at' => $now,
+                                    'updated_at' => $now,
+                                ];
+                            }
+                            SaleProductChild::insert($data);
+                        }
+                    }
                 }
             }
 
@@ -1600,7 +1639,8 @@ class SaleController extends Controller
                 'delivery_orders.filename AS filename',
                 'created_by.name AS created_by',
                 'invoices.sku AS transfer_to',
-                'delivery_orders.transport_ack_filename'
+                'delivery_orders.transport_ack_filename',
+                'approvals.status AS approval_status'
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->where('branches.object_type', DeliveryOrder::class)
@@ -1617,12 +1657,11 @@ class SaleController extends Controller
         }
 
         if (! $req->has('sku')) {
-            $records = $records->where(function ($q) {
-                $q->where(function ($qq) {
-                    $qq->where('approvals.object_type', DeliveryOrder::class)->whereNot('approvals.status', Approval::STATUS_PENDING_APPROVAL);
-                })
-                    ->orWhere('approvals.object_type', null);
-            })->leftJoin('approvals', 'approvals.object_id', '=', 'delivery_orders.id');
+            $approvals = Approval::where('object_type', DeliveryOrder::class);
+            $records = $records
+                ->leftJoinSub($approvals, 'approvals', function (JoinClause $join) {
+                    $join->on('approvals.object_id', '=', 'delivery_orders.id');
+                });
         } else {
             $records = $records->where('delivery_orders.sku', $req->sku);
         }
@@ -1662,21 +1701,20 @@ class SaleController extends Controller
             $records = $records->orderBy('delivery_orders.id', 'desc');
         }
 
-        $records_count = count($records->get());
-        $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
-            'recordsTotal' => $records_count,
-            'recordsFiltered' => $records_count,
             'data' => [],
-            'records_ids' => $records_ids,
         ];
         $path = '/public/storage';
         if (config('app.env') == 'local') {
             $path = '/storage';
         }
+
         foreach ($records_paginator as $record) {
+            if ($record->approval_status === 0) {
+                continue;
+            }
             $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('" . $record->id . "', convert_to)")->get();
             $total_amount = 0;
             $so_skus = [];
@@ -1706,6 +1744,13 @@ class SaleController extends Controller
                 'transport_ack_filename' => $transport_ack_filename,
             ];
         }
+
+        $records_count = count($data['data']);
+        $records_ids = count($data['data']);
+
+        $data['recordsTotal'] = $records_count;
+        $data['recordsFiltered'] = $records_count;
+        $data['records_ids'] = $records_ids;
 
         return response()->json($data);
     }

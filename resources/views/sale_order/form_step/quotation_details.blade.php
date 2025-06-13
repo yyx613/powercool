@@ -93,14 +93,13 @@
         $('select[name="customer"]').on('change', function() {
             let val = $(this).val()
 
+            $('select[name="sale"]').val(null).trigger('change')
+
             for (let i = 0; i < CUSTOMERS.length; i++) {
                 const element = CUSTOMERS[i];
 
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
-                    if (!INIT_EDIT) {
-                        $('select[name="sale"]').val(element.sale_agent).trigger('change')
-                    }
                     // Update payment term
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
@@ -113,6 +112,15 @@
 
                         let opt = new Option(term.credit_term.name, term.credit_term.id)
                         $(`select[name="payment_term"]`).append(opt)
+                    }
+                    // Filter Sales agent
+                    $(`select[name="sale"] option`).not(':first').addClass('hidden')
+                    for (let j = 0; j < element.sales_agents.length; j++) {
+                        $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
+                            .removeClass('hidden')
+                    }
+                    if (INIT_EDIT) {
+                        $('select[name="sale"]').val(SALE.sale_id).trigger('change')
                     }
                     break
                 }

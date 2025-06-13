@@ -90,9 +90,9 @@ class Customer extends Model
         return $this->belongsTo(DebtorType::class, 'debtor_type_id');
     }
 
-    public function saleAgent()
+    public function salesAgents()
     {
-        return $this->belongsTo(User::class, 'sale_agent');
+        return $this->hasMany(CustomerSaleAgent::class);
     }
 
     public function generateSku(string $company_first_alphabet): string

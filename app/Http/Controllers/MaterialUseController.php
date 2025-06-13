@@ -64,6 +64,7 @@ class MaterialUseController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'product' => $record->product()->withTrashed()->first()->model_name,
+                'avg_cost' => number_format($record->avgCost(), 2),
             ];
         }
                 

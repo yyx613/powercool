@@ -113,7 +113,7 @@
     <div id="items-container"></div>
     <!-- Add Items -->
     <div
-        class="flex justify-end px-4 {{ isset($sale) && ($sale->status == 2 || $sale->status == 3) ? 'hidden' : '' }}">
+        class="flex justify-end px-4 {{ isset($sale) && ($sale->status == 2 || $sale->status == 3) ? 'hidden' : '' }} {{ isset($convert_from_quo) && $convert_from_quo ? 'hidden' : '' }}">
         <button type="button"
             class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow"
             id="add-item-btn">
@@ -234,12 +234,6 @@
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
                 placeholder: "{!! __('Select a product') !!}"
             })
-            // for (let i = 0; i < PRODUCTS.length; i++) {
-            //     const element = PRODUCTS[i];
-
-            //     let opt = new Option(element.model_name, element.id)
-            //     $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
-            // }
             // Build warranty period select2
             buildWarrantyPeriodSelect2(ITEMS_COUNT)
             if (!INIT_EDIT) {
@@ -529,15 +523,18 @@
         }
 
         function selectedSerialNo($product_child_id, sale_product_id = null) {
+
             if (SALE != null && SALE.products != null) {
                 for (let i = 0; i < SALE.products.length; i++) {
                     const prod = SALE.products[i];
 
-                    for (let k = 0; k < prod.children.length; k++) {
-                        const elem = prod.children[k];
+                    if (prod.children != undefined) {
+                        for (let k = 0; k < prod.children.length; k++) {
+                            const elem = prod.children[k];
 
-                        if (prod.id == sale_product_id && elem.product_children_id == $product_child_id) {
-                            return true
+                            if (prod.id == sale_product_id && elem.product_children_id == $product_child_id) {
+                                return true
+                            }
                         }
                     }
                 }

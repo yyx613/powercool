@@ -230,4 +230,9 @@ class Product extends Model
 
         return false;
     }
+
+    public function avgCost(): float | null
+    {
+        return ProductCost::where('product_id', $this->id)->avg('unit_price');
+    }
 }
