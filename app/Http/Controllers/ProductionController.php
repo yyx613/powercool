@@ -304,7 +304,8 @@ class ProductionController extends Controller
             'production' => $production,
             'production_milestone_materials' => $production_milestone_materials,
             'material_use' => $material_use,
-            'can_extend_due_date' => $can_extend_due_date
+            'can_extend_due_date' => $can_extend_due_date,
+            'is_production_worker' => isProductionWorker()
         ]);
     }
 
