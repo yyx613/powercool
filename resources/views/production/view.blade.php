@@ -191,17 +191,19 @@
                     </div>
                 @endif
             </div>
-            <div class="border-t pt-4 mt-4">
-                <h6 class="text-md font-semibold">{{ __('B.O.M Material Use') }}</h6>
-                <ul>
-                    @foreach ($material_use->materials as $material)
-                        <li class="flex justify-between mt-0.5 hover:bg-slate-50">
-                            <p class="text-sm text-slate-500">{{ $material->material->model_name }}</p>
-                            <p class="text-sm text-slate-500 ml-2">x{{ $material->qty }}</p>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
+            @if (!$is_production_worker)
+                <div class="border-t pt-4 mt-4">
+                    <h6 class="text-md font-semibold">{{ __('B.O.M Material Use') }}</h6>
+                    <ul>
+                        @foreach ($material_use->materials as $material)
+                            <li class="flex justify-between mt-0.5 hover:bg-slate-50">
+                                <p class="text-sm text-slate-500">{{ $material->material->model_name }}</p>
+                                <p class="text-sm text-slate-500 ml-2">x{{ $material->qty }}</p>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </div>
     </div>
 
