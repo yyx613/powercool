@@ -30,6 +30,11 @@
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
         </div>
+        <div class="flex flex-col hidden customize-product-container">
+            <x-app.input.label id="customize_product" class="mb-1">{{ __('Customize Product') }}</x-app.input.label>
+            <x-app.input.input name="customize_product" id="customize_product" :hasError="$errors->has('customize_product')" />
+            <x-app.message.error id="customize_product_err" />
+        </div>
         <div class="flex flex-col">
             <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -162,6 +167,7 @@
         WARRANTY_PERIODS = @json($warranty_periods ?? []);
         PROMOTIONS = @json($promotions ?? []);
         UOMS = @json($uoms ?? []);
+        CUSTOMIZE_PRODUCT_IDS = @json($customize_product_ids ?? []);
         PRODUCT_FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
         INIT_EDIT = true
@@ -326,6 +332,12 @@
             buildSerialNoOptions(val, id)
             buildPromotionSelect(id, val)
             $(`.items[data-id="${id}"] #promo-hint`).addClass('hidden')
+            // Customize product
+            if (CUSTOMIZE_PRODUCT_IDS.includes(parseInt(val))) {
+                $(`.items[data-id="${id}"] .customize-product-container`).removeClass('hidden')
+            } else {
+                $(`.items[data-id="${id}"] .customize-product-container`).addClass('hidden')
+            }
         })
 
         function calItemTotal(idx) {

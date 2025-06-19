@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\DeliveryOrder;
 use App\Models\FactoryRawMaterial;
+use App\Models\MaterialUse;
+use App\Models\MaterialUseProduct;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Sale;
+use App\Models\SaleProductionRequest;
 use App\Models\Scopes\ApprovedScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -99,7 +102,7 @@ class ApprovalController extends Controller
                 'view_url' => $view_url,
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
-                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -133,11 +136,8 @@ class ApprovalController extends Controller
                 $obj->qty -= $data->qty;
                 $obj->to_warehouse_qty -= $data->qty;
 
-                // Product::where('id', $obj->product_id)->increment('qty', $data->qty);
-
                 $obj->save();
             }
-
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
                 $obj->status = ProductChild::STATUS_TRANSFER_APPROVED;
@@ -218,6 +218,11 @@ class ApprovalController extends Controller
             if (get_class($obj) == Production::class) {
                 $obj->status = Production::STATUS_DOING;
                 $obj->save();
+            }
+            // Sale Production Request 
+            if (get_class($obj) == MaterialUse::class) {
+                MaterialUseProduct::where('material_use_id', $obj->id)->delete();
+                MaterialUse::where('id', $obj->id)->delete();
             }
 
             DB::commit();

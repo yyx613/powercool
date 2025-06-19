@@ -46,6 +46,7 @@
         // Prepare data
         let prodOrderId = []
         let prodId = []
+        let customizeProd = []
         let prodDesc = []
         let qty = []
         let uom = []
@@ -60,6 +61,7 @@
         $('#product-details-container .items').each(function(i, obj) {
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
+            customizeProd.push($(this).find('input[name="customize_product"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             uom.push($(this).find('input[name="uom"]').val())
@@ -98,6 +100,7 @@
 
                 'product_order_id': prodOrderId,
                 'product_id': prodId,
+                'customize_product': customizeProd,
                 'product_desc': prodDesc,
                 'qty': qty,
                 'uom': uom,

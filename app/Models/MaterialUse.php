@@ -20,25 +20,38 @@ class MaterialUse extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function materials() {
+    public function approval()
+    {
+        return $this->morphOne(Approval::class, 'object');
+    }
+
+    public function materials()
+    {
         return $this->hasMany(MaterialUseProduct::class);
     }
 
-    public function product() {
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 
-    public function branch() {
+    public function branch()
+    {
         return $this->morphOne(Branch::class, 'object');
     }
 
-    public function avgCost() {
+    public function avgCost()
+    {
         $cost = 0;
-        for ($i=0; $i < count($this->materials); $i++) { 
+        for ($i = 0; $i < count($this->materials); $i++) {
+            if ($this->materials[$i]->status == MaterialUseProduct::STATUS_DISABLED) {
+                continue;
+            }
             $cost += $this->materials[$i]->material->avgCost() * $this->materials[$i]->qty;
         }
         return $cost;

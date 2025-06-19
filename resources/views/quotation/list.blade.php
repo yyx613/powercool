@@ -88,7 +88,6 @@
         </table>
     </div>
 
-    <x-app.modal.to-production-modal />
     <x-app.modal.delete-modal />
 @endsection
 

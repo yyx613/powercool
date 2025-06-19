@@ -42,6 +42,7 @@
         // Prepare data
         let prodOrderId = []
         let prodId = []
+        let customizeProd = []
         let prodDesc = []
         let qty = []
         let uom = []
@@ -56,6 +57,7 @@
         $('#product-details-container .items').each(function(i, obj) {
             prodOrderId.push($(this).data('product-id') ?? null)
             prodId.push($(this).find('select[name="product_id[]"]').val())
+            customizeProd.push($(this).find('input[name="customize_product"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
             uom.push($(this).find('input[name="uom"]').val())
@@ -65,14 +67,13 @@
             discount.push($(this).find('input[name="discount"]').val())
             remark.push($(this).find('textarea[name="remark"]').val())
             overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
-            if ($(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
+            if ($(this).find('select[name="product_serial_no[]"]').val() == null || $(this).find('select[name="product_serial_no[]"]').val().length <= 0) {
                 prodSerialNo.push(null)
             } else {
                 prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
             }
             warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
         })
-        console.debug(unitPrice)
         // Submit
         let url = '{{ route("sale.upsert_details") }}'
         url = `${url}?type=quo`
@@ -99,6 +100,7 @@
 
                 'product_order_id': prodOrderId,
                 'product_id': prodId,
+                'customize_product': customizeProd,
                 'product_desc': prodDesc,
                 'qty': qty,
                 'uom': uom,

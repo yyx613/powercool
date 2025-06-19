@@ -17,4 +17,6 @@ class Role extends Model
     const DRIVER = 4;
     const PRODUCTION_WORKER = 5;
     const PRODUCTION_SUPERVISOR = 6;
+    const PRODUCTION_ASSISTANT = 7;
+    const WAREHOUSE = 8;
 }
