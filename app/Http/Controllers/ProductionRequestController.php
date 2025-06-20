@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\MaterialUse;
+use App\Models\Product;
 use App\Models\ProductionRequest;
 use App\Models\ProductionRequestMaterial;
+use App\Models\Sale;
+use App\Models\SaleProductionRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +53,42 @@ class ProductionRequestController extends Controller
                 'requested_by' => $record->requestedBy->name ?? null,
                 'status' => $record->status,
                 'remark' => $record->remark,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function getDataSaleProductionRequest(Request $req)
+    {
+        $records = SaleProductionRequest::orderBy('id', 'desc');
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $key => $record) {
+            $data['data'][] = [
+                'no' => $key + 1,
+                'id' => $record->id,
+                'date' => Carbon::parse($record->created_at)->format('d M Y H:i'),
+                'so_no' => $record->sale->sku ?? null,
+                'product' => $record->product->sku ?? null,
+                'production' => $record->production->sku ?? null,
+                'status' => $record->status ?? null,
+                'sale_id' => $record->sale_id,
+                'product_id' => $record->product_id,
+                'has_material_use' => MaterialUse::where('product_id', $record->product_id)->exists(),
             ];
         }
 
@@ -166,5 +206,21 @@ class ProductionRequestController extends Controller
         $pqm->save();
 
         return back()->with('success', 'Request incompleted');
+    }
+
+    public function toProduction(Sale $sale, Product $product)
+    {
+        return redirect(route('production.create', [
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+        ]));
+    }
+
+    public function toMaterialUse(SaleProductionRequest $sale_production_request, Product $product)
+    {
+        return redirect(route('material_use.create', [
+            'sprid' => $sale_production_request->id,
+            'to_pid' => $product->id
+        ]));
     }
 }

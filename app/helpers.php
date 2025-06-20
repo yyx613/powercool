@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\Scopes\BranchScope;
 use App\Models\TaskMilestoneInventory;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -59,6 +60,13 @@ if (! function_exists('isProductionWorker')) {
     function isProductionWorker(): bool
     {
         return in_array(Role::PRODUCTION_WORKER, getUserRoleId(Auth::user()));
+    }
+}
+
+if (! function_exists('getCustomizeProductIds')) {
+    function getCustomizeProductIds()
+    {
+        return Product::where('model_name', 'like', '%customise%')->withoutGlobalScope(BranchScope::class)->pluck('id');
     }
 }
 

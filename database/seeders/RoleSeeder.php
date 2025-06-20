@@ -41,6 +41,14 @@ class RoleSeeder extends Seeder
                 'id' => Role::PRODUCTION_SUPERVISOR,
                 'name' => 'Production Supervisor',
             ],
+            [
+                'id' => Role::PRODUCTION_ASSISTANT,
+                'name' => 'Production Assistant',
+            ],
+            [
+                'id' => Role::WAREHOUSE,
+                'name' => 'Warehouse',
+            ],
         ];
         $permissions = Permission::get();
 

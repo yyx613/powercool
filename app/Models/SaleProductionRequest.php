@@ -7,11 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MaterialUseProduct extends Model
+class SaleProductionRequest extends Model
 {
     use HasFactory, SoftDeletes;
-
-    const STATUS_DISABLED = 1;
 
     protected $guarded = [];
     protected $casts = [
@@ -19,11 +17,23 @@ class MaterialUseProduct extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
-    protected function serializeDate(DateTimeInterface $date) {
+    protected function serializeDate(DateTimeInterface $date)
+    {
         return $date;
     }
 
-    public function material() {
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class, 'sale_id');
+    }
+
+    public function product()
+    {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function production()
+    {
+        return $this->belongsTo(Production::class, 'production_id');
     }
 }

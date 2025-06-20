@@ -215,6 +215,11 @@ class ProductController extends Controller
                     $qty = $record->qty;
                 }
             }
+            // Ready for production
+            $ready_for_production = false;
+            if ($req->boolean('is_production') == false && $req->boolean('is_product') == true && $record->materialUse != null) {
+                $ready_for_production = true;
+            }
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -230,6 +235,7 @@ class ProductController extends Controller
                 'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
                 'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
                 'approval_id' => $filter_type == 'waiting' ? $approvals->where('object_id', $frm_id)->value('id') : null,
+                'ready_for_production' => $ready_for_production
             ];
         }
         if ($req->boolean('is_production') == true && $req->boolean('is_product') == false) {
@@ -345,7 +351,14 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $product->load('image', 'children', 'sellingPrices', 'milestones');
-        $material_use = MaterialUse::with('materials.material')->where('product_id', $product->id)->get();
+        $material_uses = MaterialUse::with('materials.material', 'approval')->where('product_id', $product->id)->get();
+        $material_use = [];
+
+        for ($i = 0; $i < count($material_uses); $i++) {
+            if ($material_uses[$i]->approval == null || $material_uses[$i]->approval->status == Approval::STATUS_APPROVED) {
+                $material_use[] = $material_uses[$i];
+            }
+        }
 
         return view('inventory.form', [
             'prod' => $product,

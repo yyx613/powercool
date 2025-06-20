@@ -17,6 +17,7 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\EInvoice;
+use App\Models\InventoryCategory;
 use App\Models\InventoryServiceReminder;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
@@ -27,6 +28,7 @@ use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\SaleProductionRequest;
 use App\Models\SaleProductWarrantyPeriod;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
@@ -980,6 +982,8 @@ class SaleController extends Controller
                 $rules['product_order_id.*'] = 'nullable';
                 $rules['product_id'] = 'required';
                 $rules['product_id.*'] = 'required';
+                $rules['customize_product'] = 'required';
+                $rules['customize_product.*'] = 'nullable|max:250';
                 $rules['product_desc'] = 'required';
                 $rules['product_desc.*'] = 'nullable|max:250';
                 $rules['qty'] = 'required';
@@ -1230,6 +1234,8 @@ class SaleController extends Controller
                 'product_order_id.*' => 'nullable',
                 'product_id' => 'required',
                 'product_id.*' => 'required',
+                'customize_product' => 'nullable',
+                'customize_product.*' => 'nullable|max:250',
                 'product_desc' => 'required',
                 'product_desc.*' => 'nullable|max:250',
                 'qty' => 'required',
@@ -1320,11 +1326,34 @@ class SaleController extends Controller
                 $now = now();
                 $updated_sale_status = false;
                 for ($i = 0; $i < count($req->product_id); $i++) {
+                    $product_id = $req->product_id[$i];
+
+                    if ($req->customize_product[$i] != null) {
+                        $branch = getCurrentUserBranch();
+                        if ($branch != null) {
+                            $category = InventoryCategory::where('name', 'like', '%CUSTOMISE%')->whereHas('branch', function ($q) use ($branch) {
+                                $q->where('location', $branch);
+                            })->first();
+                        }
+
+                        $customize_prod = Product::create([
+                            'inventory_category_id' => isset($category) ? $category->id : null,
+                            'type' => Product::TYPE_PRODUCT,
+                            'sku' => $req->customize_product[$i],
+                            'model_name' => $req->customize_product[$i],
+                            'model_desc' => $req->customize_product[$i],
+                            'is_active' => true
+                        ]);
+                        (new Branch)->assign(Product::class, $customize_prod->id);
+
+                        $product_id = $customize_prod->id;
+                    }
+
                     if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
 
                         $sp->update([
-                            'product_id' => $req->product_id[$i],
+                            'product_id' => $product_id,
                             'desc' => $req->product_desc[$i],
                             'qty' => $req->qty[$i],
                             'uom' => $req->uom[$i],
@@ -1339,7 +1368,7 @@ class SaleController extends Controller
                     } else {
                         $sp = SaleProduct::create([
                             'sale_id' => $req->sale_id,
-                            'product_id' => $req->product_id[$i],
+                            'product_id' => $product_id,
                             'desc' => $req->product_desc[$i],
                             'qty' => $req->qty[$i],
                             'uom' => $req->uom[$i],
@@ -1611,12 +1640,26 @@ class SaleController extends Controller
         ], HttpFoundationResponse::HTTP_OK);
     }
 
-    public function toProduction(Request $req, Sale $sale)
+    public function toSaleProductionReqeust(Request $req, Sale $sale, Product $product)
     {
-        return redirect(route('production.create', [
-            'sale_id' => $sale->id,
-            'product_id' => $req->product,
-        ]));
+        try {
+            DB::beginTransaction();
+
+            $spr = SaleProductionRequest::create([
+                'sale_id' => $sale->id,
+                'product_id' => $product->id,
+            ]);
+            (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+
+            DB::commit();
+
+            return back()->with('success', 'Sale Production Request is created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 
     public function indexDeliveryOrder()

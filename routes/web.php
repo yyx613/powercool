@@ -282,7 +282,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             // Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             // Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
             Route::get('/get-products/{sale}', 'getProducts')->name('get_products');
-            Route::get('/to-production/{sale}', 'toProduction')->name('to_production');
+            Route::get('/to-sale-production-request/{sale}/{product}', 'toSaleProductionReqeust')->name('to_sale_production_request');
         });
 
         // Delivery Order
@@ -425,6 +425,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductionRequestController::class)->prefix('production-request')->name('production_request.')->middleware(['can:production_request.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-data-sale-production-request', 'getDataSaleProductionRequest')->name('get_data_sale_production_request');
         Route::get('/create', 'create')->name('create');
         Route::post('/store', 'store')->name('store');
         Route::get('/view/{pq}', 'view')->name('view');
@@ -432,6 +433,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/complete/{pq}', 'complete')->name('complete');
         Route::get('/material/complete/{pqm}', 'materialComplete')->name('material_complete');
         Route::get('/material/incomplete/{pqm}', 'materialIncomplete')->name('material_incomplete');
+        Route::get('/to-production/{sale}/{product}', 'toProduction')->name('to_production');
+        Route::get('/to-material-use/{sale_production_request}/{product}', 'toMaterialUse')->name('to_material_use');
     });
     // Ticket
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->middleware(['can:ticket.view'])->group(function () {

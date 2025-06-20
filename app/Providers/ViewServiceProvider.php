@@ -15,6 +15,7 @@ use App\Models\Factory;
 use App\Models\InventoryCategory;
 use App\Models\InventoryType;
 use App\Models\Invoice;
+use App\Models\MaterialUse;
 use App\Models\Milestone;
 use App\Models\MsicCode;
 use App\Models\PaymentMethod;
@@ -371,6 +372,7 @@ class ViewServiceProvider extends ServiceProvider
                 'warranty_periods' => $wps,
                 'promotions' => $promotions,
                 'uoms' => $uoms,
+                'customize_product_ids' => getCustomizeProductIds(),
             ]);
         });
         View::composer(['inventory.form'], function (ViewView $view) {
@@ -720,6 +722,14 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'productions' => $productions,
+            ]);
+        });
+        View::composer(['components.app.modal.to-material-use-modal'], function (ViewView $view) {
+            $bom_product_ids = MaterialUse::pluck('product_id');
+            $products = Product::whereIn('id', $bom_product_ids)->orderBy('id', 'desc')->get();
+
+            $view->with([
+                'products' => $products,
             ]);
         });
     }

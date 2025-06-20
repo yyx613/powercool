@@ -1,11 +1,11 @@
 <x-app.modal.base-modal id="to-production-modal">
     <div class="aspect-[2/1] flex flex-col">
         <div class="py-2 px-4 bg-gray-100">
-            <h6 class="text-lg font-black">{{ __('To Production') }}</h6>
+            <h6 class="text-lg font-black">{{ __('To Sale Production Request') }}</h6>
         </div>
         <div class="flex-1 flex flex-col p-4">
             <div class="flex-1">
-                <span class="font-medium text-sm mb-1 block">{{ __('Select product to build') }}</span>
+                <span class="font-medium text-sm mb-1 block">{{ __('Select a product to production request') }}</span>
                 <x-app.input.select name="product" id="product" class="w-full">
                     <option value="">{{ __('Select a product') }}</option>
                 </x-app.input.select>
@@ -35,7 +35,7 @@
         
         let id = $(this).data('id')
         let url = "{{ config('app.url') }}"
-        url = `${url}/sale/to-production/${id}?product=${productId}`
+        url = `${url}/sale/to-sale-production-request/${id}/${productId}`
 
         window.location.href = url
     })
