@@ -41,7 +41,13 @@
         <div class="flex flex-col">
             <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.input name="qty" id="qty" :hasError="$errors->has('qty')" class="int-input" />
+            <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                <x-app.input.input name="qty" id="qty" :hasError="$errors->has('qty')"
+                    class="int-input border-none flex-1" />
+                <button type="button"
+                    class="foc-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[is-foc=false]:bg-slate-100 data-[is-foc=true]:bg-emerald-100"
+                    data-is-foc="false">FOC</button>
+            </div>
             <x-app.message.error id="qty_err" />
         </div>
         <div class="flex flex-col">
@@ -187,6 +193,7 @@
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
+                    $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? false : true).trigger('click') // Reverse value for trigger click
                     $(`.items[data-id="${i+1}"] input[name="uom"]`).val(sp.uom)
                     $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger(
                         'change')
@@ -231,6 +238,7 @@
             ITEMS_COUNT++
             $(clone).attr('data-id', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
+            $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
             $(clone).addClass('items')
             $(clone).removeClass('hidden')
             $(clone).removeAttr('id')
@@ -341,6 +349,30 @@
                 $(`.items[data-id="${id}"] .customize-product-container`).addClass('hidden')
             }
         })
+        $('body').on('click', '.foc-btns', function() {
+            let isFoc = $(this).attr('data-is-foc')
+            let id = $(this).data('id')
+
+            if (isFoc === 'true') {
+                $(this).attr('data-is-foc', false)
+
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('disabled', false)
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('aria-disabled', false)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', false)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', false)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled', false)
+            } else {
+                $(this).attr('data-is-foc', true)
+
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).val(null).trigger('change')
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('disabled', true)
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('aria-disabled', true)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).val(null).trigger('keyup')
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', true)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', true)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled', true)
+            }
+        })
         $('select[name="promotion_id"]').on('change', function() {
             let val = $(this).val()
             let foundPromo = false
@@ -359,6 +391,7 @@
 
             if (!foundPromo) calSummary()
         })
+
 
         function calItemTotal(idx) {
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()

@@ -606,10 +606,13 @@ class ViewServiceProvider extends ServiceProvider
                 Sale::PAYMENT_STATUS_PAID => 'Paid',
             ];
             $payment_methods = PaymentMethod::orderBy('name', 'asc')->get();
+            $credit_payment_method_ids = PaymentMethod::where('name', 'like', '%credit%')->pluck('id')->toArray();
 
             $view->with([
+                'can_payment_amount' => in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
+                'credit_payment_method_ids' => $credit_payment_method_ids,
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {

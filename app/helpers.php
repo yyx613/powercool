@@ -342,15 +342,16 @@ if (! function_exists('getInvolvedProductChild')) {
 }
 
 if (! function_exists('generateSku')) {
-    function generateSku(string $prefix, array $existing_skus, bool $is_hi_ten): string
+    function generateSku(string $prefix, array $existing_skus, ?bool $is_hi_ten = null): string
     {
         $sku = null;
+        $year = now()->format('y');
         $staring_num = 1;
         $digits_length = 6;
         $formatted_prefix = $prefix;
         $user_branch = getCurrentUserBranch();
 
-        if ($user_branch != null) {
+        if ($user_branch != null && $is_hi_ten != null) {
             if (! $is_hi_ten) { // Powercool
                 if ($user_branch == Branch::LOCATION_PENANG) {
                     $formatted_prefix = 'P' . $formatted_prefix;
@@ -368,6 +369,8 @@ if (! function_exists('generateSku')) {
             while (strlen($digits) < $digits_length) {
                 $digits = '0' . $digits;
             }
+            $digits = $year . '/' . $digits; // Add year
+
             if ($formatted_prefix == '') {
                 $sku = strtoupper($digits);
             } else {

@@ -116,7 +116,6 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Tax Code</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">Description</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">FOC Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">UOM</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price<br>(RM)</td>
@@ -135,7 +134,6 @@
                 <td style="font-size: 14px; text-align: left;"></td>
                 <td style="font-size: 14px; text-align: left;">{{ $product->sku }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $product->model_name }}</td>
-                <td style="font-size: 14px; text-align: right;"></td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $product->uom }}</td>
                 <td style="font-size: 14px; text-align: right;">

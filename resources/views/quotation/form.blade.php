@@ -45,6 +45,7 @@
         let customizeProd = []
         let prodDesc = []
         let qty = []
+        let foc = []
         let uom = []
         let sellingPrice = []
         let unitPrice = []
@@ -60,6 +61,7 @@
             customizeProd.push($(this).find('input[name="customize_product"]').val())
             prodDesc.push($(this).find('input[name="product_desc"]').val())
             qty.push($(this).find('input[name="qty"]').val())
+            foc.push($(this).find('.foc-btns').data('is-foc'))
             uom.push($(this).find('input[name="uom"]').val())
             sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
             unitPrice.push($(this).find('input[name="unit_price[]"]').val())
@@ -103,6 +105,7 @@
                 'customize_product': customizeProd,
                 'product_desc': prodDesc,
                 'qty': qty,
+                'foc': foc,
                 'uom': uom,
                 'selling_price': sellingPrice,
                 'unit_price': unitPrice,

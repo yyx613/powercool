@@ -11,7 +11,7 @@
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="name" id="name" value="{{ old('name') ?? (isset($method) ? $mehod->name : null) }}" :hasError="$errors->has('name')" />
+                    <x-app.input.input name="name" id="name" value="{{ old('name') ?? (isset($method) ? $method->name : null) }}" :hasError="$errors->has('name')" />
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">

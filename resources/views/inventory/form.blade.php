@@ -166,13 +166,13 @@
                     <div class="flex flex-col">
                         <x-app.input.label id="supplier_id" class="mb-1">{{ __('Supplier') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.select name="supplier_id" id="supplier_id">
+                        <x-app.input.select2 name="supplier_id" id="supplier_id">
                             <option value="">{{ __('Select a supplier') }}</option>
                             @foreach ($suppliers as $sup)
                                 <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>{{ $sup->company_name }}
                                 </option>
                             @endforeach
-                        </x-app.input.select>
+                        </x-app.input.select2>
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-1" />
                     </div>
                 @endif

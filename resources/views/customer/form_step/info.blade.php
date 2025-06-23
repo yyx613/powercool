@@ -331,6 +331,9 @@
             if (CUSTOMER != null && CUSTOMER.category != null) {
                 $('select[name="category"]').trigger('change')
             }
+            if (CUSTOMER != null)[
+                $('select[name="msic_code"]').trigger('change')
+            ]
             INIT_DONE = true
         })
 

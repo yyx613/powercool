@@ -91,14 +91,6 @@
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
-            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
-                placeholder="{{ __('Select a term') }}">
-                <option value=""></option>
-            </x-app.input.select2>
-            <x-app.message.error id="payment_term_err" />
-        </div>
-        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">

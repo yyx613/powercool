@@ -87,7 +87,7 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 35%;">Description</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">FOC Qty</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">UOM</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Discount<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Total<br>(RM)</td>
@@ -100,7 +100,6 @@
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $prod['index'] }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod['model_name'] }}</td>
-                <td style="font-size: 14px; text-align: right;"></td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['uom'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod['unit_price'], 2) }}</td>

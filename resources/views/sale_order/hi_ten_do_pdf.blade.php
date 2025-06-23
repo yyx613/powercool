@@ -18,6 +18,13 @@
         left: 0px;
         right: 0px;
     }
+
+    #good-receives {
+        position: fixed;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+    }
 </style>
 
 <body>
@@ -147,9 +154,6 @@
                     Description</td>
                 <td
                     style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">
-                    FOC Qty</td>
-                <td
-                    style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">
                     Qty</td>
             </tr>
             @php
@@ -158,12 +162,25 @@
             <!-- Product List -->
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; padding: 5px 0 0 0; text-align: left;">{{ $key + 1 }}</td>
                     <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
                     <td style="font-size: 14px; text-align: left;">{{ $prod['desc'] }}</td>
-                    <td style="font-size: 14px; text-align: right;"></td>
                     <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
                 </tr>
+                <!-- Warranty -->
+                @if ($prod['warranty_periods'] != null)
+                    @php
+                        $warranty = [];
+                        foreach ($prod['warranty_periods'] as $wp) {
+                            $warranty[] = $wp->warrantyPeriod->name;
+                        }
+                    @endphp
+                    <tr>
+                        <td style="font-size: 14px; text-align: left; {{ $key + 1 == count($products) ? ' padding: 5px 0 75px 0;' : ' padding: 5px 0 0 0;' }}" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; vertical-align: top; font-weight: 700;" colspan="2">Warranty:
+                            {{ join(', ', $warranty) }}</td>
+                    </tr>
+                @endif
                 @php
                     $total += $prod['qty'];
                 @endphp
@@ -196,9 +213,6 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="font-size: 14px; padding: 25px 0 75px 0;" colspan="4">For : HI-TEN TRADING SDN BHD</td>
-                <td style="font-size: 14px; padding: 25px 0 75px 0; text-align: center;" colspan="3">GOODS RECEIVED
-                    IN
-                    GOOD ORDER & CONDITION.</td>
             </tr>
             <tr>
                 <td
@@ -216,6 +230,13 @@
                 <td
                     style="width: 20%; font-size: 14px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
                     Driver Signature</td>
+            </tr>
+        </table>
+        {{-- Good Receives --}}
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;" id="good-receives">
+            <tr>
+                <td style="font-size: 12px; text-align: center; font-weight: bold; font-style: italic;">GOODS RECEIVED
+                    IN GOOD ORDER & CONDITION</td>
             </tr>
         </table>
     </main>

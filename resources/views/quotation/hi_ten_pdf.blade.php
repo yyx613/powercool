@@ -229,7 +229,7 @@
             <tr>
                 <td
                     style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
-                    JINNIE</td>
+                    {{ $sale->saleperson->name }}</td>
                 <td></td>
             </tr>
         </table>

@@ -35,7 +35,7 @@
             <x-app.message.error id="sale_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
+            <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
             <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')"
                 value="{{ isset($sale) ? $sale->reference : null }}" />
             <x-app.message.error id="reference_err" />
@@ -73,6 +73,9 @@
                 <option value="">{{ __('Select a status') }}</option>
                 <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
                 <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
+                @if (isset($sale) && $sale->status == 4)
+                    <option value="4" @selected(old('status', isset($sale) ? $sale->status : null) === 4)>{{ __('Pending Approval') }}</option>
+                @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />
         </div>
@@ -86,6 +89,11 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
+
+            if (SALE != null && SALE.status == 4) { // Pending Approval
+                $('select[name="status"]').attr('disabled', true)
+                $('select[name="status"]').attr('aria-disabled', true)
+            }
 
             INIT_EDIT = false
         })

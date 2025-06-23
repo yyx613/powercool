@@ -80,7 +80,6 @@
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 35%;">Description</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">FOC Qty</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Discount<br>(RM)</td>
             <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Promotion<br>(RM)</td>
@@ -92,7 +91,6 @@
                 <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $prod['model_name'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
-                <td style="font-size: 14px; text-align: right;"></td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['unit_price'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['discount'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod['promotion'] }}</td>

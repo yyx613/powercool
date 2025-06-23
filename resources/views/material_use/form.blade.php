@@ -36,6 +36,9 @@
                             <div class="flex flex-col flex-1">
                                 <x-app.input.select name="material[]" placeholder="{{ __('Select a material') }}">
                                     <option value="">{{ __('Select a material') }}</option>
+                                    @foreach ($materials as $m)
+                                        <option value="{{ $m->id }}">({{ $m->sku }}) {{ $m->model_name }}</option>
+                                    @endforeach
                                 </x-app.input.select>
                             </div>
                             <div class="flex flex-col flex-1">
@@ -94,18 +97,9 @@
         FOR_PID = @json($for_pid ?? null);
         MATERIAL = @json($material ?? null);
         FORM_CAN_SUBMIT = true
-        MATERIALS = @json($materials ?? []);
         ITEMS_COUNT = 0
 
         $(document).ready(function() {
-            // Prepare raw materials options
-            for (let i = 0; i < MATERIALS.length; i++) {
-                const m = MATERIALS[i];
-
-                let opt = new Option(m.model_name, m.id)
-                $('#material-template select[name="material[]"]').append(opt)
-            }
-
             if (MATERIAL != null) {
                 $('select[name="product"]').val(FOR_PID ?? MATERIAL.product_id).trigger('change')
 
@@ -117,7 +111,8 @@
                     $(`.items[data-id="${i+1}"]`).attr('data-order-idx', m.id)
                     $(`.items[data-id="${i+1}"] select[name="material[]"]`).val(m.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty[]"]`).val(m.qty)
-                    $(`.items[data-id="${i+1}"] .toggle-status-btns`).attr('data-active', m.status == 1 ? false : true)
+                    $(`.items[data-id="${i+1}"] .toggle-status-btns`).attr('data-active', m.status == 1 ? false :
+                        true)
                 }
                 if (MATERIAL.materials.length <= 0) $('#add-item-btn').click()
             } else {
