@@ -272,7 +272,26 @@ class SyncAutoCountController extends Controller
                             ]);
                         }
                     }
-                   
+
+                    if (!empty($record['SalesAgent'])) {
+                        $salesAgent = DB::table('users')->where('name', $record['SalesAgent'])->first();
+
+                        if ($salesAgent) {
+                            $existingAgent = DB::table('customer_sales_agents')
+                                ->where('customer_id', $supplier->id)
+                                ->where('sales_agent_id', $salesAgent->id)
+                                ->first();
+
+                            if (!$existingAgent) {
+                                DB::table('customer_sales_agents')->insert([
+                                    'customer_id' => $supplier->id,
+                                    'sales_agent_id' => $salesAgent->id,
+                                    'created_at' => now(),
+                                    'updated_at' => now()
+                                ]);
+                            }
+                        }
+                    }
 
                 } else {
                     // Insert new supplier
@@ -329,6 +348,26 @@ class SyncAutoCountController extends Controller
                             DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address, city, state, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                                  $supplier->id, 1, 1, $record['Address'], $record['City'], $record['State'], $record['PostCode'], now(), now()
                             ]);
+                        }
+                    }
+
+                    if (!empty($record['SalesAgent'])) {
+                        $salesAgent = DB::table('users')->where('name', $record['SalesAgent'])->first();
+
+                        if ($salesAgent) {
+                            $existingAgent = DB::table('customer_sales_agents')
+                                ->where('customer_id', $supplier->id)
+                                ->where('sales_agent_id', $salesAgent->id)
+                                ->first();
+
+                            if (!$existingAgent) {
+                                DB::table('customer_sales_agents')->insert([
+                                    'customer_id' => $supplier->id,
+                                    'sales_agent_id' => $salesAgent->id,
+                                    'created_at' => now(),
+                                    'updated_at' => now()
+                                ]);
+                            }
                         }
                     }
                 }
