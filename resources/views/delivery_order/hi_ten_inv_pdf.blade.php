@@ -16,8 +16,8 @@
                 <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
                 <span style="font-size: 14px;">H/P:012-386 8164, 012-263 2919</span><br>
                 <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
-                <span style="font-size: 14px;">Service Hotline (Penang) : 012-386 8477</span><br>
-                <span style="font-size: 14px;">Email add : <a href="mailto:imax.hiten_sales@powercool.com.my">imax.hiten_sales@powercool.com.my</a></span>
+                <span style="font-size: 14px;">Service Hotline (Penang / Johor) : 012-386 8477 / 013-922 2000</span><br>
+                <span style="font-size: 14px;">Email add : <a href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
             </td>
             <td style="width: 50%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                 <table style="width: 100%; border-collapse: collapse;">
@@ -116,18 +116,22 @@
                 2. Please remit your payment to : <span style="font-weight: 700;">PUBLIC BANK Account No.: 3983 23 3530 CIMB Account No.: 8603 16 3872</span><br>
                 3. The Company reserves the right to charge interest 1.5% daily on overdue accounts.<br>
                 4. Goods sold are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed.<br>
-                5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be entertained.
+                5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
+                otherwise any discrepancy will not be entertained.<br>
+                6. For more information about our policies , please visit our website at https://imaxrefrigerator.com.my/warranty-policy/.<br>
+                7. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of the total invoice amount.<br>
+                8. Company will not obligation on those customers are not require to issue E-invoice.<br>
             </td>
         </tr>
         <tr>
-            <td></td>
-            <td></td>
             <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">HI-TEN TRADING SDN BHD</td>
+            <td></td>
+            <td></td>
         </tr>
         <tr>
-            <td></td>
-            <td></td>
             <td style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">Authorised Signature</td>
+            <td></td>
+            <td></td>
         </tr>
     </table>
 

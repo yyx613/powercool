@@ -36,7 +36,7 @@
                     <span style="font-size: 14px;">Service Hotline (Penang/Johor) : 012-386 8477 / 013-922
                         2000</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:imax.hiten_sales@powercool.com.my">enquiry@powercool.com.my</a></span>
+                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
                 </td>
             </tr>
         </table>
