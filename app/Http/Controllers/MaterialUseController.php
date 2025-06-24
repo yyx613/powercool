@@ -182,9 +182,9 @@ class MaterialUseController extends Controller
             if ($req->spr_id != null) {
                 $has_approval = Approval::where('object_type', MaterialUse::class)->where('object_id', $mu->id)->exists();
 
-                if (!$has_approval) {
-                    $spr = SaleProductionRequest::where('id', $req->spr_id)->first();
+                $spr = SaleProductionRequest::where('id', $req->spr_id)->first();
 
+                if (!$has_approval) {
                     $approval = Approval::create([
                         'object_type' => MaterialUse::class,
                         'object_id' => $mu->id,
@@ -208,7 +208,8 @@ class MaterialUseController extends Controller
             return Response::json([
                 'result' => true,
                 'material' => $mu,
-                'material_use_ids' => $new_mup_ids
+                'material_use_ids' => $new_mup_ids,
+                'redirect_to' => isset($spr) ? route('product.edit', ['product' => $spr->product_id]) : null
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();

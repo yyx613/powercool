@@ -31,11 +31,12 @@
                     <span style="font-size: 14px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
-                    <span style="font-size: 14px;">H/P:012-386 8164, 012-263 2919</span><br>
+                    <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
-                    <span style="font-size: 14px;">Service Hotline (Penang) : 012-386 8477</span><br>
+                    <span style="font-size: 14px;">Service Hotline (Penang/Johor) : 012-386 8477 / 013-922
+                        2000</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:imax.hiten_sales@powercool.com.my">imax.hiten_sales@powercool.com.my</a></span>
+                            href="mailto:imax.hiten_sales@powercool.com.my">enquiry@powercool.com.my</a></span>
                 </td>
             </tr>
         </table>
@@ -46,7 +47,7 @@
             <tr>
                 <td colspan="2"
                     style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: right;">
-                    SALE ORDER</td>
+                    SALES ORDER</td>
                 <td style="font-size: 14px; font-weight: 700; width: 35%; padding: 15px 0 10px 0; text-align: center;">
                     No. :
                     {{ $sale->sku }}</td>
@@ -54,6 +55,9 @@
             <tr>
                 <td colspan="2" style="padding: 0 35px 0 0;">
                     <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700;">TIN: {{ $customer->tin_number }}</td>
+                        </tr>
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name }}<br>
@@ -231,9 +235,15 @@
                         3530
                         CIMB Account No.: 8603 16 3872</span><br>
                     3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
-                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase<br>
+                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed.If cancel
+                    order with credit card payment,will have 10% credit card charges.<br>
                     5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
-                    otherwise any discrepancy will not be entertained.
+                    otherwise any discrepancy will not be entertained.<br>
+                    6. For more information about our policies, please visit our website at :-<br>
+                    https://imaxrefrigerator.com.my/warranty-policy/<br>
+                    7. Customer collect\unloading\handling by own, warranty will be bear by customer.<br>
+                    8. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of the total invoice amount.<br>
+                    9. Company will not obligation on those customers are not require to issue E-invoice.
                 </td>
             </tr>
             <tr>
@@ -241,9 +251,6 @@
                     style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">
                     Authorised Signature</td>
                 <td></td>
-                <td
-                    style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">
-                    Account Department</td>
             </tr>
         </table>
     </main>

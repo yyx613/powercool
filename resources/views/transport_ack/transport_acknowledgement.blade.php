@@ -72,7 +72,10 @@
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td
-                style="font-size: 14px; border: solid 1px black; border-bottom: solid 1px black; padding: 5px; text-align: center; padding: 0 10px; width: 10%; font-family: sans-serif; font-weight: 700;">
+                style="font-size: 14px; border: solid 1px black; border-bottom: solid 1px black; padding: 5px; text-align: center; padding: 0 10px; width: 5%; font-family: sans-serif; font-weight: 700;">
+                No</td>
+            <td
+                style="font-size: 14px; border: solid 1px black; border-bottom: solid 1px black; padding: 5px; text-align: center; padding: 0 10px; width: 20%; font-family: sans-serif; font-weight: 700;">
                 Item</td>
             <td
                 style="font-size: 14px; border: solid 1px black; border-bottom: solid 1px black; text-align: left; padding: 5px 10px; font-family: sans-serif; font-weight: 700;">
@@ -84,14 +87,25 @@
         @foreach ($items as $key => $item)
             <tr>
                 <td
-                    style="font-size: 14px; padding: 5px; text-align: center; padding: 0 10px; width: 10%; font-family: sans-serif;">
-                    {{ $item['product']->sku }}</td>
+                    style="font-size: 14px; padding: 5px; text-align: center; padding: 0 10px; width: 5%; font-family: sans-serif;">
+                    {{ $key + 1 }}</td>
+                <td
+                    style="font-size: 14px; padding: 5px; text-align: center; padding: 0 10px; width: 20%; font-family: sans-serif;">
+                    {{ $item['item'] }}</td>
                 <td style="font-size: 14px; text-align: left; padding: 5px 10px; font-family: sans-serif;">
-                    {{ $item['product']->model_desc }}</td>
+                    {{ $item['desc'] }}</td>
                 <td
                     style="font-size: 14px; text-align: center; width: 10%; padding: 5px 10px; font-family: sans-serif;">
                     {{ $item['qty'] }}</td>
             </tr>
+            @if ($item['serial_no'] != null)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 14px; text-align: left; padding: 0px 10px; font-family: sans-serif;">
+                        Serial No: {{ $item['serial_no'] }}</td>
+                    <td></td>
+                </tr>
+            @endif
         @endforeach
     </table>
     <!-- behalf -->

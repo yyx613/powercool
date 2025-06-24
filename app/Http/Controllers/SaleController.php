@@ -573,6 +573,7 @@ class SaleController extends Controller
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+            'terms' => $sale->paymentTerm ?? null
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -2538,7 +2539,6 @@ class SaleController extends Controller
 
     public function cancelInvoice(Request $req)
     {
-        dd($req->all());
         try {
             DB::beginTransaction();
 
@@ -2546,6 +2546,9 @@ class SaleController extends Controller
             $inv_to_cancel = json_decode($req->involved_inv_skus, true);
             $do_to_cancel = array_unique(json_decode($req->involved_do_skus, true));
             $so_to_cancel = array_unique(json_decode($req->involved_so_skus, true));
+
+            dd($req->all(), $inv_to_cancel, $do_to_cancel, $so_to_cancel);
+
 
             // Cancellation
             $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
@@ -3374,10 +3377,13 @@ class SaleController extends Controller
             'product.*' => 'required',
             'qty' => 'required',
             'qty.*' => 'required',
+            'description' => 'nullable',
+            'description.*' => 'nullable|max:250',
         ];
         $req->validate($rules, [
             'product.*.required' => 'The product at row :position is required',
-            'qty.*.required' => 'The qty at row :position is required',
+            'qty.*.required' => 'The quantity at row :position is required',
+            'description.*.required' => 'The description at row :position is required',
         ], [
             'do_id' => 'Delivery Order ID',
         ]);
@@ -3397,9 +3403,14 @@ class SaleController extends Controller
 
             $items = [];
             for ($i = 0; $i < count($req->product); $i++) {
+                $product = Product::where('id', $req->product[$i])->first();
+                $serial_no = $req->{'serial_no_' . $req->product[$i]} != null ? ProductChild::whereIn('id', $req->{'serial_no_' . $req->product[$i]})->pluck('sku')->toArray() : [];
+
                 $items[] = [
-                    'product' => Product::where('id', $req->product[$i])->first(),
+                    'item' => $product->sku,
+                    'desc' => $req->description[$i] != null ? $req->description[$i] : $product->model_desc,
                     'qty' => $req->qty[$i],
+                    'serial_no' => count($serial_no) > 0 ? join(', ', $serial_no) : null,
                 ];
             }
 

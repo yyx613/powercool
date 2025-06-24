@@ -433,7 +433,7 @@ class ViewServiceProvider extends ServiceProvider
             $req = app(\Illuminate\Http\Request::class);
             // $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
             // $material_uses = MaterialUse::with('materials.material')->get();
-            $sales = Sale::with('products')->orderBy('id', 'desc')->get();
+            $sales = Sale::with('products')->where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
             $priorities = Priority::orderBy('id', 'desc')->get();
 
             $users = User::whereHas('roles', function ($q) {
@@ -630,7 +630,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['transport_ack.generate'], function (ViewView $view) {
-            $products = Product::orderBy('id', 'desc')->get();
+            $products = Product::with('children')->orderBy('id', 'desc')->get();
             $dealers = Dealer::orderBy('id', 'desc')->get();
             $types = [
                 DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',

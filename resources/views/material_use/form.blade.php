@@ -210,7 +210,11 @@
                         $('form #submit-btn').text('Updated')
                         $('form #submit-btn').addClass('bg-green-400 shadow')
 
-                        window.location.href = '{{ route('material_use.index') }}'
+                        if (res.redirect_to != null) {
+                            window.location.href = res.redirect_to
+                        } else {
+                            window.location.href = '{{ route('material_use.index') }}'
+                        }
 
                         // setTimeout(() => {
                         //     $('form #submit-btn').text('Save and Update')
