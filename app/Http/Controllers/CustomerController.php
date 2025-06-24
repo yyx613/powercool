@@ -549,10 +549,12 @@ class CustomerController extends Controller
                 $locations = CustomerLocation::where('customer_id', $req->customer_id)
                     ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])
                     ->get();
-            } else {
+            } else if ($req->type == 'billing') {
                 $locations = CustomerLocation::where('customer_id', $req->customer_id)
                     ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_BILLING])
                     ->get();
+            } else {
+                $locations = CustomerLocation::where('customer_id', $req->customer_id)->get();
             }
 
             return Response::json([

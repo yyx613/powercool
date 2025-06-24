@@ -368,7 +368,7 @@
                         $('#do-inv-cancel-modal #info-body-container').append(clone)
                     }
 
-                    $('#do-inv-cancel-modal #warning-txt').text("{!! __('Following INV, DO & SO will be cancelled') !!}")
+                    $('#do-inv-cancel-modal #warning-txt').text("{!! __('Following INV & DO will be cancelled, SO will be remain as active.') !!}")
                     $('#do-inv-cancel-modal #yes-btn').attr('href',
                         `{{ config('app.url') }}/invoice/cancel?involved_inv_skus=${JSON.stringify(res.involved_inv_skus)}&involved_do_skus=${JSON.stringify(res.involved_do_skus)}&involved_so_skus=${JSON.stringify(res.involved_so_skus)}`
                         )

@@ -12,9 +12,7 @@ class CustomerLocation extends Model
     use HasFactory, SoftDeletes;
 
     const TYPE_BILLING = 1;
-
     const TYPE_DELIVERY = 2;
-
     const TYPE_BILLING_ADN_DELIVERY = 3;
 
     protected $guarded = [];

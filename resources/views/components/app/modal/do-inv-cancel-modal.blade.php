@@ -11,7 +11,7 @@
                     <div id="info-body-container" class="mt-4 max-h-64 overflow-y-auto">
                         <div id="info-template" class="hidden mb-2 border rounded p-2">
                             <p class="text-blue-700 leading-snug text-sm font-medium" id="main"></p>
-                            <p class="text-blue-500 leading-snug text-sm" id="sub"></p>
+                            <p class="text-blue-700 leading-snug text-sm" id="sub"></p>
                         </div>
                     </div>
                 </div>

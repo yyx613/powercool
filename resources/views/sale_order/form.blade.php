@@ -110,6 +110,17 @@
                     'customer': $('select[name="customer"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
+                    'new_billing_address': $('#new-billing-address input[name="address"]').val(),
+                    'new_billing_city': $('#new-billing-address input[name="city"]').val(),
+                    'new_billing_state': $('#new-billing-address input[name="state"]').val(),
+                    'new_billing_zip_code': $('#new-billing-address input[name="zip_code"]').val(),
+                    'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
+                        'select[name="delivery_address"]').val(),
+                    'new_delivery_address': $('#new-delivery-address input[name="address"]').val(),
+                    'new_delivery_city': $('#new-delivery-address input[name="city"]').val(),
+                    'new_delivery_state': $('#new-delivery-address input[name="state"]').val(),
+                    'new_delivery_zip_code': $('#new-delivery-address input[name="zip_code"]').val(),
+
                     'reference': $('input[name="reference"]').val(),
                     'status': $('select[name="status"]').val(),
                     'report_type': $('select[name="report_type"]').val(),
@@ -183,14 +194,26 @@
                             let errors = err.responseJSON.errors
 
                             for (const key in errors) {
-                                if (key.includes('account_') && key.includes('.')) {
+                                if (key.includes('new_delivery_')) {
+                                    $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
+                                        .find('p').text(errors[key])
+                                    $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
+                                        .removeClass('hidden')
+                                } else if (key.includes('new_billing_')) {
+                                    $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)
+                                        .find('p').text(errors[key])
+                                    $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)
+                                        .removeClass('hidden')
+                                } else if (key.includes('account_') && key.includes('.')) {
                                     let field = key.split('.')[0]
                                     let idx = key.split('.')[1]
                                     idx++
-                                    $(`.payment-amounts[data-id="${idx}"] #${field}_err`).find('p').text(
+                                    $(`.payment-amounts[data-id="${idx}"] #${field}_err`).find(
+                                        'p').text(
                                         errors[key])
-                                    $(`.payment-amounts[data-id="${idx}"] #${field}_err`).removeClass(
-                                        'hidden')
+                                    $(`.payment-amounts[data-id="${idx}"] #${field}_err`)
+                                        .removeClass(
+                                            'hidden')
                                 } else if (key.includes('.')) {
                                     let field = key.split('.')[0]
                                     let idx = key.split('.')[1]

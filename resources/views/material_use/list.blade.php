@@ -90,7 +90,7 @@
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
-                        return data
+                        return `(${data.sku}) ${data.model_name}`
                     }
                 },
                 {

@@ -215,10 +215,7 @@
                                 </div>`
                     } else {
                         return `<div>
-                                    <span>${data}</span><br>
-                                    <div class="mt-1">
-                                        <span class="text-xs rounded-full text-slate-400">B.O.M Not Ready</span>
-                                    </div>
+                                    <span>${data}</span>
                                 </div>`
                     }
                 }

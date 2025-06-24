@@ -312,7 +312,7 @@ class SaleController extends Controller
                     return $q->product_id;
                 })->toArray()
             ]);
-            $res = $this->upsertQuoDetails($request, false, true)->getData();
+            $res = $this->upsertQuoDetails($request, false, true, false)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create quotation');
             }
@@ -901,7 +901,6 @@ class SaleController extends Controller
                 'terms' => Session::get('convert_terms'),
             ]);
             $pdf->setPaper('A4', 'letter');
-            return $pdf->stream();
             $content = $pdf->download()->getOriginalContent();
             Storage::put(self::DELIVERY_ORDER_PATH . $filename, $content);
 
@@ -943,6 +942,11 @@ class SaleController extends Controller
                 $do->status = DeliveryOrder::STATUS_APPROVAL_PENDING;
                 $do->save();
             }
+            // Generate Invoice
+            $ok = $this->convertToInvoice([$do->id], Session::get('convert_customer_id'), Session::get('convert_terms'));
+            if (!$ok) {
+                throw new Exception('Failed to generate invoice');
+            }
 
             DB::commit();
 
@@ -978,11 +982,22 @@ class SaleController extends Controller
             'cc' => 'nullable|max:250',
             'status' => 'required',
             'report_type' => 'required',
-            'billing_address' => 'required',
+            'billing_address' => 'nullable',
+            'new_billing_address' => 'required_if:billing_address,null|max:250',
+            'new_billing_city' => 'required_if:billing_address,null|max:250',
+            'new_billing_state' => 'required_if:billing_address,null|max:250',
+            'new_billing_zip_code' => 'required_if:billing_address,null',
             'payment_term' => 'nullable',
             // upsertRemark
             'remark' => 'nullable|max:250',
         ];
+        if ($req->type == 'so') {
+            $rules['delivery_address'] = 'nullable';
+            $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
+            $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
+            $rules['new_delivery_state'] = 'required_if:delivery_address,null|max:250';
+            $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
+        }
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
         }
@@ -1105,7 +1120,7 @@ class SaleController extends Controller
 
             $data = [];
 
-            $res = $this->upsertQuoDetails($req, true)->getData();
+            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertQuoDetails failed');
             }
@@ -1150,7 +1165,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false)
+    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false)
     {
         if (! $validated) {
             // Validate form
@@ -1165,9 +1180,20 @@ class SaleController extends Controller
                 'cc' => 'nullable|max:250',
                 'status' => 'required',
                 'report_type' => 'required',
-                'billing_address' => 'required',
+                'billing_address' => 'nullable',
+                'new_billing_address' => 'required_if:billing_address,null|max:250',
+                'new_billing_city' => 'required_if:billing_address,null|max:250',
+                'new_billing_state' => 'required_if:billing_address,null|max:250',
+                'new_billing_zip_code' => 'required_if:billing_address,null',
                 'payment_term' => 'nullable',
             ];
+            if ($need_delivery_address == true) {
+                $rules['delivery_address'] = 'nullable';
+                $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
+                $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
+                $rules['new_delivery_state'] = 'required_if:delivery_address,null|max:250';
+                $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
+            }
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
             }
@@ -1184,8 +1210,37 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
+            // Billing
             if ($req->billing_address != null) {
-                $loc = CustomerLocation::where('id', $req->billing_address)->first();
+                $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
+            } else {
+                $bill_add = CustomerLocation::create([
+                    'customer_id' => $req->customer,
+                    'address' => $req->new_billing_address,
+                    'city' => $req->new_billing_city,
+                    'state' => $req->new_billing_state,
+                    'zip_code' => $req->new_billing_zip_code,
+                    'type' => CustomerLocation::TYPE_BILLING,
+                    'is_default' => false,
+                ]);
+                $req->merge(['billing_address' => $bill_add->id]);
+            }
+            // Delivery
+            if ($need_delivery_address == true) {
+                if ($req->delivery_address != null) {
+                    $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
+                } else {
+                    $del_add = CustomerLocation::create([
+                        'customer_id' => $req->customer,
+                        'address' => $req->new_delivery_address,
+                        'city' => $req->new_delivery_city,
+                        'state' => $req->new_delivery_state,
+                        'zip_code' => $req->new_delivery_zip_code,
+                        'type' => CustomerLocation::TYPE_DELIVERY,
+                        'is_default' => false,
+                    ]);
+                    $req->merge(['delivery_address' => $del_add->id]);
+                }
             }
 
             if ($req->sale_id == null) {
@@ -1206,7 +1261,9 @@ class SaleController extends Controller
                     'status' => $req->status,
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address,
-                    'billing_address' => isset($loc) ? $loc->formatAddress() : null,
+                    'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
+                    'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
+                    'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
                 ]);
 
@@ -1232,7 +1289,9 @@ class SaleController extends Controller
                     'status' => $sale->status == Sale::STATUS_APPROVAL_PENDING ? $sale->status : $req->status,
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address,
-                    'billing_address' => isset($loc) ? $loc->formatAddress() : null,
+                    'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
+                    'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
+                    'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
                 ]);
             }
@@ -1898,9 +1957,9 @@ class SaleController extends Controller
         ]);
     }
 
-    public function convertToInvoice(Request $req)
+    private function convertToInvoice(array $do_ids, int $customer_id, int $term_id)
     {
-        $do_ids = explode(',', $req->do);
+        // $do_ids = explode(',', $req->do);
         $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
 
         try {
@@ -1977,9 +2036,9 @@ class SaleController extends Controller
                 'do_sku' => implode(', ', $do_sku),
                 'dos' => $dos,
                 'products' => $pdf_products,
-                'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
-                'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
-                'terms' => Session::get('convert_terms'),
+                'customer' => Customer::where('id', $customer_id)->first(),
+                'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer_id),
+                'terms' => $term_id,
                 'overall_total' => $overall_total,
             ]);
             $pdf->setPaper('A4', 'letter');
@@ -2010,12 +2069,15 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('invoice.index'))->with('success', 'Delivery Order has converted');
+            return true;
+
+            // return redirect(route('invoice.index'))->with('success', 'Delivery Order has converted');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return false;
+            // return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
 
@@ -2476,6 +2538,7 @@ class SaleController extends Controller
 
     public function cancelInvoice(Request $req)
     {
+        dd($req->all());
         try {
             DB::beginTransaction();
 
