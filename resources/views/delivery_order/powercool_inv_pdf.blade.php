@@ -156,7 +156,10 @@
                 3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
                 4. Goods sold are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed.<br>
                 5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
-                otherwise any discrepancy will not be entertained.
+                otherwise any discrepancy will not be entertained.<br>
+                6. For more information about our policies , please visit our website at https://imaxrefrigerator.com.my/warranty-policy/.<br>
+                7. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of the total invoice amount.<br>
+                8. Company will not obligation on those customers are not require to issue E-invoice.<br>
             </td>
         </tr>
         <tr>

@@ -2549,7 +2549,6 @@ class SaleController extends Controller
 
             dd($req->all(), $inv_to_cancel, $do_to_cancel, $so_to_cancel);
 
-
             // Cancellation
             $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
 
