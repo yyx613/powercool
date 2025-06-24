@@ -56,8 +56,6 @@
             <tbody></tbody>
         </table>
     </div>
-
-    <x-app.modal.do-inv-cancel-modal />
 @endsection
 
 @push('scripts')
