@@ -49,6 +49,10 @@ class RoleSeeder extends Seeder
                 'id' => Role::WAREHOUSE,
                 'name' => 'Warehouse',
             ],
+            [
+                'id' => Role::FINANCE,
+                'name' => 'Finance',
+            ],
         ];
         $permissions = Permission::get();
 

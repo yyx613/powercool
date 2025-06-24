@@ -27,4 +27,20 @@ class TransportAcknowledgement extends Model
     {
         return $this->belongsTo(User::class, 'generated_by')->withoutGlobalScope(BranchScope::class);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function dealerName(): string
+    {
+        if ($this->dealer_id == '-1') {
+            return 'Power Cool';
+        } else if ($this->dealer_id == '-2') {
+            return 'Hi Ten Trading';
+        } else {
+            return $this->belongsTo(Dealer::class, 'dealer_id')->value('name');
+        }
+    }
 }

@@ -210,15 +210,12 @@
                         return `<div>
                                     <span>${data}</span><br>
                                     <div class="mt-1">
-                                        <span class="text-xs rounded-full text-green-700">Production Ready</span>
+                                        <span class="text-xs rounded-full text-green-700">B.O.M Ready</span>
                                     </div>
                                 </div>`
                     } else {
                         return `<div>
-                                    <span>${data}</span><br>
-                                    <div class="mt-1">
-                                        <span class="text-xs rounded-full text-red-700">Production Ready</span>
-                                    </div>
+                                    <span>${data}</span>
                                 </div>`
                     }
                 }

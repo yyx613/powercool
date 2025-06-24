@@ -35,7 +35,7 @@
             <x-app.message.error id="sale_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
+            <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
             <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')"
                 value="{{ isset($sale) ? $sale->reference : null }}" />
             <x-app.message.error id="reference_err" />
@@ -59,12 +59,24 @@
             <x-app.message.error id="attention_to_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }}</x-app.input.label>
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
+            </p>
             <x-app.message.error id="billing_address_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
+            <x-app.input.select id="delivery_address" name="delivery_address">
+                <option value="">{{ __('Select a delivery address') }}</option>
+            </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
+            </p>
+            <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
@@ -73,8 +85,24 @@
                 <option value="">{{ __('Select a status') }}</option>
                 <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
                 <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
+                @if (isset($sale) && $sale->status == 4)
+                    <option value="4" @selected(old('status', isset($sale) ? $sale->status : null) === 4)>{{ __('Pending Approval') }}</option>
+                @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />
+        </div>
+    </div>
+    {{-- Custom Address --}}
+    <div class="pt-4 border-t border-slate-200">
+        <div class="mb-8" id="new-billing-address">
+            @include('components.app.address-field', [
+                'title' => 'Billing Address',
+            ])
+        </div>
+        <div id="new-delivery-address">
+            @include('components.app.address-field', [
+                'title' => 'Delivery Address',
+            ])
         </div>
     </div>
 </div>
@@ -86,6 +114,11 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
+
+            if (SALE != null && SALE.status == 4) { // Pending Approval
+                $('select[name="status"]').attr('disabled', true)
+                $('select[name="status"]').attr('aria-disabled', true)
+            }
 
             INIT_EDIT = false
         })
@@ -137,18 +170,36 @@
                 type: 'GET',
                 async: false,
                 success: function(res) {
+                    // Billing Address
                     $('select[name="billing_address"] option').remove()
 
-                    // Default option
-                    let opt = new Option("{!! __('Select a billing address') !!}", null)
+                    var opt = new Option("{!! __('Select a billing address') !!}", null)
                     $('select[name="billing_address"]').append(opt)
 
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
 
+                        if (loc.type !== 1 && loc.type !== 3) continue
+
                         let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
+                    }
+
+                    // Delivery Address
+                    $('select[name="delivery_address"] option').remove()
+
+                    var opt = new Option("{!! __('Select a delivery address') !!}", null)
+                    $('select[name="delivery_address"]').append(opt)
+
+                    for (let i = 0; i < res.locations.length; i++) {
+                        const loc = res.locations[i];
+
+                        if (loc.type !== 2 && loc.type !== 3) continue
+
+                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
+                            SALE.delivery_address_id)
+                        $('select[name="delivery_address"]').append(opt)
                     }
                 },
             });

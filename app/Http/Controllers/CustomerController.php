@@ -185,10 +185,10 @@ class CustomerController extends Controller
             'company_name' => 'nullable|max:250',
             'phone_number' => 'required|max:250',
             'mobile_number' => 'nullable|max:250',
-            'email' => 'required|email|max:250',
+            'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
             'currency' => 'nullable',
-            'tin_number' => 'required_if:category,==,1|max:250',
+            'tin_number' => 'nullable',
             'status' => 'required',
             'picture' => 'nullable',
             'picture.*' => 'file|extensions:jpg,png,jpeg',
@@ -199,8 +199,8 @@ class CustomerController extends Controller
             'platform' => 'nullable',
             'local_oversea' => 'required_if:category,==,1',
             'msic_code' => 'required_unless:category,!=,2',
-            'business_activity_desc' => 'required_unless:category,!=,2',
-            'company_registration_number' => 'required_unless:category,!=,2|max:250',
+            'business_activity_desc' => 'nullable',
+            'company_registration_number' => 'nullable',
             'sst_number' => 'nullable|max:250',
             'category' => 'required|max:250',
             'tourism_tax_reg_no' => 'nullable|max:250',
@@ -209,6 +209,39 @@ class CustomerController extends Controller
             'trade_name' => 'nullable|max:250',
             'identity_type' => 'required_if:category,==,2|max:250',
             'identity_no' => 'nullable|max:250',
+
+            // 'customer_id' => 'nullable',
+            // 'company_group' => 'required',
+            // 'category' => 'required',
+            // 'prefix' => 'nullable',
+            // 'customer_name' => 'required|max:250',
+            // 'company_name' => 'nullable|max:250',
+            // 'phone_number' => 'required|max:250',
+            // 'mobile_number' => 'nullable|max:250',
+            // 'email' => 'required|email|max:250',
+            // 'website' => 'nullable|max:250',
+            // 'currency' => 'nullable',
+            // 'tin_number' => 'required_if:category,==,1|max:250',
+            // 'status' => 'required',
+            // 'picture' => 'nullable',
+            // 'picture.*' => 'file|extensions:jpg,png,jpeg',
+            // 'credit_term' => 'nullable',
+            // 'sale_agent' => 'nullable',
+            // 'area' => 'nullable',
+            // 'debtor_type' => 'nullable',
+            // 'platform' => 'nullable',
+            // 'local_oversea' => 'required_if:category,==,1',
+            // 'msic_code' => 'required_unless:category,!=,2',
+            // 'business_activity_desc' => 'required_unless:category,!=,2',
+            // 'company_registration_number' => 'required_unless:category,!=,2|max:250',
+            // 'sst_number' => 'nullable|max:250',
+            // 'category' => 'required|max:250',
+            // 'tourism_tax_reg_no' => 'nullable|max:250',
+            // 'prev_gst_reg_no' => 'nullable|max:250',
+            // 'registered_name' => 'required|max:250',
+            // 'trade_name' => 'nullable|max:250',
+            // 'identity_type' => 'required_if:category,==,2|max:250',
+            // 'identity_no' => 'nullable|max:250',
         ], [
             'required_if' => 'The :attribute is required',
             'required_unless' => 'The :attribute is required',
@@ -516,10 +549,12 @@ class CustomerController extends Controller
                 $locations = CustomerLocation::where('customer_id', $req->customer_id)
                     ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])
                     ->get();
-            } else {
+            } else if ($req->type == 'billing') {
                 $locations = CustomerLocation::where('customer_id', $req->customer_id)
                     ->whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_BILLING])
                     ->get();
+            } else {
+                $locations = CustomerLocation::where('customer_id', $req->customer_id)->get();
             }
 
             return Response::json([

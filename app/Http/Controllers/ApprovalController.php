@@ -87,7 +87,11 @@ class ApprovalController extends Controller
                 if (get_class($obj) == DeliveryOrder::class) {
                     $view_url = route('delivery_order.index', ['sku' => $obj->sku]);
                 } elseif (get_class($obj) == Sale::class) {
-                    $view_url = route('sale_order.index', ['sku' => $obj->sku]);
+                    if ($obj->type == Sale::TYPE_QUO) {
+                        $view_url = route('quotation.index', ['sku' => $obj->sku]);
+                    } else {
+                        $view_url = route('sale_order.index', ['sku' => $obj->sku]);
+                    }
                 }
             }
 

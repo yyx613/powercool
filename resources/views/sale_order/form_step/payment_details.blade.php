@@ -9,15 +9,6 @@
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
-                placeholder="{{ __('Select a term') }}">
-                <option value=""></option>
-            </x-app.input.select2>
-            <x-app.message.error id="payment_term_err" />
-        </div>
-        <div class="flex flex-col">
             <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
@@ -29,6 +20,15 @@
                 </x-app.input.selec2t>
                 <x-app.message.error id="payment_method_err" />
         </div>
+        <div class="flex flex-col hidden" id="payment-term-container">
+            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
+                placeholder="{{ __('Select a term') }}">
+                <option value=""></option>
+            </x-app.input.select2>
+            <x-app.message.error id="payment_term_err" />
+        </div>
         <div class="flex flex-col">
             <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -37,39 +37,64 @@
             <x-app.message.error id="payment_due_date_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_status" class="mb-1">{{ __('Payment Status') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="payment_status" id="payment_status" :hasError="$errors->has('payment_status')"
-                placeholder="{{ __('Select a status') }}">
-                <option value=""></option>
-                @foreach ($payment_statuses as $key => $val)
-                    <option value="{{ $key }}" @selected(old('payment_status', isset($sale) ? $sale->payment_status : null) == $key)>{{ __($val) }}</option>
-                @endforeach
-                </x-app.input.selec2t>
-                <x-app.message.error id="payment_status_err" />
-        </div>
-        <div class="flex flex-col">
             <x-app.input.label id="payment_remark" class="mb-1">{{ __('Payment Remark') }}</x-app.input.label>
             <x-app.input.input name="payment_remark" id="payment_remark" :hasError="$errors->has('payment_remark')"
                 value="{{ isset($sale) ? $sale->payment_remark : null }}" />
             <x-app.message.error id="payment_remark_err" />
         </div>
-        <div class="flex flex-col">
-            <x-app.input.label id="payment_amount" class="mb-1">{{ __('Payment Amount') }}</x-app.input.label>
-            <x-app.input.input name="payment_amount" id="payment_amount" :hasError="$errors->has('payment_amount')" class="decimal-input" />
-            <x-app.message.error id="payment_amount_err" />
-            <div id="payment-amount-records-container" class="hidden">
-                <span class="font-semibold mb-1 mt-1 text-xs inline-flex">{{ __('Payment History') }}</span>
-                <p class="text-xs" id="template"></p>
+    </div>
+    @if ($can_payment_amount)
+        {{-- Payment Amounts --}}
+        <div id="payment-amounts-container" class="pt-4 border-t border-slate-200">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full p-4 hover:bg-slate-50 relative group hidden"
+                id="payment-amount-template">
+                <button type="button"
+                    class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-payment-amount-btns"
+                    title="Delete Payment Amount">
+                    <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
+                        data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                    </svg>
+                </button>
+                <div class="flex flex-col">
+                    <x-app.input.label id="account_amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
+                    <x-app.input.input name="account_amount" id="account_amount" :hasError="$errors->has('account_amount')" class="int-input" />
+                    <x-app.message.error id="account_amount_err" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="account_date" class="mb-1">{{ __('Date') }}</x-app.input.label>
+                    <x-app.input.input name="account_date" id="account_date" :hasError="$errors->has('account_date')" />
+                    <x-app.message.error id="account_date_err" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="account_ref_no" class="mb-1">{{ __('Reference No') }}</x-app.input.label>
+                    <x-app.input.input name="account_ref_no" id="account_ref_no" :hasError="$errors->has('account_ref_no')" />
+                    <x-app.message.error id="account_ref_no_err" />
+                </div>
             </div>
         </div>
-    </div>
+        <!-- Add Items -->
+        <div class="flex justify-end px-4 mt-4">
+            <button type="button"
+                class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow"
+                id="add-payment-amount-btn">
+                <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512"
+                    style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                    <path
+                        d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z" />
+                </svg>
+                <span class="text-sm">{{ __('Add Item') }}</span>
+            </button>
+        </div>
+    @endif
 </div>
 
 @push('scripts')
     <script>
-        // PAYMENT_FORM_CAN_SUBMIT = true
-        PAYMENT_AMOUNT = @json(isset($sale) ? $sale->getFormattedPaymentAmount(true) : null);
+        CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
+        PAYMENT_AMOUNT_COUNT = 0
 
         $('input[name="payment_due_date"]').daterangepicker(datepickerParam)
         $('input[name="payment_due_date"]').on('apply.daterangepicker', function(ev, picker) {
@@ -82,96 +107,54 @@
 
                 if (SALE.can_by_pass_conversion) $('#by-pass-conversion-hint').removeClass('hidden')
 
-                updatePaymentAmountRecords()
+                if (SALE.payment_amounts.length <= 0) {
+                    $('#add-payment-amount-btn').click()
+                } else {
+                    for (let i = 0; i < SALE.payment_amounts.length; i++) {
+                        $('#add-payment-amount-btn').click()
+
+                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_amount"]`).val(SALE
+                            .payment_amounts[i].amount)
+                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_date"]`).val(SALE.payment_amounts[
+                            i].date)
+                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_ref_no"]`).val(SALE
+                            .payment_amounts[i].reference_number)
+                    }
+                }
+            } else {
+                $('#add-payment-amount-btn').click()
             }
         })
+        $('select[name="payment_method"]').on('change', function() {
+            let val = $(this).val()
 
-        function updatePaymentAmountRecords() {
-            $('#payment-amount-records-container p:not("#template")').remove()
-
-            if (PAYMENT_AMOUNT != null) {
-                $('#payment-amount-records-container').removeClass('hidden')
-
-                for (let i = 0; i < PAYMENT_AMOUNT.length; i++) {
-                    let clone = $('#payment-amount-records-container #template')[0].cloneNode(true);
-
-                    $(clone).text(`${i+1}: RM ${PAYMENT_AMOUNT[i]}`)
-                    $(clone).removeAttr('id')
-
-                    $('#payment-amount-records-container').append(clone)
-                }
+            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                $('#payment-term-container').removeClass('hidden')
+            } else {
+                $('#payment-term-container').addClass('hidden')
             }
-        }
+        })
+        $('#add-payment-amount-btn').on('click', function() {
+            let clone = $('#payment-amount-template')[0].cloneNode(true);
 
-        // $('#payment-form').on('submit', function(e) {
-        //     e.preventDefault()
+            PAYMENT_AMOUNT_COUNT++
+            $(clone).attr('data-id', PAYMENT_AMOUNT_COUNT)
+            $(clone).find('.delete-payment-amount-btns').attr('data-id', PAYMENT_AMOUNT_COUNT)
+            $(clone).addClass('payment-amounts')
+            $(clone).removeClass('hidden')
+            $(clone).removeAttr('id')
 
-        //     if (!PAYMENT_FORM_CAN_SUBMIT) return
+            $(clone).find('input[name="account_date"]').daterangepicker(datepickerParam)
+            $(clone).find('input[name="account_date"]').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD'));
+            });
 
-        //     PAYMENT_FORM_CAN_SUBMIT = false
+            $('#payment-amounts-container').append(clone)
+        })
+        $('body').on('click', '.delete-payment-amount-btns', function() {
+            let id = $(this).data('id')
 
-        //     $('#payment-form #submit-btn').text('Updating')
-        //     $('#payment-form #submit-btn').removeClass('bg-yellow-400 shadow')
-        //     $('.err_msg').addClass('hidden') // Remove error messages
-        //     // Submit
-        //     let url = ''
-        //     url = `${url}`
-
-        //     $.ajax({
-        //         headers: {
-        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //         },
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
-        //             'payment_term': $('#payment-form select[name="payment_term"]').val(),
-        //             'payment_method': $('#payment-form select[name="payment_method"]').val(),
-        //             'payment_due_date': $('#payment-form input[name="payment_due_date"]').val(),
-        //             'payment_amount': $('#payment-form input[name="payment_amount"]').val(),
-        //             'payment_status': $('#payment-form select[name="payment_status"]').val(),
-        //             'payment_remark': $('#payment-form input[name="payment_remark"]').val(),
-        //             'by_pass_conversion': $('#payment-form input[name="by_pass_conversion"]').val(),
-        //         },
-        //         success: function(res) {
-        //             if (res.new_payment_amount) {
-        //                 PAYMENT_AMOUNT = res.new_payment_amount
-        //                 updatePaymentAmountRecords()
-        //             }
-        //             if (res.can_by_pass_conversion) {
-        //                 $('#by-pass-conversion-hint').removeClass('hidden')
-        //             }
-
-        //             setTimeout(() => {
-        //                 $('#payment-form #submit-btn').text('Updated')
-        //                 $('#payment-form #submit-btn').addClass('bg-green-400 shadow')
-
-        //                 setTimeout(() => {
-        //                     $('#payment-form #submit-btn').text('Save and Update')
-        //                     $('#payment-form #submit-btn').removeClass('bg-green-400')
-        //                     $('#payment-form #submit-btn').addClass('bg-yellow-400 shadow')
-
-        //                     PAYMENT_FORM_CAN_SUBMIT = true
-        //                 }, 2000);
-        //             }, 300);
-        //         },
-        //         error: function(err) {
-        //             setTimeout(() => {
-        //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
-        //                     let errors = err.responseJSON.errors
-
-        //                     for (const key in errors) {
-        //                         $(`#payment-form #${key}_err`).find('p').text(errors[key])
-        //                         $(`#payment-form #${key}_err`).removeClass('hidden')
-        //                     }
-        //                 }
-        //                 $('#payment-form #submit-btn').text('Save and Update')
-        //                 $('#payment-form #submit-btn').addClass('bg-yellow-400 shadow')
-
-        //                 PAYMENT_FORM_CAN_SUBMIT = true
-        //             }, 300);
-        //         },
-        //     });
-        // })
+            $(`.payment-amounts[data-id="${id}"]`).remove()
+        })
     </script>
 @endpush

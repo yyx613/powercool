@@ -83,20 +83,13 @@
             <x-app.message.error id="attention_to_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="billing_address" class="mb-1">{{ __('Billing Address') }}</x-app.input.label>
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">{{ __('Please make it empty before entering a new address') }}
+            </p>
             <x-app.message.error id="billing_address_err" />
-        </div>
-        <div class="flex flex-col">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
-            <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
-                placeholder="{{ __('Select a term') }}">
-                <option value=""></option>
-            </x-app.input.select2>
-            <x-app.message.error id="payment_term_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
@@ -107,6 +100,14 @@
                 <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
             </x-app.input.select>
             <x-app.message.error id="status_err" />
+        </div>
+    </div>
+    {{-- Custom Address --}}
+    <div class="pt-4 border-t border-slate-200">
+        <div id="new-billing-address">
+            @include('components.app.address-field', [
+                'title' => 'Billing Address',
+            ])
         </div>
     </div>
 </div>

@@ -38,12 +38,12 @@
                 <td style="width: 30%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; width: 30%; font-weight: 700;">No</td>
+                            <td style="font-size: 14px; width: 40%; font-weight: 700;">No</td>
                             <td style="font-size: 14px; width: 10%;">:</td>
                             <td style="font-size: 14px; font-weight: 700;">{{ $sale->sku }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Your Ref</td>
+                            <td style="font-size: 14px;">Your P/O No.</td>
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;">{{ $sale->reference }}</td>
                         </tr>
@@ -153,11 +153,28 @@
                         {{ number_format(($prod->override_selling_price ?? $prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}
                     </td>
                 </tr>
-                <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                    <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
-                </tr>
+                @if ($prod->remark != null)
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
+                <!-- Warranty -->
+                @if ($prod->warrantyPeriods != null)
+                    @php
+                        $warranty = [];
+                        foreach ($prod->warrantyPeriods as $wp) {
+                            $warranty[] = $wp->warrantyPeriod->name;
+                        }
+                    @endphp
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Warranty:
+                            {{ join(', ', $warranty) }}</td>
+                        <td style="font-size: 14px; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
                 @endphp
@@ -173,7 +190,7 @@
             @endif
         </table>
         <!-- Item Summary -->
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 30px 0 0 0;">
             <tr>
                 <td
                     style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%;">
@@ -245,7 +262,7 @@
             <tr>
                 <td
                     style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
-                    JESLINE</td>
+                    {{ $sale->saleperson->name }}</td>
                 <td></td>
             </tr>
         </table>

@@ -385,15 +385,6 @@ class ProductionController extends Controller
                     ]);
                 }
                 (new Branch)->assign(Production::class, $production->id);
-                // Auto Assign product child to assigned Order
-                if ($production->sale_id != null) {
-                    SaleProductChild::create([
-                        'sale_product_id' => SaleProduct::where('sale_id', $production->sale_id)->where('product_id', $production->product_id)->value('id'),
-                        'product_children_id' => $production->product_child_id,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-                }
             } else {
                 $production->update([
                     'product_id' => $req->product,
@@ -861,6 +852,15 @@ class ProductionController extends Controller
                 $productions[$i]->product_child_id = $prodChild->id;
                 $productions[$i]->status = Production::STATUS_DOING;
                 $productions[$i]->save();
+                // Auto Assign product child to assigned Order
+                if ($productions[$i]->sale_id != null) {
+                    SaleProductChild::create([
+                        'sale_product_id' => SaleProduct::where('sale_id', $productions[$i]->sale_id)->where('product_id', $productions[$i]->product_id)->value('id'),
+                        'product_children_id' => $prodChild->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
 
             DB::commit();

@@ -40,6 +40,11 @@ class Sale extends Model
         return $date;
     }
 
+    public function paymentAmounts()
+    {
+        return $this->hasMany(SalePaymentAmount::class);
+    }
+
     public function products()
     {
         return $this->hasMany(SaleProduct::class, 'sale_id');
@@ -124,19 +129,6 @@ class Sale extends Model
         return $fully_converted;
     }
 
-    public function getFormattedPaymentAmount(bool $price_format = false): ?array
-    {
-        if ($this->payment_amount == null) {
-            return null;
-        } elseif (str_contains($this->payment_amount, ',')) {
-            return array_map(function ($value) use ($price_format) {
-                return $price_format ? number_format($value, 2) : number_format($value, 2, '.', '');
-            }, explode(',', $this->payment_amount));
-        } else {
-            return [$this->payment_amount];
-        }
-    }
-
     public function getTotalAmount(): float
     {
         $prods = $this->products()->withTrashed()->get();
@@ -151,11 +143,7 @@ class Sale extends Model
 
     public function getPaidAmount(): float
     {
-        if ($this->getFormattedPaymentAmount() == null) {
-            return 0;
-        }
-
-        return array_sum($this->getFormattedPaymentAmount());
+        return $this->paymentAmounts->sum('amount');
     }
 
     public function getTransferredTo(): ?array

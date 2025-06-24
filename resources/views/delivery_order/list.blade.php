@@ -36,7 +36,7 @@
                 </svg>
                 <span>{{ __('Generate Transport Acknowledgement') }}</span>
             </a>
-            @can('sale.delivery_order.convert')
+            {{-- @can('sale.delivery_order.convert')
                 <a href="{{ route('delivery_order.to_invoice') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
@@ -50,7 +50,7 @@
                     </svg>
                     <span>{{ __('Convert to Invoice') }}</span>
                 </a>
-            @endcan
+            @endcan --}}
         </div>
     </div>
     @include('components.app.alert.parent')
