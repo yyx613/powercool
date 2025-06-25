@@ -1651,21 +1651,23 @@ class SaleController extends Controller
 
             if ($sale != null) {
                 // Payment Amounts
-                SalePaymentAmount::where('sale_id', $sale->id)->delete();
+                if ($req->account_amount != null) {
+                    SalePaymentAmount::where('sale_id', $sale->id)->delete();
 
-                $data = [];
-                for ($i = 0; $i < count($req->account_amount); $i++) {
-                    $data[] = [
-                        'sale_id' => $sale->id,
-                        'amount' => $req->account_amount[$i],
-                        'date' => $req->account_date[$i],
-                        'reference_number' => $req->account_ref_no[$i],
-                        'by_id' => Auth::user()->id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                    $data = [];
+                    for ($i = 0; $i < count($req->account_amount); $i++) {
+                        $data[] = [
+                            'sale_id' => $sale->id,
+                            'amount' => $req->account_amount[$i],
+                            'date' => $req->account_date[$i],
+                            'reference_number' => $req->account_ref_no[$i],
+                            'by_id' => Auth::user()->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                    SalePaymentAmount::insert($data);
                 }
-                SalePaymentAmount::insert($data);
 
                 $to_be_paid_amount = $sale->getTotalAmount();
                 $paid_amount = $sale->getPaidAmount();
