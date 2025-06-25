@@ -291,7 +291,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getDataDeliveryOrder')->name('get_data');
             Route::get('/to-invoice', 'toInvoice')->name('to_invoice')->middleware(['can:sale.delivery_order.convert']);
             Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
-            Route::get('/cancel', 'cancelDeliveryOrder')->name('cancel');
+            // Route::get('/cancel', 'cancelDeliveryOrder')->name('cancel');
+            Route::get('/cancel', 'cancelInvoice')->name('cancel');
             Route::get('/get-cancellation-involved-do/{do}', 'getCancellationInvolvedDO')->name('get_cancellation_involved_do');
             Route::get('/generate-transport-acknowledgement', 'transportAcknowledgement')->name('transport_acknowledgement');
             Route::post('/generate-transport-acknowledgement', 'generateTransportAcknowledgement')->name('generate_transport_acknowledgement');

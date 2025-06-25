@@ -14,7 +14,7 @@ class Invoice extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const STATUS_CANCELLED = 1;
+    const STATUS_VOIDED = 1;
 
     protected $guarded = [];
 

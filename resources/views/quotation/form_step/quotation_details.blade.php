@@ -87,7 +87,8 @@
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
-            <p class="mt-1.5 text-sm text-slate-500 leading-none">{{ __('Please make it empty before entering a new address') }}
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
             </p>
             <x-app.message.error id="billing_address_err" />
         </div>
@@ -119,6 +120,7 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
+            $('select[name="billing_address"]').trigger('change')
 
             INIT_EDIT = false
         })
@@ -184,12 +186,28 @@
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
 
-                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
+                        let opt = new Option(
+                            `${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id,
+                            false, INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
                 },
             });
+        })
+        $('select[name="billing_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null) {
+                $('#new-billing-address input').attr('disabled', false)
+                $('#new-billing-address input').attr('aria-disabled', false)
+                $('#new-billing-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-billing-address input').val(null)
+                $('#new-billing-address input').attr('disabled', true)
+                $('#new-billing-address input').attr('aria-disabled', true)
+                $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
         })
     </script>
 @endpush

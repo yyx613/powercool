@@ -74,6 +74,7 @@
                 </div>
             </div>
         </div>
+        <x-app.message.error id="account_err" />
         <!-- Add Items -->
         <div class="flex justify-end px-4 mt-4">
             <button type="button"
