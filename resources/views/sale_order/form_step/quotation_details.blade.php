@@ -114,6 +114,8 @@
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
+            $('select[name="billing_address"]').trigger('change')
+            $('select[name="delivery_address"]').trigger('change')
 
             if (SALE != null && SALE.status == 4) { // Pending Approval
                 $('select[name="status"]').attr('disabled', true)
@@ -181,7 +183,7 @@
 
                         if (loc.type !== 1 && loc.type !== 3) continue
 
-                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
+                        let opt = new Option(`${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id, false, INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
@@ -197,12 +199,40 @@
 
                         if (loc.type !== 2 && loc.type !== 3) continue
 
-                        let opt = new Option(loc.address, loc.id, false, INIT_EDIT == true && loc.id ==
+                        let opt = new Option(`${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id, false, INIT_EDIT == true && loc.id ==
                             SALE.delivery_address_id)
                         $('select[name="delivery_address"]').append(opt)
                     }
                 },
             });
+        })
+        $('select[name="billing_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null) {
+                $('#new-billing-address input').attr('disabled', false)
+                $('#new-billing-address input').attr('aria-disabled', false)
+                $('#new-billing-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-billing-address input').val(null)
+                $('#new-billing-address input').attr('disabled', true)
+                $('#new-billing-address input').attr('aria-disabled', true)
+                $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('select[name="delivery_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null) {
+                $('#new-delivery-address input').attr('disabled', false)
+                $('#new-delivery-address input').attr('aria-disabled', false)
+                $('#new-delivery-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-delivery-address input').val(null)
+                $('#new-delivery-address input').attr('disabled', true)
+                $('#new-delivery-address input').attr('aria-disabled', true)
+                $('#new-delivery-address input').parent().attr('aria-disabled', true)
+            }
         })
 
         // $('#quotation-form #submit-btn').on('click', function(e) {

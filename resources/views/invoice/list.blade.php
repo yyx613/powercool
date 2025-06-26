@@ -285,7 +285,7 @@
                     orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
-                            return '{!! __('Cancelled') !!}'
+                            return '{!! __('Voided') !!}'
                         }
                         return data
                     }

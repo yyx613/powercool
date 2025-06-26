@@ -61,6 +61,7 @@ class PaymentMethodController extends Controller
                 'id' => $record->id,
                 'name' => $record->name,
                 'by_pass_conversion' => $record->by_pass_conversion,
+                'deposit_required' => $record->deposit_required,
                 'status' => $record->status,
             ];
         }
@@ -79,6 +80,7 @@ class PaymentMethodController extends Controller
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
             'by_pass_conversion' => 'required',
+            'deposit_required' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -91,6 +93,7 @@ class PaymentMethodController extends Controller
             $pm = $this->method::create([
                 'name' => $req->name,
                 'by_pass_conversion' => $req->by_pass_conversion,
+                'deposit_required' => $req->deposit_required,
                 'status' => $req->status,
             ]);
             (new Branch)->assign(PaymentMethod::class, $pm->id);
@@ -123,6 +126,7 @@ class PaymentMethodController extends Controller
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
             'by_pass_conversion' => 'required',
+            'deposit_required' => 'required',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -135,6 +139,7 @@ class PaymentMethodController extends Controller
             $method->update([
                 'name' => $req->name,
                 'by_pass_conversion' => $req->by_pass_conversion,
+                'deposit_required' => $req->deposit_required,
                 'status' => $req->status,
             ]);
 

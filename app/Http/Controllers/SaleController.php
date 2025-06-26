@@ -46,6 +46,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -1140,7 +1141,15 @@ class SaleController extends Controller
 
             if ($req->type == 'so') {
                 $res = $this->upsertPayDetails($req, true)->getData();
-                if ($res->result == false) {
+                if (isset($res->err_msg) && $res->err_msg != null) {
+                    DB::rollBack();
+
+                    return Response::json([
+                        'errors' => [
+                            'account_err_msg'  => $res->err_msg,
+                        ],
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                } else if ($res->result == false) {
                     throw new \Exception('upsertPayDetails failed');
                 }
             }
@@ -1650,12 +1659,33 @@ class SaleController extends Controller
             $sale = Sale::where('id', $req->sale_id)->first();
 
             if ($sale != null) {
+                // Check amount is greater than 50% if payment method is deposit required
+                $deposit_required = PaymentMethod::where('id', $req->payment_method)->value('deposit_required');
+
+                if ($deposit_required == true && $req->account_amount != null) {
+                    $amount_to_pay = $sale->getTotalAmount();
+                    $total_amount = 0;
+                    for ($i = 0; $i < count($req->account_amount); $i++) {
+                        if ($req->account_amount[$i] == null) {
+                            continue;
+                        }
+                        $total_amount += $req->account_amount[$i];
+                    }
+                    if ($total_amount < ($amount_to_pay / 2)) {
+                        return Response::json([
+                            'err_msg' => 'Please enter atleast 50% of the total amount, RM' . number_format($sale->getTotalAmount(), 2),
+                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                    }
+                }
                 // Payment Amounts
                 if ($req->account_amount != null) {
                     SalePaymentAmount::where('sale_id', $sale->id)->delete();
 
                     $data = [];
                     for ($i = 0; $i < count($req->account_amount); $i++) {
+                        if ($req->account_amount[$i] == null) {
+                            continue;
+                        }
                         $data[] = [
                             'sale_id' => $sale->id,
                             'amount' => $req->account_amount[$i],
@@ -1809,6 +1839,7 @@ class SaleController extends Controller
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->where('branches.object_type', DeliveryOrder::class)
+            ->whereNull('delivery_orders.deleted_at')
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
@@ -2107,8 +2138,19 @@ class SaleController extends Controller
                 $this->cancelSaleOrderFlow($sales[$i], true, null, $do_to_cancel);
             }
             DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
-                'status' => DeliveryOrder::STATUS_CANCELLED,
+                'status' => DeliveryOrder::STATUS_VOIDED,
             ]);
+
+
+            // Prepare data
+            // $inv_skus = json_decode($req->involved_inv_skus, true);
+            // $do_skus = array_unique(json_decode($req->involved_do_skus, true));
+            // $so_skus = array_unique(json_decode($req->involved_so_skus, true));
+
+            // $res = $this->cancelInvDO($req->type, $so_skus, $do_skus, $inv_skus);
+            // if ($res == false) {
+            //     throw new Exception('cancelInvDO Failed');
+            // }
 
             DB::commit();
 
@@ -2144,36 +2186,40 @@ class SaleController extends Controller
 
     public function getCancellationInvolvedDO(Request $req, DeliveryOrder $do)
     {
-        $involved = [];
-        $to_search_do_ids = [$do->id];
-        $searched_do_ids = [];
+        $data = $this->getCancellationInvolved($do->invoice_id);
 
-        while (true) {
-            $do_id_to_search = null;
-            if (count($to_search_do_ids) <= 0) {
-                break;
-            }
-            $do_id_to_search = $to_search_do_ids[0];
+        return Response::json($data, HttpFoundationResponse::HTTP_OK);
 
-            $data = $this->getCancellationInvolvedDOFlow($do_id_to_search);
-            $searched_do_ids[] = $do_id_to_search;
+        // $involved = [];
+        // $to_search_do_ids = [$do->id];
+        // $searched_do_ids = [];
 
-            if (isset($data['do_ids'])) {
-                $diff = array_values(array_diff($data['do_ids'], $searched_do_ids));
-                $to_search_do_ids = array_merge($to_search_do_ids, $diff);
-            }
-            if (isset($data['so_skus'])) {
-                $do_sku = DeliveryOrder::where('id', $do_id_to_search)->value('sku');
+        // while (true) {
+        //     $do_id_to_search = null;
+        //     if (count($to_search_do_ids) <= 0) {
+        //         break;
+        //     }
+        //     $do_id_to_search = $to_search_do_ids[0];
 
-                $involved[$do_sku] = $data['so_skus'];
-            }
+        //     $data = $this->getCancellationInvolvedDOFlow($do_id_to_search);
+        //     $searched_do_ids[] = $do_id_to_search;
 
-            $to_search_do_ids = array_unique(array_values(array_diff($to_search_do_ids, [$do_id_to_search])));
-        }
+        //     if (isset($data['do_ids'])) {
+        //         $diff = array_values(array_diff($data['do_ids'], $searched_do_ids));
+        //         $to_search_do_ids = array_merge($to_search_do_ids, $diff);
+        //     }
+        //     if (isset($data['so_skus'])) {
+        //         $do_sku = DeliveryOrder::where('id', $do_id_to_search)->value('sku');
 
-        return Response::json([
-            'involved' => $involved,
-        ], HttpFoundationResponse::HTTP_OK);
+        //         $involved[$do_sku] = $data['so_skus'];
+        //     }
+
+        //     $to_search_do_ids = array_unique(array_values(array_diff($to_search_do_ids, [$do_id_to_search])));
+        // }
+
+        // return Response::json([
+        //     'involved' => $involved,
+        // ], HttpFoundationResponse::HTTP_OK);
     }
 
     private function getCancellationInvolvedDOFlow(int $do_id)
@@ -2225,6 +2271,7 @@ class SaleController extends Controller
                 'invoices.company AS company_group'
             )
             ->where('sales.type', Sale::TYPE_SO)
+            ->whereNull('invoices.deleted_at')
             ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
@@ -2545,32 +2592,30 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             // Prepare data
-            $inv_to_cancel = json_decode($req->involved_inv_skus, true);
-            $do_to_cancel = array_unique(json_decode($req->involved_do_skus, true));
-            $so_to_cancel = array_unique(json_decode($req->involved_so_skus, true));
+            $inv_skus = json_decode($req->involved_inv_skus, true);
+            $do_skus = array_unique(json_decode($req->involved_do_skus, true));
+            $so_skus = array_unique(json_decode($req->involved_so_skus, true));
 
-            dd($req->all(), $inv_to_cancel, $do_to_cancel, $so_to_cancel);
-
-            // Cancellation
-            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_to_cancel)->get();
-
-            for ($i = 0; $i < count($sales); $i++) {
-                $this->cancelSaleOrderFlow($sales[$i], true, null, $do_to_cancel);
+            $res = $this->cancelInvDO($req->type, $so_skus, $do_skus, $inv_skus);
+            if ($res == false) {
+                throw new Exception('cancelInvDO Failed');
             }
-            DeliveryOrder::whereIn('sku', $do_to_cancel)->update([
-                'status' => DeliveryOrder::STATUS_CANCELLED,
-            ]);
-            Invoice::whereIn('sku', $inv_to_cancel)->update([
-                'status' => Invoice::STATUS_CANCELLED,
-            ]);
-            // Delete service reminder
-            InventoryServiceReminder::where('attached_type', Invoice::class)
-                ->whereIn('attached_id', Invoice::whereIn('sku', $inv_to_cancel)->pluck('id')->toArray())
-                ->delete();
+
+            $res_msg =  null;
+            if (str_contains(Route::currentRouteName(), 'invoice.')) {
+                $res_msg = 'Invoice ';
+            } else if (str_contains(Route::currentRouteName(), 'delivery_order.')) {
+                $res_msg = 'Delivery Order ';
+            }
+            if ($req->type == 'void') {
+                $res_msg = $res_msg . ' voided';
+            } else if ($req->type == 'transfer-back') {
+                $res_msg = $res_msg . ' transferred';
+            }
 
             DB::commit();
 
-            return back()->with('success', 'Invoice cancelled');
+            return back()->with('success', $res_msg);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -2579,13 +2624,62 @@ class SaleController extends Controller
         }
     }
 
+    private function cancelInvDO(string $type, array $so_skus, array $do_skus, array $inv_skus)
+    {
+        try {
+            DB::beginTransaction();
+
+            Sale::where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_CONVERTED)->whereIn('sku', $so_skus)->update([
+                'status' => Sale::STATUS_ACTIVE,
+            ]);
+
+            if ($type == 'void') {
+                DeliveryOrder::whereIn('sku', $do_skus)->update([
+                    'status' => DeliveryOrder::STATUS_VOIDED,
+                ]);
+                Invoice::whereIn('sku', $inv_skus)->update([
+                    'status' => Invoice::STATUS_VOIDED,
+                ]);
+            } else if ($type == 'transfer-back') {
+                $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id');
+                $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id');
+                DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
+                DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
+                DeliveryOrder::whereIn('sku', $do_skus)->delete();
+
+                Invoice::whereIn('sku', $inv_skus)->delete();
+
+                // Delete service reminder
+                InventoryServiceReminder::where('attached_type', Invoice::class)
+                    ->whereIn('attached_id', Invoice::whereIn('sku', $inv_skus)->pluck('id')->toArray())
+                    ->delete();
+            }
+
+            DB::commit();
+
+            return true;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return false;
+        }
+    }
+
     public function getCancellationInvolvedInv(Request $req, Invoice $inv)
+    {
+        $data = $this->getCancellationInvolved($inv->id);
+
+        return Response::json($data, HttpFoundationResponse::HTTP_OK);
+    }
+
+    private function getCancellationInvolved(int $inv_id)
     {
         $involved = [];
         $involved_inv_skus = [];
         $involved_do_skus = [];
         $involved_so_skus = [];
-        $to_search_inv_ids = [$inv->id];
+        $to_search_inv_ids = [$inv_id];
         $searched_inv_ids = [];
 
         while (true) {
@@ -2615,12 +2709,12 @@ class SaleController extends Controller
             $to_search_inv_ids = array_unique(array_values(array_diff($to_search_inv_ids, [$inv_id_to_search])));
         }
 
-        return Response::json([
+        return [
             'involved' => $involved,
             'involved_inv_skus' => $involved_inv_skus,
             'involved_do_skus' => $involved_do_skus,
             'involved_so_skus' => $involved_so_skus,
-        ], HttpFoundationResponse::HTTP_OK);
+        ];
     }
 
     private function getCancellationInvolvedInvFlow(int $inv_id)

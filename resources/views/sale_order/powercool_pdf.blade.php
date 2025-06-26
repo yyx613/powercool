@@ -249,7 +249,9 @@
                     otherwise any discrepancy will not be entertained.<br>
                     6. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of
                     the total invoice amount.<br>
-                    7. Company will not obligation on those customers are note required to issue E-invoice.<br>
+                    7. · 3 Years Compressor Warranty with T&C apply<br>
+                    · 6 months General Service conduct by IMAX<br>
+                    · Limited to 1 time change only<br>
                 </td>
             </tr>
             <tr>

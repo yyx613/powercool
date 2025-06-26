@@ -194,7 +194,10 @@
                             let errors = err.responseJSON.errors
 
                             for (const key in errors) {
-                                if (key.includes('new_delivery_')) {
+                                if (key.includes('account_err_msg')) {
+                                    $(`#account_err`).find('p').text(errors[key])
+                                    $(`#account_err`).removeClass('hidden')
+                                } else if (key.includes('new_delivery_')) {
                                     $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
                                         .find('p').text(errors[key])
                                     $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
@@ -204,7 +207,7 @@
                                         .find('p').text(errors[key])
                                     $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)
                                         .removeClass('hidden')
-                                } else if (key.includes('account_') && key.includes('.')) {
+                                } else if (key.includes('account_')) {
                                     let field = key.split('.')[0]
                                     let idx = key.split('.')[1]
                                     idx++

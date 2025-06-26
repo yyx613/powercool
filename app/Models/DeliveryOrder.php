@@ -16,7 +16,7 @@ class DeliveryOrder extends Model
 {
     use HasFactory, SoftDeletes;
 
-    const STATUS_CANCELLED = 1;
+    const STATUS_VOIDED = 1;
     const STATUS_CONVERTED = 2;
     const STATUS_APPROVAL_PENDING = 4;
     const STATUS_APPROVAL_APPROVED = 5;
