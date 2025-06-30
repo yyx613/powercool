@@ -333,7 +333,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['user_management.form', 'components.app.modal.convert-ticket-modal'], function (ViewView $view) {
-            $roles = Role::whereNot('id', Role::SUPERADMIN)->get();
+            $roles = Role::get();
 
             $view->with([
                 'roles' => $roles,
