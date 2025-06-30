@@ -276,7 +276,7 @@
                     </li>
                 @endcan
                 <!-- E - Invoice -->
-                @canany(['sale.invoice.view'])
+                @canany(['sale.e_invoice.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="101">
@@ -296,7 +296,7 @@
                             data-accordionid="101">
                             <div class="overflow-hidden">
                                 <ul>
-                                    @can('sale.invoice.view')
+                                    @can('sale.e_invoice.view')
                                         <li>
                                             <a href="{{ route('invoice.e-invoice.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -460,7 +460,8 @@
                     </li>
                 @endcan
                 <!-- Ticket & Task -->
-                @canany(['ticket.view', 'task.view', 'sale.target.view'])
+                @canany(['ticket.view', 'task_driver.view', 'task_technician.view', 'task_sale.view',
+                    'sale.target.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="8">
@@ -488,7 +489,7 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('task.view')
+                                    @can('task_driver.view')
                                         <li>
                                             <a href="{{ route('task.driver.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -496,6 +497,8 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
                                             </a>
                                         </li>
+                                    @endcan
+                                    @can('task_technician.view')
                                         <li>
                                             <a href="{{ route('task.technician.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.technician.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -503,6 +506,8 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician') }}</span>
                                             </a>
                                         </li>
+                                    @endcan
+                                    @can('task_sale.view')
                                         <li>
                                             <a href="{{ route('task.sale.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -997,7 +1002,7 @@
                         </li>
                     @endcan
                     <!-- E - Invoice -->
-                    @canany(['sale.invoice.view'])
+                    @canany(['sale.e_invoice.view'])
                         <li class="expand-sub-menu-triggers" data-type="e-invoice">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" width="20"
@@ -1036,7 +1041,8 @@
                         </li>
                     @endcan
                     <!-- Ticket & Task -->
-                    @canany(['ticket.view', 'task.view', 'sale.target.view'])
+                    @canany(['ticket.view', 'task_driver.view', 'task_technician.view', 'task_sale.view',
+                        'sale.target.view'])
                         <li class="expand-sub-menu-triggers" data-type="ticket-and-task">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"
@@ -1364,14 +1370,14 @@
             </div>
         @endcan
         <!-- E - Invoice -->
-        @canany(['sale.invoice.view'])
+        @canany(['sale.e_invoice.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="e-invoice">
                 <div class="mb-4 p-2 border-b">
                     <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('E - Invoice') }}</h6>
                 </div>
                 <ul>
-                    @can('sale.invoice.view')
+                    @can('sale.e_invoice.view')
                         <li>
                             <a href="{{ route('invoice.e-invoice.index') }}"
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.e-invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1405,7 +1411,7 @@
             </div>
         @endcan
         <!-- Ticket & Task -->
-        @canany(['ticket.view', 'task.view', 'sale.target.view'])
+        @canany(['ticket.view', 'task_driver.view', 'task_technician.view', 'task_sale.view', 'sale.target.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="ticket-and-task">
                 <div class="mb-4 p-2 border-b">
@@ -1421,27 +1427,33 @@
                             </a>
                         </li>
                     @endcan
-                    <li>
-                        <a href="{{ route('task.driver.index') }}"
-                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                            <span
-                                class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('task.technician.index') }}"
-                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.technician.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                            <span
-                                class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('task.sale.index') }}"
-                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
-                            <span
-                                class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sale') }}</span>
-                        </a>
-                    </li>
+                    @can('task_driver.view')
+                        <li>
+                            <a href="{{ route('task.driver.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('task_technician.view')
+                        <li>
+                            <a href="{{ route('task.technician.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.technician.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('task_sale.view')
+                        <li>
+                            <a href="{{ route('task.sale.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sale') }}</span>
+                            </a>
+                        </li>
+                    @endcan
                     @can('sale.target.view')
                         <li>
                             <a href="{{ route('target.index') }}"
@@ -1988,7 +2000,7 @@
                     </li>
                 @endcan
                 <!-- E - Invoice -->
-                @canany(['sale.invoice.view'])
+                @canany(['sale.e_invoice.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="101">
@@ -2008,7 +2020,7 @@
                             data-accordionid="101">
                             <div class="overflow-hidden">
                                 <ul>
-                                    @can('sale.invoice.view')
+                                    @can('sale.e_invoice.view')
                                         <li>
                                             <a href="{{ route('invoice.e-invoice.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2172,7 +2184,8 @@
                     </li>
                 @endcan
                 <!-- Ticket & Task -->
-                @canany(['ticket.view', 'task.view', 'sale.target.view'])
+                @canany(['ticket.view', 'task_driver.view', 'task_technician.view', 'task_sale.view',
+                    'sale.target.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="8">
@@ -2200,7 +2213,7 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('task.view')
+                                    @can('task_driver.view')
                                         <li>
                                             <a href="{{ route('task.driver.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.driver.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2208,6 +2221,8 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Driver') }}</span>
                                             </a>
                                         </li>
+                                    @endcan
+                                    @can('task_technician.view')
                                         <li>
                                             <a href="{{ route('task.technician.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.technician.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2215,6 +2230,8 @@
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician') }}</span>
                                             </a>
                                         </li>
+                                    @endcan
+                                    @can('task_sale.view')
                                         <li>
                                             <a href="{{ route('task.sale.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'task.sale.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2608,7 +2625,10 @@
                             'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
                             'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') ||
+                    } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
+                        CURRENT_ROUTE_NAME.includes('task_driver.') ||
+                        CURRENT_ROUTE_NAME.includes('task_technician.') ||
+                        CURRENT_ROUTE_NAME.includes('task_sale.') ||
                         CURRENT_ROUTE_NAME.includes('target.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes(
@@ -2673,7 +2693,10 @@
                         'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
                         'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('ticket.') || CURRENT_ROUTE_NAME.includes('task.') ||
+                } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
+                    CURRENT_ROUTE_NAME.includes('task_driver.') ||
+                    CURRENT_ROUTE_NAME.includes('task_technician.') ||
+                    CURRENT_ROUTE_NAME.includes('task_sale.') ||
                     CURRENT_ROUTE_NAME.includes('target.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes(

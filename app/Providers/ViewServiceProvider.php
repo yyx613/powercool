@@ -87,10 +87,13 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.delivery_order' => [],
                 'sale.transport_acknowledgement' => [],
                 'sale.invoice' => [],
+                'sale.e_invoice' => [],
                 'sale.target' => [],
                 'sale.billing' => [],
                 'sale.invoice_return' => [],
-                'task' => [],
+                'task.driver' => [],
+                'task.technician' => [],
+                'task.sale' => [],
                 'production' => [],
                 'production_material' => [],
                 'production_request' => [],
@@ -141,12 +144,18 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.invoice_return'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.invoice')) {
                     array_push($permissions_group['sale.invoice'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'sale.e_invoice')) {
+                    array_push($permissions_group['sale.e_invoice'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.target')) {
                     array_push($permissions_group['sale.target'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.billing')) {
                     array_push($permissions_group['sale.billing'], $permissions[$i]);
-                } elseif (str_contains($permissions[$i], 'task')) {
-                    array_push($permissions_group['task'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'task_driver')) {
+                    array_push($permissions_group['task.driver'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'task_technician')) {
+                    array_push($permissions_group['task.technician'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'task_sale')) {
+                    array_push($permissions_group['task.sale'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production_request')) {
                     array_push($permissions_group['production_request'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production_material')) {
