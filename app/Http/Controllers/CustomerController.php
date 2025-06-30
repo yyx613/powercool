@@ -13,8 +13,10 @@ use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
 use App\Models\ObjectCreditTerm;
 use App\Models\Sale;
+use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +51,13 @@ class CustomerController extends Controller
     public function getData(Request $req)
     {
         $records = new Customer;
+
+        if (isSalesOnly()) {
+            $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+            $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
+            
+            $records = $records->whereIn('id', $customer_ids);
+        }
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -122,6 +131,8 @@ class CustomerController extends Controller
         ];
 
         foreach ($records_paginator as $key => $record) {
+            $sales_agents = SalesAgent::whereIn('id', $record->salesAgents->pluck('sales_agent_id')->toArray())->pluck('name')->toArray();
+
             $data['data'][] = [
                 'id' => $record->id,
                 'code' => $record->sku,
@@ -132,6 +143,7 @@ class CustomerController extends Controller
                 'debt_type' => $record->debtorType->name ?? '-',
                 'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'platform' => $record->platform->name ?? '-',
+                'sales_agents' => join(', ', $sales_agents),
                 'status' => $record->status == Customer::STATUS_INACTIVE ? 'Inactive' : ($record->status == Customer::STATUS_ACTIVE ? 'Active' : 'Pending Fill Up Info'),
                 'can_edit' => hasPermission('customer.edit'),
                 'can_delete' => hasPermission('customer.delete'),
