@@ -8,6 +8,7 @@ use App\Models\ClassificationCode;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
+use App\Models\CustomerSaleAgent;
 use App\Models\Dealer;
 use App\Models\DebtorType;
 use App\Models\DeliveryOrder;
@@ -44,6 +45,7 @@ use App\Models\VehicleService;
 use App\Models\WarrantyPeriod;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
@@ -289,10 +291,22 @@ class ViewServiceProvider extends ServiceProvider
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $is_edit = true;
             }
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+                $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
+            }
             if ($is_edit) {
-                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->get();
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->get();
+                }
             } else {
-                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                }
             }
 
             $view->with('customers', $customers);
