@@ -589,10 +589,18 @@ class ViewServiceProvider extends ServiceProvider
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',
             ];
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+
+                $sales_agents = SalesAgent::whereIn('id', $sales_agents_ids)->orderBy('name', 'asc')->get();
+            } else {
+                $sales_agents = SalesAgent::orderBy('name', 'asc')->get();
+            }
 
             $view->with('debtor_types', $debtor_types);
             $view->with('company_group', $company_group);
             $view->with('business_types', Customer::BUSINESS_TYPES);
+            $view->with('sales_agents', $sales_agents);
         });
         View::composer(['dealer.form'], function (ViewView $view) {
             $company_group = [
