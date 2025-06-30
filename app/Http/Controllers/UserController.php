@@ -25,12 +25,12 @@ class UserController extends Controller
     const FORM_RULES = [
         'role' => 'required',
         'name' => 'required|max:250|unique:users,name',
-        'gender' => 'required',
-        'address' => 'required',
+        'gender' => 'nullable',
+        'address' => 'nullable',
         'state' => 'nullable',
         'city' => 'nullable',
         'zip_code' => 'nullable',
-        'phone_number' => 'required',
+        'phone_number' => 'nullable',
         'email' => 'required|email|max:250|unique:users',
         'website' => 'nullable',
         'epf' => 'nullable',
@@ -107,7 +107,11 @@ class UserController extends Controller
 
     public function store(Request $req)
     {
-        $validator = Validator::make($req->all(), self::FORM_RULES, [], [
+        $rules = self::FORM_RULES;
+        if (in_array(ModelsRole::SUPERADMIN, $req->role)) {
+            $rules['branch'] = 'nullable';
+        }
+        $validator = Validator::make($req->all(), $rules, [], [
             'name' => 'username'
         ]);
         if ($validator->fails()) {
@@ -147,8 +151,29 @@ class UserController extends Controller
                     ]);
                 }
             }
+            // Sales agent
+            if ($req->sales_agent != null) {
+                $sa_data = [];
+                DB::table('sales_sales_agents')->where('sales_id', $user->id)->delete();
 
-            (new Branch)->assign(User::class, $user->id, $req->branch);
+                for ($i = 0; $i < count($req->sales_agent); $i++) {
+                    $sa_data[] = [
+                        'sales_id' => $user->id,
+                        'sales_agent_id' => $req->sales_agent[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                if (count($sa_data) > 0) {
+                    DB::table('sales_sales_agents')->insert($sa_data);
+                }
+            }
+
+            if (in_array(ModelsRole::SUPERADMIN, $req->role)) {
+                Branch::where('object_type', User::class)->where('object_id', $user->id)->delete();
+            } else {
+                (new Branch)->assign(User::class, $user->id, $req->branch);
+            }
 
             DB::commit();
 
@@ -181,7 +206,10 @@ class UserController extends Controller
     {
         $rules = self::FORM_RULES;
         $rules['password'] = 'nullable|confirmed';
-        $rules['name'] = 'required|max:250|unique:users,name,'.$user->id;
+        $rules['name'] = 'required|max:250|unique:users,name,' . $user->id;
+        if (in_array(ModelsRole::SUPERADMIN, $req->role)) {
+            $rules['branch'] = 'nullable';
+        }
 
         unset($rules['email']);
         $validator = Validator::make($req->all(), $rules, [], [
@@ -229,22 +257,28 @@ class UserController extends Controller
                 }
             }
             // Sales agent
-            $sa_data = [];
-            DB::table('sales_sales_agents')->where('sales_id', $user->id)->delete();
+            if ($req->sales_agent != null) {
+                $sa_data = [];
+                DB::table('sales_sales_agents')->where('sales_id', $user->id)->delete();
 
-            for ($i=0; $i < count($req->sales_agent); $i++) { 
-                $sa_data[] = [
-                    'sales_id' => $user->id,
-                    'sales_agent_id' => $req->sales_agent[$i],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-            if (count($sa_data) > 0) {
-                DB::table('sales_sales_agents')->insert($sa_data);
+                for ($i = 0; $i < count($req->sales_agent); $i++) {
+                    $sa_data[] = [
+                        'sales_id' => $user->id,
+                        'sales_agent_id' => $req->sales_agent[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                if (count($sa_data) > 0) {
+                    DB::table('sales_sales_agents')->insert($sa_data);
+                }
             }
 
-            (new Branch)->assign(User::class, $user->id, $req->branch);
+            if (in_array(ModelsRole::SUPERADMIN, $req->role)) {
+                Branch::where('object_type', User::class)->where('object_id', $user->id)->delete();
+            } else {
+                (new Branch)->assign(User::class, $user->id, $req->branch);
+            }
 
             DB::commit();
 

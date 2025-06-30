@@ -161,11 +161,13 @@
                             <option value="{{ $key }}" @selected(old('branch', isset($user) && isset($user->branch) ? $user->branch->location : null) === $key)>{{ $val }}</option>
                         @endforeach
                     </x-app.input.select>
+                    <p class="mt-1 text-sm text-slate-500">Not Required if Super Admin Role is selected</p>
                     <x-input-error :messages="$errors->get('branch')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="sales_agent" class="mb-1">{{ __('Sales Agent') }}</x-app.input.label>
-                    <x-app.input.select2 name="sales_agent[]" id="sales_agent" :hasError="$errors->has('sales_agent')" placeholder="{{ __('Select a sales agent') }}" multiple>
+                    <x-app.input.select2 name="sales_agent[]" id="sales_agent" :hasError="$errors->has('sales_agent')"
+                        placeholder="{{ __('Select a sales agent') }}" multiple>
                         <option value="">{{ __('Select a sales agent') }}</option>
                         @foreach ($sales_agents as $sa)
                             <option value="{{ $sa->id }}" @selected(isset($user_sales_agents_ids) && in_array($sa->id, $user_sales_agents_ids))>{{ $sa->name }}</option>
