@@ -35,6 +35,9 @@ class AuthenticatedSessionController extends Controller
         if (isSuperAdmin()) {
             Session::put('as_branch', Branch::LOCATION_KL);
         }
+        if (isSalesOnly()) {
+            return redirect()->intended('/quotation');
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }
