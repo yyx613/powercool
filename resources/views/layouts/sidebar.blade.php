@@ -802,6 +802,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('sales_agent.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('service.index') }}"
                                             class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -1671,6 +1678,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('sales_agent.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('service.index') }}"
                         class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
@@ -2500,6 +2514,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('sales_agent.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('service.index') }}"
                                             class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -2608,11 +2629,13 @@
                         .includes('inventory_type.') || CURRENT_ROUTE_NAME.includes('inventory_category.') ||
                         CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') ||
                         CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') ||
+                        CURRENT_ROUTE_NAME.includes('sales_agent.') ||
                         CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') ||
                         CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
-                            'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
+                            'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') ||
+                        CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                     }
                 } else {
@@ -2671,11 +2694,13 @@
                     CURRENT_ROUTE_NAME
                     .includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME
                     .includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME
+                    .includes('sales_agent.') || CURRENT_ROUTE_NAME
                     .includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes(
                         'uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
-                        'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') || CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
+                        'production_material.') || CURRENT_ROUTE_NAME.includes('production_request.') ||
+                    CURRENT_ROUTE_NAME.includes('production_finish_good.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="10"]').click()
                 }
             }

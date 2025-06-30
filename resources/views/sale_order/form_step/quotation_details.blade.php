@@ -28,7 +28,7 @@
             <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
-                @foreach ($sales as $sa)
+                @foreach ($sales_agents as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
             </x-app.input.select2>

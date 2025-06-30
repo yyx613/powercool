@@ -32,6 +32,7 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
 use App\Models\Service;
 use App\Models\Supplier;
@@ -300,12 +301,17 @@ class ViewServiceProvider extends ServiceProvider
                 'product_children' => $product_children,
             ]);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'target.form', 'supplier.form', 'customer.form_step.info'], function (ViewView $view) {
+        View::composer(['target.form'], function (ViewView $view) {
             $sales = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::SALE);
             })->orderBy('id', 'desc')->get();
 
             $view->with('sales', $sales);
+        });
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'supplier.form', 'customer.form_step.info'], function (ViewView $view) {
+            $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
+
+            $view->with('sales_agents', $sales_agents);
         });
         View::composer(['sale_order.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {
             $drivers = User::whereHas('roles', function ($q) {
@@ -510,7 +516,10 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
+            $sales_agents = SalesAgent::orderBy('name')->get();
+
             $view->with('branches', $branches);
+            $view->with('sales_agents', $sales_agents);
         });
         View::composer(['components.app.modal.transfer-modal'], function (ViewView $view) {
             $branches = [

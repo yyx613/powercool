@@ -52,7 +52,7 @@ class Sale extends Model
 
     public function saleperson()
     {
-        return $this->belongsTo(User::class, 'sale_id');
+        return $this->belongsTo(SalesAgent::class, 'sale_id');
     }
 
     public function customer()

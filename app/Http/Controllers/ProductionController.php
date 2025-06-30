@@ -102,6 +102,7 @@ class ProductionController extends Controller
             'doing' => $doing_count,
             'completed' => $completed_count,
             'can_start_task' => $can_start_task,
+            'is_sales_only' => isSalesOnly(),
         ]);
     }
 

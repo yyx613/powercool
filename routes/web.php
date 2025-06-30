@@ -34,6 +34,7 @@ use App\Http\Controllers\RawMaterialRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SalesAgentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SyncController;
@@ -697,6 +698,15 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/store', 'store')->name('store');
             Route::get('/edit/{priority}', 'edit')->name('edit');
             Route::post('/update/{priority}', 'update')->name('update');
+        });
+        // Sales Agent 
+        Route::controller(SalesAgentController::class)->prefix('sales-agent')->name('sales_agent.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{agent}', 'edit')->name('edit');
+            Route::post('/update/{agent}', 'update')->name('update');
         });
     });
     Route::middleware(['can:user_role_management.view'])->group(function () {

@@ -68,8 +68,10 @@ class SaleController extends Controller
         Session::put('quo-sku', null);
         if ($req->has('sku')) {
             Session::put('quo-sku', $req->sku);
-        }
-        return view('quotation.list');
+        } 
+        return view('quotation.list', [
+            'is_sales_only' => isSalesOnly(),
+        ]);
     }
 
     public function getData(Request $req)
@@ -395,7 +397,9 @@ class SaleController extends Controller
 
     public function indexSaleOrder()
     {
-        return view('sale_order.list');
+        return view('sale_order.list', [
+            'is_sales_only' => isSalesOnly(),
+        ]);
     }
 
     public function getDataSaleOrder(Request $req)
