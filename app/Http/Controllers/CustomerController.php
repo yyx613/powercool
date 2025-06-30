@@ -40,11 +40,15 @@ class CustomerController extends Controller
         if (Session::get('debtor-category') != null) {
             $category = Session::get('debtor-category');
         }
+        if (Session::get('debtor-sales_agent') != null) {
+            $sales_agent = Session::get('debtor-sales_agent');
+        }
 
         return view('customer.list', [
             'default_debt_type' => $debt_type ?? null,
             'default_company_group' => $company_group ?? null,
             'default_category' => $category ?? null,
+            'default_sales_agent' => $sales_agent ?? null,
         ]);
     }
 
@@ -55,7 +59,7 @@ class CustomerController extends Controller
         if (isSalesOnly()) {
             $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
             $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
-            
+
             $records = $records->whereIn('id', $customer_ids);
         }
         // Search
@@ -102,6 +106,20 @@ class CustomerController extends Controller
             }
         } else if (Session::get('debtor-category') != null) {
             $records = $records->where('category', Session::get('debtor-category'));
+        }
+        if ($req->has('sales_agent')) {
+            if ($req->sales_agent == null) {
+                Session::remove('debtor-sales_agent');
+            } else {
+                $records = $records->whereHas('salesAgents', function ($q) use ($req) {
+                    $q->where('sales_agent_id', $req->sales_agent);
+                });
+                Session::put('debtor-sales_agent', $req->sales_agent);
+            }
+        } else if (Session::get('debtor-sales_agent') != null) {
+            $records = $records->whereHas('salesAgents', function ($q) {
+                $q->where('sales_agent_id', Session::get('debtor-sales_agent'));
+            });
         }
 
         // Order
