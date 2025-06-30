@@ -274,7 +274,7 @@ class SyncAutoCountController extends Controller
                     }
 
                     if (!empty($record['SalesAgent'])) {
-                        $salesAgent = DB::table('users')->where('name', $record['SalesAgent'])->first();
+                        $salesAgent = DB::table('sales_agents')->where('name', $record['SalesAgent'])->first();
 
                         if ($salesAgent) {
                             $existingAgent = DB::table('customer_sales_agents')
@@ -352,7 +352,7 @@ class SyncAutoCountController extends Controller
                     }
 
                     if (!empty($record['SalesAgent'])) {
-                        $salesAgent = DB::table('users')->where('name', $record['SalesAgent'])->first();
+                        $salesAgent = DB::table('sales_agents')->where('name', $record['SalesAgent'])->first();
 
                         if ($salesAgent) {
                             $existingAgent = DB::table('customer_sales_agents')
