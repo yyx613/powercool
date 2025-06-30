@@ -38,6 +38,10 @@ class AuthenticatedSessionController extends Controller
         if (isSalesOnly()) {
             return redirect()->intended('/quotation');
         }
+        $warehouse_ids = Role::where('name', 'like', '%warehouse%')->pluck('id')->toArray();
+        if (count(array_intersect($warehouse_ids, getUserRoleId(Auth::user()))) > 0) {
+            return redirect()->intended('/inventory-summary');
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }
