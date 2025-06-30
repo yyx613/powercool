@@ -363,33 +363,33 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/view-product-selection/{inv}', 'productSelectionView')->name('view_product_selection');
     });
     // Task
-    Route::controller(TaskController::class)->prefix('task')->name('task.')->middleware(['can:task.view'])->group(function () {
+    Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function () {
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/delete/{task}', 'delete')->name('delete')->middleware(['can:task.delete']);
 
-        Route::prefix('driver')->name('driver.')->group(function () {
+        Route::prefix('driver')->name('driver.')->middleware(['can:task_driver.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_driver.create']);
             Route::post('/store', 'driverStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_driver.edit']);
             Route::post('/update/{task}', 'driverUpdate')->name('update');
         });
-        Route::prefix('technician')->name('technician.')->group(function () {
+        Route::prefix('technician')->name('technician.')->middleware(['can:task_technician.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_technician.create']);
             Route::post('/store', 'technicianStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_technician.edit']);
             Route::post('/update/{task}', 'technicianUpdate')->name('update');
             Route::get('/generate-report', 'generate99ServiceReport')->name('generate_99_servie_report');
         });
-        Route::prefix('sale')->name('sale.')->group(function () {
+        Route::prefix('sale')->name('sale.')->middleware(['can:task_sale.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_sale.create']);
             Route::post('/store', 'saleStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_sale.edit']);
             Route::post('/update/{task}', 'saleUpdate')->name('update');
         });
     });

@@ -72,6 +72,7 @@ class PermissionSeeder extends Seeder
             'sale.transport_acknowledgement.view',
 
             'sale.invoice.view',
+            'sale.e_invoice.view',
 
             'sale.target.view',
             'sale.target.convert',
@@ -82,10 +83,20 @@ class PermissionSeeder extends Seeder
             'sale.invoice_return.view',
             'sale.invoice_return.return',
 
-            'task.view',
-            'task.create',
-            'task.edit',
-            'task.delete',
+            'task_driver.view',
+            'task_driver.create',
+            'task_driver.edit',
+            'task_driver.delete',
+
+            'task_technician.view',
+            'task_technician.create',
+            'task_technician.edit',
+            'task_technician.delete',
+
+            'task_sale.view',
+            'task_sale.create',
+            'task_sale.edit',
+            'task_sale.delete',
 
             'production.view',
             'production.create',
