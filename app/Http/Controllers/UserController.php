@@ -40,7 +40,9 @@ class UserController extends Controller
         'password' => 'required|confirmed',
         'branch' => 'required',
         'picture' => 'nullable',
-        'picture.*' => 'file|extensions:jpg,png,jpeg'
+        'picture.*' => 'file|extensions:jpg,png,jpeg',
+        'sales_agent' => 'nullable',
+        'sales_agent.*' => 'nullable',
     ];
 
     public function index()
@@ -166,11 +168,12 @@ class UserController extends Controller
         }
         $user = User::where('id', $user)->firstOrFail();
 
-        $user->load('pictures');
+        $user->load('pictures', 'salesAgents');
 
         return view('user_management.form', [
             'user' => $user,
             'user_role_ids' => getUserRoleId($user),
+            'user_sales_agents_ids' => $user->salesAgents->pluck('id')->toArray()
         ]);
     }
 
@@ -224,6 +227,21 @@ class UserController extends Controller
                         'src' => basename($path),
                     ]);
                 }
+            }
+            // Sales agent
+            $sa_data = [];
+            DB::table('sales_sales_agents')->where('sales_id', $user->id)->delete();
+
+            for ($i=0; $i < count($req->sales_agent); $i++) { 
+                $sa_data[] = [
+                    'sales_id' => $user->id,
+                    'sales_agent_id' => $req->sales_agent[$i],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            if (count($sa_data) > 0) {
+                DB::table('sales_sales_agents')->insert($sa_data);
             }
 
             (new Branch)->assign(User::class, $user->id, $req->branch);

@@ -252,7 +252,7 @@
                     <x-app.input.select2 name="sale_agent[]" id="sale_agent" :hasError="$errors->has('sale_agent')"
                         placeholder="{{ __('Select a sale agent') }}" multiple>
                         <option value="">{{ __('Select a sale agent') }}</option>
-                        @foreach ($sales as $sa)
+                        @foreach ($sales_agents as $sa)
                             <option value="{{ $sa->id }}" @selected(isset($customer) && isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }}
                             </option>
                         @endforeach

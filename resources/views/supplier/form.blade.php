@@ -205,7 +205,7 @@
                     <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }}</x-app.input.label>
                     <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')" placeholder="{{ __('Select a sale agent') }}">
                         <option value="">{{ __('Select a sale agent') }}</option>
-                        @foreach ($sales as $sa)
+                        @foreach ($sales_agents as $sa)
                             <option value="{{ $sa->id }}" @selected(old('sale', isset($supplier) ? $supplier->sale_agent : null) == $sa->id)>{{ $sa->name }}</option>
                         @endforeach
                     </x-app.input.select2>

@@ -214,12 +214,12 @@ class ReportController extends Controller
 
         $records = DB::table('sales')
             ->select(
-                'sales.id AS id', 'users.name AS saleperson', DB::raw('SUM(sum_qty) as sum_qty'),
+                'sales.id AS id', 'sales_agents.name AS saleperson', DB::raw('SUM(sum_qty) as sum_qty'),
                 DB::raw('SUM(sum_amount) as sum_amount'), DB::raw('SUM(sum_promo_amount) as sum_promo_amount'),
                 'sales.payment_amount AS payment_amount', 'sales.created_at'
             )
             ->where('sales.type', Sale::TYPE_SO)
-            ->join('users', 'users.id', '=', 'sales.sale_id')
+            ->join('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->joinSub($amount, 'amount', function ($join) {
                 $join->on('sales.id', '=', 'amount.sale_id');
             });

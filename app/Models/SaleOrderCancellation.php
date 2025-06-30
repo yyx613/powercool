@@ -28,7 +28,7 @@ class SaleOrderCancellation extends Model
     }
 
     public function salePerson() {
-        return $this->belongsTo(User::class, 'sale_person_id');
+        return $this->belongsTo(SalesAgent::class, 'sale_person_id');
     }
 
     /**

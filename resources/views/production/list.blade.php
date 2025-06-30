@@ -123,6 +123,8 @@
 
 @push('scripts')
     <script>
+        IS_SALES_ONLY = @json($is_sales_only ?? null);
+
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -289,6 +291,8 @@
                     "targets": 12,
                     "orderable": false,
                     render: function(data, type, row) {
+                        if (IS_SALES_ONLY == true) return '';
+
                         if (row.status == 5) {
                             return `<div class="flex items-center justify-end gap-x-2 px-2">
                                 <a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">

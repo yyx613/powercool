@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $date;
     }
 
+    public function salesAgents()
+    {
+        return $this->belongsToMany(SalesAgent::class, 'sales_sales_agents', 'sales_id', 'sales_agent_id');
+    }
+
     public function tasks()
     {
         return $this->belongsToMany(Task::class, 'user_task', 'user_id', 'task_id');
@@ -86,7 +91,7 @@ class User extends Authenticatable
         $sku = null;
 
         while (true) {
-            $sku = 'U'.now()->format('ym').generateRandomAlphabet();
+            $sku = 'U' . now()->format('ym') . generateRandomAlphabet();
 
             $exists = self::where(DB::raw('BINARY `sku`'), $sku)->exists();
 

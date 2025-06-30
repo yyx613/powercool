@@ -98,6 +98,7 @@
 
 @push('scripts')
     <script>
+        IS_SALES_ONLY = @json($is_sales_only ?? null);
         const urlParams = new URLSearchParams(window.location.search);
         const PROVIDED_SKU = urlParams.get('sku')
 
@@ -262,6 +263,8 @@
                     "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
+                        if (IS_SALES_ONLY == true) return '';
+
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.status != 1 ? '' : `

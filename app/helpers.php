@@ -63,6 +63,18 @@ if (! function_exists('isProductionWorker')) {
     }
 }
 
+if (! function_exists('isSalesOnly')) {
+    function isSalesOnly(): bool
+    {
+        $is_sales_role_only = false;
+        if (count(getUserRoleId(Auth::user())) === 1 && in_array(Role::SALE, getUserRoleId(Auth::user()))) {
+            $is_sales_role_only = true;
+        }
+
+        return $is_sales_role_only;
+    }
+}
+
 if (! function_exists('getCustomizeProductIds')) {
     function getCustomizeProductIds()
     {
