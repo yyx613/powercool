@@ -331,11 +331,12 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('sales', $sales);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'supplier.form', 'customer.form_step.info'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
             $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
 
             $view->with('sales_agents', $sales_agents);
         });
+
         View::composer(['sale_order.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {
             $drivers = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::DRIVER);
@@ -613,8 +614,16 @@ class ViewServiceProvider extends ServiceProvider
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
 
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+                $sales_agents = SalesAgent::whereIn('id', $sales_agents_ids)->orderBy('name', 'asc')->get();
+            } else {
+                $sales_agents = SalesAgent::orderBy('name', 'asc')->get();
+            }
+
             $view->with('platforms', $platforms);
             $view->with('is_create_link', isCreateLink());
+            $view->with('sales_agents', $sales_agents);
         });
         View::composer(['customer.form_step.info', 'supplier.form'], function (ViewView $view) {
             $msics = MsicCode::all();

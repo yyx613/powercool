@@ -84,7 +84,7 @@ class SaleController extends Controller
                 'customers.sku AS debtor_code',
                 'customers.name AS debtor_name',
                 'sales.convert_to AS transfer_to',
-                'users.name AS agent',
+                'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status'
             )
@@ -92,7 +92,7 @@ class SaleController extends Controller
             ->where('branches.object_type', 'like', '%Sale')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
-            ->leftJoin('users', 'users.id', '=', 'sales.sale_id')
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('branches', 'sales.id', '=', 'branches.object_id');
 
         if (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
@@ -412,7 +412,7 @@ class SaleController extends Controller
                 'customers.sku AS debtor_code',
                 'customers.name AS debtor_name',
                 'sales.convert_to AS transfer_to',
-                'users.name AS agent',
+                'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
                 'sales.payment_status'
@@ -421,7 +421,7 @@ class SaleController extends Controller
             ->whereNull('sales.deleted_at')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
-            ->leftJoin('users', 'users.id', '=', 'sales.sale_id');
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id');
 
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
