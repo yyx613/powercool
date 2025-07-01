@@ -313,7 +313,8 @@ class SaleController extends Controller
                 'report_type' => $req->report_type,
                 'product_id' => $products->map(function ($q) {
                     return $q->product_id;
-                })->toArray()
+                })->toArray(),
+                'billing_address' => $quos->count() == 1 ? $quos->value('billing_address_id') : null,
             ]);
             $res = $this->upsertQuoDetails($request, false, true, false)->getData();
             if ($res->result != true) {
@@ -1224,19 +1225,21 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             // Billing
-            if ($req->billing_address != null) {
-                $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
-            } else {
-                $bill_add = CustomerLocation::create([
-                    'customer_id' => $req->customer,
-                    'address' => $req->new_billing_address,
-                    'city' => $req->new_billing_city,
-                    'state' => $req->new_billing_state,
-                    'zip_code' => $req->new_billing_zip_code,
-                    'type' => CustomerLocation::TYPE_BILLING,
-                    'is_default' => false,
-                ]);
-                $req->merge(['billing_address' => $bill_add->id]);
+            if ($req->billing_address != null && $req->new_billing_address != null) {
+                if ($req->billing_address != null) {
+                    $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
+                } else {
+                    $bill_add = CustomerLocation::create([
+                        'customer_id' => $req->customer,
+                        'address' => $req->new_billing_address,
+                        'city' => $req->new_billing_city,
+                        'state' => $req->new_billing_state,
+                        'zip_code' => $req->new_billing_zip_code,
+                        'type' => CustomerLocation::TYPE_BILLING,
+                        'is_default' => false,
+                    ]);
+                    $req->merge(['billing_address' => $bill_add->id]);
+                }
             }
             // Delivery
             if ($need_delivery_address == true) {
@@ -1273,7 +1276,7 @@ class SaleController extends Controller
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
                     'report_type' => $req->report_type,
-                    'billing_address_id' => $req->billing_address,
+                    'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
@@ -1301,7 +1304,7 @@ class SaleController extends Controller
                     'quo_cc' => $req->cc,
                     'status' => $sale->status == Sale::STATUS_APPROVAL_PENDING ? $sale->status : $req->status,
                     'report_type' => $req->report_type,
-                    'billing_address_id' => $req->billing_address,
+                    'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
