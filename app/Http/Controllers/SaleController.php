@@ -31,6 +31,7 @@ use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\SaleProductionRequest;
 use App\Models\SaleProductWarrantyPeriod;
+use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
 use App\Models\Target;
@@ -70,7 +71,6 @@ class SaleController extends Controller
             Session::put('quo-sku', $req->sku);
         } 
         return view('quotation.list', [
-            'is_sales_only' => isSalesOnly(),
         ]);
     }
 
@@ -259,7 +259,7 @@ class SaleController extends Controller
                 ->distinct()
                 ->pluck('sale_id');
 
-            $salespersons = User::whereIn('id', $salesperson_ids)->get();
+            $salespersons = SalesAgent::whereIn('id', $salesperson_ids)->get();
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('open_until', '>', now()->format('Y-m-d'))
@@ -398,7 +398,6 @@ class SaleController extends Controller
     public function indexSaleOrder()
     {
         return view('sale_order.list', [
-            'is_sales_only' => isSalesOnly(),
         ]);
     }
 
@@ -741,7 +740,7 @@ class SaleController extends Controller
                 ->distinct()
                 ->pluck('sale_id');
 
-            $salespersons = User::whereIn('id', $salesperson_ids)->get();
+            $salespersons = SalesAgent::whereIn('id', $salesperson_ids)->get();
         } else {
             $sales = Sale::where('type', Sale::TYPE_SO)
                 ->whereNotIn('id', $this->getSaleInProduction())
