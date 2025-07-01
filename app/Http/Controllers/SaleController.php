@@ -69,9 +69,8 @@ class SaleController extends Controller
         Session::put('quo-sku', null);
         if ($req->has('sku')) {
             Session::put('quo-sku', $req->sku);
-        } 
-        return view('quotation.list', [
-        ]);
+        }
+        return view('quotation.list', []);
     }
 
     public function getData(Request $req)
@@ -364,6 +363,9 @@ class SaleController extends Controller
                 'override_selling_price' => $products->map(function ($q) {
                     return $q->override_selling_price;
                 })->toArray(),
+                'foc' => $products->map(function ($q) {
+                    return $q->is_foc;
+                })->toArray(),
             ]);
             $res = $this->upsertProDetails($request, false, false)->getData();
             if ($res->result != true) {
@@ -398,8 +400,7 @@ class SaleController extends Controller
 
     public function indexSaleOrder()
     {
-        return view('sale_order.list', [
-        ]);
+        return view('sale_order.list', []);
     }
 
     public function getDataSaleOrder(Request $req)
@@ -1711,7 +1712,7 @@ class SaleController extends Controller
                 $status = Sale::PAYMENT_STATUS_UNPAID;
                 if ($paid_amount >= $to_be_paid_amount) {
                     $status = Sale::PAYMENT_STATUS_PAID;
-                } else if (count($data) > 0 && $paid_amount < $to_be_paid_amount) {
+                } else if (isset($data) && count($data) > 0 && $paid_amount < $to_be_paid_amount) {
                     $status = Sale::PAYMENT_STATUS_PARTIALLY_PAID;
                 }
 
