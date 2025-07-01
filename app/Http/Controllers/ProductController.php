@@ -88,7 +88,8 @@ class ProductController extends Controller
             Session::remove('type');
         }
         return view('inventory.list', [
-            'type' => $req->type ?? null
+            'type' => $req->type ?? null,
+            'is_sales_only' => isSalesOnly(),
         ]);
     }
 
