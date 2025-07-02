@@ -244,6 +244,8 @@
                     "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
+                        if (PROVIDED_SKU != null) return ''
+
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.transport_ack_filename == null ? '' :

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Approval;
 use App\Models\DeliveryOrder;
+use App\Models\DeliveryOrderProduct;
+use App\Models\DeliveryOrderProductChild;
 use App\Models\FactoryRawMaterial;
+use App\Models\Invoice;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
 use App\Models\Product;
@@ -175,7 +178,7 @@ class ApprovalController extends Controller
             DB::beginTransaction();
 
             $obj = $approval->object()->withoutGlobalScope(ApprovedScope::class)->first();
-            
+
             $approval->status = Approval::STATUS_REJECTED;
             $approval->save();
 
@@ -192,21 +195,28 @@ class ApprovalController extends Controller
 
                     $sale_orders[$i]->save();
 
+                    $dop_ids = DeliveryOrderProduct::where('delivery_order_id', $obj->id)->pluck('id');
+                    DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
+                    DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
+                    Invoice::where('id', $obj->invoice_id)->delete();
+
                     $obj->delete();
                 }
             } elseif (get_class($obj) == Sale::class) {
+                $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                $obj->save();
             }
             // Check approval count
             $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
             Cache::put('unread_approval_count', $pending_approval_count);
             // Update respective QUO/SO/DO
-            if (get_class($obj) == Sale::class) {
-                $obj->status = Sale::STATUS_APPROVAL_REJECTED;
-                $obj->save();
-            } else if (get_class($obj) == DeliveryOrder::class) {
-                $obj->status = DeliveryOrder::STATUS_APPROVAL_REJECTED;
-                $obj->save();
-            }
+            // if (get_class($obj) == Sale::class) {
+            //     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+            //     $obj->save();
+            // } else if (get_class($obj) == DeliveryOrder::class) {
+            //     $obj->status = DeliveryOrder::STATUS_APPROVAL_REJECTED;
+            //     $obj->save();
+            // }
 
             // Production Material Transfer Request
             if (get_class($obj) == FactoryRawMaterial::class) {
