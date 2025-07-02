@@ -1851,6 +1851,8 @@ class SaleController extends Controller
 
     public function getDataDeliveryOrder(Request $req)
     {
+        $approvals = Approval::where('object_type', DeliveryOrder::class);
+
         $records = DB::table('delivery_orders')
             ->select(
                 'delivery_orders.id AS id',
@@ -1876,21 +1878,21 @@ class SaleController extends Controller
             ->leftJoin('users', 'users.id', '=', 'sales.sale_id')
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
             ->leftJoin('invoices', 'invoices.id', '=', 'delivery_orders.invoice_id')
-            ->leftJoin('branches', 'branches.object_id', '=', 'delivery_orders.id');
+            ->leftJoin('branches', 'branches.object_id', '=', 'delivery_orders.id')
+            ->leftJoinSub($approvals, 'approvals', function (JoinClause $join) {
+                $join->on('approvals.object_id', '=', 'delivery_orders.id');
+            });
 
         if (getCurrentUserBranch() != null) {
             $records = $records->where('branches.location', getCurrentUserBranch());
         }
 
-        if (! $req->has('sku')) {
-            $approvals = Approval::where('object_type', DeliveryOrder::class);
-            $records = $records
-                ->leftJoinSub($approvals, 'approvals', function (JoinClause $join) {
-                    $join->on('approvals.object_id', '=', 'delivery_orders.id');
-                });
-        } else {
+        if ($req->has('sku')) {
             $records = $records->where('delivery_orders.sku', $req->sku);
         }
+        //  else {
+        //     $records = $records->where('delivery_orders.sku', $req->sku);
+        // }
         $records = $records->groupBy('delivery_orders.id');
 
         // Search
@@ -1938,7 +1940,7 @@ class SaleController extends Controller
         }
 
         foreach ($records_paginator as $record) {
-            if ($record->approval_status === 0) {
+            if (!$req->has('sku') && $record->approval_status === 0) {
                 continue;
             }
             $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('" . $record->id . "', convert_to)")->get();
@@ -2691,7 +2693,6 @@ class SaleController extends Controller
                 DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
                 DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
                 DeliveryOrder::whereIn('sku', $do_skus)->delete();
-
                 Invoice::whereIn('sku', $inv_skus)->delete();
 
                 // Delete service reminder
