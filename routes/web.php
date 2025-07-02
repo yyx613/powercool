@@ -249,6 +249,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/pdf/{sale}', 'pdf')->name('pdf');
             Route::get('/to-sale-order', 'toSaleOrder')->name('to_sale_order')->middleware(['can:sale.quotation.convert']);
             Route::get('/convert-to-sale-order', 'converToSaleOrder')->name('convert_to_sale_order');
+            Route::get('/get-next-sku', 'getNextSku')->name('get_next_sku');
         });
 
         // Pending
@@ -273,6 +274,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
             Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
+            Route::get('/get-next-sku', 'getNextSku')->name('get_next_sku');
         });
 
         Route::prefix('sale')->name('sale.')->group(function () {

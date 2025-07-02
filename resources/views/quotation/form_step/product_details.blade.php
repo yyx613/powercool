@@ -314,6 +314,7 @@
                 const prod = PRODUCTS[i];
 
                 if (prod.id == val) {
+                    $(`.items[data-id="${id}"]`).attr('data-selected-product', prod.type === 1)
                     $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
                     $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
                     $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
@@ -346,6 +347,17 @@
                 $(`.items[data-id="${id}"] .customize-product-container`).removeClass('hidden')
             } else {
                 $(`.items[data-id="${id}"] .customize-product-container`).addClass('hidden')
+            }
+
+            // Get Next SKU
+            if (SALE == null) {
+                var selectedProduct = false
+                $('#product-details-container .items').each(function(i, obj) {
+                    if ($(this).data('selected-product')) {
+                        selectedProduct = true
+                    }
+                })
+                getNextSku(selectedProduct)
             }
         })
         $('body').on('click', '.foc-btns', function() {
