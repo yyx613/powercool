@@ -157,7 +157,7 @@
                     // 'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
                     // 'delivery_status': $('select[name="delivery_status"]').val(),
 
-                    'remark': $('textarea[name="remark"]').val(),
+                    'remark': $('#additional-remark-container textarea[name="remark"]').val(),
                 },
                 success: function(res) {
                     if (res.data.sale) {

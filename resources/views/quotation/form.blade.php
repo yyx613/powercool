@@ -125,7 +125,7 @@
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
 
-                    'remark': $('textarea[name="remark"]').val(),
+                    'remark': $('#additional-remark-container textarea[name="remark"]').val(),
                 },
                 success: function(res) {
                     if (res.data.sale) {
