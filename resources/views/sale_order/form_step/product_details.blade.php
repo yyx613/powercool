@@ -193,7 +193,8 @@
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
-                    $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? false : true).trigger('click') // Reverse value for trigger click
+                    $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? false : true)
+                        .trigger('click') // Reverse value for trigger click
                     $(`.items[data-id="${i+1}"] input[name="uom"]`).val(sp.uom)
                     $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger(
                         'change')
@@ -315,6 +316,7 @@
                 const prod = PRODUCTS[i];
 
                 if (prod.id == val) {
+                    $(`.items[data-id="${id}"]`).attr('data-selected-product', prod.type === 1)
                     $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
                     $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
                     $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
@@ -348,6 +350,16 @@
             } else {
                 $(`.items[data-id="${id}"] .customize-product-container`).addClass('hidden')
             }
+            // Get Next SKU
+            if (SALE == null) {
+                var selectedProduct = false
+                $('#product-details-container .items').each(function(i, obj) {
+                    if ($(this).data('selected-product')) {
+                        selectedProduct = true
+                    }
+                })
+                getNextSku(selectedProduct)
+            }
         })
         $('body').on('click', '.foc-btns', function() {
             let isFoc = $(this).attr('data-is-foc')
@@ -360,7 +372,8 @@
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('aria-disabled', false)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', false)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', false)
-                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled', false)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled',
+                    false)
             } else {
                 $(this).attr('data-is-foc', true)
 
@@ -370,7 +383,8 @@
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).val(null).trigger('keyup')
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', true)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', true)
-                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled', true)
+                $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled',
+                    true)
             }
         })
         $('select[name="promotion_id"]').on('change', function() {

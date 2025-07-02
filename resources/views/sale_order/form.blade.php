@@ -2,8 +2,16 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title
-            url="{{ route('sale_order.index') }}">{{ isset($sale) ? __('Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
+        <div>
+            <x-app.page-title
+                url="{{ route('sale_order.index') }}">{{ isset($sale) ? __('Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
+        </div>
+        @if (!isset($sale))
+            <div class="flex flex-col items-end">
+                <span class="text-xs text-slate-600 leading-none">{{ __('Next ID') }}</span>
+                <span class="text-md font-semibold" id="next-sku">-</span>
+            </div>
+        @endif
     </div>
 
     <div class="grid gap-y-8">
@@ -36,6 +44,12 @@
         FORM_CAN_SUBMIT = true
         SALE = @json($sale ?? null);
         QUO = @json($quo ?? null);
+
+        $(document).ready(function() {
+            if (SALE == null) {
+                getNextSku()
+            }
+        })
 
         $('form').on('submit', function(e) {
             e.preventDefault()
@@ -244,5 +258,21 @@
                 },
             });
         })
+
+        function getNextSku(selected_product = false) {
+            let url = '{{ route('quotation.get_next_sku') }}'
+            url = `${url}?type=so&is_hi_ten=${selected_product}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                success: function(res) {
+                    $('#next-sku').text(res)
+                },
+            })
+        }
     </script>
 @endpush

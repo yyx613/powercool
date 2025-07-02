@@ -589,199 +589,217 @@ class SaleController extends Controller
     public function toDeliveryOrder(Request $req)
     {
         $step = 1;
+        $loop = true;
 
-        if ($req->has('pc')) {
-            $errors = [];
-            $pc_inputs = json_decode($req->pc, true);
+        while ($loop) {
+            if ($req->has('pc')) {
+                $errors = [];
+                $pc_inputs = json_decode($req->pc, true);
 
-            foreach ($pc_inputs as $sp_id => $ipt) {
-                $sp = SaleProduct::where('id', $sp_id)->first();
-                if ($sp->product->isRawMaterial() && $ipt > $sp->remainingQtyForRM()) {
-                    $errors['sp_id_' . $sp_id] = 'The quantity is greater than ' . $sp->qty;
-                } elseif (! $sp->product->isRawMaterial() && count($ipt) == 0) {
-                    unset($pc_inputs[$sp_id]);
-                }
-            }
-            if (count($errors) > 0) {
-                throw ValidationException::withMessages($errors);
-            }
-
-            $step = 6;
-
-            Session::put('convert_product_children', $pc_inputs);
-
-            $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
-            $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
-        } elseif ($req->has('so')) {
-            $step = 5;
-
-            Session::put('convert_sale_order_id', $req->so);
-
-            // Allowed spc ids
-            $so_ids = Sale::where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
-            $sp_ids = SaleProduct::whereIn('sale_id', $so_ids)->pluck('id');
-            $spc_ids = SaleProductChild::distinct()
-                ->whereIn('sale_product_id', $sp_ids)
-                ->pluck('product_children_id')
-                ->toArray();
-
-            $dopc_ids = DeliveryOrderProductChild::pluck('product_children_id')->toArray();
-
-            $allowed_spc_ids = array_merge(array_diff($spc_ids, $dopc_ids), array_diff($dopc_ids, $spc_ids));
-
-            // Get sp
-            $products = collect();
-            $sale_orders = Sale::where('type', Sale::TYPE_SO)
-                ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
-                ->where(function ($q) {
-                    $q->where(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                ->orWhere('type', Product::TYPE_PRODUCT);
-                        })->has('products.children');
-                    })->orWhere(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                        });
-                    });
-                })
-                ->whereIn('id', explode(',', $req->so))
-                ->get();
-
-            for ($i = 0; $i < count($sale_orders); $i++) {
-                $products = $products->merge($sale_orders[$i]->products);
-            }
-        } elseif ($req->has('term')) {
-            $step = 4;
-
-            Session::put('convert_terms', $req->term);
-
-            $sale_orders = Sale::where('type', Sale::TYPE_SO)
-                ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
-                ->where('customer_id', Session::get('convert_customer_id'))
-                ->where('sale_id', Session::get('convert_salesperson_id'))
-                ->where('payment_term', Session::get('convert_terms'))
-                ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
-                })
-                ->where(function ($q) {
-                    $q->where(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                ->orWhere('type', Product::TYPE_PRODUCT);
-                        })->has('products.children');
-                    })->orWhere(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                        });
-                    });
-                })
-                ->get();
-        } elseif ($req->has('sp')) {
-            $step = 3;
-
-            Session::put('convert_salesperson_id', $req->sp);
-
-            $term_ids = Sale::where('type', Sale::TYPE_SO)
-                ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
-                ->where('customer_id', Session::get('convert_customer_id'))
-                ->where('sale_id', Session::get('convert_salesperson_id'))
-                ->whereNotNull('payment_term')
-                ->where(function ($q) {
-                    $q->wherehas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->ordoesnthave('approval');
-                })
-                ->where(function ($q) {
-                    $q->where(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                ->orWhere('type', Product::TYPE_PRODUCT);
-                        })->has('products.children');
-                    })->orWhere(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                        });
-                    });
-                })
-                ->distinct()
-                ->pluck('payment_term');
-
-            $terms = CreditTerm::whereIn('id', $term_ids)->get();
-        } elseif ($req->has('cus')) {
-            $step = 2;
-
-            Session::put('convert_customer_id', $req->cus);
-
-            $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
-                ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
-                ->where('customer_id', $req->cus)
-                ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
-                })
-                ->where(function ($q) {
-                    $q->where(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                ->orWhere('type', Product::TYPE_PRODUCT);
-                        })->has('products.children');
-                    })->orWhere(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                        });
-                    });
-                })
-                ->distinct()
-                ->pluck('sale_id');
-
-            $salespersons = SalesAgent::whereIn('id', $salesperson_ids)->get();
-        } else {
-            $sales = Sale::where('type', Sale::TYPE_SO)
-                ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
-                ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
-                })
-                ->where(function ($q) {
-                    $q->where(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                ->orWhere('type', Product::TYPE_PRODUCT);
-                        })->has('products.children');
-                    })->orWhere(function ($q) {
-                        $q->whereHas('products.product', function ($q) {
-                            $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                        });
-                    });
-                })
-                ->orderBy('id', 'desc')
-                ->distinct()
-                ->get();
-
-            $customer_ids = [];
-            for ($i = 0; $i < count($sales); $i++) {
-                for ($j = 0; $j < count($sales[$i]->products); $j++) {
-                    $is_rm = $sales[$i]->products[$j]->product->isRawMaterial();
-
-                    if ($is_rm && $sales[$i]->products[$j]->remainingQty() > 0) {
-                        $customer_ids[] = $sales[$i]->customer_id;
-                    } elseif (! $is_rm) {
-                        $customer_ids[] = $sales[$i]->customer_id;
+                foreach ($pc_inputs as $sp_id => $ipt) {
+                    $sp = SaleProduct::where('id', $sp_id)->first();
+                    if ($sp->product->isRawMaterial() && $ipt > $sp->remainingQtyForRM()) {
+                        $errors['sp_id_' . $sp_id] = 'The quantity is greater than ' . $sp->qty;
+                    } elseif (! $sp->product->isRawMaterial() && count($ipt) == 0) {
+                        unset($pc_inputs[$sp_id]);
                     }
                 }
-            }
+                if (count($errors) > 0) {
+                    throw ValidationException::withMessages($errors);
+                }
 
-            $customers = Customer::whereIn('id', $customer_ids)->get();
+                $step = 6;
+
+                Session::put('convert_product_children', $pc_inputs);
+
+                $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
+                $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
+
+                $loop = false;
+            } elseif ($req->has('term')) {
+                $step = 5;
+
+                Session::put('convert_terms', $req->term);
+
+                // Allowed spc ids
+                $so_ids = Sale::where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
+                $sp_ids = SaleProduct::whereIn('sale_id', $so_ids)->pluck('id');
+                $spc_ids = SaleProductChild::distinct()
+                    ->whereIn('sale_product_id', $sp_ids)
+                    ->pluck('product_children_id')
+                    ->toArray();
+
+                $dopc_ids = DeliveryOrderProductChild::pluck('product_children_id')->toArray();
+
+                $allowed_spc_ids = array_merge(array_diff($spc_ids, $dopc_ids), array_diff($dopc_ids, $spc_ids));
+
+                // Get sp
+                $products = collect();
+                $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                    ->whereNotIn('id', $this->getSaleInProduction())
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                    ->orWhere('type', Product::TYPE_PRODUCT);
+                            })->has('products.children');
+                        })->orWhere(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                            });
+                        });
+                    })
+                    ->whereIn('id', explode(',', $req->so))
+                    ->get();
+
+                for ($i = 0; $i < count($sale_orders); $i++) {
+                    $products = $products->merge($sale_orders[$i]->products);
+                }
+
+                $loop = false;
+            } elseif ($req->has('so')) {
+                $step = 4;
+
+                Session::put('convert_sale_order_id', $req->so);
+
+                $term_ids = Sale::where('type', Sale::TYPE_SO)
+                    ->whereNotIn('id', $this->getSaleInProduction())
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('id', explode(',', $req->so))
+                    ->where('customer_id', Session::get('convert_customer_id'))
+                    ->where('sale_id', Session::get('convert_salesperson_id'))
+                    ->whereNotNull('payment_term')
+                    ->where(function ($q) {
+                        $q->wherehas('approval', function ($q) {
+                            $q->where('status', Approval::STATUS_APPROVED);
+                        })->ordoesnthave('approval');
+                    })
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                    ->orWhere('type', Product::TYPE_PRODUCT);
+                            })->has('products.children');
+                        })->orWhere(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                            });
+                        });
+                    })
+                    ->distinct()
+                    ->pluck('payment_term');
+
+                $terms = CreditTerm::whereIn('id', $term_ids)->get();
+                if (count($terms) == 0) {
+                    $loop = true;
+                    $req->merge(['term' => null]);
+                } else {
+                    $loop = false;
+                }
+            } elseif ($req->has('sp')) {
+                $step = 3;
+
+                Session::put('convert_salesperson_id', $req->sp);
+
+                $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                    ->whereNotIn('id', $this->getSaleInProduction())
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->where('customer_id', Session::get('convert_customer_id'))
+                    ->where('sale_id', Session::get('convert_salesperson_id'))
+                    // ->where('payment_term', Session::get('convert_terms'))
+                    ->where(function ($q) {
+                        $q->whereHas('approval', function ($q) {
+                            $q->where('status', Approval::STATUS_APPROVED);
+                        })->orDoesntHave('approval');
+                    })
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                    ->orWhere('type', Product::TYPE_PRODUCT);
+                            })->has('products.children');
+                        })->orWhere(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                            });
+                        });
+                    })
+                    ->get();
+
+                $loop = false;
+            } elseif ($req->has('cus')) {
+                $step = 2;
+
+                Session::put('convert_customer_id', $req->cus);
+
+                $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
+                    ->whereNotIn('id', $this->getSaleInProduction())
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->where('customer_id', $req->cus)
+                    ->where(function ($q) {
+                        $q->whereHas('approval', function ($q) {
+                            $q->where('status', Approval::STATUS_APPROVED);
+                        })->orDoesntHave('approval');
+                    })
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                    ->orWhere('type', Product::TYPE_PRODUCT);
+                            })->has('products.children');
+                        })->orWhere(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                            });
+                        });
+                    })
+                    ->distinct()
+                    ->pluck('sale_id');
+
+                $salespersons = SalesAgent::whereIn('id', $salesperson_ids)->get();
+                $loop = false;
+            } else {
+                $sales = Sale::where('type', Sale::TYPE_SO)
+                    ->whereNotIn('id', $this->getSaleInProduction())
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->where(function ($q) {
+                        $q->whereHas('approval', function ($q) {
+                            $q->where('status', Approval::STATUS_APPROVED);
+                        })->orDoesntHave('approval');
+                    })
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
+                                    ->orWhere('type', Product::TYPE_PRODUCT);
+                            })->has('products.children');
+                        })->orWhere(function ($q) {
+                            $q->whereHas('products.product', function ($q) {
+                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+                            });
+                        });
+                    })
+                    ->orderBy('id', 'desc')
+                    ->distinct()
+                    ->get();
+
+                $customer_ids = [];
+                for ($i = 0; $i < count($sales); $i++) {
+                    for ($j = 0; $j < count($sales[$i]->products); $j++) {
+                        $is_rm = $sales[$i]->products[$j]->product->isRawMaterial();
+
+                        if ($is_rm && $sales[$i]->products[$j]->remainingQty() > 0) {
+                            $customer_ids[] = $sales[$i]->customer_id;
+                        } elseif (! $is_rm) {
+                            $customer_ids[] = $sales[$i]->customer_id;
+                        }
+                    }
+                }
+
+                $customers = Customer::whereIn('id', $customer_ids)->get();
+                $loop = false;
+            }
         }
 
         return view('sale_order.convert', [
@@ -900,7 +918,7 @@ class SaleController extends Controller
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'customer' => Customer::where('id', Session::get('convert_customer_id'))->first(),
-                'salesperson' => User::where('id', Session::get('convert_salesperson_id'))->first(),
+                'salesperson' => SalesAgent::where('id', Session::get('convert_salesperson_id'))->first(),
                 'sale_orders' => $sale_orders,
                 'products' => $pdf_products,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
@@ -1998,7 +2016,7 @@ class SaleController extends Controller
         ]);
     }
 
-    private function convertToInvoice(array $do_ids, int $customer_id, int $term_id)
+    private function convertToInvoice(array $do_ids, int $customer_id, ?int $term_id)
     {
         // $do_ids = explode(',', $req->do);
         $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
@@ -3550,5 +3568,13 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong, Please contact administrator');
         }
+    }
+
+    public function getNextSku(Request $req)
+    {
+        $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+        $next_sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, $req->is_hi_ten);
+
+        return $next_sku;
     }
 }
