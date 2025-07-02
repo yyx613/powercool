@@ -33,7 +33,7 @@ class TransportAcknowledgement extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    public function dealerName(): string
+    public function dealerName(): ?string
     {
         if ($this->dealer_id == '-1') {
             return 'Power Cool';

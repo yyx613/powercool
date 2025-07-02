@@ -972,6 +972,11 @@ class SaleController extends Controller
             if (!$ok) {
                 throw new Exception('Failed to generate invoice');
             }
+            if ($approval_required) {
+                DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', [$do->id])->update([
+                    'status' => DeliveryOrder::STATUS_APPROVAL_PENDING
+                ]);
+            }
 
             DB::commit();
 
@@ -2019,8 +2024,7 @@ class SaleController extends Controller
     private function convertToInvoice(array $do_ids, int $customer_id, ?int $term_id)
     {
         // $do_ids = explode(',', $req->do);
-        $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
-
+        $dos = DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', $do_ids)->get();
         try {
             DB::beginTransaction();
 
@@ -2036,7 +2040,7 @@ class SaleController extends Controller
             $sku = generateSku('I', $existing_skus, $is_hi_ten);
             $filename = str_replace('/', '-', $sku) . '.pdf';
 
-            $do_sku = DeliveryOrder::whereIn('id', $do_ids)->pluck('sku')->toArray();
+            $do_sku = DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', $do_ids)->pluck('sku')->toArray();
 
             $inv = Invoice::create([
                 'sku' => $sku,
@@ -2104,7 +2108,7 @@ class SaleController extends Controller
             $content = $pdf->download()->getOriginalContent();
             Storage::put(self::INVOICE_PATH . $filename, $content);
 
-            DeliveryOrder::whereIn('id', $do_ids)->update([
+            DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', $do_ids)->update([
                 'invoice_id' => $inv->id,
                 'status' => DeliveryOrder::STATUS_CONVERTED,
             ]);
@@ -2288,20 +2292,22 @@ class SaleController extends Controller
                 'invoices.date AS date',
                 'customers.sku AS debtor_code',
                 'customers.name AS debtor_name',
-                'users.name AS agent',
+                'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'invoices.status AS status',
                 'invoices.filename AS filename',
                 'created_by.name AS created_by',
-                'invoices.company AS company_group'
+                'invoices.company AS company_group',
+                'delivery_orders.status AS sos',
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('invoices.deleted_at')
+            ->whereNot('delivery_orders.status', DeliveryOrder::STATUS_APPROVAL_PENDING)
             ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
-            ->leftJoin('users', 'users.id', '=', 'sales.sale_id')
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
             ->groupBy('invoices.id');
 
@@ -2654,9 +2660,7 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            Sale::where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_CONVERTED)->whereIn('sku', $so_skus)->update([
-                'status' => Sale::STATUS_ACTIVE,
-            ]);
+            $sales = Sale::where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_CONVERTED)->whereIn('sku', $so_skus)->get();
 
             if ($type == 'void') {
                 DeliveryOrder::whereIn('sku', $do_skus)->update([
@@ -2666,7 +2670,23 @@ class SaleController extends Controller
                     'status' => Invoice::STATUS_VOIDED,
                 ]);
             } else if ($type == 'transfer-back') {
-                $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id');
+                $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id')->toArray();
+
+                for ($i = 0; $i < count($sales); $i++) {
+                    $convert_to = explode(',', $sales[$i]->convert_to);
+                    $new_convert_to = [];
+
+                    for ($j = 0; $j < count($convert_to); $j++) {
+                        if (!in_array($convert_to[$j], $do_ids)) {
+                            $new_convert_to[] = $convert_to[$j];
+                        }
+                    }
+
+                    $sales[$i]->convert_to = count($new_convert_to) == 0 ? null : join(',', $new_convert_to);
+                    $sales[$i]->status = Sale::STATUS_ACTIVE;
+                    $sales[$i]->save();
+                }
+
                 $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id');
                 DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
                 DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
