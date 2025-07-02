@@ -326,7 +326,7 @@
                         `{{ config('app.url') }}/delivery-order/cancel?involved_inv_skus=${JSON.stringify(res.involved_inv_skus)}&involved_do_skus=${JSON.stringify(res.involved_do_skus)}&involved_so_skus=${JSON.stringify(res.involved_so_skus)}&type=void`
                     )
                     $('#do-inv-void-transfer-back-modal #transfer-back-btn').attr('href',
-                        `{{ config('app.url') }}/delivery-order/cancel?involved_inv_skus=${JSON.stringify(res.involved_inv_skus)}&involved_do_skus=${JSON.stringify(res.involved_do_skus)}&involved_so_skus=${JSON.stringify(res.involved_so_skus)}&type=void`
+                        `{{ config('app.url') }}/delivery-order/cancel?involved_inv_skus=${JSON.stringify(res.involved_inv_skus)}&involved_do_skus=${JSON.stringify(res.involved_do_skus)}&involved_so_skus=${JSON.stringify(res.involved_so_skus)}&type=transfer-back`
                     )
                     $('#do-inv-void-transfer-back-modal').addClass('show-modal')
                 }
