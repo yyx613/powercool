@@ -316,7 +316,11 @@ class SaleController extends Controller
                 })->toArray(),
                 'billing_address' => $quos->count() == 1 ? $quos->value('billing_address_id') : null,
             ]);
-            $res = $this->upsertQuoDetails($request, false, true, false)->getData();
+            // Check to use back transferred SO sku
+            if ($quos[0]->convert_to != null) {
+                $sku_to_use = Sale::withTrashed()->where('id', $quos[0]->convert_to)->value('sku');
+            }
+            $res = $this->upsertQuoDetails($request, false, true, false, isset($sku_to_use) ? $sku_to_use : null)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create quotation');
             }
@@ -501,6 +505,7 @@ class SaleController extends Controller
                 'serial_no_qty' => $record->serial_no_qty,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
+                'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
             ];
         }
@@ -577,6 +582,34 @@ class SaleController extends Controller
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
+
+    public function transferBackSaleOrder(Request $req, Sale $sale)
+    {
+        try {
+            DB::beginTransaction();
+
+            $sale->status = Sale::STATUS_TRANSFERRED_BACK;
+            $sale->save();
+
+            // Change converted QUO back to active
+            Sale::where('convert_to', $sale->id)->update([
+                'status' => Sale::STATUS_ACTIVE
+            ]);
+
+            $sale->delete();
+
+            DB::commit();
+
+            return back()->with('success', 'Sale Order transferred back.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+
 
     public function pdfSaleOrder(Sale $sale)
     {
@@ -1222,7 +1255,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false)
+    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false, ?string $so_sku_to_use = null)
     {
         if (! $validated) {
             // Validate form
@@ -1303,9 +1336,13 @@ class SaleController extends Controller
             }
 
             if ($req->sale_id == null) {
-                $products = Product::whereIn('id', $req->product_id)->get();
-                $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
-                $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
+                if ($so_sku_to_use != null) {
+                    $sku = $so_sku_to_use;
+                } else {
+                    $products = Product::whereIn('id', $req->product_id)->get();
+                    $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+                    $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
+                }
 
                 $sale = Sale::create([
                     'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,

@@ -23,7 +23,7 @@ class Sale extends Model
     const STATUS_CANCELLED = 3;
     const STATUS_APPROVAL_PENDING = 4;
     const STATUS_APPROVAL_APPROVED = 5;
-    const STATUS_APPROVAL_REJECTED = 6;
+    const STATUS_TRANSFERRED_BACK = 6;
     const PAYMENT_STATUS_UNPAID = 1;
     const PAYMENT_STATUS_PARTIALLY_PAID = 2;
     const PAYMENT_STATUS_PAID = 3;
