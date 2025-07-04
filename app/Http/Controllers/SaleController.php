@@ -46,6 +46,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -416,13 +417,18 @@ class SaleController extends Controller
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
-                'sales.payment_status'
+                'sales.payment_status',
+                DB::raw('SUM(sale_products.qty) AS qty'),
+                DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
+            ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
+            ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
-            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id');
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
+            ->groupBy('sales.id');
 
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
@@ -460,11 +466,11 @@ class SaleController extends Controller
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('sales.id', 'desc');
         }
 
         $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('sales.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -491,6 +497,8 @@ class SaleController extends Controller
                 'total' => number_format($total_amount, 2),
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
+                'qty' => $record->qty,
+                'serial_no_qty' => $record->serial_no_qty,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
@@ -544,6 +552,7 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
+            'payment_editable_only' => $sale->convertFromQuo() || in_array(Role::FINANCE, getUserRoleId(Auth::user()))
         ]);
     }
 
@@ -553,6 +562,10 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             $this->cancelSaleOrderFlow($sale, false, $req->charge);
+
+            Sale::where('convert_to', $sale->id)->update([
+                'status' => Sale::STATUS_ACTIVE
+            ]);
 
             DB::commit();
 
@@ -570,6 +583,8 @@ class SaleController extends Controller
         $products = collect();
         $sps = $sale->products()->withTrashed()->get();
         for ($i = 0; $i < count($sps); $i++) {
+            $pc_ids = $sps[$i]->children->pluck('product_children_id');
+            $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
             $products->push($sps[$i]->product);
         }
         $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
@@ -901,17 +916,21 @@ class SaleController extends Controller
                 } else {
                     $dopcs = $do->products[$i]->children;
 
+                    $pc_ids = [];
                     for ($j = 0; $j < count($dopcs); $j++) {
-                        $sp_id = SaleProductChild::where('product_children_id', $dopcs[$j]->product_children_id)->value('sale_product_id');
-                        $sp = SaleProduct::where('id', $sp_id)->first();
-
-                        $pdf_products[] = [
-                            'stock_code' => $dopcs[$j]->productChild->sku,
-                            'desc' => $dopcs[$j]->productChild->parent->model_desc,
-                            'qty' => 1,
-                            'warranty_periods' => $sp->warrantyPeriods,
-                        ];
+                        $pc_ids[] = $dopcs[$j]->product_children_id;
                     }
+                    $sp_id = SaleProductChild::where('product_children_id', $dopcs[count($dopcs) - 1]->product_children_id)->value('sale_product_id');
+                    $sp = SaleProduct::where('id', $sp_id)->first();
+                    $serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
+
+                    $pdf_products[] = [
+                        'stock_code' => $dopcs[count($dopcs) - 1]->productChild->sku,
+                        'desc' => $dopcs[count($dopcs) - 1]->productChild->parent->model_desc,
+                        'qty' => 1,
+                        'warranty_periods' => $sp->warrantyPeriods,
+                        'serial_no' => $serial_no,
+                    ];
                 }
             }
             $pdf = Pdf::loadView('sale_order.' . ($is_hi_ten ? 'hi_ten' : 'powercool') . '_do_pdf', [
@@ -2056,7 +2075,7 @@ class SaleController extends Controller
             // Create PDF
             $pdf_products = [];
             $overall_total = 0;
-            $dos = DeliveryOrder::whereIn('id', $do_ids)->get();
+            $dos = DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', $do_ids)->get();
 
             for ($k = 0; $k < count($dos); $k++) {
                 for ($i = 0; $i < count($dos[$k]->products); $i++) {

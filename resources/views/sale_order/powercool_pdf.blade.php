@@ -188,6 +188,15 @@
                         <td style="font-size: 14px; text-align: left;" colspan="4"></td>
                     </tr>
                 @endif
+                <!-- Serial No -->
+                @if ($prod->serial_no != null)
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Serial No:
+                            {{ join(', ', $prod->serial_no) }}</td>
+                        <td style="font-size: 14px; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
                 @endphp
@@ -255,10 +264,12 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%; font-weight: 700;">POWER COOL EQUIPMENTS
+                <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%; font-weight: 700;">
+                    POWER COOL EQUIPMENTS
                     (M) SDN BHD</td>
                 <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%;"></td>
-                <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%; font-weight: 700;">KNOWLEDGEMENT BY:
+                <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%; font-weight: 700;">
+                    KNOWLEDGEMENT BY:
                 </td>
             </tr>
             <tr>

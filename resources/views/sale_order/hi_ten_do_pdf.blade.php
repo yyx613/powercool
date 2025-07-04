@@ -40,7 +40,8 @@
                     <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
                     <span style="font-size: 14px;">H/P:012-386 8164, 012-263 2919</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
-                    <span style="font-size: 14px;">Service Hotline (Penang / Johor) : 012-386 8477 / 013-922 2000</span><br>
+                    <span style="font-size: 14px;">Service Hotline (Penang / Johor) : 012-386 8477 / 013-922
+                        2000</span><br>
                     <span style="font-size: 14px;">Email add : <a
                             href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
                 </td>
@@ -176,11 +177,22 @@
                         }
                     @endphp
                     <tr>
-                        <td style="font-size: 14px; text-align: left; {{ $key + 1 == count($products) ? ' padding: 5px 0 75px 0;' : ' padding: 5px 0 0 0;' }}"
-                            colspan="2"></td>
-                        <td style="font-size: 14px; text-align: left; vertical-align: top; font-weight: 700;"
-                            colspan="2">Warranty:
-                            {{ join(', ', $warranty) }}</td>
+                        <td style="font-size: 14px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; vertical-align: top; font-weight: 700;">Warranty: {{ join(', ', $warranty) }}</td>
+                        <td></td>
+                    </tr>
+                @endif
+                <!-- Serial No -->
+                @if ($prod['serial_no'] != null)
+                    <tr>
+                        <td style="font-size: 14px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Serial No: {{ join(', ', $prod['serial_no']) }}</td>
+                        <td></td>
+                    </tr>
+                @endif
+                @if ($key + 1 == count($products))
+                    <tr>
+                        <td style="padding: 25px;"></td>
                     </tr>
                 @endif
                 @php

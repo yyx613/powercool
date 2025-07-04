@@ -47,7 +47,9 @@ class UserController extends Controller
 
     public function index()
     {
-        return view('user_management.list');
+        return view('user_management.list', [
+            'roles' => ModelsRole::get(),
+        ]);
     }
 
     public function getData(Request $req)
@@ -77,25 +79,38 @@ class UserController extends Controller
             $records = $records->orderBy('id', 'desc');
         }
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
-        $records_paginator = $records->simplePaginate(10);
+        $all_records = $records->get();
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
             "data" => [],
-            'records_ids' => $records_ids,
         ];
-        foreach ($records_paginator as $key => $record) {
-            $data['data'][] = [
-                'id' => $record->id,
-                'name' => $record->name,
-                'email' => $record->email,
-                'role' => join(', ', getUserRole($record)),
-                'branch' => $record->branch == null ? null : (new Branch)->keyToLabel($record->branch->location),
-            ];
+
+        // Get record counts
+        $recordsTotal = 0;
+        $records_ids = [];
+        $page = ($req->page ?? 1) - 1;
+        foreach ($all_records as $key => $record) {
+            if ($req->role != null && !in_array($req->role, getUserRoleId($record))) {
+                continue;
+            }
+            $recordsTotal++;
+
+            if ((($key + 1) > $page * 10) && count($data['data']) < 10) {
+                $records_ids[] = $record->id;
+
+                $data['data'][] = [
+                    'id' => $record->id,
+                    'name' => $record->name,
+                    'email' => $record->email,
+                    'role' => join(', ', getUserRole($record)),
+                    'branch' => $record->branch == null ? null : (new Branch)->keyToLabel($record->branch->location),
+                ];
+            }
         }
+
+        $data["recordsTotal"] = $recordsTotal;
+        $data["recordsFiltered"] = $recordsTotal;
+        $data["records_ids"] = $records_ids;
 
         return response()->json($data);
     }

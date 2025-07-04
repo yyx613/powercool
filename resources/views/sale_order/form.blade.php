@@ -44,10 +44,17 @@
         FORM_CAN_SUBMIT = true
         SALE = @json($sale ?? null);
         QUO = @json($quo ?? null);
+        PAYMENT_EDITABLE_ONLY = @json($payment_editable_only ?? null);
 
         $(document).ready(function() {
             if (SALE == null) {
                 getNextSku()
+
+            } else if (PAYMENT_EDITABLE_ONLY == true) {
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input').attr('disabled', true)
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input').addClass('!bg-gray-100')
+                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"]').parent().addClass('!bg-gray-100')
+                $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple').css('backgroundColor', '#eee')
             }
         })
 
@@ -198,7 +205,7 @@
                             // $('form #submit-btn').addClass('bg-yellow-400 shadow')
 
                             // FORM_CAN_SUBMIT = true
-                        }, 2000);
+                        }, 1000);
                     }, 300);
                 },
                 error: function(err) {
