@@ -32,7 +32,7 @@ class Branch extends Model
         $loc = null;
         if ($location != null) {
             $loc = $location;
-        } else if (isSuperAdmin()) {
+        } else if (isSuperAdmin() || getCurrentUserBranch() == null) {
             $loc = Session::get('as_branch');
         } else {
             $loc = Auth::user()->branch->location;

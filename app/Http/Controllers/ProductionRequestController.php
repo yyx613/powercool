@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductionRequest;
 use App\Models\ProductionRequestMaterial;
 use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Models\SaleProductionRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -78,6 +79,8 @@ class ProductionRequestController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            $remark = SaleProduct::where('sale_id', $record->sale_id)->where('product_id', $record->product_id)->value('remark');
+
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
@@ -85,6 +88,7 @@ class ProductionRequestController extends Controller
                 'so_no' => $record->sale->sku ?? null,
                 'product' => $record->product->sku ?? null,
                 'production' => $record->production->sku ?? null,
+                'remark' => $remark,
                 'status' => $record->status ?? null,
                 'sale_id' => $record->sale_id,
                 'product_id' => $record->product_id,

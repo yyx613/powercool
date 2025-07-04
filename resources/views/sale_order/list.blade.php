@@ -80,6 +80,7 @@
                     <th>{{ __('Debtor Name') }}</th>
                     <th>{{ __('Agent') }}</th>
                     <th>{{ __('Curr. Code') }}</th>
+                    <th>{{ __('Qty') }}</th>
                     <th>{{ __('Paid Amount') }}</th>
                     <th>{{ __('Total') }}</th>
                     <th>{{ __('Payment Status') }}</th>
@@ -129,6 +130,9 @@
                 },
                 {
                     data: 'curr_code'
+                },
+                {
+                    data: 'qty'
                 },
                 {
                     data: 'paid'
@@ -203,7 +207,7 @@
                     "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
-                        return `RM ${data}`;
+                        return `${row.serial_no_qty}/${row.qty}`;
                     }
                 },
                 {
@@ -217,6 +221,14 @@
                 {
                     "width": '10%',
                     "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `RM ${data}`;
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -233,7 +245,7 @@
                 },
                 {
                     "width": '10%',
-                    "targets": 10,
+                    "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -260,7 +272,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 11,
+                    "targets": 12,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<div class="flex items-center justify-end gap-x-2 px-2">

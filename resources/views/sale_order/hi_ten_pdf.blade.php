@@ -56,7 +56,8 @@
                 <td colspan="2" style="padding: 0 35px 0 0;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700;">TIN: {{ $customer->tin_number }}</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700;">TIN:
+                                {{ $customer->tin_number }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
@@ -187,6 +188,15 @@
                         <td style="font-size: 14px; text-align: left;" colspan="4"></td>
                     </tr>
                 @endif
+                <!-- Serial No -->
+                @if ($prod->serial_no != null)
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Serial No:
+                            {{ join(', ', $prod->serial_no) }}</td>
+                        <td style="font-size: 14px; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
                 @php
                     $total +=
                         $prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount();
@@ -235,14 +245,16 @@
                         3530
                         CIMB Account No.: 8603 16 3872</span><br>
                     3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
-                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed.If cancel
+                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase
+                    price will be imposed.If cancel
                     order with credit card payment,will have 10% credit card charges.<br>
                     5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
                     otherwise any discrepancy will not be entertained.<br>
                     6. For more information about our policies, please visit our website at :-<br>
                     https://imaxrefrigerator.com.my/warranty-policy/<br>
                     7. Customer collect\unloading\handling by own, warranty will be bear by customer.<br>
-                    8. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of the total invoice amount.<br>
+                    8. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of
+                    the total invoice amount.<br>
                     9. Company will not obligation on those customers are not require to issue E-invoice.
                 </td>
             </tr>
