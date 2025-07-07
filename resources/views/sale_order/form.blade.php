@@ -133,13 +133,11 @@
                         'select[name="billing_address"]').val(),
                     'new_billing_address': $('#new-billing-address input[name="address"]').val(),
                     'new_billing_city': $('#new-billing-address input[name="city"]').val(),
-                    'new_billing_state': $('#new-billing-address input[name="state"]').val(),
                     'new_billing_zip_code': $('#new-billing-address input[name="zip_code"]').val(),
                     'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
                         'select[name="delivery_address"]').val(),
                     'new_delivery_address': $('#new-delivery-address input[name="address"]').val(),
                     'new_delivery_city': $('#new-delivery-address input[name="city"]').val(),
-                    'new_delivery_state': $('#new-delivery-address input[name="state"]').val(),
                     'new_delivery_zip_code': $('#new-delivery-address input[name="zip_code"]').val(),
 
                     'reference': $('input[name="reference"]').val(),

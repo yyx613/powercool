@@ -122,7 +122,6 @@
             $('select[name="customer"]').trigger('change')
             $('select[name="billing_address"]').trigger('change')
 
-            INIT_EDIT = false
         })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
@@ -186,8 +185,20 @@
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
 
+                        var addr = loc.address1
+                        if (loc.address2 != null) {
+                            addr = `${addr}, ${loc.address2}`
+                        }
+                        if (loc.address3 != null) {
+                            addr = `${addr}, ${loc.address3}`
+                        }
+                        if (loc.address4 != null) {
+                            addr = `${addr}, ${loc.address4}`
+                        }
+                        addr = `${addr}, ${loc.city}, ${loc.zip_code}`
+
                         let opt = new Option(
-                            `${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id,
+                            addr, loc.id,
                             false, INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
