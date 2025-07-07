@@ -1065,18 +1065,20 @@ class SaleController extends Controller
             'status' => 'required',
             'report_type' => 'required',
             'billing_address' => 'nullable',
-            'new_billing_address' => 'required_if:billing_address,null|max:250',
-            'new_billing_city' => 'required_if:billing_address,null|max:250',
-            'new_billing_zip_code' => 'required_if:billing_address,null',
+            'new_billing_address1' => 'required_if:billing_address,null|max:250',
+            'new_billing_address2' => 'nullable|max:250',
+            'new_billing_address3' => 'nullable|max:250',
+            'new_billing_address4' => 'nullable|max:250',
             'payment_term' => 'nullable',
             // upsertRemark
             'remark' => 'nullable|max:250',
         ];
         if ($req->type == 'so') {
             $rules['delivery_address'] = 'nullable';
-            $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
-            $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
-            $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
+            $rules['new_delivery_address1'] = 'nullable|max:250';
+            $rules['new_delivery_address2'] = 'nullable|max:250';
+            $rules['new_delivery_address3'] = 'nullable|max:250';
+            $rules['new_delivery_address4'] = 'nullable|max:250';
         }
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
@@ -1269,16 +1271,18 @@ class SaleController extends Controller
                 'status' => 'required',
                 'report_type' => 'required',
                 'billing_address' => 'nullable',
-                'new_billing_address' => 'required_if:billing_address,null|max:250',
-                'new_billing_city' => 'required_if:billing_address,null|max:250',
-                'new_billing_zip_code' => 'required_if:billing_address,null',
+                'new_billing_address1' => 'required_if:billing_address,null|max:250',
+                'new_billing_address2' => 'nullable|max:250',
+                'new_billing_address3' => 'nullable|max:250',
+                'new_billing_address4' => 'nullable|max:250',
                 'payment_term' => 'nullable',
             ];
             if ($need_delivery_address == true) {
                 $rules['delivery_address'] = 'nullable';
-                $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
-                $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
-                $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
+                $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
+                $rules['new_delivery_address2'] = 'nullable|max:250';
+                $rules['new_delivery_address3'] = 'nullable|max:250';
+                $rules['new_delivery_address4'] = 'nullable|max:250';
             }
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
@@ -1297,15 +1301,16 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             // Billing
-            if ($req->billing_address != null && $req->new_billing_address != null) {
+            if ($req->billing_address != null && $req->new_billing_address1 != null) {
                 if ($req->billing_address != null) {
                     $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
                 } else {
                     $bill_add = CustomerLocation::create([
                         'customer_id' => $req->customer,
-                        'address' => $req->new_billing_address,
-                        'city' => $req->new_billing_city,
-                        'zip_code' => $req->new_billing_zip_code,
+                        'address1' => $req->new_billing_address1,
+                        'address2' => $req->new_billing_address2,
+                        'address3' => $req->new_billing_address3,
+                        'address4' => $req->new_billing_address4,
                         'type' => CustomerLocation::TYPE_BILLING,
                         'is_default' => false,
                     ]);
@@ -1319,9 +1324,10 @@ class SaleController extends Controller
                 } else {
                     $del_add = CustomerLocation::create([
                         'customer_id' => $req->customer,
-                        'address' => $req->new_delivery_address,
-                        'city' => $req->new_delivery_city,
-                        'zip_code' => $req->new_delivery_zip_code,
+                        'address1' => $req->new_delivery_address1,
+                        'address2' => $req->new_delivery_address2,
+                        'address3' => $req->new_delivery_address3,
+                        'address4' => $req->new_delivery_address4,
                         'type' => CustomerLocation::TYPE_DELIVERY,
                         'is_default' => false,
                     ]);
