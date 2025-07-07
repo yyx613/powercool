@@ -1746,7 +1746,7 @@
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto px-2 my-4 hide-scrollbar">
+        <div class="overflow-y-auto px-2 my-4 hide-scrollbar">
             <ul>
                 <!-- Notification -->
                 @can('notification.view')
