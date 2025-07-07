@@ -11,7 +11,7 @@
             </svg>
             <span class="text-lg ml-3 font-bold">{{ __('Information') }}</span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-8">
             <div class="flex flex-col">
                 <x-app.input.label id="category" class="mb-1">{{ __('Category') }} <span
                         class="text-sm text-red-500">*</span></x-app.input.label>
@@ -128,6 +128,26 @@
                 <x-app.input.input name="email" id="email" type="email" :hasError="$errors->has('email')"
                     value="{{ old('email', isset($customer) ? $customer->email : null) }}" />
                 <x-app.message.error id="email_err" />
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4 border-t border-slate-200 pt-8">
+            <div class="flex flex-col">
+                <x-app.input.label id="address" class="mb-1">{{ __('Address') }} </x-app.input.label>
+                <x-app.input.input name="address" id="address" :hasError="$errors->has('address')"
+                    value="{{ old('city', isset($customer) ? $customer->address : null) }}" />
+                <x-app.message.error id="address_err" />
+            </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="city" class="mb-1">{{ __('City') }}</x-app.input.label>
+                <x-app.input.input name="city" id="city" :hasError="$errors->has('city')"
+                    value="{{ old('city', isset($customer) ? $customer->city : null) }}" />
+                <x-app.message.error id="city_err" />
+            </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="zip_code" class="mb-1">{{ __('Zip Code') }}</x-app.input.label>
+                <x-app.input.input name="zip_code" id="zip_code" :hasError="$errors->has('zip_code')"
+                    value="{{ old('zip_code', isset($customer) ? $customer->zipcode : null) }}" class="int-input" />
+                <x-app.message.error id="zip_code_err" />
             </div>
         </div>
     </div>

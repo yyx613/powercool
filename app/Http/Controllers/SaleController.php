@@ -1067,7 +1067,6 @@ class SaleController extends Controller
             'billing_address' => 'nullable',
             'new_billing_address' => 'required_if:billing_address,null|max:250',
             'new_billing_city' => 'required_if:billing_address,null|max:250',
-            'new_billing_state' => 'required_if:billing_address,null|max:250',
             'new_billing_zip_code' => 'required_if:billing_address,null',
             'payment_term' => 'nullable',
             // upsertRemark
@@ -1077,7 +1076,6 @@ class SaleController extends Controller
             $rules['delivery_address'] = 'nullable';
             $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
             $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
-            $rules['new_delivery_state'] = 'required_if:delivery_address,null|max:250';
             $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
         }
         if ($req->type == 'quo') {
@@ -1273,7 +1271,6 @@ class SaleController extends Controller
                 'billing_address' => 'nullable',
                 'new_billing_address' => 'required_if:billing_address,null|max:250',
                 'new_billing_city' => 'required_if:billing_address,null|max:250',
-                'new_billing_state' => 'required_if:billing_address,null|max:250',
                 'new_billing_zip_code' => 'required_if:billing_address,null',
                 'payment_term' => 'nullable',
             ];
@@ -1281,7 +1278,6 @@ class SaleController extends Controller
                 $rules['delivery_address'] = 'nullable';
                 $rules['new_delivery_address'] = 'required_if:delivery_address,null|max:250';
                 $rules['new_delivery_city'] = 'required_if:delivery_address,null|max:250';
-                $rules['new_delivery_state'] = 'required_if:delivery_address,null|max:250';
                 $rules['new_delivery_zip_code'] = 'required_if:delivery_address,null';
             }
             if ($req->type == 'quo') {
@@ -1309,7 +1305,6 @@ class SaleController extends Controller
                         'customer_id' => $req->customer,
                         'address' => $req->new_billing_address,
                         'city' => $req->new_billing_city,
-                        'state' => $req->new_billing_state,
                         'zip_code' => $req->new_billing_zip_code,
                         'type' => CustomerLocation::TYPE_BILLING,
                         'is_default' => false,
@@ -1326,7 +1321,6 @@ class SaleController extends Controller
                         'customer_id' => $req->customer,
                         'address' => $req->new_delivery_address,
                         'city' => $req->new_delivery_city,
-                        'state' => $req->new_delivery_state,
                         'zip_code' => $req->new_delivery_zip_code,
                         'type' => CustomerLocation::TYPE_DELIVERY,
                         'is_default' => false,

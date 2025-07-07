@@ -183,7 +183,21 @@
 
                         if (loc.type !== 1 && loc.type !== 3) continue
 
-                        let opt = new Option(`${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id, false, INIT_EDIT == true && loc.id ==
+                        var addr = loc.address1
+                        if (loc.address2 != null) {
+                            addr = `${addr}, ${loc.address2}`
+                        }
+                        if (loc.address3 != null) {
+                            addr = `${addr}, ${loc.address3}`
+                        }
+                        if (loc.address4 != null) {
+                            addr = `${addr}, ${loc.address4}`
+                        }
+                        addr = `${addr}, ${loc.city}, ${loc.zip_code}`
+
+                        let opt = new Option(
+                            addr,
+                            loc.id, false, INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
@@ -199,7 +213,21 @@
 
                         if (loc.type !== 2 && loc.type !== 3) continue
 
-                        let opt = new Option(`${loc.address}, ${loc.city}, ${loc.state}, ${loc.zip_code}`, loc.id, false, INIT_EDIT == true && loc.id ==
+                        var addr = loc.address1
+                        if (loc.address2 != null) {
+                            addr = `${addr}, ${loc.address2}`
+                        }
+                        if (loc.address3 != null) {
+                            addr = `${addr}, ${loc.address3}`
+                        }
+                        if (loc.address4 != null) {
+                            addr = `${addr}, ${loc.address4}`
+                        }
+                        addr = `${addr}, ${loc.city}, ${loc.zip_code}`
+
+                        let opt = new Option(
+                            addr,
+                            loc.id, false, INIT_EDIT == true && loc.id ==
                             SALE.delivery_address_id)
                         $('select[name="delivery_address"]').append(opt)
                     }

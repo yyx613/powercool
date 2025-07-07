@@ -239,6 +239,9 @@ class CustomerController extends Controller
             'trade_name' => 'nullable|max:250',
             'identity_type' => 'required_if:category,==,2|max:250',
             'identity_no' => 'nullable|max:250',
+            'address' => 'nullable|max:250',
+            'city' => 'nullable|max:250',
+            'zip_code' => 'nullable|max:250',
 
             // 'customer_id' => 'nullable',
             // 'company_group' => 'required',
@@ -330,6 +333,9 @@ class CustomerController extends Controller
                     'trade_name' => $req->trade_name,
                     'identity_type' => $req->identity_type,
                     'identity_no' => $req->identity_no,
+                    'address' => $req->address,
+                    'city' => $req->city,
+                    'zipcode' => $req->zip_code,
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -363,6 +369,9 @@ class CustomerController extends Controller
                     'trade_name' => $req->trade_name,
                     'identity_type' => $req->identity_type,
                     'identity_no' => $req->identity_no,
+                    'address' => $req->address,
+                    'city' => $req->city,
+                    'zipcode' => $req->zip_code,
                 ]);
             }
             // Sales agent
@@ -453,12 +462,16 @@ class CustomerController extends Controller
             'customer_id' => 'required',
             'location_id' => 'nullable',
             'location_id.*' => 'nullable',
-            'address' => 'required',
-            'address.*' => 'required|max:250',
+            'address1' => 'required',
+            'address1.*' => 'required|max:250',
+            'address2' => 'nullable',
+            'address2.*' => 'nullable|max:250',
+            'address3' => 'nullable',
+            'address3.*' => 'nullable|max:250',
+            'address4' => 'nullable',
+            'address4.*' => 'nullable|max:250',
             'city' => 'required',
             'city.*' => 'required|max:250',
-            'state' => 'required',
-            'state.*' => 'required|max:250',
             'zip_code' => 'required',
             'zip_code.*' => 'required|max:250',
             'type' => 'required',
@@ -466,9 +479,11 @@ class CustomerController extends Controller
             'is_default' => 'required',
             'is_default.*' => 'required',
         ], [], [
-            'address.*' => 'address',
+            'address1.*' => 'address 1',
+            'address2.*' => 'address 2',
+            'address3.*' => 'address 3',
+            'address4.*' => 'address 4',
             'city.*' => 'city',
-            'state.*' => 'state',
             'zip_code.*' => 'zip code',
             'type.*' => 'type',
             'is_default.*' => 'is default',
@@ -478,7 +493,7 @@ class CustomerController extends Controller
         $bill_and_deli_has_default = false;
         $bill_has_default = false;
         $deli_has_default = false;
-        for ($i = 0; $i < count($req->address); $i++) {
+        for ($i = 0; $i < count($req->address1); $i++) {
             if ($req->is_default[$i] == true && $req->type[$i] == CustomerLocation::TYPE_BILLING_ADN_DELIVERY) {
                 if ($bill_and_deli_has_default == true) {
                     return Response::json([
@@ -520,12 +535,14 @@ class CustomerController extends Controller
 
             $now = now();
             $data = [];
-            for ($i = 0; $i < count($req->address); $i++) {
+            for ($i = 0; $i < count($req->address1); $i++) {
                 if ($req->location_id != null && $req->location_id[$i] != null) {
                     CustomerLocation::where('id', $req->location_id[$i])->update([
-                        'address' => $req->address[$i],
+                        'address1' => $req->address1[$i],
+                        'address2' => $req->address2[$i],
+                        'address3' => $req->address3[$i],
+                        'address4' => $req->address4[$i],
                         'city' => $req->city[$i],
-                        'state' => $req->state[$i],
                         'zip_code' => $req->zip_code[$i],
                         'type' => $req->type[$i],
                         'is_default' => $req->is_default[$i],
@@ -533,9 +550,11 @@ class CustomerController extends Controller
                 } else {
                     $data[] = [
                         'customer_id' => $req->customer_id,
-                        'address' => $req->address[$i],
+                        'address1' => $req->address1[$i],
+                        'address2' => $req->address2[$i],
+                        'address3' => $req->address3[$i],
+                        'address4' => $req->address4[$i],
                         'city' => $req->city[$i],
-                        'state' => $req->state[$i],
                         'zip_code' => $req->zip_code[$i],
                         'type' => $req->type[$i],
                         'is_default' => $req->is_default[$i],

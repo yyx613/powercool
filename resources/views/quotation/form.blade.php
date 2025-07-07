@@ -120,7 +120,6 @@
                         'select[name="billing_address"]').val(),
                     'new_billing_address': $('#new-billing-address input[name="address"]').val(),
                     'new_billing_city': $('#new-billing-address input[name="city"]').val(),
-                    'new_billing_state': $('#new-billing-address input[name="state"]').val(),
                     'new_billing_zip_code': $('#new-billing-address input[name="zip_code"]').val(),
 
                     'product_order_id': prodOrderId,
