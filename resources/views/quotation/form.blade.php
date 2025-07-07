@@ -118,9 +118,10 @@
                     'payment_term': $('select[name="payment_term"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
-                    'new_billing_address': $('#new-billing-address input[name="address"]').val(),
-                    'new_billing_city': $('#new-billing-address input[name="city"]').val(),
-                    'new_billing_zip_code': $('#new-billing-address input[name="zip_code"]').val(),
+                    'new_billing_address1': $('#new-billing-address input[name="address1"]').val(),
+                    'new_billing_address2': $('#new-billing-address input[name="address2"]').val(),
+                    'new_billing_address3': $('#new-billing-address input[name="address3"]').val(),
+                    'new_billing_address4': $('#new-billing-address input[name="address4"]').val(),
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,

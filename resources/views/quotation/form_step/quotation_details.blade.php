@@ -195,7 +195,6 @@
                         if (loc.address4 != null) {
                             addr = `${addr}, ${loc.address4}`
                         }
-                        addr = `${addr}, ${loc.city}, ${loc.zip_code}`
 
                         let opt = new Option(
                             addr, loc.id,

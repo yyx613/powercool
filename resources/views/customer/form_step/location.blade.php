@@ -56,21 +56,6 @@
                     <x-app.message.error id="address4_err" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="city" class="mb-1">{{ __('City') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="city" id="city" :hasError="$errors->has('city')"
-                        value="{{ old('city', isset($customer) ? $customer->city : null) }}" />
-                    <x-app.message.error id="city_err" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="zip_code" class="mb-1">{{ __('Zip Code') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="zip_code" id="zip_code" :hasError="$errors->has('zip_code')"
-                        value="{{ old('zip_code', isset($customer) ? $customer->zip_code : null) }}"
-                        class="int-input" />
-                    <x-app.message.error id="zip_code_err" />
-                </div>
-                <div class="flex flex-col">
                     <x-app.input.label id="type" class="mb-1">{{ __('Type') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="type" id="type">
@@ -192,9 +177,6 @@
             let address2 = []
             let address3 = []
             let address4 = []
-            let city = []
-            let state = []
-            let zipCode = []
             let type = []
             let isDefault = []
             $('#location-form .items').each(function(i, obj) {
@@ -203,9 +185,6 @@
                 address2.push($(this).find('input[name="address2"]').val())
                 address3.push($(this).find('input[name="address3"]').val())
                 address4.push($(this).find('input[name="address4"]').val())
-                city.push($(this).find('input[name="city"]').val())
-                state.push($(this).find('input[name="state"]').val())
-                zipCode.push($(this).find('input[name="zip_code"]').val())
                 type.push($(this).find('select[name="type"]').val())
                 isDefault.push($(this).find('select[name="is_default"]').val())
             })
@@ -223,9 +202,6 @@
                     'address2': address2,
                     'address3': address3,
                     'address4': address4,
-                    'city': city,
-                    'state': state,
-                    'zip_code': zipCode,
                     'type': type,
                     'is_default': isDefault,
                 },
