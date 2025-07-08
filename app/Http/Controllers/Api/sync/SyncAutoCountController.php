@@ -429,12 +429,19 @@ class SyncAutoCountController extends Controller
             return response()->json(['error' => 'Invalid company group'], 400);
         }
     
-        $suppliers = Supplier::where('sync', 0)
-                             ->where('company_group', $companyGroup)
-                             ->get();
+        // $suppliers = Debtor::where('sync', 0)
+        //                      ->where('company_group', $companyGroup)
+        //                      ->get();
+
+         $customers = DB::table('customers')
+        ->join('customer_locations', 'customers.id', '=', 'customer_locations.customer_id')
+        ->where('customers.sync', 0)
+        ->where('customers.company_group', $companyGroup)
+        ->select('customers.*', 'customer_locations.*') // or select specific columns
+        ->get();
     
         // Return only the array of suppliers without any wrapper
-        return response()->json($suppliers);
+        return response()->json($customers);
     }
 
     public function updateCustomerSyncStatus(Request $request)
@@ -447,11 +454,11 @@ class SyncAutoCountController extends Controller
             ]);
 
             // Update all records in one query
-            $updated = Supplier::whereIn('id', $request->ids)->update(['sync' => 1]);
+            $updated = Debtor::whereIn('id', $request->ids)->update(['sync' => 1]);
 
             // Return success message with the count of updated records
             return response()->json([
-                'message' => "$updated suppliers updated successfully"
+                'message' => "$updated customers updated successfully"
             ]);
         } catch (\Exception $e) {
             return response()->json([
