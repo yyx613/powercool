@@ -259,18 +259,16 @@ class SyncAutoCountController extends Controller
                         $supplier->id, 1
                     ]);
     
-                    if($record['TIN'] != null){
-                        if (!$custLocation) {
-                            // Insert new branch entry
-                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address, city, state, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                                 $supplier->id, 1, 1, $record['Address'], $record['City'], $record['State'], $record['PostCode'], now(), now()
-                            ]);
-                        }else{
-                            // Update existing branch entry
-                            DB::update("UPDATE customer_locations SET address = ?, city = ?, state = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
-                                $record['Address'], $record['City'], $record['State'], $record['PostCode'], $supplier->id, 1
-                            ]);
-                        }
+                    if (!$custLocation) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address1, address2, address3, address4, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                $supplier->id, 1, 1, $record['Address1'], $record['Address2'], $record['Address3'], $record['Address4'], $record['PostCode'], now(), now()
+                        ]);
+                    }else {
+                        // Update existing branch entry
+                        DB::update("UPDATE customer_locations SET address1 = ?, address2 = ?, address3 = ?, address4 = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
+                            $record['Address1'], $record['Address2'], $record['Address3'], $record['Address4'], $record['PostCode'], $supplier->id, 1
+                        ]);
                     }
 
                     if (!empty($record['SalesAgent'])) {
@@ -342,14 +340,19 @@ class SyncAutoCountController extends Controller
                     $custLocation = DB::select("SELECT * FROM customer_locations WHERE customer_id = ? AND is_default = ?", [
                         $supplier->id, 1
                     ]);
-                    if($record['TIN'] != null){
-                        if (!$custLocation) {
-                            // Insert new branch entry
-                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address, city, state, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                                 $supplier->id, 1, 1, $record['Address'], $record['City'], $record['State'], $record['PostCode'], now(), now()
-                            ]);
-                        }
+                    
+                    if (!$custLocation) {
+                        // Insert new branch entry
+                        DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address1, address2, address3, address4, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                $supplier->id, 1, 1, $record['Address1'], $record['Address2'], $record['Address3'], $record['Address4'], $record['PostCode'], now(), now()
+                        ]);
+                    }else {
+                        // Update existing branch entry
+                        DB::update("UPDATE customer_locations SET address1 = ?, address2 = ?, address3 = ?, address4 = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
+                            $record['Address1'], $record['Address2'], $record['Address3'], $record['Address4'], $record['PostCode'], $supplier->id, 1
+                        ]);
                     }
+                    
 
                     if (!empty($record['SalesAgent'])) {
                         $salesAgent = DB::table('sales_agents')->where('name', $record['SalesAgent'])->first();
