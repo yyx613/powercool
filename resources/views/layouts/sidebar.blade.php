@@ -1731,7 +1731,7 @@
 
 <!-- Mobile -->
 <aside class="max-w-[250px] w-full bg-blue-900 z-50 fixed top-0 left-0 hidden" id="mobile-sidebar">
-    <div class="h-screen flex flex-col overflow-x-hidden">
+    <div class="h-screen flex flex-col overflow-x-hidden hide-scrollbar">
         <div class="px-4 pt-4 pb-2 flex items-center">
             <button type="button" class="mobile-sidebar-trigger-btn">
                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"
@@ -1746,7 +1746,7 @@
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>
-        <div class="overflow-y-auto px-2 my-4 hide-scrollbar">
+        <div class="px-2 my-4 hide-scrollbar">
             <ul>
                 <!-- Notification -->
                 @can('notification.view')
