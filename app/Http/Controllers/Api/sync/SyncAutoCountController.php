@@ -68,6 +68,9 @@ class SyncAutoCountController extends Controller
                     $record['MSIC']
                 ]);
 
+                $area = DB::table('areas')->where('name', $record['AreaCode'])->first();
+                $areaId = $area ? $area->id : 18;
+
                 if ($supplier) {
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
@@ -80,6 +83,7 @@ class SyncAutoCountController extends Controller
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
                         'currency_id' => $currencyId,
                         'updated_at' => now(),
+                        'area_id' => $areaId,
 
                         'type' => '1',
                         'registered_name' => $record['CompanyName'],
@@ -126,6 +130,7 @@ class SyncAutoCountController extends Controller
                         'currency_id' => $currencyId,
                         'created_at' => now(),
                         'updated_at' => now(),
+                        'area_id' => $areaId,
 
                         'registered_name' => $record['CompanyName'],
                         'tin_number' => $record['TIN'],
@@ -209,6 +214,9 @@ class SyncAutoCountController extends Controller
                     $record['MSIC']
                 ]);
 
+                $area = DB::table('areas')->where('name', $record['AreaCode'])->first();
+                $areaId = $area ? $area->id : 18;
+
                 if ($supplier) {
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
@@ -223,6 +231,7 @@ class SyncAutoCountController extends Controller
                         'debtor_type_id' => $record['DebtorType'],
                         'currency_id' => $currencyId,
                         'updated_at' => now(),
+                        'area_id' => $areaId,
                         
                         'type' => '1',
                         'registered_name' => $record['CompanyName'],
@@ -309,6 +318,7 @@ class SyncAutoCountController extends Controller
                         'currency_id' => $currencyId,
                         'created_at' => now(),
                         'updated_at' => now(),
+                        'area_id' => $areaId,
 
                         'registered_name' => $record['CompanyName'],
                         'tin_number' => $record['TIN'],
