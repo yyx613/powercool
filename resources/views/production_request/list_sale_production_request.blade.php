@@ -45,6 +45,9 @@
 
 @push('scripts')
     <script>
+        SALE_INIT_LOAD = true;
+        SALE_DEFAULT_PAGE = @json($default_sale_page ?? null);
+
         var columns = [{
                 data: 'no'
             },
@@ -160,6 +163,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: SALE_DEFAULT_PAGE != null ? (SALE_DEFAULT_PAGE - 1) * 10 : 0,
             columns: columns,
             columnDefs: columnDefs,
             ajax: {
@@ -167,8 +171,10 @@
                     var info = $('#data-table-sale').DataTable().page.info();
                     var url = "{{ route('production_request.get_data_sale_production_request') }}"
 
-                    url = `${url}?page=${ info.page + 1 }`
+                    url = `${url}?page=${ SALE_INIT_LOAD == true && SALE_DEFAULT_PAGE != null ? SALE_DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table-sale').DataTable().ajax.url(url);
+
+                    SALE_INIT_LOAD = false
                 },
             },
         });

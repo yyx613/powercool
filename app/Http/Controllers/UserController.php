@@ -47,14 +47,19 @@ class UserController extends Controller
 
     public function index()
     {
+        $page = Session::get('user-management-page');
+
         return view('user_management.list', [
             'roles' => ModelsRole::get(),
+            'default_page' => $page ?? null,
         ]);
     }
 
     public function getData(Request $req)
     {
         $records = User::with('roles');
+
+        Session::put('user-management-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {

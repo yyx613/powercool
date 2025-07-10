@@ -1731,7 +1731,7 @@
 
 <!-- Mobile -->
 <aside class="max-w-[250px] w-full bg-blue-900 z-50 fixed top-0 left-0 hidden" id="mobile-sidebar">
-    <div class="h-screen flex flex-col overflow-x-hidden hide-scrollbar">
+    <div class="flex flex-col overflow-x-hidden hide-scrollbar" style="min-height: 100%; height: -webkit-fill-available; height: 100vh;">
         <div class="px-4 pt-4 pb-2 flex items-center">
             <button type="button" class="mobile-sidebar-trigger-btn">
                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"

@@ -75,6 +75,8 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
         DEFAULT_COMPANY_GROUP = @json($default_company_group ?? null);
         TABLE_FILTER = {
             'company_group': DEFAULT_COMPANY_GROUP ?? '',
@@ -87,6 +89,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'code' },
                 { data: 'name' },
@@ -146,8 +149,10 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('dealer.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }&company_group=${ TABLE_FILTER['company_group'] }`
+                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&company_group=${ TABLE_FILTER['company_group'] }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

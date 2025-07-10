@@ -23,8 +23,11 @@ class SupplierController extends Controller
         if (Session::get('supplier-company_group') != null) {
             $company_group = Session::get('supplier-company_group');
         }
+        $page = Session::get('supplier-page');
+
         return view('supplier.list', [
             'default_company_group' => $company_group ?? null,
+            'default_page' => $page ?? null,
         ]);
     }
 
@@ -43,6 +46,8 @@ class SupplierController extends Controller
                     ->orWhere('company_name', 'like', '%' . $keyword . '%');
             });
         }
+
+        Session::put('supplier-page', $req->page);
         if ($req->has('company_group')) {
             if ($req->company_group == null) {
                 Session::remove('supplier-company_group');

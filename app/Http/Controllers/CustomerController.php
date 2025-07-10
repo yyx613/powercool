@@ -43,12 +43,14 @@ class CustomerController extends Controller
         if (Session::get('debtor-sales_agent') != null) {
             $sales_agent = Session::get('debtor-sales_agent');
         }
+        $page = Session::get('debtor-page');
 
         return view('customer.list', [
             'default_debt_type' => $debt_type ?? null,
             'default_company_group' => $company_group ?? null,
             'default_category' => $category ?? null,
             'default_sales_agent' => $sales_agent ?? null,
+            'default_page' => $page ?? null
         ]);
     }
 
@@ -77,6 +79,7 @@ class CustomerController extends Controller
             });
         }
 
+        Session::put('debtor-page', $req->page);
         if ($req->has('debt_type')) {
             if ($req->debt_type == null) {
                 Session::remove('debtor-debt_type');
@@ -294,7 +297,7 @@ class CustomerController extends Controller
                 $err = json_decode($res->getData()->message);
 
                 throw ValidationException::withMessages([
-                    'tin_number' => $err->title ?? $err->message,
+                    'tin_number' => is_string($err) ? $err : ($err->title ?? $err->message),
                     'tin_number_hasil' => true,
                 ]);
             }

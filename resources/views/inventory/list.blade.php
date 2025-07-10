@@ -166,6 +166,8 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
         TYPE = @json($type ?? null);
         IS_PRODUCT = @json($is_product);
         IS_PRODUCTION = @json($is_production);
@@ -404,6 +406,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: columns,
             columnDefs: columnDefs,
             ajax: {
@@ -412,8 +415,10 @@
                     var url = "{{ route('product.get_data') }}"
 
                     url =
-                        `${url}?page=${ info.page + 1 }&is_product=${IS_PRODUCT}&is_production=${IS_PRODUCTION}`
+                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&is_product=${IS_PRODUCT}&is_production=${IS_PRODUCTION}`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
             fnDrawCallback: function(data) {
