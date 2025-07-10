@@ -19,7 +19,13 @@ class ProductionRequestController extends Controller
 {
     public function index()
     {
-        return view('production_request.list');
+        $page = Session::get('production-request-page');
+        $sale_page = Session::get('sale-production-request-page');
+
+        return view('production_request.list', [
+            'default_page' => $page ?? null,
+            'default_sale_page' => $sale_page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
@@ -29,6 +35,8 @@ class ProductionRequestController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
         }
+
+        Session::put('production-request-page', $req->page);
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -67,6 +75,8 @@ class ProductionRequestController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
         }
+
+        Session::put('sale-production-request-page', $req->page);
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

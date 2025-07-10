@@ -71,7 +71,11 @@ class SaleController extends Controller
         if ($req->has('sku')) {
             Session::put('quo-sku', $req->sku);
         }
-        return view('quotation.list', []);
+        $page = Session::get('quotation-page');
+
+        return view('quotation.list', [
+            'default_page' => $page ?? null
+        ]);
     }
 
     public function getData(Request $req)
@@ -101,6 +105,7 @@ class SaleController extends Controller
         if (Session::get('quo-sku') != null) {
             $records = $records->where('sales.sku', Session::get('quo-sku'));
         }
+        Session::put('quotation-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -405,7 +410,11 @@ class SaleController extends Controller
 
     public function indexSaleOrder()
     {
-        return view('sale_order.list', []);
+        $page = Session::get('sale-order-page');
+
+        return view('sale_order.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataSaleOrder(Request $req)
@@ -438,6 +447,7 @@ class SaleController extends Controller
             $records = $records->where('sales.sku', $req->sku);
         }
 
+        Session::put('sale-order-page', $req->page);
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -958,7 +968,7 @@ class SaleController extends Controller
                     $serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
 
                     $pdf_products[] = [
-                        'stock_code' => $dopcs[count($dopcs) - 1]->productChild->sku,
+                        'stock_code' => $dopcs[count($dopcs) - 1]->productChild->parent->sku,
                         'desc' => $dopcs[count($dopcs) - 1]->productChild->parent->model_desc,
                         'qty' => 1,
                         'warranty_periods' => $sp->warrantyPeriods,
@@ -1902,7 +1912,11 @@ class SaleController extends Controller
 
     public function indexDeliveryOrder()
     {
-        return view('delivery_order.list');
+        $page = Session::get('delivery-order-page');
+
+        return view('delivery_order.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataDeliveryOrder(Request $req)
@@ -1946,11 +1960,9 @@ class SaleController extends Controller
         if ($req->has('sku')) {
             $records = $records->where('delivery_orders.sku', $req->sku);
         }
-        //  else {
-        //     $records = $records->where('delivery_orders.sku', $req->sku);
-        // }
         $records = $records->groupBy('delivery_orders.id');
 
+        Session::put('delivery-order-page', $req->page);
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -2136,7 +2148,7 @@ class SaleController extends Controller
                         for ($j = 0; $j < count($dopcs); $j++) {
                             $subtotal = ($dopcs[$j]->doProduct->saleProduct->override_selling_price ?? ($dopcs[$j]->doProduct->saleProduct->qty * $dopcs[$j]->doProduct->saleProduct->unit_price)) - $dopcs[$j]->doProduct->saleProduct->discountAmount();
                             $pdf_products[] = [
-                                'stock_code' => $dopcs[$j]->productChild->sku,
+                                'stock_code' => $dopcs[$j]->productChild->parent->sku,
                                 'model_name' => $dopcs[$j]->productChild->parent->model_name,
                                 'qty' => 1,
                                 'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
@@ -2338,7 +2350,11 @@ class SaleController extends Controller
 
     public function indexInvoice()
     {
-        return view('invoice.list');
+        $page = Session::get('invoice-page');
+
+        return view('invoice.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataInvoice(Request $req)
@@ -2369,6 +2385,7 @@ class SaleController extends Controller
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
             ->groupBy('invoices.id');
 
+        Session::put('invoice-page', $req->page);
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -3517,12 +3534,18 @@ class SaleController extends Controller
 
     public function indexTransportAck()
     {
-        return view('transport_ack.list');
+        $page = Session::get('transport-ack-page');
+
+        return view('transport_ack.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataTransportAck(Request $req)
     {
         $records = TransportAcknowledgement::orderBy('id', 'desc');
+
+        Session::put('transport-ack-page', $req->page);
 
         $records_count = count($records->get());
         $records_ids = $records->pluck('id');

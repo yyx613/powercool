@@ -95,6 +95,8 @@ class ProductionController extends Controller
 
         $can_start_task = count(array_intersect([Role::SUPERADMIN, Role::PRODUCTION_SUPERVISOR], getUserRoleId(Auth::user()))) > 0;
 
+        $page = Session::get('production-page');
+
         return view('production.list', [
             'productin_left' => $this->prod::where('due_date', now()->format('Y-m-d'))->count(),
             'all' => $all_count,
@@ -103,6 +105,7 @@ class ProductionController extends Controller
             'completed' => $completed_count,
             'can_start_task' => $can_start_task,
             'is_sales_only' => isSalesOnly(),
+            'default_page' => $page ?? null,
         ]);
     }
 
@@ -117,6 +120,7 @@ class ProductionController extends Controller
             });
         }
 
+        Session::put('production-page', $req->page);
         $type = Session::get('production-type');
         if ($type != null) {
             if ($type == 'new') {

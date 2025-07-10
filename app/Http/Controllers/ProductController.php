@@ -87,9 +87,21 @@ class ProductController extends Controller
         } else {
             Session::remove('type');
         }
+
+        if (str_contains(Route::currentRouteName(), 'production_finish_good.')) {
+            $page = Session::get('production-finish-good-page');
+        } else if (str_contains(Route::currentRouteName(), 'production_material.')) {
+            $page = Session::get('production-material-page');
+        } else if (str_contains(Route::currentRouteName(), 'product.')) {
+            $page = Session::get('finish-good-page');
+        } else {
+            $page = Session::get('raw-material-page');
+        }
+
         return view('inventory.list', [
             'type' => $req->type ?? null,
             'is_sales_only' => isSalesOnly(),
+            'default_page' => $page ?? null,
         ]);
     }
 
@@ -143,6 +155,20 @@ class ProductController extends Controller
                 $records = $records->withCount(['children' => function ($q) {
                     $q->where('location', ProductChild::LOCATION_FACTORY);
                 }])->having('children_count', '>', 0);
+            }
+        }
+
+        if ($req->boolean('is_production') == true) {
+            if ($req->boolean('is_product') == true) {
+                Session::put('production-finish-good-page', $req->page);
+            } else {
+                Session::put('production-material-page', $req->page);
+            }
+        } else {
+            if ($req->boolean('is_product') == true) {
+                Session::put('finish-good-page', $req->page);
+            } else {
+                Session::put('raw-material-page', $req->page);
             }
         }
 

@@ -17,8 +17,11 @@ class DealerController extends Controller
         if (Session::get('dealer-company_group') != null) {
             $company_group = Session::get('dealer-company_group');
         }
+        $page = Session::get('dealer-page');
+
         return view('dealer.list', [
             'default_company_group' => $company_group ?? null,
+            'default_page' => $page ?? null,
         ]);
     }
 
@@ -35,6 +38,8 @@ class DealerController extends Controller
                     ->orWhere('sku', 'like', '%' . $keyword . '%');
             });
         }
+
+        Session::put('dealer-page', $req->page);
         if ($req->has('company_group')) {
             if ($req->company_group == null) {
                 Session::remove('dealer-company_group');
