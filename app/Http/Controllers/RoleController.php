@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 
@@ -12,12 +13,18 @@ class RoleController extends Controller
 {
     public function index()
     {
-        return view('role_management.list');
+        $page = Session::get('role-management-page');
+
+        return view('role_management.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $request)
     {
         $records = Role::orderBy('id', 'desc');
+
+        Session::put('role-management-page', $request->page);
 
         if ($request->has('keyword') && $request->input('keyword') != '') {
             $records = $records->where('name', 'like', '%'.$request->input('keyword').'%');

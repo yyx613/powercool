@@ -2888,11 +2888,17 @@ class SaleController extends Controller
 
     public function indexTarget()
     {
-        return view('target.list');
+        $page = Session::get('target-page');
+
+        return view('target.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataTarget(Request $req)
     {
+        Session::put('target-page', $req->page);
+
         $records = Target::with('salesperson');
 
         // Search

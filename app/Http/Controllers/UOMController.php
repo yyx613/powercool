@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\UOM;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class UOMController extends Controller
@@ -19,12 +20,18 @@ class UOMController extends Controller
 
     public function index()
     {
-        return view('uom.list');
+        $page = Session::get('uom-page');
+
+        return view('uom.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
         $records = $this->uom;
+
+        Session::put('uom-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -38,6 +45,8 @@ class UOMController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'company_group',
+                2 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

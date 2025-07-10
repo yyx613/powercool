@@ -9,34 +9,45 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class InventoryServiceReminderController extends Controller
 {
     protected $inventoryServiceReminder;
 
-    public function __construct(InventoryServiceReminder $inventoryServiceReminder) {
-        $this->inventoryServiceReminder = $inventoryServiceReminder;        
+    public function __construct(InventoryServiceReminder $inventoryServiceReminder)
+    {
+        $this->inventoryServiceReminder = $inventoryServiceReminder;
     }
 
-    public function index() {
-        return view('service_reminder.list');
+    public function index()
+    {
+        $page = Session::get('inventory-service-reminder-page');
+
+        return view('service_reminder.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
+        Session::put('inventory-service-reminder-page', $req->page);
+
         $records = $this->inventoryServiceReminder;
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->whereHasMorph('objectable', [Product::class, ProductChild::class], function ($query) use ($keyword) {
-                    $query->where('sku', 'like', '%'.$keyword.'%');
+                    $query->where('sku', 'like', '%' . $keyword . '%');
                 });
             });
         }
         // Order
-        $records = $records->groupBy('object_type')->groupBy('object_id')->orderBy('id', 'desc');
+        $records = $records->orderBy('id', 'desc');
+        $records = $records->groupBy('object_type')->groupBy('object_id');
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -51,23 +62,26 @@ class InventoryServiceReminderController extends Controller
         foreach ($records_paginator as $key => $record) {
             $next_service_date = $this->inventoryServiceReminder::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->first();
             $last_service_date = $this->inventoryServiceReminder::where('object_type', $record->object_type)->where('object_id', $record->object_id)->orderBy('id', 'desc')->skip(1)->first();
+            $obj = $record->objectable()->withTrashed()->first();
 
             $data['data'][] = [
                 'id' => Crypt::encrypt($record->id),
-                'sku' => $record->objectable()->withTrashed()->first()->sku,
+                'sku' => $obj == null ? null : $obj->sku,
                 'next_service_date' => Carbon::parse($next_service_date->next_service_date)->format('d M Y'),
                 'last_service_date' => $last_service_date == null ? null : Carbon::parse($last_service_date->next_service_date)->format('d M Y'),
             ];
         }
-                
+
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('service_reminder.form');
     }
 
-    public function view($sr) {
+    public function view($sr)
+    {
         $sr = Crypt::decrypt($sr);
 
         $sr = $this->inventoryServiceReminder::findOrFail($sr);
@@ -77,7 +91,8 @@ class InventoryServiceReminderController extends Controller
         ]);
     }
 
-    public function viewGetData(Request $req) {
+    public function viewGetData(Request $req)
+    {
         $record = $this->inventoryServiceReminder::where('id', $req->id)->first();
 
         $records = $this->inventoryServiceReminder::where([
@@ -102,11 +117,12 @@ class InventoryServiceReminderController extends Controller
                 'service_date' => Carbon::parse($record->next_service_date)->format('d M Y'),
             ];
         }
-                
+
         return response()->json($data);
     }
 
-    public function upsert(Request $req) {
+    public function upsert(Request $req)
+    {
         // Validate form
         $rules = [
             'product' => 'required',
@@ -129,8 +145,8 @@ class InventoryServiceReminderController extends Controller
             ]);
 
             DB::commit();
-            
-            
+
+
             if ($req->create_again == true) {
                 return redirect(route('service_reminder.create'))->with('success', 'Service Date created');
             }

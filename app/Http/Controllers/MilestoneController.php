@@ -9,6 +9,7 @@ use App\Models\ProductMilestone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class MilestoneController extends Controller
@@ -22,13 +23,19 @@ class MilestoneController extends Controller
 
     public function index()
     {
-        return view('milestone.list');
+        $page = Session::get('milestone-page');
+
+        return view('milestone.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
         $records = $this->ms::where('type', Milestone::TYPE_PRODUCTION)
             ->whereNotNull('batch');
+
+        Session::put('milestone-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -48,7 +55,7 @@ class MilestoneController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'name',
+                1 => 'type',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

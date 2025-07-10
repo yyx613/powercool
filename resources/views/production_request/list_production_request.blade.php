@@ -1,7 +1,7 @@
 <div id="list-production-request-container">
     <!-- Filters -->
-    <div class="flex justify-between">
-        <div class="flex items-center gap-x-4 max-w-sm w-full mb-4">
+    <div class="flex justify-end">
+        {{-- <div class="flex items-center gap-x-4 max-w-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">
@@ -13,7 +13,7 @@
                     </div>
                 </x-app.input.input>
             </div>
-        </div>
+        </div> --}}
 
         <div class="flex items-center justify-end mb-4">
             <div class="rounded-md overflow-hidden flex" id="switch-view-btn">
@@ -88,7 +88,6 @@
             {
                 "width": "10%",
                 "targets": 1,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -96,7 +95,6 @@
             {
                 "width": "10%",
                 "targets": 2,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -104,7 +102,6 @@
             {
                 "width": "10%",
                 "targets": 3,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -112,7 +109,6 @@
             {
                 "width": "10%",
                 "targets": 4,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -120,7 +116,6 @@
             {
                 "width": "10%",
                 "targets": 5,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -128,7 +123,6 @@
             {
                 "width": "10%",
                 "targets": 6,
-                orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
                         case 1:

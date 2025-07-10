@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 
 class MaterialUseController extends Controller
 {
@@ -29,31 +30,39 @@ class MaterialUseController extends Controller
 
     public function index()
     {
-        return view('material_use.list');
+        $page = Session::get('material-use-page');
+
+        return view('material_use.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
-        $records = $this->mu::with('approval');
+        $records = $this->mu::with('approval')
+            ->select('material_uses.*', 'products.model_name AS productName', 'products.sku AS productSku')
+            ->leftJoin('products', 'products.id', '=', 'material_uses.product_id');
+
+        Session::put('material-use-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('products.model_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('products.sku', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
-            $map = [
-                0 => 'name',
-            ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy(Product::select('model_name')->whereColumn('material_uses.product_id', 'products.id'), $order['dir']);
+                if ($order['column'] == 0) {
+                    $records = $records->orderBy('products.model_name', $order['dir']);
+                }
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('material_uses.id', 'desc');
         }
 
         $records_paginator = $records->simplePaginate(10);
@@ -67,7 +76,7 @@ class MaterialUseController extends Controller
             }
             $data['data'][] = [
                 'id' => $record->id,
-                'product' => $record->product()->withTrashed()->first(),
+                'product' => '('.$record->productSku.') ' . $record->productName,
                 'avg_cost' => number_format($record->avgCost(), 2),
             ];
         }

@@ -16,6 +16,7 @@ use App\Models\Warranty;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class WarrantyController extends Controller
 {
@@ -38,10 +39,16 @@ class WarrantyController extends Controller
     }
 
     public function index() {
-        return view('warranty.list');
+        $page = Session::get('warranty-page');
+
+        return view('warranty.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
+        Session::put('warranty-page', $req->page);
+
         $cus = DB::table('customers')->select('id', 'name');
         $prods = DB::table('products')->select('id', 'model_name');
 
@@ -97,7 +104,7 @@ class WarrantyController extends Controller
             ->select(
                 'product_children.sku AS serial_no', 
                 'dopcs.inv_id AS inv_id', 'dopcs.inv_sku AS inv_sku', 'dopcs.so_id', 'dopcs.customer_name AS customer_name', 
-                'dopcs.warranty', 'dopcs.warranty_period', 'dopcs.warranty_period', 'dopcs.inv_created_at',
+                'dopcs.warranty', 'dopcs.warranty_period', 'dopcs.inv_created_at',
                 'prods.model_name AS product_name',
             )
             ->joinSub($dopcs, 'dopcs', function ($join) {
@@ -120,7 +127,20 @@ class WarrantyController extends Controller
             });
         }
         // Order
-        $records = $records->orderBy('inv_id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                0 => 'dopcs.inv_sku',
+                1 => 'dopcs.customer_name',
+                2 => 'prods.model_name',
+                3 => 'product_children.sku',
+                4 => 'dopcs.warranty',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('inv_id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('inv_id');

@@ -38,7 +38,8 @@ class ReportController extends Controller
     protected $taskMs;
     protected $taskMsInventory;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->production = new Production;
         $this->product = new Product;
         $this->sale = new Sale;
@@ -49,12 +50,14 @@ class ReportController extends Controller
         $this->taskMsInventory = new TaskMilestoneInventory();
     }
 
-    public function indexProduction() {
+    public function indexProduction()
+    {
         $this->clearSession();
         return view('report.production_list');
     }
 
-    public function getDataProduction(Request $req) {
+    public function getDataProduction(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -62,7 +65,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->queryProduction($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -86,15 +89,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelProduction() {
-        $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelProduction()
+    {
+        $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new ProductionReportExport($records), 'production-report.xlsx');
     }
 
-    public function exportInPdfProduction() {
-        $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfProduction()
+    {
+        $records = $this->queryProduction(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.production_list_pdf', [
@@ -105,7 +110,8 @@ class ReportController extends Controller
         return $pdf->download('production-report.pdf');
     }
 
-    private function queryProduction(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function queryProduction(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $records = $this->production;
 
         // Daterange
@@ -122,7 +128,7 @@ class ReportController extends Controller
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->orWhereHas('product', function ($q) use ($keyword) {
-                    return $q->where('model_name', 'like', '%' . $keyword . '%')->orWhere('sku', 'like', '%'.$keyword.'%');
+                    return $q->where('model_name', 'like', '%' . $keyword . '%')->orWhere('sku', 'like', '%' . $keyword . '%');
                 });
             });
         }
@@ -131,12 +137,14 @@ class ReportController extends Controller
         return $records;
     }
 
-    public function indexSales() {
+    public function indexSales()
+    {
         $this->clearSession();
         return view('report.sales_list');
     }
 
-    public function getDataSales(Request $req) {
+    public function getDataSales(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -144,7 +152,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->querySales($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -161,7 +169,7 @@ class ReportController extends Controller
         $overall_amount = 0;
         foreach ($records_paginator as $key => $record) {
             $overall_qty += $record->sum_qty;
-            $overall_amount += $record->sum_amount - $record->sum_promo_amount - ($record->payment_amount ?? 0);
+            $overall_amount += $record->sum_amount - $record->sum_promo_amount - ($record->paymentAmount ?? 0);
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -169,7 +177,7 @@ class ReportController extends Controller
                 'qty' => $record->sum_qty,
                 'promo' => number_format($record->sum_promo_amount, 2),
                 'amount' => number_format($record->sum_amount - $record->sum_promo_amount, 2),
-                'outstanding_amount' => number_format($record->sum_amount - $record->sum_promo_amount - ($record->payment_amount ?? 0), 2),
+                'outstanding_amount' => number_format($record->sum_amount - $record->sum_promo_amount - ($record->paymentAmount ?? 0), 2),
                 'overall_qty' => $overall_qty,
                 'overall_amount' => number_format($overall_amount, 2),
             ];
@@ -178,15 +186,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelSales() {
-        $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelSales()
+    {
+        $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new SalesReportExport($records), 'sales-report.xlsx');
     }
 
-    public function exportInPdfSales() {
-        $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfSales()
+    {
+        $records = $this->querySales(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.sales_list_pdf', [
@@ -197,13 +207,16 @@ class ReportController extends Controller
         return $pdf->download('sales-report.pdf');
     }
 
-    private function querySales(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function querySales(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $promo = DB::table('promotions')
             ->select('id', 'amount');
 
         $amount = DB::table('sale_products')
             ->select(
-                'sale_products.sale_id', 'sale_products.promotion_id', DB::raw('SUM(sale_products.qty) as sum_qty'),
+                'sale_products.sale_id',
+                'sale_products.promotion_id',
+                DB::raw('SUM(sale_products.qty) as sum_qty'),
                 DB::raw('SUM(sale_products.qty * sale_products.unit_price) as sum_amount'),
                 DB::raw('SUM(promo.amount) as sum_promo_amount')
             )
@@ -212,16 +225,30 @@ class ReportController extends Controller
                 $join->on('sale_products.promotion_id', '=', 'promo.id');
             });
 
+        $payment_amount = DB::table('sale_payment_amounts')
+            ->select(
+                'sale_payment_amounts.sale_id',
+                DB::raw('SUM(sale_payment_amounts.amount) as paymentAmount')
+            )
+            ->groupBy('sale_payment_amounts.sale_id');
+
         $records = DB::table('sales')
             ->select(
-                'sales.id AS id', 'sales_agents.name AS saleperson', DB::raw('SUM(sum_qty) as sum_qty'),
-                DB::raw('SUM(sum_amount) as sum_amount'), DB::raw('SUM(sum_promo_amount) as sum_promo_amount'),
-                'sales.payment_amount AS payment_amount', 'sales.created_at'
+                'sales.id AS id',
+                'sales_agents.name AS saleperson',
+                DB::raw('SUM(sum_qty) as sum_qty'),
+                DB::raw('SUM(sum_amount) as sum_amount'),
+                DB::raw('SUM(sum_promo_amount) as sum_promo_amount'),
+                'payment_amount.paymentAmount AS payment_amount',
+                'sales.created_at'
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->join('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->joinSub($amount, 'amount', function ($join) {
                 $join->on('sales.id', '=', 'amount.sale_id');
+            })
+            ->joinSub($payment_amount, 'payment_amount', function ($join) {
+                $join->on('sales.id', '=', 'payment_amount.sale_id');
             });
 
         // Daterange
@@ -245,11 +272,13 @@ class ReportController extends Controller
         return $records;
     }
 
-    public function indexStock() {
+    public function indexStock()
+    {
         return view('report.stock_list');
     }
 
-    public function getDataStock(Request $req) {
+    public function getDataStock(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -257,7 +286,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->queryStock($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -284,15 +313,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelStock() {
-        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelStock()
+    {
+        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new StockReportExport($records), 'stock-report.xlsx');
     }
 
-    public function exportInPdfStock() {
-        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfStock()
+    {
+        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.stock_list_pdf', [
@@ -303,7 +334,8 @@ class ReportController extends Controller
         return $pdf->download('stock-report.pdf');
     }
 
-    private function queryStock(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function queryStock(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $records = $this->product;
 
         // Daterange
@@ -319,8 +351,8 @@ class ReportController extends Controller
         // Search
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_name', 'like', '%'.$keyword.'%');
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_name', 'like', '%' . $keyword . '%');
             });
         }
         $records = $records->orderBy('id', 'desc');
@@ -328,11 +360,13 @@ class ReportController extends Controller
         return $records;
     }
 
-    public function indexEarning() {
+    public function indexEarning()
+    {
         return view('report.earning_list');
     }
 
-    public function getDataEarning(Request $req) {
+    public function getDataEarning(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -340,7 +374,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->queryEarning($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -366,15 +400,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelEarning() {
-        $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelEarning()
+    {
+        $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new EarningReportExport($records), 'earning-report.xlsx');
     }
 
-    public function exportInPdfEarning() {
-        $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfEarning()
+    {
+        $records = $this->queryEarning(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.earning_list_pdf', [
@@ -385,15 +421,19 @@ class ReportController extends Controller
         return $pdf->download('earning-report.pdf');
     }
 
-    private function queryEarning(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function queryEarning(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $promo = DB::table('promotions')->select('id', 'amount');
 
         $sales = DB::table('sales')->where('type', Sale::TYPE_SO);
-        
+
         $records = DB::table('sale_products')
             ->select(
-                'sale_products.sale_id', 'sale_products.product_id AS product_id', 'products.model_name AS model_name', 'products.sku AS sku',
-                DB::raw('SUM(sale_products.cost) as sum_cost'), 
+                'sale_products.sale_id',
+                'sale_products.product_id AS product_id',
+                'products.model_name AS model_name',
+                'products.sku AS sku',
+                DB::raw('SUM(sale_products.cost) as sum_cost'),
                 DB::raw('SUM(promo.amount) as sum_promo_amount'),
                 DB::raw('SUM(sale_products.qty * sale_products.unit_price - sale_products.cost) as sum_amount'),
             )
@@ -427,11 +467,13 @@ class ReportController extends Controller
         return $records;
     }
 
-    public function indexService() {
+    public function indexService()
+    {
         return view('report.service_list');
     }
 
-    public function getDataService(Request $req) {
+    public function getDataService(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -439,7 +481,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->queryService($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -463,15 +505,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelService() {
-        $records = $this->queryService(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelService()
+    {
+        $records = $this->queryService(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new ServiceReportExport($records), 'service-report.xlsx');
     }
 
-    public function exportInPdfService() {
-        $records = $this->queryService(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfService()
+    {
+        $records = $this->queryService(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.service_list_pdf', [
@@ -482,7 +526,8 @@ class ReportController extends Controller
         return $pdf->download('service-report.pdf');
     }
 
-    private function queryService(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function queryService(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $part_replacement_ms_id = $this->ms::where('type', $this->ms::TYPE_SERVICE_TASK)
             ->where('is_custom', false)
             ->where('name', 'Part Replacement')
@@ -490,9 +535,10 @@ class ReportController extends Controller
 
         $records = DB::table('tasks')
             ->select(
-                'tasks.id AS id', 'products.model_name AS product',
-                DB::raw('SUM(tasks.amount_to_collect) as income_generated'), 
-                DB::raw('COUNT(*) as service_count'), 
+                'tasks.id AS id',
+                'products.model_name AS product',
+                DB::raw('SUM(tasks.amount_to_collect) as income_generated'),
+                DB::raw('COUNT(*) as service_count'),
             )
             ->where('tasks.type', Task::TYPE_TECHNICIAN)
             ->leftJoin('task_milestone', 'tasks.id', '=', 'task_milestone.task_id')
@@ -522,11 +568,13 @@ class ReportController extends Controller
         return $records;
     }
 
-    public function indexTechnicianStock() {
+    public function indexTechnicianStock()
+    {
         return view('report.technician_stock_list');
     }
 
-    public function getDataTechnicianStock(Request $req) {
+    public function getDataTechnicianStock(Request $req)
+    {
         $keyword = null;
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -534,7 +582,7 @@ class ReportController extends Controller
         Session::put('report_start_date', $req->start_date);
         Session::put('report_end_date', $req->end_date);
         Session::put('report_keyword', $keyword);
-        
+
         $records = $this->queryTechnicianStock($req->start_date, $req->end_date, $keyword);
 
         $records_count = $records->count();
@@ -559,15 +607,17 @@ class ReportController extends Controller
         return response()->json($data);
     }
 
-    public function exportInExcelTechnicianStock() {
-        $records = $this->queryTechnicianStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInExcelTechnicianStock()
+    {
+        $records = $this->queryTechnicianStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         return Excel::download(new TechnicianStockReportExport($records), 'technician-stock-report.xlsx');
     }
 
-    public function exportInPdfTechnicianStock() {
-        $records = $this->queryTechnicianStock(Session::get('report_start_date'), Session::get('report_end_date' ), Session::get('report_keyword'));
+    public function exportInPdfTechnicianStock()
+    {
+        $records = $this->queryTechnicianStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
         $records = $records->get();
 
         $pdf = Pdf::loadView('report.technician_stock_list_pdf', [
@@ -578,7 +628,8 @@ class ReportController extends Controller
         return $pdf->download('technician-stock-report.pdf');
     }
 
-    private function queryTechnicianStock(?string $start_date='null', ?string $end_date='null', ?string $keyword) {
+    private function queryTechnicianStock(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    {
         $part_replacement_ms_id = $this->ms::where('type', $this->ms::TYPE_SERVICE_TASK)
             ->where('is_custom', false)
             ->where('name', 'Part Replacement')
@@ -586,8 +637,11 @@ class ReportController extends Controller
 
         $records = DB::table('tasks')
             ->select(
-                'tasks.id AS id', 'tasks.sku AS sku', 'users.name AS technician', 'products.model_name AS product_for_replacement',
-                DB::raw('SUM(task_milestone_inventories.qty) as material_used_qty'), 
+                'tasks.id AS id',
+                'tasks.sku AS sku',
+                'users.name AS technician',
+                'products.model_name AS product_for_replacement',
+                DB::raw('SUM(task_milestone_inventories.qty) as material_used_qty'),
             )
             ->where('tasks.type', Task::TYPE_TECHNICIAN)
             ->leftJoin('task_milestone', 'tasks.id', '=', 'task_milestone.task_id')
@@ -621,7 +675,8 @@ class ReportController extends Controller
         return $records;
     }
 
-    private function clearSession() {
+    private function clearSession()
+    {
         Session::forget('report_start_date');
         Session::forget('report_end_date');
         Session::forget('report_keyword');

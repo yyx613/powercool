@@ -114,9 +114,13 @@ class CustomerController extends Controller
             if ($req->sales_agent == null) {
                 Session::remove('debtor-sales_agent');
             } else {
-                $records = $records->whereHas('salesAgents', function ($q) use ($req) {
-                    $q->where('sales_agent_id', $req->sales_agent);
-                });
+                if ($req->sales_agent == 'without_agent') {
+                    $records = $records->doesntHave('salesAgents');
+                } else {
+                    $records = $records->whereHas('salesAgents', function ($q) use ($req) {
+                        $q->where('sales_agent_id', $req->sales_agent);
+                    });
+                }
                 Session::put('debtor-sales_agent', $req->sales_agent);
             }
         } else if (Session::get('debtor-sales_agent') != null) {

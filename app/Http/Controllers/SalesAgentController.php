@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\SalesAgent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class SalesAgentController extends Controller
@@ -19,12 +20,18 @@ class SalesAgentController extends Controller
 
     public function index()
     {
-        return view('sales_agent.list');
+        $page = Session::get('sales-agent-page');
+
+        return view('sales_agent.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
         $records = $this->salesAgent;
+
+        Session::put('sales-agent-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {

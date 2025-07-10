@@ -8,17 +8,24 @@ use App\Models\ProductChild;
 use App\Models\TaskMilestoneInventory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 
 class InventoryServieHistoryController extends Controller
 {
     public function index()
     {
-        return view('service_history.list');
+        $page = Session::get('dealer-page');
+
+        return view('service_history.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
+        Session::put('dealer-page', $req->page);
+
         $tmi_ids = TaskMilestoneInventory::where('inventory_type', ProductChild::class)->pluck('inventory_id');
 
         $records = ProductChild::whereIn('id', $tmi_ids);
@@ -42,7 +49,16 @@ class InventoryServieHistoryController extends Controller
             });
         }
         // Order
-        $records = $records->orderBy('id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

@@ -7,6 +7,7 @@ use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -20,35 +21,49 @@ class PromotionController extends Controller
     }
 
     public function index() {
+        $page = Session::get('promotion-page');
+
         return view('promotion.list');
     }
 
     public function getData(Request $req) {
-        $records = $this->promo;
+        $records = $this->promo
+            ->select('promotions.*', 'products.model_name AS productName')
+            ->join('products', 'promotions.product_id', '=', 'products.id');
+
+        Session::put('promotion-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->where('amount', 'like', '%' . $keyword . '%');
+                $q->where('promotions.sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('promotions.amount', 'like', '%' . $keyword . '%')
+                    ->orWhere('products.model_name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'name',
+                0 => 'promotions.sku',
+                2 => 'promotions.amount',
+                3 => 'promotions.valid_till',
+                4 => 'promotions.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if ($order['column'] == 1) {
+                    $records = $records->orderBy('products.model_name', $order['dir']);
+                } else {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('promotions.id', 'desc');
         }
 
         $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('promotions.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -61,7 +76,7 @@ class PromotionController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'promo_code' => $record->sku,
-                'product' => $record->product->model_name,
+                'product' => $record->productName,
                 'type' => $record->type,
                 'amount' => $record->amount,
                 'valid_till' => $record->valid_till,

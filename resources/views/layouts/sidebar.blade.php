@@ -815,14 +815,14 @@
                                     </li>
                                     <li>
                                         <a href="{{ route('service.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('sync.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                         </a>
@@ -1696,16 +1696,16 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
                     </a>
                 </li>
-                <li>
+                <li> 
                     <a href="{{ route('service.index') }}"
-                        class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('sync.index') }}"
-                        class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                     </a>
@@ -2546,7 +2546,7 @@
                                     </li>
                                     <li>
                                         <a href="{{ route('sync.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                         </a>
@@ -2626,9 +2626,9 @@
                             'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
-                        CURRENT_ROUTE_NAME.includes('task_driver.') ||
-                        CURRENT_ROUTE_NAME.includes('task_technician.') ||
-                        CURRENT_ROUTE_NAME.includes('task_sale.') ||
+                        CURRENT_ROUTE_NAME.includes('task.driver.') ||
+                        CURRENT_ROUTE_NAME.includes('task.technician.') ||
+                        CURRENT_ROUTE_NAME.includes('task.sale.') ||
                         CURRENT_ROUTE_NAME.includes('target.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes(
@@ -2694,9 +2694,9 @@
                         'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
-                    CURRENT_ROUTE_NAME.includes('task_driver.') ||
-                    CURRENT_ROUTE_NAME.includes('task_technician.') ||
-                    CURRENT_ROUTE_NAME.includes('task_sale.') ||
+                    CURRENT_ROUTE_NAME.includes('task.driver.') ||
+                    CURRENT_ROUTE_NAME.includes('task.technician.') ||
+                    CURRENT_ROUTE_NAME.includes('task.sale.') ||
                     CURRENT_ROUTE_NAME.includes('target.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="8"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('service_history.') || CURRENT_ROUTE_NAME.includes(

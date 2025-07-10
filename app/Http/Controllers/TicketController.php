@@ -19,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -50,11 +51,17 @@ class TicketController extends Controller
 
     public function index()
     {
-        return view('ticket.list');
+        $page = Session::get('ticket-page');
+
+        return view('ticket.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
+        Session::put('ticket-page', $req->page);
+
         $records = new Ticket;
 
         // Search
@@ -73,6 +80,7 @@ class TicketController extends Controller
                 0 => 'sku',
                 1 => 'subject',
                 2 => 'created_at',
+                3 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
