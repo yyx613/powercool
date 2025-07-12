@@ -282,6 +282,24 @@ class SyncAutoCountController extends Controller
                         }
                     }
 
+                    $custLocationDelivery = DB::select("SELECT * FROM customer_locations WHERE customer_id = ? AND is_default = ?", [
+                        $supplier->id, 0
+                    ]);
+    
+                    if(!empty($record['DeliverAddr1'])) {
+                        if (!$custLocationDelivery) {
+                            // Insert new branch entry
+                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address1, address2, address3, address4, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                    $supplier->id, 1, 0, $record['DeliverAddr1'], $record['DeliverAddr2'], $record['DeliverAddr3'], $record['DeliverAddr4'], $record['DeliverPostCode'], now(), now()
+                            ]);
+                        }else {
+                            // Update existing branch entry
+                            DB::update("UPDATE customer_locations SET address1 = ?, address2 = ?, address3 = ?, address4 = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
+                                $record['DeliverAddr1'], $record['DeliverAddr2'], $record['DeliverAddr3'], $record['DeliverAddr4'], $record['DeliverPostCode'], $supplier->id, 0
+                            ]);
+                        }
+                    }
+
                     if (!empty($record['SalesAgent'])) {
                         $salesAgent = DB::table('sales_agents')->where('name', $record['SalesAgent'])->first();
 
@@ -367,6 +385,24 @@ class SyncAutoCountController extends Controller
                         }
                     }
 
+                    $custLocationDelivery = DB::select("SELECT * FROM customer_locations WHERE customer_id = ? AND is_default = ?", [
+                        $supplier->id, 0
+                    ]);
+    
+                    if(!empty($record['DeliverAddr1'])) {
+                        if (!$custLocationDelivery) {
+                            // Insert new branch entry
+                            DB::insert("INSERT INTO customer_locations (customer_id, type, is_default, address1, address2, address3, address4, zip_code,created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                                    $supplier->id, 1, 0, $record['DeliverAddr1'], $record['DeliverAddr2'], $record['DeliverAddr3'], $record['DeliverAddr4'], $record['DeliverPostCode'], now(), now()
+                            ]);
+                        }else {
+                            // Update existing branch entry
+                            DB::update("UPDATE customer_locations SET address1 = ?, address2 = ?, address3 = ?, address4 = ?, zip_code = ? WHERE customer_id = ? AND is_default = ?", [
+                                $record['DeliverAddr1'], $record['DeliverAddr2'], $record['DeliverAddr3'], $record['DeliverAddr4'], $record['DeliverPostCode'], $supplier->id, 0
+                            ]);
+                        }
+                    }
+
                     if (!empty($record['SalesAgent'])) {
                         $salesAgent = DB::table('sales_agents')->where('name', $record['SalesAgent'])->first();
 
@@ -446,12 +482,17 @@ class SyncAutoCountController extends Controller
         //                      ->where('company_group', $companyGroup)
         //                      ->get();
 
-         $customers = DB::table('customers')
-        ->join('customer_locations', 'customers.id', '=', 'customer_locations.customer_id')
+        $customers = DB::table('customers')
+        ->leftJoin('customer_locations', 'customers.id', '=', 'customer_locations.customer_id')
         ->where('customers.sync', 0)
         ->where('customers.company_group', $companyGroup)
-        ->select('customers.*', 'customer_locations.*') // or select specific columns
+        ->where(function ($query) {
+            $query->where('customer_locations.is_default', 1)
+                ->orWhereNull('customer_locations.id'); // assumes 'id' is the PK of customer_locations
+        })
+        ->select('customers.*', 'customer_locations.*')
         ->get();
+
     
         // Return only the array of suppliers without any wrapper
         return response()->json($customers);
