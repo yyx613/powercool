@@ -490,7 +490,17 @@ class SyncAutoCountController extends Controller
             $query->where('customer_locations.is_default', 1)
                 ->orWhereNull('customer_locations.id'); // assumes 'id' is the PK of customer_locations
         })
-        ->select('customers.*', 'customer_locations.*')
+        ->select(
+        'customers.*',
+        'customer_locations.id as location_id',
+        'customer_locations.address1',
+        'customer_locations.address2',
+        'customer_locations.address3',
+        'customer_locations.address4',
+        'customer_locations.zip_code',
+        'customer_locations.type',
+        'customer_locations.is_default'
+        )
         ->get();
 
     
