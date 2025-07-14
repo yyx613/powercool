@@ -134,8 +134,9 @@ class CustomerController extends Controller
             $map = [
                 1 => 'sku',
                 2 => 'name',
-                3 => 'phone',
-                4 => 'company_name',
+                4 => 'phone',
+                5 => 'company_name',
+                10 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

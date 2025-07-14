@@ -269,6 +269,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
             Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
+            Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
             Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/transfer-back/{sale}', 'transferBackSaleOrder')->name('transfer_back')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);

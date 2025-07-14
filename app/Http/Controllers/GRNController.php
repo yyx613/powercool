@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class GRNController extends Controller
@@ -37,11 +38,17 @@ class GRNController extends Controller
 
     public function index()
     {
-        return view('grn.list');
+        $page = Session::get('grn-page');
+
+        return view('grn.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
+        Session::put('grn-page', $req->page);
+
         $records = $this->grn;
 
         // Search
@@ -53,7 +60,17 @@ class GRNController extends Controller
             });
         }
         // Order
-        $records = $records->groupBy('sku')->orderBy('id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                1 => 'sku',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+        $records = $records->groupBy('sku');
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

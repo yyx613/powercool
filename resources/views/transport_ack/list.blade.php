@@ -107,7 +107,6 @@
                 {
                     "width": "10%",
                     "targets": 1,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -115,7 +114,6 @@
                 {
                     "width": "10%",
                     "targets": 2,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -123,7 +121,7 @@
                 {
                     "width": "10%",
                     "targets": 3,
-                    'orderable': false,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -131,7 +129,6 @@
                 {
                     "width": "10%",
                     "targets": 4,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -139,7 +136,6 @@
                 {
                     "width": "10%",
                     "targets": 5,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }

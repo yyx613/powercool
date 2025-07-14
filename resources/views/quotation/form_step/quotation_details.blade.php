@@ -160,6 +160,8 @@
                     }
                     if (INIT_EDIT) {
                         $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                    } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                        $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
                     }
                     break
                 }

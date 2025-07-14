@@ -12,12 +12,17 @@ use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class InvoiceReturnController extends Controller
 {
     public function index()
     {
-        return view('invoice_return.list');
+        $page = Session::get('invoice-return-page');
+
+        return view('invoice_return.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function productSelection(Invoice $inv)

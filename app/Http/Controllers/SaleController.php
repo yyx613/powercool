@@ -80,6 +80,8 @@ class SaleController extends Controller
 
     public function getData(Request $req)
     {
+        Session::put('quotation-page', $req->page);
+
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id',
@@ -90,14 +92,19 @@ class SaleController extends Controller
                 'sales.convert_to AS transfer_to',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
-                'sales.status AS status'
+                'sales.status AS status',
+                DB::raw('SUM(sale_products.unit_price * sale_products.qty) AS total_amount')
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', 'like', '%Sale')
+            ->whereNull('sales.deleted_at')
+            ->whereNull('sale_products.deleted_at')
+            ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
-            ->leftJoin('branches', 'sales.id', '=', 'branches.object_id');
+            ->leftJoin('branches', 'sales.id', '=', 'branches.object_id')
+            ->groupBy('sales.id');
 
         if (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
             $records = $records->where('branches.location', getCurrentUserBranch());
@@ -105,7 +112,6 @@ class SaleController extends Controller
         if (Session::get('quo-sku') != null) {
             $records = $records->where('sales.sku', Session::get('quo-sku'));
         }
-        Session::put('quotation-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -123,21 +129,23 @@ class SaleController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'doc_no',
-                1 => 'date',
-                2 => 'debtor_code',
-                3 => 'debtor_name',
-                5 => 'agent',
+                0 => 'sales.sku',
+                1 => 'sales.created_at',
+                2 => 'customers.sku',
+                3 => 'customers.name',
+                4 => 'sales_agents.name',
+                6 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
+                7 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('sales.id', 'desc');
         }
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_count = count($records->get());
+        $records_ids = $records->pluck('sales.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -147,9 +155,6 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $record) {
-            $quo = Sale::where('type', Sale::TYPE_QUO)->where('id', $record->id)->first();
-            $total_amount = $quo->getTotalAmount();
-
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -158,7 +163,7 @@ class SaleController extends Controller
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,
                 'curr_code' => $record->curr_code ?? null,
-                'total' => number_format($total_amount, 2),
+                'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
                 'can_edit' => hasPermission('sale.quotation.edit'),
                 'can_delete' => hasPermission('sale.quotation.delete'),
@@ -419,6 +424,8 @@ class SaleController extends Controller
 
     public function getDataSaleOrder(Request $req)
     {
+        Session::put('sale-order-page', $req->page);
+
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id',
@@ -433,21 +440,24 @@ class SaleController extends Controller
                 'sales.payment_status',
                 DB::raw('SUM(sale_products.qty) AS qty'),
                 DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'),
+                DB::raw('SUM(sale_products.qty * sale_products.unit_price) AS total_amount'),
+                DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
+            ->whereNull('sale_products.deleted_at')
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
+            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
             ->groupBy('sales.id');
 
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
         }
 
-        Session::put('sale-order-page', $req->page);
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -470,11 +480,15 @@ class SaleController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'doc_no',
-                1 => 'date',
-                2 => 'debtor_code',
-                4 => 'debtor_name',
-                5 => 'agent',
+                0 => 'sales.sku',
+                1 => 'sales.created_at',
+                2 => 'customers.sku',
+                4 => 'customers.name',
+                5 => 'sales_agents.name',
+                8 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
+                9 => DB::raw('SUM(sale_payment_amounts.amount)'),
+                10 => 'sales.payment_status',
+                11 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -483,7 +497,7 @@ class SaleController extends Controller
             $records = $records->orderBy('sales.id', 'desc');
         }
 
-        $records_count = $records->count();
+        $records_count = count($records->get());
         $records_ids = $records->pluck('sales.id');
         $records_paginator = $records->simplePaginate(10);
 
@@ -494,10 +508,6 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $record) {
-            $so = Sale::where('type', Sale::TYPE_SO)->where('id', $record->id)->first();
-            $paid_amount = $so->getPaidAmount();
-            $total_amount = $so->getTotalAmount();
-
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -507,8 +517,8 @@ class SaleController extends Controller
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,
                 'curr_code' => $record->curr_code ?? null,
-                'paid' => number_format($paid_amount, 2),
-                'total' => number_format($total_amount, 2),
+                'paid' => number_format($record->paid_amount, 2),
+                'total' => number_format($record->total_amount, 2),
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
                 'qty' => $record->qty,
@@ -539,6 +549,10 @@ class SaleController extends Controller
 
     public function editSaleOrder(Sale $sale)
     {
+        $is_view = false;
+        if(str_contains(Route::currentRouteName(), '.view')) {
+            $is_view = true;
+        }
         if ($sale->status == Sale::STATUS_CANCELLED) {
             $sale->load([
                 'products' => function ($q) {
@@ -567,7 +581,8 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
-            'payment_editable_only' => $sale->convertFromQuo() || in_array(Role::FINANCE, getUserRoleId(Auth::user()))
+            'payment_editable_only' => $sale->convertFromQuo() || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
+            'is_view' => $is_view,
         ]);
     }
 
@@ -1989,6 +2004,8 @@ class SaleController extends Controller
                 2 => 'customers.sku',
                 5 => 'customers.name',
                 6 => 'users.name',
+                9 => 'created_by.name',
+                10 => 'delivery_orders.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -2385,7 +2402,11 @@ class SaleController extends Controller
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
             ->groupBy('invoices.id');
 
-        Session::put('invoice-page', $req->page);
+        if ($req->has('is_return')) {
+            Session::put('invoice-return-page', $req->page);
+        } else {
+            Session::put('invoice-page', $req->page);
+        }
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -2406,13 +2427,26 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
-            $map = [
-                1 => 'invoices.sku',
-                2 => 'invoices.date',
-                3 => 'customers.sku',
-                5 => 'customers.name',
-                6 => 'users.name',
-            ];
+
+            if ($req->has('is_return')) {
+                $map = [
+                    0 => 'invoices.sku',
+                    1 => 'invoices.date',
+                    2 => 'customers.sku',
+                    4 => 'customers.name',
+                    5 => 'sales_agents.name',
+                    10 => 'invoices.status',
+                ];
+            } else {
+                $map = [
+                    1 => 'invoices.sku',
+                    2 => 'invoices.date',
+                    3 => 'customers.sku',
+                    5 => 'customers.name',
+                    6 => 'sales_agents.name',
+                    11 => 'invoices.status',
+                ];
+            }
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
@@ -3054,11 +3088,16 @@ class SaleController extends Controller
 
     public function indexBilling()
     {
-        return view('billing.list');
+        $page = Session::get('billing-page');
+
+        return view('billing.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataBilling(Request $req)
     {
+        Session::put('billing-page', $req->page);
         $records = new Billing;
 
         // Search
@@ -3072,7 +3111,8 @@ class SaleController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
+                1 => 'sku',
+                2 => 'date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -3309,46 +3349,52 @@ class SaleController extends Controller
 
     public function indexPendingOrder()
     {
-        return view('sale_pending.list');
+        $page = Session::get('pending-order-page');
+
+        return view('sale_pending.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataPendingOrder(Request $req)
     {
+        Session::put('pending-order-page', $req->page);
+
         $records = Sale::where('type', Sale::TYPE_PENDING);
+
+        $records = $records
+            ->select('sales.*', 'platforms.name AS platformName', DB::raw('SUM("sale_payment_amounts.amount") AS paymentAmounts'))
+            ->leftJoin('platforms', 'platforms.id', '=', 'sales.platform_id')
+            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
+            ->whereNull('sale_payment_amounts.deleted_at');
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('platform', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%' . $keyword . '%');
-                    })
-                    ->orWhere('reference', 'like', '%' . $keyword . '%')
-                    ->orWhere('remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_method', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_amount', 'like', '%' . $keyword . '%')
-                    ->orWhere('payment_remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('delivery_instruction', 'like', '%' . $keyword . '%');
+                $q->where('sales.sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('platforms.name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
-                1 => 'payment_amount',
-                2 => 'platform',
+                1 => 'sales.sku',
+                2 => DB::raw('SUM("sale_payment_amounts.amount")'),
+                3 => 'platforms.name',
+                4 => 'sales.status',
             ];
             foreach ($req->order as $order) {
-                $records->orderBy($map[$order['column']], $order['dir']);
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
-            $records->orderBy('id', 'desc');
+            $records = $records->orderBy('sales.id', 'desc');
         }
+        $records = $records->groupBy('sales.id');
 
         $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('sales.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -3361,9 +3407,9 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'total_amount' => $record->payment_amount,
+                'total_amount' => $record->paymentAmount,
                 'status' => $record->status,
-                'platform' => $record->platform->name ?? '-',
+                'platform' => $record->platformName ?? '-',
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
             ];
@@ -3549,12 +3595,35 @@ class SaleController extends Controller
 
     public function getDataTransportAck(Request $req)
     {
-        $records = TransportAcknowledgement::orderBy('id', 'desc');
-
         Session::put('transport-ack-page', $req->page);
+        
+        $records = new TransportAcknowledgement;
+        $records = $records
+            ->select(
+                'transport_acknowledgements.*',
+                'users.name AS customerName',
+                'generator.name AS generatedBy',
+            )
+            ->leftJoin('users', 'users.id', '=', 'transport_acknowledgements.customer_id')
+            ->leftJoin('users AS generator', 'generator.id', '=', 'transport_acknowledgements.generated_by');
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'transport_acknowledgements.sku',
+                2 => 'transport_acknowledgements.date',
+                4 => 'users.name',
+                5 => 'generator.name',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('transport_acknowledgements.id', 'desc');
+        }
 
         $records_count = count($records->get());
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('transport_acknowledgements.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -3576,8 +3645,8 @@ class SaleController extends Controller
                 'sku' => $record->sku,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
                 'dealer' => $record->dealerName(),
-                'customer' => $record->customer == null ? null : $record->customer->name,
-                'created_by' => $record->createdBy == null ? null : $record->createdBy->name,
+                'customer' => $record->customerName,
+                'created_by' => $record->generatedBy,
                 'filename' => $transport_ack_filename,
             ];
         }

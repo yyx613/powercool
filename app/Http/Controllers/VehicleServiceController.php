@@ -8,6 +8,7 @@ use App\Models\VehicleServiceItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class VehicleServiceController extends Controller
@@ -24,26 +25,48 @@ class VehicleServiceController extends Controller
 
     public function index()
     {
-        return view('vehicle_service.list');
+        $page = Session::get('vehicle-service-page');
+
+        return view('vehicle_service.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
+        Session::put('vehicle-service-page', $req->page);
+
         $records = $this->vs;
+        $records = $records
+            ->select(
+                'vehicle_services.*', 'vehicles.plate_number AS plateNumber',
+            )
+            ->leftJoin('vehicles', 'vehicles.id', '=', 'vehicle_services.vehicle_id');
+            
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->whereHas('vehicle', function ($q) use ($keyword) {
-                    $q->where('plate_number', 'like', '%'.$keyword.'%');
-                })
-                    ->orWhere('petrol', 'like', '%'.$keyword.'%')
-                    ->orWhere('toll', 'like', '%'.$keyword.'%');
+                $q->where('vehicles.plate_number', 'like', '%'.$keyword.'%')
+                    ->orWhere('vehicle_services.amount', 'like', '%'.$keyword.'%');
             });
         }
-        $records = $records->orderBy('id', 'desc');
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'vehicles.plate_number',
+                2 => 'vehicle_services.date',
+                3 => 'vehicle_services.remind_at',
+                4 => 'vehicle_services.amount',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -58,7 +81,7 @@ class VehicleServiceController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
-                'vehicle_plate_number' => $record->vehicle->plate_number,
+                'vehicle_plate_number' => $record->plateNumber,
                 'service' => VehicleService::types[$record->type],
                 'date' => $record->date == null ? null : Carbon::parse($record->date)->format('Y M d'),
                 'reminder_date' => $record->remind_at == null ? null : Carbon::parse($record->remind_at)->format('Y M d'),
