@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Priority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class PriorityController extends Controller
@@ -17,11 +18,17 @@ class PriorityController extends Controller
     }
 
     public function index() {
-        return view('priority.list');
+        $page = Session::get('priority-page');
+
+        return view('priority.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
         $records = $this->priority;
+
+        Session::put('priority-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {

@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class AreaController extends Controller
@@ -17,11 +18,17 @@ class AreaController extends Controller
     }
 
     public function index() {
-        return view('area.list');
+        $page = Session::get('area-page');
+
+        return view('area.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
         $records = $this->area;
+
+        Session::put('area-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -35,6 +42,7 @@ class AreaController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

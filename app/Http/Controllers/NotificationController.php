@@ -19,14 +19,19 @@ class NotificationController extends Controller
         if (Session::get('notification-status') != null) {
             $status = Session::get('notification-status');
         }
+        $page = Session::get('notification-page');
+
         return view('notification.list', [
             'statuses' => self::STATUSES,
             'default_status' => $status ?? null,
+            'default_page' => $page ?? null,
         ]);
     }
 
     public function getData(Request $request)
     {
+        Session::put('notification-page', $request->page);
+
         $user = $request->user();
         $records = $user->notifications()->orderBy('created_at', 'desc');
 

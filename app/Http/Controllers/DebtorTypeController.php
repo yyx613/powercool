@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\DebtorType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class DebtorTypeController extends Controller
@@ -17,11 +18,17 @@ class DebtorTypeController extends Controller
     }
 
     public function index() {
-        return view('debtor_type.list');
+        $page = Session::get('debtor-type-page');
+
+        return view('debtor_type.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
         $records = $this->debtor;
+
+        Session::put('debtor-type-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -35,6 +42,7 @@ class DebtorTypeController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

@@ -84,6 +84,8 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
         FOR_ROLE = @json($for_role ?? null);
         SELECTED_TASK_IDS = []
 
@@ -373,6 +375,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: columns,
             columnDefs: columnDefs,
             ajax: {
@@ -380,8 +383,10 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('task.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }&role=${ FOR_ROLE == 'driver' ? 'driver' : (FOR_ROLE == 'technician' ? 'technician' : 'sale') }`
+                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&role=${ FOR_ROLE == 'driver' ? 'driver' : (FOR_ROLE == 'technician' ? 'technician' : 'sale') }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

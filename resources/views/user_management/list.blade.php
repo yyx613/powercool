@@ -52,7 +52,7 @@
                 <x-app.input.select name="filter_role" id="filter_role" class="w-full">
                     <option value="">{{ __('Select a role') }}</option>
                     @foreach ($roles as $role)
-                        <option value="{{ $role->id }}">{{ __($role->name) }}</option>
+                        <option value="{{ $role->id }}" @selected(isset($default_role) && $default_role == $role->id)>{{ __($role->name) }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>

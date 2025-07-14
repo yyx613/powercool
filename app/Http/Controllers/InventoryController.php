@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class InventoryController extends Controller
@@ -41,25 +42,35 @@ class InventoryController extends Controller
 
     public function index()
     {
-        return view('inventory_category.list');
+        $page = Session::get('inventory-category-page');
+
+        return view('inventory_category.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
         $records = $this->invCat;
 
+        Session::put('inventory-category-page', $req->page);
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('factory', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'company_group',
+                2 => 'factory',
+                3 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -462,12 +473,18 @@ class InventoryController extends Controller
 
     public function indexType()
     {
-        return view('inventory_type.list');
+        $page = Session::get('inventory-type-page');
+
+        return view('inventory_type.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getDataType(Request $req)
     {
         $records = $this->invType;
+
+        Session::put('inventory-type-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -481,6 +498,9 @@ class InventoryController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'company_group',
+                2 => 'type',
+                3 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

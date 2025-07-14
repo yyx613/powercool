@@ -61,10 +61,10 @@ class SupplierController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
-                1 => 'name',
-                2 => 'phone',
-                3 => 'company_name',
+                1 => 'sku',
+                2 => 'name',
+                3 => 'phone',
+                4 => 'company_name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

@@ -185,14 +185,12 @@
                     }
                 },
                 {
-                    // "width": "20%",
                     "targets": 1,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    // "width": "20%",
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
@@ -200,7 +198,6 @@
                     }
                 },
                 {
-                    // "width": "10%",
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
@@ -208,7 +205,6 @@
                     }
                 },
                 {
-                    // "width": "20%",
                     "targets": 4,
                     orderable: false,
                     render: function(data, type, row) {
@@ -216,21 +212,18 @@
                     }
                 },
                 {
-                    // "width": "20%",
                     "targets": 5,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    // "width": "20%",
                     "targets": 6,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    // "width": "10%",
                     "targets": 7,
                     orderable: false,
                     render: function(data, type, row) {
@@ -238,7 +231,6 @@
                     }
                 },
                 {
-                    // "width": "10%",
                     "targets": 8,
                     orderable: false,
                     render: function(data, type, row) {
@@ -246,7 +238,6 @@
                     }
                 },
                 {
-                    // "width": '10%',
                     "targets": 9,
                     orderable: false,
                     render: function(data, type, row) {
@@ -261,7 +252,6 @@
                     }
                 },
                 {
-                    // "width": '10%',
                     "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
@@ -282,7 +272,6 @@
                     }
                 },
                 {
-                    // "width": "10%",
                     "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
@@ -290,7 +279,6 @@
                     }
                 },
                 {
-                    // "width": "5%",
                     "targets": 12,
                     "orderable": false,
                     render: function(data, type, row) {

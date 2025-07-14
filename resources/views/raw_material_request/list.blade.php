@@ -76,6 +76,9 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
+
         var columns = [{
                 data: 'no'
             },
@@ -115,7 +118,6 @@
             {
                 "width": "10%",
                 "targets": 1,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -123,7 +125,6 @@
             {
                 "width": "10%",
                 "targets": 2,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -131,7 +132,6 @@
             {
                 "width": "10%",
                 "targets": 3,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -139,7 +139,6 @@
             {
                 "width": "10%",
                 "targets": 4,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -147,7 +146,6 @@
             {
                 "width": "10%",
                 "targets": 5,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -155,7 +153,6 @@
             {
                 "width": "10%",
                 "targets": 6,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -163,7 +160,6 @@
             {
                 "width": "10%",
                 "targets": 7,
-                orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
                         case 1:
@@ -204,6 +200,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: columns,
             columnDefs: columnDefs,
             ajax: {
@@ -212,8 +209,10 @@
                     var url = "{{ route('raw_material_request.get_data') }}"
 
                     url =
-                        `${url}?page=${ info.page + 1 }`
+                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

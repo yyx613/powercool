@@ -7,6 +7,7 @@ use App\Models\WarrantyPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class WarrantyPeriodController extends Controller
 {
@@ -23,11 +24,17 @@ class WarrantyPeriodController extends Controller
     }
 
     public function index() {
-        return view('warranty_period.list');
+        $page = Session::get('warranty-period-page');
+
+        return view('warranty_period.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
         $records = $this->wp;
+
+        Session::put('warranty-period-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -42,6 +49,7 @@ class WarrantyPeriodController extends Controller
             $map = [
                 0 => 'name',
                 1 => 'period',
+                2 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

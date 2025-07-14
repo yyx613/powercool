@@ -25,13 +25,13 @@
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="sale" id="sale" :hasError="$errors->has('sale')"
+            <x-app.input.select name="sale" id="sale" :hasError="$errors->has('sale')"
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales_agents as $sa)
                     <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
-            </x-app.input.select2>
+            </x-app.input.select>
             <x-app.message.error id="sale_err" />
         </div>
         <div class="flex flex-col">
@@ -156,7 +156,10 @@
                     }
                     if (INIT_EDIT) {
                         $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                    } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                        $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
                     }
+
                     break
                 }
             }

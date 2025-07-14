@@ -286,7 +286,6 @@
                 {
                     "width": "10%",
                     "targets": 11,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
                             return '{!! __('Voided') !!}'

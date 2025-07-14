@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Platform;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class PlatformController extends Controller
@@ -17,11 +18,17 @@ class PlatformController extends Controller
     }
 
     public function index() {
-        return view('platform.list');
+        $page = Session::get('platform-page');
+
+        return view('platform.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req) {
         $records = $this->platform;
+
+        Session::put('platform-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -35,6 +42,8 @@ class PlatformController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'can_submit_einvoice',
+                2 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class VehicleController extends Controller
@@ -19,11 +20,17 @@ class VehicleController extends Controller
 
     public function index()
     {
-        return view('vehicle.list');
+        $page = Session::get('vehicle-page');
+
+        return view('vehicle.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
+        Session::put('vehicle-page', $req->page);
+
         $records = $this->vehi;
 
         // Search

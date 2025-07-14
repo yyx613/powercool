@@ -47,11 +47,15 @@ class UserController extends Controller
 
     public function index()
     {
+        if (Session::get('user-management-role') != null) {
+            $role = Session::get('user-management-role');
+        }
         $page = Session::get('user-management-page');
 
         return view('user_management.list', [
             'roles' => ModelsRole::get(),
             'default_page' => $page ?? null,
+            'default_role' => $role ?? null,
         ]);
     }
 
@@ -82,6 +86,16 @@ class UserController extends Controller
             }
         } else {
             $records = $records->orderBy('id', 'desc');
+        }
+
+        if ($req->has('role')) {
+            if ($req->role == null) {
+                Session::remove('user-management-role');
+            } else {
+                Session::put('user-management-role', $req->role);
+            }
+        } else if (Session::get('user-management-role') != null) {
+            $req->merge(['role' => Session::get('user-management-role')]);
         }
 
         $all_records = $records->get();

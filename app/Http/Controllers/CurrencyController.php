@@ -35,6 +35,7 @@ class CurrencyController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

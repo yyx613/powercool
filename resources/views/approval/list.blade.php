@@ -72,6 +72,8 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
         DEFAULT_STATUS = @json($default_status ?? null);
         TABLE_FILTER = {
             'status': DEFAULT_STATUS ?? '',
@@ -85,6 +87,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [{
                     data: 'no'
                 },
@@ -210,8 +213,10 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('approval.get_data') }}"
 
-                    url = `${url}?page=${ info.page + 1 }&status=${ TABLE_FILTER['status'] }`
+                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&status=${ TABLE_FILTER['status'] }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -89,6 +90,8 @@ class TaskController extends Controller
             $role_id = Task::TYPE_DRIVER;
         }
 
+        $page = Session::get('task-page');
+
         $data = [
             'for_role' => $for_role,
             'due_today' => Task::where('type', $role_id)->where('due_date', now()->format('Y-m-d'))->count(),
@@ -96,6 +99,7 @@ class TaskController extends Controller
             'doing' => Task::where('type', $role_id)->where('status', Task::STATUS_DOING)->count(),
             'in_review' => Task::where('type', $role_id)->where('status', Task::STATUS_IN_REVIEW)->count(),
             'completed' => Task::where('type', $role_id)->where('status', Task::STATUS_COMPLETED)->count(),
+            'default_page' => $page ?? null,
         ];
 
         return view('task.list', $data);
@@ -103,6 +107,8 @@ class TaskController extends Controller
 
     public function getData(Request $req)
     {
+        Session::put('task-page', $req->page);
+
         $role = null;
 
         switch ($req->role) {

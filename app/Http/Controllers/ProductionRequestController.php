@@ -30,16 +30,84 @@ class ProductionRequestController extends Controller
 
     public function getData(Request $req)
     {
-        $records = ProductionRequest::orderBy('id', 'desc');
+        Session::put('production-request-page', $req->page);
+
+        $totalRequested = DB::table('production_request_materials')
+            ->select(
+                'production_request_materials.production_request_id',
+                DB::raw('COUNT(production_request_materials.production_request_id) AS totalRequested'),
+            )
+            ->groupBy('production_request_materials.production_request_id');
+
+
+        $fulfilled = DB::table('production_request_materials')
+            ->select(
+                'production_request_materials.production_request_id',
+                DB::raw('COUNT(production_request_materials.production_request_id) AS fulfilled'),
+            )
+            ->where('status', ProductionRequest::STATUS_COMPLETED)
+            ->groupBy('production_request_materials.production_request_id');
+
+        $qty = DB::table('production_request_materials')
+            ->select(
+                'production_request_materials.production_request_id',
+                'totalRequested.totalRequested AS totalRequestedQty',
+                DB::raw('IFNULL(fulfilled.fulfilled, 0) AS fulfilledQty'),
+                DB::raw('IFNULL(SUM(totalRequested.totalRequested - fulfilled.fulfilled), totalRequested.totalRequested) AS balanceQty'),
+            )
+            ->leftJoinSub($totalRequested, 'totalRequested', function ($join) {
+                $join->on('totalRequested.production_request_id', '=', 'production_request_materials.production_request_id');
+            })
+            ->leftJoinSub($fulfilled, 'fulfilled', function ($join) {
+                $join->on('fulfilled.production_request_id', '=', 'production_request_materials.production_request_id');
+            })
+            ->groupBy('production_request_materials.production_request_id');
+
+
+        $records = new ProductionRequest;
+
+        $records = $records
+            ->select(
+                'production_requests.*',
+                'qty.totalRequestedQty',
+                'qty.balanceQty',
+                'qty.fulfilledQty',
+                'users.name AS requestedBy'
+            )
+            ->leftJoin('users', 'users.id', '=', 'production_requests.requested_by')
+            ->leftJoinSub($qty, 'qty', function ($join) {
+                $join->on('qty.production_request_id', '=', 'production_requests.id');
+            });
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
-        }
 
-        Session::put('production-request-page', $req->page);
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'production_requests.created_at',
+                2 => 'qty.totalRequestedQty',  
+                3 => 'qty.balanceQty',
+                4 => 'qty.fulfilledQty',
+                5 => 'users.name',
+                6 => 'production_requests.status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('production_requests.id', 'desc');
+        }
+        $records = $records->groupBy('production_requests.id');
 
         $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('production_requests.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -49,17 +117,14 @@ class ProductionRequestController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            $total_request_qty = $record->materials->count();
-            $fulfilled_qty = $record->completedMaterials()->count();
-
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
                 'date' => Carbon::parse($record->created_at)->format('d M Y H:i'),
-                'total_request_qty' => $total_request_qty,
-                'balance_qty' => $total_request_qty - $fulfilled_qty,
-                'fulfilled_qty' => $fulfilled_qty,
-                'requested_by' => $record->requestedBy->name ?? null,
+                'total_request_qty' => $record->totalRequestedQty,
+                'balance_qty' => $record->balanceQty,
+                'fulfilled_qty' => $record->fulfilledQty ?? 0,
+                'requested_by' => $record->requestedBy ?? null,
                 'status' => $record->status,
                 'remark' => $record->remark,
             ];
@@ -70,7 +135,14 @@ class ProductionRequestController extends Controller
 
     public function getDataSaleProductionRequest(Request $req)
     {
-        $records = SaleProductionRequest::orderBy('id', 'desc');
+        $records = new SaleProductionRequest;
+
+        $records = $records
+            ->select('sale_production_requests.*', 'products.sku AS productSku', 'sales.sku AS soSku', 'productions.sku AS productionSku')
+            ->leftJoin('products', 'products.id', '=', 'sale_production_requests.product_id')
+            ->leftJoin('productions', 'productions.id', '=', 'sale_production_requests.production_id')
+            ->leftJoin('sales', 'sales.id', '=', 'sale_production_requests.sale_id');
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -78,8 +150,33 @@ class ProductionRequestController extends Controller
 
         Session::put('sale-production-request-page', $req->page);
 
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%');
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'created_at',
+                2 => 'sales.sku',
+                3 => 'products.sku',
+                4 => 'productions.sku',
+                6 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('sale_production_requests.id', 'desc');
+        }
+
         $records_count = $records->count();
-        $records_ids = $records->pluck('id');
+        $records_ids = $records->pluck('sale_production_requests.id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [
@@ -95,9 +192,9 @@ class ProductionRequestController extends Controller
                 'no' => $key + 1,
                 'id' => $record->id,
                 'date' => Carbon::parse($record->created_at)->format('d M Y H:i'),
-                'so_no' => $record->sale->sku ?? null,
-                'product' => $record->product->sku ?? null,
-                'production' => $record->production->sku ?? null,
+                'so_no' => $record->soSku ?? null,
+                'product' => $record->productSku ?? null,
+                'production' => $record->productionSku ?? null,
                 'remark' => $remark,
                 'status' => $record->status ?? null,
                 'sale_id' => $record->sale_id,

@@ -6,28 +6,39 @@ use App\Models\Branch;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class ServiceController extends Controller
 {
     protected $service;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->service = new Service();
     }
 
-    public function index() {
-        return view('service.list');
+    public function index()
+    {
+        $page = Session::get('service-page');
+
+        return view('service.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
-    public function getData(Request $req) {
+    public function getData(Request $req)
+    {
         $records = $this->service;
+
+        Session::put('service-page', $req->page);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function($q) use ($keyword) {
+            $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('amount', 'like', '%' . $keyword . '%');
             });
@@ -37,6 +48,7 @@ class ServiceController extends Controller
             $map = [
                 0 => 'name',
                 1 => 'amount',
+                2 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -67,11 +79,13 @@ class ServiceController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('service.form');
     }
 
-    public function store(Request $req) {
+    public function store(Request $req)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
@@ -106,13 +120,15 @@ class ServiceController extends Controller
         }
     }
 
-    public function edit(Service $service) {
+    public function edit(Service $service)
+    {
         return view('service.form', [
             'service' => $service
         ]);
     }
 
-    public function update(Request $req, Service $service) {
+    public function update(Request $req, Service $service)
+    {
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
@@ -142,7 +158,8 @@ class ServiceController extends Controller
         }
     }
 
-    public function delete(Service $service) {
+    public function delete(Service $service)
+    {
         $service->delete();
 
         return back()->with('success', 'Service deleted');

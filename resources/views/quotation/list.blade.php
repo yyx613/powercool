@@ -164,7 +164,6 @@
                 {
                     "width": "10%",
                     "targets": 4,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -180,7 +179,6 @@
                 {
                     "width": "10%",
                     "targets": 6,
-                    orderable: false,
                     render: function(data, type, row) {
                         return `RM ${data}`
                     }
@@ -188,7 +186,6 @@
                 {
                     "width": '10%',
                     "targets": 7,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:

@@ -57,6 +57,9 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
+
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -65,6 +68,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'name' },
                 { data: 'action' },
@@ -95,8 +99,10 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('sales_agent.get_data') }}"
                     
-                    url = `${url}?page=${ info.page + 1 }`
+                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

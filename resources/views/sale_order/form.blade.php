@@ -4,7 +4,7 @@
     <div class="mb-6 flex justify-between items-center">
         <div>
             <x-app.page-title
-                url="{{ route('sale_order.index') }}">{{ isset($sale) ? __('Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
+                url="{{ route('sale_order.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Sale Order - ' : 'Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
         </div>
         @if (!isset($sale))
             <div class="flex flex-col items-end">
@@ -24,17 +24,19 @@
             @include('sale_order.form_step.payment_details')
             @include('sale_order.form_step.remarks')
 
-            <div class="flex justify-end">
-                @if (isset($sale) && $sale->status == 2)
-                    <span
-                        class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
-                @elseif (isset($sale) && $sale->status == 3)
-                    <span
-                        class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
-                @else
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                @endif
-            </div>
+            @if (isset($is_view) && $is_view == false)
+                <div class="flex justify-end">
+                    @if (isset($sale) && $sale->status == 2)
+                        <span
+                            class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
+                    @elseif (isset($sale) && $sale->status == 3)
+                        <span
+                            class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
+                    @else
+                        <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+                    @endif
+                </div>
+            @endif
         </form>
     </div>
 @endsection
@@ -45,16 +47,20 @@
         SALE = @json($sale ?? null);
         QUO = @json($quo ?? null);
         PAYMENT_EDITABLE_ONLY = @json($payment_editable_only ?? null);
+        IS_VIEW = @json($is_view ?? null);
 
         $(document).ready(function() {
             if (SALE == null) {
                 getNextSku()
-
-            } else if (PAYMENT_EDITABLE_ONLY == true) {
-                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input').attr('disabled', true)
-                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input').addClass('!bg-gray-100')
-                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"]').parent().addClass('!bg-gray-100')
-                $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple').css('backgroundColor', '#eee')
+            } else if (PAYMENT_EDITABLE_ONLY == true || IS_VIEW == true) {
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input')
+                    .attr('disabled', true)
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
+                    .addClass('!bg-gray-100')
+                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"]')
+                    .parent().addClass('!bg-gray-100')
+                $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
+                    .css('backgroundColor', '#eee')
             }
         })
 

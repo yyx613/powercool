@@ -44,7 +44,6 @@
         <table id="role-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('No') }}</th>
                     <th>{{ __('Role') }}</th>
                     <th>{{ __('No of Users') }}</th>
                     <th></th>
@@ -69,16 +68,14 @@
             // ordering: false,
             pageLength: 10,
             columns: [
-                { data: 'no' },
                 { data: 'role' },
                 { data: 'user_count_under_role' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { "width": "5%", "targets": 0 },
+                { "width": "15%", "targets": 0 },
                 { "width": "15%", "targets": 1 },
-                { "width": "15%", "targets": 2 },
-                { "width": "5%", "targets": 3, "orderable": false },
+                { "width": "5%", "targets": 2, "orderable": false },
             ]
         });
 

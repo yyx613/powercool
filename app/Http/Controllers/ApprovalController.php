@@ -37,14 +37,19 @@ class ApprovalController extends Controller
         if (Session::get('approval-status') != null) {
             $status = Session::get('approval-status');
         }
+        $page = Session::get('approval-page');
+
         return view('approval.list', [
             'statuses' => self::STATUSES,
             'default_status' => $status ?? null,
+            'default_page' => $page ?? null,
         ]);
     }
 
     public function getData(Request $request)
     {
+        Session::put('approval-page', $request->page);
+
         $records = Approval::latest();
 
         if ($request->has('status')) {
@@ -203,7 +208,7 @@ class ApprovalController extends Controller
                     $obj->delete();
                 }
             } elseif (get_class($obj) == Sale::class) {
-                $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                $obj->status = Sale::STATUS_ACTIVE;
                 $obj->save();
             }
             // Check approval count

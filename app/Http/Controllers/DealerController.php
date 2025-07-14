@@ -29,6 +29,8 @@ class DealerController extends Controller
     {
         $records = new Dealer;
 
+        Session::put('dealer-page', $req->page);
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -39,7 +41,6 @@ class DealerController extends Controller
             });
         }
 
-        Session::put('dealer-page', $req->page);
         if ($req->has('company_group')) {
             if ($req->company_group == null) {
                 Session::remove('dealer-company_group');

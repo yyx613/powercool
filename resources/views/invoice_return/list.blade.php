@@ -63,6 +63,9 @@
 
 @push('scripts')
     <script>
+        INIT_LOAD = true;
+        DEFAULT_PAGE = @json($default_page ?? null);
+
         $('#data-table').on('draw.dt', function() {
             $('.order-checkbox').each(function() {
                 let invoiceId = $(this).data('id');
@@ -85,6 +88,7 @@
             processing: true,
             serverSide: true,
             order: [],
+            displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'doc_no' },
                 { data: 'date' },
@@ -183,7 +187,6 @@
                 {
                     "width": "10%",
                     "targets": 10,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (data == 1) {
                             return '{!! __("Cancelled") !!}'
@@ -212,10 +215,12 @@
             ajax: {
                 data: function(){
                     var info = $('#data-table').DataTable().page.info();
-                    var url = "{{ route('invoice.get_data') }}"
+                    var url = "{{ route('invoice.get_data') }}?is_return=true"
 
-                    url = `${url}?page=${ info.page + 1 }`
+                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
+
+                    INIT_LOAD = false
                 },
             },
         });

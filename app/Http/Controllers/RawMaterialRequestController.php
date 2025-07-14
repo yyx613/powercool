@@ -18,12 +18,64 @@ class RawMaterialRequestController extends Controller
 {
     public function index()
     {
-        return view('raw_material_request.list');
+        $page = Session::get('raw-material-request-page');
+
+        return view('raw_material_request.list', [
+            'default_page' => $page ?? null,
+        ]);
     }
 
     public function getData(Request $req)
     {
-        $records = RawMaterialRequest::orderBy('id', 'desc');
+        Session::put('raw-material-request-page', $req->page);
+
+        $totalRequested = DB::table('raw_material_request_materials')
+            ->select(
+                'raw_material_request_materials.raw_material_request_id',
+                DB::raw('COUNT(raw_material_request_materials.qty) AS totalRequested'),
+            )
+            ->groupBy('raw_material_request_materials.raw_material_request_id');
+
+        $fulfilled = DB::table('raw_material_request_materials')
+            ->select(
+                'raw_material_request_materials.raw_material_request_id',
+                DB::raw('COUNT(raw_material_request_materials.qty) AS fulfilled'),
+            )
+            ->where('status', RawMaterialRequest::STATUS_COMPLETED)
+            ->groupBy('raw_material_request_materials.raw_material_request_id');
+
+        $qty = DB::table('raw_material_request_materials')
+            ->select(
+                'raw_material_request_materials.raw_material_request_id',
+                'totalRequested.totalRequested AS totalRequestedQty',
+                DB::raw('IFNULL(fulfilled.fulfilled, 0) AS fulfilledQty'),
+                DB::raw('IFNULL(totalRequested.totalRequested - fulfilled.fulfilled, totalRequested.totalRequested) AS balanceQty'),
+            )
+            ->leftJoinSub($totalRequested, 'totalRequested', function ($join) {
+                $join->on('totalRequested.raw_material_request_id', '=', 'raw_material_request_materials.raw_material_request_id');
+            })
+            ->leftJoinSub($fulfilled, 'fulfilled', function ($join) {
+                $join->on('fulfilled.raw_material_request_id', '=', 'raw_material_request_materials.raw_material_request_id');
+            })
+            ->groupBy('raw_material_request_materials.raw_material_request_id');
+
+
+        $records = new RawMaterialRequest;
+
+        $records = $records->select(
+                'raw_material_requests.*',
+                'qty.totalRequestedQty',
+                'qty.balanceQty',
+                'qty.fulfilledQty',
+                'users.name AS requestedBy',
+                'productions.sku AS productionSku'
+            )
+            ->leftJoin('users', 'users.id', '=', 'raw_material_requests.requested_by')
+            ->leftJoin('productions', 'productions.id', '=', 'raw_material_requests.production_id')
+            ->leftJoinSub($qty, 'qty', function ($join) {
+                $join->on('qty.raw_material_request_id', '=', 'raw_material_requests.id');
+            });
+
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
@@ -33,6 +85,23 @@ class RawMaterialRequestController extends Controller
                     $q->where('sku', 'like', '%' . $keyword . '%');
                 });
             });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'raw_material_requests.created_at',
+                2 => 'productions.sku',  
+                3 => 'qty.totalRequestedQty',  
+                4 => 'qty.balanceQty',
+                5 => 'qty.fulfilledQty',
+                6 => 'users.name',
+                7 => 'raw_material_requests.status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('raw_material_requests.id', 'desc');
         }
 
         $records_count = $records->count();
@@ -46,18 +115,15 @@ class RawMaterialRequestController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            $total_request_qty = $record->materials->count();
-            $fulfilled_qty = $record->completedMaterials()->count();
-
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
                 'date' => Carbon::parse($record->created_at)->format('d M Y H:i'),
-                'production_id' => $record->production->sku ?? null,
-                'total_request_qty' => $total_request_qty,
-                'balance_qty' => $total_request_qty - $fulfilled_qty,
-                'fulfilled_qty' => $fulfilled_qty,
-                'requested_by' => $record->requestedBy->name ?? null,
+                'production_id' => $record->productionSku ?? null,
+                'total_request_qty' => $record->totalRequestedQty,
+                'balance_qty' => $record->balanceQty,
+                'fulfilled_qty' => $record->fulfilledQty ?? 0,
+                'requested_by' => $record->requestedBy ?? null,
                 'status' => $record->status,
             ];
         }

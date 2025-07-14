@@ -114,9 +114,13 @@ class CustomerController extends Controller
             if ($req->sales_agent == null) {
                 Session::remove('debtor-sales_agent');
             } else {
-                $records = $records->whereHas('salesAgents', function ($q) use ($req) {
-                    $q->where('sales_agent_id', $req->sales_agent);
-                });
+                if ($req->sales_agent == 'without_agent') {
+                    $records = $records->doesntHave('salesAgents');
+                } else {
+                    $records = $records->whereHas('salesAgents', function ($q) use ($req) {
+                        $q->where('sales_agent_id', $req->sales_agent);
+                    });
+                }
                 Session::put('debtor-sales_agent', $req->sales_agent);
             }
         } else if (Session::get('debtor-sales_agent') != null) {
@@ -130,8 +134,9 @@ class CustomerController extends Controller
             $map = [
                 1 => 'sku',
                 2 => 'name',
-                3 => 'phone',
-                4 => 'company_name',
+                4 => 'phone',
+                5 => 'company_name',
+                10 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
