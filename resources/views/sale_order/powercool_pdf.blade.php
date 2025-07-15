@@ -152,17 +152,17 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->sku }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->product->uom }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>Price
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discount ?? 0, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->sku }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->model_name }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->qty }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->uom }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->unit_price, 2) }}</td>Price
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->discount ?? 0, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format(($prod->override_selling_price ?? $prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}
                     </td>
                 </tr>
@@ -206,7 +206,7 @@
                 <tr>
                     <td colspan="2"></td>
                     <td colspan="2" style="font-size: 14px; padding: 15px 0;"><span
-                            style="font-weight: 700;">REMARK:</span><br>{{ $sale->remark }}</td>
+                            style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="2"></td>
                 </tr>
             @endif
@@ -259,8 +259,8 @@
                     6. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of
                     the total invoice amount.<br>
                     7. · 3 Years Compressor Warranty with T&C apply<br>
-                    · 6 months General Service conduct by IMAX<br>
-                    · Limited to 1 time change only<br>
+                    <span style="padding: 0 0 0 18px;">· 6 months General Service conduct by IMAX</span><br>
+                    <span style="padding: 0 0 0 18px;">· Limited to 1 time change only</span><br>
                 </td>
             </tr>
             <tr>

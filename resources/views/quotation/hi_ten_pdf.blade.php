@@ -34,7 +34,9 @@
                     <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:imax.hiten_sales@powercool.com.my">imax.hiten_sales@powercool.com.my</a></span>
+                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>
+                    <span style="font-size: 14px;">Website : <a
+                            href="imaxrefrigerator.com.my">imaxrefrigerator.com.my</a></span>
                 </td>
             </tr>
         </table>
@@ -64,7 +66,6 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
                         </tr>
                     </table>
                 </td>
@@ -138,23 +139,25 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;"></td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discount ?? 0, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;"></td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->model_name }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->qty }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->unit_price, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->discount ?? 0, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
-                <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                    <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
-                </tr>
+                @if ($prod->remark != null)
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
                 @endphp
@@ -163,8 +166,8 @@
             @if ($sale->remark != null)
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2" style="font-size: 14px; padding: 15px 0;"><span
-                            style="font-weight: 700;">REMARK:</span><br>{{ $sale->remark }}</td>
+                    <td colspan="2" style="font-size: 14px; padding: 0px 0;"><span
+                            style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="2"></td>
                 </tr>
             @endif
@@ -210,8 +213,8 @@
                     otherwise any discrepancy will not be entertained.<br>
                     6. Prices are subjected to change without prior notice.<br>
                     7. · 3 Years Compressor Warranty with T&C apply<br>
-                    · 6 months General Service conduct by IMAX<br>
-                    · Limited to 1 time change only<br>
+                    <span style="padding: 0 0 0 18px;">· 6 months General Service conduct by IMAX</span><br>
+                    <span style="padding: 0 0 0 18px;">· Limited to 1 time change only</span><br>
                     8. Wear and tear not included in warranty claim
                 </td>
             </tr>
@@ -227,9 +230,14 @@
             </tr>
             <tr>
                 <td
-                    style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
+                    style="font-size: 16px; text-align: center; width: 33%; border-bottom: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
                     {{ $sale->saleperson->name }}</td>
                 <td></td>
+            </tr>
+            <tr>
+                <td style="font-size: 16px; padding: 10px 0 0 0; font-family: serif;" colspan="2">
+                    This is a computer generated documents no signature required.
+                </td>
             </tr>
         </table>
     </main>
