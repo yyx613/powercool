@@ -128,6 +128,11 @@ class PermissionSeeder extends Seeder
             'dealer.edit',
             'dealer.delete',
 
+            'agent_debtor.view',
+            // 'agent_debtor.create',
+            // 'agent_debtor.edit',
+            // 'agent_debtor.delete',
+
             'vehicle.view',
             'vehicle_service.reminder',
 

@@ -97,8 +97,12 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
-                <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
-                <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
+                @if (isset($sale) && $sale->status == 4)
+                    <option value="4" selected>{{ __('Pending Approval') }}</option>
+                @else
+                    <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
+                    <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
+                @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />
         </div>

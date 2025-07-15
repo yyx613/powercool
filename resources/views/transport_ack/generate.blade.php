@@ -65,7 +65,21 @@
                         <x-input-error :messages="$errors->get('type')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="delivery_to" class="mb-1">{{ __('Delivery To') }} <span
+                        <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }}  <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')"
+                            value="{{ old('company_name') ?? null }}" />
+                        <x-input-error :messages="$errors->get('company_name')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="phone" class="mb-1">{{ __('Phone') }}  <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.input name="phone" id="phone" :hasError="$errors->has('phone')"
+                            value="{{ old('phone') ?? null }}" />
+                        <x-input-error :messages="$errors->get('phone')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="delivery_to" class="mb-1">{{ __('Address') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.textarea name="delivery_to" id="delivery_to" :hasError="$errors->has('delivery_to')"
                             text="{{ old('delivery_to') ?? null }}" />
@@ -100,10 +114,12 @@
                     <div class="flex flex-col">
                         <x-app.input.label id="product" class="mb-1">{{ __('Product') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
-                        <x-app.input.select name="product[]" :hasError="$errors->has('product')" placeholder="{{ __('Select a product') }}">
+                        <x-app.input.select name="product[]" :hasError="$errors->has('product')"
+                            placeholder="{{ __('Select a product') }}">
                             <option value="">{{ __('Select a product') }}</option>
                             @foreach ($products as $pro)
-                                <option value="{{ $pro->id }}">{{ $pro->sku }} ({{ $pro->model_name }})</option>
+                                <option value="{{ $pro->id }}">{{ $pro->sku }} ({{ $pro->model_name }})
+                                </option>
                             @endforeach
                         </x-app.input.select>
                     </div>
@@ -168,8 +184,8 @@
                                 <div class="flex flex-col" id="serial-no-container">
                                     <x-app.input.label id="serial_no"
                                         class="mb-1">{{ __('Serial No') }}</x-app.input.label>
-                                    <x-app.input.select2 name="serial_no_{{ $key + 1 }}[]" placeholder="{{ __('Select a serial no') }}"
-                                        multiple>
+                                    <x-app.input.select2 name="serial_no_{{ $key + 1 }}[]"
+                                        placeholder="{{ __('Select a serial no') }}" multiple>
                                         <option value="">{{ __('Select a serial no') }}</option>
                                         @foreach ($products as $pro)
                                             @if ($pro->id == old('product.' . $key))

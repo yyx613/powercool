@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgentDebtor;
 use App\Models\Approval;
 use App\Models\Billing;
 use App\Models\BillingProduct;
@@ -88,11 +89,12 @@ class SaleController extends Controller
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
                 'customers.sku AS debtor_code',
-                'customers.name AS debtor_name',
+                'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
+                'sales.is_draft AS is_draft',
                 DB::raw('SUM(sale_products.unit_price * sale_products.qty) AS total_amount')
             )
             ->where('sales.type', Sale::TYPE_QUO)
@@ -165,6 +167,8 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
+                'is_draft' => $record->is_draft,
+                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING,
                 'can_edit' => hasPermission('sale.quotation.edit'),
                 'can_delete' => hasPermission('sale.quotation.delete'),
             ];
@@ -208,6 +212,10 @@ class SaleController extends Controller
 
     public function pdf(Sale $sale)
     {
+        if ($sale->status == Sale::STATUS_APPROVAL_PENDING) {
+            return abort(403);
+        }
+
         $products = collect();
         $sps = $sale->products;
         for ($i = 0; $i < count($sps); $i++) {
@@ -330,7 +338,7 @@ class SaleController extends Controller
             if ($quos[0]->convert_to != null) {
                 $sku_to_use = Sale::withTrashed()->where('id', $quos[0]->convert_to)->value('sku');
             }
-            $res = $this->upsertQuoDetails($request, false, true, false, isset($sku_to_use) ? $sku_to_use : null)->getData();
+            $res = $this->upsertQuoDetails($request, false, true, false, isset($sku_to_use) ? $sku_to_use : null, false)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create quotation');
             }
@@ -382,7 +390,7 @@ class SaleController extends Controller
                     return $q->is_foc;
                 })->toArray(),
             ]);
-            $res = $this->upsertProDetails($request, false, false)->getData();
+            $res = $this->upsertProDetails($request, false, false, false)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create product');
             }
@@ -432,11 +440,12 @@ class SaleController extends Controller
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
                 'customers.sku AS debtor_code',
-                'customers.name AS debtor_name',
+                'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
+                'sales.is_draft AS is_draft',
                 'sales.payment_status',
                 DB::raw('SUM(sale_products.qty) AS qty'),
                 DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'),
@@ -521,12 +530,14 @@ class SaleController extends Controller
                 'total' => number_format($record->total_amount, 2),
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
+                'is_draft' => $record->is_draft,
                 'qty' => $record->qty,
                 'serial_no_qty' => $record->serial_no_qty,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
+                'can_view_pdf' => $record->status != Sale::STATUS_APPROVAL_PENDING,
             ];
         }
 
@@ -550,7 +561,7 @@ class SaleController extends Controller
     public function editSaleOrder(Sale $sale)
     {
         $is_view = false;
-        if(str_contains(Route::currentRouteName(), '.view')) {
+        if (str_contains(Route::currentRouteName(), '.view')) {
             $is_view = true;
         }
         if ($sale->status == Sale::STATUS_CANCELLED) {
@@ -638,6 +649,10 @@ class SaleController extends Controller
 
     public function pdfSaleOrder(Sale $sale)
     {
+        if ($sale->status == Sale::STATUS_APPROVAL_PENDING) {
+            return abort(403);
+        }
+
         $products = collect();
         $sps = $sale->products()->withTrashed()->get();
         for ($i = 0; $i < count($sps); $i++) {
@@ -1227,7 +1242,7 @@ class SaleController extends Controller
 
             $data = [];
 
-            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true)->getData();
+            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, false)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertQuoDetails failed');
             }
@@ -1236,7 +1251,7 @@ class SaleController extends Controller
                 $req->merge(['sale_id' => $res->sale->id]);
             }
 
-            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false)->getData();
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, false)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertProDetails failed');
             }
@@ -1280,7 +1295,171 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false, ?string $so_sku_to_use = null)
+    public function saveAsDraft(Request $req)
+    {
+        // Validate form
+        $rules = [
+            // upsertQuoDetails
+            'sale_id' => 'nullable',
+            'quo_id' => 'nullable',
+            'sale' => 'nullable',
+            'customer' => 'nullable',
+            'reference' => 'nullable',
+            'store' => 'nullable',
+            'from' => 'nullable|max:250',
+            'cc' => 'nullable|max:250',
+            'status' => 'nullable',
+            'report_type' => 'nullable',
+            'billing_address' => 'nullable',
+            'new_billing_address1' => 'nullable|max:250',
+            'new_billing_address2' => 'nullable|max:250',
+            'new_billing_address3' => 'nullable|max:250',
+            'new_billing_address4' => 'nullable|max:250',
+            'payment_term' => 'nullable',
+            // upsertRemark
+            'remark' => 'nullable|max:250',
+        ];
+        if ($req->type == 'so') {
+            $rules['delivery_address'] = 'nullable';
+            $rules['new_delivery_address1'] = 'nullable|max:250';
+            $rules['new_delivery_address2'] = 'nullable|max:250';
+            $rules['new_delivery_address3'] = 'nullable|max:250';
+            $rules['new_delivery_address4'] = 'nullable|max:250';
+        }
+        if ($req->type == 'quo') {
+            $rules['open_until'] = 'nullable';
+        }
+        if ($req->type == 'so') {
+            // if (isset($convert_from_quo) && !$convert_from_quo) {
+            //     // upsertProDetails
+            //     $rules['product_order_id'] = 'nullable';
+            //     $rules['product_order_id.*'] = 'nullable';
+            //     $rules['product_id'] = 'required';
+            //     $rules['product_id.*'] = 'required';
+            //     $rules['customize_product'] = 'required';
+            //     $rules['customize_product.*'] = 'nullable|max:250';
+            //     $rules['product_desc'] = 'required';
+            //     $rules['product_desc.*'] = 'nullable|max:250';
+            //     $rules['qty'] = 'required';
+            //     $rules['qty.*'] = 'required';
+            //     $rules['foc'] = 'required';
+            //     $rules['foc.*'] = 'required';
+            //     $rules['uom'] = 'required';
+            //     $rules['uom.*'] = 'required';
+            //     $rules['selling_price'] = 'nullable';
+            //     $rules['selling_price.*'] = 'nullable';
+            //     $rules['unit_price'] = 'required';
+            //     $rules['unit_price.*'] = 'nullable';
+            //     $rules['promotion_id'] = 'required';
+            //     $rules['promotion_id.*'] = 'nullable';
+            //     $rules['product_serial_no'] = 'nullable';
+            //     $rules['product_serial_no.*'] = 'nullable';
+            //     $rules['warranty_period'] = 'required';
+            //     $rules['warranty_period.*'] = 'required';
+            //     $rules['discount'] = 'required';
+            //     $rules['discount.*'] = 'nullable';
+            //     $rules['product_remark'] = 'required';
+            //     $rules['product_remark.*'] = 'nullable|max:250';
+            //     $rules['override_selling_price'] = 'nullable';
+            //     $rules['override_selling_price.*'] = 'nullable';
+            // }
+            // upsertPayDetails
+            $rules['payment_term'] = 'nullable';
+            $rules['payment_method'] = 'nullable';
+            $rules['payment_due_date'] = 'nullable';
+            $rules['payment_remark'] = 'nullable|max:250';
+            if (in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
+                $rules['account_amount'] = 'nullable';
+                $rules['account_amount.*'] = 'nullable';
+                $rules['account_date'] = 'nullable';
+                $rules['account_date.*'] = 'nullable';
+                $rules['account_ref_no'] = 'nullable';
+                $rules['account_ref_no.*'] = 'nullable|max:250';
+            }
+        }
+
+        $req->validate($rules, [], [
+            // upsertQuoDetails
+            'sale' => 'sales agent',
+            'report_type' => 'type',
+            'customer' => 'company',
+            'open_until' => 'validity',
+            // upsertProDetails
+            'product_id.*' => 'product',
+            'product_desc.*' => 'product description',
+            'qty.*' => 'quantity',
+            'uom.*' => 'UOM',
+            'selling_price.*' => 'selling price',
+            'unit_price.*' => 'unit price',
+            'product_serial_no.*' => 'product serial no',
+            'warranty_period.*' => 'warranty period',
+            'discount.*' => 'discount',
+            'remark' => 'remark',
+            'override_selling_price' => 'override selling price',
+            // upsertPayDetails
+            'account_amount.*' => 'amount',
+            'account_date.*' => 'date',
+            'account_ref_no.*' => 'reference no',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $data = [];
+
+            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertQuoDetails failed');
+            }
+            if ($res->sale) {
+                $data['sale'] = $res->sale;
+                $req->merge(['sale_id' => $res->sale->id]);
+            }
+
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertProDetails failed');
+            }
+            if ($res->product_ids) {
+                $data['product_ids'] = $res->product_ids;
+            }
+
+            if ($req->type == 'so') {
+                $res = $this->upsertPayDetails($req, true)->getData();
+                if (isset($res->err_msg) && $res->err_msg != null) {
+                    DB::rollBack();
+
+                    return Response::json([
+                        'errors' => [
+                            'account_err_msg'  => $res->err_msg,
+                        ],
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                } else if ($res->result == false) {
+                    throw new \Exception('upsertPayDetails failed');
+                }
+            }
+
+            $res = $this->upsertRemark($req, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertRemark failed');
+            }
+
+            DB::commit();
+
+            return Response::json([
+                'result' => true,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false, ?string $so_sku_to_use = null, bool $is_draft = false)
     {
         if (! $validated) {
             // Validate form
@@ -1343,7 +1522,7 @@ class SaleController extends Controller
                 }
             }
             // Delivery
-            if ($need_delivery_address == true) {
+            if ($need_delivery_address == true && $req->delivery_address != null && $req->new_delivery_address1 != null) {
                 if ($req->delivery_address != null) {
                     $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
                 } else {
@@ -1380,6 +1559,7 @@ class SaleController extends Controller
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $req->status,
+                    'is_draft' => $is_draft,
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
@@ -1408,6 +1588,7 @@ class SaleController extends Controller
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $sale->status == Sale::STATUS_APPROVAL_PENDING ? $sale->status : $req->status,
+                    'is_draft' => $is_draft,
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
@@ -1437,7 +1618,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false)
+    public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $is_draft = false)
     {
         if (! $validated) {
             // Validate form
@@ -1539,9 +1720,13 @@ class SaleController extends Controller
                 }
 
                 $now = now();
-                $updated_sale_status = false;
+                $approval_needed = false;
+                $approval_desc = null;
                 for ($i = 0; $i < count($req->product_id); $i++) {
                     $product_id = $req->product_id[$i];
+                    if ($is_draft && $product_id == null) {
+                        continue;
+                    }
 
                     if ($req->customize_product != null && $req->customize_product[$i] != null) {
                         $branch = getCurrentUserBranch();
@@ -1613,29 +1798,12 @@ class SaleController extends Controller
                     $prod = Product::where('id', $req->product_id[$i])->first();
 
                     if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
-                        if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
-                            $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
-                            $approval = Approval::create([
-                                'object_type' => Sale::class,
-                                'object_id' => $req->sale_id,
-                                'status' => Approval::STATUS_PENDING_APPROVAL,
-                                'data' => $req->type == 'quo' ? json_encode([
-                                    'is_quo' => true,
-                                    'description' => 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower')  . ($is_greater ? $prod->max_price : $prod->min_price),
-                                ]) : json_encode([
-                                    'is_quo' => false,
-                                    'description' => 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower')  . ($is_greater ? $prod->max_price : $prod->min_price),
-                                ])
-                            ]);
-                            (new Branch)->assign(Approval::class, $approval->id);
-                            if (!$updated_sale_status) {
-                                // Update QUO/SO status
-                                Sale::where('id', $req->sale_id)->update([
-                                    'status' => Sale::STATUS_APPROVAL_PENDING
-                                ]);
-                                $updated_sale_status = true;
-                            }
+                        $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
+                        $approval_needed = true;
+                        if ($approval_desc != null) {
+                            $approval_desc .= ', ';
                         }
+                        $approval_desc .= 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price);
                     }
 
                     // Sale product children
@@ -1657,6 +1825,28 @@ class SaleController extends Controller
                             ];
                         }
                         SaleProductChild::insert($data);
+                    }
+                }
+                // Approval
+                if ($approval_needed) {
+                    if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                        $approval = Approval::create([
+                            'object_type' => Sale::class,
+                            'object_id' => $req->sale_id,
+                            'status' => Approval::STATUS_PENDING_APPROVAL,
+                            'data' => $req->type == 'quo' ? json_encode([
+                                'is_quo' => true,
+                                'description' => $approval_desc,
+                            ]) : json_encode([
+                                'is_quo' => false,
+                                'description' => $approval_desc,
+                            ])
+                        ]);
+                        (new Branch)->assign(Approval::class, $approval->id);
+                        // Update QUO/SO status
+                        Sale::where('id', $req->sale_id)->update([
+                            'status' => Sale::STATUS_APPROVAL_PENDING
+                        ]);
                     }
                 }
             } else {
@@ -3596,7 +3786,7 @@ class SaleController extends Controller
     public function getDataTransportAck(Request $req)
     {
         Session::put('transport-ack-page', $req->page);
-        
+
         $records = new TransportAcknowledgement;
         $records = $records
             ->select(
@@ -3665,6 +3855,8 @@ class SaleController extends Controller
         $rules = [
             'do_id' => 'nullable|max:250',
             'date' => 'required',
+            'company_name' => 'required',
+            'phone' => 'required',
             'delivery_to' => 'required',
             'dealer' => 'required',
             'type' => 'required',
@@ -3681,6 +3873,7 @@ class SaleController extends Controller
             'description.*.required' => 'The description at row :position is required',
         ], [
             'do_id' => 'Delivery Order ID',
+            'delivery_to' => 'Address'
         ]);
 
         try {
@@ -3726,13 +3919,24 @@ class SaleController extends Controller
             $filename = 'transport-ack-' . generateRandomAlphabet(10) . '-' . Auth::user()->id . '.pdf';
             Storage::put(self::TRANSPORT_ACKNOWLEDGEMENT_PATH . $filename, $content);
 
-            TransportAcknowledgement::create([
+            $ack = TransportAcknowledgement::create([
                 'sku' => $sku,
                 'date' => $req->date,
                 'dealer_id' => $req->dealer,
                 'filename' => $filename,
                 'generated_by' => Auth::user()->id,
             ]);
+            (new Branch)->assign(TransportAcknowledgement::class, $ack->id);
+
+            // Create agent debtor
+            $agent = AgentDebtor::create([
+                'sku' => (new AgentDebtor)->generateSku(),
+                'company_name' => $req->company_name,
+                'phone' => $req->phone,
+                'address' => $req->delivery_to,
+                'dealer_id' => $req->dealer,
+            ]);
+            (new Branch)->assign(AgentDebtor::class, $agent->id);
 
             DB::commit();
 
@@ -3747,7 +3951,7 @@ class SaleController extends Controller
 
     public function getNextSku(Request $req)
     {
-        $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+        $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('is_draft', false)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
         $next_sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, $req->is_hi_ten);
 
         return $next_sku;

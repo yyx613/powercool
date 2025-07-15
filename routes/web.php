@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentDebtorController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CreditTermController;
@@ -281,6 +282,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
 
         Route::prefix('sale')->name('sale.')->group(function () {
             Route::post('/upsert-details', 'upsertDetails')->name('upsert_details');
+            Route::post('/save-as-draft', 'saveAsDraft')->name('save_as_draft');
             // Route::post('/upsert-quotation-details', 'upsertQuoDetails')->name('upsert_quo_details');
             // Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
             // Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
@@ -536,6 +538,18 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
         Route::get('/export', 'export')->name('export');
     });
+    // Agent Debtor
+    Route::controller(AgentDebtorController::class)->prefix('agent-debtor')->name('agent_debtor.')->middleware(['can:agent_debtor.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:agent_debtor.create']);
+        Route::get('/edit/{agent}', 'edit')->name('edit')->middleware(['can:agent_debtor.edit']);
+        Route::get('/view/{agent}', 'view')->name('view');
+        Route::get('/delete/{dealer}', 'delete')->name('delete')->middleware(['can:agent_debtor.delete']);
+        Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
+        Route::get('/export', 'export')->name('export');
+    });
+
     // Setting
     Route::middleware(['can:setting.view'])->group(function () {
         // Vehicle Service

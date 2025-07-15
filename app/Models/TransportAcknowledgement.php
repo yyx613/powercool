@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[ScopedBy([BranchScope::class])]
 class TransportAcknowledgement extends Model
 {
     use HasFactory;
@@ -21,6 +23,11 @@ class TransportAcknowledgement extends Model
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
+    }
+
+    public function branch()
+    {
+        return $this->morphOne(Branch::class, 'object');
     }
 
     public function createdBy()
