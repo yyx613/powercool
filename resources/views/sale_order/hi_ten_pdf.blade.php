@@ -34,7 +34,9 @@
                     <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
+                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>
+                    <span style="font-size: 14px;">Website : <a
+                            href="imaxrefrigerator.com.my">imaxrefrigerator.com.my</a></span>
                 </td>
             </tr>
         </table>
@@ -54,10 +56,6 @@
                 <td colspan="2" style="padding: 0 35px 0 0;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700;">TIN:
-                                {{ $customer->tin_number }}</td>
-                        </tr>
-                        <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address ?? '' }}<br>
@@ -67,8 +65,11 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700;">TIN:
+                                {{ $customer->tin_number }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 14px; padding: 5px 0 0 0;">TEL: {{ $customer->phone }}</td>
                         </tr>
                     </table>
                 </td>
@@ -147,20 +148,20 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->sku }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->desc }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->is_foc == true ? '' : $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->is_foc == false ? '' : $prod->qty }}
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->sku }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->desc }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->is_foc == true ? '' : $prod->qty }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->is_foc == false ? '' : $prod->qty }}
                     </td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod->uom }}</td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->uom }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->override_selling_price ?? $prod->unit_price, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discount, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->discount, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount(), 2) }}
                     </td>
                 </tr>
@@ -205,7 +206,7 @@
                 <tr>
                     <td colspan="2"></td>
                     <td colspan="2" style="font-size: 14px; padding: 15px 0;"><span
-                            style="font-weight: 700;">REMARK:</span><br>{{ $sale->remark }}</td>
+                            style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="2"></td>
                 </tr>
             @endif

@@ -136,22 +136,30 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;"></td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod->product->model_name }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: center;">{{ $prod->product->uom }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->unit_price, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ number_format($prod->discountAmount(), 2) }}
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;"></td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ $prod->product->model_name }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ $prod->qty }}</td>
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ $prod->product->uom }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ number_format($prod->unit_price, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        {{ number_format($prod->discountAmount(), 2) }}
                     </td>
-                    <td style="font-size: 14px; text-align: right;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
-                <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                    <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
-                </tr>
+                @if ($prod->remark != null)
+                    <tr>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                        <td style="font-size: 14px; padding: 5px 0; text-align: left;" colspan="4"></td>
+                    </tr>
+                @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
                 @endphp
@@ -161,7 +169,7 @@
                 <tr>
                     <td colspan="2"></td>
                     <td colspan="2" style="font-size: 14px; padding: 15px 0;"><span
-                            style="font-weight: 700;">REMARK:</span><br>{{ $sale->remark }}</td>
+                            style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="2"></td>
                 </tr>
             @endif
@@ -216,8 +224,8 @@
                     otherwise any discrepancy will not be entertained.<br>
                     6. Prices are subjected to change without prior notice.
                     7. · 3 Years Compressor Warranty with T&C apply<br>
-                    · 6 months General Service conduct by IMAX<br>
-                    · Limited to 1 time change only<br>
+                    <span style="padding: 0 0 0 18px;">· 6 months General Service conduct by IMAX</span><br>
+                    <span style="padding: 0 0 0 18px;">· Limited to 1 time change only</span><br>
                     8. Wear and tear not included in warranty claim
                 </td>
             </tr>
