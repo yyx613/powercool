@@ -49,7 +49,10 @@ class SyncAutoCountController extends Controller
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
-                $supplier = Supplier::where('sku', $accNo)->first();
+                $supplier = DB::table('suppliers')
+                ->where('sku', $accNo)
+                ->where('company_group_autocount', $request->query('company_group'))
+                ->first();
 
                 // Retrieve or create currency
                 $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
@@ -77,7 +80,7 @@ class SyncAutoCountController extends Controller
                         'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
-                        'company_group' => ($companyGroup == 1 || $companyGroup == 2) ? $companyGroup : (($companyGroup == 3) ? '1' : '2'),
+                        'company_group' => $branchNo,
                         'company_group_autocount' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
@@ -123,7 +126,7 @@ class SyncAutoCountController extends Controller
                         'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
-                        'company_group' => ($companyGroup == 1 || $companyGroup == 2) ? $companyGroup : (($companyGroup == 3) ? '1' : '2'),
+                        'company_group' => $branchNo,
                         'company_group_autocount' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
@@ -195,7 +198,10 @@ class SyncAutoCountController extends Controller
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
-                $supplier = Customer::where('sku', $accNo)->first();
+                $supplier = DB::table('customers')
+                ->where('sku', $accNo)
+                ->where('company_group_autocount', $request->query('company_group'))
+                ->first();
 
                 // Retrieve or create currency
                 $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
@@ -223,7 +229,7 @@ class SyncAutoCountController extends Controller
                         'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
-                        'company_group' => ($companyGroup == 1 || $companyGroup == 2) ? $companyGroup : (($companyGroup == 3) ? '1' : '2'),
+                        'company_group' => $branchNo,
                         'company_group_autocount' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
@@ -327,7 +333,7 @@ class SyncAutoCountController extends Controller
                         'name' => $record['Name'],
                         'phone' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
-                        'company_group' => ($companyGroup == 1 || $companyGroup == 2) ? $companyGroup : (($companyGroup == 3) ? '1' : '2'),
+                        'company_group' => $branchNo,
                         'company_group_autocount' => $companyGroup,
                         'company_registration_number' => $record['RegisterNo'],
                         // 'location' => $record['Address1'] . ' ' . $record['Address2'] . ' ' . $record['Address3'],
@@ -439,7 +445,7 @@ class SyncAutoCountController extends Controller
         }
     
         $suppliers = Supplier::where('sync', 0)
-                             ->where('company_group', $companyGroup)
+                             ->where('company_group_autocount', $companyGroup)
                              ->get();
     
         // Return only the array of suppliers without any wrapper
@@ -485,7 +491,7 @@ class SyncAutoCountController extends Controller
         $customers = DB::table('customers')
         ->leftJoin('customer_locations', 'customers.id', '=', 'customer_locations.customer_id')
         ->where('customers.sync', 0)
-        ->where('customers.company_group', $companyGroup)
+        ->where('customers.company_group_autocount', $companyGroup)
         ->where(function ($query) {
             $query->where('customer_locations.is_default', 1)
                 ->orWhereNull('customer_locations.id'); // assumes 'id' is the PK of customer_locations
