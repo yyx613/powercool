@@ -28,7 +28,17 @@ class SyncAutoCountController extends Controller
         try {
             $data = $request->json()->all();// Retrieve all UOM records from the request
             $companyGroup = $request->query('company_group');
-            $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
+            $companyGroup2 = (int) $request->query('company_group');
+
+            if (in_array($companyGroup2, [1, 2])) {
+                $branchNo = '1';
+            } elseif (in_array($companyGroup2, [3, 4])) {
+                $branchNo = '2';
+            } else {
+                // Optional: throw error or default safely
+                return response()->json(['message' => 'Invalid company_group value.'], 400);
+            }
+
 
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
@@ -173,7 +183,16 @@ class SyncAutoCountController extends Controller
         try {
             $data = $request->json()->all(); // Retrieve all UOM records from the request
             $companyGroup = $request->query('company_group');
-            $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
+            $companyGroup2 = (int) $request->query('company_group');
+
+            if (in_array($companyGroup2, [1, 2])) {
+                $branchNo = '1';
+            } elseif (in_array($companyGroup2, [3, 4])) {
+                $branchNo = '2';
+            } else {
+                // Optional: throw error or default safely
+                return response()->json(['message' => 'Invalid company_group value.'], 400);
+            }
 
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
