@@ -28,6 +28,7 @@ class SyncAutoCountController extends Controller
         try {
             $data = $request->json()->all();// Retrieve all UOM records from the request
             $companyGroup = $request->query('company_group');
+            $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
 
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
@@ -101,8 +102,6 @@ class SyncAutoCountController extends Controller
                         'trade_name' => $record['TradeName']
                     ]);
 
-                    $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
-
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
                         'App\Models\Supplier', $supplier->id, $branchNo
                     ]);
@@ -146,9 +145,6 @@ class SyncAutoCountController extends Controller
                         'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
                         'trade_name' => $record['TradeName']
                     ]);
-
-                    $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
-
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
                         'App\Models\Supplier', $supplier->id, $branchNo
                     ]);
@@ -177,7 +173,7 @@ class SyncAutoCountController extends Controller
         try {
             $data = $request->json()->all(); // Retrieve all UOM records from the request
             $companyGroup = $request->query('company_group');
-
+            $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
 
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
@@ -252,7 +248,7 @@ class SyncAutoCountController extends Controller
                         'trade_name' => $record['TradeName']
                     ]);
 
-                    $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
+                    
                     
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
                         'App\Models\Customer', $supplier->id, $branchNo
@@ -355,8 +351,6 @@ class SyncAutoCountController extends Controller
                         'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
                         'trade_name' => $record['TradeName']
                     ]);
-
-                    $branchNo = ($companyGroup == 1 || $companyGroup == 2) ? '1' : '2';
                     
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
                         'App\Models\Customer', $supplier->id, $branchNo
