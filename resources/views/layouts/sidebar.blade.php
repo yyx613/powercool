@@ -125,6 +125,15 @@
                                             </a>
                                         </li>
                                     @endcan
+                                    @can('agent_debtor.view')
+                                        <li>
+                                            <a href="{{ route('agent_debtor.index') }}"
+                                                class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'agent_debtor.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Agent Debtor') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </div>
@@ -1154,6 +1163,15 @@
                             </a>
                         </li>
                     @endcan
+                    @can('agent_debtor.view')
+                        <li>
+                            <a href="{{ route('agent_debtor.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'agent_debtor.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Agent Debtor') }}</span>
+                            </a>
+                        </li>
+                    @endcan
                 </ul>
             </div>
         @endcan
@@ -1845,6 +1863,15 @@
                                                 class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'dealer.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Dealer') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('agent_debtor.view')
+                                        <li>
+                                            <a href="{{ route('agent_debtor.index') }}"
+                                                class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'agent_debtor.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Agent Debtor') }}</span>
                                             </a>
                                         </li>
                                     @endcan
@@ -2609,7 +2636,7 @@
                             'vehicle.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes(
-                            'supplier.') || CURRENT_ROUTE_NAME.includes('dealer.')) {
+                            'supplier.') || CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes('agent_debtor.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
                             'invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes(
@@ -2677,7 +2704,7 @@
                 if (CURRENT_ROUTE_NAME.includes('vehicle_service.') || CURRENT_ROUTE_NAME.includes('vehicle.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.') ||
-                    CURRENT_ROUTE_NAME.includes('dealer.')) {
+                    CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes('agent_debtor.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
                         'invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') ||

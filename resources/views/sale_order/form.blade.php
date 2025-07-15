@@ -8,7 +8,7 @@
         </div>
         @if (!isset($sale))
             <div class="flex flex-col items-end">
-                <span class="text-xs text-slate-600 leading-none">{{ __('Next ID') }}</span>
+                <span class="text-xs text-slate-600 leading-none">{{ __('Potential ID') }}</span>
                 <span class="text-md font-semibold" id="next-sku">-</span>
             </div>
         @endif
@@ -24,8 +24,8 @@
             @include('sale_order.form_step.payment_details')
             @include('sale_order.form_step.remarks')
 
-            @if (isset($is_view) && $is_view == false)
-                <div class="flex justify-end">
+            @if (!isset($is_view) || (isset($is_view) && $is_view == false))
+                <div class="flex justify-end gap-x-4">
                     @if (isset($sale) && $sale->status == 2)
                         <span
                             class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
@@ -33,6 +33,7 @@
                         <span
                             class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
                     @else
+                        <x-app.button.submit id="save-as-draft-btn" class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
                         <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                     @endif
                 </div>
@@ -64,15 +65,20 @@
             }
         })
 
+        $('#save-as-draft-btn, #submit-btn').on('click', function() {
+            $(this).attr('data-triggered', true)
+        })
+
         $('form').on('submit', function(e) {
             e.preventDefault()
 
             if (!FORM_CAN_SUBMIT) return
 
             FORM_CAN_SUBMIT = false
+            isSaveAsDraft = $('#save-as-draft-btn').attr('data-triggered')
 
-            $('form #submit-btn').text('Updating')
-            $('form #submit-btn').removeClass('bg-yellow-400 shadow')
+            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).text('Updating')
+            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).removeClass('!bg-blue-200 bg-yellow-400 shadow')
             $('.err_msg').addClass('hidden') // Remove error messages
             // Prepare products details
             let prodOrderId = []
@@ -121,7 +127,7 @@
                 accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
             })
             // Submit
-            let url = '{{ route('sale.upsert_details') }}'
+            let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' : '{{ route('sale.upsert_details') }}'
             url = `${url}?type=so`
 
             $.ajax({
@@ -200,19 +206,12 @@
                         $('#by-pass-conversion-hint').removeClass('hidden')
                     }
 
+                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).text('Updated')
+                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).addClass('bg-green-400 shadow')
+
                     setTimeout(() => {
-                        $('form #submit-btn').text('Updated')
-                        $('form #submit-btn').addClass('bg-green-400 shadow')
-
-                        setTimeout(() => {
-                            window.location.href = '{{ route('sale_order.index') }}'
-                            // $('form #submit-btn').text('Save and Update')
-                            // $('form #submit-btn').removeClass('bg-green-400')
-                            // $('form #submit-btn').addClass('bg-yellow-400 shadow')
-
-                            // FORM_CAN_SUBMIT = true
-                        }, 1000);
-                    }, 300);
+                        window.location.href = '{{ route('sale_order.index') }}'
+                    }, 1000);
                 },
                 error: function(err) {
                     setTimeout(() => {
@@ -263,8 +262,13 @@
                             $(`.items #product_serial_no_err`).removeClass('hidden')
                         }
 
-                        $('form #submit-btn').text('Save and Update')
-                        $('form #submit-btn').addClass('bg-yellow-400 shadow')
+                        if (isSaveAsDraft == 'true') {
+                            $('form #save-as-draft-btn').text('Save As Draft')
+                            $('form #save-as-draft-btn').addClass('!bg-blue-200 shadow')
+                        } else {
+                            $('form #submit-btn').text('Save and Update')
+                            $('form #submit-btn').addClass('bg-yellow-400 shadow')
+                        }
 
                         FORM_CAN_SUBMIT = true
                     }, 300);
