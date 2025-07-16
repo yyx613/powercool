@@ -8,12 +8,12 @@
 </head>
 <style>
     @page {
-        margin: 225px 25px 50px 25px;
+        margin: 200px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -200px;
+        top: -175px;
         left: 0px;
         right: 0px;
     }
@@ -33,7 +33,9 @@
                     <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
+                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>
+                    <span style="font-size: 14px;">Website : <a
+                            href="imaxrefrigerator.com.my">imaxrefrigerator.com.my</a></span>
                 </td>
                 <td style="width: 50%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -80,15 +82,14 @@
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name }}<br>
-                                {{ $billing_address->address ?? '' }}<br>
-                                {{ $billing_address->city ?? '' }}<br>
-                                {{ $billing_address->zip_code ?? '' }}<br>
-                                {{ $billing_address->state ?? '' }}<br>
+                                {{ $billing_address->address1 ?? '' }}<br>
+                                {{ $billing_address->address2 ?? '' }}<br>
+                                {{ $billing_address->address3 ?? '' }}<br>
+                                {{ $billing_address->address4 ?? '' }}<br>
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
                         </tr>
                     </table>
                 </td>
@@ -125,14 +126,14 @@
             </tr>
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['model_name'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['unit_price'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['discount'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['promotion'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['total'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['stock_code'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['model_name'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['qty'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['unit_price'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['discount'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['promotion'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['total'] }}</td>
                 </tr>
             @endforeach
         </table>

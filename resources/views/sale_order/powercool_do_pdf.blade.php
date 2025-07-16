@@ -97,10 +97,10 @@
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name }}<br>
-                                {{ $billing_address->address ?? '' }}<br>
-                                {{ $billing_address->city ?? '' }}<br>
-                                {{ $billing_address->zip_code ?? '' }}<br>
-                                {{ $billing_address->state ?? '' }}<br>
+                                {{ $billing_address->address1 ?? '' }}<br>
+                                {{ $billing_address->address2 ?? '' }}<br>
+                                {{ $billing_address->address3 ?? '' }}<br>
+                                {{ $billing_address->address4 ?? '' }}<br>
                             </td>
                         </tr>
                         <tr>
@@ -117,15 +117,14 @@
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name ?? '' }}<br>
-                                {{ $delivery_address->address ?? '' }}<br>
-                                {{ $delivery_address->city ?? '' }}<br>
-                                {{ $delivery_address->zip_code ?? '' }}<br>
-                                {{ $delivery_address->state ?? '' }}<br>
+                                {{ $delivery_address->address1 ?? '' }}<br>
+                                {{ $delivery_address->address2 ?? '' }}<br>
+                                {{ $delivery_address->address3 ?? '' }}<br>
+                                {{ $delivery_address->address4 ?? '' }}<br>
                             </td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
                         </tr>
                     </table>
                 </td>
@@ -153,10 +152,10 @@
             <!-- Product List -->
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['desc'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['stock_code'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['desc'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['qty'] }}</td>
                 </tr>
                 <!-- Warranty -->
                 @if ($prod['warranty_periods'] != null)
