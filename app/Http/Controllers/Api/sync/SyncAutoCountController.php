@@ -260,7 +260,10 @@ class SyncAutoCountController extends Controller
                         'prev_gst_reg_no' => $record['GSTRegisterNo'],
                         'sst_number' => $record['SSTRegisterNo'],
                         'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
-                        'trade_name' => $record['TradeName']
+                        'trade_name' => $record['TradeName'],
+                        'address' => $record['Address'],
+                        'city' => $record['City'],
+                        'zipcode' => $record['PostCode'],
                     ]);
 
                     
@@ -364,7 +367,10 @@ class SyncAutoCountController extends Controller
                         'prev_gst_reg_no' => $record['GSTRegisterNo'],
                         'sst_number' => $record['SSTRegisterNo'],
                         'tourism_tax_reg_no' => $record['TourismTaxRegisterNo'],
-                        'trade_name' => $record['TradeName']
+                        'trade_name' => $record['TradeName'],
+                        'address' => $record['Address'],
+                        'city' => $record['City'],
+                        'zipcode' => $record['PostCode'],
                     ]);
                     
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
