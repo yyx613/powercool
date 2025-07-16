@@ -59,10 +59,9 @@ class SyncAutoCountController extends Controller
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
-                $supplier = DB::table('suppliers')
-                ->where('sku', $accNo)
-                ->where('company_group_autocount', $request->query('company_group'))
-                ->first();
+                $supplier = Supplier::where('sku', $accNo)
+                            ->where('company_group_autocount', $companyGroup)
+                            ->first();
 
                 // Retrieve or create currency
                 $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
@@ -211,10 +210,9 @@ class SyncAutoCountController extends Controller
                 $accNo = $record['AccNo'];
 
                 // Retrieve product_id using itemCode from products table
-                $supplier = DB::table('customers')
-                ->where('sku', $accNo)
-                ->where('company_group_autocount', $request->query('company_group'))
-                ->first();
+                $supplier = Customer::where('sku', $accNo)
+                            ->where('company_group_autocount', $companyGroup)
+                            ->first();
 
                 // Retrieve or create currency
                 $CurrencyCode = Currency::where('name', $record['CurrencyCode'])->first();
