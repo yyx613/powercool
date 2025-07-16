@@ -246,6 +246,7 @@ class SaleController extends Controller
             Session::put('convert_salesperson_id', $req->sp);
 
             $quotations = Sale::where('type', Sale::TYPE_QUO)
+                ->where('is_draft', false)
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
@@ -264,6 +265,7 @@ class SaleController extends Controller
             Session::put('convert_customer_id', $req->cus);
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->where('is_draft', false)
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
@@ -280,6 +282,7 @@ class SaleController extends Controller
             $salespersons = SalesAgent::whereIn('id', $salesperson_ids)->get();
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
+                ->where('is_draft', false)
                 ->where('open_until', '>', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
@@ -710,7 +713,7 @@ class SaleController extends Controller
                 Session::put('convert_terms', $req->term);
 
                 // Allowed spc ids
-                $so_ids = Sale::where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
+                $so_ids = Sale::where('is_draft', false)->where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
                 $sp_ids = SaleProduct::whereIn('sale_id', $so_ids)->pluck('id');
                 $spc_ids = SaleProductChild::distinct()
                     ->whereIn('sale_product_id', $sp_ids)
@@ -724,6 +727,7 @@ class SaleController extends Controller
                 // Get sp
                 $products = collect();
                 $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                    ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where(function ($q) {
@@ -752,6 +756,7 @@ class SaleController extends Controller
                 Session::put('convert_sale_order_id', $req->so);
 
                 $term_ids = Sale::where('type', Sale::TYPE_SO)
+                    ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->whereIn('id', explode(',', $req->so))
@@ -791,6 +796,7 @@ class SaleController extends Controller
                 Session::put('convert_salesperson_id', $req->sp);
 
                 $sale_orders = Sale::where('type', Sale::TYPE_SO)
+                    ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where('customer_id', Session::get('convert_customer_id'))
@@ -822,6 +828,7 @@ class SaleController extends Controller
                 Session::put('convert_customer_id', $req->cus);
 
                 $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
+                    ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where('customer_id', $req->cus)
@@ -849,6 +856,7 @@ class SaleController extends Controller
                 $loop = false;
             } else {
                 $sales = Sale::where('type', Sale::TYPE_SO)
+                    ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where(function ($q) {
