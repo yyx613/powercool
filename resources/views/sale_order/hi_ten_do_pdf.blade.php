@@ -41,7 +41,9 @@
                     <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 14px;">Email add : <a
-                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span>
+                            href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>
+                    <span style="font-size: 14px;">Website : <a
+                            href="imaxrefrigerator.com.my">imaxrefrigerator.com.my</a></span>
                 </td>
                 <td style="width: 50%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -105,10 +107,10 @@
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name }}<br>
-                                {{ $billing_address->address ?? '' }}<br>
-                                {{ $billing_address->city ?? '' }}<br>
-                                {{ $billing_address->zip_code ?? '' }}<br>
-                                {{ $billing_address->state ?? '' }}<br>
+                                {{ $billing_address->address1 ?? '' }}<br>
+                                {{ $billing_address->address2 ?? '' }}<br>
+                                {{ $billing_address->address3 ?? '' }}<br>
+                                {{ $billing_address->address4 ?? '' }}<br>
                             </td>
                         </tr>
                         <tr>
@@ -125,10 +127,10 @@
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
                                 {{ $customer->company_name ?? '' }}<br>
-                                {{ $delivery_address->address ?? '' }}<br>
-                                {{ $delivery_address->city ?? '' }}<br>
-                                {{ $delivery_address->zip_code ?? '' }}<br>
-                                {{ $delivery_address->state ?? '' }}<br>
+                                {{ $delivery_address->address1 ?? '' }}<br>
+                                {{ $delivery_address->address2 ?? '' }}<br>
+                                {{ $delivery_address->address3 ?? '' }}<br>
+                                {{ $delivery_address->address4 ?? '' }}<br>
                             </td>
                         </tr>
                         <tr>
@@ -161,10 +163,10 @@
             <!-- Product List -->
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 14px; padding: 5px 0 0 0; text-align: left;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['stock_code'] }}</td>
-                    <td style="font-size: 14px; text-align: left;">{{ $prod['desc'] }}</td>
-                    <td style="font-size: 14px; text-align: right;">{{ $prod['qty'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['stock_code'] }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['desc'] }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod['qty'] }}</td>
                 </tr>
                 <!-- Warranty -->
                 @if ($prod['warranty_periods'] != null)
@@ -176,7 +178,8 @@
                     @endphp
                     <tr>
                         <td style="font-size: 14px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 14px; text-align: left; vertical-align: top; font-weight: 700;">Warranty: {{ join(', ', $warranty) }}</td>
+                        <td style="font-size: 14px; text-align: left; vertical-align: top; font-weight: 700;">Warranty:
+                            {{ join(', ', $warranty) }}</td>
                         <td></td>
                     </tr>
                 @endif
@@ -184,7 +187,8 @@
                 @if ($prod['serial_no'] != null)
                     <tr>
                         <td style="font-size: 14px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Serial No: {{ join(', ', $prod['serial_no']) }}</td>
+                        <td style="font-size: 14px; text-align: left; font-weight: 700;">Serial No:
+                            {{ join(', ', $prod['serial_no']) }}</td>
                         <td></td>
                     </tr>
                 @endif
