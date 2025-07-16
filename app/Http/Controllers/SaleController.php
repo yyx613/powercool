@@ -1305,151 +1305,25 @@ class SaleController extends Controller
 
     public function saveAsDraft(Request $req)
     {
-        // Validate form
-        $rules = [
-            // upsertQuoDetails
-            'sale_id' => 'nullable',
-            'quo_id' => 'nullable',
-            'sale' => 'nullable',
-            'customer' => 'nullable',
-            'reference' => 'nullable',
-            'store' => 'nullable',
-            'from' => 'nullable|max:250',
-            'cc' => 'nullable|max:250',
-            'status' => 'nullable',
-            'report_type' => 'nullable',
-            'billing_address' => 'nullable',
-            'new_billing_address1' => 'nullable|max:250',
-            'new_billing_address2' => 'nullable|max:250',
-            'new_billing_address3' => 'nullable|max:250',
-            'new_billing_address4' => 'nullable|max:250',
-            'payment_term' => 'nullable',
-            // upsertRemark
-            'remark' => 'nullable|max:250',
-        ];
-        if ($req->type == 'so') {
-            $rules['delivery_address'] = 'nullable';
-            $rules['new_delivery_address1'] = 'nullable|max:250';
-            $rules['new_delivery_address2'] = 'nullable|max:250';
-            $rules['new_delivery_address3'] = 'nullable|max:250';
-            $rules['new_delivery_address4'] = 'nullable|max:250';
-        }
-        if ($req->type == 'quo') {
-            $rules['open_until'] = 'nullable';
-        }
-        if ($req->type == 'so') {
-            // if (isset($convert_from_quo) && !$convert_from_quo) {
-            //     // upsertProDetails
-            //     $rules['product_order_id'] = 'nullable';
-            //     $rules['product_order_id.*'] = 'nullable';
-            //     $rules['product_id'] = 'required';
-            //     $rules['product_id.*'] = 'required';
-            //     $rules['customize_product'] = 'required';
-            //     $rules['customize_product.*'] = 'nullable|max:250';
-            //     $rules['product_desc'] = 'required';
-            //     $rules['product_desc.*'] = 'nullable|max:250';
-            //     $rules['qty'] = 'required';
-            //     $rules['qty.*'] = 'required';
-            //     $rules['foc'] = 'required';
-            //     $rules['foc.*'] = 'required';
-            //     $rules['uom'] = 'required';
-            //     $rules['uom.*'] = 'required';
-            //     $rules['selling_price'] = 'nullable';
-            //     $rules['selling_price.*'] = 'nullable';
-            //     $rules['unit_price'] = 'required';
-            //     $rules['unit_price.*'] = 'nullable';
-            //     $rules['promotion_id'] = 'required';
-            //     $rules['promotion_id.*'] = 'nullable';
-            //     $rules['product_serial_no'] = 'nullable';
-            //     $rules['product_serial_no.*'] = 'nullable';
-            //     $rules['warranty_period'] = 'required';
-            //     $rules['warranty_period.*'] = 'required';
-            //     $rules['discount'] = 'required';
-            //     $rules['discount.*'] = 'nullable';
-            //     $rules['product_remark'] = 'required';
-            //     $rules['product_remark.*'] = 'nullable|max:250';
-            //     $rules['override_selling_price'] = 'nullable';
-            //     $rules['override_selling_price.*'] = 'nullable';
-            // }
-            // upsertPayDetails
-            $rules['payment_term'] = 'nullable';
-            $rules['payment_method'] = 'nullable';
-            $rules['payment_due_date'] = 'nullable';
-            $rules['payment_remark'] = 'nullable|max:250';
-            if (in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
-                $rules['account_amount'] = 'nullable';
-                $rules['account_amount.*'] = 'nullable';
-                $rules['account_date'] = 'nullable';
-                $rules['account_date.*'] = 'nullable';
-                $rules['account_ref_no'] = 'nullable';
-                $rules['account_ref_no.*'] = 'nullable|max:250';
-            }
-        }
-
-        $req->validate($rules, [], [
-            // upsertQuoDetails
-            'sale' => 'sales agent',
-            'report_type' => 'type',
-            'customer' => 'company',
-            'open_until' => 'validity',
-            // upsertProDetails
-            'product_id.*' => 'product',
-            'product_desc.*' => 'product description',
-            'qty.*' => 'quantity',
-            'uom.*' => 'UOM',
-            'selling_price.*' => 'selling price',
-            'unit_price.*' => 'unit price',
-            'product_serial_no.*' => 'product serial no',
-            'warranty_period.*' => 'warranty period',
-            'discount.*' => 'discount',
-            'remark' => 'remark',
-            'override_selling_price' => 'override selling price',
-            // upsertPayDetails
-            'account_amount.*' => 'amount',
-            'account_date.*' => 'date',
-            'account_ref_no.*' => 'reference no',
-        ]);
-
         try {
             DB::beginTransaction();
 
-            $data = [];
+            if ($req->sale_id == null) {
+                $products = Product::whereIn('id', $req->product_id)->get();
+                $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+                $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
 
-            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, true)->getData();
-            if ($res->result == false) {
-                throw new \Exception('upsertQuoDetails failed');
-            }
-            if ($res->sale) {
-                $data['sale'] = $res->sale;
-                $req->merge(['sale_id' => $res->sale->id]);
-            }
-
-            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true)->getData();
-            if ($res->result == false) {
-                throw new \Exception('upsertProDetails failed');
-            }
-            if ($res->product_ids) {
-                $data['product_ids'] = $res->product_ids;
-            }
-
-            if ($req->type == 'so') {
-                $res = $this->upsertPayDetails($req, true)->getData();
-                if (isset($res->err_msg) && $res->err_msg != null) {
-                    DB::rollBack();
-
-                    return Response::json([
-                        'errors' => [
-                            'account_err_msg'  => $res->err_msg,
-                        ],
-                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
-                } else if ($res->result == false) {
-                    throw new \Exception('upsertPayDetails failed');
-                }
-            }
-
-            $res = $this->upsertRemark($req, true)->getData();
-            if ($res->result == false) {
-                throw new \Exception('upsertRemark failed');
+                $sale = Sale::create([
+                    'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
+                    'sku' => $sku,
+                    'is_draft' => true,
+                    'draft_data' => json_encode($req->all()),
+                ]);
+                (new Branch)->assign(Sale::class, $sale->id);
+            } else {
+                Sale::where('id', $req->sale_id)->update([
+                    'draft_data' => json_encode($req->all())
+                ]);
             }
 
             DB::commit();

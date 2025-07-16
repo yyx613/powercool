@@ -28,7 +28,8 @@
                     <span
                         class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
                 @else
-                    <x-app.button.submit id="save-as-draft-btn" class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
+                    <x-app.button.submit id="save-as-draft-btn"
+                        class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
                     <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 @endif
             </div>
@@ -45,6 +46,47 @@
             if (SALE == null) {
                 getNextSku()
             }
+            if (SALE.is_draft == true) {
+                draftData = SALE.draft_data
+                // Quotation details
+                $('input[name="open_until"]').val(draftData.open_until)
+                $('select[name="customer"]').val(draftData.customer).trigger('change')
+                $('input[name="reference"]').val(draftData.reference)
+                $('input[name="from"]').val(draftData.from)
+                $('input[name="cc"]').val(draftData.cc)
+                $('input[name="store"]').val(draftData.store)
+                $('select[name="sale"]').val(draftData.sale).trigger('change')
+                $('select[name="report_type"]').val(draftData.report_type).trigger('change')
+                $('select[name="billing_address"]').val(draftData.billing_address).trigger('change')
+                $('select[name="status"]').val(draftData.status).trigger('change')
+                $('#new-billing-address input[name="address1"]').val(draftData.new_billing_address1)
+                $('#new-billing-address input[name="address2"]').val(draftData.new_billing_address2)
+                $('#new-billing-address input[name="address3"]').val(draftData.new_billing_address3)
+                $('#new-billing-address input[name="address4"]').val(draftData.new_billing_address4)
+                // Product details
+                for (let i = 0; i < draftData.product_id.length; i++) {
+                    if (i != 0) {
+                        $('#add-item-btn').click()
+                    }
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="product_id[]"]`).val(draftData.product_id[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] input[name="qty"]`).val(draftData.qty[i])
+                    $(`#product-details-container .items[data-id=${i+1}] input[name="product_desc"]`).val(draftData.product_desc[i])
+                    $(`#product-details-container .items[data-id=${i+1}] input[name="discount"]`).val(draftData.discount[i])
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="warranty_period[]"]`).val(draftData.warranty_period[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="promotion[]"]`).val(draftData.promotion_id[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] textarea[name="remark"]`).text(draftData.product_remark[i])
+                    if (draftData.foc[i] == 'true') {
+                        $(`#product-details-container .items[data-id=${i+1}] .foc-btns`).click()
+                    }
+                    if (draftData.selling_price[i] != null) {
+                        $(`#product-details-container .items[data-id=${i+1}] select[name="selling_price[]"]`).val(draftData.selling_price[i]).trigger('change')
+                    } else {
+                        $(`#product-details-container .items[data-id=${i+1}] input[name="override_selling_price"]`).val(draftData.override_selling_price[i]).trigger('keyup')
+                    }
+                }
+                // Remarks
+                $('#additional-remark-container textarea[name="remark"]').text(draftData.remark)
+            }
         })
 
         $('#save-as-draft-btn, #submit-btn').on('click', function() {
@@ -60,7 +102,8 @@
             isSaveAsDraft = $('#save-as-draft-btn').attr('data-triggered')
 
             $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).text('Updating')
-            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).removeClass('!bg-blue-200 bg-yellow-400 shadow')
+            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).removeClass(
+                '!bg-blue-200 bg-yellow-400 shadow')
             $('.err_msg').addClass('hidden') // Remove error messages
             // Prepare data
             let prodOrderId = []
@@ -101,7 +144,8 @@
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
             // Submit
-            let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' : '{{ route('sale.upsert_details') }}'
+            let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
+                '{{ route('sale.upsert_details') }}'
             url = `${url}?type=quo`
 
             $.ajax({
@@ -158,8 +202,10 @@
                             $(this).attr('data-product-id', product_ids[i])
                         })
                     }
-                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).text('Updated')
-                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).addClass('bg-green-400 shadow')
+                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).text(
+                        'Updated')
+                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`)
+                        .addClass('bg-green-400 shadow')
 
                     setTimeout(() => {
                         window.location.href = '{{ route('quotation.index') }}'

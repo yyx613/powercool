@@ -35,6 +35,11 @@ class Sale extends Model
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
+    public function getDraftDataAttribute($val)
+    {
+        return $val == null ? null : json_decode($val);
+    }
+
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
