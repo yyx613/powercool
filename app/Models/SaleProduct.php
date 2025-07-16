@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SaleProduct extends Model
 {
+    const STATUS_APPROVAL_PENDING = 0;
+    const STATUS_APPROVAL_APPROVED = 1;
+    const STATUS_APPROVAL_REJECTED = 2;
+
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];

@@ -24,7 +24,7 @@
             @include('sale_order.form_step.payment_details')
             @include('sale_order.form_step.remarks')
 
-            @if (!isset($is_view) || (isset($is_view) && $is_view == false))
+            @if (!isset($is_view) || (isset($is_view) && $is_view == false) || !isset($has_pending_approval) || (isset($has_pending_approval) && $has_pending_approval == false))
                 <div class="flex justify-end gap-x-4">
                     @if (isset($sale) && $sale->status == 2)
                         <span
