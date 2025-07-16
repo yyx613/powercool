@@ -27,12 +27,11 @@ class SyncAutoCountController extends Controller
     {
         try {
             $data = $request->json()->all();// Retrieve all UOM records from the request
-            $companyGroup = $request->query('company_group');
-            $companyGroup2 = (int) $request->query('company_group');
+            $companyGroup = (int) $request->query('company_group');
 
-            if (in_array($companyGroup2, [1, 3])) {
+            if (in_array($companyGroup, [1, 3])) {
                 $branchNo = '1';
-            } elseif (in_array($companyGroup2, [2, 4])) {
+            } elseif (in_array($companyGroup, [2, 4])) {
                 $branchNo = '2';
             } else {
                 // Optional: throw error or default safely
@@ -182,12 +181,11 @@ class SyncAutoCountController extends Controller
     {
         try {
             $data = $request->json()->all(); // Retrieve all UOM records from the request
-            $companyGroup = $request->query('company_group');
-            $companyGroup2 = (int) $request->query('company_group');
+            $companyGroup = (int) $request->query('company_group');
 
-            if (in_array($companyGroup2, [1, 3])) {
+            if (in_array($companyGroup, [1, 3])) {
                 $branchNo = '1';
-            } elseif (in_array($companyGroup2, [2, 4])) {
+            } elseif (in_array($companyGroup, [2, 4])) {
                 $branchNo = '2';
             } else {
                 // Optional: throw error or default safely
