@@ -263,7 +263,7 @@ class SyncAutoCountController extends Controller
                         'trade_name' => $record['TradeName'],
                         'address' => $record['Address'],
                         'city' => $record['City'],
-                        'zipcode' => $record['PostCode'],
+                        'zipcode' => $record['PostCode']
                     ]);
 
                     
@@ -370,7 +370,7 @@ class SyncAutoCountController extends Controller
                         'trade_name' => $record['TradeName'],
                         'address' => $record['Address'],
                         'city' => $record['City'],
-                        'zipcode' => $record['PostCode'],
+                        'zipcode' => $record['PostCode']
                     ]);
                     
                     $existing = DB::select("SELECT * FROM branches WHERE object_type = ? AND object_id = ? AND location = ?", [
