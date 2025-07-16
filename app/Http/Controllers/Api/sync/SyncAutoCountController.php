@@ -30,9 +30,9 @@ class SyncAutoCountController extends Controller
             $companyGroup = $request->query('company_group');
             $companyGroup2 = (int) $request->query('company_group');
 
-            if (in_array($companyGroup2, [1, 2])) {
+            if (in_array($companyGroup2, [1, 3])) {
                 $branchNo = '1';
-            } elseif (in_array($companyGroup2, [3, 4])) {
+            } elseif (in_array($companyGroup2, [2, 4])) {
                 $branchNo = '2';
             } else {
                 // Optional: throw error or default safely
@@ -185,9 +185,9 @@ class SyncAutoCountController extends Controller
             $companyGroup = $request->query('company_group');
             $companyGroup2 = (int) $request->query('company_group');
 
-            if (in_array($companyGroup2, [1, 2])) {
+            if (in_array($companyGroup2, [1, 3])) {
                 $branchNo = '1';
-            } elseif (in_array($companyGroup2, [3, 4])) {
+            } elseif (in_array($companyGroup2, [2, 4])) {
                 $branchNo = '2';
             } else {
                 // Optional: throw error or default safely
