@@ -184,8 +184,11 @@ class SaleController extends Controller
 
     public function edit(Sale $sale)
     {
+        $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
+
         return view('quotation.form', [
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
+            'has_pending_approval' => $has_pending_approval,
         ]);
     }
 
@@ -592,11 +595,14 @@ class SaleController extends Controller
             $q->attached_to_do = $q->attachedToDo();
         });
 
+        $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
+
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
             'payment_editable_only' => $sale->convertFromQuo() || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
             'is_view' => $is_view,
+            'has_pending_approval' => $has_pending_approval,
         ]);
     }
 
@@ -1602,8 +1608,6 @@ class SaleController extends Controller
                 }
 
                 $now = now();
-                $approval_needed = false;
-                $approval_desc = null;
                 for ($i = 0; $i < count($req->product_id); $i++) {
                     $product_id = $req->product_id[$i];
                     if ($is_draft && $product_id == null) {
@@ -1633,6 +1637,9 @@ class SaleController extends Controller
 
                     if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
+                        if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
+                            continue;
+                        }
 
                         $sp->update([
                             'product_id' => $product_id,
@@ -1681,13 +1688,29 @@ class SaleController extends Controller
 
                     if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                         $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
-                        $approval_needed = true;
-                        if ($approval_desc != null) {
-                            $approval_desc .= ', ';
-                        }
-                        $approval_desc .= 'The override selling price is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price);
-                    }
 
+                        $approval = Approval::create([
+                            'object_type' => Sale::class,
+                            'object_id' => $req->sale_id,
+                            'status' => Approval::STATUS_PENDING_APPROVAL,
+                            'data' => $req->type == 'quo' ? json_encode([
+                                'is_quo' => true,
+                                'sale_product_id' => $sp->id,
+                                'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                            ]) : json_encode([
+                                'is_quo' => false,
+                                'sale_product_id' => $sp->id,
+                                'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                            ])
+                        ]);
+                        (new Branch)->assign(Approval::class, $approval->id);
+                        // Update QUO/SO status
+                        Sale::where('id', $req->sale_id)->update([
+                            'status' => Sale::STATUS_APPROVAL_PENDING
+                        ]);
+                        $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
+                        $sp->save();
+                    }
                     // Sale product children
                     SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
                     $existing_spc_ids = SaleProductChild::where('sale_product_id', $sp->id)->pluck('product_children_id')->toArray();
@@ -1707,28 +1730,6 @@ class SaleController extends Controller
                             ];
                         }
                         SaleProductChild::insert($data);
-                    }
-                }
-                // Approval
-                if ($approval_needed) {
-                    if (! Approval::where('object_type', Sale::class)->where('object_id', $req->sale_id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
-                        $approval = Approval::create([
-                            'object_type' => Sale::class,
-                            'object_id' => $req->sale_id,
-                            'status' => Approval::STATUS_PENDING_APPROVAL,
-                            'data' => $req->type == 'quo' ? json_encode([
-                                'is_quo' => true,
-                                'description' => $approval_desc,
-                            ]) : json_encode([
-                                'is_quo' => false,
-                                'description' => $approval_desc,
-                            ])
-                        ]);
-                        (new Branch)->assign(Approval::class, $approval->id);
-                        // Update QUO/SO status
-                        Sale::where('id', $req->sale_id)->update([
-                            'status' => Sale::STATUS_APPROVAL_PENDING
-                        ]);
                     }
                 }
             } else {

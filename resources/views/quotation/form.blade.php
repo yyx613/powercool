@@ -23,16 +23,18 @@
             @include('quotation.form_step.product_details')
             @include('quotation.form_step.remarks')
 
-            <div class="flex justify-end gap-x-4">
-                @if (isset($sale) && $sale->status == 2)
-                    <span
-                        class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
-                @else
-                    <x-app.button.submit id="save-as-draft-btn"
-                        class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
-                    <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-                @endif
-            </div>
+            @if (!isset($has_pending_approval) || (isset($has_pending_approval) && $has_pending_approval == false))
+                <div class="flex justify-end gap-x-4">
+                    @if (isset($sale) && $sale->status == 2)
+                        <span
+                            class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
+                    @else
+                        <x-app.button.submit id="save-as-draft-btn"
+                            class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
+                        <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+                    @endif
+                </div>
+            @endif
         </form>
     </div>
 @endsection
@@ -68,20 +70,28 @@
                     if (i != 0) {
                         $('#add-item-btn').click()
                     }
-                    $(`#product-details-container .items[data-id=${i+1}] select[name="product_id[]"]`).val(draftData.product_id[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="product_id[]"]`).val(draftData
+                        .product_id[i]).trigger('change')
                     $(`#product-details-container .items[data-id=${i+1}] input[name="qty"]`).val(draftData.qty[i])
-                    $(`#product-details-container .items[data-id=${i+1}] input[name="product_desc"]`).val(draftData.product_desc[i])
-                    $(`#product-details-container .items[data-id=${i+1}] input[name="discount"]`).val(draftData.discount[i])
-                    $(`#product-details-container .items[data-id=${i+1}] select[name="warranty_period[]"]`).val(draftData.warranty_period[i]).trigger('change')
-                    $(`#product-details-container .items[data-id=${i+1}] select[name="promotion[]"]`).val(draftData.promotion_id[i]).trigger('change')
-                    $(`#product-details-container .items[data-id=${i+1}] textarea[name="remark"]`).text(draftData.product_remark[i])
+                    $(`#product-details-container .items[data-id=${i+1}] input[name="product_desc"]`).val(draftData
+                        .product_desc[i])
+                    $(`#product-details-container .items[data-id=${i+1}] input[name="discount"]`).val(draftData
+                        .discount[i])
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="warranty_period[]"]`).val(
+                        draftData.warranty_period[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] select[name="promotion[]"]`).val(draftData
+                        .promotion_id[i]).trigger('change')
+                    $(`#product-details-container .items[data-id=${i+1}] textarea[name="remark"]`).text(draftData
+                        .product_remark[i])
                     if (draftData.foc[i] == 'true') {
                         $(`#product-details-container .items[data-id=${i+1}] .foc-btns`).click()
                     }
                     if (draftData.selling_price[i] != null) {
-                        $(`#product-details-container .items[data-id=${i+1}] select[name="selling_price[]"]`).val(draftData.selling_price[i]).trigger('change')
+                        $(`#product-details-container .items[data-id=${i+1}] select[name="selling_price[]"]`).val(
+                            draftData.selling_price[i]).trigger('change')
                     } else {
-                        $(`#product-details-container .items[data-id=${i+1}] input[name="override_selling_price"]`).val(draftData.override_selling_price[i]).trigger('keyup')
+                        $(`#product-details-container .items[data-id=${i+1}] input[name="override_selling_price"]`)
+                            .val(draftData.override_selling_price[i]).trigger('keyup')
                     }
                 }
                 // Remarks

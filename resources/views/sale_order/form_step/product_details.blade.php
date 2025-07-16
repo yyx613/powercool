@@ -7,6 +7,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Product Details') }}</span>
     </div>
+    {{-- Template --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
         id="item-template">
         <button type="button"
@@ -21,6 +22,14 @@
         <div class="flex col-span-4 justify-end hidden attached-do-msg">
             <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                 {{ __('Product is attached to DO') }}</p>
+        </div>
+        <div class="col-span-4 hidden" id="approval-status-container">
+            <span id="pending-status"
+                class="hidden border rounded border-slate-500 text-slate-500 text-sm font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
+            <span id="approved-status"
+                class="hidden border rounded border-green-600 text-green-600 text-sm font-medium px-1 py-0.5">{{ __('Approved') }}</span>
+            <span id="rejected-status"
+                class="hidden border rounded border-red-600 text-red-600 text-sm font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
         </div>
         <div class="flex flex-col">
             <x-app.input.label class="mb-1">{{ __('Product') }} <span
@@ -199,6 +208,18 @@
                     $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger(
                         'change')
                     $(`.items[data-id="${i+1}"] input[name="product_desc"]`).val(sp.desc)
+                    if (sp.status != null) {
+                        $(`.items[data-id="${i+1}"] #approval-status-container`).removeClass('hidden')
+                        if (sp.status === 0) $(
+                            `.items[data-id="${i+1}"] #approval-status-container #pending-status`).removeClass(
+                            'hidden')
+                        else if (sp.status === 1) $(
+                            `.items[data-id="${i+1}"] #approval-status-container #approved-status`).removeClass(
+                            'hidden')
+                        else if (sp.status === 2) $(
+                            `.items[data-id="${i+1}"] #approval-status-container #rejected-status`).removeClass(
+                            'hidden')
+                    }
                     let temp = []
                     for (let j = 0; j < sp.warranty_periods.length; j++) {
                         temp.push(sp.warranty_periods[j].warranty_period_id)

@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Models\SaleProductionRequest;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
@@ -136,8 +137,16 @@ class ApprovalController extends Controller
             Cache::put('unread_approval_count', $pending_approval_count);
             // Update respective QUO/SO/DO
             if (get_class($approval->object) == Sale::class) {
-                $approval->object->status = Sale::STATUS_APPROVAL_APPROVED;
-                $approval->object->save();
+                $data = json_decode($approval->data);
+                SaleProduct::where('id', $data->sale_product_id)->update([
+                    'status' => SaleProduct::STATUS_APPROVAL_APPROVED
+                ]);
+                if (!Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                    $has_rejected = Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_REJECTED)->exists();
+
+                    $approval->object->status = $has_rejected ? Sale::STATUS_APPROVAL_REJECTED : Sale::STATUS_APPROVAL_APPROVED;
+                    $approval->object->save();
+                }
             } else if (get_class($approval->object) == DeliveryOrder::class) {
                 $approval->object->status = DeliveryOrder::STATUS_APPROVAL_APPROVED;
                 $approval->object->save();
@@ -208,8 +217,14 @@ class ApprovalController extends Controller
                     $obj->delete();
                 }
             } elseif (get_class($obj) == Sale::class) {
-                $obj->status = Sale::STATUS_ACTIVE;
-                $obj->save();
+                $data = json_decode($approval->data);
+                SaleProduct::where('id', $data->sale_product_id)->update([
+                    'status' => SaleProduct::STATUS_APPROVAL_REJECTED
+                ]);
+                if (!Approval::where('object_type', Sale::class)->where('object_id', $obj->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                    $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                    $obj->save();
+                }
             }
             // Check approval count
             $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
