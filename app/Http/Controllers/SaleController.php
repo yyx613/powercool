@@ -1137,40 +1137,41 @@ class SaleController extends Controller
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
         }
+        if ($req->type == 'quo' || (isset($convert_from_quo) && !$convert_from_quo)) {
+            // upsertProDetails
+            $rules['product_order_id'] = 'nullable';
+            $rules['product_order_id.*'] = 'nullable';
+            $rules['product_id'] = 'required';
+            $rules['product_id.*'] = 'required';
+            $rules['customize_product'] = 'required';
+            $rules['customize_product.*'] = 'nullable|max:250';
+            $rules['product_desc'] = 'required';
+            $rules['product_desc.*'] = 'nullable|max:250';
+            $rules['qty'] = 'required';
+            $rules['qty.*'] = 'required';
+            $rules['foc'] = 'required';
+            $rules['foc.*'] = 'required';
+            $rules['uom'] = 'required';
+            $rules['uom.*'] = 'required';
+            $rules['selling_price'] = 'nullable';
+            $rules['selling_price.*'] = 'nullable';
+            $rules['unit_price'] = 'required';
+            $rules['unit_price.*'] = 'nullable';
+            $rules['promotion_id'] = 'required';
+            $rules['promotion_id.*'] = 'nullable';
+            $rules['product_serial_no'] = 'nullable';
+            $rules['product_serial_no.*'] = 'nullable';
+            $rules['warranty_period'] = 'required';
+            $rules['warranty_period.*'] = 'required';
+            $rules['warranty_period.*.*'] = 'required';
+            $rules['discount'] = 'required';
+            $rules['discount.*'] = 'nullable';
+            $rules['product_remark'] = 'required';
+            $rules['product_remark.*'] = 'nullable|max:250';
+            $rules['override_selling_price'] = 'nullable';
+            $rules['override_selling_price.*'] = 'nullable';
+        }
         if ($req->type == 'so') {
-            if (isset($convert_from_quo) && !$convert_from_quo) {
-                // upsertProDetails
-                $rules['product_order_id'] = 'nullable';
-                $rules['product_order_id.*'] = 'nullable';
-                $rules['product_id'] = 'required';
-                $rules['product_id.*'] = 'required';
-                $rules['customize_product'] = 'required';
-                $rules['customize_product.*'] = 'nullable|max:250';
-                $rules['product_desc'] = 'required';
-                $rules['product_desc.*'] = 'nullable|max:250';
-                $rules['qty'] = 'required';
-                $rules['qty.*'] = 'required';
-                $rules['foc'] = 'required';
-                $rules['foc.*'] = 'required';
-                $rules['uom'] = 'required';
-                $rules['uom.*'] = 'required';
-                $rules['selling_price'] = 'nullable';
-                $rules['selling_price.*'] = 'nullable';
-                $rules['unit_price'] = 'required';
-                $rules['unit_price.*'] = 'nullable';
-                $rules['promotion_id'] = 'required';
-                $rules['promotion_id.*'] = 'nullable';
-                $rules['product_serial_no'] = 'nullable';
-                $rules['product_serial_no.*'] = 'nullable';
-                $rules['warranty_period'] = 'required';
-                $rules['warranty_period.*'] = 'required';
-                $rules['discount'] = 'required';
-                $rules['discount.*'] = 'nullable';
-                $rules['product_remark'] = 'required';
-                $rules['product_remark.*'] = 'nullable|max:250';
-                $rules['override_selling_price'] = 'nullable';
-                $rules['override_selling_price.*'] = 'nullable';
-            }
             // upsertPayDetails
             $credit_payment_method_ids = PaymentMethod::where('name', 'like', '%credit%')->pluck('id')->toArray();
             if (in_array($req->payment_method, $credit_payment_method_ids)) {
@@ -1205,7 +1206,7 @@ class SaleController extends Controller
             'selling_price.*' => 'selling price',
             'unit_price.*' => 'unit price',
             'product_serial_no.*' => 'product serial no',
-            'warranty_period.*' => 'warranty period',
+            'warranty_period.*.*' => 'warranty period',
             'discount.*' => 'discount',
             'remark' => 'remark',
             'override_selling_price' => 'override selling price',
@@ -1536,6 +1537,7 @@ class SaleController extends Controller
                 'product_serial_no.*' => 'nullable',
                 'warranty_period' => 'required',
                 'warranty_period.*' => 'required',
+                'warranty_period.*.*' => 'required',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
