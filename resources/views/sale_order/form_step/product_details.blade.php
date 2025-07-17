@@ -108,8 +108,7 @@
             <x-app.message.error id="discount_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="warranty_period" class="mb-1">{{ __('Warranty Period') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="warranty_period" class="mb-1">{{ __('Warranty Period') }}</x-app.input.label>
             <x-app.input.select name="warranty_period[]" multiple>
                 <option value=""></option>
             </x-app.input.select>
