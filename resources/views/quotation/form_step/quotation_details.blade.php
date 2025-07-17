@@ -24,7 +24,7 @@
                 placeholder="{{ __('Select a company') }}">
                 <option value="">{{ __('Select a company') }}</option>
                 @foreach ($customers as $cu)
-                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }}</option>
+                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }} - {{ $cu->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
                 @endforeach
             </x-app.input.select2>
             <x-app.message.error id="customer_err" />
