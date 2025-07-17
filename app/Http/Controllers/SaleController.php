@@ -1163,7 +1163,7 @@ class SaleController extends Controller
             $rules['product_serial_no.*'] = 'nullable';
             $rules['warranty_period'] = 'required';
             $rules['warranty_period.*'] = 'required';
-            $rules['warranty_period.*.*'] = 'required';
+            $rules['warranty_period.*.*'] = 'nullable';
             $rules['discount'] = 'required';
             $rules['discount.*'] = 'nullable';
             $rules['product_remark'] = 'required';
@@ -1537,7 +1537,7 @@ class SaleController extends Controller
                 'product_serial_no.*' => 'nullable',
                 'warranty_period' => 'required',
                 'warranty_period.*' => 'required',
-                'warranty_period.*.*' => 'required',
+                'warranty_period.*.*' => 'nullable',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
@@ -1677,6 +1677,9 @@ class SaleController extends Controller
                     if (count($req->warranty_period) >= ($i + 1) && $req->warranty_period[$i] != null) {
                         $spwp_data = [];
                         for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
+                            if ($req->warranty_period[$i][$j] == null) {
+                                continue;
+                            }
                             $spwp_data[] = [
                                 'sale_product_id' => $sp->id,
                                 'warranty_period_id' => $req->warranty_period[$i][$j],
@@ -1684,7 +1687,9 @@ class SaleController extends Controller
                                 'updated_at' => now(),
                             ];
                         }
-                        SaleProductWarrantyPeriod::insert($spwp_data);
+                        if (count($spwp_data) > 0) {
+                            SaleProductWarrantyPeriod::insert($spwp_data);
+                        }
                     }
                     $prod = Product::where('id', $req->product_id[$i])->first();
 
