@@ -18,7 +18,7 @@
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
             <td style="width: 70%; border-bottom: solid 1px black; padding: 0 50px 10px 0; text-align: center;">
-                <span style="font-size: 18px;">HI-TEN TRADING SDN BHD <span style="font-size: 14px;">(709676-X)</span></span><br>
+                <span style="font-size: 18px;">HI-TEN TRADING SDN BHD <span style="font-size: 14px;">[200501027542 (709676-X)]</span></span><br>
                 <span style="font-size: 14px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                 <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                 <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>

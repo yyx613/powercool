@@ -90,7 +90,8 @@
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%; text-align: start;">FAX: </td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH: {{ $customer->name ?? '' }}
+                            </td>
                         </tr>
                     </table>
                 </td>
@@ -138,16 +139,18 @@
                 <tr>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;"></td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
+                        {{ $prod->product->sku }}
+                    </td>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->product->model_name }}</td>
-                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ $prod->product->uom }}</td>
-                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ number_format($prod->unit_price, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ number_format($prod->discountAmount(), 2) }}
                     </td>
                     <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">

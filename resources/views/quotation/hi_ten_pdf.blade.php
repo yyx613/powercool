@@ -27,7 +27,7 @@
             <tr>
                 <td style="width: 33.33%; border-bottom: solid 1px black; padding: 0 0 10px 0; text-align: center;">
                     <span style="font-size: 18px;">HI-TEN TRADING SDN BHD <span
-                            style="font-size: 14px;">(709676-X)</span></span><br>
+                            style="font-size: 14px;">[200501027542 (709676-X)]</span></span><br>
                     <span style="font-size: 14px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
@@ -66,6 +66,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0;">AH: {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -140,12 +141,12 @@
             @foreach ($products as $key => $prod)
                 <tr>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;"></td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">{{ $prod->product->sku }}</td>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->model_name }}</td>
                     <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->qty }}</td>
-                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->unit_price, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ number_format($prod->discount ?? 0, 2) }}</td>
-                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">{{ number_format($prod->unit_price, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">{{ number_format($prod->discount ?? 0, 2) }}</td>
+                    <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
                     <td style="font-size: 14px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
@@ -186,7 +187,7 @@
                     {{ $sale->open_until }}</td>
                 <td
                     style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
-                    Total {{ number_format($total, 2) }}</td>
+                    Total RM{{ number_format($total, 2) }}</td>
             </tr>
             <tr>
                 <td style="font-size: 14px; font-weight: 700;">Payment Term</td>
