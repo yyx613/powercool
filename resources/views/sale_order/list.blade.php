@@ -272,7 +272,7 @@
                             case 6:
                                 return "{!! __('Rejected') !!}"
                             case 7:
-                                return "{!! __('Approval Rejected') !!}"
+                                return "{!! __('Rejected') !!}"
                             default: 
                                 return data
                         }

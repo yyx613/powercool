@@ -60,7 +60,7 @@
                         <tr>
                             <td style="font-size: 14px;">Salesperson</td>
                             <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $sale->saleperson->name }}</td>
+                            <td style="font-size: 14px;">{{ $sale->saleperson->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -101,9 +101,8 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
-                            </td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%; text-align: start;">FAX: </td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH: {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -153,7 +152,7 @@
             @foreach ($products as $key => $prod)
                 <tr>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $key + 1 }}</td>
-                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->sku }}</td>
+                    <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">{{ $prod->product->sku }}</td>
                     <td style="font-size: 14px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->model_name }}</td>
                     <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->qty }}</td>
                     <td style="font-size: 14px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">{{ $prod->product->uom }}</td>
@@ -279,7 +278,7 @@
                 <td style="font-size: 14px; padding: 0 0 50px 0; text-align: center; width: 33%;"></td>
                 <td
                     style="font-weight: 700; font-size: 14px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0;">
-                    {{ $sale->saleperson->name }}</td>
+                    {{ $sale->saleperson->name ?? '' }}</td>
             </tr>
         </table>
     </main>

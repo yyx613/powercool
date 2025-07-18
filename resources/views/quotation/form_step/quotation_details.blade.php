@@ -24,7 +24,8 @@
                 placeholder="{{ __('Select a company') }}">
                 <option value="">{{ __('Select a company') }}</option>
                 @foreach ($customers as $cu)
-                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }} - {{ $cu->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
+                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }} -
+                        {{ $cu->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
                 @endforeach
             </x-app.input.select2>
             <x-app.message.error id="customer_err" />
@@ -93,6 +94,13 @@
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
+            <x-app.input.select name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')">
+                <option value="">{{ __('Select a payment term') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="payment_term_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
@@ -100,7 +108,7 @@
                 @if (isset($sale) && $sale->status == 4)
                     <option value="4" selected>{{ __('Pending Approval') }}</option>
                 @elseif (isset($sale) && $sale->status == 7)
-                    <option value="7" selected>{{ __('Approval Rejected') }}</option>
+                    <option value="7" selected>{{ __('Rejected') }}</option>
                 @else
                     <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
                     <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
@@ -148,9 +156,9 @@
                     // Update payment term
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
-                    $(`select[name="payment_term"]`).select2({
-                        placeholder: '{{ __('Select a term') }}'
-                    })
+                    // $(`select[name="payment_term"]`).select2({
+                    //     placeholder: '{{ __('Select a term') }}'
+                    // })
 
                     for (let i = 0; i < element.credit_terms.length; i++) {
                         const term = element.credit_terms[i];
@@ -166,6 +174,7 @@
                     // }
                     if (INIT_EDIT) {
                         $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                        $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
                     } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
                         $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
                     }

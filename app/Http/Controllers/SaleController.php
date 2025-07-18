@@ -168,7 +168,7 @@ class SaleController extends Controller
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
-                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING,
+                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
                 'can_edit' => hasPermission('sale.quotation.edit'),
                 'can_delete' => hasPermission('sale.quotation.delete'),
             ];
@@ -215,7 +215,7 @@ class SaleController extends Controller
 
     public function pdf(Sale $sale)
     {
-        if ($sale->status == Sale::STATUS_APPROVAL_PENDING) {
+        if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
             return abort(403);
         }
 
@@ -543,7 +543,7 @@ class SaleController extends Controller
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
-                'can_view_pdf' => $record->status != Sale::STATUS_APPROVAL_PENDING,
+                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
             ];
         }
 
@@ -658,9 +658,9 @@ class SaleController extends Controller
 
     public function pdfSaleOrder(Sale $sale)
     {
-        if ($sale->status == Sale::STATUS_APPROVAL_PENDING) {
-            return abort(403);
-        }
+        // if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
+        //     return abort(403);
+        // }
 
         $products = collect();
         $sps = $sale->products()->withTrashed()->get();
@@ -1161,8 +1161,8 @@ class SaleController extends Controller
             $rules['promotion_id.*'] = 'nullable';
             $rules['product_serial_no'] = 'nullable';
             $rules['product_serial_no.*'] = 'nullable';
-            $rules['warranty_period'] = 'required';
-            $rules['warranty_period.*'] = 'required';
+            $rules['warranty_period'] = 'nullable';
+            $rules['warranty_period.*'] = 'nullable';
             $rules['warranty_period.*.*'] = 'nullable';
             $rules['discount'] = 'required';
             $rules['discount.*'] = 'nullable';
@@ -1575,8 +1575,8 @@ class SaleController extends Controller
                 'promotion_id.*' => 'nullable',
                 'product_serial_no' => 'nullable',
                 'product_serial_no.*' => 'nullable',
-                'warranty_period' => 'required',
-                'warranty_period.*' => 'required',
+                'warranty_period' => 'nullable',
+                'warranty_period.*' => 'nullable',
                 'warranty_period.*.*' => 'nullable',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
