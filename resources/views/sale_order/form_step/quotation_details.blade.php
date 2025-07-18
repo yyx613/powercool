@@ -152,11 +152,11 @@
                         $(`select[name="payment_term"]`).append(opt)
                     }
                     // Filter Sales agent
-                    $(`select[name="sale"] option`).not(':first').addClass('hidden')
-                    for (let j = 0; j < element.sales_agents.length; j++) {
-                        $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
-                            .removeClass('hidden')
-                    }
+                    // $(`select[name="sale"] option`).not(':first').addClass('hidden')
+                    // for (let j = 0; j < element.sales_agents.length; j++) {
+                    //     $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
+                    //         .removeClass('hidden')
+                    // }
                     if (INIT_EDIT) {
                         $('select[name="sale"]').val(SALE.sale_id).trigger('change')
                     } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
