@@ -1315,22 +1315,62 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->sale_id == null) {
-                $products = Product::whereIn('id', $req->product_id)->get();
-                $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
-                $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
+            // if ($req->sale_id == null) {
+            //     $products = Product::whereIn('id', $req->product_id)->get();
+            //     $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+            //     $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
 
-                $sale = Sale::create([
-                    'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
-                    'sku' => $sku,
-                    'is_draft' => true,
-                    'draft_data' => json_encode($req->all()),
-                ]);
-                (new Branch)->assign(Sale::class, $sale->id);
-            } else {
-                Sale::where('id', $req->sale_id)->update([
-                    'draft_data' => json_encode($req->all())
-                ]);
+            //     $sale = Sale::create([
+            //         'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
+            //         'sku' => $sku,
+            //         'is_draft' => true,
+            //         'draft_data' => json_encode($req->all()),
+            //     ]);
+            //     (new Branch)->assign(Sale::class, $sale->id);
+            // } else {
+            //     Sale::where('id', $req->sale_id)->update([
+            //         'draft_data' => json_encode($req->all())
+            //     ]);
+            // }
+
+            // insert into columns
+            $data = [];
+
+            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertQuoDetails failed');
+            }
+            if ($res->sale) {
+                $data['sale'] = $res->sale;
+                $req->merge(['sale_id' => $res->sale->id]);
+            }
+
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertProDetails failed');
+            }
+            if ($res->product_ids) {
+                $data['product_ids'] = $res->product_ids;
+            }
+
+            if ($req->type == 'so') {
+                $res = $this->upsertPayDetails($req, true)->getData();
+                if (isset($res->err_msg) && $res->err_msg != null) {
+                    DB::rollBack();
+
+                    return Response::json([
+                        'errors' => [
+                            'account_err_msg'  => $res->err_msg,
+                        ],
+                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                } else if ($res->result == false) {
+                    throw new \Exception('upsertPayDetails failed');
+                }
+            }
+
+            $res = $this->upsertRemark($req, true)->getData();
+            if ($res->result == false) {
+                throw new \Exception('upsertRemark failed');
             }
 
             DB::commit();
@@ -1394,7 +1434,7 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             // Billing
-            if ($req->billing_address != null && $req->new_billing_address1 != null) {
+            if ($req->billing_address != null || $req->new_billing_address1 != null) {
                 if ($req->billing_address != null) {
                     $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
                 } else {
@@ -1411,7 +1451,7 @@ class SaleController extends Controller
                 }
             }
             // Delivery
-            if ($need_delivery_address == true && $req->delivery_address != null && $req->new_delivery_address1 != null) {
+            if ($need_delivery_address == true && ($req->delivery_address != null || $req->new_delivery_address1 != null)) {
                 if ($req->delivery_address != null) {
                     $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
                 } else {
@@ -1674,7 +1714,7 @@ class SaleController extends Controller
                         ]);
                     }
                     // Warranty Period
-                    if (count($req->warranty_period) >= ($i + 1) && $req->warranty_period[$i] != null) {
+                    if ($req->warranty_period != null && count($req->warranty_period) >= ($i + 1) && $req->warranty_period[$i] != null) {
                         $spwp_data = [];
                         for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
                             if ($req->warranty_period[$i][$j] == null) {
@@ -1693,7 +1733,7 @@ class SaleController extends Controller
                     }
                     $prod = Product::where('id', $req->product_id[$i])->first();
 
-                    if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
+                    if (!$is_draft && $req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                         $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
 
                         $approval = Approval::create([
