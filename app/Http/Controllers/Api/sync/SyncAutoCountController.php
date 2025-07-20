@@ -238,7 +238,8 @@ class SyncAutoCountController extends Controller
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
                         'name' => $record['Name'],
-                        'phone' => $record['Phone'] ?? "-",
+                        'phone' => $record['TaxPhone'] ?? "-",
+                        'mobile_number' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup,
                         'company_group_autocount' => $companyGroup,
@@ -345,7 +346,8 @@ class SyncAutoCountController extends Controller
                     $supplier = Customer::create([
                         'sku' => $record['AccNo'],
                         'name' => $record['Name'],
-                        'phone' => $record['Phone'] ?? "-",
+                        'phone' => $record['TaxPhone'] ?? "-",
+                        'mobile_number' => $record['Phone'] ?? "-",
                         'company_name' => $record['CompanyName'],
                         'company_group' => $companyGroup, // should be 1 or 2 powercool or hiten
                         'company_group_autocount' => $companyGroup,
