@@ -422,6 +422,7 @@
 
             $('#info-form').submit()
             $('#tin-info-modal').removeClass('show-modal')
+            NEGLECT_TIN_VALIDATION = false
         })
 
         $('#info-form').on('submit', function(e) {
