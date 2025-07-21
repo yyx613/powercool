@@ -94,6 +94,17 @@
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
+            <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
+                placeholder="{{ __('Select a method') }}">
+                <option value=""></option>
+                @foreach ($payment_methods as $method)
+                    <option value="{{ $method->id }}" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == $method->id)>{{ $method->name }}</option>
+                @endforeach
+                </x-app.input.selec2t>
+                <x-app.message.error id="payment_method_err" />
+        </div>
+        <div class="flex flex-col hidden" id="payment-term-container">
             <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
             <x-app.input.select name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')">
                 <option value="">{{ __('Select a payment term') }}</option>
@@ -131,6 +142,7 @@
     <script>
         INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
+        CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
 
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
@@ -234,6 +246,15 @@
                 $('#new-billing-address input').attr('disabled', true)
                 $('#new-billing-address input').attr('aria-disabled', true)
                 $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('select[name="payment_method"]').on('change', function() {
+            let val = $(this).val()
+
+            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                $('#payment-term-container').removeClass('hidden')
+            } else {
+                $('#payment-term-container').addClass('hidden')
             }
         })
     </script>
