@@ -138,9 +138,11 @@ class ApprovalController extends Controller
             // Update respective QUO/SO/DO
             if (get_class($approval->object) == Sale::class) {
                 $data = json_decode($approval->data);
-                SaleProduct::where('id', $data->sale_product_id)->update([
-                    'status' => SaleProduct::STATUS_APPROVAL_APPROVED
-                ]);
+                if (isset($data->sale_product_id)) {
+                    SaleProduct::where('id', $data->sale_product_id)->update([
+                        'status' => SaleProduct::STATUS_APPROVAL_APPROVED
+                    ]);
+                }
                 if (!Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
                     $has_rejected = Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_REJECTED)->exists();
 
@@ -218,9 +220,11 @@ class ApprovalController extends Controller
                 }
             } elseif (get_class($obj) == Sale::class) {
                 $data = json_decode($approval->data);
-                SaleProduct::where('id', $data->sale_product_id)->update([
-                    'status' => SaleProduct::STATUS_APPROVAL_REJECTED
-                ]);
+                if (isset($data->sale_product_id)) {
+                    SaleProduct::where('id', $data->sale_product_id)->update([
+                        'status' => SaleProduct::STATUS_APPROVAL_REJECTED
+                    ]);
+                }
                 if (!Approval::where('object_type', Sale::class)->where('object_id', $obj->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
                     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
                     $obj->save();

@@ -175,6 +175,7 @@
                     'cc': $('input[name="cc"]').val(),
                     'status': $('select[name="status"]').val(),
                     'report_type': $('select[name="report_type"]').val(),
+                    'payment_method': $('select[name="payment_method"]').val(),
                     'payment_term': $('select[name="payment_term"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),

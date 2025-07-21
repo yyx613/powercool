@@ -658,9 +658,9 @@ class SaleController extends Controller
 
     public function pdfSaleOrder(Sale $sale)
     {
-        // if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
-        //     return abort(403);
-        // }
+        if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
+            return abort(403);
+        }
 
         $products = collect();
         $sps = $sale->products()->withTrashed()->get();
@@ -1352,6 +1352,12 @@ class SaleController extends Controller
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
             }
+            $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
+            if (!$has_rejected) {
+                Sale::where('id', $req->sale_id)->update([
+                    'status' => Sale::STATUS_ACTIVE
+                ]);
+            }
 
             if ($req->type == 'so') {
                 $res = $this->upsertPayDetails($req, true)->getData();
@@ -1495,6 +1501,7 @@ class SaleController extends Controller
                     'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
+                    'payment_method' => $req->payment_method,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);
@@ -1524,7 +1531,24 @@ class SaleController extends Controller
                     'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
+                    'payment_method' => $req->payment_method,
                 ]);
+            }
+            // Payment method approval
+            if ($req->payment_method != null) {
+                $credit_term_payment_method_ids = PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
+                if (in_array($req->payment_method, $credit_term_payment_method_ids)) {
+                    $approval = Approval::create([
+                        'object_type' => Sale::class,
+                        'object_id' => $req->sale_id,
+                        'status' => Approval::STATUS_PENDING_APPROVAL,
+                        'data' =>  json_encode([
+                            'is_payment_method' => true,
+                            'description' => 'The payment method for ' . $sale->sku . ' is Credit Term.',
+                        ])
+                    ]);
+                    (new Branch)->assign(Approval::class, $approval->id);
+                }
             }
 
             if ($req->quo_id != null) {
@@ -1756,6 +1780,9 @@ class SaleController extends Controller
                             'status' => Sale::STATUS_APPROVAL_PENDING
                         ]);
                         $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
+                        $sp->save();
+                    } else if (!$is_draft) {
+                        $sp->status = null;
                         $sp->save();
                     }
                     // Sale product children

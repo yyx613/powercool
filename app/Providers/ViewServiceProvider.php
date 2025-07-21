@@ -651,20 +651,20 @@ class ViewServiceProvider extends ServiceProvider
                 'sale_orders' => $sale_orders,
             ]);
         });
-        View::composer(['sale_order.form_step.payment_details'], function (ViewView $view) {
+        View::composer(['sale_order.form_step.payment_details', 'quotation.form_step.quotation_details'], function (ViewView $view) {
             $payment_statuses = [
                 Sale::PAYMENT_STATUS_UNPAID => 'Unpaid',
                 Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',
                 Sale::PAYMENT_STATUS_PAID => 'Paid',
             ];
             $payment_methods = PaymentMethod::orderBy('name', 'asc')->get();
-            $credit_payment_method_ids = PaymentMethod::where('name', 'like', '%credit%')->pluck('id')->toArray();
+            $credit_term_payment_method_ids = PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
 
             $view->with([
                 'can_payment_amount' => in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
-                'credit_payment_method_ids' => $credit_payment_method_ids,
+                'credit_payment_method_ids' => $credit_term_payment_method_ids,
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
