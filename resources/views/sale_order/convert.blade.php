@@ -6,7 +6,21 @@
     </div>
     <div class="bg-white p-4 border rounded-md flex flex-col lg:flex-row gap-8 lg:gap-x-12">
         <!-- Steps -->
-        <div class="flex flex-wrap lg:flex-col gap-6 flex-1">
+        <div class="flex flex-wrap lg:flex-col gap-4 flex-1">
+            @if ($step != 1)
+                <div>
+                    <button class="flex items-center gap-x-1 hover:bg-slate-200 px-2 py-1 transition-all duration-200 rounded" id="previous-page-btn">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"
+                            width="512" height="512">
+                            <path
+                                d="M10.48,19a1,1,0,0,1-.7-.29L5.19,14.12a3,3,0,0,1,0-4.24L9.78,5.29a1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42L6.6,11.29a1,1,0,0,0,0,1.42l4.59,4.58a1,1,0,0,1,0,1.42A1,1,0,0,1,10.48,19Z" />
+                            <path
+                                d="M17.48,19a1,1,0,0,1-.7-.29l-6-6a1,1,0,0,1,0-1.42l6-6a1,1,0,0,1,1.41,0,1,1,0,0,1,0,1.42L12.9,12l5.29,5.29a1,1,0,0,1,0,1.42A1,1,0,0,1,17.48,19Z" />
+                        </svg>
+                        <span class="text-xs font-medium">{{ __('Previous Step') }}</span>
+                    </button>
+                </div>
+            @endif
             <!-- Step 1 -->
             <div
                 class="min-w-[250px] flex-1 lg:flex-0 flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 1 ? 'opacity-25' : '' }}">
@@ -419,6 +433,9 @@
             url = `${url}?delivery_address=${selectedDeliveryAddressId}`
 
             window.location.href = url
+        })
+        $('#previous-page-btn').on('click', function() {
+            history.back()
         })
 
         function canConfirmStep5() {

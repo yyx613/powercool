@@ -241,6 +241,13 @@ class SaleController extends Controller
 
     public function toSaleOrder(Request $req)
     {
+        if (Session::get('convert_customer_id') != null) {
+            $selected_customer = Customer::where('id', Session::get('convert_customer_id'))->first();
+        }
+        if (Session::get('convert_salesperson_id') != null) {
+            $selected_salesperson = SalesAgent::where('id', Session::get('convert_salesperson_id'))->first();
+        }
+
         $step = 1;
 
         if ($req->has('sp')) {
@@ -306,6 +313,8 @@ class SaleController extends Controller
             'customers' => $customers ?? [],
             'salespersons' => $salespersons ?? [],
             'quotations' => $quotations ?? [],
+            'selected_customer' => $selected_customer ?? null,
+            'selected_salesperson' => $selected_salesperson ?? null,
         ]);
     }
 
@@ -396,7 +405,7 @@ class SaleController extends Controller
                     return $q->is_foc;
                 })->toArray(),
             ]);
-            $res = $this->upsertProDetails($request, false, false, false)->getData();
+            $res = $this->upsertProDetails($request, false, false, false, true)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create product');
             }
@@ -1266,12 +1275,18 @@ class SaleController extends Controller
                 $req->merge(['sale_id' => $res->sale->id]);
             }
 
-            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, false)->getData();
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, false, false)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertProDetails failed');
             }
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
+            }
+            $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
+            if (!$has_rejected) {
+                Sale::where('id', $req->sale_id)->update([
+                    'status' => Sale::STATUS_ACTIVE
+                ]);
             }
 
             if ($req->type == 'so') {
@@ -1345,18 +1360,12 @@ class SaleController extends Controller
                 $req->merge(['sale_id' => $res->sale->id]);
             }
 
-            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true)->getData();
+            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertProDetails failed');
             }
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
-            }
-            $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
-            if (!$has_rejected) {
-                Sale::where('id', $req->sale_id)->update([
-                    'status' => Sale::STATUS_ACTIVE
-                ]);
             }
 
             if ($req->type == 'so') {
@@ -1571,7 +1580,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $is_draft = false)
+    public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $is_draft = false, bool $skip_approval = false)
     {
         if (! $validated) {
             // Validate form
@@ -1757,33 +1766,38 @@ class SaleController extends Controller
                     }
                     $prod = Product::where('id', $req->product_id[$i])->first();
 
-                    if (!$is_draft && $req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
-                        $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
+                    if (!$skip_approval) {
+                        if (!$is_draft && $req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
+                            $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
 
-                        $approval = Approval::create([
-                            'object_type' => Sale::class,
-                            'object_id' => $req->sale_id,
-                            'status' => Approval::STATUS_PENDING_APPROVAL,
-                            'data' => $req->type == 'quo' ? json_encode([
-                                'is_quo' => true,
-                                'sale_product_id' => $sp->id,
-                                'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
-                            ]) : json_encode([
-                                'is_quo' => false,
-                                'sale_product_id' => $sp->id,
-                                'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
-                            ])
-                        ]);
-                        (new Branch)->assign(Approval::class, $approval->id);
-                        // Update QUO/SO status
-                        Sale::where('id', $req->sale_id)->update([
-                            'status' => Sale::STATUS_APPROVAL_PENDING
-                        ]);
-                        $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
-                        $sp->save();
-                    } else if (!$is_draft) {
-                        $sp->status = null;
-                        $sp->save();
+                            $approval = Approval::create([
+                                'object_type' => Sale::class,
+                                'object_id' => $req->sale_id,
+                                'status' => Approval::STATUS_PENDING_APPROVAL,
+                                'data' => $req->type == 'quo' ? json_encode([
+                                    'is_quo' => true,
+                                    'sale_product_id' => $sp->id,
+                                    'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                                ]) : json_encode([
+                                    'is_quo' => false,
+                                    'sale_product_id' => $sp->id,
+                                    'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                                ])
+                            ]);
+                            (new Branch)->assign(Approval::class, $approval->id);
+                            // Update QUO/SO status
+                            Sale::where('id', $req->sale_id)->update([
+                                'status' => Sale::STATUS_APPROVAL_PENDING
+                            ]);
+                            if ($sp->status == SaleProduct::STATUS_APPROVAL_REJECTED) {
+                                $sp->revised = true;
+                            }
+                            $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
+                            $sp->save();
+                        } else if (!$is_draft) {
+                            $sp->status = null;
+                            $sp->save();
+                        }
                     }
                     // Sale product children
                     SaleProductChild::where('sale_product_id', $sp->id)->whereNotIn('product_children_id', $req->product_serial_no[$i] ?? [])->forceDelete();
