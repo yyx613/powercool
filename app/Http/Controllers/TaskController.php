@@ -134,11 +134,11 @@ class TaskController extends Controller
             $keyword = $req->search['value'];
 
             $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('desc', 'like', '%'.$keyword.'%')
-                    ->orWhere('remark', 'like', '%'.$keyword.'%')
-                    ->orWhere('amount_to_collect', 'like', '%'.$keyword.'%');
+                $q->where('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('desc', 'like', '%' . $keyword . '%')
+                    ->orWhere('remark', 'like', '%' . $keyword . '%')
+                    ->orWhere('amount_to_collect', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -182,8 +182,8 @@ class TaskController extends Controller
                 'due_date' => $record->due_date,
                 'amount_to_collect' => $record->amount_to_collect == 0 ? null : number_format($record->amount_to_collect, 2),
                 'status' => $record->status,
-                'can_edit' => hasPermission('task.edit'),
-                'can_delete' => hasPermission('task.delete'),
+                'can_edit' => hasPermission('task_' . $req->role . '.edit'),
+                'can_delete' => hasPermission('task_' . $req->role . '.delete'),
                 'whatsapp_url' => $whatsapp_url,
                 'whatsapp_click_count' => $record->whatsapp_click_count ?? 0,
             ];
@@ -283,11 +283,13 @@ class TaskController extends Controller
                 ]);
             }
 
-            foreach ($req->milestone as $ms_id) {
-                TaskMilestone::create([
-                    'task_id' => $task->id,
-                    'milestone_id' => $ms_id,
-                ]);
+            if ($req->milestone != null) {
+                foreach ($req->milestone as $ms_id) {
+                    TaskMilestone::create([
+                        'task_id' => $task->id,
+                        'milestone_id' => $ms_id,
+                    ]);
+                }
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
             if ($req->amount_to_collect > 0 && ! array_intersect($req->milestone, getPaymentCollectionIds())) {
@@ -331,9 +333,9 @@ class TaskController extends Controller
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40).'.'.$extension;
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (! $exists) {
                             break;
                         }
@@ -343,7 +345,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
                 }
             }
 
@@ -467,9 +469,9 @@ class TaskController extends Controller
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40).'.'.$extension;
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (! $exists) {
                             break;
                         }
@@ -479,7 +481,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
                 }
             }
 
@@ -592,9 +594,9 @@ class TaskController extends Controller
                     $extension = explode('.', $atts[$i]->src)[1];
 
                     while (true) {
-                        $filename = generateRandomAlphabet(40).'.'.$extension;
+                        $filename = generateRandomAlphabet(40) . '.' . $extension;
 
-                        $exists = Storage::exists(Attachment::TASK_PATH.'/'.$filename);
+                        $exists = Storage::exists(Attachment::TASK_PATH . '/' . $filename);
                         if (! $exists) {
                             break;
                         }
@@ -604,7 +606,7 @@ class TaskController extends Controller
                         'object_id' => $task->id,
                         'src' => $filename,
                     ]);
-                    Storage::copy(Attachment::TICKET_PATH.'/'.$atts[$i]->src, Attachment::TASK_PATH.'/'.$filename);
+                    Storage::copy(Attachment::TICKET_PATH . '/' . $atts[$i]->src, Attachment::TASK_PATH . '/' . $filename);
                 }
             }
 
@@ -706,14 +708,16 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
-            foreach ($req->milestone as $ms_id) {
-                $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
-                if ($ms == null) {
-                    TaskMilestone::create([
-                        'task_id' => $task->id,
-                        'milestone_id' => $ms_id,
-                    ]);
+            if ($req->milestone != null) {
+                TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
+                foreach ($req->milestone as $ms_id) {
+                    $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
+                    if ($ms == null) {
+                        TaskMilestone::create([
+                            'task_id' => $task->id,
+                            'milestone_id' => $ms_id,
+                        ]);
+                    }
                 }
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
@@ -1059,13 +1063,13 @@ class TaskController extends Controller
                     if ($req->has('date') && $req->has('driver_id')) {
                         $new_delivery_date = Carbon::createFromFormat('d/m/Y', $req->date)->format('d-m-Y');
 
-                        $whatsapp_url = 'https://wa.me/+6'.$task->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($new_delivery_date)->format('d/m/y'));
+                        $whatsapp_url = 'https://wa.me/+6' . $task->customer->phone . '?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($new_delivery_date)->format('d/m/y')) . '&attachment=https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf';
 
-                        (new ActivityLog)->store(Task::class, $task->id, 'Driver ('.$driver->name.') has sent Whatsapp Message', json_encode([
+                        (new ActivityLog)->store(Task::class, $task->id, 'Driver (' . $driver->name . ') has sent Whatsapp Message', json_encode([
                             'delivery_date' => $new_delivery_date,
                         ]), $driver->id, $driver->branch->location);
                     } else {
-                        $whatsapp_url = 'https://wa.me/+6'.$task->customer->phone.'?text='.getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($task->start_date)->format('d/m/y'));
+                        $whatsapp_url = 'https://wa.me/+6' . $task->customer->phone . '?text=' . getWhatsAppContent($driver->name, $driver->phone_number, $driver->car_plate, $task->estimated_time, Carbon::parse($task->start_date)->format('d/m/y')) . '&attachment=https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf';
                     }
                 }
             }
@@ -1083,6 +1087,7 @@ class TaskController extends Controller
 
             return redirect()->away($whatsapp_url);
         } catch (\Throwable $th) {
+            report($th);
             abort(500);
         }
     }
