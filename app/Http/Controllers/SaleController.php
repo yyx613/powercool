@@ -1529,6 +1529,9 @@ class SaleController extends Controller
                     $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
                 }
 
+                $sales_id = DB::table('sales_sales_agents')->where('sales_agent_id', $req->sale)->value('sales_id');
+                $created_by = $sales_id == null ? Auth::user()->id : $sales_id;
+
                 $sale = Sale::create([
                     'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
                     'sku' => $sku,
@@ -1548,7 +1551,7 @@ class SaleController extends Controller
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
-                    'created_by' => Auth::user()->id,
+                    'created_by' => $created_by,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);

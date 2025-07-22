@@ -543,7 +543,8 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
-            $sales_agents = SalesAgent::orderBy('name')->get();
+            $sales_agent_ids = DB::table('sales_sales_agents')->pluck('sales_agent_id')->toArray();
+            $sales_agents = SalesAgent::whereNotIn('id', $sales_agent_ids)->orderBy('name')->get();
 
             $view->with('branches', $branches);
             $view->with('sales_agents', $sales_agents);
