@@ -95,6 +95,7 @@ class SaleController extends Controller
                 'currencies.name AS curr_code',
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
+                'sales.created_by AS created_by',
                 DB::raw('SUM(sale_products.unit_price * sale_products.qty) AS total_amount')
             )
             ->where('sales.type', Sale::TYPE_QUO)
@@ -157,6 +158,8 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $record) {
+            $owned = isSuperAdmin() || Auth::user()->id == $record->created_by;
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -169,7 +172,7 @@ class SaleController extends Controller
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
-                'can_edit' => hasPermission('sale.quotation.edit'),
+                'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 'can_delete' => hasPermission('sale.quotation.delete'),
             ];
         }
@@ -184,6 +187,11 @@ class SaleController extends Controller
 
     public function edit(Sale $sale)
     {
+        $owned = isSuperAdmin() || Auth::user()->id == $sale->created_by;
+        if (!$owned) {
+            abort(403);
+        }
+
         $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
 
         return view('quotation.form', [
@@ -442,6 +450,7 @@ class SaleController extends Controller
 
         return view('sale_order.list', [
             'default_page' => $page ?? null,
+            'is_sale_coordinator_only' => isSalesCoordinatorOnly()
         ]);
     }
 
@@ -462,6 +471,7 @@ class SaleController extends Controller
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
                 'sales.payment_status',
+                'sales.created_by',
                 DB::raw('SUM(sale_products.qty) AS qty'),
                 DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'),
                 DB::raw('SUM(sale_products.qty * sale_products.unit_price) AS total_amount'),
@@ -480,6 +490,9 @@ class SaleController extends Controller
 
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
+        }
+        if (isSalesOnly()) {
+            $records = $records->where('sales.created_by', Auth::user()->id);
         }
 
         // Search
@@ -578,6 +591,11 @@ class SaleController extends Controller
         $is_view = false;
         if (str_contains(Route::currentRouteName(), '.view')) {
             $is_view = true;
+        } else {
+            $owned = isSuperAdmin() || Auth::user()->id == $sale->created_by;
+            if (!$owned) {
+                abort(403);
+            }
         }
         if ($sale->status == Sale::STATUS_CANCELLED) {
             $sale->load([
@@ -609,9 +627,10 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
-            'payment_editable_only' => $sale->convertFromQuo() || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
+            'payment_editable_only' => $sale->convertFromQuo() || isFinanceOnly(),
             'is_view' => $is_view,
             'has_pending_approval' => $has_pending_approval,
+            'is_sale_coordinator_only' => isSalesCoordinatorOnly()
         ]);
     }
 
@@ -913,6 +932,20 @@ class SaleController extends Controller
             }
         }
 
+        if (Session::get('convert_customer_id') != null) {
+            $selected_customer = Customer::where('id', Session::get('convert_customer_id'))->first();
+        }
+        if (Session::get('convert_salesperson_id') != null) {
+            $selected_salesperson = SalesAgent::where('id', Session::get('convert_salesperson_id'))->first();
+        }
+        if (Session::get('convert_terms') != null) {
+            $selected_term = CreditTerm::where('id', Session::get('convert_terms'))->first();
+        }
+        if (Session::get('convert_sale_order_id') != null) {
+            $selected_so_sku = Sale::where('type', Sale::TYPE_SO)->where('id', explode(',', Session::get('convert_sale_order_id')))->pluck('sku')->toArray();
+            $selected_so_sku = join(', ', $selected_so_sku);
+        }
+
         return view('sale_order.convert', [
             'step' => $step,
             'customers' => $customers ?? [],
@@ -922,6 +955,10 @@ class SaleController extends Controller
             'terms' => $terms ?? [],
             'allowed_spc_ids' => $allowed_spc_ids ?? [],
             'delivery_addresses' => $delivery_addresses ?? [],
+            'selected_customer' => $selected_customer ?? null,
+            'selected_salesperson' => $selected_salesperson ?? null,
+            'selected_term' => $selected_term ?? null,
+            'selected_so_sku' => $selected_so_sku ?? null,
         ]);
     }
 
@@ -1511,6 +1548,7 @@ class SaleController extends Controller
                     'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
+                    'created_by' => Auth::user()->id,
                 ]);
 
                 (new Branch)->assign(Sale::class, $sale->id);

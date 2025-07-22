@@ -24,7 +24,11 @@
             @include('sale_order.form_step.payment_details')
             @include('sale_order.form_step.remarks')
 
-            @if (!isset($is_view) || (isset($is_view) && $is_view == false) || !isset($has_pending_approval) || (isset($has_pending_approval) && $has_pending_approval == false))
+            @if (
+                !isset($is_view) ||
+                    (isset($is_view) && $is_view == false) ||
+                    !isset($has_pending_approval) ||
+                    (isset($has_pending_approval) && $has_pending_approval == false))
                 <div class="flex justify-end gap-x-4">
                     @if (isset($sale) && $sale->status == 2)
                         <span
@@ -50,19 +54,27 @@
         QUO = @json($quo ?? null);
         PAYMENT_EDITABLE_ONLY = @json($payment_editable_only ?? null);
         IS_VIEW = @json($is_view ?? null);
+        IS_SALE_COORDINATOR_ONLY = @json($is_sale_coordinator_only ?? null);
 
         $(document).ready(function() {
             if (SALE == null) {
                 getNextSku()
-            } else if (PAYMENT_EDITABLE_ONLY == true || IS_VIEW == true) {
+            } else if (PAYMENT_EDITABLE_ONLY == true || IS_VIEW == true || IS_SALE_COORDINATOR_ONLY == true) {
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input')
                     .attr('disabled', true)
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
                     .addClass('!bg-gray-100')
-                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"]')
+                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"]')
                     .parent().addClass('!bg-gray-100')
                 $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
                     .css('backgroundColor', '#eee')
+
+                if (IS_SALE_COORDINATOR_ONLY == true) {
+                    $('#payment-details-container input, #payment-details-container select').attr('disabled', true)
+                    $('#payment-details-container input, #payment-details-container select').addClass('!bg-gray-100')
+                    $('#payment-details-container input').parent().addClass('!bg-gray-100')
+                    $('#payment-details-container .select2, #payment-details-container .select2-selection--multiple').css('backgroundColor', '#eee')
+                }
             }
             // if (SALE != null && SALE.is_draft == true) {
             //     draftData = SALE.draft_data

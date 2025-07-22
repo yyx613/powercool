@@ -4,12 +4,58 @@
     <div class="mb-6">
         <x-app.page-title url="{{ route('sale_order.index') }}">Convert Sale Order to Delivery Order</x-app.page-title>
     </div>
+    @if ($step > 1)
+        <div class="flex gap-x-4 mb-3">
+            @if ($step > 1 && isset($selected_customer) && $selected_customer != null)
+                <div class="flex items-center gap-x-2">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm1,15V7c0-.404-.244-.77-.617-.924-.375-.157-.805-.069-1.09,.217l-2.444,2.444c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l.737-.737v7.586c0,.553,.448,1,1,1s1-.447,1-1Z" />
+                    </svg>
+                    <p class="text-xs">{{ $selected_customer->company_name }} - {{ $selected_customer->name }}</p>
+                </div>
+            @endif
+            @if ($step > 2 && isset($selected_salesperson) && $selected_salesperson != null)
+                <div class="flex items-center gap-x-2">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm4,15c0-.553-.448-1-1-1h-4.781c.426-.37,1.069-.72,1.742-1.086,1.754-.956,4.156-2.265,4.035-5.131-.089-2.121-1.844-3.783-3.995-3.783-2.206,0-4,1.794-4,4,0,.553,.448,1,1,1s1-.447,1-1c0-1.103,.897-2,2-2,1.058,0,1.954,.838,1.997,1.867,.064,1.513-1.088,2.253-2.994,3.29-.99,.54-1.925,1.049-2.559,1.797-.475,.56-.58,1.319-.272,1.983,.304,.655,.942,1.062,1.666,1.062h5.162c.552,0,1-.447,1-1Z" />
+                    </svg>
+                    <p class="text-xs">{{ $selected_salesperson->name }}</p>
+                </div>
+            @endif
+            @if ($step > 3 && isset($selected_term) && $selected_term != null)
+                <div class="flex items-center gap-x-2">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-8c0,2.206-1.794,4-4,4h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.103,0,2-.897,2-2s-.897-2-2-2h-2c-.552,0-1-.447-1-1s.448-1,1-1h2c.551,0,1-.448,1-1s-.449-1-1-1h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.654,0,3,1.346,3,3,0,.68-.236,1.301-.619,1.805,.977,.73,1.619,1.885,1.619,3.195Z" />
+                    </svg>
+                    <p class="text-xs">{{ $selected_term->name }}</p>
+                </div>
+            @endif
+            @if ($step > 4 && isset($selected_so_sku) && $selected_so_sku != null)
+                <div class="flex items-center gap-x-2">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-15v10c0,.553-.447,1-1,1s-1-.447-1-1v-3h-3c-1.654,0-3-1.346-3-3V7c0-.553,.447-1,1-1s1,.447,1,1v4c0,.552,.448,1,1,1h3V7c0-.553,.447-1,1-1s1,.447,1,1Z" />
+                    </svg>
+                    <p class="text-xs">{{ $selected_so_sku }}</p>
+                </div>
+            @endif
+        </div>
+    @endif
     <div class="bg-white p-4 border rounded-md flex flex-col lg:flex-row gap-8 lg:gap-x-12">
         <!-- Steps -->
         <div class="flex flex-wrap lg:flex-col gap-4 flex-1">
             @if ($step != 1)
                 <div>
-                    <button class="flex items-center gap-x-1 hover:bg-slate-200 px-2 py-1 transition-all duration-200 rounded" id="previous-page-btn">
+                    <button
+                        class="flex items-center gap-x-1 hover:bg-slate-200 px-2 py-1 transition-all duration-200 rounded"
+                        id="previous-page-btn">
                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"
                             width="512" height="512">
                             <path
@@ -112,7 +158,7 @@
                                     data-id="{{ $cus->id }}">
                                     <a href="{{ route('sale_order.to_delivery_order', ['cus' => $cus->id]) }}"
                                         class="text-sm flex items-center justify-between p-2 font-semibold">
-                                        {{ $cus->name }}
+                                        {{ $cus->company_name }} - {{ $cus->name }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                             viewBox="0 0 24 24" width="512" height="512">
                                             <path

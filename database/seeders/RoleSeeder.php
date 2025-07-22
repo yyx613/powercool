@@ -53,6 +53,10 @@ class RoleSeeder extends Seeder
                 'id' => Role::FINANCE,
                 'name' => 'Finance',
             ],
+            [
+                'id' => Role::SALE_COORDINATOR,
+                'name' => 'Sale Coordinator',
+            ],
         ];
         $permissions = Permission::get();
 
