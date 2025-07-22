@@ -24,6 +24,8 @@
                 {{ __('Product is attached to DO') }}</p>
         </div>
         <div class="col-span-4 hidden" id="approval-status-container">
+            <span id="revised-status"
+                class="hidden border rounded border-blue-500 text-blue-500 text-sm font-medium px-1 py-0.5">{{ __('Revised') }}</span>
             <span id="pending-status"
                 class="hidden border rounded border-slate-500 text-slate-500 text-sm font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
             <span id="approved-status"
@@ -218,6 +220,10 @@
                         else if (sp.status === 2) $(
                             `.items[data-id="${i+1}"] #approval-status-container #rejected-status`).removeClass(
                             'hidden')
+                    }
+                    if (sp.revised == true) {
+                        $(`.items[data-id="${i+1}"] #approval-status-container`).removeClass('hidden')
+                        $(`.items[data-id="${i+1}"] #approval-status-container #revised-status`).removeClass('hidden')
                     }
                     let temp = []
                     for (let j = 0; j < sp.warranty_periods.length; j++) {

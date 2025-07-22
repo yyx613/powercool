@@ -21,6 +21,7 @@ use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -32,17 +33,27 @@ class ApprovalController extends Controller
         1 => 'Approved',
         2 => 'Rejected',
     ];
+    const TYPES = [
+        0 => 'Quotation',
+        1 => 'Sale Order',
+        2 => 'Delivery Order',
+    ];
 
     public function index()
     {
         if (Session::get('approval-status') != null) {
             $status = Session::get('approval-status');
         }
+        if (Session::get('approval-type') != null) {
+            $type = Session::get('approval-type');
+        }
         $page = Session::get('approval-page');
 
         return view('approval.list', [
             'statuses' => self::STATUSES,
+            'types' => self::TYPES,
             'default_status' => $status ?? null,
+            'default_type' => $type ?? null,
             'default_page' => $page ?? null,
         ]);
     }
@@ -53,6 +64,17 @@ class ApprovalController extends Controller
 
         $records = Approval::latest();
 
+        // Search
+        if ($request->has('search') && $request->search['value'] != null) {
+            $keyword = $request->search['value'];
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class], function ($query) use ($keyword) {
+                    $query->where('sku', 'like', '%' . $keyword . '%');
+                });
+            });
+        }
+        // Filter status
         if ($request->has('status')) {
             if ($request->status == null) {
                 Session::remove('approval-status');
@@ -75,6 +97,30 @@ class ApprovalController extends Controller
                 $records = $records->where('status', Approval::STATUS_REJECTED);
             }
         }
+        // Filter type
+        if ($request->has('type')) {
+            if ($request->type == null) {
+                Session::remove('approval-type');
+            } else if ($request->type == 0) {
+                $records = $records->where('object_type', Sale::class)->where('data', 'like', '%is_quo%');
+                Session::put('approval-type', $request->type);
+            } elseif ($request->type == 1) {
+                $records = $records->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
+                Session::put('approval-type', $request->type);
+            } elseif ($request->type == 2) {
+                $records = $records->where('object_type', DeliveryOrder::class);
+                Session::put('approval-type', $request->type);
+            }
+        } else if (Session::get('approval-type') != null) {
+            if (Session::get('approval-type') == 0) {
+                $records = $records->where('object_type', Sale::class)->where('data', 'like', '%is_quo%');
+            } elseif (Session::get('approval-type') == 1) {
+                $records = $records->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
+            } elseif (Session::get('approval-type') == 2) {
+                $records = $records->where('object_type', DeliveryOrder::class);
+            }
+        }
+
         $has = hasPermission('approval.production_material_transfer_request');
         if (!$has) {
             $records = $records->whereNot('object_type', FactoryRawMaterial::class)->whereNot('object_type', ProductChild::class);
