@@ -1,4 +1,4 @@
-<div class="bg-white p-4 border rounded-md">
+<div class="bg-white p-4 border rounded-md" id="payment-details-container">
     <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
             width="512" height="512">

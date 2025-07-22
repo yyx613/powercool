@@ -20,4 +20,5 @@ class Role extends Model
     const PRODUCTION_ASSISTANT = 7;
     const WAREHOUSE = 8;
     const FINANCE = 9;
+    const SALE_COORDINATOR = 13;
 }

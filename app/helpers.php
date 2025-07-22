@@ -75,6 +75,30 @@ if (! function_exists('isSalesOnly')) {
     }
 }
 
+if (! function_exists('isSalesCoordinatorOnly')) {
+    function isSalesCoordinatorOnly(): bool
+    {
+        $is_sales_role_only = false;
+        if (count(getUserRoleId(Auth::user())) === 1 && in_array(Role::SALE_COORDINATOR, getUserRoleId(Auth::user()))) {
+            $is_sales_role_only = true;
+        }
+
+        return $is_sales_role_only;
+    }
+}
+
+if (! function_exists('isFinanceOnly')) {
+    function isFinanceOnly(): bool
+    {
+        $is_sales_role_only = false;
+        if (count(getUserRoleId(Auth::user())) === 1 && in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
+            $is_sales_role_only = true;
+        }
+
+        return $is_sales_role_only;
+    }
+}
+
 if (! function_exists('getCustomizeProductIds')) {
     function getCustomizeProductIds()
     {
