@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\CustomerExport;
+use App\Models\Approval;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
@@ -431,7 +432,36 @@ class CustomerController extends Controller
             }
 
             // Credit Terms
-            if ($req->credit_term != null) {
+            $approval_required = false;
+            $current_terms = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->pluck('credit_term_id')->toArray();
+            $req_terms = $req->credit_term == null ? [] : $req->credit_term;
+
+            // check for approval
+            if (count($current_terms) != count($req_terms)) {
+                $approval_required = true;
+            } else {
+                for ($i = 0; $i < count($current_terms); $i++) {
+                    if (!in_array($current_terms[$i], $req_terms)) {
+                        $approval_required = true;
+                        break;
+                    }
+                }
+            }
+            if ($approval_required) {
+                $approval = Approval::create([
+                    'object_type' => Customer::class,
+                    'object_id' => $customer->id,
+                    'status' => Approval::STATUS_PENDING_APPROVAL,
+                    'data' =>  json_encode([
+                        'is_credit_term' => true,
+                        'to_credit_term_ids' => $req->credit_term,
+                        'description' => 'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed',
+                    ])
+                ]);
+                (new Branch)->assign(Approval::class, $approval->id);
+            }
+
+            if (!$approval_required && $req->credit_term != null) {
                 ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->delete();
 
                 $terms = [];

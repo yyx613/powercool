@@ -26,6 +26,9 @@
             <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
                 placeholder="{{ __('Select a term') }}">
                 <option value=""></option>
+                @foreach ($credit_terms as $term)
+                    <option value="{{ $term->id }}" @selected(old('payment_term', isset($sale) ? $sale->payment_term : null) == $term->id)>{{ $term->name }}</option>
+                @endforeach
             </x-app.input.select2>
             <x-app.message.error id="payment_term_err" />
         </div>

@@ -659,13 +659,15 @@ class ViewServiceProvider extends ServiceProvider
                 Sale::PAYMENT_STATUS_PAID => 'Paid',
             ];
             $payment_methods = PaymentMethod::orderBy('name', 'asc')->get();
-            $credit_term_payment_method_ids = PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
+            $credit_terms = CreditTerm::orderBy('id', 'desc')->get();
+            $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
             $view->with([
                 'can_payment_amount' => in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
                 'credit_payment_method_ids' => $credit_term_payment_method_ids,
+                'credit_terms' => $credit_terms,
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {

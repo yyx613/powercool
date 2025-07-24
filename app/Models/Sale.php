@@ -99,24 +99,6 @@ class Sale extends Model
         }
     }
 
-    public function paymentMethodHumanRead(): string
-    {
-        switch ($this->payment_method) {
-            case 'cash':
-                return 'Cash';
-            case 'term':
-                return 'Term';
-            case 'banking':
-                return 'Banking';
-            case 'tng':
-                return 'T&G';
-            case 'cheque':
-                return 'Cheque';
-            default:
-                return $this->payment_method ?? '-';
-        }
-    }
-
     public function hasNoMoreQtyToConvertDO(): bool
     {
         $fully_converted = true;
@@ -167,6 +149,11 @@ class Sale extends Model
     public function paymentTerm()
     {
         return $this->belongsTo(CreditTerm::class, 'payment_term');
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(paymentMethod::class, 'payment_method');
     }
 
     public function convertFromQuo(): bool
