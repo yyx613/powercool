@@ -104,13 +104,6 @@
                 </x-app.input.selec2t>
                 <x-app.message.error id="payment_method_err" />
         </div>
-        <div class="flex flex-col hidden" id="payment-term-container">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
-            <x-app.input.select name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')">
-                <option value="">{{ __('Select a payment term') }}</option>
-            </x-app.input.select>
-            <x-app.message.error id="payment_term_err" />
-        </div>
         <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>

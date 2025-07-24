@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\Customer;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
@@ -10,6 +11,7 @@ use App\Models\FactoryRawMaterial;
 use App\Models\Invoice;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
+use App\Models\ObjectCreditTerm;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
@@ -37,6 +39,7 @@ class ApprovalController extends Controller
         0 => 'Quotation',
         1 => 'Sale Order',
         2 => 'Delivery Order',
+        3 => 'Customer',
     ];
 
     public function index()
@@ -110,6 +113,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 2) {
                 $records = $records->where('object_type', DeliveryOrder::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 3) {
+                $records = $records->where('object_type', Customer::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -118,6 +124,9 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
             } elseif (Session::get('approval-type') == 2) {
                 $records = $records->where('object_type', DeliveryOrder::class);
+            } elseif ($request->type == 3) {
+                $records = $records->where('object_type', Customer::class);
+                Session::put('approval-type', $request->type);
             }
         }
 
@@ -162,7 +171,7 @@ class ApprovalController extends Controller
                 'view_url' => $view_url,
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
-                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -184,16 +193,25 @@ class ApprovalController extends Controller
             // Update respective QUO/SO/DO
             if (get_class($approval->object) == Sale::class) {
                 $data = json_decode($approval->data);
-                if (isset($data->sale_product_id)) {
-                    SaleProduct::where('id', $data->sale_product_id)->update([
-                        'status' => SaleProduct::STATUS_APPROVAL_APPROVED
-                    ]);
-                }
-                if (!Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
-                    $has_rejected = Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_REJECTED)->exists();
 
-                    $approval->object->status = $has_rejected ? Sale::STATUS_APPROVAL_REJECTED : Sale::STATUS_APPROVAL_APPROVED;
-                    $approval->object->save();
+                if (isset($data->is_reuse)) {
+                    $obj->status = Sale::STATUS_ACTIVE;
+                    $obj->save();
+                } else if (isset($data->is_payment_method)) {
+                    $obj->status = Sale::STATUS_APPROVAL_APPROVED;
+                    $obj->save();
+                } else {
+                    if (isset($data->sale_product_id)) {
+                        SaleProduct::where('id', $data->sale_product_id)->update([
+                            'status' => SaleProduct::STATUS_APPROVAL_APPROVED
+                        ]);
+                    }
+                    if (!Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                        $has_rejected = Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_REJECTED)->exists();
+
+                        $approval->object->status = $has_rejected ? Sale::STATUS_APPROVAL_REJECTED : Sale::STATUS_APPROVAL_APPROVED;
+                        $approval->object->save();
+                    }
                 }
             } else if (get_class($approval->object) == DeliveryOrder::class) {
                 $approval->object->status = DeliveryOrder::STATUS_APPROVAL_APPROVED;
@@ -217,6 +235,24 @@ class ApprovalController extends Controller
             if (get_class($obj) == Production::class) {
                 $obj->status = Production::STATUS_COMPLETED;
                 $obj->save();
+            }
+            // Customer (credit term) 
+            if (get_class($obj) == Customer::class) {
+                $data = json_decode($approval->data);
+
+                ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $obj->id)->delete();
+
+                $terms = [];
+                for ($i = 0; $i < count($data->to_credit_term_ids); $i++) {
+                    $terms[] = [
+                        'object_type' => Customer::class,
+                        'object_id' => $obj->id,
+                        'credit_term_id' => $data->to_credit_term_ids[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                ObjectCreditTerm::insert($terms);
             }
 
             DB::commit();
@@ -266,14 +302,23 @@ class ApprovalController extends Controller
                 }
             } elseif (get_class($obj) == Sale::class) {
                 $data = json_decode($approval->data);
-                if (isset($data->sale_product_id)) {
-                    SaleProduct::where('id', $data->sale_product_id)->update([
-                        'status' => SaleProduct::STATUS_APPROVAL_REJECTED
-                    ]);
-                }
-                if (!Approval::where('object_type', Sale::class)->where('object_id', $obj->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+
+                if (isset($data->is_reuse)) {
                     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
                     $obj->save();
+                } else if (isset($data->is_payment_method)) {
+                    $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                    $obj->save();
+                } else {
+                    if (isset($data->sale_product_id)) {
+                        SaleProduct::where('id', $data->sale_product_id)->update([
+                            'status' => SaleProduct::STATUS_APPROVAL_REJECTED
+                        ]);
+                    }
+                    if (!Approval::where('object_type', Sale::class)->where('object_id', $obj->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                        $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                        $obj->save();
+                    }
                 }
             }
             // Check approval count
@@ -309,6 +354,7 @@ class ApprovalController extends Controller
                 MaterialUseProduct::where('material_use_id', $obj->id)->delete();
                 MaterialUse::where('id', $obj->id)->delete();
             }
+            // Customer (credit term) do nothing 
 
             DB::commit();
 

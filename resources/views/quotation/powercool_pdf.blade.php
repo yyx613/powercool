@@ -90,7 +90,8 @@
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH: {{ $customer->name ?? '' }}
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH:
+                                {{ $customer->name ?? '' }}
                             </td>
                         </tr>
                     </table>
@@ -193,12 +194,20 @@
                     Sub Total (Excluding SST) {{ number_format($total, 2) }}</td>
             </tr>
             <tr>
-                <td style="font-size: 14px; font-weight: 700;">Payment Term</td>
+                <td style="font-size: 14px; font-weight: 700;">Payment Method</td>
                 <td style="font-size: 14px; font-weight: 700;">:</td>
-                <td style="font-size: 14px; font-weight: 700;">{{ $sale->paymentTerm->name ?? null }}</td>
-                <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 5px 0 0 0;">Tax @ 0% on
-                    {{ number_format(0, 2) }}</td>
+                <td style="font-size: 14px; font-weight: 700;">{{ $sale->paymentMethod->name ?? null }}</td>
+                <td></td>
             </tr>
+            @if ($show_payment_term)
+                <tr>
+                    <td style="font-size: 14px; font-weight: 700;">Payment Term</td>
+                    <td style="font-size: 14px; font-weight: 700;">:</td>
+                    <td style="font-size: 14px; font-weight: 700;">{{ $payment_term ?? null }}</td>
+                    <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 5px 0 0 0;">Tax @ 0% on
+                        {{ number_format(0, 2) }}</td>
+                </tr>
+            @endif
             <tr>
                 <td style="font-size: 14px; font-weight: 700;"></td>
                 <td style="font-size: 14px; font-weight: 700;"></td>

@@ -3,6 +3,7 @@
 use App\Models\Branch;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\Milestone;
+use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\ProductionMilestone;
@@ -457,5 +458,12 @@ if (! function_exists('isHiTen')) {
         }
 
         return $is_hi_ten;
+    }
+}
+
+if (! function_exists('getPaymentMethodCreditTermIds')) {
+    function getPaymentMethodCreditTermIds()
+    {
+        return PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
     }
 }

@@ -141,25 +141,7 @@
 
                 if (element.id == val) {
                     $('input[name="attention_to"]').val(element.name)
-                    // Update payment term
-                    $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
-                    // $(`select[name="payment_term"]`).select2({
-                    //     placeholder: 'Select a term'
-                    // })
-
-                    for (let i = 0; i < element.credit_terms.length; i++) {
-                        const term = element.credit_terms[i];
-
-                        let opt = new Option(term.credit_term.name, term.credit_term.id)
-                        $(`select[name="payment_term"]`).append(opt)
-                    }
-                    // Filter Sales agent
-                    // $(`select[name="sale"] option`).not(':first').addClass('hidden')
-                    // for (let j = 0; j < element.sales_agents.length; j++) {
-                    //     $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
-                    //         .removeClass('hidden')
-                    // }
                     if (INIT_EDIT) {
                         $('select[name="sale"]').val(SALE.sale_id).trigger('change')
                         $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')

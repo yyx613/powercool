@@ -21,6 +21,7 @@ use App\Models\EInvoice;
 use App\Models\InventoryCategory;
 use App\Models\InventoryServiceReminder;
 use App\Models\Invoice;
+use App\Models\ObjectCreditTerm;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
@@ -174,6 +175,8 @@ class SaleController extends Controller
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 'can_delete' => hasPermission('sale.quotation.delete'),
+                'can_cancel' => $record->status == Sale::STATUS_ACTIVE,
+                'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
             ];
         }
 
@@ -198,6 +201,60 @@ class SaleController extends Controller
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
             'has_pending_approval' => $has_pending_approval,
         ]);
+    }
+
+    public function cancel(Sale $sale)
+    {
+        try {
+            DB::beginTransaction();
+
+            $sale->status = Sale::STATUS_CANCELLED;
+            $sale->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Quotation cancelled');
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function reuse(Sale $sale)
+    {
+        if ($sale->status != Sale::STATUS_CANCELLED) {
+            abort(403);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => Sale::class,
+                'object_id' => $sale->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' =>  json_encode([
+                    'is_quo' => true,
+                    'is_reuse' => true,
+                    'description' => Auth::user()->name . ' has requested to reuse quotation (' . $sale->sku . ')',
+                ])
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $sale->status = Sale::STATUS_APPROVAL_PENDING;
+            $sale->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Quotation reuse request is now waiting for approval');
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
     }
 
     public function delete(Sale $sale)
@@ -235,12 +292,20 @@ class SaleController extends Controller
 
         $sale->load('saleperson');
 
+        $show_payment_term = in_array($sale->payment_method, getPaymentMethodCreditTermIds());
+        if ($show_payment_term) {
+            $ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $sale->customer_id)->pluck('credit_term_id')->toArray();
+            $payment_term = join(', ', CreditTerm::whereIn('id', $ct_ids)->pluck('name')->toArray());
+        }
+
         $pdf = Pdf::loadView('quotation.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+            'show_payment_term' => $show_payment_term,
+            'payment_term' => $payment_term ?? null,
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -641,6 +706,7 @@ class SaleController extends Controller
 
             $this->cancelSaleOrderFlow($sale, false, $req->charge);
 
+            // Change converted QUO back to active
             Sale::where('convert_to', $sale->id)->update([
                 'status' => Sale::STATUS_ACTIVE
             ]);
@@ -1586,18 +1652,32 @@ class SaleController extends Controller
             }
             // Payment method approval
             if ($req->payment_method != null) {
-                $credit_term_payment_method_ids = PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
-                if (in_array($req->payment_method, $credit_term_payment_method_ids)) {
+                $approval_required = false;
+                if ($req->type == 'quo') {
+                    $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
+                    $approval_required = in_array($req->payment_method, $credit_term_payment_method_ids);
+                } else if ($req->type == 'so') {
+                    $customer_ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $req->customer)->pluck('credit_term_id')->toArray();
+                    $approval_required = !in_array($req->payment_term, $customer_ct_ids);
+                }
+                if ($approval_required) {
                     $approval = Approval::create([
                         'object_type' => Sale::class,
-                        'object_id' => $req->sale_id,
+                        'object_id' => $sale->id,
                         'status' => Approval::STATUS_PENDING_APPROVAL,
-                        'data' =>  json_encode([
+                        'data' => $req->type == 'quo' ? json_encode([
+                            'is_quo' => true,
                             'is_payment_method' => true,
-                            'description' => 'The payment method for ' . $sale->sku . ' is Credit Term.',
+                            'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
+                        ]) : json_encode([
+                            'is_payment_method' => true,
+                            'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
                         ])
                     ]);
                     (new Branch)->assign(Approval::class, $approval->id);
+
+                    $sale->status = Sale::STATUS_APPROVAL_PENDING;
+                    $sale->save();
                 }
             }
 

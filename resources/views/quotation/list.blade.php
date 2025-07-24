@@ -89,6 +89,7 @@
     </div>
 
     <x-app.modal.delete-modal />
+    <x-app.modal.confirmation-modal />
 @endsection
 
 @push('scripts')
@@ -142,7 +143,7 @@
                                 <span>${data}</span>
                                 <span class="text-xs text-blue-700">Draft</span>
                             `
-                        } 
+                        }
                         return data
                     }
                 },
@@ -200,12 +201,13 @@
                                 return "{!! __('Active') !!}"
                             case 2:
                                 return "{!! __('Converted') !!}"
+                            case 3:
+                                return "{!! __('Cancelled') !!}"
                             case 4:
                                 return "{!! __('Pending Approval') !!}"
                             case 5:
                                 return "{!! __('Approved') !!}"
                             case 6:
-                                return "{!! __('Rejected') !!}"
                             case 7:
                                 return "{!! __('Rejected') !!}"
                             default:
@@ -220,23 +222,37 @@
                     render: function(data, type, row) {
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
+                                row.can_reuse ?
+                                    `<a href="{{ config('app.url') }}/quotation/reuse/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" target="_blank" title="{!! __('Reuse') !!}">
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
+                                        <path d="m24,12.5c0,2.062-.819,3.984-2.308,5.412-.399.382-1.031.369-1.414-.029-.382-.398-.369-1.031.029-1.414,1.092-1.047,1.692-2.457,1.692-3.969,0-2.614-1.857-4.882-4.417-5.394-.958-.191-1.744-.8-2.158-1.673-1.183-2.494-3.814-3.832-6.568-3.329-2.406.44-4.368,2.439-4.771,4.862-.122.737-.114,1.471.023,2.18.191.989-.178,2.047-.962,2.762-.729.663-1.147,1.606-1.147,2.591,0,1.17.582,2.259,1.557,2.911.459.308.582.929.274,1.388-.193.288-.51.443-.832.443-.191,0-.385-.055-.556-.169-1.53-1.024-2.443-2.734-2.443-4.573,0-1.546.656-3.03,1.801-4.07.272-.248.405-.594.346-.902-.184-.943-.194-1.916-.033-2.889C2.66,3.349,5.226.736,8.497.137c3.59-.658,7.184,1.167,8.734,4.439.141.295.411.502.742.569,3.492.697,6.026,3.79,6.026,7.354Zm-12-.5h-1.086l1.793-1.793c.391-.391.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.75,2.75c-.78.78-.78,2.049,0,2.828l2.75,2.75c.195.195.451.293.707.293s.512-.098.707-.293c.391-.391.391-1.023,0-1.414l-1.707-1.707h1c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4c0-.271.026-.54.08-.802.109-.541-.241-1.068-.782-1.179-.539-.11-1.068.241-1.179.782-.079.392-.119.795-.119,1.198,0,3.309,2.691,6,6,6s6-2.691,6-6-2.691-6-6-6Z"/>
+                                        </svg>
+                                    </a>` : ''
+                            }
+                            ${
+                                row.can_cancel ?
+                                    `<button class="rounded-full p-2 bg-violet-200 inline-block cancel-btns" data-id="${row.id}" title="{!! __('Cancel') !!}">
+                                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
+                                                </button>` : ''
+                            }
+                            ${
                                 row.can_view_pdf ? `
-                                <a href="{{ config('app.url') }}/quotation/pdf/${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" target="_blank" title="{!! __('View PDF') !!}">
-                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0H8A5.006,5.006,0,0,0,3,5V23a1,1,0,0,0,1.564.825L6.67,22.386l2.106,1.439a1,1,0,0,0,1.13,0l2.1-1.439,2.1,1.439a1,1,0,0,0,1.131,0l2.1-1.438,2.1,1.437A1,1,0,0,0,21,23V5A5.006,5.006,0,0,0,16,0Zm3,21.1-1.1-.752a1,1,0,0,0-1.132,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.131,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.129,0L5,21.1V5A3,3,0,0,1,8,2h8a3,3,0,0,1,3,3Z"/><rect x="7" y="8" width="10" height="2" rx="1"/><rect x="7" y="12" width="8" height="2" rx="1"/></svg>
-                                </a>` : ''
+                                                <a href="{{ config('app.url') }}/quotation/pdf/${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" target="_blank" title="{!! __('View PDF') !!}">
+                                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,0H8A5.006,5.006,0,0,0,3,5V23a1,1,0,0,0,1.564.825L6.67,22.386l2.106,1.439a1,1,0,0,0,1.13,0l2.1-1.439,2.1,1.439a1,1,0,0,0,1.131,0l2.1-1.438,2.1,1.437A1,1,0,0,0,21,23V5A5.006,5.006,0,0,0,16,0Zm3,21.1-1.1-.752a1,1,0,0,0-1.132,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.131,0l-2.1,1.439-2.1-1.439a1,1,0,0,0-1.129,0L5,21.1V5A3,3,0,0,1,8,2h8a3,3,0,0,1,3,3Z"/><rect x="7" y="8" width="10" height="2" rx="1"/><rect x="7" y="12" width="8" height="2" rx="1"/></svg>
+                                                </a>` : ''
                             }
                             ${
                                 row.can_edit ? `
-                                        <a href="{{ config('app.url') }}/quotation/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('Edit') !!}">
-                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m18.813,10c.309,0,.601-.143.79-.387s.255-.562.179-.861c-.311-1.217-.945-2.329-1.833-3.217l-3.485-3.485c-1.322-1.322-3.08-2.05-4.95-2.05h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h3c.552,0,1-.448,1-1s-.448-1-1-1h-3c-1.654,0-3-1.346-3-3V5c0-1.654,1.346-3,3-3h4.515c.163,0,.325.008.485.023v4.977c0,1.654,1.346,3,3,3h5.813Zm-6.813-3V2.659c.379.218.732.488,1.05.806l3.485,3.485c.314.314.583.668.803,1.05h-4.338c-.551,0-1-.449-1-1Zm11.122,4.879c-1.134-1.134-3.11-1.134-4.243,0l-6.707,6.707c-.755.755-1.172,1.76-1.172,2.829v1.586c0,.552.448,1,1,1h1.586c1.069,0,2.073-.417,2.828-1.172l6.707-6.707c.567-.567.879-1.32.879-2.122s-.312-1.555-.878-2.121Zm-1.415,2.828l-6.708,6.707c-.377.378-.879.586-1.414.586h-.586v-.586c0-.534.208-1.036.586-1.414l6.708-6.707c.377-.378,1.036-.378,1.414,0,.189.188.293.439.293.707s-.104.518-.293.707Z"/></svg>
-                                        </a>` : ''
+                                                        <a href="{{ config('app.url') }}/quotation/edit/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('Edit') !!}">
+                                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m18.813,10c.309,0,.601-.143.79-.387s.255-.562.179-.861c-.311-1.217-.945-2.329-1.833-3.217l-3.485-3.485c-1.322-1.322-3.08-2.05-4.95-2.05h-4.515C2.243,0,0,2.243,0,5v14c0,2.757,2.243,5,5,5h3c.552,0,1-.448,1-1s-.448-1-1-1h-3c-1.654,0-3-1.346-3-3V5c0-1.654,1.346-3,3-3h4.515c.163,0,.325.008.485.023v4.977c0,1.654,1.346,3,3,3h5.813Zm-6.813-3V2.659c.379.218.732.488,1.05.806l3.485,3.485c.314.314.583.668.803,1.05h-4.338c-.551,0-1-.449-1-1Zm11.122,4.879c-1.134-1.134-3.11-1.134-4.243,0l-6.707,6.707c-.755.755-1.172,1.76-1.172,2.829v1.586c0,.552.448,1,1,1h1.586c1.069,0,2.073-.417,2.828-1.172l6.707-6.707c.567-.567.879-1.32.879-2.122s-.312-1.555-.878-2.121Zm-1.415,2.828l-6.708,6.707c-.377.378-.879.586-1.414.586h-.586v-.586c0-.534.208-1.036.586-1.414l6.708-6.707c.377-.378,1.036-.378,1.414,0,.189.188.293.439.293.707s-.104.518-.293.707Z"/></svg>
+                                                        </a>` : ''
                             }
                             ${
 
                                 row.can_delete && row.status != 2 ? `
-                                            <button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="{!! __('Delete') !!}">
-                                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
-                                            </button>` : ''
+                                                            <button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="{!! __('Delete') !!}">
+                                                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
+                                                            </button>` : ''
                             }
                        </div>`
                     }
@@ -247,7 +263,8 @@
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('quotation.get_data') }}"
 
-                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
+                    url =
+                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
 
                     INIT_LOAD = false
@@ -289,6 +306,18 @@
         //     });
         // })
 
+        $('#data-table').on('click', '.cancel-btns', function() {
+            id = $(this).data('id')
+
+            $('#confirmation-modal #msg').text(`Are you sure to cancel the quotation?`)
+            $('#confirmation-modal #yes-btn').attr('data-link', `{{ config('app.url') }}/quotation/cancel/${id}`)
+            $('#confirmation-modal').addClass('show-modal')
+        })
+        $('#confirmation-modal #yes-btn').on('click', function() {
+            let url = $(this).attr('data-link')
+
+            window.location.href = url
+        })
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')
 
