@@ -1385,8 +1385,9 @@ class SaleController extends Controller
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
             }
+            $sale = Sale::where('id', $req->sale_id)->first();
             $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
-            if (!$has_rejected) {
+            if ($sale->status != Sale::STATUS_APPROVAL_PENDING && !$has_rejected) {
                 Sale::where('id', $req->sale_id)->update([
                     'status' => Sale::STATUS_ACTIVE
                 ]);
