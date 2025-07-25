@@ -1377,6 +1377,9 @@ class SaleController extends Controller
                 $data['sale'] = $res->sale;
                 $req->merge(['sale_id' => $res->sale->id]);
             }
+            if ($res->approval_required) {
+                $pending_approval_alrdy = $res->approval_required;
+            }
 
             $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, false, false)->getData();
             if ($res->result == false) {
@@ -1385,9 +1388,8 @@ class SaleController extends Controller
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
             }
-            $sale = Sale::where('id', $req->sale_id)->first();
             $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
-            if ($sale->status != Sale::STATUS_APPROVAL_PENDING && !$has_rejected) {
+            if (isset($pending_approval_alrdy) && $pending_approval_alrdy == false && !$has_rejected) {
                 Sale::where('id', $req->sale_id)->update([
                     'status' => Sale::STATUS_ACTIVE
                 ]);
@@ -1691,6 +1693,7 @@ class SaleController extends Controller
             return Response::json([
                 'result' => true,
                 'sale' => $sale,
+                'approval_required' => isset($approval_required) ? $approval_required : false
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
