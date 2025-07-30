@@ -305,6 +305,8 @@
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
             let val = $(this).val()
 
+            $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val(null)
+
             for (let i = 0; i < PRODUCTS.length; i++) {
                 if (PRODUCTS[i].id == productId) {
                     for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
@@ -321,6 +323,7 @@
         $('body').on('keyup', 'input[name="override_selling_price"]', function() {
             let idx = $(this).parent().parent().parent().data('id')
 
+            $(`.items[data-id="${idx}"] select[name="selling_price[]"]`).val(null)
             $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val($(this).val())
         })
         $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',

@@ -6,7 +6,7 @@
     <div class="grid grid-cols-3 gap-8 w-full mb-8">
         <div class="flex flex-col col-span-3">
             <x-app.input.label id="remark" class="mb-1">{{ __('Additional Note') }}</x-app.input.label>
-            <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" text="{{ isset($sale) ? $sale->remark : null }}" />
+            <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" text="{{ isset($replicate) ? $replicate->remark : (isset($sale) ? $sale->remark : null) }}" />
             <x-app.message.error id="remark_err"/>
         </div>
     </div>
