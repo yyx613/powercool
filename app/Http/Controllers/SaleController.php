@@ -190,7 +190,7 @@ class SaleController extends Controller
     {
         $data = [];
         if ($req->has('quo')) {
-            $replicate = Sale::where('id', $req->quo)->first(); 
+            $replicate = Sale::where('id', $req->quo)->first();
             $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods');
         }
 
@@ -212,17 +212,30 @@ class SaleController extends Controller
         ]);
     }
 
-    public function cancel(Sale $sale)
+    public function cancel(Request $req, Sale $sale)
     {
         try {
             DB::beginTransaction();
 
-            $sale->status = Sale::STATUS_CANCELLED;
+            $approval = Approval::create([
+                'object_type' => Sale::class,
+                'object_id' => $sale->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_quo' => true,
+                    'is_cancellation' => true,
+                    'description' => Auth::user()->name . ' has requested to cancel the quotation.',
+                    'cancellation_remark' => $req->remark ?? null,
+                ])
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $sale->status = Sale::STATUS_APPROVAL_PENDING;
             $sale->save();
 
             DB::commit();
 
-            return back()->with('success', 'Quotation cancelled');
+            return back()->with('success', 'Quotation cancel request is submitted');
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
@@ -713,16 +726,33 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->cancelSaleOrderFlow($sale, false, $req->charge);
-
-            // Change converted QUO back to active
-            Sale::where('convert_to', $sale->id)->update([
-                'status' => Sale::STATUS_ACTIVE
+            $approval = Approval::create([
+                'object_type' => Sale::class,
+                'object_id' => $sale->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_quo' => false,
+                    'is_cancellation' => true,
+                    'description' => Auth::user()->name . ' has requested to cancel the sale order.',
+                    'cancellation_remark' => $req->remark ?? null,
+                    'charge' => $req->charge,
+                ])
             ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $sale->status = Sale::STATUS_APPROVAL_PENDING;
+            $sale->save();
+
+            // $this->cancelSaleOrderFlow($sale, false, $req->charge);
+
+            // // Change converted QUO back to active
+            // Sale::where('convert_to', $sale->id)->update([
+            //     'status' => Sale::STATUS_ACTIVE
+            // ]);
 
             DB::commit();
 
-            return back()->with('success', 'Quotation cancelled');
+            return back()->with('success', 'Sale Order cancelled');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -2562,7 +2592,7 @@ class SaleController extends Controller
         }
     }
 
-    private function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge = null, ?array $do_skus = null)
+    public function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge = null, ?array $do_skus = null)
     {
         SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1, null);
 

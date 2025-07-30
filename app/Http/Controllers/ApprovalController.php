@@ -160,6 +160,14 @@ class ApprovalController extends Controller
                 }
             }
 
+            $remark = null;
+            if ($record->data != null) {
+                $payload = json_decode($record->data);
+                if (isset($payload->cancellation_remark)) {
+                    $remark = $payload->cancellation_remark;
+                }
+            }
+
             $data['data'][] = [
                 'no' => ($key + 1),
                 'id' => $record->id,
@@ -171,6 +179,7 @@ class ApprovalController extends Controller
                 'view_url' => $view_url,
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
+                'remark' => $remark,
                 'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
@@ -194,7 +203,18 @@ class ApprovalController extends Controller
             if (get_class($approval->object) == Sale::class) {
                 $data = json_decode($approval->data);
 
-                if (isset($data->is_reuse)) {
+                if (isset($data->is_cancellation) && isset($data->is_quo)) {
+                    if ($data->is_quo == true) {
+                        $obj->status = Sale::STATUS_CANCELLED;
+                        $obj->save();
+                    } else {
+                        (new SaleController)->cancelSaleOrderFlow($obj, false, $data->charge);
+                        // // Change converted QUO back to active
+                        Sale::where('convert_to', $obj->id)->update([
+                            'status' => Sale::STATUS_ACTIVE
+                        ]);
+                    }
+                } else if (isset($data->is_reuse)) {
                     $obj->status = Sale::STATUS_ACTIVE;
                     $obj->save();
                 } else if (isset($data->is_payment_method)) {
@@ -303,7 +323,10 @@ class ApprovalController extends Controller
             } elseif (get_class($obj) == Sale::class) {
                 $data = json_decode($approval->data);
 
-                if (isset($data->is_reuse)) {
+                if (isset($data->is_cancellation)) {
+                    $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                    $obj->save();
+                } else if (isset($data->is_reuse)) {
                     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
                     $obj->save();
                 } else if (isset($data->is_payment_method)) {
