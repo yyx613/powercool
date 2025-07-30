@@ -43,6 +43,10 @@
     <script>
         FORM_CAN_SUBMIT = true
         SALE = @json($sale ?? null);
+        REPLICATE = @json($replicate ?? null);
+        if (REPLICATE != null && SALE == null) {
+            SALE = REPLICATE
+        }
 
         $(document).ready(function() {
             if (SALE == null) {

@@ -24,7 +24,7 @@
                 placeholder="{{ __('Select a company') }}">
                 <option value="">{{ __('Select a company') }}</option>
                 @foreach ($customers as $cu)
-                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }} -
+                    <option value="{{ $cu->id }}" @selected(old('customer', isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null)) == $cu->id)>{{ $cu->company_name }} -
                         {{ $cu->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
                 @endforeach
             </x-app.input.select2>
@@ -33,25 +33,25 @@
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
             <x-app.input.input name="reference" id="reference" :hasError="$errors->has('reference')"
-                value="{{ isset($sale) ? $sale->reference : null }}" />
+                value="{{ isset($replicate) ? $replicate->reference : (isset($sale) ? $sale->reference : null) }}" />
             <x-app.message.error id="reference_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="from" class="mb-1">{{ __('From') }}</x-app.input.label>
             <x-app.input.input name="from" id="from" :hasError="$errors->has('from')"
-                value="{{ isset($sale) ? $sale->quo_from : null }}" />
+                value="{{ isset($replicate) ? $replicate->quo_from : (isset($sale) ? $sale->quo_from : null) }}" />
             <x-app.message.error id="from_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="cc" class="mb-1">{{ __('C.C.') }}</x-app.input.label>
             <x-app.input.input name="cc" id="cc" :hasError="$errors->has('cc')"
-                value="{{ isset($sale) ? $sale->quo_cc : null }}" />
+                value="{{ isset($replicate) ? $replicate->quo_cc : (isset($sale) ? $sale->quo_cc : null) }}" />
             <x-app.message.error id="cc_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
             <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
-                value="{{ isset($sale) ? $sale->store : null }}" />
+                value="{{ isset($replicate) ? $replicate->store : (isset($sale) ? $sale->store : null) }}" />
             <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
@@ -61,7 +61,7 @@
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales_agents as $sa)
-                    <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
+                    <option value="{{ $sa->id }}" @selected(old('sale', isset($replicate) ? $replicate->sale_id : (isset($sale) ? $sale->sale_id : null)) == $sa->id)>{{ $sa->name }}</option>
                 @endforeach
             </x-app.input.select>
             <x-app.message.error id="sale_err" />
@@ -72,7 +72,7 @@
             <x-app.input.select name="report_type" id="report_type" :hasError="$errors->has('report_type')">
                 <option value="">{{ __('Select a type') }}</option>
                 @foreach ($report_types as $type)
-                    <option value="{{ $type->id }}" @selected(old('report_type', isset($sale) ? $sale->report_type : null) == $type->id)>{{ $type->name }}</option>
+                    <option value="{{ $type->id }}" @selected(old('report_type', isset($replicate) ? $replicate->report_type : (isset($sale) ? $sale->report_type : null)) == $type->id)>{{ $type->name }}</option>
                 @endforeach
             </x-app.input.select>
             <x-app.message.error id="report_type_err" />
@@ -80,7 +80,7 @@
         <div class="flex flex-col">
             <x-app.input.label id="attention_to" class="mb-1">{{ __('Attention To') }}</x-app.input.label>
             <x-app.input.input name="attention_to" id="attention_to" :hasError="$errors->has('attention_to')"
-                value="{{ isset($sale) ? $sale->quo_cc : null }}" disabled="true" />
+                value="{{ isset($replicate) ? $replicate->quo_cc : (isset($sale) ? $sale->quo_cc : null) }}" disabled="true" />
             <x-app.message.error id="attention_to_err" />
         </div>
         <div class="flex flex-col">
@@ -99,7 +99,7 @@
                 placeholder="{{ __('Select a method') }}">
                 <option value=""></option>
                 @foreach ($payment_methods as $method)
-                    <option value="{{ $method->id }}" @selected(old('payment_method', isset($sale) ? $sale->payment_method : null) == $method->id)>{{ $method->name }}</option>
+                    <option value="{{ $method->id }}" @selected(old('payment_method', isset($replicate) ? $replicate->payment_method : (isset($sale) ? $sale->payment_method : null)) == $method->id)>{{ $method->name }}</option>
                 @endforeach
                 </x-app.input.selec2t>
                 <x-app.message.error id="payment_method_err" />
@@ -109,15 +109,15 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
-                @if (isset($sale) && $sale->status == 4)
+                @if (isset($replicate) ? $replicate->status == 4 : isset($sale) && $sale->status == 4)
                     <option value="4" selected>{{ __('Pending Approval') }}</option>
-                @elseif (isset($sale) && $sale->status == 7)
+                @elseif (isset($replicate) ? $replicate->status == 7 : isset($sale) && $sale->status == 7)
                     <option value="7" selected>{{ __('Rejected') }}</option>
-                @elseif (isset($sale) && $sale->status == 5)
+                @elseif (isset($replicate) ? $replicate->status == 5 : isset($sale) && $sale->status == 5)
                     <option value="5" selected>{{ __('Approved') }}</option>
                 @else
-                    <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
-                    <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
+                    <option value="1" @selected(old('status', isset($replicate) ? $replicate->status : (isset($sale) ? $sale->status : null)) == 1)>{{ __('Active') }}</option>
+                    <option value="0" @selected(old('status', isset($replicate) ? $replicate->status : (isset($sale) ? $sale->status : null)) === 0)>{{ __('Inactive') }}</option>
                 @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />
@@ -142,7 +142,6 @@
         $(document).ready(function() {
             $('select[name="customer"]').trigger('change')
             $('select[name="billing_address"]').trigger('change')
-
         })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)

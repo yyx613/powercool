@@ -89,6 +89,7 @@ class SaleController extends Controller
                 'sales.id AS id',
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
+                'sales.open_until AS validity',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
@@ -135,11 +136,12 @@ class SaleController extends Controller
             $map = [
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
-                2 => 'customers.sku',
-                3 => 'customers.name',
-                4 => 'sales_agents.name',
-                6 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
-                7 => 'sales.status',
+                2 => 'sales.open_until',
+                3 => 'customers.sku',
+                4 => 'customers.name',
+                5 => 'sales_agents.name',
+                7 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
+                8 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -165,6 +167,7 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
+                'validity' => Carbon::parse($record->validity)->format('d M Y'),
                 'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,
@@ -175,7 +178,7 @@ class SaleController extends Controller
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 'can_delete' => hasPermission('sale.quotation.delete'),
-                'can_cancel' => $record->status == Sale::STATUS_ACTIVE,
+                'can_cancel' => !$record->is_draft && $record->status == Sale::STATUS_ACTIVE,
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
             ];
         }
@@ -183,9 +186,15 @@ class SaleController extends Controller
         return response()->json($data);
     }
 
-    public function create()
+    public function create(Request $req)
     {
-        return view('quotation.form');
+        $data = [];
+        if ($req->has('quo')) {
+            $replicate = Sale::where('id', $req->quo)->first(); 
+            $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods');
+        }
+
+        return view('quotation.form', $data);
     }
 
     public function edit(Sale $sale)
@@ -1377,7 +1386,7 @@ class SaleController extends Controller
                 $data['sale'] = $res->sale;
                 $req->merge(['sale_id' => $res->sale->id]);
             }
-            if ($res->approval_required) {
+            if (isset($res->approval_required)) {
                 $pending_approval_alrdy = $res->approval_required;
             }
 
@@ -1435,24 +1444,6 @@ class SaleController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            // if ($req->sale_id == null) {
-            //     $products = Product::whereIn('id', $req->product_id)->get();
-            //     $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
-            //     $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
-
-            //     $sale = Sale::create([
-            //         'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
-            //         'sku' => $sku,
-            //         'is_draft' => true,
-            //         'draft_data' => json_encode($req->all()),
-            //     ]);
-            //     (new Branch)->assign(Sale::class, $sale->id);
-            // } else {
-            //     Sale::where('id', $req->sale_id)->update([
-            //         'draft_data' => json_encode($req->all())
-            //     ]);
-            // }
 
             // insert into columns
             $data = [];
@@ -1654,7 +1645,7 @@ class SaleController extends Controller
                 ]);
             }
             // Payment method approval
-            if ($req->payment_method != null) {
+            if (!$is_draft && $req->payment_method != null) {
                 $approval_required = false;
                 if ($req->type == 'quo') {
                     $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
@@ -1891,36 +1882,42 @@ class SaleController extends Controller
                     }
                     $prod = Product::where('id', $req->product_id[$i])->first();
 
-                    if (!$skip_approval) {
-                        if (!$is_draft && $req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
-                            $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
+                    if (!$is_draft && !$skip_approval) {
+                        if ($req->selling_price[$i] == null) {
+                            if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
+                                $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
 
-                            $approval = Approval::create([
-                                'object_type' => Sale::class,
-                                'object_id' => $req->sale_id,
-                                'status' => Approval::STATUS_PENDING_APPROVAL,
-                                'data' => $req->type == 'quo' ? json_encode([
-                                    'is_quo' => true,
-                                    'sale_product_id' => $sp->id,
-                                    'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
-                                ]) : json_encode([
-                                    'is_quo' => false,
-                                    'sale_product_id' => $sp->id,
-                                    'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
-                                ])
-                            ]);
-                            (new Branch)->assign(Approval::class, $approval->id);
-                            // Update QUO/SO status
-                            Sale::where('id', $req->sale_id)->update([
-                                'status' => Sale::STATUS_APPROVAL_PENDING
-                            ]);
-                            if ($sp->status == SaleProduct::STATUS_APPROVAL_REJECTED) {
-                                $sp->revised = true;
+                                $approval = Approval::create([
+                                    'object_type' => Sale::class,
+                                    'object_id' => $req->sale_id,
+                                    'status' => Approval::STATUS_PENDING_APPROVAL,
+                                    'data' => $req->type == 'quo' ? json_encode([
+                                        'is_quo' => true,
+                                        'sale_product_id' => $sp->id,
+                                        'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                                    ]) : json_encode([
+                                        'is_quo' => false,
+                                        'sale_product_id' => $sp->id,
+                                        'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
+                                    ])
+                                ]);
+                                (new Branch)->assign(Approval::class, $approval->id);
+                                // Update QUO/SO status
+                                Sale::where('id', $req->sale_id)->update([
+                                    'status' => Sale::STATUS_APPROVAL_PENDING
+                                ]);
+                                if ($sp->status == SaleProduct::STATUS_APPROVAL_REJECTED) {
+                                    $sp->revised = true;
+                                }
+                                $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
+                                $sp->save();
+                            } else {
+                                $sp->status = null;
+                                $sp->save();
                             }
-                            $sp->status = SaleProduct::STATUS_APPROVAL_PENDING;
-                            $sp->save();
-                        } else if (!$is_draft) {
+                        } else {
                             $sp->status = null;
+                            $sp->revised = true;
                             $sp->save();
                         }
                     }
