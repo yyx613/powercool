@@ -1472,6 +1472,7 @@ class SaleController extends Controller
 
     public function saveAsDraft(Request $req)
     {
+        // dd($req->all());
         try {
             DB::beginTransaction();
 
@@ -1487,7 +1488,7 @@ class SaleController extends Controller
                 $req->merge(['sale_id' => $res->sale->id]);
             }
 
-            $res = $this->upsertProDetails($req, true, isset($convert_from_quo) ? $convert_from_quo : false, true, true)->getData();
+            $res = $this->upsertProDetails($req, true, false, true, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertProDetails failed');
             }
@@ -1816,7 +1817,7 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             if (!$convert_from_quo) {
-                if ($req->product_order_id != null) {
+                if (!$is_draft && $req->product_order_id != null) {
                     $order_idx = array_filter($req->product_order_id, function ($val) {
                         return $val != null;
                     });
@@ -1856,7 +1857,7 @@ class SaleController extends Controller
                         $product_id = $customize_prod->id;
                     }
 
-                    if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
+                    if (!$is_draft && $req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
                         if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
                             continue;

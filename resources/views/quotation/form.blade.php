@@ -170,7 +170,7 @@
                 url: url,
                 type: 'POST',
                 data: {
-                    'sale_id': SALE != null ? SALE.id : null,
+                    'sale_id': REPLICATE != null ? null : (SALE != null ? SALE.id : null),
                     'sale': $('select[name="sale"]').val(),
                     'customer': $('select[name="customer"]').val(),
                     'open_until': $('input[name="open_until"]').val(),
