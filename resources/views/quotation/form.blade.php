@@ -158,6 +158,9 @@
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
+            if (REPLICATE != null) {
+                prodOrderId = []
+            }
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
