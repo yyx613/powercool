@@ -284,6 +284,8 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
+            Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->delete();
+
             $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
             SaleProductChild::whereIn('sale_product_id', $sp_ids)->delete();
             SaleProduct::whereIn('id', $sp_ids)->delete();
