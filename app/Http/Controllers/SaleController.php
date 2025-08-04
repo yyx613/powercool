@@ -179,7 +179,7 @@ class SaleController extends Controller
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 // 'can_delete' => hasPermission('sale.quotation.delete'),
                 'can_delete' => false,
-                'can_cancel' => !$record->is_draft && $record->status == Sale::STATUS_ACTIVE,
+                'can_cancel' => !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED]),
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
             ];
         }
