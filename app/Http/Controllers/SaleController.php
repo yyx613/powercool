@@ -1947,8 +1947,10 @@ class SaleController extends Controller
                                 $sp->save();
                             }
                         } else {
+                            if ($sp->status != SaleProduct::STATUS_APPROVAL_REJECTED) {
+                                $sp->revised = true;
+                            }
                             $sp->status = null;
-                            $sp->revised = true;
                             $sp->save();
                         }
                     }
