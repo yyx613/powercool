@@ -177,7 +177,8 @@ class SaleController extends Controller
                 'is_draft' => $record->is_draft,
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
-                'can_delete' => hasPermission('sale.quotation.delete'),
+                // 'can_delete' => hasPermission('sale.quotation.delete'),
+                'can_delete' => false,
                 'can_cancel' => !$record->is_draft && $record->status == Sale::STATUS_ACTIVE,
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
             ];
@@ -653,7 +654,8 @@ class SaleController extends Controller
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
-                'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
+                // 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
+                'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
             ];
         }
