@@ -215,7 +215,7 @@
                             `.items[data-id="${i+1}"] #approval-status-container #rejected-status`).removeClass(
                             'hidden')
                     }
-                    if (REPLICAET == null && sp.revised == true) {
+                    if (REPLICATE == null && sp.revised == true) {
                         $(`.items[data-id="${i+1}"] #approval-status-container`).removeClass('hidden')
                         $(`.items[data-id="${i+1}"] #approval-status-container #revised-status`).removeClass(
                             'hidden')
