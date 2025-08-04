@@ -1676,32 +1676,43 @@ class SaleController extends Controller
             }
             // Payment method approval
             if (!$is_draft && $req->payment_method != null) {
-                $approval_required = false;
+                $quo_skip_approval = false;
                 if ($req->type == 'quo') {
-                    $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
-                    $approval_required = in_array($req->payment_method, $credit_term_payment_method_ids);
-                } else if ($req->type == 'so') {
-                    $customer_ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $req->customer)->pluck('credit_term_id')->toArray();
-                    $approval_required = !in_array($req->payment_term, $customer_ct_ids);
+                    $quo_skip_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)
+                        ->whereIn('status', [Approval::STATUS_APPROVED, Approval::STATUS_PENDING_APPROVAL])
+                        ->where('data', 'like', '%is_quo%')
+                        ->where('data', 'like', '%is_payment_method%')
+                        ->exists();
                 }
-                if ($approval_required) {
-                    $approval = Approval::create([
-                        'object_type' => Sale::class,
-                        'object_id' => $sale->id,
-                        'status' => Approval::STATUS_PENDING_APPROVAL,
-                        'data' => $req->type == 'quo' ? json_encode([
-                            'is_quo' => true,
-                            'is_payment_method' => true,
-                            'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
-                        ]) : json_encode([
-                            'is_payment_method' => true,
-                            'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
-                        ])
-                    ]);
-                    (new Branch)->assign(Approval::class, $approval->id);
+                if (!$quo_skip_approval) {
+                    $approval_required = false;
+                    if ($req->type == 'quo') {
+                        $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
+                        $approval_required = in_array($req->payment_method, $credit_term_payment_method_ids);
+                    } else if ($req->type == 'so') {
+                        $customer_ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $req->customer)->pluck('credit_term_id')->toArray();
+                        $approval_required = !in_array($req->payment_term, $customer_ct_ids);
+                    }
 
-                    $sale->status = Sale::STATUS_APPROVAL_PENDING;
-                    $sale->save();
+                    if ($approval_required) {
+                        $approval = Approval::create([
+                            'object_type' => Sale::class,
+                            'object_id' => $sale->id,
+                            'status' => Approval::STATUS_PENDING_APPROVAL,
+                            'data' => $req->type == 'quo' ? json_encode([
+                                'is_quo' => true,
+                                'is_payment_method' => true,
+                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
+                            ]) : json_encode([
+                                'is_payment_method' => true,
+                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
+                            ])
+                        ]);
+                        (new Branch)->assign(Approval::class, $approval->id);
+
+                        $sale->status = Sale::STATUS_APPROVAL_PENDING;
+                        $sale->save();
+                    }
                 }
             }
 
@@ -1946,7 +1957,7 @@ class SaleController extends Controller
                                 $sp->save();
                             }
                         } else {
-                            if ($sp->status != SaleProduct::STATUS_APPROVAL_REJECTED) {
+                            if ($sp->status == SaleProduct::STATUS_APPROVAL_REJECTED) {
                                 $sp->revised = true;
                             }
                             $sp->status = null;
