@@ -101,7 +101,11 @@
                 @foreach ($payment_methods as $method)
                     <option value="{{ $method->id }}" @selected(old('payment_method', isset($replicate) ? $replicate->payment_method : (isset($sale) ? $sale->payment_method : null)) == $method->id)>{{ $method->name }}</option>
                 @endforeach
-                </x-app.input.selec2t>
+                </x-app.input.selec2>
+                <div class="hidden mt-1" id="credit-term-hint-container">
+                    <span class="text-xs font-medium">Credit Terms: </span>
+                    <span class="text-xs text-slate-600" id="value"></span>
+                </div>
                 <x-app.message.error id="payment_method_err" />
         </div>
         <div class="flex flex-col">
@@ -150,6 +154,9 @@
         });
 
         $('select[name="customer"]').on('change', function() {
+            $('#credit-term-hint-container').addClass('hidden')
+            $('#credit-term-hint-container #value').text(null)
+
             let val = $(this).val()
 
             $('select[name="sale"]').val(null).trigger('change')
@@ -158,19 +165,20 @@
                 const element = CUSTOMERS[i];
 
                 if (element.id == val) {
-                    $('input[name="attention_to"]').val(element.name)
                     // Update payment term
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
-                    // $(`select[name="payment_term"]`).select2({
-                    //     placeholder: '{{ __('Select a term') }}'
-                    // })
-
+                    let creditTerms = []
                     for (let i = 0; i < element.credit_terms.length; i++) {
                         const term = element.credit_terms[i];
+                        creditTerms.push(term.credit_term.name)
 
                         let opt = new Option(term.credit_term.name, term.credit_term.id)
                         $(`select[name="payment_term"]`).append(opt)
+                    }
+                    if (creditTerms.length > 0) {
+                        $('#credit-term-hint-container').removeClass('hidden')
+                        $('#credit-term-hint-container #value').text(creditTerms.join(', '))
                     }
                     // Filter Sales agent
                     // $(`select[name="sale"] option`).not(':first').addClass('hidden')

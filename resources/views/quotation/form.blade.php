@@ -46,6 +46,7 @@
         REPLICATE = @json($replicate ?? null);
         if (REPLICATE != null && SALE == null) {
             SALE = REPLICATE
+            getNextSku()
         }
 
         $(document).ready(function() {
