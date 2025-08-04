@@ -1472,7 +1472,6 @@ class SaleController extends Controller
 
     public function saveAsDraft(Request $req)
     {
-        // dd($req->all());
         try {
             DB::beginTransaction();
 
@@ -1817,7 +1816,7 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             if (!$convert_from_quo) {
-                if (!$is_draft && $req->product_order_id != null) {
+                if ($req->product_order_id != null) {
                     $order_idx = array_filter($req->product_order_id, function ($val) {
                         return $val != null;
                     });
@@ -1857,7 +1856,7 @@ class SaleController extends Controller
                         $product_id = $customize_prod->id;
                     }
 
-                    if (!$is_draft && $req->product_order_id != null && $req->product_order_id[$i] != null) {
+                    if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
                         if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
                             continue;
