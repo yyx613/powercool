@@ -180,6 +180,9 @@ class ApprovalController extends Controller
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
                 'remark' => $remark,
+                'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
+                'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->name : null,
+                'sales_agent_name' => get_class($obj) == Sale::class ? $obj->saleperson->name : null,
                 'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
