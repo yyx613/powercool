@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\Scopes\BranchScope;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -118,16 +117,5 @@ class Customer extends Model
         }
 
         return $sku;
-    }
-
-    public function formatObject(Collection $data)
-    {
-        $formatted = [];
-
-        for ($i = 0; $i < count($data); $i++) {
-            $formatted[$data[$i]->id] = $data[$i];
-        }
-
-        return $formatted;
     }
 }

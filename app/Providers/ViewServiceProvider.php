@@ -289,7 +289,33 @@ class ViewServiceProvider extends ServiceProvider
                 'customers' => $customers,
             ]);
         });
-        View::composer(['ticket.form', 'quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details'], function (ViewView $view) {
+            $is_edit = false;
+            if (str_contains(Route::currentRouteName(), '.edit')) {
+                $is_edit = true;
+            }
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+                $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
+            }
+            if ($is_edit) {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->lazy();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->lazy();
+                }
+            } else {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->lazy();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->lazy();
+                }
+            }
+            $customers = $customers->keyBy('id')->all();
+
+            $view->with('customers', $customers);
+        });
+        View::composer(['ticket.form', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
             $is_edit = false;
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $is_edit = true;
@@ -312,7 +338,7 @@ class ViewServiceProvider extends ServiceProvider
                 }
             }
             if (str_contains(Route::currentRouteName(), 'quotation.')) {
-                $customers = (new Customer)->formatObject($customers);
+                $customers = $customers->keyBy('id')->all();
             }
 
             $view->with('customers', $customers);
@@ -381,13 +407,18 @@ class ViewServiceProvider extends ServiceProvider
                 $involved_pc_ids = array_diff($involved_pc_ids, $pc_for_sale);
             }
 
-            $products = Product::with(['children' => function ($q) use ($involved_pc_ids) {
+            $productCursor = Product::with(['children' => function ($q) use ($involved_pc_ids) {
                 $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
             }])
                 ->with('sellingPrices')
                 ->where('is_active', true)
                 ->orderBy('id', 'desc')
-                ->get();
+                ->lazy();
+
+            $products = collect();
+            foreach ($productCursor as $val) {
+                $products->add($val);
+            }
 
             // Warranty Periods
             $wps = WarrantyPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
@@ -404,7 +435,7 @@ class ViewServiceProvider extends ServiceProvider
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
 
             if (str_contains(Route::currentRouteName(), 'quotation.')) {
-                $products = (new Product)->formatObject($products);
+                $products = $products->keyBy('id')->all();
             }
 
             $view->with([

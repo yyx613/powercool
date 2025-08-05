@@ -140,7 +140,7 @@
 
 @push('scripts')
     <script>
-        INIT_EDIT = true
+        QUOTATION_DETAILS_INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
 
@@ -149,6 +149,7 @@
                 $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
             }
+            QUOTATION_DETAILS_INIT_EDIT = false
         })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
@@ -181,16 +182,10 @@
                     $('#credit-term-hint-container').removeClass('hidden')
                     $('#credit-term-hint-container #value').text(creditTerms.join(', '))
                 }
-                // Filter Sales agent
-                // $(`select[name="sale"] option`).not(':first').addClass('hidden')
-                // for (let j = 0; j < element.sales_agents.length; j++) {
-                //     $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
-                //         .removeClass('hidden')
-                // }
-                if (INIT_EDIT) {
+                if (QUOTATION_DETAILS_INIT_EDIT) {
                     $('select[name="sale"]').val(SALE.sale_id).trigger('change')
                     $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
-                } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                } else if (QUOTATION_DETAILS_INIT_EDIT == false && element.sales_agents.length === 1) {
                     $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
                 }
             }
@@ -228,7 +223,7 @@
 
                         let opt = new Option(
                             addr, loc.id,
-                            false, INIT_EDIT == true && loc.id ==
+                            false, QUOTATION_DETAILS_INIT_EDIT == true && loc.id ==
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
