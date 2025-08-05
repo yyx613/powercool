@@ -289,7 +289,33 @@ class ViewServiceProvider extends ServiceProvider
                 'customers' => $customers,
             ]);
         });
-        View::composer(['ticket.form', 'quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details'], function (ViewView $view) {
+            $is_edit = false;
+            if (str_contains(Route::currentRouteName(), '.edit')) {
+                $is_edit = true;
+            }
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+                $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
+            }
+            if ($is_edit) {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->get();
+                }
+            } else {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                }
+            }
+            $customers = $customers->keyBy('id')->all();
+
+            $view->with('customers', $customers);
+        });
+        View::composer(['ticket.form','sale_order.form_step.quotation_details'], function (ViewView $view) {
             $is_edit = false;
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $is_edit = true;

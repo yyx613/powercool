@@ -159,15 +159,13 @@
 
         $(document).ready(function() {
             if (SALE != null) {
-                for (let j = 0; j < CUSTOMERS.length; j++) {
-                    var element = CUSTOMERS[j]
+                if (CUSTOMERS[SALE.customer_id] != undefined) {
+                    let element = CUSTOMERS[SALE.customer_id]
 
-                    if (element.id == SALE.customer_id) {
-                        $('input[name="customer_label"]').val(
-                            `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                        hintClickedCallback(SALE.customer_id,
-                            `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                    }
+                    $('input[name="customer_label"]').val(
+                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
+                    hintClickedCallback(SALE.customer_id,
+                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
                 }
                 $('select[name="billing_address"]').trigger('change')
             }
@@ -183,10 +181,11 @@
             $('#customer_label_hints').empty()
             let val = $('input[name="customer_label"]').val()
 
-            for (let j = 0; j < CUSTOMERS.length; j++) {
-                var element = CUSTOMERS[j]
+            if (val == '') return
+
+            for (const [key, element] of Object.entries(CUSTOMERS)) {
                 // Append to customer label hints
-                if (val != '' && element.company_name.toLowerCase().includes(val)) {
+                if (element.company_name.toLowerCase().includes(val)) {
                     $('#customer_label_hints').append(
                         `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
                     )
@@ -230,33 +229,27 @@
             $('input[name="customer_label"]').val(customer_label)
             $('input[name="customer"]').val(customer_id)
 
-            for (let j = 0; j < CUSTOMERS.length; j++) {
-                var element = CUSTOMERS[j]
+            var element = CUSTOMERS[customer_id]
+            // Update payment term
+            $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
-                if (element.id == customer_id) {
-                    // Update payment term
-                    $(`select[name="payment_term"]`).find('option').not(':first').remove();
+            let creditTerms = []
+            for (let i = 0; i < element.credit_terms.length; i++) {
+                const term = element.credit_terms[i];
+                creditTerms.push(term.credit_term.name)
 
-                    let creditTerms = []
-                    for (let i = 0; i < element.credit_terms.length; i++) {
-                        const term = element.credit_terms[i];
-                        creditTerms.push(term.credit_term.name)
-
-                        let opt = new Option(term.credit_term.name, term.credit_term.id)
-                        $(`select[name="payment_term"]`).append(opt)
-                    }
-                    if (creditTerms.length > 0) {
-                        $('#credit-term-hint-container').removeClass('hidden')
-                        $('#credit-term-hint-container #value').text(creditTerms.join(', '))
-                    }
-                    if (QUOTATION_DETAILS_INIT_EDIT) {
-                        $('select[name="sale"]').val(SALE.sale_id).trigger('change')
-                        $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
-                    } else if (QUOTATION_DETAILS_INIT_EDIT == false && element.sales_agents.length === 1) {
-                        $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
-                    }
-                    break
-                }
+                let opt = new Option(term.credit_term.name, term.credit_term.id)
+                $(`select[name="payment_term"]`).append(opt)
+            }
+            if (creditTerms.length > 0) {
+                $('#credit-term-hint-container').removeClass('hidden')
+                $('#credit-term-hint-container #value').text(creditTerms.join(', '))
+            }
+            if (QUOTATION_DETAILS_INIT_EDIT) {
+                $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
+            } else if (QUOTATION_DETAILS_INIT_EDIT == false && element.sales_agents.length === 1) {
+                $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
             }
 
             let url = '{{ route('customer.get_location') }}'
