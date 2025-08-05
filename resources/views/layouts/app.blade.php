@@ -22,6 +22,9 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.css">
+        
+        {{-- Debounce --}}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
 
         <!-- Datatables -->
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -62,6 +65,7 @@
     </body>
 
     <script>
+        const DEBOUNCE_DURATION = 500 // milliseconds
         moment.tz.setDefault("Asia/Kuala_Lumpur")
 
         var datepickerParam = {
