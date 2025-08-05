@@ -300,22 +300,26 @@ class ViewServiceProvider extends ServiceProvider
             }
             if ($is_edit) {
                 if (isset($customer_ids)) {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->get();
+                    $customerCursor = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->lazy();
                 } else {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->get();
+                    $customerCursor = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->lazy();
                 }
             } else {
                 if (isset($customer_ids)) {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                    $customerCursor = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->lazy();
                 } else {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                    $customerCursor = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->lazy();
                 }
+            }
+            $customers = collect();
+            foreach ($customerCursor as $val) {
+                $customers->add($val);
             }
             $customers = $customers->keyBy('id')->all();
 
             $view->with('customers', $customers);
         });
-        View::composer(['ticket.form','sale_order.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['ticket.form', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
             $is_edit = false;
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $is_edit = true;
