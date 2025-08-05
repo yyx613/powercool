@@ -11,7 +11,7 @@
                     <x-app.input.input name="charge" id="charge" class="decimal-input" />
                 </div>
                 <div class="flex flex-col mb-8">
-                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                    <x-app.input.label id="remark" class="mb-1">{{ __('Reason') }}</x-app.input.label>
                     <x-app.input.textarea name="remark" id="remark" required='true' />
                 </div>
                 <div class="flex gap-x-6">

@@ -187,12 +187,10 @@
 
             for (const [key, element] of Object.entries(CUSTOMERS)) {
                 // Append to customer label hints
-                if (element.company_name.toLowerCase().includes(val)) {
-                    $('#customer_label_hints').append(
-                        `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
-                    )
-                    $('#customer_label_hints').removeClass('hidden')
-                }
+                $('#customer_label_hints').append(
+                    `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
+                )
+                $('#customer_label_hints').removeClass('hidden')
             }
         }))
 

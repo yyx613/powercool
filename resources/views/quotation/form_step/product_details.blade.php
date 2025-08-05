@@ -302,7 +302,7 @@
             let idx = $(this).parent().parent().data('id')
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
             let val = $(this).val()
-            let product = PRODUCTS[val]
+            let product = PRODUCTS[productId]
 
             $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val(null)
 
