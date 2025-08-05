@@ -185,7 +185,7 @@
         CUSTOMIZE_PRODUCT_IDS = @json($customize_product_ids ?? []);
         PRODUCT_FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
-        INIT_EDIT = true
+        PRODUCT_DETAILS_INIT_EDIT = true
 
         $(document).ready(function() {
             if (SALE != null) {
@@ -249,7 +249,7 @@
                 $('#add-item-btn').click()
             }
 
-            INIT_EDIT = false
+            PRODUCT_DETAILS_INIT_EDIT = false
         })
         $('#add-item-btn').on('click', function() {
             let clone = $('#item-template')[0].cloneNode(true);
@@ -275,7 +275,7 @@
             // }
 
             buildWarrantyPeriodSelect2(ITEMS_COUNT) // Build warranty period select2
-            if (!INIT_EDIT) {
+            if (!PRODUCT_DETAILS_INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
 
