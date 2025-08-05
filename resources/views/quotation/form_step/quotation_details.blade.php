@@ -80,7 +80,8 @@
         <div class="flex flex-col">
             <x-app.input.label id="attention_to" class="mb-1">{{ __('Attention To') }}</x-app.input.label>
             <x-app.input.input name="attention_to" id="attention_to" :hasError="$errors->has('attention_to')"
-                value="{{ isset($replicate) ? $replicate->quo_cc : (isset($sale) ? $sale->quo_cc : null) }}" disabled="true" />
+                value="{{ isset($replicate) ? $replicate->quo_cc : (isset($sale) ? $sale->quo_cc : null) }}"
+                disabled="true" />
             <x-app.message.error id="attention_to_err" />
         </div>
         <div class="flex flex-col">
@@ -144,8 +145,10 @@
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
 
         $(document).ready(function() {
-            $('select[name="customer"]').trigger('change')
-            $('select[name="billing_address"]').trigger('change')
+            if (SALE != null) {
+                $('select[name="customer"]').trigger('change')
+                $('select[name="billing_address"]').trigger('change')
+            }
         })
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
@@ -161,38 +164,34 @@
 
             $('select[name="sale"]').val(null).trigger('change')
 
-            for (let i = 0; i < CUSTOMERS.length; i++) {
-                const element = CUSTOMERS[i];
+            if (CUSTOMERS[val] != undefined) {
+                var element = CUSTOMERS[val]
+                // Update payment term
+                $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
-                if (element.id == val) {
-                    // Update payment term
-                    $(`select[name="payment_term"]`).find('option').not(':first').remove();
+                let creditTerms = []
+                for (let i = 0; i < element.credit_terms.length; i++) {
+                    const term = element.credit_terms[i];
+                    creditTerms.push(term.credit_term.name)
 
-                    let creditTerms = []
-                    for (let i = 0; i < element.credit_terms.length; i++) {
-                        const term = element.credit_terms[i];
-                        creditTerms.push(term.credit_term.name)
-
-                        let opt = new Option(term.credit_term.name, term.credit_term.id)
-                        $(`select[name="payment_term"]`).append(opt)
-                    }
-                    if (creditTerms.length > 0) {
-                        $('#credit-term-hint-container').removeClass('hidden')
-                        $('#credit-term-hint-container #value').text(creditTerms.join(', '))
-                    }
-                    // Filter Sales agent
-                    // $(`select[name="sale"] option`).not(':first').addClass('hidden')
-                    // for (let j = 0; j < element.sales_agents.length; j++) {
-                    //     $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
-                    //         .removeClass('hidden')
-                    // }
-                    if (INIT_EDIT) {
-                        $('select[name="sale"]').val(SALE.sale_id).trigger('change')
-                        $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
-                    } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
-                        $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
-                    }
-                    break
+                    let opt = new Option(term.credit_term.name, term.credit_term.id)
+                    $(`select[name="payment_term"]`).append(opt)
+                }
+                if (creditTerms.length > 0) {
+                    $('#credit-term-hint-container').removeClass('hidden')
+                    $('#credit-term-hint-container #value').text(creditTerms.join(', '))
+                }
+                // Filter Sales agent
+                // $(`select[name="sale"] option`).not(':first').addClass('hidden')
+                // for (let j = 0; j < element.sales_agents.length; j++) {
+                //     $(`select[name="sale"] option[value="${element.sales_agents[j].sales_agent_id}"]`)
+                //         .removeClass('hidden')
+                // }
+                if (INIT_EDIT) {
+                    $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                    $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
+                } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                    $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
                 }
             }
 

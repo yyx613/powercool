@@ -302,19 +302,17 @@
             let idx = $(this).parent().parent().data('id')
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
             let val = $(this).val()
+            let product = PRODUCTS[val]
 
             $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val(null)
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                if (PRODUCTS[i].id == productId) {
-                    for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                        if (PRODUCTS[i].selling_prices[j].id == val) {
-                            $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val(PRODUCTS[i].selling_prices[
-                                j].price)
-                            break
-                        }
+            if (product != undefined) {
+                for (let j = 0; j < product.selling_prices.length; j++) {
+                    if (product.selling_prices[j].id == val) {
+                        $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val(product.selling_prices[j]
+                            .price)
+                        break
                     }
-                    break;
                 }
             }
         })
@@ -338,36 +336,33 @@
         $('body').on('change', 'select[name="product_id[]"]', function() {
             let id = $(this).parent().parent().attr('data-id')
             let val = $(this).val()
+            let product = PRODUCTS[val]
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const prod = PRODUCTS[i];
+            if (product != undefined) {
+                $(`.items[data-id="${id}"]`).attr('data-selected-product', product.type === 1)
+                $(`.items[data-id="${id}"] #min_price`).text(priceFormat(product.min_price))
+                $(`.items[data-id="${id}"] #max_price`).text(priceFormat(product.max_price))
+                $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
 
-                if (prod.id == val) {
-                    $(`.items[data-id="${id}"]`).attr('data-selected-product', prod.type === 1)
-                    $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
-                    $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
-                    $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
+                $(`.items[data-id="${id}"] input[name="uom"]`).val(null)
 
-                    $(`.items[data-id="${id}"] input[name="uom"]`).val(null)
-
-                    for (let j = 0; j < UOMS.length; j++) {
-                        if (UOMS[j].id == prod.uom) {
-                            $(`.items[data-id="${id}"] input[name="uom"]`).val(UOMS[j].name)
-                            break
-                        }
+                for (let j = 0; j < UOMS.length; j++) {
+                    if (UOMS[j].id == product.uom) {
+                        $(`.items[data-id="${id}"] input[name="uom"]`).val(UOMS[j].name)
+                        break
                     }
-                    $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
-                    // Append selling prices
-                    for (let j = 0; j < prod.selling_prices.length; j++) {
-                        let opt = new Option(
-                            `${prod.selling_prices[j].name} (RM ${priceFormat(prod.selling_prices[j].price)})`,
-                            prod.selling_prices[j].id)
+                }
+                $(`.items[data-id="${id}"] input[name="product_desc"]`).val(product.model_desc)
+                // Append selling prices
+                for (let j = 0; j < product.selling_prices.length; j++) {
+                    let opt = new Option(
+                        `${product.selling_prices[j].name} (RM ${priceFormat(product.selling_prices[j].price)})`,
+                        product.selling_prices[j].id)
 
-                        $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append(opt)
-                    }
-                    break
+                    $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append(opt)
                 }
             }
+
             buildSerialNoOptions(val, id)
             buildPromotionSelect(id, val)
             $(`.items[data-id="${id}"] #promo-hint`).addClass('hidden')
@@ -423,20 +418,18 @@
             let promo = $(`.items[data-id="${idx}"] select[name="promotion[]"]`).val()
             let discount = $(`.items[data-id="${idx}"] input[name="discount"]`).val()
             let overrideSellingPrice = $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val()
+            let product = PRODUCTS[productId]
 
             let unitPrice = 0
             if (overrideSellingPrice != '') {
                 unitPrice = overrideSellingPrice
             } else {
-                for (let i = 0; i < PRODUCTS.length; i++) {
-                    if (PRODUCTS[i].id == productId) {
-                        for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                            if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                                unitPrice = PRODUCTS[i].selling_prices[j].price
-                                break
-                            }
+                if (product != undefined) {
+                    for (let j = 0; j < product.selling_prices.length; j++) {
+                        if (product.selling_prices[j].id == sellingPrice) {
+                            unitPrice = product.selling_prices[j].price
+                            break
                         }
-                        break;
                     }
                 }
             }
@@ -490,18 +483,17 @@
                 let sellingPrice = $(this).find(`select[name="selling_price[]"]`).val()
                 let overrideSellingPrice = $(this).find(`input[name="override_selling_price"]`).val()
                 let unitPrice = 0
+                let product = PRODUCTS[productId]
+
                 if (overrideSellingPrice != '') {
                     unitPrice = overrideSellingPrice
                 } else {
-                    for (let i = 0; i < PRODUCTS.length; i++) {
-                        if (PRODUCTS[i].id == productId) {
-                            for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                                if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                                    unitPrice = PRODUCTS[i].selling_prices[j].price
-                                    break
-                                }
+                    if (product != undefined) {
+                        for (let j = 0; j < product.selling_prices.length; j++) {
+                            if (product.selling_prices[j].id == sellingPrice) {
+                                unitPrice = product.selling_prices[j].price
+                                break
                             }
-                            break;
                         }
                     }
                 }
@@ -570,24 +562,21 @@
         }
 
         function buildSerialNoOptions(product_id, item_id, sale_product_id = null) {
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const prod = PRODUCTS[i];
+            let product = PRODUCTS[product_id]
 
-                if (prod.id == product_id) {
-                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
+            if (product != undefined) {
+                $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
 
-                    if (prod.children != undefined) {
-                        for (let j = 0; j < prod.children.length; j++) {
-                            const child = prod.children[j];
-                            let selected = selectedSerialNo(child.id, sale_product_id)
+                if (product.children != undefined) {
+                    for (let j = 0; j < product.children.length; j++) {
+                        const child = product.children[j];
+                        let selected = selectedSerialNo(child.id, sale_product_id)
 
-                            let opt = new Option(child.sku, child.id, selected, selected)
-                            opt.selected = selected
-                            opt.value = child.id
-                            $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
-                        }
+                        let opt = new Option(child.sku, child.id, selected, selected)
+                        opt.selected = selected
+                        opt.value = child.id
+                        $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                     }
-                    break
                 }
             }
         }

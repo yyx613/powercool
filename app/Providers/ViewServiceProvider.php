@@ -311,6 +311,9 @@ class ViewServiceProvider extends ServiceProvider
                     $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
                 }
             }
+            if (str_contains(Route::currentRouteName(), 'quotation.')) {
+                $customers = (new Customer)->formatObject($customers);
+            }
 
             $view->with('customers', $customers);
         });
@@ -399,6 +402,10 @@ class ViewServiceProvider extends ServiceProvider
 
             // UOM
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
+
+            if (str_contains(Route::currentRouteName(), 'quotation.')) {
+                $products = (new Product)->formatObject($products);
+            }
 
             $view->with([
                 'products' => $products,
