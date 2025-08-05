@@ -189,7 +189,7 @@
                     render: function(data, type, row) {
                         let display = data
                         if (row.remark != null) {
-                            display = `${display}<br><span class="text-xs">Remark: ${row.remark}</span>`
+                            display = `${display}<br><span class="text-xs">Reason: ${row.remark}</span>`
                         }
                         if (row.debtor_name != null && row.debtor_code != null) {
                             display = `${display}<br><span class="text-xs">Debtor: ${row.debtor_name} (${row.debtor_code})</span>`

@@ -176,7 +176,7 @@ class SaleController extends Controller
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
-                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
+                'can_view_pdf' => $record->is_draft == false && !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED, Sale::STATUS_APPROVAL_REJECTED]),
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 // 'can_delete' => hasPermission('sale.quotation.delete'),
                 'can_delete' => false,
@@ -194,6 +194,13 @@ class SaleController extends Controller
         if ($req->has('quo')) {
             $replicate = Sale::where('id', $req->quo)->first();
             $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods');
+
+            $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                ->where('id', $replicate->customer_id)
+                ->orderBy('id', 'desc')->get();
+            $customers = $customers->keyBy('id')->all();
+
+            $data['customers'] = $customers;
         }
 
         return view('quotation.form', $data);
