@@ -165,6 +165,8 @@
                     if (element.id == SALE.customer_id) {
                         $('input[name="customer_label"]').val(
                             `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
+                        hintClickedCallback(SALE.customer_id,
+                            `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
                     }
                 }
                 $('select[name="billing_address"]').trigger('change')
@@ -194,18 +196,44 @@
         }))
 
         $('body').on('click', '.hints', function() {
+            hintClickedCallback($(this).data('customer-id'), $(this).text())
+        })
+        $('select[name="billing_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null) {
+                $('#new-billing-address input').attr('disabled', false)
+                $('#new-billing-address input').attr('aria-disabled', false)
+                $('#new-billing-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-billing-address input').val(null)
+                $('#new-billing-address input').attr('disabled', true)
+                $('#new-billing-address input').attr('aria-disabled', true)
+                $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('select[name="payment_method"]').on('change', function() {
+            let val = $(this).val()
+
+            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                $('#payment-term-container').removeClass('hidden')
+            } else {
+                $('#payment-term-container').addClass('hidden')
+            }
+        })
+
+        function hintClickedCallback(customer_id, customer_label) {
             $('#credit-term-hint-container').addClass('hidden')
             $('#credit-term-hint-container #value').text(null)
             $('select[name="sale"]').val(null).trigger('change')
             $('#customer_label_hints').addClass('hidden')
-            let val = $(this).data('customer-id')
-            $('input[name="customer_label"]').val($(this).text())
-            $('input[name="customer"]').val(val)
+            $('input[name="customer_label"]').val(customer_label)
+            $('input[name="customer"]').val(customer_id)
 
             for (let j = 0; j < CUSTOMERS.length; j++) {
                 var element = CUSTOMERS[j]
 
-                if (element.id == val) {
+                if (element.id == customer_id) {
                     // Update payment term
                     $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
@@ -232,7 +260,7 @@
             }
 
             let url = '{{ route('customer.get_location') }}'
-            url = `${url}?customer_id=${val}`
+            url = `${url}?customer_id=${customer_id}`
 
             $.ajax({
                 headers: {
@@ -270,29 +298,6 @@
                     }
                 },
             });
-        })
-        $('select[name="billing_address"]').on('change', function() {
-            let val = $(this).val()
-
-            if (val == 'null' || val == null) {
-                $('#new-billing-address input').attr('disabled', false)
-                $('#new-billing-address input').attr('aria-disabled', false)
-                $('#new-billing-address input').parent().attr('aria-disabled', false)
-            } else {
-                $('#new-billing-address input').val(null)
-                $('#new-billing-address input').attr('disabled', true)
-                $('#new-billing-address input').attr('aria-disabled', true)
-                $('#new-billing-address input').parent().attr('aria-disabled', true)
-            }
-        })
-        $('select[name="payment_method"]').on('change', function() {
-            let val = $(this).val()
-
-            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
-                $('#payment-term-container').removeClass('hidden')
-            } else {
-                $('#payment-term-container').addClass('hidden')
-            }
-        })
+        }
     </script>
 @endpush
