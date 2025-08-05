@@ -722,4 +722,49 @@ class CustomerController extends Controller
     {
         return Excel::download(new CustomerExport, 'user.xlsx');
     }
+
+    public function getByKeyword(Request $req)
+    {
+        try {
+            $keyword = $req->keyword;
+            $is_edit = $req->is_edit;
+
+            if (isSalesOnly()) {
+                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
+                $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
+            }
+            if ($is_edit) {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                        ->whereIn('id', $customer_ids)
+                        ->where('company_name', 'like', '%' . $keyword . '%')
+                        ->orderBy('id', 'desc')->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                        ->where('company_name', 'like', '%' . $keyword . '%')
+                        ->orderBy('id', 'desc')->get();
+                }
+            } else {
+                if (isset($customer_ids)) {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                        ->where('company_name', 'like', '%' . $keyword . '%')
+                        ->whereIn('id', $customer_ids)
+                        ->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                } else {
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                        ->where('company_name', 'like', '%' . $keyword . '%')
+                        ->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                }
+            }
+            $customers = $customers->keyBy('id')->all();
+
+            return response()->json([
+                'customers' => $customers,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'msg' => 'Something went wrong'
+            ], 500);
+        }
+    }
 }
