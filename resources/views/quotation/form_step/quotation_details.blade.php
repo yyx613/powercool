@@ -183,6 +183,8 @@
 
             if (val == '') return
 
+            getCustomer(val)
+
             for (const [key, element] of Object.entries(CUSTOMERS)) {
                 // Append to customer label hints
                 if (element.company_name.toLowerCase().includes(val)) {
@@ -289,6 +291,23 @@
                             SALE.billing_address_id)
                         $('select[name="billing_address"]').append(opt)
                     }
+                },
+            });
+        }
+
+        function getCustomer(keyword) {
+            let url = '{{ route('customer.get_by_keyword') }}'
+            url = `${url}?keyword=${keyword}&is_edit=${REPLICATE == null && SALE != null}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    CUSTOMERS = res.customers
                 },
             });
         }

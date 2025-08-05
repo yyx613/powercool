@@ -12,6 +12,7 @@ use App\Models\CreditNote;
 use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
+use App\Models\CustomerSaleAgent;
 use App\Models\Dealer;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
@@ -207,9 +208,15 @@ class SaleController extends Controller
 
         $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
 
+        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+            ->where('id', $sale->customer_id)
+            ->orderBy('id', 'desc')->get();
+        $customers = $customers->keyBy('id')->all();
+
         return view('quotation.form', [
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
             'has_pending_approval' => $has_pending_approval,
+            'customers' => $customers,
         ]);
     }
 

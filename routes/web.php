@@ -516,6 +516,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-so-do/{cus}', 'getSaleAndDeliveryOrder')->name('get_so_do');
         Route::post('/sync', 'sync')->name('sync');
         Route::get('/export', 'export')->name('export');
+        Route::get('/get-by-keyword', 'getByKeyword')->name('get_by_keyword');
     });
     // Supplier
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {
