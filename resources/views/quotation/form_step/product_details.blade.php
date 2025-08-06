@@ -267,12 +267,6 @@
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
                 placeholder: "{!! __('Select a product') !!}"
             })
-            // for (let i = 0; i < PRODUCTS.length; i++) {
-            //     const element = PRODUCTS[i];
-
-            //     let opt = new Option(element.model_name, element.id)
-            //     $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
-            // }
 
             buildWarrantyPeriodSelect2(ITEMS_COUNT) // Build warranty period select2
             if (!PRODUCT_DETAILS_INIT_EDIT) {
@@ -283,6 +277,10 @@
                 'border border-gray-300 rounded-md overflow-hidden')
 
             hideDeleteBtnWhenOnlyOneItem()
+
+            if (PRODUCT_DETAILS_INIT_EDIT == false) {
+                $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2('open')
+            }
         })
         $('body').on('click', '.delete-item-btns', function() {
             let id = $(this).data('id')
