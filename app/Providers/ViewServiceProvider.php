@@ -289,7 +289,7 @@ class ViewServiceProvider extends ServiceProvider
                 'customers' => $customers,
             ]);
         });
-        View::composer(['ticket.form', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['ticket.form'], function (ViewView $view) {
             $is_edit = false;
             if (str_contains(Route::currentRouteName(), '.edit')) {
                 $is_edit = true;

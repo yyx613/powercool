@@ -729,13 +729,19 @@ class SaleController extends Controller
 
         $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
 
+        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+            ->where('id', $sale->customer_id)
+            ->orderBy('id', 'desc')->get();
+        $customers = $customers->keyBy('id')->all();
+
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
             'payment_editable_only' => $sale->convertFromQuo() || isFinanceOnly(),
             'is_view' => $is_view,
             'has_pending_approval' => $has_pending_approval,
-            'is_sale_coordinator_only' => isSalesCoordinatorOnly()
+            'is_sale_coordinator_only' => isSalesCoordinatorOnly(),
+            'customers' => $customers,
         ]);
     }
 
