@@ -4105,7 +4105,7 @@ class SaleController extends Controller
 
     public function getNextSku(Request $req)
     {
-        $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('is_draft', false)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
+        $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
         $next_sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, $req->is_hi_ten);
 
         return $next_sku;
