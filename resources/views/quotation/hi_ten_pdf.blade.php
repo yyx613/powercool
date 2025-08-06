@@ -18,6 +18,10 @@
         left: 0px;
         right: 0px;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -45,10 +49,16 @@
     <main>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
             <tr>
-                <td colspan="2"
-                    style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: right;">
-                    QUOTATION</td>
-                <td style="font-size: 14px; font-weight: 700; width: 35%; padding: 15px 0 10px 0; text-align: center;">
+                <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;"
+                    id="invalid">
+                    {{ $sale->status == 3 ? 'CANCELLED' : '' }}
+                </td>
+                <td
+                    style="font-size: 18px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
+                    QUOTATION
+                </td>
+                <td
+                    style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 15px 0 10px 0; text-align: center;">
                     No. :
                     {{ $sale->sku }}</td>
             </tr>

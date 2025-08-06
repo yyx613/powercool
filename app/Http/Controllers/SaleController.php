@@ -176,7 +176,7 @@ class SaleController extends Controller
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
-                'can_view_pdf' => $record->is_draft == false && !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED, Sale::STATUS_APPROVAL_REJECTED]),
+                'can_view_pdf' => $record->is_draft == false && !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_APPROVAL_REJECTED]),
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 // 'can_delete' => hasPermission('sale.quotation.delete'),
                 'can_delete' => false,

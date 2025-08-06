@@ -18,6 +18,10 @@
         left: 0px;
         right: 0px;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -72,11 +76,19 @@
 
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
             <tr>
-                <td style="font-size: 18px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;"
-                    colspan="2">QUOTATION</td>
+                <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;"
+                    id="invalid">
+                    {{ $sale->status == 3 ? 'CANCELLED' : '' }}
+                </td>
+                <td
+                    style="font-size: 18px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
+                    QUOTATION</td>
+                <td
+                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
+                </td>
             </tr>
             <tr>
-                <td style="padding: 0 35px 0 0;" colspan="2">
+                <td style="padding: 0 35px 0 0;" colspan="3">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px; width: 50%;" colspan="2">
@@ -98,7 +110,7 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 25px 0 0 0;">Thank you for your inquiry. We are pleased to submit
+                <td style="font-size: 14px; padding: 25px 0 0 0;" colspan="2">Thank you for your inquiry. We are pleased to submit
                     our
                     quote as follows:</td>
                 <td style="font-size: 14px; padding: 25px 0 0 0;">Store: {{ $sale->store }}</td>
