@@ -223,7 +223,7 @@
                     'sale_id': SALE != null ? SALE.id : null,
                     'quo_id': QUO != null ? QUO.id : null,
                     'sale': $('select[name="sale"]').val(),
-                    'customer': $('select[name="customer"]').val(),
+                    'customer': $('input[name="customer"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
                     'new_billing_addres1': $('#new-billing-address input[name="address1"]').val(),

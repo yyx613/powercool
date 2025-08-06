@@ -10,7 +10,7 @@
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
-        <div class="flex flex-col">
+        {{-- <div class="flex flex-col">
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')"
@@ -22,7 +22,21 @@
                 @endforeach
             </x-app.input.select2>
             <x-app.message.error id="customer_err" />
+        </div> --}}
+        <div class="flex flex-col">
+            <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
+                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <div class="relative">
+                <x-app.input.input name="customer_label" id="customer_label" :hasError="$errors->has('customer')" />
+                <ul class="absolute top-[45px] shadow bg-white w-full hidden z-50 max-h-40 overflow-y-auto"
+                    id="customer_label_hints">
+                </ul>
+            </div>
+            <input type="hidden" name="customer"
+                value="{{ isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null) }}" />
+            <x-app.message.error id="customer_err" />
         </div>
+
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -119,42 +133,94 @@
         CUSTOMERS = @json($customers ?? []);
 
         $(document).ready(function() {
-            $('select[name="customer"]').trigger('change')
-            $('select[name="billing_address"]').trigger('change')
-            $('select[name="delivery_address"]').trigger('change')
+            if (SALE != null) {
+                if (SALE.status == 4) {
+                    $('select[name="status"]').attr('disabled', true)
+                    $('select[name="status"]').attr('aria-disabled', true)
 
-            if (SALE != null && SALE.status == 4) { // Pending Approval
-                $('select[name="status"]').attr('disabled', true)
-                $('select[name="status"]').attr('aria-disabled', true)
+                }
+                if (CUSTOMERS[SALE.customer_id] != undefined) {
+                    let element = CUSTOMERS[SALE.customer_id]
+
+                    $('input[name="customer_label"]').val(
+                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
+                    hintClickedCallback(SALE.customer_id,
+                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
+                }
+                $('select[name="billing_address"]').trigger('change')
+                $('select[name="delivery_address"]').trigger('change')
             }
 
             INIT_EDIT = false
         })
 
-        $('select[name="customer"]').on('change', function() {
+        $('select[name="billing_address"]').on('change', function() {
             let val = $(this).val()
 
-            $('select[name="sale"]').val(null).trigger('change')
+            if (val == 'null' || val == null) {
+                $('#new-billing-address input').attr('disabled', false)
+                $('#new-billing-address input').attr('aria-disabled', false)
+                $('#new-billing-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-billing-address input').val(null)
+                $('#new-billing-address input').attr('disabled', true)
+                $('#new-billing-address input').attr('aria-disabled', true)
+                $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('select[name="delivery_address"]').on('change', function() {
+            let val = $(this).val()
 
-            for (let i = 0; i < CUSTOMERS.length; i++) {
-                const element = CUSTOMERS[i];
+            if (val == 'null' || val == null) {
+                $('#new-delivery-address input').attr('disabled', false)
+                $('#new-delivery-address input').attr('aria-disabled', false)
+                $('#new-delivery-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-delivery-address input').val(null)
+                $('#new-delivery-address input').attr('disabled', true)
+                $('#new-delivery-address input').attr('aria-disabled', true)
+                $('#new-delivery-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('body').on('click', '.hints', function() {
+            hintClickedCallback($(this).data('customer-id'), $(this).text())
+        })
+        $('input[name="customer_label"]').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
+            $('#customer_label_hints').empty()
+            let val = $('input[name="customer_label"]').val()
 
-                if (element.id == val) {
-                    $('input[name="attention_to"]').val(element.name)
+            if (val == '') return
 
-                    if (INIT_EDIT) {
-                        $('select[name="sale"]').val(SALE.sale_id).trigger('change')
-                        $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
-                    } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
-                        $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
-                    }
+            getCustomer(val)
 
-                    break
-                }
+            for (const [key, element] of Object.entries(CUSTOMERS)) {
+                // Append to customer label hints
+                $('#customer_label_hints').append(
+                    `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
+                )
+                $('#customer_label_hints').removeClass('hidden')
+            }
+        }))
+
+
+        function hintClickedCallback(customer_id, customer_label) {
+            $('#customer_label_hints').addClass('hidden')
+            $('input[name="customer_label"]').val(customer_label)
+            $('input[name="customer"]').val(customer_id)
+
+            var element = CUSTOMERS[customer_id]
+
+            $('input[name="attention_to"]').val(element.name)
+
+            if (INIT_EDIT) {
+                $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
+            } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
             }
 
             let url = '{{ route('customer.get_location') }}'
-            url = `${url}?customer_id=${val}`
+            url = `${url}?customer_id=${customer_id}`
 
             $.ajax({
                 headers: {
@@ -223,35 +289,24 @@
                     }
                 },
             });
-        })
-        $('select[name="billing_address"]').on('change', function() {
-            let val = $(this).val()
+        }
 
-            if (val == 'null' || val == null) {
-                $('#new-billing-address input').attr('disabled', false)
-                $('#new-billing-address input').attr('aria-disabled', false)
-                $('#new-billing-address input').parent().attr('aria-disabled', false)
-            } else {
-                $('#new-billing-address input').val(null)
-                $('#new-billing-address input').attr('disabled', true)
-                $('#new-billing-address input').attr('aria-disabled', true)
-                $('#new-billing-address input').parent().attr('aria-disabled', true)
-            }
-        })
-        $('select[name="delivery_address"]').on('change', function() {
-            let val = $(this).val()
+        function getCustomer(keyword) {
+            let url = '{{ route('customer.get_by_keyword') }}'
+            url = `${url}?keyword=${keyword}&is_edit=${SALE != null}`
 
-            if (val == 'null' || val == null) {
-                $('#new-delivery-address input').attr('disabled', false)
-                $('#new-delivery-address input').attr('aria-disabled', false)
-                $('#new-delivery-address input').parent().attr('aria-disabled', false)
-            } else {
-                $('#new-delivery-address input').val(null)
-                $('#new-delivery-address input').attr('disabled', true)
-                $('#new-delivery-address input').attr('aria-disabled', true)
-                $('#new-delivery-address input').parent().attr('aria-disabled', true)
-            }
-        })
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    CUSTOMERS = res.customers
+                },
+            });
+        }
 
         // $('#quotation-form #submit-btn').on('click', function(e) {
         //     e.preventDefault()
