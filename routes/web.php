@@ -246,6 +246,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getData')->name('get_data');
             Route::get('/create', 'create')->name('create')->middleware(['can:sale.quotation.create']);
             Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['can:sale.quotation.edit']);
+            Route::get('/view/{sale}', 'edit')->name('view');
             Route::get('/cancel/{sale}', 'cancel')->name('cancel');
             Route::get('/reuse/{sale}', 'reuse')->name('reuse');
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.quotation.delete']);

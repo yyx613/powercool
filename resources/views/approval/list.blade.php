@@ -188,6 +188,7 @@
                     'orderable': false,
                     render: function(data, type, row) {
                         let display = data
+                        display = `${display}<br>`
                         if (row.remark != null) {
                             display = `${display}<br><span class="text-xs">Reason: ${row.remark}</span>`
                         }

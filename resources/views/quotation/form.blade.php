@@ -23,11 +23,14 @@
             @include('quotation.form_step.product_details')
             @include('quotation.form_step.remarks')
 
-            @if (!isset($has_pending_approval) || (isset($has_pending_approval) && $has_pending_approval == false))
+            @if (!isset($is_view) || (isset($is_view) && $is_view != true))
                 <div class="flex justify-end gap-x-4">
                     @if (isset($sale) && $sale->status == 2)
                         <span
                             class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
+                    @elseif (isset($sale) && $sale->status == 3)
+                        <span
+                            class="text-sm text-red-500 border border-red-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
                     @else
                         <x-app.button.submit id="save-as-draft-btn"
                             class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>

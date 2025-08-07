@@ -65,7 +65,7 @@
     </body>
 
     <script>
-        const DEBOUNCE_DURATION = 500 // milliseconds
+        const DEBOUNCE_DURATION = 300 // milliseconds
         moment.tz.setDefault("Asia/Kuala_Lumpur")
 
         var datepickerParam = {

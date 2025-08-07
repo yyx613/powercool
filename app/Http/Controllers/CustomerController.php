@@ -6,6 +6,7 @@ use App\Exports\CustomerExport;
 use App\Models\Approval;
 use App\Models\Attachment;
 use App\Models\Branch;
+use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
 use App\Models\CustomerSaleAgent;
@@ -448,6 +449,8 @@ class CustomerController extends Controller
                 }
             }
             if ($approval_required) {
+                $terms = CreditTerm::whereIn('id', $req->credit_term)->pluck('name')->toArray();
+
                 $approval = Approval::create([
                     'object_type' => Customer::class,
                     'object_id' => $customer->id,
@@ -455,7 +458,7 @@ class CustomerController extends Controller
                     'data' =>  json_encode([
                         'is_credit_term' => true,
                         'to_credit_term_ids' => $req->credit_term,
-                        'description' => 'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed',
+                        'description' => 'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to (' . join(",", $terms) . ')',
                     ])
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);

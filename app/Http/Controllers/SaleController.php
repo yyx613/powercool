@@ -164,6 +164,13 @@ class SaleController extends Controller
         foreach ($records_paginator as $record) {
             $owned = isSuperAdmin() || Auth::user()->id == $record->created_by;
 
+            $is_approval_cancellation = false;
+            if ($record->status == Sale::STATUS_APPROVAL_PENDING) {
+                $is_approval_cancellation = Approval::where('object_type', Sale::class)->where('object_id', $record->id)
+                    ->where('status', Approval::STATUS_PENDING_APPROVAL)
+                    ->where('data', 'like', '%is_quo%')->where('data', 'like', '%is_cancellation%')->exists();
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -182,6 +189,8 @@ class SaleController extends Controller
                 'can_delete' => false,
                 'can_cancel' => !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED]),
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
+                'view_only' => in_array($record->status, [Sale::STATUS_CANCELLED, Sale::STATUS_CONVERTED, Sale::STATUS_APPROVAL_PENDING]),
+                'is_approval_cancellation' => $is_approval_cancellation
             ];
         }
 
@@ -208,12 +217,15 @@ class SaleController extends Controller
 
     public function edit(Sale $sale)
     {
+        $is_view = false;
+        if (str_contains(Route::currentRouteName(), 'view')) {
+            $is_view = true;
+        }
+
         $owned = isSuperAdmin() || Auth::user()->id == $sale->created_by;
         if (!$owned) {
             abort(403);
         }
-
-        $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
 
         $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
             ->where('id', $sale->customer_id)
@@ -222,8 +234,8 @@ class SaleController extends Controller
 
         return view('quotation.form', [
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
-            'has_pending_approval' => $has_pending_approval,
             'customers' => $customers,
+            'is_view' => $is_view,
         ]);
     }
 
@@ -275,7 +287,7 @@ class SaleController extends Controller
                 'data' =>  json_encode([
                     'is_quo' => true,
                     'is_reuse' => true,
-                    'description' => Auth::user()->name . ' has requested to reuse quotation (' . $sale->sku . ')',
+                    'description' => Auth::user()->name . ' has requested to reuse quotation.',
                 ])
             ]);
             (new Branch)->assign(Approval::class, $approval->id);
@@ -1451,8 +1463,8 @@ class SaleController extends Controller
             if ($res->product_ids) {
                 $data['product_ids'] = $res->product_ids;
             }
-            $has_rejected = SaleProduct::where('sale_id', $req->sale_id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
-            if (isset($pending_approval_alrdy) && $pending_approval_alrdy == false && !$has_rejected) {
+            $has_pending_and_rejected = SaleProduct::where('sale_id', $req->sale_id)->whereIn('status', [SaleProduct::STATUS_APPROVAL_PENDING, SaleProduct::STATUS_APPROVAL_REJECTED])->exists();
+            if (isset($pending_approval_alrdy) && $pending_approval_alrdy == false && !$has_pending_and_rejected) {
                 Sale::where('id', $req->sale_id)->update([
                     'status' => Sale::STATUS_ACTIVE
                 ]);
@@ -1719,6 +1731,13 @@ class SaleController extends Controller
                     }
 
                     if ($approval_required) {
+                        $customer = Customer::where('id', $sale->customer_id)->first();
+
+                        $terms = [];
+                        for ($i = 0; $i < count($customer->creditTerms); $i++) {
+                            $terms[] = $customer->creditTerms[$i]->creditTerm->name;
+                        }
+
                         $approval = Approval::create([
                             'object_type' => Sale::class,
                             'object_id' => $sale->id,
@@ -1726,15 +1745,19 @@ class SaleController extends Controller
                             'data' => $req->type == 'quo' ? json_encode([
                                 'is_quo' => true,
                                 'is_payment_method' => true,
-                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
+                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term. (' . join(",", $terms) . ')',
                             ]) : json_encode([
                                 'is_payment_method' => true,
-                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term.',
+                                'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term. (' . join(",", $terms) . ')',
                             ])
                         ]);
                         (new Branch)->assign(Approval::class, $approval->id);
 
+                        if ($sale->payment_method_status == Sale::STATUS_APPROVAL_REJECTED) {
+                            $sale->payment_method_revised = true;
+                        }
                         $sale->status = Sale::STATUS_APPROVAL_PENDING;
+                        $sale->payment_method_status = Sale::STATUS_APPROVAL_PENDING;
                         $sale->save();
                     }
                 }
