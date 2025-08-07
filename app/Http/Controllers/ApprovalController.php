@@ -328,7 +328,7 @@ class ApprovalController extends Controller
                 $data = json_decode($approval->data);
 
                 if (isset($data->is_cancellation)) {
-                    $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                    $obj->status = Sale::STATUS_ACTIVE;
                     $obj->save();
                 } else if (isset($data->is_reuse)) {
                     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
