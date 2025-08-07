@@ -49,9 +49,8 @@
     <main>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
             <tr>
-                <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;"
-                    id="invalid">
-                    {{ $sale->status == 3 ? 'CANCELLED' : '' }}
+                <td
+                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
                 <td
                     style="font-size: 18px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
@@ -62,6 +61,20 @@
                     No. :
                     {{ $sale->sku }}</td>
             </tr>
+            @if ($sale->status == 3)
+                <tr>
+                    <td
+                        style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
+                    </td>
+                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
+                        id="invalid">
+                        CANCELLED
+                    </td>
+                    <td
+                        style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td colspan="2" style="padding: 0 35px 0 0;">
                     <table style="width: 100%; border-collapse: collapse;">

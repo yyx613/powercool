@@ -116,6 +116,24 @@
                     <option value="{{ $method->id }}" @selected(old('payment_method', isset($replicate) ? $replicate->payment_method : (isset($sale) ? $sale->payment_method : null)) == $method->id)>{{ $method->name }}</option>
                 @endforeach
                 </x-app.input.selec2>
+                @if (isset($sale) && $sale->payment_method_status != null)
+                    <div class="col-span-4 mt-1.5">
+                        @if ($sale->payment_method_revised == 1)
+                            <span
+                                class="border rounded border-blue-500 text-blue-500 text-xs font-medium px-1 py-0.5">{{ __('Revised') }}</span>
+                        @endif
+                        @if ($sale->payment_method_status == 4)
+                            <span
+                                class="border rounded border-slate-500 text-slate-500 text-xs font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
+                        @elseif ($sale->payment_method_status == 5)
+                            <span
+                                class="border rounded border-green-600 text-green-600 text-xs font-medium px-1 py-0.5">{{ __('Approved') }}</span>
+                        @elseif ($sale->payment_method_status == 7)
+                            <span
+                                class="border rounded border-red-600 text-red-600 text-xs font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
+                        @endif
+                    </div>
+                @endif
                 <div class="hidden mt-1" id="credit-term-hint-container">
                     <span class="text-xs font-medium">Credit Terms: </span>
                     <span class="text-xs text-slate-600" id="value"></span>
