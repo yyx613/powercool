@@ -13,7 +13,7 @@
                         <path
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm1,15V7c0-.404-.244-.77-.617-.924-.375-.157-.805-.069-1.09,.217l-2.444,2.444c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l.737-.737v7.586c0,.553,.448,1,1,1s1-.447,1-1Z" />
                     </svg>
-                    <p class="text-xs">{{ $selected_customer->company_name }} - {{ $selected_customer->name }}</p>
+                    <p class="text-xs">{{ $selected_customer->company_name }} - {{ $selected_customer->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</p>
                 </div>
             @endif
             @if ($step > 2 && isset($selected_salesperson) && $selected_salesperson != null)
@@ -158,7 +158,7 @@
                                     data-id="{{ $cus->id }}">
                                     <a href="{{ route('sale_order.to_delivery_order', ['cus' => $cus->id]) }}"
                                         class="text-sm flex items-center justify-between p-2 font-semibold">
-                                        {{ $cus->company_name }} - {{ $cus->name }}
+                                        {{ $cus->company_name }} - {{ $cus->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                             viewBox="0 0 24 24" width="512" height="512">
                                             <path

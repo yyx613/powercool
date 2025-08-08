@@ -331,7 +331,7 @@ class ApprovalController extends Controller
                     $obj->status = Sale::STATUS_ACTIVE;
                     $obj->save();
                 } else if (isset($data->is_reuse)) {
-                    $obj->status = Sale::STATUS_APPROVAL_REJECTED;
+                    $obj->status = Sale::STATUS_CANCELLED;
                     $obj->save();
                 } else if (isset($data->is_payment_method)) {
                     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
