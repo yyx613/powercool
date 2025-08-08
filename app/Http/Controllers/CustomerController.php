@@ -208,9 +208,19 @@ class CustomerController extends Controller
 
     public function delete(Customer $customer)
     {
-        $customer->delete();
+        $approval = Approval::create([
+            'object_type' => Customer::class,
+            'object_id' => $customer->id,
+            'status' => Approval::STATUS_PENDING_APPROVAL,
+            'data' =>  json_encode([
+                'is_delete' => true,
+                'customer_id' => $customer->id,
+                'description' => Auth::user()->name . ' has requested to delete the debtor, ' . $customer->company_name,
+            ])
+        ]);
+        (new Branch)->assign(Approval::class, $approval->id);
 
-        return back()->with('success', 'Customer deleted');
+        return back()->with('success', 'Delete debtor request is submitted');
     }
 
     public function upsertInfo(Request $req)
@@ -730,7 +740,7 @@ class CustomerController extends Controller
     {
         try {
             $keyword = $req->keyword;
-            $is_edit = $req->is_edit;
+            $is_edit = $req->boolean('is_edit');
 
             if (isSalesOnly()) {
                 $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
@@ -765,6 +775,7 @@ class CustomerController extends Controller
                 'customers' => $customers,
             ], 200);
         } catch (\Throwable $th) {
+            report($th);
             return response()->json([
                 'msg' => 'Something went wrong'
             ], 500);

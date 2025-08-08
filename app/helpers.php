@@ -443,21 +443,9 @@ if (! function_exists('getCurrentUserBranch')) {
 }
 
 if (! function_exists('isHiTen')) {
-    /**
-     * @param  Collection<Product>  $products
-     */
-    function isHiTen(Collection $products): ?int
+    function isHiTen(int $company_group): bool
     {
-        $is_hi_ten = false;
-
-        for ($i = 0; $i < count($products); $i++) {
-            if ($products[$i]->type == Product::TYPE_PRODUCT) {
-                $is_hi_ten = true;
-                break;
-            }
-        }
-
-        return $is_hi_ten;
+        return $company_group == 2; 
     }
 }
 
