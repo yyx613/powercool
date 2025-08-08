@@ -145,15 +145,15 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                 <option value="">{{ __('Select a status') }}</option>
-                @if (isset($replicate) ? $replicate->status == 4 : isset($sale) && $sale->status == 4)
+                @if (isset($sale) && $sale->status == 4)
                     <option value="4" selected>{{ __('Pending Approval') }}</option>
-                @elseif (isset($replicate) ? $replicate->status == 7 : isset($sale) && $sale->status == 7)
+                @elseif (isset($sale) && $sale->status == 7)
                     <option value="7" selected>{{ __('Rejected') }}</option>
-                @elseif (isset($replicate) ? $replicate->status == 5 : isset($sale) && $sale->status == 5)
+                @elseif (isset($sale) && $sale->status == 5)
                     <option value="5" selected>{{ __('Approved') }}</option>
                 @else
-                    <option value="1" @selected(old('status', isset($replicate) ? $replicate->status : (isset($sale) ? $sale->status : null)) == 1)>{{ __('Active') }}</option>
-                    <option value="0" @selected(old('status', isset($replicate) ? $replicate->status : (isset($sale) ? $sale->status : null)) === 0)>{{ __('Inactive') }}</option>
+                    <option value="1" @selected(old('status', isset($replicate) ? 1 : (isset($sale) ? $sale->status : null)) == 1)>{{ __('Active') }}</option>
+                    <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
                 @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />

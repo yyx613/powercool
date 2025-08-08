@@ -267,6 +267,10 @@
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
                 placeholder: "{!! __('Select a product') !!}"
             })
+            // Build selling price select2
+            $(`.items[data-id="${ITEMS_COUNT}"] select[name="selling_price[]"]`).select2({
+                placeholder: "{!! __('Select a selling price') !!}"
+            })
 
             buildWarrantyPeriodSelect2(ITEMS_COUNT) // Build warranty period select2
             if (!PRODUCT_DETAILS_INIT_EDIT) {

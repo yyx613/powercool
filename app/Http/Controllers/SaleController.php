@@ -126,9 +126,10 @@ class SaleController extends Controller
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sales.sku', 'like', '%' . $keyword . '%')
                     ->orWhere('sales.created_at', 'like', '%' . $keyword . '%')
+                    ->orWhere('sales.open_until', 'like', '%' . $keyword . '%')
                     ->orWhere('customers.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('customers.name', 'like', '%' . $keyword . '%')
-                    ->orWhere('users.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('customers.company_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sales_agents.name', 'like', '%' . $keyword . '%')
                     ->orWhere('currencies.name', 'like', '%' . $keyword . '%');
             });
         }
@@ -139,7 +140,7 @@ class SaleController extends Controller
                 1 => 'sales.created_at',
                 2 => 'sales.open_until',
                 3 => 'customers.sku',
-                4 => 'customers.name',
+                4 => 'customers.company_name',
                 5 => 'sales_agents.name',
                 7 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
                 8 => 'sales.status',
@@ -621,8 +622,8 @@ class SaleController extends Controller
                 $q->where('sales.sku', 'like', '%' . $keyword . '%')
                     ->orWhere('sales.created_at', 'like', '%' . $keyword . '%')
                     ->orWhere('customers.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('customers.name', 'like', '%' . $keyword . '%')
-                    ->orWhere('users.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('customers.company_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sales_agents.name', 'like', '%' . $keyword . '%')
                     ->orWhere('currencies.name', 'like', '%' . $keyword . '%');
 
                 for ($i = 0; $i < count($do_ids); $i++) {
@@ -636,12 +637,12 @@ class SaleController extends Controller
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
                 2 => 'customers.sku',
-                4 => 'customers.name',
-                5 => 'sales_agents.name',
-                8 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
-                9 => DB::raw('SUM(sale_payment_amounts.amount)'),
-                10 => 'sales.payment_status',
-                11 => 'sales.status',
+                5 => 'customers.name',
+                6 => 'sales_agents.name',
+                9 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
+                10 => DB::raw('SUM(sale_payment_amounts.amount)'),
+                11 => 'sales.payment_status',
+                12 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -666,6 +667,7 @@ class SaleController extends Controller
                 'doc_no' => $record->doc_no,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
                 'debtor_code' => $record->debtor_code,
+                'transfer_from' => implode(', ', Sale::where('convert_to', $record->id)->pluck('sku')->toArray()),
                 'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,

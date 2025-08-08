@@ -280,6 +280,10 @@
             if (!INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
+            // Build selling price select2
+            $(`.items[data-id="${ITEMS_COUNT}"] select[name="selling_price[]"]`).select2({
+                placeholder: "{!! __('Select a selling price') !!}"
+            })
 
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass(
                 'border border-gray-300 rounded-md overflow-hidden')
