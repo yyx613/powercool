@@ -2,14 +2,29 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <div>
-            <x-app.page-title
-                url="{{ route('sale_order.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Sale Order - ' : 'Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
-        </div>
+        <x-app.page-title
+            url="{{ route('sale_order.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Sale Order - ' : 'Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
+    </div>
+    <div class="mb-2">
         @if (!isset($sale))
-            <div class="flex flex-col items-end">
+            <div class="flex flex-col">
                 <span class="text-xs text-slate-600 leading-none">{{ __('Potential ID') }}</span>
                 <span class="text-md font-semibold" id="next-sku">-</span>
+            </div>
+        @else
+            <div class="flex gap-4">
+                @if (isset($transfer_to) && $transfer_to != null)
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-600 leading-none">{{ __('Transfer To') }}</span>
+                        <span class="text-md font-semibold">{{ $transfer_to }}</span>
+                    </div>
+                @endif
+                @if (isset($transfer_from) && $transfer_from != null)
+                    <div class="flex flex-col">
+                        <span class="text-xs text-slate-600 leading-none">{{ __('Transfer From') }}</span>
+                        <span class="text-md font-semibold">{{ $transfer_from }}</span>
+                    </div>
+                @endif
             </div>
         @endif
     </div>
@@ -62,16 +77,20 @@
                     .attr('disabled', true)
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
                     .addClass('!bg-gray-100')
-                $('#quotation-details-container input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"]')
+                $('#new-billing-address input, #new-delivery-address input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"]')
                     .parent().addClass('!bg-gray-100')
+                $('#quotation-details-container #company-container div').addClass('!bg-gray-100')
+                $('#quotation-details-container input[name="reference"]').parent().addClass('!bg-gray-100')
                 $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
                     .css('backgroundColor', '#eee')
 
                 if (IS_SALE_COORDINATOR_ONLY == true) {
                     $('#payment-details-container input, #payment-details-container select').attr('disabled', true)
-                    $('#payment-details-container input, #payment-details-container select').addClass('!bg-gray-100')
+                    $('#payment-details-container input, #payment-details-container select').addClass(
+                        '!bg-gray-100')
                     $('#payment-details-container input').parent().addClass('!bg-gray-100')
-                    $('#payment-details-container .select2, #payment-details-container .select2-selection--multiple').css('backgroundColor', '#eee')
+                    $('#payment-details-container .select2, #payment-details-container .select2-selection--multiple')
+                        .css('backgroundColor', '#eee')
                 }
             }
             // if (SALE != null && SALE.is_draft == true) {

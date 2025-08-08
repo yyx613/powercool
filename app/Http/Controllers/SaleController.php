@@ -91,6 +91,7 @@ class SaleController extends Controller
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
                 'sales.open_until AS validity',
+                'sales.store AS store',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
@@ -139,11 +140,11 @@ class SaleController extends Controller
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
                 2 => 'sales.open_until',
-                3 => 'customers.sku',
-                4 => 'customers.company_name',
-                5 => 'sales_agents.name',
-                7 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
-                8 => 'sales.status',
+                4 => 'customers.sku',
+                5 => 'customers.company_name',
+                6 => 'sales_agents.name',
+                9 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
+                10 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -177,9 +178,11 @@ class SaleController extends Controller
                 'doc_no' => $record->doc_no,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
                 'validity' => Carbon::parse($record->validity)->format('d M Y'),
+                'transfer_to' => implode(', ', Sale::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,
+                'store' => $record->store,
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
@@ -233,10 +236,17 @@ class SaleController extends Controller
             ->orderBy('id', 'desc')->get();
         $customers = $customers->keyBy('id')->all();
 
+        if ($sale->convert_to == null) {
+            $transfer_to = null;
+        } else {
+            $transfer_to = implode(', ', Sale::whereIn('id', explode(',', $sale->convert_to))->pluck('sku')->toArray());
+        }
+
         return view('quotation.form', [
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods'),
             'customers' => $customers,
             'is_view' => $is_view,
+            'transfer_to' => $transfer_to
         ]);
     }
 
@@ -336,12 +346,6 @@ class SaleController extends Controller
             return abort(403);
         }
 
-        $products = collect();
-        $sps = $sale->products;
-        for ($i = 0; $i < count($sps); $i++) {
-            $products->push($sps[$i]->product);
-        }
-
         $sale->load('saleperson');
 
         $show_payment_term = in_array($sale->payment_method, getPaymentMethodCreditTermIds());
@@ -350,7 +354,7 @@ class SaleController extends Controller
             $payment_term = join(', ', CreditTerm::whereIn('id', $ct_ids)->pluck('name')->toArray());
         }
 
-        $pdf = Pdf::loadView('quotation.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('quotation.' . (isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,
@@ -382,7 +386,7 @@ class SaleController extends Controller
 
             $quotations = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>', now()->format('Y-m-d'))
+                ->where('open_until', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -401,7 +405,7 @@ class SaleController extends Controller
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>', now()->format('Y-m-d'))
+                ->where('open_until', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -418,7 +422,7 @@ class SaleController extends Controller
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>', now()->format('Y-m-d'))
+                ->where('open_until', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -468,6 +472,7 @@ class SaleController extends Controller
                 'reference' => implode(',', $references->toArray()),
                 'status' => true,
                 'type' => 'so',
+                'store' => count($quos) > 1 ? null : (count($quos) > 0 ? $quos[0]->store : null),
                 'report_type' => $req->report_type,
                 'product_id' => $products->map(function ($q) {
                     return $q->product_id;
@@ -580,6 +585,7 @@ class SaleController extends Controller
                 'sales.id AS id',
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
+                'sales.store AS store',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
@@ -636,13 +642,13 @@ class SaleController extends Controller
             $map = [
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
-                2 => 'customers.sku',
+                4 => 'customers.sku',
                 5 => 'customers.name',
                 6 => 'sales_agents.name',
-                9 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
-                10 => DB::raw('SUM(sale_payment_amounts.amount)'),
-                11 => 'sales.payment_status',
-                12 => 'sales.status',
+                10 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
+                11 => DB::raw('SUM(sale_payment_amounts.amount)'),
+                12 => 'sales.payment_status',
+                13 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -671,6 +677,7 @@ class SaleController extends Controller
                 'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_name' => $record->debtor_name,
                 'agent' => $record->agent,
+                'store' => $record->store,
                 'curr_code' => $record->curr_code ?? null,
                 'paid' => number_format($record->paid_amount, 2),
                 'total' => number_format($record->total_amount, 2),
@@ -748,6 +755,13 @@ class SaleController extends Controller
             ->orderBy('id', 'desc')->get();
         $customers = $customers->keyBy('id')->all();
 
+        $transfer_from = implode(', ', Sale::where('convert_to', $sale->id)->pluck('sku')->toArray());
+        if ($sale->convert_to == null) {
+            $transfer_to = null;
+        } else {
+            $transfer_to = implode(', ', DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->pluck('sku')->toArray());
+        }
+
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
@@ -756,6 +770,8 @@ class SaleController extends Controller
             'has_pending_approval' => $has_pending_approval,
             'is_sale_coordinator_only' => isSalesCoordinatorOnly(),
             'customers' => $customers,
+            'transfer_from' => $transfer_from,
+            'transfer_to' => $transfer_to,
         ]);
     }
 
@@ -833,14 +849,12 @@ class SaleController extends Controller
             return abort(403);
         }
 
-        $products = collect();
         $sps = $sale->products()->withTrashed()->get();
         for ($i = 0; $i < count($sps); $i++) {
             $pc_ids = $sps[$i]->children->pluck('product_children_id');
             $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
-            $products->push($sps[$i]->product);
         }
-        $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('sale_order.' . (isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sps,
@@ -1129,7 +1143,16 @@ class SaleController extends Controller
             }
 
             // Prepare data
-            $is_hi_ten = isHiTen($products);
+            $so_ids = Session::get('convert_sale_order_id');
+            $sales = Sale::whereIn('id', $so_ids)->get();
+
+            $is_hi_ten = false;
+            for ($i = 0; $i < count($sales); $i++) {
+                $is_hi_ten = isHiTen($sales[$i]->customer->company_group);
+                if ($is_hi_ten == true) {
+                    break;
+                }
+            }
             $existing_skus = DeliveryOrder::withoutGlobalScope(BranchScope::class)->withoutGlobalScope(ApprovedScope::class)->pluck('sku')->toArray();
             $sku = generateSku('DO', $existing_skus, $is_hi_ten);
             $filename = str_replace('/', '-', $sku) . '.pdf';
@@ -1652,9 +1675,9 @@ class SaleController extends Controller
                 if ($so_sku_to_use != null) {
                     $sku = $so_sku_to_use;
                 } else {
-                    $products = Product::whereIn('id', $req->product_id)->get();
+                    $company_group = Customer::where('id', $req->customer)->value('company_group');
                     $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
-                    $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($products));
+                    $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($company_group));
                 }
 
                 $sales_id = DB::table('sales_sales_agents')->where('sales_agent_id', $req->sale)->value('sales_id');
@@ -2485,17 +2508,11 @@ class SaleController extends Controller
 
     private function convertToInvoice(array $do_ids, int $customer_id, ?int $term_id)
     {
-        // $do_ids = explode(',', $req->do);
         $dos = DeliveryOrder::withoutGlobalScope(ApprovedScope::class)->whereIn('id', $do_ids)->get();
         try {
             DB::beginTransaction();
 
-            $products = collect();
-            $sps = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
-            for ($i = 0; $i < count($sps); $i++) {
-                $products->push($sps[$i]->product);
-            }
-            $is_hi_ten = isHiTen($products);
+            $is_hi_ten = isHiTen(Customer::where('id', $customer_id)->value('company_group'));
 
             // Create record
             $existing_skus = Invoice::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
@@ -3822,13 +3839,7 @@ class SaleController extends Controller
 
     public function pdfPendingOrder(Sale $sale)
     {
-        $products = collect();
-        $sps = $sale->products;
-        for ($i = 0; $i < count($sps); $i++) {
-            $products->push($sps[$i]->product);
-        }
-
-        $pdf = Pdf::loadView('sale_order.' . (isHiTen($products) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('sale_order.' . (isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sale->products,

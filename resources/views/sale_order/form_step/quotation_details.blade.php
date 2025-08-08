@@ -26,7 +26,7 @@
         <div class="flex flex-col">
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <div class="relative">
+            <div class="relative" id="company-container">
                 <x-app.input.input name="customer_label" id="customer_label" :hasError="$errors->has('customer')" />
                 <ul class="absolute top-[45px] shadow bg-white w-full hidden z-50 max-h-40 overflow-y-auto"
                     id="customer_label_hints">
@@ -201,7 +201,6 @@
                 $('#customer_label_hints').removeClass('hidden')
             }
         }))
-
 
         function hintClickedCallback(customer_id, customer_label) {
             $('#customer_label_hints').addClass('hidden')

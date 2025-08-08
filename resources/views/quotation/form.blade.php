@@ -2,18 +2,23 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <div>
-            <x-app.page-title
-                url="{{ route('quotation.index') }}">{{ isset($sale) ? __('Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
-        </div>
+        <x-app.page-title
+            url="{{ route('quotation.index') }}">{{ isset($sale) ? __('Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
+    </div>
+    @include('components.app.alert.parent')
+    <div class="mb-2">
         @if (!isset($sale))
-            <div class="flex flex-col items-end">
+            <div class="flex flex-col">
                 <span class="text-xs text-slate-600 leading-none">{{ __('Potential ID') }}</span>
                 <span class="text-md font-semibold" id="next-sku">-</span>
             </div>
+        @elseif (isset($transfer_to) && $transfer_to != null)
+            <div class="flex flex-col">
+                <span class="text-xs text-slate-600 leading-none">{{ __('Transfer To') }}</span>
+                <span class="text-md font-semibold">{{ $transfer_to }}</span>
+            </div>
         @endif
     </div>
-    @include('components.app.alert.parent')
     <div class="grid gap-y-8">
         <form action="{{ isset($sale) ? route('sale.upsert_details', ['sale' => $sale]) : route('sale.upsert_details') }}"
             method="POST" enctype="multipart/form-data" class="flex flex-col gap-4">
