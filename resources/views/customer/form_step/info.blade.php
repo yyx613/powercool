@@ -381,8 +381,6 @@
 
             if (val == 2) {
                 $('input[name="tin_number"]').val('EI000000000020')
-            } else {
-                $('input[name="tin_number"]').val(null)
             }
         })
         $('select[name="msic_code"]').on('change', function() {

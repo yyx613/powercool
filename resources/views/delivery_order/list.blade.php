@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Delivery Order')
 
 @vite(['resources/css/jquery.dataTables.min.css'])
 
@@ -189,7 +190,7 @@
                     "width": "10%",
                     "targets": 5,
                     render: function(data, type, row) {
-                        return data
+                        return `${row.debtor_name}, ${row.debtor_company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
                     }
                 },
                 {

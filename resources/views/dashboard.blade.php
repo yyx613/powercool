@@ -1,11 +1,13 @@
 @extends('layouts.app')
+@section('title', 'Dashboard')
 
 @section('content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-semibold">{{ __('Dashboard') }}</h1>
         <div class="flex flex-col">
             <span class="text-2xl font-semibold">{{ __(now()->format('l')) }}</span>
-            <span class="text-lg leading-none">{{ now()->format('d ') . __(now()->format('F')) . now()->format(' Y, H:i A') }}</span>
+            <span
+                class="text-lg leading-none">{{ now()->format('d ') . __(now()->format('F')) . now()->format(' Y, H:i A') }}</span>
         </div>
     </div>
     <!-- Content -->
@@ -41,15 +43,16 @@
                                         @php
                                             if ($task->status == 1) {
                                                 $color = 'bg-red-400';
-                                            } else if ($task->status == 2) {
+                                            } elseif ($task->status == 2) {
                                                 $color = 'bg-orange-400';
-                                            } else if ($task->status == 3) {
+                                            } elseif ($task->status == 3) {
                                                 $color = 'bg-blue-400';
-                                            } else if ($task->status == 4) {
+                                            } elseif ($task->status == 4) {
                                                 $color = 'bg-teal-400';
                                             }
                                         @endphp
-                                        <span class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($task->statusToHumanRead($task->status)) }}</span>
+                                        <span
+                                            class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($task->statusToHumanRead($task->status)) }}</span>
                                     </td>
                                     <td class="px-1 py-2 flex justify-center">
                                         <x-app.circular-progress perc="{{ $task->getProgress($task) }}" />
@@ -83,7 +86,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach ($production_summary as $ps)
+                            @foreach ($production_summary as $ps)
                                 <tr>
                                     <td class="px-1 py-2 text-sm">{{ $ps->name }}</td>
                                     <td class="px-1 py-2 text-sm text-center">
@@ -102,15 +105,16 @@
                                         @php
                                             if ($ps->status == 1) {
                                                 $color = 'bg-red-400';
-                                            } else if ($ps->status == 2) {
+                                            } elseif ($ps->status == 2) {
                                                 $color = 'bg-orange-400';
-                                            } else if ($ps->status == 3) {
+                                            } elseif ($ps->status == 3) {
                                                 $color = 'bg-blue-400';
-                                            } else if ($ps->status == 4) {
+                                            } elseif ($ps->status == 4) {
                                                 $color = 'bg-teal-400';
                                             }
                                         @endphp
-                                        <span class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($ps->statusToHumanRead($ps->status)) }}</span>
+                                        <span
+                                            class="rounded-full py-1 px-2 text-xs font-semibold text-white {{ $color }}">{{ __($ps->statusToHumanRead($ps->status)) }}</span>
                                     </td>
                                     <td class="px-1 py-2 flex justify-center">
                                         <x-app.circular-progress perc="{{ $ps->getProgress($ps) }}" />
@@ -130,10 +134,13 @@
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @else
+                                    <x-app.no-image-icon class="p-1" />
                                 @endif
                             </div>
-                            <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }} {{ __('Left') }}</span>
+                            <span class="flex-1 text-lg font-medium">{{ $pro->sku }}</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }}
+                                {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach
@@ -147,10 +154,13 @@
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
+                                @else
+                                    <x-app.no-image-icon class="p-1" />
                                 @endif
                             </div>
-                            <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
-                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }} {{ __('Left') }}</span>
+                            <span class="flex-1 text-lg font-medium">{{ $pro->sku }}</span>
+                            <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }}
+                                {{ __('Left') }}</span>
                         </div>
                     @endif
                 @endforeach
@@ -163,8 +173,10 @@
                 <div class="flex">
                     <div class="flex-1 flex flex-col items-center">
                         <div class="p-2 rounded-full bg-sky-200">
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
-                                <path d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z"/>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="m9,12c3.309,0,6-2.691,6-6S12.309,0,9,0,3,2.691,3,6s2.691,6,6,6Zm0-10c2.206,0,4,1.794,4,4s-1.794,4-4,4-4-1.794-4-4,1.794-4,4-4Zm12,12h-5c-1.654,0-3,1.346-3,3v4c0,1.654,1.346,3,3,3h5c1.654,0,3-1.346,3-3v-4c0-1.654-1.346-3-3-3Zm1,7c0,.552-.449,1-1,1h-5c-.551,0-1-.448-1-1v-4c0-.552.449-1,1-1h5c.551,0,1,.448,1,1v4Zm-2-3c0,.553-.448,1-1,1h-1c-.552,0-1-.447-1-1s.448-1,1-1h1c.552,0,1,.447,1,1Zm-9.351-1.072c.42.358.47.989.112,1.41l-.5.586c-.06.07-.129.132-.207.183-.79.527-1.859.386-2.487-.331l-2.331-2.767c-2.03,1.294-3.237,3.495-3.237,5.886v1.105c0,.553-.448,1-1,1s-1-.447-1-1v-1.105c0-3.075,1.551-5.906,4.148-7.571.846-.542,1.973-.371,2.618.397l2.211,2.625.261-.307c.358-.42.99-.472,1.41-.111Z" />
                             </svg>
                         </div>
                         <span class="text-lg font-semibold mt-2">{{ $suppliers_count }}</span>
@@ -172,7 +184,11 @@
                     </div>
                     <div class="flex-1 flex flex-col items-center border-l">
                         <div class="p-2 rounded-full bg-emerald-200">
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z"/></svg>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                viewBox="0 0 24 24" width="512" height="512">
+                                <path
+                                    d="M12,16a4,4,0,1,1,4-4A4,4,0,0,1,12,16Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,12,10Zm6,13A6,6,0,0,0,6,23a1,1,0,0,0,2,0,4,4,0,0,1,8,0,1,1,0,0,0,2,0ZM18,8a4,4,0,1,1,4-4A4,4,0,0,1,18,8Zm0-6a2,2,0,1,0,2,2A2,2,0,0,0,18,2Zm6,13a6.006,6.006,0,0,0-6-6,1,1,0,0,0,0,2,4,4,0,0,1,4,4,1,1,0,0,0,2,0ZM6,8a4,4,0,1,1,4-4A4,4,0,0,1,6,8ZM6,2A2,2,0,1,0,8,4,2,2,0,0,0,6,2ZM2,15a4,4,0,0,1,4-4A1,1,0,0,0,6,9a6.006,6.006,0,0,0-6,6,1,1,0,0,0,2,0Z" />
+                            </svg>
                         </div>
                         <span class="text-lg font-semibold mt-2">{{ $customers_count }}</span>
                         <span class="text-sm">{{ __('Number of Customers') }}</span>
@@ -186,9 +202,10 @@
                     <div class="mb-2 flex items-center gap-4 bg-slate-50 p-2 rounded-md">
                         <div class="h-8 w-8 bg-white rounded-md">
                             @if ($row['product']->image != null)
-                                <img src="{{ $row['product']->image->url }}" alt="" class="h-full w-full object-contain">
+                                <img src="{{ $row['product']->image->url }}" alt=""
+                                    class="h-full w-full object-contain">
                             @else
-                                <x-app.no-image-icon/>
+                                <x-app.no-image-icon />
                             @endif
                         </div>
                         <div class="flex flex-col flex-1">
@@ -204,15 +221,15 @@
 @endsection
 
 @push('scripts')
-<script>
-    $('select[name="task_status"], select[name="production_status"]').on('change', function() {
-        let task_status = $('select[name="task_status"]').val()
-        let production_status = $('select[name="production_status"]').val()
-        let url = "{{ route('dashboard.index') }}"
-        if (task_status != '' || production_status != '') {
-            url = `${url}?task_status=${task_status}&production_status=${production_status}`
-        }
-        window.location.href = url
-    })
-</script>
+    <script>
+        $('select[name="task_status"], select[name="production_status"]').on('change', function() {
+            let task_status = $('select[name="task_status"]').val()
+            let production_status = $('select[name="production_status"]').val()
+            let url = "{{ route('dashboard.index') }}"
+            if (task_status != '' || production_status != '') {
+                url = `${url}?task_status=${task_status}&production_status=${production_status}`
+            }
+            window.location.href = url
+        })
+    </script>
 @endpush

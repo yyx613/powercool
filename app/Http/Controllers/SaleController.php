@@ -93,6 +93,7 @@ class SaleController extends Controller
                 'sales.open_until AS validity',
                 'sales.store AS store',
                 'customers.sku AS debtor_code',
+                'customers.company_group AS company_group',
                 'customers.company_name AS debtor_name',
                 'sales.convert_to AS transfer_to',
                 'sales_agents.name AS agent',
@@ -181,6 +182,7 @@ class SaleController extends Controller
                 'transfer_to' => implode(', ', Sale::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
+                'debtor_company_group' => $record->company_group,
                 'agent' => $record->agent,
                 'store' => $record->store,
                 'curr_code' => $record->curr_code ?? null,
@@ -588,6 +590,7 @@ class SaleController extends Controller
                 'sales.store AS store',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
+                'customers.company_group AS company_group',
                 'sales.convert_to AS transfer_to',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
@@ -672,10 +675,11 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
-                'debtor_code' => $record->debtor_code,
                 'transfer_from' => implode(', ', Sale::where('convert_to', $record->id)->pluck('sku')->toArray()),
                 'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
+                'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
+                'debtor_company_group' => $record->company_group,
                 'agent' => $record->agent,
                 'store' => $record->store,
                 'curr_code' => $record->curr_code ?? null,
@@ -1448,21 +1452,21 @@ class SaleController extends Controller
             }
         }
         // Check raw material has enough qty (upsertProDetails)
-        for ($i = 0; $i < count($req->product_id); $i++) {
-            $prod = Product::where('id', $req->product_id[$i])->first();
+        // for ($i = 0; $i < count($req->product_id); $i++) {
+        //     $prod = Product::where('id', $req->product_id[$i])->first();
 
-            if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
-                $max_qty = $prod->warehouseAvailableStock($req->sale_id);
+        //     if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
+        //         $max_qty = $prod->warehouseAvailableStock($req->sale_id);
 
-                if ($req->qty[$i] > $max_qty) {
-                    return Response::json([
-                        'errors' => [
-                            'qty.' . $i => 'The quantity has exceed the available quantity (' . $max_qty . ')',
-                        ],
-                    ], HttpFoundationResponse::HTTP_BAD_REQUEST);
-                }
-            }
-        }
+        //         if ($req->qty[$i] > $max_qty) {
+        //             return Response::json([
+        //                 'errors' => [
+        //                     'qty.' . $i => 'The quantity has exceed the available quantity (' . $max_qty . ')',
+        //                 ],
+        //             ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+        //         }
+        //     }
+        // }
 
         try {
             DB::beginTransaction();
@@ -1878,21 +1882,21 @@ class SaleController extends Controller
                 }
             }
             // Check raw material has enough qty (upsertProDetails)
-            for ($i = 0; $i < count($req->product_id); $i++) {
-                $prod = Product::where('id', $req->product_id[$i])->first();
+            // for ($i = 0; $i < count($req->product_id); $i++) {
+            //     $prod = Product::where('id', $req->product_id[$i])->first();
 
-                if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
-                    $max_qty = $prod->warehouseAvailableStock($req->sale_id);
+            //     if ($prod->type == Product::TYPE_RAW_MATERIAL && $prod->is_sparepart == false) {
+            //         $max_qty = $prod->warehouseAvailableStock($req->sale_id);
 
-                    if ($req->qty[$i] > $max_qty) {
-                        return Response::json([
-                            'errors' => [
-                                'qty.' . $i => 'The quantity has exceed the available quantity (' . $max_qty . ')',
-                            ],
-                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
-                    }
-                }
-            }
+            //         if ($req->qty[$i] > $max_qty) {
+            //             return Response::json([
+            //                 'errors' => [
+            //                     'qty.' . $i => 'The quantity has exceed the available quantity (' . $max_qty . ')',
+            //                 ],
+            //             ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+            //         }
+            //     }
+            // }
         }
 
         try {
@@ -2343,6 +2347,7 @@ class SaleController extends Controller
                 'delivery_orders.created_at AS date',
                 'customers.sku AS debtor_code',
                 'customers.name AS debtor_name',
+                'customers.company_group AS company_group',
                 'users.name AS agent',
                 'currencies.name AS curr_code',
                 'delivery_orders.status AS status',
@@ -2442,10 +2447,11 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
-                'debtor_code' => $record->debtor_code,
                 'transfer_from' => implode(', ', $so_skus),
                 'transfer_to' => $record->transfer_to ?? null,
+                'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
+                'debtor_company_group' => $record->company_group,
                 'agent' => $record->agent,
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($total_amount, 2),

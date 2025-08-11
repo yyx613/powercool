@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Service Reminder')
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">

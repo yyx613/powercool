@@ -240,24 +240,26 @@
                 <td style="font-size: 14px; padding: 25px 0 15px 0;" colspan="2">E.& O.E.</td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 0 0 15px 0;" colspan="2">
+                <td style="font-size: 12px; padding: 0 0 15px 0;" colspan="2">
                     1. Cheque should make payable to HI-TEN TRADING SDN BHD<br>
-                    2. Please remit your payment to : <span style="font-weight: 700;">PUBLIC BANK Account No.: 3983 23
-                        3530
-                        CIMB Account No.: 8603 16 3872</span><br>
+                    2. Please remit your payment to : PUBLIC BANK Account No.: 3983 23 3530 CIMB Account No.: 8603 16 3872</span><br>
                     3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
-                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase<br>
-                    5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
-                    otherwise any discrepancy will not be entertained.<br>
+                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed. If cancel order with credit card payment, will have 10% credit card charges.<br>
+                    5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be entertained.<br>
                     6. Prices are subjected to change without prior notice.<br>
-                    7. · 3 Years Compressor Warranty with T&C apply<br>
-                    <span style="padding: 0 0 0 18px;">· 6 months General Service conduct by IMAX</span><br>
-                    <span style="padding: 0 0 0 18px;">· Limited to 1 time change only</span><br>
-                    8. Wear and tear not included in warranty claim
+                    7. For more information about our policies, please visit our website at:
+                    <a href="https://imaxrefrigerator.com.my/warranty-policy">https://imaxrefrigerator.com.my/warranty-policy</a><br>
+                    <span style="padding: 0 0 0 15px;">· 3 /5 Years  Compressor Warranty with T&C apply.</span><br>
+                    <span style="padding: 0 0 0 15px;">· 6 months General Service conduct by IMAX</span><br>
+                    <span style="padding: 0 0 0 15px;">· Limited to 1 time change only</span><br>
+                    8. Customer collect\ unloading\ handling by own, Warranty will be bear by customer.<br>
+                    9. Wear and tear not included in Warranty Claim.<br>
+                    10. Request E-invoice after 72hrs which original invoice have validated by IRB will be charge 5% of the total invoice amount.<br>
+                    11. Company will not obligation on those customers are not require to issue E-invoice.
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 0 0 25px 0;" colspan="2">
+                <td style="font-size: 12px; padding: 0 0 25px 0;" colspan="2">
                     We hope that our quotation is favourable to you and looking forward to receive your valued orders in
                     due
                     course. Thank and regards.

@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Consolidated E-Invoice')
 
 @vite(['resources/css/jquery.dataTables.min.css'])
 

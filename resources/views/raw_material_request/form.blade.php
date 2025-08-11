@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Raw Material Request')
 
 @section('content')
     <div class="mb-6">
