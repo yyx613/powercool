@@ -248,6 +248,7 @@
             $('input[name="customer"]').val(customer_id)
 
             var element = CUSTOMERS[customer_id]
+            $('input[name="attention_to"]').val(element.name)
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
