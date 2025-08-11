@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Quotation')
 
 @section('content')
     <div class="mb-6">

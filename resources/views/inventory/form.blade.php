@@ -1,4 +1,15 @@
+@php
+    $title = 'Finish Good';
+    if (!$is_product) {
+        $title = 'Raw Material';
+    }
+    if ($is_production) {
+        $title = 'Production ' . $title;
+    }
+@endphp
+
 @extends('layouts.app')
+@section('title', $title)
 
 @section('content')
     <div class="mb-6">

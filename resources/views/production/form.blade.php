@@ -2,6 +2,7 @@
 @inject('prodMsMaterialPreview', 'App\Models\ProductionMilestoneMaterialPreview')
 
 @extends('layouts.app')
+@section('title', 'Production')
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">

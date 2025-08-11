@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', 'Credit Note')
 
 @vite(['resources/css/jquery.dataTables.min.css'])
 

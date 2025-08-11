@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('title', $for_role == 'driver' ? 'Driver Task' : ($for_role == 'technician' ? 'Technician Task' : 'Sale Task'))
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
