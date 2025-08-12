@@ -1,15 +1,21 @@
 <form action="" method="POST" enctype="multipart/form-data" id="info-form" class="flex flex-col gap-8">
     <!-- 1st panel -->
     <div class="bg-white p-4 border rounded-md">
-        <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
-            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512"
-                height="512">
-                <path
-                    d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z" />
-                <path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z" />
-                <circle cx="12" cy="6.5" r="1.5" />
-            </svg>
-            <span class="text-lg ml-3 font-bold">{{ __('Information') }}</span>
+        <div class="flex justify-between mb-6">
+            <div class="flex items-center border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512"
+                    height="512">
+                    <path
+                        d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z" />
+                    <path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z" />
+                    <circle cx="12" cy="6.5" r="1.5" />
+                </svg>
+                <span class="text-lg ml-3 font-bold">{{ __('Information') }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="for_einvoice" id="for_einvoice" class="rounded-sm" @checked(isset($customer) ? $customer->for_einvoice : null) />
+                <x-app.input.label id="for_einvoice">{{ __('For E-Invoice') }}</x-app.input.label>
+            </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-8">
             <div class="flex flex-col">
@@ -26,7 +32,7 @@
             </div>
             <div class="flex flex-col hidden" id="local_oversea-container">
                 <x-app.input.label id="local_oversea" class="mb-1">{{ __('Type') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.select name="local_oversea" id="local_oversea" :hasError="$errors->has('local_oversea')">
                     <option value="">{{ __('Select a type') }}</option>
                     <option value="1" @selected(old('type', isset($customer) ? $customer->type : null) == 1)>{{ __('Local') }}</option>
@@ -36,21 +42,21 @@
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN') }} <span
-                        class="text-sm text-red-500" id="tin_number_required_star">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')"
                     value="{{ old('tin_number', isset($customer) ? $customer->tin_number : null) }}" />
                 <x-app.message.error id="tin_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="company_registration_number" class="mb-1">{{ __('Business Reg No.') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="company_registration_number" id="company_registration_number" :hasError="$errors->has('company_registration_number')"
                     value="{{ old('company_registration_number', isset($customer) ? $customer->company_registration_number : null) }}" />
                 <x-app.message.error id="company_registration_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="msic_code" class="mb-1">{{ __('MSIC Code') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.select2 name="msic_code" id="msic_code" :hasError="$errors->has('msic_code')"
                     placeholder="{{ __('Select a MSIC Code') }}">
                     <option value="">{{ __('Select a Msic Code') }}</option>
@@ -82,8 +88,8 @@
                 <x-app.message.error id="tourism_tax_reg_no_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
-                <x-app.input.label id="prev_gst_reg_no"
-                    class="mb-1">{{ __('Prev. GST Reg No.') }}</x-app.input.label>
+                <x-app.input.label id="prev_gst_reg_no" class="mb-1">{{ __('Prev. GST Reg No.') }} <span
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" :hasError="$errors->has('prev_gst_reg_no')"
                     value="{{ old('prev_gst_reg_no', isset($customer) ? $customer->prev_gst_reg_no : null) }}" />
                 <x-app.message.error id="prev_gst_reg_no_err" />
@@ -103,20 +109,21 @@
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="registered_name" class="mb-1">{{ __('Registered Name') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="registered_name" id="registered_name" :hasError="$errors->has('registered_name')"
                     value="{{ old('registered_name', isset($customer) ? $customer->registered_name : null) }}" />
                 <x-app.message.error id="registered_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
-                <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }}</x-app.input.label>
+                <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }} <span
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')"
                     value="{{ old('trade_name', isset($customer) ? $customer->trade_name : null) }}" />
                 <x-app.message.error id="trade_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')"
                     value="{{ old('phone_number', isset($customer) ? $customer->phone : null) }}" />
                 <span class="text-sm text-slate-500">{{ __('"+6" is not required') }}</span>
@@ -124,7 +131,7 @@
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="email" class="mb-1">{{ __('Email Address') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="email" id="email" type="email" :hasError="$errors->has('email')"
                     value="{{ old('email', isset($customer) ? $customer->email : null) }}" />
                 <x-app.message.error id="email_err" />
@@ -354,6 +361,7 @@
             if (CUSTOMER != null)[
                 $('select[name="msic_code"]').trigger('change')
             ]
+            $('input[name="for_einvoice"]').trigger('change')
             INIT_DONE = true
         })
 
@@ -398,17 +406,17 @@
 
             if (val == 1) {
                 $('#local_oversea-container').removeClass('hidden')
-                $('#tin_number_required_star').removeClass('hidden')
+                // $('#tin_number_required_star').removeClass('hidden')
                 $('.individual-fields-container').addClass('hidden')
                 $('.non-individual-fields-container').removeClass('hidden')
             } else if (val == 2) {
                 $('#local_oversea-container').addClass('hidden')
-                $('#tin_number_required_star').addClass('hidden')
+                // $('#tin_number_required_star').addClass('hidden')
                 $('.individual-fields-container').removeClass('hidden')
                 $('.non-individual-fields-container').addClass('hidden')
             } else if (val == 3) {
                 $('#local_oversea-container').addClass('hidden')
-                $('#tin_number_required_star').addClass('hidden')
+                // $('#tin_number_required_star').addClass('hidden')
                 $('.individual-fields-container').addClass('hidden')
                 $('.non-individual-fields-container').removeClass('hidden')
             }
@@ -421,6 +429,15 @@
             $('#info-form').submit()
             $('#tin-info-modal').removeClass('show-modal')
             NEGLECT_TIN_VALIDATION = false
+        })
+        $('input[name="for_einvoice"]').on('change', function() {
+            let val = $(this).is(':checked')
+
+            if (val == true) {
+                $('.for_einvoice-required').removeClass('hidden')
+            } else {
+                $('.for_einvoice-required').addClass('hidden')
+            }
         })
 
         $('#info-form').on('submit', function(e) {
@@ -439,6 +456,7 @@
             var formData = new FormData(this);
             formData.append('customer_id', CUSTOMER != null ? CUSTOMER.id : null)
             formData.append('neglect_tin_validation', NEGLECT_TIN_VALIDATION)
+            formData.append('for_einvoice', $('input[name="for_einvoice"]').is(':checked'))
 
             // let picture = $('input[name="picture[]"]').prop('files')
             // if (picture.length > 0) formData.append('picture[]', picture)

@@ -424,7 +424,7 @@ class SaleController extends Controller
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>=', now()->format('Y-m-d'))
+                // ->where('open_until', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -437,6 +437,14 @@ class SaleController extends Controller
                 ->pluck('customer_id');
 
             $customers = Customer::whereIn('id', $customer_ids)->get();
+            // Filter for einvoice filled
+            $temp = [];
+            for ($i = 0; $i < count($customers); $i++) {
+                if ($customers[$i]->forEinvoiceFilled()) {
+                    $temp[] = $customers[$i];
+                }
+            }
+            $customers = $temp;
         }
 
         return view('quotation.convert', [
