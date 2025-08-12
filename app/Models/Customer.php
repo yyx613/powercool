@@ -118,4 +118,14 @@ class Customer extends Model
 
         return $sku;
     }
+
+    public function forEinvoiceFilled(): bool
+    {
+        if ($this->for_einvoice == true) {
+            if ($this->local_oversea == null || $this->tin_number == null || $this->company_registration_number == null || $this->msic_code == null || $this->prev_gst_reg_no == null || $this->registered_name == null || $this->trade_name == null || $this->phone_number == null || $this->email == null) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

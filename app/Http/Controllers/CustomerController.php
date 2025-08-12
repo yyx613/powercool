@@ -225,15 +225,15 @@ class CustomerController extends Controller
 
     public function upsertInfo(Request $req)
     {
-        // Validate request
-        $req->validate([
+        $rules = [
+            'for_einvoice' => 'required',
             'customer_id' => 'nullable',
             'company_group' => 'required',
             'category' => 'required',
             'prefix' => 'nullable',
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
-            'phone_number' => 'required|max:250',
+            'phone_number' => 'nullable|max:250',
             'mobile_number' => 'nullable|max:250',
             'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
@@ -247,55 +247,35 @@ class CustomerController extends Controller
             'area' => 'nullable',
             'debtor_type' => 'nullable',
             'platform' => 'nullable',
-            'local_oversea' => 'required_if:category,==,1',
-            'msic_code' => 'required_unless:category,!=,2',
+            'local_oversea' => 'nullable',
+            'msic_code' => 'nullable',
             'business_activity_desc' => 'nullable',
             'company_registration_number' => 'nullable',
             'sst_number' => 'nullable|max:250',
             'category' => 'required|max:250',
             'tourism_tax_reg_no' => 'nullable|max:250',
             'prev_gst_reg_no' => 'nullable|max:250',
-            'registered_name' => 'required|max:250',
+            'registered_name' => 'nullable|max:250',
             'trade_name' => 'nullable|max:250',
             'identity_type' => 'required_if:category,==,2|max:250',
             'identity_no' => 'nullable|max:250',
             'address' => 'nullable|max:250',
             'city' => 'nullable|max:250',
             'zip_code' => 'nullable|max:250',
-
-            // 'customer_id' => 'nullable',
-            // 'company_group' => 'required',
-            // 'category' => 'required',
-            // 'prefix' => 'nullable',
-            // 'customer_name' => 'required|max:250',
-            // 'company_name' => 'nullable|max:250',
-            // 'phone_number' => 'required|max:250',
-            // 'mobile_number' => 'nullable|max:250',
-            // 'email' => 'required|email|max:250',
-            // 'website' => 'nullable|max:250',
-            // 'currency' => 'nullable',
-            // 'tin_number' => 'required_if:category,==,1|max:250',
-            // 'status' => 'required',
-            // 'picture' => 'nullable',
-            // 'picture.*' => 'file|extensions:jpg,png,jpeg',
-            // 'credit_term' => 'nullable',
-            // 'sale_agent' => 'nullable',
-            // 'area' => 'nullable',
-            // 'debtor_type' => 'nullable',
-            // 'platform' => 'nullable',
-            // 'local_oversea' => 'required_if:category,==,1',
-            // 'msic_code' => 'required_unless:category,!=,2',
-            // 'business_activity_desc' => 'required_unless:category,!=,2',
-            // 'company_registration_number' => 'required_unless:category,!=,2|max:250',
-            // 'sst_number' => 'nullable|max:250',
-            // 'category' => 'required|max:250',
-            // 'tourism_tax_reg_no' => 'nullable|max:250',
-            // 'prev_gst_reg_no' => 'nullable|max:250',
-            // 'registered_name' => 'required|max:250',
-            // 'trade_name' => 'nullable|max:250',
-            // 'identity_type' => 'required_if:category,==,2|max:250',
-            // 'identity_no' => 'nullable|max:250',
-        ], [
+        ];
+        if ($req->boolean('for_einvoice') == true) {
+            $rules['local_oversea'] = 'required';
+            $rules['tin_number'] = 'required';
+            $rules['company_registration_number'] = 'required';
+            $rules['msic_code'] = 'required';
+            $rules['prev_gst_reg_no'] = 'required|max:250';
+            $rules['registered_name'] = 'required|max:250';
+            $rules['trade_name'] = 'required|max:250';
+            $rules['phone_number'] = 'required|max:250';
+            $rules['email'] = 'required|email|max:250';
+        }
+        // Validate request
+        $req->validate($rules, [
             'required_if' => 'The :attribute is required',
             'required_unless' => 'The :attribute is required',
         ], [
@@ -308,7 +288,7 @@ class CustomerController extends Controller
         ]);
 
         // Validate tin with hasil
-        if ($req->boolean('neglect_tin_validation') == false) {
+        if ($req->boolean('for_einvoice') == true && $req->boolean('neglect_tin_validation') == false) {
             $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
             if ($res->status() != 200) {
                 $err = json_decode($res->getData()->message);
@@ -356,6 +336,7 @@ class CustomerController extends Controller
                     'address' => $req->address,
                     'city' => $req->city,
                     'zipcode' => $req->zip_code,
+                    'for_einvoice' => $req->boolean('for_einvoice'),
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
@@ -392,6 +373,7 @@ class CustomerController extends Controller
                     'address' => $req->address,
                     'city' => $req->city,
                     'zipcode' => $req->zip_code,
+                    'for_einvoice' => $req->boolean('for_einvoice'),
                 ]);
             }
             // Sales agent
