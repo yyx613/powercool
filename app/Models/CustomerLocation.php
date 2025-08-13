@@ -71,17 +71,17 @@ class CustomerLocation extends Model
     {
         $addr = null;
 
-        if ($this->address != null) {
-            $addr .= $this->address.'<br>';
+        if ($this->address1 != null) {
+            $addr .= $this->address1.'<br>';
         }
-        if ($this->city != null) {
-            $addr .= $this->city.'<br>';
+        if ($this->address2 != null) {
+            $addr .= $this->address2.'<br>';
         }
-        if ($this->postcode != null) {
-            $addr .= $this->postcode.'<br>';
+        if ($this->address3 != null) {
+            $addr .= $this->address3.'<br>';
         }
-        if ($this->state != null) {
-            $addr .= $this->state.'<br>';
+        if ($this->address4 != null) {
+            $addr .= $this->address4.'<br>';
         }
 
         return $addr;

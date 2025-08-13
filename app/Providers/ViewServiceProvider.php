@@ -36,6 +36,7 @@ use App\Models\SaleProductChild;
 use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
 use App\Models\Service;
+use App\Models\Setting;
 use App\Models\Supplier;
 use App\Models\Ticket;
 use App\Models\UOM;
@@ -306,9 +307,9 @@ class ViewServiceProvider extends ServiceProvider
                 }
             } else {
                 if (isset($customer_ids)) {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->whereIn('id', $customer_ids)->orderBy('id', 'desc')->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])->get();
                 } else {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')->orderBy('id', 'desc')->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])->get();
                 }
             }
 
@@ -367,6 +368,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function (ViewView $view) {
+            $sst = Setting::where('key', Setting::SST_KEY)->value('value');
             $involved_pc_ids = getInvolvedProductChild();
 
             // Exclude current sale, if edit
@@ -415,6 +417,7 @@ class ViewServiceProvider extends ServiceProvider
                 'promotions' => $promotions,
                 'uoms' => $uoms,
                 'customize_product_ids' => getCustomizeProductIds(),
+                'sst' => $sst,
             ]);
         });
         View::composer(['inventory.form'], function (ViewView $view) {

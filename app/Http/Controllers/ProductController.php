@@ -689,6 +689,7 @@ class ProductController extends Controller
             'image' => 'nullable',
             'image.*' => 'file|mimes:jpg,png,jpeg',
             'hi_ten_stock_code' => 'nullable',
+            'sst' => 'nullable',
 
             'selling_price_name' => 'nullable',
             'selling_price_name.*' => 'nullable',
@@ -806,6 +807,7 @@ class ProductController extends Controller
                     'tiktok_sku' => $req->tiktok_sku,
                     'woo_commerce_sku' => $req->woo_commerce_sku,
                     'hi_ten_stock_code' => $req->hi_ten_stock_code,
+                    'sst' => $req->sst == null ? false : true,
                 ]);
 
                 (new Branch)->assign(Product::class, $prod->id);
@@ -843,6 +845,7 @@ class ProductController extends Controller
                     'tiktok_sku' => $req->tiktok_sku,
                     'woo_commerce_sku' => $req->woo_commerce_sku,
                     'hi_ten_stock_code' => $req->hi_ten_stock_code,
+                    'sst' => $req->sst == null ? false : true,
                 ]);
             }
 

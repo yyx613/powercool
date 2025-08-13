@@ -230,11 +230,14 @@ class ApprovalController extends Controller
                             'status' => SaleProduct::STATUS_APPROVAL_APPROVED
                         ]);
                     }
-                    if (!Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
-                        $has_rejected = Approval::where('object_type', Sale::class)->where('object_id', $approval->object->id)->where('status', Approval::STATUS_REJECTED)->exists();
+                    $obj->status = Sale::STATUS_APPROVAL_APPROVED;
+                    $obj->save();
 
-                        $approval->object->status = $has_rejected ? Sale::STATUS_APPROVAL_REJECTED : Sale::STATUS_APPROVAL_APPROVED;
-                        $approval->object->save();
+                    if (!Approval::where('object_type', Sale::class)->where('object_id', $obj->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists()) {
+                        $has_rejected = SaleProduct::where('sale_id', $obj->id)->where('status', SaleProduct::STATUS_APPROVAL_REJECTED)->exists();
+
+                        $obj->status = $has_rejected ? Sale::STATUS_APPROVAL_REJECTED : Sale::STATUS_APPROVAL_APPROVED;
+                        $obj->save();
                     }
                 }
             } else if (get_class($approval->object) == DeliveryOrder::class) {
@@ -280,6 +283,9 @@ class ApprovalController extends Controller
                         ];
                     }
                     ObjectCreditTerm::insert($terms);
+
+                    $obj->status = Customer::STATUS_APPROVAL_APPROVED;
+                    $obj->save();
                 }
             }
 
@@ -387,6 +393,15 @@ class ApprovalController extends Controller
                 MaterialUse::where('id', $obj->id)->delete();
             }
             // Customer (credit term) do nothing 
+            if (get_class($obj) == Customer::class) {
+                $data = json_decode($approval->data);
+
+                if (isset($data->is_delete) && isset($data->customer_id)) {
+                } else {
+                    $obj->status = Customer::STATUS_APPROVAL_REJECTED;
+                    $obj->save();
+                }
+            }
 
             DB::commit();
 

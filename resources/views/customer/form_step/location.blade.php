@@ -35,8 +35,7 @@
                         {{ __('Default Billing & Delivery Address') }}</p>
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="address1" class="mb-1">{{ __('Address 1') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="address1" class="mb-1">{{ __('Address 1') }}</x-app.input.label>
                     <x-app.input.input name="address1" id="address1" :hasError="$errors->has('address1')" />
                     <x-app.message.error id="address1_err" />
                 </div>
@@ -56,8 +55,7 @@
                     <x-app.message.error id="address4_err" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="type" class="mb-1">{{ __('Type') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="type" class="mb-1">{{ __('Type') }}</x-app.input.label>
                     <x-app.input.select name="type" id="type">
                         <option value="">{{ __('Select a type') }}</option>
                         <option value="1">{{ __('Billing') }}</option>
@@ -67,8 +65,7 @@
                     <x-app.message.error id="type_err" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="is_default" class="mb-1">{{ __('Is Default') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="is_default" class="mb-1">{{ __('Is Default') }}</x-app.input.label>
                     <x-app.input.select name="is_default" id="is_default">
                         <option value="">{{ __('Select is default') }}</option>
                         <option value="1">{{ __('Yes') }}</option>
@@ -93,8 +90,7 @@
                 <span class="text-sm">{{ __('Add Location') }}</span>
             </button>
             <!-- Submit -->
-            <x-app.button.submit id="submit-btn"
-                class="{{ !isset($mode) ? '' : 'hidden' }}">{{ __('Save and Update') }}</x-app.button.submit>
+            <x-app.button.submit id="submit-btn" class="hidden">{{ __('Save and Update') }}</x-app.button.submit>
         </div>
     </form>
 </div>
@@ -206,41 +202,77 @@
                     'is_default': isDefault,
                 },
                 success: function(res) {
-                    setTimeout(() => {
-                        $('#location-form #submit-btn').text('Updated')
-                        $('#location-form #submit-btn').addClass('bg-green-400 shadow')
-
-                        let locIds = res.location_ids
-                        $('#location-form .items').each(function(i, obj) {
-                            $(this).attr('data-location-id', locIds[i])
-                        })
-
-                        $(`#location-form .items .default-billing-msg`).addClass('hidden')
-                        if (res.default_billing_address_id != null) {
-                            $(`#location-form .items[data-location-id="${res.default_billing_address_id}"] .default-billing-msg`)
-                                .removeClass('hidden')
-                        }
-                        $(`#location-form .items .default-delivery-msg`).addClass('hidden')
-                        if (res.default_delivery_address_id != null) {
-                            $(`#location-form .items[data-location-id="${res.default_delivery_address_id}"] .default-delivery-msg`)
-                                .removeClass('hidden')
-                        }
-                        $(`#location-form .items .default-billing-and-delivery-msg`).addClass(
-                            'hidden')
-                        if (res.default_billing_and_delivery_address_id != null) {
-                            $(`#location-form .items[data-location-id="${res.default_billing_and_delivery_address_id}"] .default-billing-and-delivery-msg`)
-                                .removeClass('hidden')
-                        }
-
+                    if (GROUP_SUBMITTING) {
                         setTimeout(() => {
-                            $('#location-form #submit-btn').text('Save and Update')
-                            $('#location-form #submit-btn').removeClass('bg-green-400')
-                            $('#location-form #submit-btn').addClass(
-                                'bg-yellow-400 shadow')
+                            $('#group-submit-btn').text('Updated')
+                            $('#group-submit-btn').addClass('bg-green-400 shadow')
 
-                            LOCATION_FORM_CAN_SUBMIT = true
-                        }, 2000);
-                    }, 300);
+                            let locIds = res.location_ids
+                            $('#location-form .items').each(function(i, obj) {
+                                $(this).attr('data-location-id', locIds[i])
+                            })
+
+                            $(`#location-form .items .default-billing-msg`).addClass('hidden')
+                            if (res.default_billing_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_billing_address_id}"] .default-billing-msg`)
+                                    .removeClass('hidden')
+                            }
+                            $(`#location-form .items .default-delivery-msg`).addClass('hidden')
+                            if (res.default_delivery_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_delivery_address_id}"] .default-delivery-msg`)
+                                    .removeClass('hidden')
+                            }
+                            $(`#location-form .items .default-billing-and-delivery-msg`)
+                                .addClass(
+                                    'hidden')
+                            if (res.default_billing_and_delivery_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_billing_and_delivery_address_id}"] .default-billing-and-delivery-msg`)
+                                    .removeClass('hidden')
+                            }
+
+                            setTimeout(() => {
+                                window.location.href = '{{ route('customer.index') }}'
+                            }, 1000);
+                        }, 300);
+                    } else {
+                        setTimeout(() => {
+                            $('#location-form #submit-btn').text('Updated')
+                            $('#location-form #submit-btn').addClass('bg-green-400 shadow')
+
+                            let locIds = res.location_ids
+                            $('#location-form .items').each(function(i, obj) {
+                                $(this).attr('data-location-id', locIds[i])
+                            })
+
+                            $(`#location-form .items .default-billing-msg`).addClass('hidden')
+                            if (res.default_billing_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_billing_address_id}"] .default-billing-msg`)
+                                    .removeClass('hidden')
+                            }
+                            $(`#location-form .items .default-delivery-msg`).addClass('hidden')
+                            if (res.default_delivery_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_delivery_address_id}"] .default-delivery-msg`)
+                                    .removeClass('hidden')
+                            }
+                            $(`#location-form .items .default-billing-and-delivery-msg`)
+                                .addClass(
+                                    'hidden')
+                            if (res.default_billing_and_delivery_address_id != null) {
+                                $(`#location-form .items[data-location-id="${res.default_billing_and_delivery_address_id}"] .default-billing-and-delivery-msg`)
+                                    .removeClass('hidden')
+                            }
+
+                            setTimeout(() => {
+                                $('#location-form #submit-btn').text('Save and Update')
+                                $('#location-form #submit-btn').removeClass(
+                                    'bg-green-400')
+                                $('#location-form #submit-btn').addClass(
+                                    'bg-yellow-400 shadow')
+
+                                LOCATION_FORM_CAN_SUBMIT = true
+                            }, 2000);
+                        }, 300);
+                    }
                 },
                 error: function(err) {
                     setTimeout(() => {
@@ -261,10 +293,13 @@
                                 .responseJSON.is_default)
                             $(`#location-form .items #is_default_err`).removeClass('hidden')
                         }
-                        $('#location-form #submit-btn').text('Save and Update')
-                        $('#location-form #submit-btn').addClass('bg-yellow-400 shadow')
+                        $('#location-form #submit-btn, #group-submit-btn').text(
+                            'Save and Update')
+                        $('#location-form #submit-btn, #group-submit-btn').addClass(
+                            'bg-yellow-400 shadow')
 
                         LOCATION_FORM_CAN_SUBMIT = true
+                        GROUP_SUBMITTING = false
                     }, 300);
                 },
             });

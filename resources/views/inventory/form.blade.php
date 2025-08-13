@@ -202,6 +202,14 @@
                             <x-input-error :messages="$errors->get('hi_ten_stock_code')" class="mt-1" />
                     </div>
                 @endif
+                @if ($is_product == true)
+                    <div class="flex items-center gap-2 h-full">
+                        <input type="checkbox" name="sst" id="sst" class="rounded-sm"
+                            @checked(old('sst', isset($prod) ? $prod->sst : null)) />
+                        <x-app.input.label id="sst">{{ __('SST') }}</x-app.input.label>
+                        <x-input-error :messages="$errors->get('sst')" class="mt-1" />
+                    </div>
+                @endif
             </div>
         </div>
         <!-- Selling Prices -->

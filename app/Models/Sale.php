@@ -123,7 +123,7 @@ class Sale extends Model
 
         $total = 0;
         for ($i = 0; $i < count($prods); $i++) {
-            $total += ($prods[$i]->qty * $prods[$i]->unit_price);
+            $total += (($prods[$i]->qty * $prods[$i]->unit_price) - ($prods[$i]->sst_amount ?? 0));
         }
 
         return $total;

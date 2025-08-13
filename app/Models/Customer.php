@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 #[ScopedBy([BranchScope::class])]
 class Customer extends Model
@@ -16,10 +17,11 @@ class Customer extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_INACTIVE = 0;
-
     const STATUS_ACTIVE = 1;
-
     const STATUS_PENDING_FILL_UP_INFO = 2;
+    const STATUS_APPROVAL_PENDING = 3;
+    const STATUS_APPROVAL_REJECTED = 4;
+    const STATUS_APPROVAL_APPROVED = 5;
 
     const BUSINESS_TYPES = [
         1 => 'Business',
@@ -127,5 +129,25 @@ class Customer extends Model
             }
         }
         return true;
+    }
+
+    public function statusToLabel(int $status): string
+    {
+        switch ($status) {
+            case self::STATUS_INACTIVE:
+                return 'Inactive';
+            case self::STATUS_ACTIVE:
+                return 'Active';
+            case self::STATUS_PENDING_FILL_UP_INFO:
+                return 'Pending Fill Up Info';
+            case self::STATUS_APPROVAL_PENDING:
+                return 'Pending Approval';
+            case self::STATUS_APPROVAL_APPROVED:
+                return 'Approved';
+            case self::STATUS_APPROVAL_REJECTED:
+                return 'Rejected';
+            default:
+                return '';
+        }
     }
 }

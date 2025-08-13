@@ -13,7 +13,8 @@
                 <span class="text-lg ml-3 font-bold">{{ __('Information') }}</span>
             </div>
             <div class="flex items-center gap-2">
-                <input type="checkbox" name="for_einvoice" id="for_einvoice" class="rounded-sm" @checked(isset($customer) ? $customer->for_einvoice : null) />
+                <input type="checkbox" name="for_einvoice" id="for_einvoice" class="rounded-sm"
+                    @checked(isset($customer) ? $customer->for_einvoice : null) />
                 <x-app.input.label id="for_einvoice">{{ __('For E-Invoice') }}</x-app.input.label>
             </div>
         </div>
@@ -94,15 +95,17 @@
                     value="{{ old('prev_gst_reg_no', isset($customer) ? $customer->prev_gst_reg_no : null) }}" />
                 <x-app.message.error id="prev_gst_reg_no_err" />
             </div>
-            <div class="flex flex-col hidden individual-fields-container"">
-                <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+            <div class="flex flex-col hidden individual-fields-container">
+                <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }}
+                    <span class="text-sm text-red-500 hidden for_einvoice-required">*</span>
+                </x-app.input.label>
                 <x-app.input.input name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')"
                     value="{{ old('identity_type', isset($customer) ? $customer->identity_type : null) }}" />
                 <x-app.message.error id="identity_type_err" />
             </div>
-            <div class="flex flex-col hidden individual-fields-container"">
-                <x-app.input.label id="identity_no" class="mb-1">{{ __('Identity No.') }}</x-app.input.label>
+            <div class="flex flex-col hidden individual-fields-container">
+                <x-app.input.label id="identity_no" class="mb-1">{{ __('Identity No.') }} <span
+                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="identity_no" id="identity_no" :hasError="$errors->has('identity_no')"
                     value="{{ old('identity_no', isset($customer) ? $customer->identity_no : null) }}" />
                 <x-app.message.error id="identity_no_err" />
@@ -161,7 +164,7 @@
     <!-- 2nd Panel -->
     <div class="bg-white p-4 border rounded-md">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4">
-            <!-- <div class="flex flex-col">
+            {{-- <div class="flex flex-col">
                 <x-app.input.label class="mb-1">Picture</x-app.input.label>
                 <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>
                 <x-app.message.error id="picture_err"/>
@@ -170,14 +173,14 @@
                         <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                     </div>
                     @if (isset($customer))
-@foreach ($customer->pictures as $att)
-<div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
-                                <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
-                            </div>
-@endforeach
-@endif
+                        @foreach ($customer->pictures as $att)
+                        <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
+                                                        <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
+                                                    </div>
+                        @endforeach
+                    @endif
                 </div>
-            </div> -->
+            </div> --}}
             @if (isset($customer))
                 <div class="flex flex-col">
                     <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
@@ -310,6 +313,24 @@
                         @endforeach
                     </x-app.input.select>
                     <x-app.message.error id="credit_term_err" />
+                    @if (isset($customer) && $customer->status != null)
+                        <div class="col-span-4 mt-1.5">
+                            @if ($customer->revised == 1)
+                                <span
+                                    class="border rounded border-blue-500 text-blue-500 text-xs font-medium px-1 py-0.5">{{ __('Revised') }}</span>
+                            @endif
+                            @if ($customer->status == 3)
+                                <span
+                                    class="border rounded border-slate-500 text-slate-500 text-xs font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
+                            @elseif ($customer->status == 5)
+                                <span
+                                    class="border rounded border-green-600 text-green-600 text-xs font-medium px-1 py-0.5">{{ __('Approved') }}</span>
+                            @elseif ($customer->status == 4)
+                                <span
+                                    class="border rounded border-red-600 text-red-600 text-xs font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @endif
             <div class="flex flex-col">
@@ -320,8 +341,14 @@
                         <option value="2" selected>{{ __('Pending Fill Up Info') }}</option>
                     @else
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
-                        <option value="1" @selected(old('status', isset($customer) ? $customer->status : null) == 1)>{{ __('Active') }}</option>
-                        <option value="0" @selected(old('status', isset($customer) ? $customer->status : null) === 0)>{{ __('Inactive') }}</option>
+                        @if (isset($customer) && $customer->status == 4)
+                            <option value="4" @selected(old('status', isset($customer) ? $customer->status : null) == 4)>{{ __('Rejected') }}</option>
+                        @elseif (isset($customer) && $customer->status == 5)
+                            <option value="5" @selected(old('status', isset($customer) ? $customer->status : null) == 5)>{{ __('Approved') }}</option>
+                        @else
+                            <option value="1" @selected(old('status', isset($customer) ? $customer->status : null) == 1)>{{ __('Active') }}</option>
+                            <option value="0" @selected(old('status', isset($customer) ? $customer->status : null) === 0)>{{ __('Inactive') }}</option>
+                        @endif
                     @endif
                 </x-app.input.select>
                 <x-app.message.error id="status_err" />
@@ -333,11 +360,9 @@
                 <x-app.message.error id="remark_err" />
             </div>
         </div>
-        @if (!isset($mode))
-            <div class="mt-8 flex justify-end">
-                <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
-            </div>
-        @endif
+        <div class="mt-8 hidden">
+            <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
+        </div>
     </div>
 </form>
 
@@ -479,18 +504,23 @@
                         $('#create-customer-link-created-modal').addClass('show-modal')
                     }
 
-                    setTimeout(() => {
-                        $('#info-form #submit-btn').text('Updated')
-                        $('#info-form #submit-btn').addClass('bg-green-400 shadow')
-
+                    if (GROUP_SUBMITTING) {
+                        $('#location-form').submit()
+                    } else {
                         setTimeout(() => {
-                            $('#info-form #submit-btn').text('Save and Update')
-                            $('#info-form #submit-btn').removeClass('bg-green-400')
-                            $('#info-form #submit-btn').addClass('bg-yellow-400 shadow')
+                            $('#info-form #submit-btn').text('Updated')
+                            $('#info-form #submit-btn').addClass('bg-green-400 shadow')
 
-                            INFO_FORM_CAN_SUBMIT = true
-                        }, 2000);
-                    }, 300);
+                            setTimeout(() => {
+                                $('#info-form #submit-btn').text('Save and Update')
+                                $('#info-form #submit-btn').removeClass('bg-green-400')
+                                $('#info-form #submit-btn').addClass(
+                                    'bg-yellow-400 shadow')
+
+                                INFO_FORM_CAN_SUBMIT = true
+                            }, 2000);
+                        }, 300);
+                    }
                 },
                 error: function(err) {
                     if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
@@ -516,10 +546,12 @@
 
 
                     setTimeout(() => {
-                        $('#info-form #submit-btn').text('Save and Update')
-                        $('#info-form #submit-btn').addClass('bg-yellow-400 shadow')
+                        $('#info-form #submit-btn, #group-submit-btn').text('Save and Update')
+                        $('#info-form #submit-btn, #group-submit-btn').addClass(
+                            'bg-yellow-400 shadow')
 
                         INFO_FORM_CAN_SUBMIT = true
+                        GROUP_SUBMITTING = false
                     }, 300);
                 },
             });

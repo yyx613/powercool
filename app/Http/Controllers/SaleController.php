@@ -37,6 +37,7 @@ use App\Models\SaleProductWarrantyPeriod;
 use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\Scopes\BranchScope;
+use App\Models\Setting;
 use App\Models\Target;
 use App\Models\TransportAcknowledgement;
 use App\Models\UOM;
@@ -101,7 +102,7 @@ class SaleController extends Controller
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
-                DB::raw('SUM(sale_products.unit_price * sale_products.qty) AS total_amount')
+                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount')
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', 'like', '%Sale')
@@ -424,7 +425,7 @@ class SaleController extends Controller
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                // ->where('open_until', '>=', now()->format('Y-m-d'))
+                ->where('open_until', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -521,6 +522,12 @@ class SaleController extends Controller
                 'unit_price' => $products->map(function ($q) {
                     return $q->unit_price;
                 })->toArray(),
+                'with_sst' => $products->map(function ($q) {
+                    return $q->with_sst == true ? 'true' : 'false';
+                })->toArray(),
+                'sst_amount' => $products->map(function ($q) {
+                    return $q->sst_amount;
+                })->toArray(),
                 'promotion_id' => $products->map(function ($q) {
                     return $q->promotion_id;
                 })->toArray(),
@@ -590,6 +597,12 @@ class SaleController extends Controller
     {
         Session::put('sale-order-page', $req->page);
 
+        $serial_no_qty_query = DB::table('sales')
+            ->select('sales.id AS sale_id', DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'))
+            ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
+            ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
+            ->groupBy('sales.id');
+
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id',
@@ -606,20 +619,22 @@ class SaleController extends Controller
                 'sales.is_draft AS is_draft',
                 'sales.payment_status',
                 'sales.created_by',
+                'serial_no_qty_query.serial_no_qty',
                 DB::raw('SUM(sale_products.qty) AS qty'),
-                DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'),
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price) AS total_amount'),
+                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sst_amount, 0)) AS total_amount'),
                 DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
-            ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
+            ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
+                $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
+            })
             ->groupBy('sales.id');
 
         if ($req->has('sku')) {
@@ -697,7 +712,7 @@ class SaleController extends Controller
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
                 'qty' => $record->qty,
-                'serial_no_qty' => $record->serial_no_qty,
+                'serial_no_qty' => $record->serial_no_qty ?? 0,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
@@ -1155,7 +1170,7 @@ class SaleController extends Controller
             }
 
             // Prepare data
-            $so_ids = Session::get('convert_sale_order_id');
+            $so_ids = explode(',', Session::get('convert_sale_order_id'));
             $sales = Sale::whereIn('id', $so_ids)->get();
 
             $is_hi_ten = false;
@@ -1321,6 +1336,7 @@ class SaleController extends Controller
 
     public function upsertDetails(Request $req)
     {
+        // dd($req->all());
         if ($req->type == 'so') {
             if ($req->sale_id == null) {
                 $convert_from_quo = false;
@@ -1764,7 +1780,7 @@ class SaleController extends Controller
                         $approval_required = in_array($req->payment_method, $credit_term_payment_method_ids);
                     } else if ($req->type == 'so') {
                         $customer_ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $req->customer)->pluck('credit_term_id')->toArray();
-                        $approval_required = !in_array($req->payment_term, $customer_ct_ids);
+                        $approval_required = ($req->payment_term) > 0 && !in_array($req->payment_term, $customer_ct_ids);
                     }
 
                     if ($approval_required) {
@@ -1951,10 +1967,20 @@ class SaleController extends Controller
                         $product_id = $customize_prod->id;
                     }
 
+                    $prod = Product::where('id', $req->product_id[$i])->first();
                     if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
-                        if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
-                            continue;
+                        // If sale product is approved but amount changed, proceed
+                        $skip_approved = true;
+                        if ($req->selling_price[$i] == null) {
+                            if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price) && $sp->override_selling_price != $req->override_selling_price[$i]) {
+                                $skip_approved = false;
+                            }
+                        }
+                        if ($skip_approved) {
+                            if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
+                                continue;
+                            }
                         }
 
                         $sp->update([
@@ -1962,6 +1988,9 @@ class SaleController extends Controller
                             'desc' => $req->product_desc[$i],
                             'qty' => $req->qty[$i],
                             'is_foc' => $req->foc[$i] === 'true',
+                            'with_sst' => $req->with_sst[$i] === 'true',
+                            'sst_amount' => $req->sst_amount[$i],
+                            'sst_value' => $req->with_sst[$i] === 'true' ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
                             'uom' => $req->uom[$i],
                             'unit_price' => $req->foc[$i] === 'true' ? 0 : $req->unit_price[$i],
                             'selling_price_id' => $req->foc[$i] === 'true' ? null : $req->selling_price[$i],
@@ -1978,6 +2007,9 @@ class SaleController extends Controller
                             'desc' => $req->product_desc[$i],
                             'qty' => $req->qty[$i],
                             'is_foc' => $req->foc[$i] === 'true',
+                            'with_sst' => $req->with_sst[$i] === 'true',
+                            'sst_amount' => $req->sst_amount[$i],
+                            'sst_value' => $req->with_sst[$i] === 'true' ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
                             'uom' => $req->uom[$i],
                             'unit_price' => $req->foc[$i] === 'true' ? 0 : $req->unit_price[$i],
                             'selling_price_id' => $req->foc[$i] === 'true' ? null : $req->selling_price[$i],
@@ -2005,7 +2037,6 @@ class SaleController extends Controller
                             SaleProductWarrantyPeriod::insert($spwp_data);
                         }
                     }
-                    $prod = Product::where('id', $req->product_id[$i])->first();
 
                     if (!$is_draft && !$skip_approval) {
                         if ($req->selling_price[$i] == null) {

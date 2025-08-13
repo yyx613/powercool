@@ -80,6 +80,18 @@
             <x-app.message.error id="amount_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="sst" class="mb-1">{{ __('SST') }}
+                ({{ $sst }}%)</x-app.input.label>
+            <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                <x-app.input.input name="sst" id="sst" :hasError="$errors->has('sst')" disabled="true"
+                    class="border-none flex-1" />
+                <button type="button"
+                    class="sst-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[with-sst=false]:bg-slate-100 data-[with-sst=true]:bg-emerald-100"
+                    data-with-sst="false">SST</button>
+            </div>
+            <x-app.message.error id="sst_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="product_desc" class="mb-1">{{ __('Product Description') }}</x-app.input.label>
             <x-app.input.input name="product_desc" id="product_desc" :hasError="$errors->has('product_desc')" />
             <x-app.message.error id="product_desc_err" />
@@ -164,7 +176,7 @@
                 <tr>
                     <td>{{ __('Tax') }}</td>
                     <td class="w-4 text-center">:</td>
-                    <td>0.00</td>
+                    <td id="tax-amount">0.00</td>
                 </tr>
                 <tr>
                     <td>{{ __('Total') }}</td>
@@ -178,6 +190,7 @@
 
 @push('scripts')
     <script>
+        SST = @json($sst ?? null);
         PRODUCTS = @json($products ?? []);
         WARRANTY_PERIODS = @json($warranty_periods ?? []);
         PROMOTIONS = @json($promotions ?? []);
@@ -197,7 +210,8 @@
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
-                    $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? false : true)
+                    $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? true : false)
+                    $(`.items[data-id="${i+1}"] .sst-btns`).attr('data-with-sst', sp.with_sst == 1 ? false : true)
                         .trigger('click') // Reverse value for trigger click
                     $(`.items[data-id="${i+1}"] input[name="uom"]`).val(sp.uom)
                     $(`.items[data-id="${i+1}"] select[name="selling_price[]"]`).val(sp.selling_price_id).trigger(
@@ -258,6 +272,7 @@
             $(clone).attr('data-id', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
+            $(clone).find('.sst-btns').attr('data-id', ITEMS_COUNT)
             $(clone).addClass('items')
             $(clone).removeClass('hidden')
             $(clone).removeAttr('id')
@@ -342,6 +357,7 @@
 
             if (product != undefined) {
                 $(`.items[data-id="${id}"]`).attr('data-selected-product', product.type === 1)
+                $(`.items[data-id="${id}"] .sst-btns`).attr('data-with-sst', product.sst === 1)
                 $(`.items[data-id="${id}"] #min_price`).text(priceFormat(product.min_price))
                 $(`.items[data-id="${id}"] #max_price`).text(priceFormat(product.max_price))
                 $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
@@ -412,6 +428,18 @@
                     true)
             }
         })
+        $('body').on('click', '.sst-btns', function() {
+            let withSST = $(this).attr('data-with-sst')
+            let id = $(this).data('id')
+
+            if (withSST === 'true') {
+                $(this).attr('data-with-sst', false)
+            } else {
+                $(this).attr('data-with-sst', true)
+            }
+            calItemTax(id)
+            calSummary()
+        })
 
         function calItemTotal(idx) {
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
@@ -469,13 +497,28 @@
 
             $(`.items[data-id="${idx}"] input[name="amount"]`).val(priceFormat(subtotal - promoAmount - discountAmount))
 
+            calItemTax(idx)
             calSummary()
+        }
+
+        function calItemTax(idx) {
+            let enabledSST = $(`.items[data-id=${idx}] .sst-btns`).attr('data-with-sst')
+            let amount = $(`.items[data-id=${idx}] input[name="amount"]`).val()
+
+            if (enabledSST === 'true' && amount != undefined) {
+                amount = amount.replaceAll(',', '')
+
+                $(`.items[data-id="${idx}"] input[name="sst"]`).val(priceFormat(amount * SST / 100))
+            } else if (enabledSST === 'false') {
+                $(`.items[data-id="${idx}"] input[name="sst"]`).val(null)
+            }
         }
 
         function calSummary() {
             let overallSubtotal = 0
             let overallPromoAmount = 0
             let overallDiscountAmount = 0
+            let overallTaxAmount = 0
 
             $('.items').each(function(i, obj) {
                 let productId = $(this).find('select[name="product_id[]"]').val()
@@ -523,16 +566,25 @@
                 if (discount != '' && discount != null) {
                     discountAmount = discount
                 }
+                // Tax
+                let enabledSST = $(this).find('.sst-btns').attr('data-with-sst')
+                let taxAmount = null
+                if (enabledSST === 'true') {
+                    taxAmount = (subtotal - promoAmount - discountAmount) * SST / 100
+                    taxAmount = priceFormat(taxAmount).replaceAll(',', '')
+                }
 
                 overallSubtotal += (subtotal * 1)
                 overallPromoAmount += (promoAmount * 1)
                 overallDiscountAmount += (discountAmount * 1)
+                overallTaxAmount += (taxAmount * 1)
             })
 
             $('#subtotal').text(priceFormat(overallSubtotal))
             $('#promo-amount').text(priceFormat(overallPromoAmount))
             $('#discount-amount').text(priceFormat(overallDiscountAmount))
-            $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount))
+            $('#tax-amount').text(priceFormat(overallTaxAmount))
+            $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount - overallTaxAmount))
         }
 
         function buildWarrantyPeriodSelect2(item_id) {

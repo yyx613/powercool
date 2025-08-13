@@ -187,6 +187,8 @@
             let prodDesc = []
             let qty = []
             let foc = []
+            let withSST = []
+            let SSTAmount = []
             let uom = []
             let sellingPrice = []
             let unitPrice = []
@@ -203,6 +205,9 @@
                 prodDesc.push($(this).find('input[name="product_desc"]').val())
                 qty.push($(this).find('input[name="qty"]').val())
                 foc.push($(this).find('.foc-btns').data('is-foc'))
+                withSST.push($(this).find('.sst-btns').data('with-sst'))
+                SSTAmount.push($(this).find('input[name="sst"]').val() == undefined ? null : $(this).find(
+                    'input[name="sst"]').val().replaceAll(',', ''))
                 uom.push($(this).find('input[name="uom"]').val())
                 sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
                 unitPrice.push($(this).find('input[name="unit_price[]"]').val())
@@ -265,6 +270,8 @@
                     'product_desc': prodDesc,
                     'qty': qty,
                     'foc': foc,
+                    'with_sst': withSST,
+                    'sst_amount': SSTAmount,
                     'uom': uom,
                     'selling_price': sellingPrice,
                     'unit_price': unitPrice,
