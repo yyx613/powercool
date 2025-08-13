@@ -26,17 +26,20 @@
         <div class="flex flex-col">
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <div class="relative" id="company-container">
-                <x-app.input.input name="customer_label" id="customer_label" :hasError="$errors->has('customer')" />
-                <ul class="absolute top-[45px] shadow bg-white w-full hidden z-50 max-h-40 overflow-y-auto"
-                    id="customer_label_hints">
-                </ul>
+            <div class="relative">
+                <x-app.input.select name="customer" id="customer" :hasError="$errors->has('customer')"
+                    placeholder="{{ __('Select a company') }}">
+                    <option value="">{{ __('Select a company') }}</option>
+                    @if (isset($customers))
+                        @foreach ($customers as $cus)
+                            <option value="{{ $cus->id }}" @selected(old('customer', isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null)) == $cus->id)>{{ $cus->company_name }} -
+                                {{ $cus->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
+                        @endforeach
+                    @endif
+                </x-app.input.select>
             </div>
-            <input type="hidden" name="customer"
-                value="{{ isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null) }}" />
             <x-app.message.error id="customer_err" />
         </div>
-
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -131,22 +134,18 @@
     <script>
         INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
+        SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
 
         $(document).ready(function() {
+            buildCompanySelect2()
+
             if (SALE != null) {
                 if (SALE.status == 4) {
                     $('select[name="status"]').attr('disabled', true)
                     $('select[name="status"]').attr('aria-disabled', true)
 
                 }
-                if (CUSTOMERS[SALE.customer_id] != undefined) {
-                    let element = CUSTOMERS[SALE.customer_id]
-
-                    $('input[name="customer_label"]').val(
-                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                    hintClickedCallback(SALE.customer_id,
-                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                }
+                $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
                 $('select[name="delivery_address"]').trigger('change')
             }
@@ -182,25 +181,58 @@
                 $('#new-delivery-address input').parent().attr('aria-disabled', true)
             }
         })
-        $('body').on('click', '.hints', function() {
-            hintClickedCallback($(this).data('customer-id'), $(this).text())
-        })
-        $('input[name="customer_label"]').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
-            $('#customer_label_hints').empty()
-            let val = $('input[name="customer_label"]').val()
+        $('select[name="customer"]').on('change', function() {
+            var customer_id = $(this).val()
+            var element = CUSTOMERS[customer_id]
+            $('input[name="attention_to"]').val(element.name)
 
-            if (val == '') return
-
-            getCustomer(val)
-
-            for (const [key, element] of Object.entries(CUSTOMERS)) {
-                // Append to customer label hints
-                $('#customer_label_hints').append(
-                    `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
-                )
-                $('#customer_label_hints').removeClass('hidden')
+            if (INIT_EDIT) {
+                $('select[name="sale"]').val(SALE.sale_id).trigger('change')
+                $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
+            } else if (INIT_EDIT == false && element.sales_agents.length === 1) {
+                $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
             }
-        }))
+
+            let url = '{{ route('customer.get_location') }}'
+            url = `${url}?customer_id=${customer_id}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                async: false,
+                success: function(res) {
+                    $('select[name="billing_address"] option').remove()
+
+                    // Default option
+                    let opt = new Option("{!! __('Select a billing address') !!}", null)
+                    $('select[name="billing_address"]').append(opt)
+
+                    for (let i = 0; i < res.locations.length; i++) {
+                        const loc = res.locations[i];
+
+                        var addr = loc.address1
+                        if (loc.address2 != null) {
+                            addr = `${addr}, ${loc.address2}`
+                        }
+                        if (loc.address3 != null) {
+                            addr = `${addr}, ${loc.address3}`
+                        }
+                        if (loc.address4 != null) {
+                            addr = `${addr}, ${loc.address4}`
+                        }
+
+                        let opt = new Option(
+                            addr, loc.id,
+                            false, INIT_EDIT == true && loc.id ==
+                            SALE.billing_address_id)
+                        $('select[name="billing_address"]').append(opt)
+                    }
+                },
+            });
+        })
 
         function hintClickedCallback(customer_id, customer_label) {
             $('#customer_label_hints').addClass('hidden')
@@ -290,21 +322,35 @@
             });
         }
 
-        function getCustomer(keyword) {
-            let url = '{{ route('customer.get_by_keyword') }}'
-            url = `${url}?keyword=${keyword}&is_edit=${SALE != null}`
+        function buildCompanySelect2() {
+            $('select[name="customer"]').select2({
+                minimumInputLength: 1,
+                placeholder: 'Search for a company',
+                ajax: {
+                    url: `${SEARCH_CUSTOMERS_URL}?is_edit=${SALE != null}`,
+                    delay: DEBOUNCE_DURATION,
+                    dataType: 'json',
+                    data: function(params) {
+                        var query = {
+                            keyword: params.term,
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        CUSTOMERS = data.customers
 
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'GET',
-                async: false,
-                success: function(res) {
-                    CUSTOMERS = res.customers
-                },
-            });
+                        return {
+                            results: $.map(data.customers, function(item) {
+                                return {
+                                    id: item.id,
+                                    text: `${item.company_name} - ${item.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
+                                };
+                            })
+                        }
+                    }
+                }
+            })
+            $('select[name="customer"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
         }
 
         // $('#quotation-form #submit-btn').on('click', function(e) {

@@ -1240,6 +1240,7 @@ class SaleController extends Controller
                         'stock_code' => $do->products[$i]->saleProduct->product->sku,
                         'desc' => $do->products[$i]->saleProduct->product->model_desc,
                         'qty' => $do->products[$i]->qty,
+                        'uom' => $do->products[$i]->saleProduct->uom,
                     ];
                 } else {
                     $dopcs = $do->products[$i]->children;
@@ -1256,6 +1257,7 @@ class SaleController extends Controller
                         'stock_code' => $dopcs[count($dopcs) - 1]->productChild->parent->sku,
                         'desc' => $dopcs[count($dopcs) - 1]->productChild->parent->model_desc,
                         'qty' => 1,
+                        'uom' => $sp->uom, 
                         'warranty_periods' => $sp->warrantyPeriods,
                         'serial_no' => $serial_no,
                     ];

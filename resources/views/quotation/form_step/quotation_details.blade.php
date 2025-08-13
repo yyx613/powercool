@@ -34,13 +34,17 @@
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <div class="relative">
-                <x-app.input.input name="customer_label" id="customer_label" :hasError="$errors->has('customer')" />
-                <ul class="absolute top-[45px] shadow bg-white w-full hidden z-50 max-h-40 overflow-y-auto"
-                    id="customer_label_hints">
-                </ul>
+                <x-app.input.select name="customer" id="customer" :hasError="$errors->has('customer')"
+                    placeholder="{{ __('Select a company') }}">
+                    <option value="">{{ __('Select a company') }}</option>
+                    @if (isset($customers))
+                        @foreach ($customers as $cus)
+                            <option value="{{ $cus->id }}" @selected(old('customer', isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null)) == $cus->id)>{{ $cus->company_name }} -
+                                {{ $cus->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
+                        @endforeach
+                    @endif
+                </x-app.input.select>
             </div>
-            <input type="hidden" name="customer"
-                value="{{ isset($replicate) ? $replicate->customer_id : (isset($sale) ? $sale->customer_id : null) }}" />
             <x-app.message.error id="customer_err" />
         </div>
         <div class="flex flex-col">
@@ -174,17 +178,13 @@
         QUOTATION_DETAILS_INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
+        SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
 
         $(document).ready(function() {
-            if (SALE != null) {
-                if (CUSTOMERS[SALE.customer_id] != undefined) {
-                    let element = CUSTOMERS[SALE.customer_id]
+            buildCompanySelect2()
 
-                    $('input[name="customer_label"]').val(
-                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                    hintClickedCallback(SALE.customer_id,
-                        `${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`)
-                }
+            if (SALE != null) {
+                $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
             }
             QUOTATION_DETAILS_INIT_EDIT = false
@@ -195,26 +195,6 @@
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
 
-        $('input[name="customer_label"]').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
-            $('#customer_label_hints').empty()
-            let val = $('input[name="customer_label"]').val()
-
-            if (val == '') return
-
-            getCustomer(val)
-
-            for (const [key, element] of Object.entries(CUSTOMERS)) {
-                // Append to customer label hints
-                $('#customer_label_hints').append(
-                    `<li class="p-1.5 text-sm hover:bg-slate-100 cursor-pointer hints" data-customer-id="${element.id}">${element.company_name} - ${element.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}</li>`
-                )
-                $('#customer_label_hints').removeClass('hidden')
-            }
-        }))
-
-        $('body').on('click', '.hints', function() {
-            hintClickedCallback($(this).data('customer-id'), $(this).text())
-        })
         $('select[name="billing_address"]').on('change', function() {
             let val = $(this).val()
 
@@ -238,14 +218,10 @@
                 $('#payment-term-container').addClass('hidden')
             }
         })
+        $('select[name="customer"]').on('change', function() {
+            let customer_id = $(this).val()
 
-        function hintClickedCallback(customer_id, customer_label) {
-            $('#credit-term-hint-container').addClass('hidden')
-            $('#credit-term-hint-container #value').text(null)
             $('select[name="sale"]').val(null).trigger('change')
-            $('#customer_label_hints').addClass('hidden')
-            $('input[name="customer_label"]').val(customer_label)
-            $('input[name="customer"]').val(customer_id)
 
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
@@ -310,23 +286,37 @@
                     }
                 },
             });
-        }
+        })
 
-        function getCustomer(keyword) {
-            let url = '{{ route('customer.get_by_keyword') }}'
-            url = `${url}?keyword=${keyword}&is_edit=${REPLICATE == null && SALE != null}`
+        function buildCompanySelect2() {
+            $('select[name="customer"]').select2({
+                minimumInputLength: 1,
+                placeholder: 'Search for a company',
+                ajax: {
+                    url: `${SEARCH_CUSTOMERS_URL}?is_edit=${REPLICATE == null && SALE != null}`,
+                    delay: DEBOUNCE_DURATION,
+                    dataType: 'json',
+                    data: function(params) {
+                        var query = {
+                            keyword: params.term,
+                        }
+                        return query;
+                    },
+                    processResults: function(data) {
+                        CUSTOMERS = data.customers
 
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'GET',
-                async: false,
-                success: function(res) {
-                    CUSTOMERS = res.customers
-                },
-            });
+                        return {
+                            results: $.map(data.customers, function(item) {
+                                return {
+                                    id: item.id,
+                                    text: `${item.company_name} - ${item.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
+                                };
+                            })
+                        }
+                    }
+                }
+            })
+            $('select[name="customer"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
         }
     </script>
 @endpush

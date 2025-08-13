@@ -188,7 +188,7 @@
                 data: {
                     'sale_id': REPLICATE != null ? null : (SALE != null ? SALE.id : null),
                     'sale': $('select[name="sale"]').val(),
-                    'customer': $('input[name="customer"]').val(),
+                    'customer': $('select[name="customer"]').val(),
                     'open_until': $('input[name="open_until"]').val(),
                     'reference': $('input[name="reference"]').val(),
                     'store': $('input[name="store"]').val(),
