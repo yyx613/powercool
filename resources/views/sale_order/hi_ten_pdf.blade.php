@@ -146,6 +146,7 @@
             </tr>
             @php
                 $total = 0;
+                $total_tax = 0;
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
@@ -200,6 +201,7 @@
                 @php
                     $total +=
                         $prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount();
+                    $total_tax += ($prod->sst_amount ?? 0);
                 @endphp
             @endforeach
             <!-- Remark -->
@@ -229,7 +231,7 @@
                     {{ priceToWord(number_format($total, 2)) }}</td>
                 <td
                     style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%; vertical-align: text-top;">
-                    Total {{ number_format($total, 2) }}</td>
+                    Total {{ number_format($total - $total_tax, 2) }}</td>
             </tr>
         </table>
 

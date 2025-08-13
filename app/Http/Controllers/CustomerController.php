@@ -172,8 +172,8 @@ class CustomerController extends Controller
                 'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'platform' => $record->platform->name ?? '-',
                 'sales_agents' => join(', ', $sales_agents),
-                'status' => $record->status == Customer::STATUS_INACTIVE ? 'Inactive' : ($record->status == Customer::STATUS_ACTIVE ? 'Active' : 'Pending Fill Up Info'),
-                'can_edit' => hasPermission('customer.edit'),
+                'status' => $record->statusToLabel($record->status),
+                'can_edit' => hasPermission('customer.edit') && $record->status != Customer::STATUS_APPROVAL_PENDING,
                 'can_delete' => hasPermission('customer.delete'),
             ];
         }
@@ -257,7 +257,7 @@ class CustomerController extends Controller
             'prev_gst_reg_no' => 'nullable|max:250',
             'registered_name' => 'nullable|max:250',
             'trade_name' => 'nullable|max:250',
-            'identity_type' => 'required_if:category,==,2|max:250',
+            'identity_type' => 'nullable|max:250',
             'identity_no' => 'nullable|max:250',
             'address' => 'nullable|max:250',
             'city' => 'nullable|max:250',
@@ -273,6 +273,8 @@ class CustomerController extends Controller
             $rules['trade_name'] = 'required|max:250';
             $rules['phone_number'] = 'required|max:250';
             $rules['email'] = 'required|email|max:250';
+            $rules['identity_type'] = 'required_if:category,==,2|max:250';
+            $rules['identity_no'] = 'required|max:250';
         }
         // Validate request
         $req->validate($rules, [
@@ -454,6 +456,12 @@ class CustomerController extends Controller
                     ])
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);
+
+                if ($customer->status == Customer::STATUS_APPROVAL_REJECTED) {
+                    $customer->revised = true;
+                }
+                $customer->status = Customer::STATUS_APPROVAL_PENDING;
+                $customer->save();
             }
 
             if (!$approval_required && $req->credit_term != null) {
@@ -495,8 +503,8 @@ class CustomerController extends Controller
             'customer_id' => 'required',
             'location_id' => 'nullable',
             'location_id.*' => 'nullable',
-            'address1' => 'required',
-            'address1.*' => 'required|max:250',
+            'address1' => 'nullable',
+            'address1.*' => 'nullable|max:250',
             'address2' => 'nullable',
             'address2.*' => 'nullable|max:250',
             'address3' => 'nullable',
@@ -504,9 +512,9 @@ class CustomerController extends Controller
             'address4' => 'nullable',
             'address4.*' => 'nullable|max:250',
             'type' => 'required',
-            'type.*' => 'required',
+            'type.*' => 'nullable',
             'is_default' => 'required',
-            'is_default.*' => 'required',
+            'is_default.*' => 'nullable',
         ], [], [
             'address1.*' => 'address 1',
             'address2.*' => 'address 2',
@@ -563,6 +571,10 @@ class CustomerController extends Controller
             $now = now();
             $data = [];
             for ($i = 0; $i < count($req->address1); $i++) {
+                if ($req->address1[$i] == null) {
+                    continue;
+                }
+
                 if ($req->location_id != null && $req->location_id[$i] != null) {
                     CustomerLocation::where('id', $req->location_id[$i])->update([
                         'address1' => $req->address1[$i],
@@ -586,7 +598,6 @@ class CustomerController extends Controller
                     ];
                 }
             }
-
             CustomerLocation::insert($data);
 
             $new_loc_ids = CustomerLocation::where('customer_id', $req->customer_id)
@@ -744,11 +755,15 @@ class CustomerController extends Controller
                     $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
                         ->where('company_name', 'like', '%' . $keyword . '%')
                         ->whereIn('id', $customer_ids)
-                        ->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                        ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
+                        ->orderBy('id', 'desc')
+                        ->get();
                 } else {
                     $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
                         ->where('company_name', 'like', '%' . $keyword . '%')
-                        ->orderBy('id', 'desc')->where('status', Customer::STATUS_ACTIVE)->get();
+                        ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
+                        ->orderBy('id', 'desc')
+                        ->get();
                 }
             }
             $customers = $customers->keyBy('id')->all();

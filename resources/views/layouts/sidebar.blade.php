@@ -830,6 +830,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('setting.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('sync.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -1601,7 +1608,7 @@
             </div>
         @endcan
         <!-- Setting -->
-        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
+        <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-screen overflow-y-auto py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
             data-type="setting">
             <div class="mb-4 p-2 border-b">
                 <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Setting') }}</h6>
@@ -1714,11 +1721,18 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
                     </a>
                 </li>
-                <li> 
+                <li>
                     <a href="{{ route('service.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('setting.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
                     </a>
                 </li>
                 <li>
@@ -1749,7 +1763,8 @@
 
 <!-- Mobile -->
 <aside class="max-w-[250px] w-full bg-blue-900 z-50 fixed top-0 left-0 hidden" id="mobile-sidebar">
-    <div class="flex flex-col overflow-x-hidden hide-scrollbar" style="min-height: 100%; height: -webkit-fill-available; height: 100vh;">
+    <div class="flex flex-col overflow-x-hidden hide-scrollbar"
+        style="min-height: 100%; height: -webkit-fill-available; height: 100vh;">
         <div class="px-4 pt-4 pb-2 flex items-center">
             <button type="button" class="mobile-sidebar-trigger-btn">
                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"
@@ -2572,6 +2587,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('setting.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'setting.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('sync.index') }}"
                                             class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -2636,7 +2658,8 @@
                             'vehicle.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="11"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes(
-                            'supplier.') || CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes('agent_debtor.')) {
+                            'supplier.') || CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes(
+                            'agent_debtor.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
                             'invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes(
@@ -2676,7 +2699,7 @@
                         .includes('inventory_type.') || CURRENT_ROUTE_NAME.includes('inventory_category.') ||
                         CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') ||
                         CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') ||
-                        CURRENT_ROUTE_NAME.includes('sales_agent.') ||
+                        CURRENT_ROUTE_NAME.includes('sales_agent.') || CURRENT_ROUTE_NAME.includes('setting.') ||
                         CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') ||
                         CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
@@ -2745,7 +2768,8 @@
                     .includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME
                     .includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME
                     .includes('sales_agent.') || CURRENT_ROUTE_NAME
-                    .includes('service.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes(
+                    .includes('service.') || CURRENT_ROUTE_NAME
+                    .includes('setting.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes(
                         'uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(

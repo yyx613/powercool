@@ -37,6 +37,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesAgentController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TaskController;
@@ -729,6 +730,13 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/store', 'store')->name('store');
             Route::get('/edit/{agent}', 'edit')->name('edit');
             Route::post('/update/{agent}', 'update')->name('update');
+        });
+        // Settings 
+        Route::controller(SettingController::class)->prefix('settings')->name('setting.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/edit/{setting}', 'edit')->name('edit');
+            Route::post('/update/{setting}', 'update')->name('update');
         });
     });
     Route::middleware(['can:user_role_management.view'])->group(function () {

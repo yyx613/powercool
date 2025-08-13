@@ -160,6 +160,7 @@
             </tr>
             @php
                 $total = 0;
+                $total_tax = 0;
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
@@ -190,6 +191,7 @@
                 @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
+                    $total_tax += ($prod->sst_amount ?? 0);
                 @endphp
             @endforeach
             <!-- Remark -->
@@ -216,7 +218,7 @@
                     {{ $sale->open_until }}</td>
                 <td
                     style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
-                    Total RM{{ number_format($total, 2) }}</td>
+                    Total RM{{ number_format($total - $total_tax, 2) }}</td>
             </tr>
             <tr>
                 <td style="font-size: 14px; font-weight: 700;">Payment Method</td>

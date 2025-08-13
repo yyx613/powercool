@@ -148,6 +148,7 @@
             </tr>
             @php
                 $total = 0;
+                $total_tax = 0;
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
@@ -198,6 +199,7 @@
                 @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
+                    $total_tax += ($prod->sst_amount ?? 0);
                 @endphp
             @endforeach
             <!-- Remark -->
@@ -226,7 +228,7 @@
                 <td style="font-size: 14px; font-weight: 700;"></td>
                 <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0;" colspan="3">
                     Tax @ 0% on <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format(0, 2) }}</span></td>
+                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total_tax, 2) }}</span></td>
             </tr>
             <tr>
                 <td style="font-size: 14px; font-weight: 700;"></td>
@@ -235,7 +237,7 @@
                 <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">Total (Inclusive
                     of
                     SST) <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total, 2) }}</span>
+                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total - $total_tax, 2) }}</span>
                 </td>
             </tr>
         </table>
