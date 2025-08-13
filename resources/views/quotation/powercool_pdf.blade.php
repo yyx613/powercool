@@ -30,41 +30,41 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 18px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
-                            style="font-size: 14px; font-weight: 100;">(383045-D)</span></span><br>
-                    <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
-                    <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
-                    <span style="font-size: 14px;">48200 SERENDAH,SELANGOR.</span><br>
-                    <span style="font-size: 14px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
-                    <span style="font-size: 14px;">Email : enquiry@powercool.com.my</span><br>
-                    <span style="font-size: 14px;">Sales Tax ID No : B16-1809-22000036</span><br>
+                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
+                            style="font-size: 12px; font-weight: 100;">(383045-D)</span></span><br>
+                    <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
+                    <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
+                    <span style="font-size: 12px;">48200 SERENDAH,SELANGOR.</span><br>
+                    <span style="font-size: 12px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
+                    <span style="font-size: 12px;">Email : enquiry@powercool.com.my</span><br>
+                    <span style="font-size: 12px;">Sales Tax ID No : B16-1809-22000036</span><br>
                 </td>
                 <td style="width: 30%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; width: 30%; font-weight: 700;">No</td>
-                            <td style="font-size: 14px; width: 10%;">:</td>
-                            <td style="font-size: 14px; font-weight: 700;">{{ $sale->sku }}</td>
+                            <td style="font-size: 12px; width: 30%; font-weight: 700;">No</td>
+                            <td style="font-size: 12px; width: 10%;">:</td>
+                            <td style="font-size: 12px; font-weight: 700;">{{ $sale->sku }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Your Ref</td>
-                            <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $sale->reference }}</td>
+                            <td style="font-size: 12px;">Your Ref</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $sale->reference }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">From</td>
-                            <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $sale->quo_from }}</td>
+                            <td style="font-size: 12px;">From</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $sale->quo_from }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Salesperson</td>
-                            <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $sale->saleperson->name }}</td>
+                            <td style="font-size: 12px;">Salesperson</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $sale->saleperson->name }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Date</td>
-                            <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $date }}</td>
+                            <td style="font-size: 12px;">Date</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $date }}</td>
                         </tr>
                     </table>
                 </td>
@@ -77,26 +77,26 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
             <tr>
                 <td
-                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
+                    style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
                 <td
-                    style="font-size: 18px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
+                    style="font-size: 16px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
                     QUOTATION</td>
                 <td
-                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
+                    style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
             </tr>
             @if ($sale->status == 3)
                 <tr>
                     <td
-                        style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
+                        style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
                     </td>
-                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
+                    <td style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
                         id="invalid">
                         CANCELLED
                     </td>
                     <td
-                        style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
+                        style="font-size: 12px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
                     </td>
                 </tr>
             @endif
@@ -104,7 +104,7 @@
                 <td style="padding: 0 35px 0 0;" colspan="3">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; width: 50%;" colspan="2">
+                            <td style="font-size: 12px; width: 50%;" colspan="2">
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -113,9 +113,9 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
+                            <td style="font-size: 12px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH:
+                            <td style="font-size: 12px; padding: 10px 0 0 0; width: 15%;">AH:
                                 {{ $customer->name ?? '' }}
                             </td>
                         </tr>
@@ -123,11 +123,11 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 25px 0 0 0;" colspan="2">Thank you for your inquiry. We are
+                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">Thank you for your inquiry. We are
                     pleased to submit
                     our
                     quote as follows:</td>
-                <td style="font-size: 14px; padding: 25px 0 0 0;">Store: {{ $sale->store }}</td>
+                <td style="font-size: 12px; padding: 25px 0 0 0;">Store: {{ $sale->store }}</td>
             </tr>
         </table>
 
@@ -180,7 +180,7 @@
                     <td style="font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ $prod->qty }}</td>
                     <td style="font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
-                        {{ $prod->product->uom }}</td>
+                        {{ $prod->uom }}</td>
                     <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
@@ -215,41 +215,41 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 20%;">
+                    style="font-size: 12px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 20%;">
                     Validity</td>
                 <td
-                    style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 5px;">
+                    style="font-size: 12px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black; width: 5px;">
                     :</td>
-                <td style="font-size: 14px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black;">
+                <td style="font-size: 12px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black;">
                     {{ $sale->open_until }}</td>
                 <td
-                    style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
+                    style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
                     Sub Total (Excluding SST) <span
                         style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total, 2) }}</span>
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; font-weight: 700;">Payment Method</td>
-                <td style="font-size: 14px; font-weight: 700;">:</td>
-                <td style="font-size: 14px; font-weight: 700;">{{ $sale->paymentMethod->name ?? null }}</td>
-                <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">
+                <td style="font-size: 12px; font-weight: 700;">Payment Method</td>
+                <td style="font-size: 12px; font-weight: 700;">:</td>
+                <td style="font-size: 12px; font-weight: 700;">{{ $sale->paymentMethod->name ?? null }}</td>
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">
                     Tax @ {{ $sst_value }}% on <span
                         style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total_tax, 2) }}</span>
                 </td>
             </tr>
             @if ($show_payment_term)
                 <tr>
-                    <td style="font-size: 14px; font-weight: 700;">Payment Term</td>
-                    <td style="font-size: 14px; font-weight: 700;">:</td>
-                    <td style="font-size: 14px; font-weight: 700;">{{ $payment_term ?? null }}</td>
+                    <td style="font-size: 12px; font-weight: 700;">Payment Term</td>
+                    <td style="font-size: 12px; font-weight: 700;">:</td>
+                    <td style="font-size: 12px; font-weight: 700;">{{ $payment_term ?? null }}</td>
                     <td></td>
                 </tr>
             @endif
             <tr>
-                <td style="font-size: 14px; font-weight: 700;"></td>
-                <td style="font-size: 14px; font-weight: 700;"></td>
-                <td style="font-size: 14px; font-weight: 700;"></td>
-                <td style="font-size: 14px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">Total (Inclusive
+                <td style="font-size: 12px; font-weight: 700;"></td>
+                <td style="font-size: 12px; font-weight: 700;"></td>
+                <td style="font-size: 12px; font-weight: 700;"></td>
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">Total (Inclusive
                     of
                     SST) <span
                         style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total - $total_tax, 2) }}</span>
@@ -288,12 +288,12 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 16px; padding: 0 0 50px 0; text-align: center; width: 33%;">PREPARED BY</td>
+                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;">PREPARED BY</td>
                 <td></td>
             </tr>
             <tr>
                 <td
-                    style="font-size: 16px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
+                    style="font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
                     {{ $sale->saleperson->name }}</td>
                 <td></td>
             </tr>
