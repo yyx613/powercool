@@ -365,6 +365,8 @@ class SaleController extends Controller
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
             'show_payment_term' => $show_payment_term,
             'payment_term' => $payment_term ?? null,
+            'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
+            'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -868,8 +870,6 @@ class SaleController extends Controller
         }
     }
 
-
-
     public function pdfSaleOrder(Sale $sale)
     {
         if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
@@ -888,7 +888,9 @@ class SaleController extends Controller
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
-            'terms' => $sale->paymentTerm ?? null
+            'terms' => $sale->paymentTerm ?? null,
+            'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
+            'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
         ]);
         $pdf->setPaper('A4', 'letter');
 

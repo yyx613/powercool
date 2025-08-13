@@ -18,5 +18,10 @@ class SettingSeeder extends Seeder
             'Name' => 'SST',
             'value' => 1.4
         ]);
+        Setting::create([
+            'key' => 'tax_code',
+            'Name' => 'Tax Code',
+            'value' => 'S-10'
+        ]);
     }
 }

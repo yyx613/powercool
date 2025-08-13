@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Setting extends Model
 {
     const SST_KEY = 'sst';
+    const TAX_CODE_KEY = 'tax_code';
 
     use HasFactory;
 
