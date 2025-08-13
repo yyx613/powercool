@@ -12,7 +12,7 @@
         @include('customer.form_step.info')
         @include('customer.form_step.location')
     </div>
-    @if (!isset($customer) || (isset($customer) && $customer->status != 3))
+    @if (!isset($mode) && (!isset($customer) || (isset($customer) && $customer->status != 3)))
         <div class="mt-8 flex justify-end">
             <x-app.button.submit id="group-submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
         </div>
