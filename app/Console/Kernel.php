@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+        $schedule->command('app:expire-quotation')->dailyAt('00:01')->evenInMaintenanceMode();
         $schedule->command('app:refresh-tik-tok-token')->everyThreeHours();
         $schedule->command('app:refresh-lazada-token')->everyThreeHours();
         $schedule->command('app:refresh-shopee-token')->everyThreeHours();

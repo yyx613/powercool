@@ -102,6 +102,7 @@ class SaleController extends Controller
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
+                'sales.expired_at AS expired_at',
                 DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount')
             )
             ->where('sales.type', Sale::TYPE_QUO)
@@ -189,6 +190,7 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
+                'expired_at' => $record->expired_at,
                 'is_draft' => $record->is_draft,
                 'can_view_pdf' => $record->is_draft == false && !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_APPROVAL_REJECTED]),
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
@@ -1744,6 +1746,10 @@ class SaleController extends Controller
                 $ref = null;
                 if ($req->type == 'quo') {
                     $ref = $req->reference;
+                    if ($req->open_until >= now()->format('Y-m-d')) {
+                        $sale->expired_at = null;
+                        $sale->save();
+                    }
                 } elseif ($req->type != 'quo' && $req->reference != null) {
                     $ref = json_encode(explode(',', $req->reference));
                 }
