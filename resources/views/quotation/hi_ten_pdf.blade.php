@@ -150,16 +150,16 @@
                     UOM</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    U/Price<br>(RM)</td>
+                    U/Price (RM)</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Discount<br>(RM)</td>
+                    Discount (RM)</td>
+                <td
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 20%;">
+                    Promotion (RM)</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Promotion<br>(RM)</td>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Total<br>(RM)</td>
+                    Total (RM)</td>
             </tr>
             @php
                 $total = 0;

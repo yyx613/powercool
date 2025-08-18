@@ -62,55 +62,6 @@
             if (SALE == null) {
                 getNextSku()
             }
-            // if (SALE != null SALE.is_draft == true) {
-            //     draftData = SALE.draft_data
-            //     // Quotation details
-            //     $('input[name="open_until"]').val(draftData.open_until)
-            //     $('select[name="customer"]').val(draftData.customer).trigger('change')
-            //     $('input[name="reference"]').val(draftData.reference)
-            //     $('input[name="from"]').val(draftData.from)
-            //     $('input[name="cc"]').val(draftData.cc)
-            //     $('input[name="store"]').val(draftData.store)
-            //     $('select[name="sale"]').val(draftData.sale).trigger('change')
-            //     $('select[name="report_type"]').val(draftData.report_type).trigger('change')
-            //     $('select[name="billing_address"]').val(draftData.billing_address).trigger('change')
-            //     $('select[name="status"]').val(draftData.status).trigger('change')
-            //     $('#new-billing-address input[name="address1"]').val(draftData.new_billing_address1)
-            //     $('#new-billing-address input[name="address2"]').val(draftData.new_billing_address2)
-            //     $('#new-billing-address input[name="address3"]').val(draftData.new_billing_address3)
-            //     $('#new-billing-address input[name="address4"]').val(draftData.new_billing_address4)
-            //     // Product details
-            //     for (let i = 0; i < draftData.product_id.length; i++) {
-            //         if (i != 0) {
-            //             $('#add-item-btn').click()
-            //         }
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="product_id[]"]`).val(draftData
-            //             .product_id[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="qty"]`).val(draftData.qty[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="product_desc"]`).val(draftData
-            //             .product_desc[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="discount"]`).val(draftData
-            //             .discount[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="warranty_period[]"]`).val(
-            //             draftData.warranty_period[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="promotion[]"]`).val(draftData
-            //             .promotion_id[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] textarea[name="remark"]`).text(draftData
-            //             .product_remark[i])
-            //         if (draftData.foc[i] == 'true') {
-            //             $(`#product-details-container .items[data-id=${i+1}] .foc-btns`).click()
-            //         }
-            //         if (draftData.selling_price[i] != null) {
-            //             $(`#product-details-container .items[data-id=${i+1}] select[name="selling_price[]"]`).val(
-            //                 draftData.selling_price[i]).trigger('change')
-            //         } else {
-            //             $(`#product-details-container .items[data-id=${i+1}] input[name="override_selling_price"]`)
-            //                 .val(draftData.override_selling_price[i]).trigger('keyup')
-            //         }
-            //     }
-            //     // Remarks
-            //     $('#additional-remark-container textarea[name="remark"]').text(draftData.remark)
-            // }
         })
 
         $('#save-as-draft-btn, #submit-btn').on('click', function() {
@@ -132,6 +83,7 @@
             // Prepare data
             let prodOrderId = []
             let prodId = []
+            let sequence = []
             let customizeProd = []
             let prodDesc = []
             let qty = []
@@ -150,6 +102,7 @@
             $('#product-details-container .items').each(function(i, obj) {
                 prodOrderId.push($(this).data('product-id') ?? null)
                 prodId.push($(this).find('select[name="product_id[]"]').val())
+                sequence.push($(this).data('sequence'))
                 customizeProd.push($(this).find('input[name="customize_product"]').val())
                 prodDesc.push($(this).find('input[name="product_desc"]').val())
                 qty.push($(this).find('input[name="qty"]').val())
@@ -207,6 +160,7 @@
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
+                    'sequence': sequence,
                     'customize_product': customizeProd,
                     'product_desc': prodDesc,
                     'qty': qty,

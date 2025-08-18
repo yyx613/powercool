@@ -53,7 +53,7 @@ class Sale extends Model
 
     public function products()
     {
-        return $this->hasMany(SaleProduct::class, 'sale_id');
+        return $this->hasMany(SaleProduct::class, 'sale_id')->orderBy('sequence');
     }
 
     public function saleperson()
