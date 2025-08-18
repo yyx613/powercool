@@ -231,6 +231,10 @@
                     "width": '10%',
                     "targets": 10,
                     render: function(data, type, row) {
+                        if (row.expired_at != null) {
+                            return "{!! __('Expired') !!}"
+                        }
+
                         switch (data) {
                             case 0:
                                 return "{!! __('Inactive') !!}"
