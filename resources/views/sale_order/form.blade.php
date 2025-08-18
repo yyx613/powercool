@@ -183,6 +183,7 @@
             // Prepare products details
             let prodOrderId = []
             let prodId = []
+            let sequence = []
             let customizeProd = []
             let prodDesc = []
             let qty = []
@@ -201,6 +202,7 @@
             $('#product-details-container .items').each(function(i, obj) {
                 prodOrderId.push($(this).data('product-id') ?? null)
                 prodId.push($(this).find('select[name="product_id[]"]').val())
+                sequence.push($(this).data('sequence'))
                 customizeProd.push($(this).find('input[name="customize_product"]').val())
                 prodDesc.push($(this).find('input[name="product_desc"]').val())
                 qty.push($(this).find('input[name="qty"]').val())
@@ -266,6 +268,7 @@
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
+                    'sequence': sequence,
                     'customize_product': customizeProd,
                     'product_desc': prodDesc,
                     'qty': qty,

@@ -30,7 +30,7 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
+                    <span style="font-size: 12px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
                             style="font-size: 12px; font-weight: 100;">(383045-D)</span></span><br>
                     <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
@@ -154,13 +154,13 @@
                     UOM</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    U/Price<br>(RM)</td>
+                    U/Price (RM)</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Discount<br>(RM)</td>
+                    Discount (RM)</td>
                 <td
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Total<br>(RM)</td>
+                    Total (RM)</td>
             </tr>
             @php
                 $total = 0;
@@ -223,18 +223,26 @@
                 <td style="font-size: 12px; font-weight: 700; padding: 10px 0 0 0; border-top: solid 1px black;">
                     {{ $sale->open_until }}</td>
                 <td
-                    style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
-                    Sub Total (Excluding SST) <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total, 2) }}</span>
+                    style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 5px 0 0; border-top: solid 1px black;">
+                    Sub Total (Excluding SST)
+                </td>
+                <td style="padding: 10px 0 0 0; border-top: solid 1px black; width: 10%;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total, 2) }}</p>
                 </td>
             </tr>
             <tr>
                 <td style="font-size: 12px; font-weight: 700;">Payment Method</td>
                 <td style="font-size: 12px; font-weight: 700;">:</td>
                 <td style="font-size: 12px; font-weight: 700;">{{ $sale->paymentMethod->name ?? null }}</td>
-                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">
-                    Tax @ {{ $sst_value }}% on <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total_tax, 2) }}</span>
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 0px 5px 0 0;">
+                    Tax @ {{ $sst_value }}% on
+                </td>
+                <td style="padding: 0px 0 0 0;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total_tax, 2) }}</p>
                 </td>
             </tr>
             @if ($show_payment_term)
@@ -243,16 +251,22 @@
                     <td style="font-size: 12px; font-weight: 700;">:</td>
                     <td style="font-size: 12px; font-weight: 700;">{{ $payment_term ?? null }}</td>
                     <td></td>
+                    <td></td>
                 </tr>
             @endif
             <tr>
                 <td style="font-size: 12px; font-weight: 700;"></td>
                 <td style="font-size: 12px; font-weight: 700;"></td>
                 <td style="font-size: 12px; font-weight: 700;"></td>
-                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">Total (Inclusive
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 0px 5px 0 0;">Total
+                    (Inclusive
                     of
-                    SST) <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total - $total_tax, 2) }}</span>
+                    SST)
+                </td>
+                <td style="padding: 0px 0 0 0;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total - $total_tax, 2) }}</p>
                 </td>
             </tr>
         </table>
@@ -260,7 +274,7 @@
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 15px 0;" colspan="2">Note</td>
+                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">Note</td>
             </tr>
             <tr>
                 <td style="font-size: 12px; padding: 0 0 15px 0;" colspan="2">
@@ -273,10 +287,10 @@
                     will be imposed.<br>
                     5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,<br>
                     otherwise any discrepancy will not be entertained.<br>
-                    6. Prices are subjected to change without prior notice.
+                    6. Prices are subjected to change without prior notice.<br>
                     7. · 3 Years Compressor Warranty with T&C apply<br>
-                    <span style="padding: 0 0 0 18px;">· 6 months General Service conduct by IMAX</span><br>
-                    <span style="padding: 0 0 0 18px;">· Limited to 1 time change only</span><br>
+                    <span style="padding: 0 0 0 15px;">· 6 months General Service conduct by IMAX</span><br>
+                    <span style="padding: 0 0 0 15px;">· Limited to 1 time change only</span><br>
                     8. Wear and tear not included in warranty claim
                 </td>
             </tr>
@@ -288,14 +302,18 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;">PREPARED BY</td>
+                <td style="font-size: 12px; padding: 0 0 25px 0; text-align: center; width: 33%;">Your Faithfully</td>
                 <td></td>
             </tr>
             <tr>
                 <td
-                    style="font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
+                    style="font-size: 12px; text-align: center; width: 33%; border-bottom: solid 1px black; padding: 10px 0 0 0; font-family: serif;">
                     {{ $sale->saleperson->name }}</td>
                 <td></td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; padding: 30px 0 0 0;" colspan="2">This is a computer generated
+                    documents no signature required.</td>
             </tr>
         </table>
     </main>

@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 200px 25px 50px 25px;
+        margin: 175px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -175px;
+        top: -150px;
         left: 0px;
         right: 0px;
     }
@@ -26,8 +26,8 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span><br>
-                    <span style="font-size: 10px;">(383045-D)</span><br>
+                    <span style="font-size: 12px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
+                            style="font-size: 12px; font-weight: 100;">(383045-D)</span></span><br>
                     <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 12px;">48200 SERENDAH,SELANGOR.</span><br>
@@ -121,35 +121,35 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
                     Tax Code</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">
                     Item Code</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 40%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    U/Price<br>(RM)</td>
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
+                    U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Discount<br>(RM)</td>
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
+                    Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Promotion<br>(RM)</td>
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 20%;">
+                    Promotion (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
-                    Total<br>(RM)</td>
+                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 20%;">
+                    Total (RM)</td>
             </tr>
             @php
                 $total = 0;
@@ -157,34 +157,34 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $key + 1 }}</td>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $tax_code }}</td>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
+                    <td style="font-size: 10px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ $prod->product->sku }}</td>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->product->model_name }}</td>
-                    <td style="font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->qty }}</td>
-                    <td style="font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->uom }}</td>
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->unit_price, 2) }}</td>Price
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->discount ?? 0, 2) }}</td>
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format(($prod->override_selling_price ?? $prod->qty * $prod->unit_price) - $prod->discountAmount(), 2) }}
                     </td>
                 </tr>
                 @if ($prod->remark != null)
                     <tr>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="4"></td>
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;" colspan="4"></td>
                     </tr>
                 @endif
                 <!-- Warranty -->
@@ -196,19 +196,19 @@
                         }
                     @endphp
                     <tr>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Warranty:
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">Warranty:
                             {{ join(', ', $warranty) }}</td>
-                        <td style="font-size: 12px; text-align: left;" colspan="4"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="4"></td>
                     </tr>
                 @endif
                 <!-- Serial No -->
                 @if ($prod->serial_no != null)
                     <tr>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">Serial No:
                             {{ join(', ', $prod->serial_no) }}</td>
-                        <td style="font-size: 12px; text-align: left;" colspan="4"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="4"></td>
                     </tr>
                 @endif
                 @php
@@ -220,7 +220,7 @@
             @if ($sale->remark != null)
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2" style="font-size: 12px; padding: 15px 0;"><span
+                    <td colspan="2" style="font-size: 10px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="2"></td>
                 </tr>
@@ -233,26 +233,38 @@
                     colspan="3">
                     {{ priceToWord(number_format($total, 2)) }}</td>
                 <td
-                    style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
-                    Sub Total (Excluding SST) <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total, 2) }}</span>
+                    style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 5px 0 0; border-top: solid 1px black;">
+                    Sub Total (Excluding SST)
+                </td>
+                <td style="padding: 10px 0 0 0; border-top: solid 1px black; width: 10%;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total, 2) }}</p>
                 </td>
             </tr>
             <tr>
                 <td style="font-size: 12px; font-weight: 700;"></td>
-                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;" colspan="3">
-                    Tax @ {{ $sst_value }}% on <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total_tax, 2) }}</span>
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 0px 5px 0 0;" colspan="3">
+                    Tax @ {{ $sst_value }}% on
+                </td>
+                <td style="padding: 0px 0 0 0;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total_tax, 2) }}</p>
                 </td>
             </tr>
             <tr>
                 <td style="font-size: 12px; font-weight: 700;"></td>
                 <td style="font-size: 12px; font-weight: 700;"></td>
                 <td style="font-size: 12px; font-weight: 700;"></td>
-                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0;">Total (Inclusive
+                <td style="font-size: 12px; font-weight: 700; text-align: right; padding: 0px 5px 0 0;">Total (Inclusive
                     of
-                    SST) <span
-                        style="border: solid 1px black; padding: 2.5px 10px;">{{ number_format($total - $total_tax, 2) }}</span>
+                    SST)
+                </td>
+                <td style="padding: 0px 0 0 0;">
+                    <p
+                        style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
+                        {{ number_format($total - $total_tax, 2) }}</p>
                 </td>
             </tr>
         </table>
@@ -260,10 +272,10 @@
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 15px 0;" colspan="3">Note</td>
+                <td style="font-size: 12px; padding: 25px 0 0px 0;" colspan="3">Note</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; padding: 0 0 15px 0;" colspan="3">
+                <td style="font-size: 12px; padding: 0 0 40px 0;" colspan="3">
                     1. All cheques should be crossed and makde payable to POWER COOL EQUIPMENTS (M) SDN BHD<br>
                     2. Please remit your payment to : <span style="font-weight: 700;">Public Bank Ac No.:
                         3141967510</span><br>

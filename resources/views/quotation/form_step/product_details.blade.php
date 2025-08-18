@@ -201,6 +201,15 @@
         PRODUCT_DETAILS_INIT_EDIT = true
 
         $(document).ready(function() {
+            var elem = document.getElementById('items-container')
+            if (elem != null) {
+                var sortable = Sortable.create(elem, {
+                    onEnd: function(evt) {
+                        sortProduct()
+                    },
+                })
+            }
+
             if (SALE != null) {
                 for (let i = 0; i < SALE.products.length; i++) {
                     const sp = SALE.products[i];
@@ -270,6 +279,7 @@
 
             ITEMS_COUNT++
             $(clone).attr('data-id', ITEMS_COUNT)
+            $(clone).attr('data-sequence', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.sst-btns').attr('data-id', ITEMS_COUNT)
@@ -658,6 +668,15 @@
             } else {
                 $('.items:first .delete-item-btns').addClass('group-hover:block')
             }
+        }
+
+        function sortProduct() {
+            let sequence = 0
+
+            $('.items').each(function(i, obj) {
+                sequence++
+                $(this).attr('data-sequence', sequence)
+            })
         }
     </script>
 @endpush

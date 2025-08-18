@@ -1257,7 +1257,7 @@ class SaleController extends Controller
                         'stock_code' => $dopcs[count($dopcs) - 1]->productChild->parent->sku,
                         'desc' => $dopcs[count($dopcs) - 1]->productChild->parent->model_desc,
                         'qty' => 1,
-                        'uom' => $sp->uom, 
+                        'uom' => $sp->uom,
                         'warranty_periods' => $sp->warrantyPeriods,
                         'serial_no' => $serial_no,
                     ];
@@ -1974,6 +1974,10 @@ class SaleController extends Controller
                     $prod = Product::where('id', $req->product_id[$i])->first();
                     if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
+                        if ($req->sequence[$i] != $sp->sequence) {
+                            $sp->sequence = $req->sequence[$i] ?? null;
+                            $sp->save();
+                        }
                         // If sale product is approved but amount changed, proceed
                         $skip_approved = true;
                         if ($req->selling_price[$i] == null) {
@@ -2021,6 +2025,7 @@ class SaleController extends Controller
                             'promotion_id' => $req->promotion_id[$i],
                             'discount' => $req->discount[$i],
                             'remark' => $req->product_remark[$i],
+                            'sequence' => $req->sequence[$i] ?? null,
                         ]);
                     }
                     // Warranty Period
@@ -2130,6 +2135,9 @@ class SaleController extends Controller
                             }
                             SaleProductChild::insert($data);
                         }
+                        // Update product sequence
+                        $sp->sequence = $req->sequence[$i] ?? null;
+                        $sp->save();
                     }
                 }
             }
