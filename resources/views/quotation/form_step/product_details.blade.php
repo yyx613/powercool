@@ -19,15 +19,34 @@
                     d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
             </svg>
         </button>
-        <div class="col-span-4 hidden" id="approval-status-container">
-            <span id="revised-status"
-                class="hidden border rounded border-blue-500 text-blue-500 text-sm font-medium px-1 py-0.5">{{ __('Revised') }}</span>
-            <span id="pending-status"
-                class="hidden border rounded border-slate-500 text-slate-500 text-sm font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
-            <span id="approved-status"
-                class="hidden border rounded border-green-600 text-green-600 text-sm font-medium px-1 py-0.5">{{ __('Approved') }}</span>
-            <span id="rejected-status"
-                class="hidden border rounded border-red-600 text-red-600 text-sm font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
+        <div class="col-span-4 flex items-center gap-4">
+            <div class="flex gap-2">
+                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn" title="{{ __('Move Down') }}">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"
+                        width="512" height="512">
+                        <path
+                            d="M17.71,12.71a1,1,0,0,0-1.42,0L13,16V6a1,1,0,0,0-2,0V16L7.71,12.71a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41l4.3,4.29A2,2,0,0,0,12,19h0a2,2,0,0,0,1.4-.59l4.3-4.29A1,1,0,0,0,17.71,12.71Z" />
+                    </svg>
+                </button>
+                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-up-btn" title="{{ __('Move Up') }}">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
+                        <g id="_01_align_center" data-name="01 align center">
+                            <path
+                                d="M17.707,9.879,13.414,5.586a2,2,0,0,0-2.828,0L6.293,9.879l1.414,1.414L11,8V19h2V8l3.293,3.293Z" />
+                        </g>
+                    </svg>
+                </button>
+            </div>
+            <div class="hidden" id="approval-status-container">
+                <span id="revised-status"
+                    class="hidden border rounded border-blue-500 text-blue-500 text-sm font-medium px-1 py-0.5">{{ __('Revised') }}</span>
+                <span id="pending-status"
+                    class="hidden border rounded border-slate-500 text-slate-500 text-sm font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
+                <span id="approved-status"
+                    class="hidden border rounded border-green-600 text-green-600 text-sm font-medium px-1 py-0.5">{{ __('Approved') }}</span>
+                <span id="rejected-status"
+                    class="hidden border rounded border-red-600 text-red-600 text-sm font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
+            </div>
         </div>
         <div class="flex flex-col">
             <x-app.input.label class="mb-1">{{ __('Product') }} <span
@@ -201,15 +220,6 @@
         PRODUCT_DETAILS_INIT_EDIT = true
 
         $(document).ready(function() {
-            var elem = document.getElementById('items-container')
-            if (elem != null) {
-                var sortable = Sortable.create(elem, {
-                    onEnd: function(evt) {
-                        sortProduct()
-                    },
-                })
-            }
-
             if (SALE != null) {
                 for (let i = 0; i < SALE.products.length; i++) {
                     const sp = SALE.products[i];
@@ -272,6 +282,8 @@
                 $('#add-item-btn').click()
             }
 
+            sortProduct()
+
             PRODUCT_DETAILS_INIT_EDIT = false
         })
         $('#add-item-btn').on('click', function() {
@@ -280,6 +292,8 @@
             ITEMS_COUNT++
             $(clone).attr('data-id', ITEMS_COUNT)
             $(clone).attr('data-sequence', ITEMS_COUNT)
+            $(clone).find('.move-down-btn').attr('data-sequence', ITEMS_COUNT)
+            $(clone).find('.move-up-btn').attr('data-sequence', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.sst-btns').attr('data-id', ITEMS_COUNT)
@@ -309,6 +323,7 @@
 
             if (PRODUCT_DETAILS_INIT_EDIT == false) {
                 $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2('open')
+                sortProduct()
             }
         })
         $('body').on('click', '.delete-item-btns', function() {
@@ -449,6 +464,18 @@
             }
             calItemTax(id)
             calSummary()
+        })
+        $('body').on('click', '.move-down-btn', function() {
+            let itemSequence = $(this).data('sequence')
+
+            $(`.items[data-sequence=${itemSequence}]`).insertAfter($(`.items[data-sequence=${itemSequence+1}]`))
+            sortProduct()
+        })
+        $('body').on('click', '.move-up-btn', function() {
+            let itemSequence = $(this).data('sequence')
+
+            $(`.items[data-sequence=${itemSequence}]`).insertBefore($(`.items[data-sequence=${itemSequence-1}]`))
+            sortProduct()
         })
 
         function calItemTotal(idx) {
@@ -673,9 +700,23 @@
         function sortProduct() {
             let sequence = 0
 
-            $('.items').each(function(i, obj) {
+            $('#items-container .items').each(function(i, obj) {
+                $(this).find('.move-down-btn').removeClass('hidden')
+                $(this).find('.move-up-btn').removeClass('hidden')
+
+                if ($('.items').length <= 1) {
+                    $(this).find('.move-down-btn').addClass('hidden')
+                    $(this).find('.move-up-btn').addClass('hidden')
+                } else if (i == 0) {
+                    $(this).find('.move-up-btn').addClass('hidden')
+                } else if (i + 1 == $('.items').length) {
+                    $(this).find('.move-down-btn').addClass('hidden')
+                }
+
                 sequence++
                 $(this).attr('data-sequence', sequence)
+                $(this).find('.move-down-btn').attr('data-sequence', sequence)
+                $(this).find('.move-up-btn').attr('data-sequence', sequence)
             })
         }
     </script>

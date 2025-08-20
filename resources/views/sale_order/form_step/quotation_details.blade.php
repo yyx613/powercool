@@ -233,6 +233,9 @@
                 },
             });
         })
+        $('body').on('focus', '[aria-labelledby="select2-customer-container"]', function() {
+            $('select[name="customer"]').select2('open')
+        })
 
         function hintClickedCallback(customer_id, customer_label) {
             $('#customer_label_hints').addClass('hidden')

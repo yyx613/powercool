@@ -287,6 +287,9 @@
                 },
             });
         })
+        $('body').on('focus', '[aria-labelledby="select2-customer-container"]', function() {
+            $('select[name="customer"]').select2('open')
+        })
 
         function buildCompanySelect2() {
             $('select[name="customer"]').select2({

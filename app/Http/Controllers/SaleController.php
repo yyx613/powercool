@@ -478,6 +478,9 @@ class SaleController extends Controller
                 $references = $references->merge($quos[$i]->reference);
                 $remarks = $remarks->merge($quos[$i]->remark);
                 $products = $products->merge($quos[$i]->products);
+
+                $quos[$i]->status_before_convert = $quos[$i]->status;
+                $quos[$i]->save();
             }
 
             // Create quotation details
@@ -855,9 +858,11 @@ class SaleController extends Controller
             $sale->save();
 
             // Change converted QUO back to active
-            Sale::where('convert_to', $sale->id)->update([
-                'status' => Sale::STATUS_ACTIVE
-            ]);
+            $quos = Sale::where('convert_to', $sale->id)->get();
+            for ($i=0; $i < count($quos); $i++) { 
+                $quos[$i]->status = $quos[$i]->status_before_convert ?? Sale::STATUS_ACTIVE;
+                $quos[$i]->save();
+            }
 
             $sale->delete();
 
@@ -1524,7 +1529,7 @@ class SaleController extends Controller
             }
             $has_pending_and_rejected = SaleProduct::where('sale_id', $req->sale_id)->whereIn('status', [SaleProduct::STATUS_APPROVAL_PENDING, SaleProduct::STATUS_APPROVAL_REJECTED])->exists();
             if (isset($pending_approval_alrdy) && $pending_approval_alrdy == false && !$has_pending_and_rejected) {
-                Sale::where('id', $req->sale_id)->update([
+                Sale::where('id', $req->sale_id)->whereNot('status', Sale::STATUS_APPROVAL_APPROVED)->update([
                     'status' => Sale::STATUS_ACTIVE
                 ]);
             }
