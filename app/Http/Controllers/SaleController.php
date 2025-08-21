@@ -888,7 +888,7 @@ class SaleController extends Controller
             $pc_ids = $sps[$i]->children->pluck('product_children_id');
             $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
         }
-        $pdf = Pdf::loadView('sale_order.' . (isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('sale_order.' . 'powercool' . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sps,

@@ -30,41 +30,41 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 12px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
+                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
                             style="font-size: 12px; font-weight: 100;">(383045-D)</span></span><br>
-                    <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
-                    <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
-                    <span style="font-size: 12px;">48200 SERENDAH,SELANGOR.</span><br>
-                    <span style="font-size: 12px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
-                    <span style="font-size: 12px;">Email : enquiry@powercool.com.my</span><br>
-                    <span style="font-size: 12px;">Sales Tax ID No : B16-1809-22000036</span><br>
+                    <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
+                    <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
+                    <span style="font-size: 14px;">48200 SERENDAH,SELANGOR.</span><br>
+                    <span style="font-size: 14px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
+                    <span style="font-size: 14px;">Email : enquiry@powercool.com.my</span><br>
+                    <span style="font-size: 14px;">Sales Tax ID No : B16-1809-22000036</span><br>
                 </td>
                 <td style="width: 30%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 12px; width: 30%; font-weight: 700;">No</td>
-                            <td style="font-size: 12px; width: 10%;">:</td>
-                            <td style="font-size: 12px; font-weight: 700;">{{ $sale->sku }}</td>
+                            <td style="font-size: 14px; width: 30%; font-weight: 700;">No</td>
+                            <td style="font-size: 14px; width: 10%;">:</td>
+                            <td style="font-size: 14px; font-weight: 700;">{{ $sale->sku }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px;">Your Ref</td>
-                            <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $sale->reference }}</td>
+                            <td style="font-size: 14px;">Your Ref</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->reference }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px;">From</td>
-                            <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $sale->quo_from }}</td>
+                            <td style="font-size: 14px;">From</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->quo_from }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px;">Salesperson</td>
-                            <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $sale->saleperson->name }}</td>
+                            <td style="font-size: 14px;">Salesperson</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->saleperson->name }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px;">Date</td>
-                            <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $date }}</td>
+                            <td style="font-size: 14px;">Date</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $date }}</td>
                         </tr>
                     </table>
                 </td>
@@ -73,30 +73,29 @@
     </header>
 
     <main>
-
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
             <tr>
                 <td
-                    style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
+                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
                 <td
                     style="font-size: 16px; font-weight: 700; width: 33.33%; padding: 15px 35px 10px 0; text-align: center;">
                     QUOTATION</td>
                 <td
-                    style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
+                    style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
             </tr>
             @if ($sale->status == 3)
                 <tr>
                     <td
-                        style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
+                        style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
                     </td>
-                    <td style="font-size: 12px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
+                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
                         id="invalid">
                         CANCELLED
                     </td>
                     <td
-                        style="font-size: 12px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
+                        style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
                     </td>
                 </tr>
             @endif
@@ -104,7 +103,7 @@
                 <td style="padding: 0 35px 0 0;" colspan="3">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 12px; width: 50%;" colspan="2">
+                            <td style="font-size: 14px; width: 50%;" colspan="2">
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -113,9 +112,9 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
-                            <td style="font-size: 12px; padding: 10px 0 0 0; width: 15%;">AH:
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH:
                                 {{ $customer->name ?? '' }}
                             </td>
                         </tr>
@@ -123,11 +122,11 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">Thank you for your inquiry. We are
+                <td style="font-size: 14px; padding: 25px 0 0 0;" colspan="2">Thank you for your inquiry. We are
                     pleased to submit
                     our
                     quote as follows:</td>
-                <td style="font-size: 12px; padding: 25px 0 0 0;">Store: {{ $sale->store }}</td>
+                <td style="font-size: 14px; padding: 25px 0 0 0;">Store: {{ $sale->store }}</td>
             </tr>
         </table>
 
@@ -147,19 +146,19 @@
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 40%;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 12.5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 12.5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
                     Total (RM)</td>
             </tr>
             @php
@@ -272,28 +271,81 @@
         </table>
 
         <!-- Footer -->
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 15px 0;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">Note</td>
+                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">E.& O.E.</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; padding: 0 0 15px 0;" colspan="2">
-                    1. All cheques should be crossed and makde payable to POWER COOL EQUIPMENTS (M) SDN BHD<br>
-                    2. Please remit your payment to : <span style="font-weight: 700;">Public Bank Ac No.:
-                        3141967510</span><br>
-                    3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
-                    4. Goods sold and deposit are not returnable & refundable. A cancellation fee of 20% on purchase
-                    price
-                    will be imposed.<br>
-                    5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,<br>
-                    otherwise any discrepancy will not be entertained.<br>
-                    6. Prices are subjected to change without prior notice.<br>
-                    7. · 3 Years Compressor Warranty with T&C apply<br>
-                    <span style="padding: 0 0 0 15px;">· 6 months General Service conduct by IMAX</span><br>
-                    <span style="padding: 0 0 0 15px;">· Limited to 1 time change only</span><br>
-                    8. Wear and tear not included in warranty claim
+                <td style="font-size: 12px; padding: 0 0 0 0;" colspan="2">Note</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">1.</td>
+                <td style="font-size: 12px; width: 95%; text-align: left;">Cheque should make payable to <span
+                        style="font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span></td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">2.</td>
+                <td style="font-size: 12px; width: 95%; text-align: left;">Please remit your payment to : <span
+                        style="font-weight: 700;">PUBLIC BANK Account No.: 3141 96 7510</span></td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">3.</td>
+                <td style="font-size: 12px; width: 95%; text-align: left;">The Company reserves the right to charge
+                    interest 1.5% per month on overdue accounts.</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">4.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Goods sold and deposit are not returnable &
+                    refundable. A cancellation fee of 20% on purchase price will be imposed. If cancel order with credit
+                    card payment, will have 10% credit card charges.</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">5.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Any queries or complaints regarding this
+                    invoice must be made within 7 days from date hereof, otherwise any discrepancy will not be
+                    entertained.</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">6.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">3 Years Compressor Warranty with T&C
+                    apply.<br>
+                    * 6 months General Service conduct by IMAX</span><br>
+                    * Limited to 1 time change only</span>
                 </td>
             </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">7.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Customer collect\ unloading\ handling by
+                    own, Warranty will be bear by customer.
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">8.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Wear and tear not included in Warranty
+                    Claim.
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">9.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Request E-invoice after 72hrs which
+                    original invoice have validated by IRB will be charge 5% of the total invoice amount.
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">10.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Company will not obligation on those
+                    customers are not require to issue E-invoice.
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">11.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">Prices are subject to change without prior
+                    notice.
+                </td>
+            </tr>
+        </table>
+
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="font-size: 12px; padding: 0 0 35px 0;" colspan="2">
                     We hope that our quotation is favourable to you and looking forward to receive your valued orders in
