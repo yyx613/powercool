@@ -859,7 +859,7 @@ class SaleController extends Controller
 
             // Change converted QUO back to active
             $quos = Sale::where('convert_to', $sale->id)->get();
-            for ($i=0; $i < count($quos); $i++) { 
+            for ($i = 0; $i < count($quos); $i++) {
                 $quos[$i]->status = $quos[$i]->status_before_convert ?? Sale::STATUS_ACTIVE;
                 $quos[$i]->save();
             }
@@ -1753,6 +1753,9 @@ class SaleController extends Controller
                     $ref = $req->reference;
                     if ($req->open_until >= now()->format('Y-m-d')) {
                         $sale->expired_at = null;
+                        $sale->save();
+                    } else {
+                        $sale->expired_at = now()->format('Y-m-d');
                         $sale->save();
                     }
                 } elseif ($req->type != 'quo' && $req->reference != null) {
