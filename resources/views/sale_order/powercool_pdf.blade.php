@@ -102,7 +102,7 @@
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">AH:
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">ATT:
                                 {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>

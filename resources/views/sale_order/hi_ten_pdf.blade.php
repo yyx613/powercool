@@ -70,7 +70,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 5px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 5px 0 0 0;">AH: {{ $customer->name ?? '' }}</td>
+                            <td style="font-size: 14px; padding: 5px 0 0 0;">ATT: {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
