@@ -35,7 +35,7 @@
                     <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 14px;">48200 SERENDAH,SELANGOR.</span><br>
-                    <span style="font-size: 14px;">Tel: 603-6094 1122 Service Hotline: 012-386 8743</span><br>
+                    <span style="font-size: 14px;">Tel: 603-6094 1122 <span style="padding: 0 0 0 15px;">Service Hotline: 012-386 8743</span></span><br>
                     <span style="font-size: 14px;">Email : enquiry@powercool.com.my</span><br>
                     <span style="font-size: 14px;">Sales Tax ID No : B16-1809-22000036</span><br>
                 </td>
@@ -190,9 +190,12 @@
                 </tr>
                 @if ($prod->remark != null)
                     <tr>
+                        <td colspan="7" style="padding: 15px 0 0 0;"></td>
+                    </tr>
+                    <tr>
                         <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">{!! nl2br($prod->remark) !!}</td>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="4"></td>
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;" colspan="2">{!! nl2br($prod->remark) !!}</td>
+                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="3"></td>
                     </tr>
                 @endif
                 @php

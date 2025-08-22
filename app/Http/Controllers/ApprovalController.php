@@ -272,17 +272,19 @@ class ApprovalController extends Controller
                 } else {
                     ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $obj->id)->delete();
 
-                    $terms = [];
-                    for ($i = 0; $i < count($data->to_credit_term_ids); $i++) {
-                        $terms[] = [
-                            'object_type' => Customer::class,
-                            'object_id' => $obj->id,
-                            'credit_term_id' => $data->to_credit_term_ids[$i],
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                    if ($data->to_credit_term_ids != null) {
+                        $terms = [];
+                        for ($i = 0; $i < count($data->to_credit_term_ids); $i++) {
+                            $terms[] = [
+                                'object_type' => Customer::class,
+                                'object_id' => $obj->id,
+                                'credit_term_id' => $data->to_credit_term_ids[$i],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                        ObjectCreditTerm::insert($terms);
                     }
-                    ObjectCreditTerm::insert($terms);
 
                     $obj->status = Customer::STATUS_APPROVAL_APPROVED;
                     $obj->save();

@@ -89,8 +89,8 @@
                 <x-app.message.error id="tourism_tax_reg_no_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
-                <x-app.input.label id="prev_gst_reg_no" class="mb-1">{{ __('Prev. GST Reg No.') }} <span
-                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
+                <x-app.input.label id="prev_gst_reg_no"
+                    class="mb-1">{{ __('Prev. GST Reg No.') }}</x-app.input.label>
                 <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" :hasError="$errors->has('prev_gst_reg_no')"
                     value="{{ old('prev_gst_reg_no', isset($customer) ? $customer->prev_gst_reg_no : null) }}" />
                 <x-app.message.error id="prev_gst_reg_no_err" />
@@ -118,8 +118,7 @@
                 <x-app.message.error id="registered_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
-                <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }} <span
-                        class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
+                <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }} </x-app.input.label>
                 <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')"
                     value="{{ old('trade_name', isset($customer) ? $customer->trade_name : null) }}" />
                 <x-app.message.error id="trade_name_err" />
@@ -454,6 +453,7 @@
             $('#info-form').submit()
             $('#tin-info-modal').removeClass('show-modal')
             NEGLECT_TIN_VALIDATION = false
+            GROUP_SUBMITTING = true
         })
         $('input[name="for_einvoice"]').on('change', function() {
             let val = $(this).is(':checked')
