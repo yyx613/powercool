@@ -360,7 +360,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('billing')->name('billing.')->middleware(['can:sale.billing.view'])->group(function () {
             Route::get('/', 'indexBilling')->name('index');
             Route::get('/get-data', 'getDataBilling')->name('get_data');
-            Route::get('/to-invoice-billing', 'toBilling')->name('to_billing');
+            Route::get('/to-invoice-billing', 'toBilling')->name('to_billing')->middleware(['can:sale.invoice.convert_to_billing']);
             Route::post('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
         });
     });
