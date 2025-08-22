@@ -26,7 +26,7 @@ class ExpireQuotation extends Command
      */
     public function handle()
     {
-        Sale::where('type', Sale::TYPE_QUO)->where('open_until', '<', now()->format('Y-m-d'))->update([
+        Sale::where('type', Sale::TYPE_QUO)->whereNot('status', Sale::STATUS_CONVERTED)->where('open_until', '<', now()->format('Y-m-d'))->update([
             'expired_at' => now()
         ]);
     }

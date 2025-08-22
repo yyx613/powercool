@@ -213,12 +213,12 @@ class ApprovalController extends Controller
                     } else {
                         (new SaleController)->cancelSaleOrderFlow($obj, false, $data->charge);
                         // // Change converted QUO back to active
-                        Sale::where('convert_to', $obj->id)->update([
-                            'status' => Sale::STATUS_ACTIVE
-                        ]);
+                        $quo = Sale::where('convert_to', $obj->id)->first();
+                        $quo->status = $quo->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
+                        $quo->save();
                     }
                 } else if (isset($data->is_reuse)) {
-                    $obj->status = Sale::STATUS_ACTIVE;
+                    $obj->status = $obj->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                     $obj->save();
                 } else if (isset($data->is_payment_method)) {
                     $obj->status = Sale::STATUS_APPROVAL_APPROVED;
@@ -321,7 +321,7 @@ class ApprovalController extends Controller
                 $sale_orders = Sale::whereRaw('find_in_set(' . $obj->id . ', convert_to)')->get();
 
                 for ($i = 0; $i < count($sale_orders); $i++) {
-                    $sale_orders[$i]->status = Sale::STATUS_ACTIVE;
+                    $sale_orders[$i]->status = $sale_orders[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
 
                     $current_do_ids = explode(',', $sale_orders[$i]->convert_to);
                     array_splice($current_do_ids, array_search($obj->id, $current_do_ids), 1);
@@ -340,7 +340,7 @@ class ApprovalController extends Controller
                 $data = json_decode($approval->data);
 
                 if (isset($data->is_cancellation)) {
-                    $obj->status = Sale::STATUS_ACTIVE;
+                    $obj->status = $obj->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                     $obj->save();
                 } else if (isset($data->is_reuse)) {
                     $obj->status = Sale::STATUS_CANCELLED;

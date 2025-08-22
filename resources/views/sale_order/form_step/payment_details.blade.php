@@ -9,8 +9,7 @@
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} </x-app.input.label>
             <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
                 placeholder="{{ __('Select a method') }}">
                 <option value=""></option>
@@ -33,8 +32,7 @@
             <x-app.message.error id="payment_term_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} </x-app.input.label>
             <x-app.input.input name="payment_due_date" id="payment_due_date" :hasError="$errors->has('payment_due_date')"
                 value="{{ isset($sale) ? $sale->payment_due_date : null }}" />
             <x-app.message.error id="payment_due_date_err" />

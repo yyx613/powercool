@@ -160,4 +160,26 @@ class Sale extends Model
     {
         return self::where('convert_to', $this->id)->exists();
     }
+
+    public function hasApprovalAndAllApproved(): bool
+    {
+        $has_approval = Approval::where('object_type', Sale::class)->where('object_id', $this->id)->exists();
+        if ($has_approval) {
+            $sale_products = $this->products;
+
+            for ($i = 0; $i < count($sale_products); $i++) {
+                if ($sale_products[$i]->status == null) {
+                    continue;
+                }
+                if ($sale_products[$i]->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
+                    return true;
+                }
+            }
+
+            if ($this->payment_method_status != null) {
+                return $this->payment_method_status == self::STATUS_APPROVAL_APPROVED;
+            }
+        }
+        return false;
+    }
 }

@@ -478,9 +478,6 @@ class SaleController extends Controller
                 $references = $references->merge($quos[$i]->reference);
                 $remarks = $remarks->merge($quos[$i]->remark);
                 $products = $products->merge($quos[$i]->products);
-
-                $quos[$i]->status_before_convert = $quos[$i]->status;
-                $quos[$i]->save();
             }
 
             // Create quotation details
@@ -752,7 +749,7 @@ class SaleController extends Controller
         if (str_contains(Route::currentRouteName(), '.view')) {
             $is_view = true;
         } else {
-            $owned = isSuperAdmin() || Auth::user()->id == $sale->created_by;
+            $owned = isSuperAdmin() || isSalesCoordinatorOnly() || Auth::user()->id == $sale->created_by;
             if (!$owned) {
                 abort(403);
             }
@@ -860,7 +857,7 @@ class SaleController extends Controller
             // Change converted QUO back to active
             $quos = Sale::where('convert_to', $sale->id)->get();
             for ($i = 0; $i < count($quos); $i++) {
-                $quos[$i]->status = $quos[$i]->status_before_convert ?? Sale::STATUS_ACTIVE;
+                $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                 $quos[$i]->save();
             }
 
@@ -958,6 +955,8 @@ class SaleController extends Controller
                 $products = collect();
                 $sale_orders = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
+                    ->whereNotNull('payment_method')
+                    ->whereNotNull('payment_due_date')
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where(function ($q) {
@@ -987,6 +986,8 @@ class SaleController extends Controller
 
                 $term_ids = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
+                    ->whereNotNull('payment_method')
+                    ->whereNotNull('payment_due_date')
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->whereIn('id', explode(',', $req->so))
@@ -1027,6 +1028,8 @@ class SaleController extends Controller
 
                 $sale_orders = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
+                    ->whereNotNull('payment_method')
+                    ->whereNotNull('payment_due_date')
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where('customer_id', Session::get('convert_customer_id'))
@@ -1059,6 +1062,8 @@ class SaleController extends Controller
 
                 $salesperson_ids = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
+                    ->whereNotNull('payment_method')
+                    ->whereNotNull('payment_due_date')
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                     ->where('customer_id', $req->cus)
@@ -1089,6 +1094,8 @@ class SaleController extends Controller
                     ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereNotNull('payment_method')
+                    ->whereNotNull('payment_due_date')
                     ->where(function ($q) {
                         $q->whereHas('approval', function ($q) {
                             $q->where('status', Approval::STATUS_APPROVED);
@@ -1432,8 +1439,8 @@ class SaleController extends Controller
             } else {
                 $rules['payment_term'] = 'nullable';
             }
-            $rules['payment_method'] = 'required';
-            $rules['payment_due_date'] = 'required';
+            $rules['payment_method'] = 'nullable';
+            $rules['payment_due_date'] = 'nullable';
             $rules['payment_remark'] = 'nullable|max:250';
             if (in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
                 $rules['account_amount'] = 'nullable';
