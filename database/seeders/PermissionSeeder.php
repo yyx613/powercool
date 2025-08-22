@@ -18,6 +18,10 @@ class PermissionSeeder extends Seeder
 
             'approval.view',
             'approval.production_material_transfer_request',
+            'approval.type_quotation',
+            'approval.type_sale_order',
+            'approval.type_delivery_order',
+            'approval.type_customer',
 
             'dashboard.view',
 
@@ -56,12 +60,14 @@ class PermissionSeeder extends Seeder
             'sale.quotation.view',
             'sale.quotation.create',
             'sale.quotation.edit',
+            'sale.quotation.view_record',
             'sale.quotation.delete',
             'sale.quotation.convert',
 
             'sale.sale_order.view',
             'sale.sale_order.create',
             'sale.sale_order.edit',
+            'sale.sale_order.view_record',
             'sale.sale_order.cancel',
             'sale.sale_order.delete',
             'sale.sale_order.convert',
@@ -70,15 +76,20 @@ class PermissionSeeder extends Seeder
             'sale.delivery_order.convert',
 
             'sale.transport_acknowledgement.view',
+            'sale.transport_acknowledgement.create',
 
             'sale.invoice.view',
+            'sale.invoice.sync_to_autocount',
+            'sale.invoice.convert_to_billing',
+            'sale.invoice.submit_e_invoice',
+            'sale.invoice.submit_consolidated_e_invoice',
+
             'sale.e_invoice.view',
 
             'sale.target.view',
             'sale.target.convert',
 
             'sale.billing.view',
-            'sale.billing.convert',
 
             'sale.invoice_return.view',
             'sale.invoice_return.return',
@@ -129,9 +140,6 @@ class PermissionSeeder extends Seeder
             'dealer.delete',
 
             'agent_debtor.view',
-            // 'agent_debtor.create',
-            // 'agent_debtor.edit',
-            // 'agent_debtor.delete',
 
             'vehicle.view',
             'vehicle_service.reminder',

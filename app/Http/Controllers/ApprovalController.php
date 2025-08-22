@@ -52,9 +52,23 @@ class ApprovalController extends Controller
         }
         $page = Session::get('approval-page');
 
+        $types = self::TYPES;
+        if (!hasPermission('approval.type_quotation')) {
+            unset($types[0]);
+        }
+        if (!hasPermission('approval.type_sale_order')) {
+            unset($types[1]);
+        }
+        if (!hasPermission('approval.type_delivery_order')) {
+            unset($types[2]);
+        }
+        if (!hasPermission('approval.type_customer')) {
+            unset($types[3]);
+        }
+
         return view('approval.list', [
             'statuses' => self::STATUSES,
-            'types' => self::TYPES,
+            'types' => $types,
             'default_status' => $status ?? null,
             'default_type' => $type ?? null,
             'default_page' => $page ?? null,
@@ -101,6 +115,28 @@ class ApprovalController extends Controller
             }
         }
         // Filter type
+        $records = $records->where(function ($q) {
+            if (!hasPermission('approval.type_quotation')) {
+                $q->orWhere(function ($q) {
+                    $q->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
+                });
+            }
+            if (!hasPermission('approval.type_sale_order')) {
+                $q->orWhere(function ($q) {
+                    $q->where('object_type', Sale::class)->where('data', 'like', '%is_quo%');
+                });
+            }
+            if (!hasPermission('approval.type_delivery_order')) {
+                $q->orWhere(function ($q) {
+                    $q->whereNot('object_type', DeliveryOrder::class);
+                });
+            }
+            if (!hasPermission('approval.type_customer')) {
+                $q->orWhere(function ($q) {
+                    $q->whereNot('object_type', Customer::class);
+                });
+            }
+        });
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');

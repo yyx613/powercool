@@ -24,7 +24,7 @@
     <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
         <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice') }}</x-app.page-title>
         <div class="flex gap-x-4">
-            @can('sale.billing.convert')
+            @can('sale.invoice.sync_to_autocount')
                 <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="sync-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
                         width="512" height="512">
@@ -37,6 +37,8 @@
                     </svg>
                     <span>{{ __('Sync to Autocount') }}</span>
                 </a>
+            @endcan
+            @can('sale.invoice.convert_to_billing')
                 <a href="{{ route('billing.to_billing') }}"
                     class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
@@ -50,6 +52,8 @@
                     </svg>
                     <span>{{ __('Convert to Billing') }}</span>
                 </a>
+            @endcan
+            @can('sale.invoice.submit_e_invoice')
                 <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
                         width="512" height="512">
@@ -62,6 +66,8 @@
                     </svg>
                     <span>{{ __('Submit E-Invoice') }}</span>
                 </a>
+            @endcan
+            @can('sale.invoice.submit_consolidated_e_invoice')
                 <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2"
                     id="submit-consolidated-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"

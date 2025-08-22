@@ -93,6 +93,7 @@ class SaleController extends Controller
                 'sales.created_at AS date',
                 'sales.open_until AS validity',
                 'sales.store AS store',
+                'customers.id AS customer_id',
                 'customers.sku AS debtor_code',
                 'customers.company_group AS company_group',
                 'customers.company_name AS debtor_name',
@@ -103,7 +104,7 @@ class SaleController extends Controller
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
-                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount')
+                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', 'like', '%Sale')
@@ -194,12 +195,21 @@ class SaleController extends Controller
                 'is_draft' => $record->is_draft,
                 'can_view_pdf' => $record->is_draft == false && !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_APPROVAL_REJECTED]),
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
+                'can_view' => hasPermission('sale.quotation.view_record') && in_array($record->status, [Sale::STATUS_CANCELLED, Sale::STATUS_CONVERTED, Sale::STATUS_APPROVAL_PENDING]),
                 // 'can_delete' => hasPermission('sale.quotation.delete'),
                 'can_delete' => false,
                 'can_cancel' => !in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED]),
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
-                'view_only' => in_array($record->status, [Sale::STATUS_CANCELLED, Sale::STATUS_CONVERTED, Sale::STATUS_APPROVAL_PENDING]),
-                'is_approval_cancellation' => $is_approval_cancellation
+                'is_approval_cancellation' => $is_approval_cancellation,
+                'conditions_to_convert' => [
+                    'is_draft' => $record->is_draft,
+                    'is_expired' => $record->expired_at != null,
+                    'has_product' => SaleProduct::where('sale_id', $record->id)->exists(),
+                    'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE,
+                    'no_pending_approval' => !Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
+                    'not_in_production' => !in_array($record->id, $this->getSaleInProduction()),
+                    'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
+                ]
             ];
         }
 
@@ -445,7 +455,7 @@ class SaleController extends Controller
             // Filter for einvoice filled
             $temp = [];
             for ($i = 0; $i < count($customers); $i++) {
-                if ($customers[$i]->forEinvoiceFilled()) {
+                if (Customer::forEinvoiceFilled($customers[$i]->id)) {
                     $temp[] = $customers[$i];
                 }
             }
@@ -613,6 +623,9 @@ class SaleController extends Controller
                 'sales.sku AS doc_no',
                 'sales.created_at AS date',
                 'sales.store AS store',
+                'sales.payment_method AS payment_method',
+                'sales.payment_due_date AS payment_due_date',
+                'customers.id AS customer_id',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
                 'customers.company_group AS company_group',
@@ -698,6 +711,8 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $record) {
+            $sp_ids = SaleProduct::where('sale_id', $record->id)->pluck('id')->toArray();
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -718,11 +733,23 @@ class SaleController extends Controller
                 'qty' => $record->qty,
                 'serial_no_qty' => $record->serial_no_qty ?? 0,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
+                'can_view' => hasPermission('sale.sale_order.view_record'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
                 // 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
                 'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
+                'conditions_to_convert' => [
+                    'is_draft' => $record->is_draft,
+                    'payment_method_filled' => $record->payment_method != null,
+                    'payment_due_date_filled' => $record->payment_due_date != null,
+                    'has_product' => count($sp_ids) > 0,
+                    'has_serial_no' => SaleProductChild::whereIn('sale_product_id', $sp_ids)->exists(),
+                    'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE,
+                    'no_pending_approval' => !Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
+                    'not_in_production' => !in_array($record->id, $this->getSaleInProduction()),
+                    'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
+                ]
             ];
         }
 

@@ -62,7 +62,7 @@
             // Automatically select view permission if create/edit permission is selected
             if (permissionName.includes('.create') || permissionName.includes('.edit') || permissionName.includes('.delete')) {
                 $(`input[name="${ group }.view"]`).prop('checked', true)
-            } else if (permissionName.includes('.view') && (
+            } else if (permissionName.includes('.view') && !permissionName.includes('.view_record') && (
                 $(`input[name="${ group }.create"]`).is(':checked') ||
                 $(`input[name="${ group }.edit"]`).is(':checked') ||
                 $(`input[name="${ group }.delete"]`).is(':checked')
