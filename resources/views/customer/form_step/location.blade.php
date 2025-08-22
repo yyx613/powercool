@@ -205,7 +205,7 @@
                     if (GROUP_SUBMITTING) {
                         setTimeout(() => {
                             $('#group-submit-btn').text('Updated')
-                            $('#group-submit-btn').addClass('bg-green-400 shadow')
+                            $('#group-submit-btn').addClass('!bg-green-400 shadow')
 
                             let locIds = res.location_ids
                             $('#location-form .items').each(function(i, obj) {

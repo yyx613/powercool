@@ -268,9 +268,7 @@ class CustomerController extends Controller
             $rules['tin_number'] = 'required';
             $rules['company_registration_number'] = 'required';
             $rules['msic_code'] = 'required';
-            $rules['prev_gst_reg_no'] = 'required|max:250';
             $rules['registered_name'] = 'required|max:250';
-            $rules['trade_name'] = 'required|max:250';
             $rules['phone_number'] = 'required|max:250';
             $rules['email'] = 'required|email|max:250';
             $rules['identity_type'] = 'required_if:category,==,2|max:250';
@@ -443,7 +441,9 @@ class CustomerController extends Controller
                 }
             }
             if ($approval_required) {
-                $terms = CreditTerm::whereIn('id', $req->credit_term)->pluck('name')->toArray();
+                if ($req->credit_term != null) {
+                    $terms = CreditTerm::whereIn('id', $req->credit_term)->pluck('name')->toArray();
+                }
 
                 $approval = Approval::create([
                     'object_type' => Customer::class,
@@ -452,7 +452,10 @@ class CustomerController extends Controller
                     'data' =>  json_encode([
                         'is_credit_term' => true,
                         'to_credit_term_ids' => $req->credit_term,
-                        'description' => 'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to (' . join(",", $terms) . ')',
+                        'description' =>
+                        $req->credit_term == null ?
+                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to Empty credit term' :
+                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to (' . join(",", $terms) . ')',
                     ])
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);

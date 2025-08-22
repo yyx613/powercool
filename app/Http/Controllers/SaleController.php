@@ -888,7 +888,9 @@ class SaleController extends Controller
             $pc_ids = $sps[$i]->children->pluck('product_children_id');
             $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
         }
-        $pdf = Pdf::loadView('sale_order.' . 'powercool' . '_pdf', [
+        $quo_skus = Sale::where('type', Sale::TYPE_QUO)->where('convert_to', $sale->id)->pluck('sku')->toArray();
+
+        $pdf = Pdf::loadView('sale_order.' . (isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sps,
@@ -898,6 +900,7 @@ class SaleController extends Controller
             'terms' => $sale->paymentTerm ?? null,
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
+            'quo_skus' => join(', ', $quo_skus),
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -1347,7 +1350,6 @@ class SaleController extends Controller
 
     public function upsertDetails(Request $req)
     {
-        // dd($req->all());
         if ($req->type == 'so') {
             if ($req->sale_id == null) {
                 $convert_from_quo = false;
