@@ -164,7 +164,7 @@
                             <span class="text-xs text-blue-700 ${row.is_draft == true ? '' : 'hidden'}">Draft</span>
                             <div class="mt-1 group relative">
                                 ${
-                                    convertable ?
+                                    convertable || row.status == 2 ?
                                     `<svg class="h-3.5 w-3.5 fill-green-500" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/></svg>` :
                                     `<svg class="h-3.5 w-3.5 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>`
                                 }
@@ -178,7 +178,7 @@
                                             <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
                                             <li class="text-sm ${row.conditions_to_convert.is_expired == false ? 'line-through text-slate-400' : ''}">Not expired</li>
                                             <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
-                                            <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
+                                            <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true || row.status == 2 ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
                                             <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
                                             <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
                                             <li class="text-sm ${row.conditions_to_convert.filled_for_e_invoice == true ? 'line-through text-slate-400' : ''}">Filled for E-Invoice</li>
