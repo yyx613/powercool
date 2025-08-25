@@ -42,18 +42,18 @@ class SyncAutoCountController extends Controller
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
 
-                if (in_array($companyGroup, [1, 3])) {
-                    $targetGroup = $companyGroup === 1 ? 2 : 4;
+                // if (in_array($companyGroup, [1, 3])) {
+                //     $targetGroup = $companyGroup === 1 ? 2 : 4;
 
-                    $conflictSupplier = Supplier::where('registered_name', $registeredName)
-                        ->where('company_group_autocount', $targetGroup)
-                        ->first();
+                //     $conflictSupplier = Supplier::where('registered_name', $registeredName)
+                //         ->where('company_group_autocount', $targetGroup)
+                //         ->first();
 
-                    if ($conflictSupplier) {
-                        Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
-                        continue; // skip this record
-                    }
-                }
+                //     if ($conflictSupplier) {
+                //         Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
+                //         continue; // skip this record
+                //     }
+                // }
 
 
                 $accNo = $record['AccNo'];
@@ -194,18 +194,18 @@ class SyncAutoCountController extends Controller
             foreach ($data as $record) {
                 $registeredName = $record['CompanyName'];
 
-                if (in_array($companyGroup, [1, 3])) {
-                    $targetGroup = $companyGroup === 1 ? 2 : 4;
+                // if (in_array($companyGroup, [1, 3])) {
+                //     $targetGroup = $companyGroup === 1 ? 2 : 4;
 
-                    $conflictSupplier = Customer::where('registered_name', $registeredName)
-                        ->where('company_group_autocount', $targetGroup)
-                        ->first();
+                //     $conflictSupplier = Customer::where('registered_name', $registeredName)
+                //         ->where('company_group_autocount', $targetGroup)
+                //         ->first();
 
-                    if ($conflictSupplier) {
-                        //Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
-                        continue; // skip this record
-                    }
-                }
+                //     if ($conflictSupplier) {
+                //         //Log::info("Skipped '{$registeredName}' in group {$companyGroup} as it exists in group {$targetGroup}.");
+                //         continue; // skip this record
+                //     }
+                // }
 
                 $accNo = $record['AccNo'];
 
