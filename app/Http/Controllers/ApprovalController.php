@@ -480,4 +480,21 @@ class ApprovalController extends Controller
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
     }
+
+    public function hasPending()
+    {
+        try {
+            $has_pending_approval = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
+
+            return Response::json([
+                'has_pending' => $has_pending_approval,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

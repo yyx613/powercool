@@ -27,6 +27,8 @@ class PermissionSeeder extends Seeder
 
             'inventory.summary.view',
 
+            'inventory.view_action',
+
             'inventory.category.view',
             'inventory.category.create',
             'inventory.category.edit',

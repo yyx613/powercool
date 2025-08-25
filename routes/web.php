@@ -128,6 +128,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/approve/{approval}', 'approve')->name('approve');
         Route::get('/reject/{approval}', 'reject')->name('reject');
         Route::get('/stock-in/{approval}', 'stockIn')->name('stock_in');
+        Route::get('/has-pending', 'hasPending')->name('has_pending');
     });
     // Dashboard
     Route::controller(DashboardController::class)->prefix('dashboard')->name('dashboard.')->middleware(['can:dashboard.view'])->group(function () {
@@ -137,6 +138,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(InventoryController::class)->prefix('inventory-summary')->name('inventory_summary.')->middleware(['can:inventory.summary.view'])->group(function () { // Inventory Category
         Route::get('/', 'indexSummary')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-data-summary', 'getDataSummary')->name('get_data_summary');
         Route::get('/get-remaining-qty', 'getRemainingQty')->name('get_remaining_qty');
     });
     Route::controller(InventoryController::class)->prefix('inventory-category')->name('inventory_category.')->middleware(['can:inventory.category.view'])->group(function () { // Inventory Category
@@ -312,8 +314,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('transport-acknowledgement')->name('transport_ack.')->middleware(['can:sale.transport_acknowledgement.view'])->group(function () {
             Route::get('/', 'indexTransportAck')->name('index');
             Route::get('/get-data', 'getDataTransportAck')->name('get_data');
-            Route::get('/generate', 'transportAcknowledgementTransportAck')->name('transport_acknowledgement');
-            Route::post('/generate', 'generateTransportAcknowledgementTransportAck')->name('generate_transport_acknowledgement');
+            Route::get('/generate', 'createTransportAck')->name('transport_acknowledgement');
+            Route::get('/edit/{ack}', 'editTransportAck')->name('edit');
+            Route::post('/generate/{ack?}', 'generateTransportAcknowledgementTransportAck')->name('generate_transport_acknowledgement');
         });
         // Invoice
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
