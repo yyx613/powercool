@@ -125,7 +125,11 @@ class Customer extends Model
     {
         $cus = self::where('id', $id)->first();
         if ($cus->for_einvoice == true) {
-            if ($cus->local_oversea == null || $cus->tin_number == null || $cus->company_registration_number == null || $cus->msic_code == null || $cus->registered_name == null || $cus->phone_number == null || $cus->email == null) {
+            if (
+                $cus->type == null || $cus->tin_number == null || $cus->company_registration_number == null ||
+                $cus->msic_id == null || $cus->registered_name == null || $cus->phone == null ||
+                $cus->email == null
+            ) {
                 return false;
             }
         }

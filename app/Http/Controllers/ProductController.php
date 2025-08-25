@@ -404,6 +404,7 @@ class ProductController extends Controller
             'warehouse_on_hold_stock' => $product->warehouseOnHoldStock(),
             'production_stock' => $product->productionStock(),
             'production_reserved_stock' => $product->productionReservedStock(),
+            'has_permission_to_action' => hasPermission('inventory.view_action')
         ]);
     }
 

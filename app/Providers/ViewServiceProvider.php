@@ -76,6 +76,7 @@ class ViewServiceProvider extends ServiceProvider
                 'notification' => [],
                 'approval' => [],
                 'dashboard' => [],
+                'inventory.view_action' => [],
                 'inventory.summary' => [],
                 'inventory.category' => [],
                 'inventory.product' => [],
@@ -120,6 +121,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['approval'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.summary')) {
                     array_push($permissions_group['inventory.summary'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'inventory.view_action')) {
+                    array_push($permissions_group['inventory.view_action'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.category')) {
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.product')) {
@@ -527,6 +530,11 @@ class ViewServiceProvider extends ServiceProvider
             ];
 
             $view->with('languages', $languages);
+        });
+        View::composer(['layouts.app'], function (ViewView $view) {
+            $can_view_approval = hasPermission('approval.view');
+
+            $view->with('can_view_approval', $can_view_approval);
         });
         View::composer(['layouts.navbar'], function (ViewView $view) {
             $branches = [

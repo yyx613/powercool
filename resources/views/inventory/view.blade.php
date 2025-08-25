@@ -1,4 +1,15 @@
+@php
+    $title = 'Finish Good';
+    if (!$is_product) {
+        $title = 'Raw Material';
+    }
+    if ($is_production) {
+        $title = 'Production ' . $title;
+    }
+@endphp
+
 @extends('layouts.app')
+@section('title', $title)
 
 @vite(['resources/css/jquery.dataTables.min.css'])
 
@@ -229,6 +240,7 @@
         IS_PRODUCTION = @json($is_production ?? null);
         PRODUCT = @json($prod ?? null);
         CHECKED_CHECKBOXES = []
+        HAS_PERMISSION_TO_ACTION = @json($has_permission_to_action ?? null);
 
         $(document).ready(function() {
             // Auto search if url provided 'search' keyword
@@ -407,6 +419,7 @@
                         "targets": 6,
                         orderable: false,
                         render: function(data, type, row) {
+                            if (HAS_PERMISSION_TO_ACTION == false) return ''
                             if (row.status == 5 || row.status == 7) return ''
 
                             if (row.status == 6) {

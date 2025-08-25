@@ -12,7 +12,6 @@ use App\Models\CreditNote;
 use App\Models\CreditTerm;
 use App\Models\Customer;
 use App\Models\CustomerLocation;
-use App\Models\CustomerSaleAgent;
 use App\Models\Dealer;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
@@ -40,6 +39,7 @@ use App\Models\Scopes\BranchScope;
 use App\Models\Setting;
 use App\Models\Target;
 use App\Models\TransportAcknowledgement;
+use App\Models\TransportAcknowledgementProduct;
 use App\Models\UOM;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -502,7 +502,7 @@ class SaleController extends Controller
                 'product_id' => $products->map(function ($q) {
                     return $q->product_id;
                 })->toArray(),
-                'billing_address' => $quos->count() == 1 ? $quos->value('billing_address_id') : null,
+                'billing_address' => $quos[0]->value('billing_address_id'),
             ]);
             // Check to use back transferred SO sku
             if ($quos[0]->convert_to != null) {
@@ -2411,11 +2411,13 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $spr = SaleProductionRequest::create([
-                'sale_id' => $sale->id,
-                'product_id' => $product->id,
-            ]);
-            (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+            for ($i = 0; $i < ($req->qty ?? 1); $i++) {
+                $spr = SaleProductionRequest::create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+                ]);
+                (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+            }
 
             DB::commit();
 
@@ -4147,12 +4149,19 @@ class SaleController extends Controller
         return response()->json($data);
     }
 
-    public function transportAcknowledgementTransportAck()
+    public function createTransportAck()
     {
         return view('transport_ack.generate');
     }
 
-    public function generateTransportAcknowledgementTransportAck(Request $req)
+    public function editTransportAck(Request $req, TransportAcknowledgement $ack)
+    {
+        return view('transport_ack.generate', [
+            'ack' => $ack->load('products')
+        ]);
+    }
+
+    public function generateTransportAcknowledgementTransportAck(Request $req, TransportAcknowledgement $ack)
     {
         // Validate form
         $rules = [
@@ -4193,15 +4202,22 @@ class SaleController extends Controller
             }
 
             $items = [];
+            $product_data = [];
             for ($i = 0; $i < count($req->product); $i++) {
                 $product = Product::where('id', $req->product[$i])->first();
-                $serial_no = $req->{'serial_no_' . $req->product[$i]} != null ? ProductChild::whereIn('id', $req->{'serial_no_' . $req->product[$i]})->pluck('sku')->toArray() : [];
+                $serial_no = $req->{'serial_no_' . $req->product[$i]} != null && $req->{'serial_no_' . $req->product[$i]} != '' ? ProductChild::whereIn('id', $req->{'serial_no_' . $req->product[$i]})->pluck('sku')->toArray() : [];
 
                 $items[] = [
                     'item' => $product->sku,
                     'desc' => $req->description[$i] != null ? $req->description[$i] : $product->model_desc,
                     'qty' => $req->qty[$i],
                     'serial_no' => count($serial_no) > 0 ? join(', ', $serial_no) : null,
+                ];
+                $product_data[] = [
+                    'product_id' => $product->id,
+                    'desc' => $req->description[$i] != null ? $req->description[$i] : $product->model_desc,
+                    'qty' => $req->qty[$i],
+                    'product_child_id' => $req->{'serial_no_' . $req->product[$i]} != null && $req->{'serial_no_' . $req->product[$i]} != '' ? $req->{'serial_no_' . $req->product[$i]} : null,
                 ];
             }
 
@@ -4222,24 +4238,54 @@ class SaleController extends Controller
             $filename = 'transport-ack-' . generateRandomAlphabet(10) . '-' . Auth::user()->id . '.pdf';
             Storage::put(self::TRANSPORT_ACKNOWLEDGEMENT_PATH . $filename, $content);
 
-            $ack = TransportAcknowledgement::create([
-                'sku' => $sku,
-                'date' => $req->date,
-                'dealer_id' => $req->dealer,
-                'filename' => $filename,
-                'generated_by' => Auth::user()->id,
-            ]);
-            (new Branch)->assign(TransportAcknowledgement::class, $ack->id);
+            // Save record
+            if ($ack == null) {
+                $ack = TransportAcknowledgement::create([
+                    'sku' => $sku,
+                    'date' => $req->date,
+                    'dealer_id' => $req->dealer,
+                    'delivery_order_id' => $req->do_id,
+                    'type' => $req->type,
+                    'company_name' => $req->company_name,
+                    'phone' => $req->phone,
+                    'address' => $req->delivery_to,
+                    'filename' => $filename,
+                    'generated_by' => Auth::user()->id,
+                ]);
+                for ($i = 0; $i < count($product_data); $i++) {
+                    $product_data[$i]['transport_acknowledgement_id'] = $ack->id;
+                }
+                TransportAcknowledgementProduct::insert($product_data);
+                (new Branch)->assign(TransportAcknowledgement::class, $ack->id);
 
-            // Create agent debtor
-            $agent = AgentDebtor::create([
-                'sku' => (new AgentDebtor)->generateSku(),
-                'company_name' => $req->company_name,
-                'phone' => $req->phone,
-                'address' => $req->delivery_to,
-                'dealer_id' => $req->dealer,
-            ]);
-            (new Branch)->assign(AgentDebtor::class, $agent->id);
+                // Create agent debtor
+                $agent = AgentDebtor::create([
+                    'sku' => (new AgentDebtor)->generateSku(),
+                    'company_name' => $req->company_name,
+                    'phone' => $req->phone,
+                    'address' => $req->delivery_to,
+                    'dealer_id' => $req->dealer,
+                ]);
+                (new Branch)->assign(AgentDebtor::class, $agent->id);
+            } else {
+                $ack->update([
+                    'sku' => $sku,
+                    'date' => $req->date,
+                    'dealer_id' => $req->dealer,
+                    'delivery_order_id' => $req->do_id,
+                    'type' => $req->type,
+                    'company_name' => $req->company_name,
+                    'phone' => $req->phone,
+                    'address' => $req->delivery_to,
+                    'filename' => $filename,
+                    'generated_by' => Auth::user()->id,
+                ]);
+                for ($i = 0; $i < count($product_data); $i++) {
+                    $product_data[$i]['transport_acknowledgement_id'] = $ack->id;
+                }
+                TransportAcknowledgementProduct::where('transport_acknowledgement_id', $ack->id)->delete();
+                TransportAcknowledgementProduct::insert($product_data);
+            }
 
             DB::commit();
 

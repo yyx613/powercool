@@ -4,11 +4,11 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
-            url="{{ route('transport_ack.index') }}">{{ __('Generate Transport Acknowledgement') }}</x-app.page-title>
+            url="{{ route('transport_ack.index') }}">{{ isset($ack) ? __('Edit Transport Acknowledgement') : __('Generate Transport Acknowledgement') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
 
-    <form action="{{ route('transport_ack.generate_transport_acknowledgement') }}" method="POST" enctype="multipart/form-data"
+    <form action="{{ isset($ack) ? route('transport_ack.generate_transport_acknowledgement', ['ack' => $ack]) : route('transport_ack.generate_transport_acknowledgement') }}" method="POST" enctype="multipart/form-data"
         class="flex flex-col gap-y-8">
         @csrf
         <div class="bg-white p-4 border rounded-md">
@@ -27,14 +27,14 @@
                     <div class="flex flex-col">
                         <x-app.input.label id="do_id" class="mb-1">{{ __('Delivery Order ID') }}</x-app.input.label>
                         <x-app.input.input name="do_id" id="do_id" :hasError="$errors->has('do_id')"
-                            value="{{ old('do_id') ?? null }}" />
+                            value="{{ old('do_id', isset($ack) ? $ack->delivery_order_id : null) ?? null }}" />
                         <x-input-error :messages="$errors->get('do_id')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="date" class="mb-1">{{ __('Date') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="date" id="date" :hasError="$errors->has('date')"
-                            value="{{ old('date') ?? null }}" />
+                            value="{{ old('date', isset($ack) ? $ack->date : null) ?? null }}" />
                         <x-input-error :messages="$errors->get('date')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
@@ -43,10 +43,10 @@
                         <x-app.input.select2 name="dealer" id="dealer" :hasError="$errors->has('dealer')"
                             placeholder="{{ __('Select a dealer') }}">
                             <option value="">{{ __('Select a dealer') }}</option>
-                            <option value="-1" @selected(old('dealer') == '-1')>Powercool</option>
-                            <option value="-2" @selected(old('dealer') == '-2')>Hi Ten Trading</option>
+                            <option value="-1" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-1')>Powercool</option>
+                            <option value="-2" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-2')>Hi Ten Trading</option>
                             @foreach ($dealers as $dealer)
-                                <option value="{{ $dealer->id }}" @selected(old('dealer') == $dealer->id)>{{ $dealer->name }}
+                                <option value="{{ $dealer->id }}" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == $dealer->id)>{{ $dealer->name }}
                                 </option>
                             @endforeach
                         </x-app.input.select2>
@@ -59,31 +59,31 @@
                             placeholder="{{ __('Select a type') }}">
                             <option value="">{{ __('Select a type') }}</option>
                             @foreach ($types as $key => $val)
-                                <option value="{{ $key }}" @selected(old('type') == $key)>{{ $val }}
+                                <option value="{{ $key }}" @selected(old('type', isset($ack) ? $ack->type : null) == $key)>{{ $val }}
                                 </option>
                             @endforeach
                         </x-app.input.select2>
                         <x-input-error :messages="$errors->get('type')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }}  <span
+                        <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')"
-                            value="{{ old('company_name') ?? null }}" />
+                            value="{{ old('company_name', isset($ack) ? $ack->company_name : null) ?? null }}" />
                         <x-input-error :messages="$errors->get('company_name')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="phone" class="mb-1">{{ __('Phone') }}  <span
+                        <x-app.input.label id="phone" class="mb-1">{{ __('Phone') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="phone" id="phone" :hasError="$errors->has('phone')"
-                            value="{{ old('phone') ?? null }}" />
+                            value="{{ old('phone', isset($ack) ? $ack->phone : null) ?? null }}" />
                         <x-input-error :messages="$errors->get('phone')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="delivery_to" class="mb-1">{{ __('Address') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.textarea name="delivery_to" id="delivery_to" :hasError="$errors->has('delivery_to')"
-                            text="{{ old('delivery_to') ?? null }}" />
+                            text="{{ old('delivery_to', isset($ack) ? $ack->address : null) ?? null }}" />
                         <x-input-error :messages="$errors->get('delivery_to')" class="mt-1" />
                     </div>
                 </div>
@@ -231,10 +231,24 @@
     <script>
         ITEM_ID = 0
         PRODUCTS = @json($products ?? []);
+        TRANSPORT_ACK = @json($ack ?? null);
 
         $(document).ready(function() {
             if ($('input[name="has_old_val"]').length <= 0) {
-                $('#add-item-btn').click()
+                if (TRANSPORT_ACK != null) {
+                    for (let i = 0; i < TRANSPORT_ACK.products.length; i++) {
+                        const element = TRANSPORT_ACK.products[i];
+
+                        $('#add-item-btn').click()
+
+                        $(`.items[data-id=${ITEM_ID}] select[name="product[]"]`).val(element.product_id).trigger(
+                            'change')
+                        $(`.items[data-id=${ITEM_ID}] input[name="qty[]"]`).val(element.qty)
+                        $(`.items[data-id=${ITEM_ID}] input[name="description[]"]`).val(element.desc)
+                    }
+                } else {
+                    $('#add-item-btn').click()
+                }
             } else {
                 ITEM_ID = $('input[name="has_old_val"]').val()
             }

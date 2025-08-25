@@ -267,22 +267,24 @@
                     for (let i = 0; i < res.locations.length; i++) {
                         const loc = res.locations[i];
 
-                        var addr = loc.address1
-                        if (loc.address2 != null) {
-                            addr = `${addr}, ${loc.address2}`
-                        }
-                        if (loc.address3 != null) {
-                            addr = `${addr}, ${loc.address3}`
-                        }
-                        if (loc.address4 != null) {
-                            addr = `${addr}, ${loc.address4}`
-                        }
+                        if (loc.type == 1 || loc.type == 3) {
+                            var addr = loc.address1
+                            if (loc.address2 != null) {
+                                addr = `${addr}, ${loc.address2}`
+                            }
+                            if (loc.address3 != null) {
+                                addr = `${addr}, ${loc.address3}`
+                            }
+                            if (loc.address4 != null) {
+                                addr = `${addr}, ${loc.address4}`
+                            }
 
-                        let opt = new Option(
-                            addr, loc.id,
-                            false, QUOTATION_DETAILS_INIT_EDIT == true && loc.id ==
-                            SALE.billing_address_id)
-                        $('select[name="billing_address"]').append(opt)
+                            let opt = new Option(
+                                addr, loc.id,
+                                false, QUOTATION_DETAILS_INIT_EDIT == true ? loc.id ==
+                                SALE.billing_address_id : loc.is_default)
+                            $('select[name="billing_address"]').append(opt)
+                        }
                     }
                 },
             });

@@ -113,7 +113,9 @@ class InventoryController extends Controller
             $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('model_name', 'like', '%' . $keyword . '%');
+                $q->orWhere('model_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%');
             });
         }
         // Category
@@ -243,35 +245,52 @@ class InventoryController extends Controller
             $category['label'][] = $categories[$i]->name;
             $category['data'][] = $this->prod->where('inventory_category_id', $categories[$i]->id)->count();
         }
-        // Stock summary
-        $warehouse_stock = 0;
-        $warehouse_reserved_stock = 0;
-        $production_stock = 0;
-        $production_reserved_stock = 0;
-        for ($i = 0; $i < count($products); $i++) {
-            $warehouse_stock += $products[$i]->warehouseAvailableStock($products[$i]->id);
-            $warehouse_reserved_stock += $products[$i]->warehouseReservedStock($products[$i]->id);
-            $production_stock += $products[$i]->productionStock($products[$i]->id);
-            $production_reserved_stock += $products[$i]->productionReservedStock($products[$i]->id);
-        }
-        for ($i = 0; $i < count($raw_materials); $i++) {
-            $warehouse_stock += $raw_materials[$i]->warehouseAvailableStock($raw_materials[$i]->id);
-            $warehouse_reserved_stock += $raw_materials[$i]->warehouseReservedStock($raw_materials[$i]->id);
-            $production_stock += $raw_materials[$i]->productionStock($raw_materials[$i]->id);
-            $production_reserved_stock += $raw_materials[$i]->productionReservedStock($raw_materials[$i]->id);
-        }
 
         return view('inventory.summary', [
-            'warehouse_available_stock' => $warehouse_stock,
-            'warehouse_reserved_stock' => $warehouse_reserved_stock,
-            'production_stock' => $production_stock,
-            'production_reserved_stock' => $production_reserved_stock,
             'products' => $products,
             'raw_materials' => $raw_materials,
             'active_product_count' => $active_product_count,
             'inactive_product_count' => $inactive_product_count,
             'categories' => $category,
         ]);
+    }
+
+    public function getDataSummary()
+    {
+        try {
+            $products = $this->prod->with('image')->where('type', Product::TYPE_PRODUCT)->get();
+            $raw_materials = $this->prod->with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
+            // Stock summary
+            $warehouse_stock = 0;
+            $warehouse_reserved_stock = 0;
+            $production_stock = 0;
+            $production_reserved_stock = 0;
+            for ($i = 0; $i < count($products); $i++) {
+                $warehouse_stock += $products[$i]->warehouseAvailableStock($products[$i]->id);
+                $warehouse_reserved_stock += $products[$i]->warehouseReservedStock($products[$i]->id);
+                $production_stock += $products[$i]->productionStock($products[$i]->id);
+                $production_reserved_stock += $products[$i]->productionReservedStock($products[$i]->id);
+            }
+            for ($i = 0; $i < count($raw_materials); $i++) {
+                $warehouse_stock += $raw_materials[$i]->warehouseAvailableStock($raw_materials[$i]->id);
+                $warehouse_reserved_stock += $raw_materials[$i]->warehouseReservedStock($raw_materials[$i]->id);
+                $production_stock += $raw_materials[$i]->productionStock($raw_materials[$i]->id);
+                $production_reserved_stock += $raw_materials[$i]->productionReservedStock($raw_materials[$i]->id);
+            }
+
+            return Response::json([
+                'warehouse_available_stock' => $warehouse_stock,
+                'warehouse_reserved_stock' => $warehouse_reserved_stock,
+                'production_stock' => $production_stock,
+                'production_reserved_stock' => $production_reserved_stock,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function stockIn(ProductChild $product_child)
