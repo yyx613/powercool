@@ -187,22 +187,24 @@
                                     `<svg class="h-3.5 w-3.5 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>`
                                 }
                                 <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-0 opacity-0 z-[-10] w-56">
-                                    <div class="p-3 rounded shadow border bg-white">
-                                        <div class="flex items-center gap-2">
+                                    <div class="rounded shadow border bg-white">
+                                        <div class="flex items-center gap-2 border-b px-3 py-2">
                                             <svg class="h-3.5 w-3.5 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>
                                             <p class="font-medium">Conditions to convert</p>
                                         </div>
-                                        <ul class="mt-2 list-disc pl-4">
-                                            <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
-                                            <li class="text-sm ${row.conditions_to_convert.payment_method_filled == false ? 'line-through text-slate-400' : ''}">Payment method filled</li>
-                                            <li class="text-sm ${row.conditions_to_convert.payment_due_date_filled == false ? 'line-through text-slate-400' : ''}">Payment due date filled</li>
-                                            <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
-                                            <li class="text-sm ${row.conditions_to_convert.has_serial_no == true ? 'line-through text-slate-400' : ''}">Has serial no</li>
-                                            <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true || row.status == 2 ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
-                                            <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
-                                            <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
-                                            <li class="text-sm ${row.conditions_to_convert.filled_for_e_invoice == true ? 'line-through text-slate-400' : ''}">Filled for E-Invoice</li>
-                                        </ul>
+                                        <div class="px-3 py-2">
+                                            <ul class="list-disc pl-4">
+                                                <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
+                                                <li class="text-sm ${row.conditions_to_convert.payment_method_filled == false ? 'line-through text-slate-400' : ''}">Payment method filled</li>
+                                                <li class="text-sm ${row.conditions_to_convert.payment_due_date_filled == false ? 'line-through text-slate-400' : ''}">Payment due date filled</li>
+                                                <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
+                                                <li class="text-sm ${row.conditions_to_convert.has_serial_no == true ? 'line-through text-slate-400' : ''}">Has serial no</li>
+                                                <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true || row.status == 2 ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
+                                                <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
+                                                <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
+                                                <li class="text-sm ${row.conditions_to_convert.filled_for_e_invoice == true ? 'line-through text-slate-400' : ''}">Filled for E-Invoice</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -472,13 +474,22 @@
                 url: url,
                 type: 'GET',
                 success: function(res) {
+                    console.debug(res)
                     let opt = new Option('Select a product', null)
                     $('#to-production-modal select').append(opt)
 
                     for (let i = 0; i < res.products.length; i++) {
                         const elem = res.products[i];
+                        var requestedCount = 0
 
-                        let opt = new Option(elem.model_name, elem.id)
+                        for (let j = 0; j < res.requested_details.length; j++) {
+                            if (res.requested_details[j].product_id == elem.id) {
+                                requestedCount = res.requested_details[j].count
+                                break
+                            }
+                        }
+
+                        let opt = new Option(`${elem.model_name} - Requested x${requestedCount}`, elem.id)
                         $('#to-production-modal select').append(opt)
                     }
 
