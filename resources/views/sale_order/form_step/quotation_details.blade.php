@@ -41,6 +41,11 @@
             <x-app.message.error id="customer_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="mobile" class="mb-1">{{ __('Mobile') }}</x-app.input.label>
+            <x-app.input.input name="mobile" id="mobile" :hasError="$errors->has('mobile')" disabled="true" />
+            <x-app.message.error id="mobile_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="sale" id="sale" :hasError="$errors->has('sale')"
@@ -81,9 +86,6 @@
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
-            <p class="mt-1.5 text-sm text-slate-500 leading-none">
-                {{ __('Please make it empty before entering a new address') }}
-            </p>
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
@@ -91,9 +93,6 @@
             <x-app.input.select id="delivery_address" name="delivery_address">
                 <option value="">{{ __('Select a delivery address') }}</option>
             </x-app.input.select>
-            <p class="mt-1.5 text-sm text-slate-500 leading-none">
-                {{ __('Please make it empty before entering a new address') }}
-            </p>
             <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
@@ -113,19 +112,6 @@
                 @endif
             </x-app.input.select>
             <x-app.message.error id="status_err" />
-        </div>
-    </div>
-    {{-- Custom Address --}}
-    <div class="pt-4 border-t border-slate-200">
-        <div class="mb-8" id="new-billing-address">
-            @include('components.app.address-field', [
-                'title' => 'Billing Address',
-            ])
-        </div>
-        <div id="new-delivery-address">
-            @include('components.app.address-field', [
-                'title' => 'Delivery Address',
-            ])
         </div>
     </div>
 </div>
@@ -153,38 +139,11 @@
             INIT_EDIT = false
         })
 
-        $('select[name="billing_address"]').on('change', function() {
-            let val = $(this).val()
-
-            if (val == 'null' || val == null) {
-                $('#new-billing-address input').attr('disabled', false)
-                $('#new-billing-address input').attr('aria-disabled', false)
-                $('#new-billing-address input').parent().attr('aria-disabled', false)
-            } else {
-                $('#new-billing-address input').val(null)
-                $('#new-billing-address input').attr('disabled', true)
-                $('#new-billing-address input').attr('aria-disabled', true)
-                $('#new-billing-address input').parent().attr('aria-disabled', true)
-            }
-        })
-        $('select[name="delivery_address"]').on('change', function() {
-            let val = $(this).val()
-
-            if (val == 'null' || val == null) {
-                $('#new-delivery-address input').attr('disabled', false)
-                $('#new-delivery-address input').attr('aria-disabled', false)
-                $('#new-delivery-address input').parent().attr('aria-disabled', false)
-            } else {
-                $('#new-delivery-address input').val(null)
-                $('#new-delivery-address input').attr('disabled', true)
-                $('#new-delivery-address input').attr('aria-disabled', true)
-                $('#new-delivery-address input').parent().attr('aria-disabled', true)
-            }
-        })
         $('select[name="customer"]').on('change', function() {
             var customer_id = $(this).val()
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
+            $('input[name="mobile"]').val(element.phone ?? element.mobile_number)
 
             if (INIT_EDIT) {
                 $('select[name="sale"]').val(SALE.sale_id).trigger('change')
