@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 425px 25px 50px 25px;
+        margin: 435px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -400px;
+        top: -410px;
         left: 0px;
         right: 0px;
     }
@@ -45,7 +45,7 @@
                 </td>
             </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 15px 0;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td
                     style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
@@ -78,7 +78,7 @@
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
-                                {{ $customer->tin_number ?? '' }}<br>
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -115,7 +115,7 @@
                             <td style="font-size: 14px;">{{ $date }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Store</td>
+                            <td style="font-size: 14px;">Warehouse</td>
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;">{{ $sale->store }}</td>
                         </tr>
@@ -123,7 +123,7 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 14px; padding: 25px 0 0 0;" colspan="3">Thank you for your inquiry. We are
+                <td style="font-size: 14px; padding: 25px 0 15px 0;" colspan="3">Thank you for your inquiry. We are
                     pleased
                     to submit our quote as follows:</td>
             </tr>
@@ -135,31 +135,31 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
                     Item Code</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
                     Promotion (RM)</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
                     Total (RM)</td>
             </tr>
             @php

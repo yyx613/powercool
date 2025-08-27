@@ -100,6 +100,17 @@ if (! function_exists('isFinanceOnly')) {
     }
 }
 
+if (! function_exists('isFinance')) {
+    function isFinance(): bool
+    {
+        if (in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
 if (! function_exists('getCustomizeProductIds')) {
     function getCustomizeProductIds()
     {

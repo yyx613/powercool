@@ -69,14 +69,13 @@
         FORM_CAN_SUBMIT = true
         SALE = @json($sale ?? null);
         QUO = @json($quo ?? null);
-        PAYMENT_EDITABLE_ONLY = @json($payment_editable_only ?? null);
+        CAN_EDIT_PAYMENT = @json($can_edit_payment ?? null);
         IS_VIEW = @json($is_view ?? null);
-        IS_SALE_COORDINATOR_ONLY = @json($is_sale_coordinator_only ?? null);
 
         $(document).ready(function() {
             if (SALE == null) {
                 getNextSku()
-            } else if (PAYMENT_EDITABLE_ONLY == true || IS_VIEW == true || IS_SALE_COORDINATOR_ONLY == true) {
+            } else {
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input')
                     .attr('disabled', true)
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
@@ -88,7 +87,7 @@
                 $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
                     .css('backgroundColor', '#eee')
 
-                if (IS_SALE_COORDINATOR_ONLY == true) {
+                if (CAN_EDIT_PAYMENT == false) {
                     $('#payment-details-container input, #payment-details-container select').attr('disabled', true)
                     $('#payment-details-container input, #payment-details-container select').addClass(
                         '!bg-gray-100')
