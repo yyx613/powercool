@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 375px 25px 50px 25px;
+        margin: 400px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -350px;
+        top: -375px;
         left: 0px;
         right: 0px;
     }
@@ -40,7 +40,7 @@
                 </td>
             </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 15px 0;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td colspan="2"
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: right;">
@@ -54,7 +54,7 @@
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
-                                {{ $customer->tin_number ?? '' }}<br>
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -68,8 +68,13 @@
                         </tr>
                     </table>
                 </td>
-                <td>
+                <td style="padding: 0 0 25px 0;">
                     <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="font-size: 14px; width: 40%;">Quotation No.</td>
+                            <td style="font-size: 14px; width: 10%;">:</td>
+                            <td style="font-size: 14px;">{{ $quo_skus ?? '' }}</td>
+                        </tr>
                         <tr>
                             <td style="font-size: 14px; width: 40%;">Your P/O No.</td>
                             <td style="font-size: 14px; width: 10%;">:</td>
@@ -91,7 +96,7 @@
                             <td style="font-size: 14px;">{{ $saleperson->name }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px;">Store</td>
+                            <td style="font-size: 14px;">Warehouse</td>
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;"></td>
                         </tr>
@@ -111,34 +116,34 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black;  border-bottom: solid 1px black; text-align: left; width: 5%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
                     Item Code</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
                     Description</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     FOC Qty</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 5%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
                     Promotion (RM)</td>
                 <td
-                    style="font-size: 10px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">
+                    style="font-size: 10px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
                     Total (RM)</td>
             </tr>
             @php
@@ -193,7 +198,7 @@
                     @if (count($warranty) > 0)
                         <tr>
                             <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">Warranty:
+                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">Warranty:<br>
                                 {{ join(', ', $warranty) }}</td>
                             <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                         </tr>
@@ -203,7 +208,7 @@
                 @if ($prod->serial_no != null)
                     <tr>
                         <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">Serial No:
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">Serial No:<br>
                             {{ join(', ', $prod->serial_no) }}</td>
                         <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                     </tr>

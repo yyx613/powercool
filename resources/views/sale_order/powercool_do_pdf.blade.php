@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 175px 25px 50px 25px;
+        margin: 375px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -150px;
+        top: -350px;
         left: 0px;
         right: 0px;
     }
@@ -33,8 +33,8 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 65%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
-                            style="font-size: 12px; font-weight: 100;">(383045-D)</span></span><br>
+                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span><br>
+                    <span style="font-size: 10px;">(199601010696 C383045-D)</span><br>
                     <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 12px;">48200 SERENDAH,SELANGOR.</span><br>
@@ -74,28 +74,33 @@
                             <td style="font-size: 12px;">:</td>
                             <td style="font-size: 12px;"></td>
                         </tr>
-
+                        <tr>
+                            <td style="font-size: 12px;">Warehouse</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $warehouse }}</td>
+                        </tr>
                     </table>
                 </td>
             </tr>
         </table>
-    </header>
-
-    <main>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
+        <table
+            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td colspan="2"
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
                     DELIVERY ORDER</td>
             </tr>
             <tr>
-                <td style="padding: 0 35px 0 0;">
+                <td style="padding: 0 35px 15px 0;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px; font-weight: 700;">Billing Address</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;" colspan="2">
+                                @if ($customer->tin_number != null)
+                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
+                                @endif
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -109,13 +114,16 @@
                         </tr>
                     </table>
                 </td>
-                <td style="padding: 0 35px 0 0;">
+                <td style="padding: 0 35px 15px 0;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px; font-weight: 700;">Delivery Address</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;" colspan="2">
+                                @if ($customer->tin_number != null)
+                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
+                                @endif
                                 {{ $customer->company_name ?? '' }}<br>
                                 {{ $delivery_address->address1 ?? '' }}<br>
                                 {{ $delivery_address->address2 ?? '' }}<br>
@@ -130,23 +138,26 @@
                 </td>
             </tr>
         </table>
+    </header>
+
+    <main>
         <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
                     Stock Code</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 45%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 45%;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
                     UOM</td>
             </tr>
             @php
@@ -176,7 +187,7 @@
                     @endphp
                     <tr>
                         <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">Warranty:
+                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">Warranty:<br>
                             {{ join(', ', $warranty) }}</td>
                         <td></td>
                     </tr>
@@ -185,7 +196,7 @@
                 @if ($prod['serial_no'] != null)
                     <tr>
                         <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:<br>
                             {{ join(', ', $prod['serial_no']) }}</td>
                         <td></td>
                     </tr>

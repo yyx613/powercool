@@ -181,7 +181,7 @@
     <div id="items-container"></div>
     <!-- Add Items -->
     <div
-        class="flex justify-end px-4 {{ isset($sale) && ($sale->status == 2 || $sale->status == 3 || $payment_editable_only == true) ? 'hidden' : '' }} {{ isset($convert_from_quo) && $convert_from_quo ? 'hidden' : '' }}">
+        class="flex justify-end px-4 {{ isset($sale) && ($sale->status == 2 || $sale->status == 3) ? 'hidden' : '' }} {{ isset($convert_from_quo) && $convert_from_quo ? 'hidden' : '' }}">
         <button type="button"
             class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow"
             id="add-item-btn">

@@ -826,10 +826,10 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
-            'payment_editable_only' => $sale->convertFromQuo() || isFinanceOnly(),
+            // 'payment_editable_only' => $sale->convertFromQuo() || isSuperAdmin() || isFinance(),
+            'can_edit_payment' => isSuperAdmin() || isFinance(),
             'is_view' => $is_view,
             'has_pending_approval' => $has_pending_approval,
-            'is_sale_coordinator_only' => isSalesCoordinatorOnly(),
             'customers' => $customers,
             'transfer_from' => $transfer_from,
             'transfer_to' => $transfer_to,
@@ -1321,6 +1321,7 @@ class SaleController extends Controller
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => CustomerLocation::where('id', $req->delivery_address)->first(),
                 'terms' => Session::get('convert_terms'),
+                'warehouse' => $sale_orders[0]->store ?? '',
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
