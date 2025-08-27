@@ -43,6 +43,16 @@
                         </g>
                     </svg>
                 </button>
+                @if (isset($sale))
+                    <button type="button" class="text-sm p-1.5 rounded-full bg-purple-200 to-production-btns"
+                        title="{{ __('To Sale Production Request') }}">
+                        <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                            viewBox="0 0 24 24" width="512" height="512">
+                            <path
+                                d="M8,5c0-2.206-1.794-4-4-4S0,2.794,0,5c0,1.86,1.277,3.428,3,3.873v7.253c-1.723,.445-3,2.013-3,3.873,0,2.206,1.794,4,4,4s4-1.794,4-4c0-1.86-1.277-3.428-3-3.873v-7.253c1.723-.445,3-2.013,3-3.873Zm-6,0c0-1.103,.897-2,2-2s2,.897,2,2-.897,2-2,2-2-.897-2-2Zm4,15c0,1.103-.897,2-2,2s-2-.897-2-2,.897-2,2-2,2,.897,2,2Zm15-3.873v-7.127c0-2.757-2.243-5-5-5h-3.471l2.196-2.311c.381-.4,.364-1.034-.036-1.414-.399-.379-1.033-.364-1.413,.036l-2.396,2.522c-1.17,1.169-1.17,3.073-.03,4.212l2.415,2.631c.196,.215,.466,.324,.736,.324,.242,0,.484-.087,.676-.263,.407-.374,.435-1.006,.061-1.413l-2.133-2.324h3.397c1.654,0,3,1.346,3,3v7.127c-1.724,.445-3,2.013-3,3.873,0,2.206,1.794,4,4,4s4-1.794,4-4c0-1.86-1.276-3.428-3-3.873Zm-1,5.873c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Z" />
+                        </svg>
+                    </button>
+                @endif
             </div>
             <div class="hidden" id="approval-status-container">
                 <span id="revised-status"
@@ -155,7 +165,7 @@
                 <div class="flex justify-between">
                     <x-app.input.label id="product_serial_no"
                         class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
-                        <span class="text-sm text-slate-400" id="available-qty"></span>
+                    <span class="text-sm text-slate-400" id="available-qty"></span>
                 </div>
                 <x-app.input.select name="product_serial_no[]" multiple class="h-36 md:h-full">
                 </x-app.input.select>
@@ -309,6 +319,7 @@
             $(clone).attr('data-sequence', ITEMS_COUNT)
             $(clone).find('.move-down-btn').attr('data-sequence', ITEMS_COUNT)
             $(clone).find('.move-up-btn').attr('data-sequence', ITEMS_COUNT)
+            $(clone).find('.to-production-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.sst-btns').attr('data-id', ITEMS_COUNT)
@@ -494,6 +505,18 @@
 
             $(`.items[data-sequence=${itemSequence}]`).insertBefore($(`.items[data-sequence=${itemSequence-1}]`))
             sortProduct()
+        })
+        $('body').on('click', '.to-production-btns', function() {
+            let id = $(this).data('id')
+            let productId = $(`.items[data-id=${id}] select[name="product_id[]"]`).val()
+
+            if (productId == null || productId == undefined) return
+
+            $('#to-production-modal #product-selector').addClass('hidden')
+            $('#to-production-modal #product-selector').attr('data-product-id', productId)
+            $('#to-production-modal #yes-btn').attr('data-id', SALE.id)
+            $('#to-production-modal #yes-btn').removeClass('hidden')
+            $('#to-production-modal').addClass('show-modal')
         })
         $('select[name="promotion_id"]').on('change', function() {
             let val = $(this).val()

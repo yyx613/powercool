@@ -108,7 +108,8 @@
                 qty.push($(this).find('input[name="qty"]').val())
                 foc.push($(this).find('.foc-btns').data('is-foc'))
                 withSST.push($(this).find('.sst-btns').data('with-sst'))
-                SSTAmount.push($(this).find('input[name="sst"]').val() == undefined ? null : $(this).find('input[name="sst"]').val().replaceAll(',', ''))
+                SSTAmount.push($(this).find('input[name="sst"]').val() == undefined ? null : $(this).find(
+                    'input[name="sst"]').val().replaceAll(',', ''))
                 uom.push($(this).find('input[name="uom"]').val())
                 sellingPrice.push($(this).find('select[name="selling_price[]"]').val())
                 unitPrice.push($(this).find('input[name="unit_price[]"]').val())
@@ -157,6 +158,12 @@
                     'new_billing_address2': $('#new-billing-address input[name="address2"]').val(),
                     'new_billing_address3': $('#new-billing-address input[name="address3"]').val(),
                     'new_billing_address4': $('#new-billing-address input[name="address4"]').val(),
+                    'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
+                        'select[name="delivery_address"]').val(),
+                    'new_delivery_address1': $('#new-delivery-address input[name="address1"]').val(),
+                    'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
+                    'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
+                    'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
@@ -206,7 +213,12 @@
                             let errors = err.responseJSON.errors
 
                             for (const key in errors) {
-                                if (key.includes('new_billing_')) {
+                                if (key.includes('new_delivery_')) {
+                                    $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
+                                        .find('p').text(errors[key])
+                                    $(`#new-delivery-address #${key.replace('new_delivery_', '') }_err`)
+                                        .removeClass('hidden')
+                                } else if (key.includes('new_billing_')) {
                                     $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)
                                         .find('p').text(errors[key])
                                     $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)

@@ -374,7 +374,8 @@ class SaleController extends Controller
             'sale' => $sale,
             'products' => $sale->products,
             'customer' => $sale->customer,
-            'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+            'billing_address' => CustomerLocation::where('id', $sale->billing_address_id)->first(),
+            'delivery_address' => CustomerLocation::where('id', $sale->delivery_address_id)->first(),
             'show_payment_term' => $show_payment_term,
             'payment_term' => $payment_term ?? null,
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
@@ -502,13 +503,15 @@ class SaleController extends Controller
                 'product_id' => $products->map(function ($q) {
                     return $q->product_id;
                 })->toArray(),
-                'billing_address' => $quos[0]->value('billing_address_id'),
+                'billing_address' => $quos[0]->billing_address_id,
+                'delivery_address' => $quos[0]->delivery_address_id,
+                'payment_method' => $quos[0]->payment_method,
             ]);
             // Check to use back transferred SO sku
             if ($quos[0]->convert_to != null) {
                 $sku_to_use = Sale::withTrashed()->where('id', $quos[0]->convert_to)->value('sku');
             }
-            $res = $this->upsertQuoDetails($request, false, true, false, isset($sku_to_use) ? $sku_to_use : null, false)->getData();
+            $res = $this->upsertQuoDetails($request, false, true, isset($sku_to_use) ? $sku_to_use : null, false)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create quotation');
             }
@@ -920,7 +923,8 @@ class SaleController extends Controller
             'products' => $sps,
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
-            'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+            'billing_address' => CustomerLocation::where('id', $sale->billing_address_id)->first(),
+            'delivery_address' => CustomerLocation::where('id', $sale->delivery_address_id)->first(),
             'terms' => $sale->paymentTerm ?? null,
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
@@ -1405,18 +1409,18 @@ class SaleController extends Controller
             'cc' => 'nullable|max:250',
             'status' => 'required',
             'report_type' => 'required',
-            'billing_address' => 'nullable',
-            'new_billing_address1' => 'required_if:billing_address,null|max:250',
-            'new_billing_address2' => 'nullable|max:250',
-            'new_billing_address3' => 'nullable|max:250',
-            'new_billing_address4' => 'nullable|max:250',
             'payment_term' => 'nullable',
             // upsertRemark
             'remark' => 'nullable|max:250',
         ];
-        if ($req->type == 'so') {
+        if ($req->type == 'quo') {
+            $rules['billing_address'] = 'nullable';
+            $rules['new_billing_address1'] = 'required_if:billing_address,null|max:250';
+            $rules['new_billing_address2'] = 'nullable|max:250';
+            $rules['new_billing_address3'] = 'nullable|max:250';
+            $rules['new_billing_address4'] = 'nullable|max:250';
             $rules['delivery_address'] = 'nullable';
-            $rules['new_delivery_address1'] = 'nullable|max:250';
+            $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
             $rules['new_delivery_address2'] = 'nullable|max:250';
             $rules['new_delivery_address3'] = 'nullable|max:250';
             $rules['new_delivery_address4'] = 'nullable|max:250';
@@ -1485,6 +1489,7 @@ class SaleController extends Controller
             'report_type' => 'type',
             'customer' => 'company',
             'open_until' => 'validity',
+            'store' => 'warehouse',
             // upsertProDetails
             'product_id.*' => 'product',
             'product_desc.*' => 'product description',
@@ -1544,7 +1549,7 @@ class SaleController extends Controller
 
             $data = [];
 
-            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, false)->getData();
+            $res = $this->upsertQuoDetails($req, true, false, null, false)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertQuoDetails failed');
             }
@@ -1614,7 +1619,7 @@ class SaleController extends Controller
             // insert into columns
             $data = [];
 
-            $res = $this->upsertQuoDetails($req, true, false, $req->type == 'quo' ? false : true, null, true)->getData();
+            $res = $this->upsertQuoDetails($req, true, false, null, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertQuoDetails failed');
             }
@@ -1666,7 +1671,7 @@ class SaleController extends Controller
         }
     }
 
-    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $need_delivery_address = false, ?string $so_sku_to_use = null, bool $is_draft = false)
+    public function upsertQuoDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, ?string $so_sku_to_use = null, bool $is_draft = false)
     {
         if (! $validated) {
             // Validate form
@@ -1681,14 +1686,15 @@ class SaleController extends Controller
                 'cc' => 'nullable|max:250',
                 'status' => 'required',
                 'report_type' => 'required',
-                'billing_address' => 'nullable',
-                'new_billing_address1' => 'required_if:billing_address,null|max:250',
-                'new_billing_address2' => 'nullable|max:250',
-                'new_billing_address3' => 'nullable|max:250',
-                'new_billing_address4' => 'nullable|max:250',
                 'payment_term' => 'nullable',
             ];
-            if ($need_delivery_address == true) {
+            if ($req->type == 'quo') {
+                $rules['billing_address'] = 'nullable';
+                $rules['new_billing_address1'] = 'required_if:billing_address,null|max:250';
+                $rules['new_billing_address2'] = 'nullable|max:250';
+                $rules['new_billing_address3'] = 'nullable|max:250';
+                $rules['new_billing_address4'] = 'nullable|max:250';
+
                 $rules['delivery_address'] = 'nullable';
                 $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
                 $rules['new_delivery_address2'] = 'nullable|max:250';
@@ -1729,7 +1735,7 @@ class SaleController extends Controller
                 }
             }
             // Delivery
-            if ($need_delivery_address == true && ($req->delivery_address != null || $req->new_delivery_address1 != null)) {
+            if ($req->delivery_address != null || $req->new_delivery_address1 != null) {
                 if ($req->delivery_address != null) {
                     $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
                 } else {
@@ -1773,8 +1779,8 @@ class SaleController extends Controller
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
-                    'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
-                    'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
+                    'delivery_address_id' => $req->delivery_address ?? null,
+                    'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
                     'created_by' => $created_by,
@@ -1811,8 +1817,8 @@ class SaleController extends Controller
                     'report_type' => $req->report_type,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
-                    'delivery_address_id' => $need_delivery_address == true ? $req->delivery_address : null,
-                    'delivery_address' => $need_delivery_address == true ? (isset($del_add) ? $del_add->formatAddress() : null) : null,
+                    'delivery_address_id' =>  $req->delivery_address ?? null,
+                    'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
                 ]);
@@ -2401,8 +2407,13 @@ class SaleController extends Controller
             })
             ->get();
 
+        $sale_product_details = SaleProduct::select('id', 'product_id', 'qty')->with('children')->where('sale_id', $sale->id)->whereIn('product_id', $product_ids)->groupBy('product_id')->get();
+        $requested_details = SaleProductionRequest::select('product_id', DB::raw('COUNT(*) as count'))->whereIn('product_id', $product_ids)->groupBy('product_id')->get();
+
         return Response::json([
             'products' => $products,
+            'requested_details' => $requested_details,
+            'sale_product_details' => $sale_product_details,
         ], HttpFoundationResponse::HTTP_OK);
     }
 

@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 425px 25px 50px 25px;
+        margin: 450px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -400px;
+        top: -425px;
         left: 0px;
         right: 0px;
     }
@@ -30,8 +30,7 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
-                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span
-                            style="font-size: 10px; font-weight: 100;">(383045-D)</span></span><br>
+                    <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span><br>
                     <span style="font-size: 10px;">(199601010696 C383045-D)</span><br>
                     <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
@@ -102,21 +101,38 @@
                 <td style="padding: 0 35px 0 0;" colspan="3">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; width: 50%;" colspan="2">
-                                {{ $customer->tin_number ?? '' }}<br>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700; width: 50%;">Billing
+                                Address:</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0; font-weight: 700; width: 50%;">Delivery
+                                Address:</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 14px; width: 50%;">
+                                @if ($customer->tin_number != null)
+                                    {{ $customer->tin_number ?? '' }}<br>
+                                @endif
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
                                 {{ $billing_address->address3 ?? '' }}<br>
                                 {{ $billing_address->address4 ?? '' }}<br>
                             </td>
+                            <td style="font-size: 14px; width: 50%;">
+                                @if ($customer->tin_number != null)
+                                    {{ $customer->tin_number ?? '' }}<br>
+                                @endif
+                                {{ $customer->company_name }}<br>
+                                {{ $delivery_address->address1 ?? '' }}<br>
+                                {{ $delivery_address->address2 ?? '' }}<br>
+                                {{ $delivery_address->address3 ?? '' }}<br>
+                                {{ $delivery_address->address4 ?? '' }}<br>
+                            </td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">ATT:
-                                {{ $customer->name ?? '' }}
-                            </td>
+                                {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>

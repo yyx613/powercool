@@ -48,6 +48,11 @@
             <x-app.message.error id="customer_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="mobile" class="mb-1">{{ __('Mobile') }}</x-app.input.label>
+            <x-app.input.input name="mobile" id="mobile" :hasError="$errors->has('mobile')" disabled="true" />
+            <x-app.message.error id="mobile_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
             <x-app.input.input name="reference" id="reference" :hasError="$errors->has('reference')"
                 value="{{ isset($replicate) ? $replicate->reference : (isset($sale) ? $sale->reference : null) }}" />
@@ -66,7 +71,7 @@
             <x-app.message.error id="cc_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
+            <x-app.input.label id="store" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
             <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
                 value="{{ isset($replicate) ? $replicate->store : (isset($sale) ? $sale->store : null) }}" />
             <x-app.message.error id="store_err" />
@@ -110,6 +115,16 @@
                 {{ __('Please make it empty before entering a new address') }}
             </p>
             <x-app.message.error id="billing_address_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
+            <x-app.input.select id="delivery_address" name="delivery_address">
+                <option value="">{{ __('Select a delivery address') }}</option>
+            </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
+            </p>
+            <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
@@ -165,9 +180,14 @@
     </div>
     {{-- Custom Address --}}
     <div class="pt-4 border-t border-slate-200">
-        <div id="new-billing-address">
+        <div class="mb-8" id="new-billing-address">
             @include('components.app.address-field', [
                 'title' => 'Billing Address',
+            ])
+        </div>
+        <div id="new-delivery-address">
+            @include('components.app.address-field', [
+                'title' => 'Delivery Address',
             ])
         </div>
     </div>
@@ -198,7 +218,7 @@
         $('select[name="billing_address"]').on('change', function() {
             let val = $(this).val()
 
-            if (val == 'null' || val == null) {
+            if (val == 'null' || val == null || val == '') {
                 $('#new-billing-address input').attr('disabled', false)
                 $('#new-billing-address input').attr('aria-disabled', false)
                 $('#new-billing-address input').parent().attr('aria-disabled', false)
@@ -207,6 +227,21 @@
                 $('#new-billing-address input').attr('disabled', true)
                 $('#new-billing-address input').attr('aria-disabled', true)
                 $('#new-billing-address input').parent().attr('aria-disabled', true)
+            }
+        })
+        $('select[name="delivery_address"]').on('change', function() {
+            let val = $(this).val()
+            console.debug(val)
+
+            if (val == 'null' || val == null || val == '') {
+                $('#new-delivery-address input').attr('disabled', false)
+                $('#new-delivery-address input').attr('aria-disabled', false)
+                $('#new-delivery-address input').parent().attr('aria-disabled', false)
+            } else {
+                $('#new-delivery-address input').val(null)
+                $('#new-delivery-address input').attr('disabled', true)
+                $('#new-delivery-address input').attr('aria-disabled', true)
+                $('#new-delivery-address input').parent().attr('aria-disabled', true)
             }
         })
         $('select[name="payment_method"]').on('change', function() {
@@ -225,6 +260,7 @@
 
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
+            $('input[name="mobile"]').val(element.phone ?? element.mobile_number)
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();
 
@@ -285,7 +321,27 @@
                                 SALE.billing_address_id : loc.is_default)
                             $('select[name="billing_address"]').append(opt)
                         }
+                        if (loc.type == 2 || loc.type == 3) {
+                            var addr = loc.address1
+                            if (loc.address2 != null) {
+                                addr = `${addr}, ${loc.address2}`
+                            }
+                            if (loc.address3 != null) {
+                                addr = `${addr}, ${loc.address3}`
+                            }
+                            if (loc.address4 != null) {
+                                addr = `${addr}, ${loc.address4}`
+                            }
+
+                            let opt = new Option(
+                                addr, loc.id,
+                                false, QUOTATION_DETAILS_INIT_EDIT == true ? loc.id ==
+                                SALE.delivery_address_id : loc.is_default)
+                            $('select[name="delivery_address"]').append(opt)
+                        }
                     }
+                    $('select[name="billing_address"]').trigger('change')
+                    $('select[name="delivery_address"]').trigger('change')
                 },
             });
         })
