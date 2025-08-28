@@ -88,6 +88,17 @@ if (! function_exists('isSalesCoordinatorOnly')) {
     }
 }
 
+if (! function_exists('isSalesCoordinator')) {
+    function isSalesCoordinator(): bool
+    {
+        if (in_array(Role::SALE_COORDINATOR, getUserRoleId(Auth::user()))) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
 if (! function_exists('isFinanceOnly')) {
     function isFinanceOnly(): bool
     {
@@ -456,7 +467,7 @@ if (! function_exists('getCurrentUserBranch')) {
 if (! function_exists('isHiTen')) {
     function isHiTen(int $company_group): bool
     {
-        return $company_group == 2; 
+        return $company_group == 2;
     }
 }
 
