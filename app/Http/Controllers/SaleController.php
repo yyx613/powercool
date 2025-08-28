@@ -779,7 +779,7 @@ class SaleController extends Controller
         if (str_contains(Route::currentRouteName(), '.view')) {
             $is_view = true;
         } else {
-            $owned = isSuperAdmin() || isSalesCoordinatorOnly() || Auth::user()->id == $sale->created_by;
+            $owned = isSuperAdmin() || isSalesCoordinator() || Auth::user()->id == $sale->created_by;
             if (!$owned) {
                 abort(403);
             }
