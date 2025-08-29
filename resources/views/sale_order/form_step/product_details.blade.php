@@ -700,6 +700,16 @@
         }
 
         function buildSerialNoOptions(product_id, item_id, sale_product_id = null) {
+            let selectedQty = 0
+            if (SALE != null) {
+                for (let i = 0; i < SALE.products.length; i++) {
+                    if (SALE.products[i].product_id == product_id) {
+                        selectedQty = SALE.products[i].children.length
+                        break;
+                    }
+                }
+            }
+
             for (let i = 0; i < PRODUCTS.length; i++) {
                 const prod = PRODUCTS[i];
 
@@ -715,7 +725,7 @@
                         opt.value = child.id
                         $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                     }
-                    $(`.items[data-id="${item_id}"] #available-qty`).text(`Available Qty: ${prod.children.length}`)
+                    $(`.items[data-id="${item_id}"] #available-qty`).text(`Available Qty: ${prod.children.length - selectedQty}`)
                     break
                 }
             }
