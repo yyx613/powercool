@@ -1759,7 +1759,9 @@ class SaleController extends Controller
                 } else {
                     $company_group = Customer::where('id', $req->customer)->value('company_group');
                     $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO)->pluck('sku')->toArray();
-                    $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $existing_skus, isHiTen($company_group));
+                    $transferred_back_skus = Sale::withTrashed()->where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_TRANSFERRED_BACK)->distinct()->pluck('sku')->toArray();
+                    $all_skus = array_merge($existing_skus, $transferred_back_skus);
+                    $sku = generateSku($req->type == 'quo' ? 'QT' : 'SO', $all_skus, isHiTen($company_group));
                 }
 
                 $sales_id = DB::table('sales_sales_agents')->where('sales_agent_id', $req->sale)->value('sales_id');

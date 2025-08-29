@@ -34,7 +34,7 @@
             <tr>
                 <td style="width: 65%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
                     <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span><br>
-                    <span style="font-size: 10px;">(199601010696 C383045-D)</span><br>
+                    <span style="font-size: 10px;">[199601010696 (383045-D)]</span><br>
                     <span style="font-size: 12px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 12px;">48200 SERENDAH,SELANGOR.</span><br>
