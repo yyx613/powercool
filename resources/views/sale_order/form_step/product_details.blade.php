@@ -518,6 +518,24 @@
             $('#to-production-modal #yes-btn').removeClass('hidden')
             $('#to-production-modal').addClass('show-modal')
         })
+        $('body').on('change', 'select[name="product_serial_no[]"]', function() {
+            let itemId = $(this).closest('.items').attr('data-id')
+            let productId = $(`.items[data-id=${itemId}] select[name="product_id[]"]`).val()
+            let totalQty = 0
+            let selectedQty = $(`.items[data-id=${itemId}] select[name="product_serial_no[]"] option:checked`)
+                .length
+
+            for (let i = 0; i < PRODUCTS.length; i++) {
+                const prod = PRODUCTS[i];
+
+                if (prod.id == productId) {
+                    totalQty = prod.children.length
+                    break
+                }
+            }
+
+            $(`.items[data-id="${itemId}"] #available-qty`).text(`Available Qty: ${totalQty - selectedQty}`)
+        })
         $('select[name="promotion_id"]').on('change', function() {
             let val = $(this).val()
             let foundPromo = false
@@ -725,7 +743,8 @@
                         opt.value = child.id
                         $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                     }
-                    $(`.items[data-id="${item_id}"] #available-qty`).text(`Available Qty: ${prod.children.length - selectedQty}`)
+                    $(`.items[data-id="${item_id}"] #available-qty`).text(
+                        `Available Qty: ${prod.children.length - selectedQty}`)
                     break
                 }
             }

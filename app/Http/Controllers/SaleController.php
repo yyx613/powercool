@@ -404,7 +404,7 @@ class SaleController extends Controller
 
             $quotations = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>=', now()->format('Y-m-d'))
+                ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -423,7 +423,7 @@ class SaleController extends Controller
 
             $salesperson_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>=', now()->format('Y-m-d'))
+                ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -440,7 +440,7 @@ class SaleController extends Controller
         } else {
             $customer_ids = Sale::where('type', Sale::TYPE_QUO)
                 ->where('is_draft', false)
-                ->where('open_until', '>=', now()->format('Y-m-d'))
+                ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
@@ -887,6 +887,11 @@ class SaleController extends Controller
             // Change converted QUO back to active
             $quos = Sale::where('convert_to', $sale->id)->get();
             for ($i = 0; $i < count($quos); $i++) {
+                if ($quos[$i]->open_until >= now()->format('Y-m-d')) {
+                    $quos[$i]->expired_at = null;
+                } else {
+                    $quos[$i]->expired_at = now()->format('Y-m-d');
+                }
                 $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                 $quos[$i]->save();
             }
