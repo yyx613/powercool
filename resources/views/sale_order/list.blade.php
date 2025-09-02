@@ -173,7 +173,7 @@
                     "targets": 0,
                     render: function(data, type, row) {
                         let convertable = row.conditions_to_convert.is_draft == false && row
-                            .conditions_to_convert.payment_method_filled == false && row
+                            .conditions_to_convert.payment_method_filled == true && row
                             .conditions_to_convert.payment_due_date_filled == false && row
                             .conditions_to_convert.has_product == true && row.conditions_to_convert
                             .has_serial_no == true && row.conditions_to_convert.is_active_or_approved ==
@@ -199,7 +199,7 @@
                                         <div class="px-3 py-2">
                                             <ul class="list-disc pl-4">
                                                 <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
-                                                <li class="text-sm ${row.conditions_to_convert.payment_method_filled == false ? 'line-through text-slate-400' : ''}">Payment method filled</li>
+                                                <li class="text-sm ${row.conditions_to_convert.payment_method_filled == true ? 'line-through text-slate-400' : ''}">Payment method filled</li>
                                                 <li class="text-sm ${row.conditions_to_convert.payment_due_date_filled == false ? 'line-through text-slate-400' : ''}">Payment due date filled</li>
                                                 <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
                                                 <li class="text-sm ${row.conditions_to_convert.has_serial_no == true ? 'line-through text-slate-400' : ''}">Has serial no</li>
