@@ -638,6 +638,8 @@ class SaleController extends Controller
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
                 'sales.payment_status',
+                'payment_methods.name as payment_method',
+                'payment_methods.by_pass_conversion as by_pass_conversion',
                 'sales.created_by',
                 'serial_no_qty_query.serial_no_qty',
                 DB::raw('SUM(sale_products.qty) AS qty'),
@@ -652,6 +654,7 @@ class SaleController extends Controller
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
+            ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
             ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
             })
@@ -693,8 +696,9 @@ class SaleController extends Controller
                 6 => 'sales_agents.name',
                 10 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
                 11 => DB::raw('SUM(sale_payment_amounts.amount)'),
-                12 => 'sales.payment_status',
-                13 => 'sales.status',
+                12 => 'payment_methods.name',
+                13 => 'sales.payment_status',
+                14 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -730,6 +734,7 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'paid' => number_format($record->paid_amount, 2),
                 'total' => number_format($record->total_amount, 2),
+                'payment_method' => $record->payment_method,
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
                 'is_draft' => $record->is_draft,
@@ -739,7 +744,6 @@ class SaleController extends Controller
                 'can_view' => hasPermission('sale.sale_order.view_record'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_transfer_back' => $record->status == Sale::STATUS_ACTIVE,
-                // 'can_delete' => hasPermission('sale.sale_order.delete') && ! in_array($record->status, [Sale::STATUS_CONVERTED, Sale::STATUS_CANCELLED]),
                 'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
                 'conditions_to_convert' => [
@@ -752,6 +756,7 @@ class SaleController extends Controller
                     'no_pending_approval' => !Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
                     'not_in_production' => !in_array($record->id, $this->getSaleInProduction()),
                     'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
+                    'by_pass_for_unpaid' => $record->payment_status != Sale::PAYMENT_STATUS_UNPAID || ($record->payment_status == Sale::PAYMENT_STATUS_UNPAID && $record->by_pass_conversion)
                 ]
             ];
         }

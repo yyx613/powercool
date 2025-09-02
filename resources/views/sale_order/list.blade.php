@@ -86,6 +86,7 @@
                     <th>{{ __('Qty') }}</th>
                     <th>{{ __('Paid Amount') }}</th>
                     <th>{{ __('Total') }}</th>
+                    <th>{{ __('Payment Method') }}</th>
                     <th>{{ __('Payment Status') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
@@ -155,6 +156,9 @@
                     data: 'total'
                 },
                 {
+                    data: 'payment_method'
+                },
+                {
                     data: 'payment_status'
                 },
                 {
@@ -175,7 +179,7 @@
                             .has_serial_no == true && row.conditions_to_convert.is_active_or_approved ==
                             true && row.conditions_to_convert.no_pending_approval == true &&
                             row.conditions_to_convert.not_in_production == true && row.conditions_to_convert
-                            .filled_for_e_invoice == true
+                            .filled_for_e_invoice == true && row.conditions_to_convert.by_pass_for_unpaid == true
                             
                         return `
                             <span>${data}</span>
@@ -203,6 +207,7 @@
                                                 <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
                                                 <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
                                                 <li class="text-sm ${row.conditions_to_convert.filled_for_e_invoice == true ? 'line-through text-slate-400' : ''}">Filled for E-Invoice</li>
+                                                <li class="text-sm ${row.conditions_to_convert.by_pass_for_unpaid == true ? 'line-through text-slate-400' : ''}">Can by pass for unpaid</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -297,6 +302,13 @@
                     "width": '10%',
                     "targets": 12,
                     render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 13,
+                    render: function(data, type, row) {
                         switch (data) {
                             case 1:
                                 return "{!! __('Unpaid') !!}"
@@ -311,7 +323,7 @@
                 },
                 {
                     "width": '10%',
-                    "targets": 13,
+                    "targets": 14,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
@@ -340,7 +352,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 14,
+                    "targets": 15,
                     orderable: false,
                     render: function(data, type, row) {
                         if (IS_SALE_COORDINATOR_ONLY == true) {
