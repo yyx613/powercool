@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\EInvoiceEmail;
 use App\Models\Billing;
 use App\Models\BillingProduct;
+use App\Models\Branch;
 use App\Models\ClassificationCode;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
@@ -14,6 +15,7 @@ use App\Models\CustomerLocation;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
+use App\Models\DraftEInvoice;
 use App\Models\EInvoice;
 use App\Models\Invoice;
 use App\Models\MsicCode;
@@ -109,7 +111,7 @@ class EInvoiceController extends Controller
     {
         try {
             $path = '/connect/token';
-            $url = $this->endpoint.$path;
+            $url = $this->endpoint . $path;
 
             $clientId = $company == 'powercool' ? $this->powerCoolId : $this->hitenId;
             $clientSecret = $company == 'powercool' ? $this->powerCoolSecret : $this->hitenSecret;
@@ -135,7 +137,6 @@ class EInvoiceController extends Controller
                     'message' => $response->body(),
                 ], $response->status());
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred during login',
@@ -153,7 +154,7 @@ class EInvoiceController extends Controller
                 'Accept' => 'application/json',
                 'Accept-Language' => 'en',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
 
             $response = Http::withHeaders($headers)->get($url);
@@ -238,7 +239,7 @@ class EInvoiceController extends Controller
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+            'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
         ];
 
         $documents = [];
@@ -273,12 +274,12 @@ class EInvoiceController extends Controller
                                 'invoiceCodeNumber' => $invoiceCodeNumber,
                                 'error' => $documentDetails['error'],
                             ];
-    
+
                             continue;
                         }
-    
+
                         $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
-    
+
                         if (! $invoice->einvoice) {
                             $invoice->einvoice()->create([
                                 'uuid' => $uuid,
@@ -293,12 +294,12 @@ class EInvoiceController extends Controller
                             ]);
                         }
                         $successfulDocuments[] = $invoiceCodeNumber;
-    
+
                         if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
                             $generatedPdf = $this->generateAndSaveEInvoicePdf($documentDetails, $invoiceCodeNumber);
                         }
                     }
-    
+
                     if (! empty($rejectedDocuments)) {
                         $errorDetails = [];
                         foreach ($rejectedDocuments as $rejectedDoc) {
@@ -322,16 +323,15 @@ class EInvoiceController extends Controller
                     } else {
                         DB::commit();
                     }
-    
+
                     return response()->json([
                         'message' => 'Document submission completed',
                         'successfulDocuments' => $successfulDocuments,
                         'errorDetails' => $errorDetails,
                     ]);
-    
                 } catch (\Throwable $th) {
                     DB::rollBack();
-    
+
                     return response()->json([
                         'error' => 'Document submission failed',
                         'message' => $th->getMessage(),
@@ -349,7 +349,38 @@ class EInvoiceController extends Controller
                 'message' => $th->getMessage(),
             ]);
         }
-        
+    }
+
+    public function submitDraft(Request $req)
+    {
+        $req->validate([
+            'invoices' => 'required|array',
+            'invoices.*.id' => 'required|integer',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($req->invoices as $key => $value) {
+                $draft = DraftEInvoice::create([
+                    'invoice_id' => $value['id'],
+                ]);
+                (new Branch)->assign(DraftEInvoice::class, $draft->id);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Document submission completed',
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+            return response()->json([
+                'error' => 'Document submission failed',
+                'message' => $th->getMessage(),
+            ]);
+        }
     }
 
     public function submitConsolidated(Request $request)
@@ -366,7 +397,7 @@ class EInvoiceController extends Controller
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
+            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
         ];
         $documents = [];
 
@@ -444,7 +475,6 @@ class EInvoiceController extends Controller
                     'acceptedDocuments' => $acceptedDocuments,
                     'errorDetails' => $errorDetails,
                 ]);
-
             } else {
                 DB::rollBack();
 
@@ -453,7 +483,6 @@ class EInvoiceController extends Controller
                     'message' => $response->body(),
                 ], $response->status());
             }
-
         } catch (\Throwable $th) {
             DB::rollBack();
             dd([$th]);
@@ -467,7 +496,7 @@ class EInvoiceController extends Controller
 
             $headers = [
                 'Accept' => 'application/json',
-                'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
             $maxRetries = 10;
             $retryCount = 0;
@@ -503,7 +532,6 @@ class EInvoiceController extends Controller
                 }
 
                 $retryCount++;
-                
             }
         } catch (\Throwable $th) {
             dd($th);
@@ -532,7 +560,7 @@ class EInvoiceController extends Controller
             $customer = $sale->customer;
             $validationLink = $this->generateValidationLink($uuid, $longId);
 
-            $pdf = Pdf::loadView('invoice.pdf.'.$invoice->company.'_inv_pdf', [
+            $pdf = Pdf::loadView('invoice.pdf.' . $invoice->company . '_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $invoiceCodeNumber,
                 'do_sku' => implode(', ', $do_sku),
@@ -549,7 +577,7 @@ class EInvoiceController extends Controller
 
             $content = $pdf->download()->getOriginalContent();
 
-            $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf', $content);
+            $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_' . $uuid . '.pdf', $content);
 
             return $e;
         } catch (\Throwable $th) {
@@ -603,7 +631,7 @@ class EInvoiceController extends Controller
             })->filter()->toArray();
             $sale_products = SaleProduct::whereIn('id', DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_product_id'))->get();
 
-            $pdf = Pdf::loadView('invoice.pdf.consolidated.'.$this->getPdfType($sale_products).'_inv_pdf', [
+            $pdf = Pdf::loadView('invoice.pdf.consolidated.' . $this->getPdfType($sale_products) . '_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $consolidatedSku,
                 'do_sku' => implode(', ', $do_skus),
@@ -616,7 +644,7 @@ class EInvoiceController extends Controller
             $pdf->setPaper('A4', 'letter');
 
             $content = $pdf->download()->getOriginalContent();
-            Storage::put('public/e-invoices/pdf/consolidated/'.'consolidated_e_invoice_'.$uuid.'.pdf', $content);
+            Storage::put('public/e-invoices/pdf/consolidated/' . 'consolidated_e_invoice_' . $uuid . '.pdf', $content);
 
             return true;
         } catch (\Throwable $th) {
@@ -638,7 +666,7 @@ class EInvoiceController extends Controller
                 $deliveryOrder = $invoice->deliveryOrders->first();
                 $customer = Customer::findOrFail($deliveryOrder->customer_id);
                 $company = $invoice->company == 'powercool' ? 'PowerCool' : 'Hi-Ten';
-                $path = public_path('storage/e-invoices/pdf/e-invoices/'.'e_invoice_'.$einvoice->uuid.'.pdf');
+                $path = public_path('storage/e-invoices/pdf/e-invoices/' . 'e_invoice_' . $einvoice->uuid . '.pdf');
                 Mail::to($customer->email)->send(new EInvoiceEmail($customer, $einvoice, $path, $company));
                 $isSent = true;
             } elseif ($type == 'credit') {
@@ -659,7 +687,7 @@ class EInvoiceController extends Controller
                         $company = 'PowerCool';
                     }
 
-                    $path = public_path('storage/e-invoices/pdf/credit_note/'.'credit_note_'.$creditNote->uuid.'.pdf');
+                    $path = public_path('storage/e-invoices/pdf/credit_note/' . 'credit_note_' . $creditNote->uuid . '.pdf');
                     Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $creditNote, $path, $company));
                     $isSent = true;
                 }
@@ -680,7 +708,7 @@ class EInvoiceController extends Controller
                         $company = 'PowerCool';
                     }
 
-                    $path = public_path('storage/e-invoices/pdf/debit_note/'.'debit_note_'.$debitNote->uuid.'.pdf');
+                    $path = public_path('storage/e-invoices/pdf/debit_note/' . 'debit_note_' . $debitNote->uuid . '.pdf');
                     Mail::to($customer ? $customer->email : 'imax.hiten_sales@powercool.com.my')->send(new EInvoiceEmail($customer, $debitNote, $path, $company));
                     $isSent = true;
                 }
@@ -693,7 +721,6 @@ class EInvoiceController extends Controller
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage()]);
         }
-
     }
 
     public function generateValidationLink($uuid, $longId)
@@ -716,7 +743,7 @@ class EInvoiceController extends Controller
         $uuid = $req->input('uuid');
         $type = $req->input('type');
         if ($type == 'consolidated') {
-            $path = '/public/e-invoices/pdf/consolidated/consolidated_e_invoice_'.$uuid.'.pdf';
+            $path = '/public/e-invoices/pdf/consolidated/consolidated_e_invoice_' . $uuid . '.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
@@ -724,7 +751,7 @@ class EInvoiceController extends Controller
                 return response()->json(['error' => '文件未找到'], 404);
             }
         } elseif ($type == 'eInvoice') {
-            $path = '/public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf';
+            $path = '/public/e-invoices/pdf/e-invoices/e_invoice_' . $uuid . '.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
@@ -732,7 +759,7 @@ class EInvoiceController extends Controller
                 return response()->json(['error' => '文件未找到'], 404);
             }
         } elseif ($type == 'credit') {
-            $path = '/public/e-invoices/pdf/credit_note/credit_note_'.$uuid.'.pdf';
+            $path = '/public/e-invoices/pdf/credit_note/credit_note_' . $uuid . '.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
@@ -740,7 +767,7 @@ class EInvoiceController extends Controller
                 return response()->json(['error' => '文件未找到'], 404);
             }
         } elseif ($type == 'debit') {
-            $path = '/public/e-invoices/pdf/debit_note/debit_note_'.$uuid.'.pdf';
+            $path = '/public/e-invoices/pdf/debit_note/debit_note_' . $uuid . '.pdf';
 
             if (Storage::exists($path)) {
                 return Storage::download($path);
@@ -782,7 +809,7 @@ class EInvoiceController extends Controller
                 }
                 foreach ($invoice['items'] as $item) {
                     if ($fromBilling) {
-                        $billingProducts = BillingProduct::where('billing_id',$billing->id)->get();
+                        $billingProducts = BillingProduct::where('billing_id', $billing->id)->get();
                         //this saleProduct is not saleProduct, it is billingProducts
                         $saleProduct = $billingProducts->where('product_id', $item['product_id'])->first();
                     } else {
@@ -874,7 +901,7 @@ class EInvoiceController extends Controller
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
+            'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
         ];
 
         $documents = [];
@@ -971,7 +998,6 @@ class EInvoiceController extends Controller
                     'successfulDocuments' => $successfulDocuments,
                     'errorDetails' => $errorDetails,
                 ]);
-
             } else {
                 DB::rollBack();
 
@@ -980,7 +1006,6 @@ class EInvoiceController extends Controller
                     'message' => $response->body(),
                 ], $response->status());
             }
-
         } catch (\Throwable $th) {
             DB::rollBack();
             dd([$response->body(), $th]);
@@ -997,9 +1022,9 @@ class EInvoiceController extends Controller
             $productDetails = [];
 
             foreach ($items as $key => $item) {
-                if($fromBilling){
+                if ($fromBilling) {
                     $saleProduct = Product::find($item['id']);
-                }else{
+                } else {
                     $saleProduct = SaleProduct::find($item['id']);
                 }
 
@@ -1031,9 +1056,7 @@ class EInvoiceController extends Controller
 
                         $sale = $deliveryOrder->products->first()->saleProduct->sale;
                     } else {
-
                     }
-
                 } else {
                     $customer = null;
                 }
@@ -1051,9 +1074,7 @@ class EInvoiceController extends Controller
 
                         $sale = $deliveryOrder->products->first()->saleProduct->sale;
                     } else {
-
                     }
-
                 } else {
                     $customer = null;
                 }
@@ -1063,12 +1084,12 @@ class EInvoiceController extends Controller
             $validationLink = $this->generateValidationLink($uuid, $longId);
 
             if ($invoice instanceof Invoice) {
-                $pdf = Pdf::loadView('invoice.pdf.note.'.$invoice->company.'_inv_pdf', [
+                $pdf = Pdf::loadView('invoice.pdf.note.' . $invoice->company . '_inv_pdf', [
                     'date' => now()->format('d/m/Y'),
                     'sku' => $note->sku,
                     'productDetails' => $productDetails,
                     'total' => $total,
-                    'customer' => $customer, 
+                    'customer' => $customer,
                     'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer->id),
                     'terms' => '',
                     'type' => $note instanceof CreditNote ? 'CREDIT NOTE' : 'DEBIT NOTE',
@@ -1081,7 +1102,7 @@ class EInvoiceController extends Controller
                 $content = $pdf->download()->getOriginalContent();
                 $type = $note instanceof CreditNote ? 'credit_note' : 'debit_note';
 
-                return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
+                return Storage::put('public/e-invoices/pdf/' . $type . '/' . $type . '_' . $uuid . '.pdf', $content);
             } else {
                 $pdf = Pdf::loadView('invoice.pdf.billing.note_pdf', [
                     'date' => now()->format('d/m/Y'),
@@ -1098,7 +1119,7 @@ class EInvoiceController extends Controller
                 $content = $pdf->download()->getOriginalContent();
                 $type = $note instanceof CreditNote ? 'credit_note' : 'debit_note';
 
-                return Storage::put('public/e-invoices/pdf/'.$type.'/'.$type.'_'.$uuid.'.pdf', $content);
+                return Storage::put('public/e-invoices/pdf/' . $type . '/' . $type . '_' . $uuid . '.pdf', $content);
             }
             // dd($validationLink);
 
@@ -1156,7 +1177,7 @@ class EInvoiceController extends Controller
                     $eInvoice = EInvoice::find($invoiceId);
                     $billing = $eInvoice->einvoiceable;
                     $invoices = $billing->invoices;
-                    $billingProducts = BillingProduct::where('billing_id',$billing->id)->get();
+                    $billingProducts = BillingProduct::where('billing_id', $billing->id)->get();
 
                     if ($invoices) {
                         foreach ($billingProducts as $billingProduct) {
@@ -1211,7 +1232,6 @@ class EInvoiceController extends Controller
                     }
                 }
             }
-
         } elseif ($req->has('cus')) {
             $step = 5;
             $customerId = $req->cus;
@@ -1283,7 +1303,7 @@ class EInvoiceController extends Controller
         DB::beginTransaction();
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$eInvoice->einvoiceable->company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer ' . $eInvoice->einvoiceable->company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
                 'Content-Type' => 'application/json',
             ])->put($url, $body);
 
@@ -1325,7 +1345,7 @@ class EInvoiceController extends Controller
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$invoice instanceof Invoice ? ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten) : $this->accessTokenPowerCool,
+            'Authorization' => 'Bearer ' . $invoice instanceof Invoice ? ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten) : $this->accessTokenPowerCool,
         ];
 
         $documents = [];
@@ -1448,7 +1468,6 @@ class EInvoiceController extends Controller
                     'successfulDocuments' => $successfulDocuments,
                     'errorDetails' => $errorDetails,
                 ]);
-
             } catch (\Throwable $th) {
                 DB::rollBack();
                 dd([$response->body(), $th]);
@@ -1506,7 +1525,7 @@ class EInvoiceController extends Controller
                 'syncedCount' => $syncedCount,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error syncing classification codes: '.$e->getMessage());
+            Log::error('Error syncing classification codes: ' . $e->getMessage());
 
             return response()->json([
                 'message' => 'An error occurred while syncing classification codes.',
@@ -1607,7 +1626,7 @@ class EInvoiceController extends Controller
             'Accept' => 'application/json',
             'Accept-Language' => 'en',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+            'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
         ];
 
         foreach ($selectedBillings as $billingId) {
@@ -1699,7 +1718,6 @@ class EInvoiceController extends Controller
                     'successfulDocuments' => $successfulDocuments,
                     'errorDetails' => $errorDetails,
                 ]);
-
             } catch (\Throwable $th) {
                 DB::rollBack();
 
@@ -1714,7 +1732,6 @@ class EInvoiceController extends Controller
                 'message' => $response->body(),
             ], $response->status());
         }
-
     }
 
     public function generateAndSaveBillingEInvoicePdf($documentDetails, $invoiceCodeNumber)
@@ -1731,14 +1748,14 @@ class EInvoiceController extends Controller
                 'our_do_no' => $billing->our_do_no,
                 'term' => CreditTerm::where('id', $billing->term_id)->value('name'),
                 'salesperson' => User::where('id', $billing->sale_person_id)->value('name'),
-                'products' => BillingProduct::where('billing_id',$billing->id)->get(),
+                'products' => BillingProduct::where('billing_id', $billing->id)->get(),
                 'validationLink' => $validationLink,
             ]);
             $pdf->setPaper('A4', 'letter');
 
             $content = $pdf->download()->getOriginalContent();
 
-            $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_'.$uuid.'.pdf', $content);
+            $e = Storage::put('public/e-invoices/pdf/e-invoices/e_invoice_' . $uuid . '.pdf', $content);
 
             return $e;
         } catch (\Throwable $th) {
@@ -1769,5 +1786,4 @@ class EInvoiceController extends Controller
             'message' => 'Invoices updated successfully.',
         ]);
     }
-
 }

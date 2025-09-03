@@ -305,6 +305,15 @@
                             data-accordionid="101">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('sale.draft_e_invoice.view')
+                                        <li>
+                                            <a href="{{ route('invoice.draft-e-invoice.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.draft-e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Draft E Invoice') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
                                     @can('sale.e_invoice.view')
                                         <li>
                                             <a href="{{ route('invoice.e-invoice.index') }}"
@@ -1402,6 +1411,15 @@
                     <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('E - Invoice') }}</h6>
                 </div>
                 <ul>
+                    @can('sale.draft_e_invoice.view')
+                        <li>
+                            <a href="{{ route('invoice.draft-e-invoice.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'invoice.draft-e-invoice.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Draft E Invoice') }}</span>
+                            </a>
+                        </li>
+                    @endcan
                     @can('sale.e_invoice.view')
                         <li>
                             <a href="{{ route('invoice.e-invoice.index') }}"
@@ -2075,6 +2093,15 @@
                             data-accordionid="101">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('sale.draft_e_invoice.view')
+                                        <li>
+                                            <a href="{{ route('invoice.draft-e-invoice.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ Route::currentRouteName() == 'invoice.draft-e-invoice.index' ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Draft E Invoice') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
                                     @can('sale.e_invoice.view')
                                         <li>
                                             <a href="{{ route('invoice.e-invoice.index') }}"
@@ -2674,7 +2701,7 @@
                             'supplier.') || CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes(
                             'agent_debtor.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
-                    } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
+                    } else if (CURRENT_ROUTE_NAME.includes('invoice.draft-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
                             'invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes(
                             'invoice.credit-note.') || CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()
@@ -2742,7 +2769,7 @@
                 } else if (CURRENT_ROUTE_NAME.includes('customer.') || CURRENT_ROUTE_NAME.includes('supplier.') ||
                     CURRENT_ROUTE_NAME.includes('dealer.') || CURRENT_ROUTE_NAME.includes('agent_debtor.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="6"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
+                } else if (CURRENT_ROUTE_NAME.includes('invoice.draft-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.e-invoice.') || CURRENT_ROUTE_NAME.includes(
                         'invoice.consolidated-e-invoice.') || CURRENT_ROUTE_NAME.includes('invoice.credit-note.') ||
                     CURRENT_ROUTE_NAME.includes('invoice.debit-note.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="101"]').click()

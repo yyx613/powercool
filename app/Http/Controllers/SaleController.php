@@ -17,6 +17,7 @@ use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
+use App\Models\DraftEInvoice;
 use App\Models\EInvoice;
 use App\Models\InventoryCategory;
 use App\Models\InventoryServiceReminder;
@@ -1158,6 +1159,7 @@ class SaleController extends Controller
                     ->distinct()
                     ->get();
 
+                dd($sales);
                 $customer_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     for ($j = 0; $j < count($sales[$i]->products); $j++) {
@@ -3027,6 +3029,153 @@ class SaleController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function indexDraftEInvoice()
+    {
+        $page = Session::get('invoice-draft-e-invoice-page');
+
+        return view('invoice.draft-e-invoice.list', [
+            'default_page' => $page ?? null,
+        ]);
+    }
+
+    public function getDataDraftEInvoice(Request $req)
+    {
+        Session::put('invoice-draft-e-invoice-page', $req->page);
+
+        $records = DB::table('draft_e_invoices')
+            ->select(
+                'draft_e_invoices.id AS id',
+                'invoices.id AS invoice_id',
+                'invoices.sku AS doc_no',
+                'invoices.date AS date',
+                'customers.sku AS debtor_code',
+                'customers.name AS debtor_name',
+                'customers.tin_number AS tin_number',
+                'sales_agents.name AS agent',
+                'currencies.name AS curr_code',
+                'draft_e_invoices.status AS status',
+                'invoices.filename AS filename',
+                'created_by.name AS created_by',
+                'invoices.company AS company_group',
+            )
+            ->where('sales.type', Sale::TYPE_SO)
+            ->whereNull('invoices.deleted_at')
+            ->whereNot('delivery_orders.status', DeliveryOrder::STATUS_APPROVAL_PENDING)
+            ->leftJoin('invoices', 'draft_e_invoices.invoice_id', '=', 'invoices.id')
+            ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
+            ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
+            ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
+            ->groupBy('draft_e_invoices.id');
+
+        // Search
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+
+            $do_ids = DeliveryOrder::where('sku', 'like', '%' . $keyword . '%')->pluck('id')->toArray();
+
+            $records = $records->where(function ($q) use ($keyword, $do_ids) {
+                $q->where('invoices.sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('invoices.date', 'like', '%' . $keyword . '%')
+                    ->orWhere('customers.sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('customers.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('users.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('created_by.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('currencies.name', 'like', '%' . $keyword . '%')
+                    ->orWhere('invoices.company', 'like', '%' . $keyword . '%')
+                    ->orWhereIn('delivery_orders.id', $do_ids);
+            });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'invoices.sku',
+                2 => 'invoices.date',
+                3 => 'customers.sku',
+                5 => 'customers.name',
+                6 => 'sales_agents.name',
+                11 => 'invoices.status',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('draft_e_invoices.id', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('draft_e_invoices.id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        $path = '/public/storage';
+        if (config('app.env') == 'local') {
+            $path = '/storage';
+        }
+        foreach ($records_paginator as $record) {
+            $dos = DeliveryOrder::where('invoice_id', $record->id)->get();
+            $total_amount = 0;
+            $do_skus = [];
+
+            for ($i = 0; $i < count($dos); $i++) {
+                $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('" . $dos[$i]->id . "', convert_to)")->get();
+                for ($j = 0; $j < count($sos); $j++) {
+                    $total_amount += $sos[$j]->getTotalAmount();
+                }
+                $do_skus[] = $dos[$i]->sku;
+            }
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'debtor_code' => $record->debtor_code,
+                'transfer_from' => implode(', ', $do_skus),
+                'debtor_name' => $record->debtor_name,
+                'agent' => $record->agent ?? null,
+                'curr_code' => $record->curr_code ?? null,
+                'total' => number_format($total_amount, 2),
+                'created_by' => $record->created_by ?? null,
+                'company_group' => $record->company_group,
+                'status' => $record->status,
+                'tin_number' => $record->tin_number,
+                'invoice_id' => $record->invoice_id,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function approveDraftEInvoice(DraftEInvoice $draft)
+    {
+        try {
+            DB::beginTransaction();
+
+            $draft->status = DraftEInvoice::STATUS_APPROVED;
+            $draft->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Document approved',
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+            return response()->json([
+                'error' => 'Failed to approve',
+                'message' => $th->getMessage(),
+            ]);
+        }
     }
 
     public function indexEInvoice()

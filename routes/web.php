@@ -322,6 +322,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
             Route::get('/', 'indexInvoice')->name('index');
             Route::get('/get-data', 'getDataInvoice')->name('get_data');
+            Route::get('/draft-e-invoice', 'indexDraftEInvoice')->name('draft-e-invoice.index');
+            Route::get('/get-data-draft-e-invoice', 'getDataDraftEInvoice')->name('get_data_draft_e_invoice');
+            Route::get('/approve-draft-e-invoice/{draft}', 'approveDraftEInvoice')->name('approve_draft_e_invoice');
             Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
             Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
             Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
@@ -804,6 +807,7 @@ Route::prefix('e-invoice')->group(function () {
     Route::get('/login', [EInvoiceController::class, 'login']);
     Route::get('/generate', [EInvoiceController::class, 'generateXmlInvoice']);
     Route::post('/submit', [EInvoiceController::class, 'submit']);
+    Route::post('/submit-draft', [EInvoiceController::class, 'submitDraft']);
     Route::post('/submit-consolidated', [EInvoiceController::class, 'submitConsolidated']);
     Route::get('/send-to-customer', [EInvoiceController::class, 'sendEmail'])->name('send.email');
     Route::get('/download', [EInvoiceController::class, 'download'])->name('e-invoice.download');

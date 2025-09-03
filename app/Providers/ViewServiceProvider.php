@@ -91,6 +91,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale.delivery_order' => [],
                 'sale.transport_acknowledgement' => [],
                 'sale.invoice' => [],
+                'sale.draft_e_invoice' => [],
                 'sale.e_invoice' => [],
                 'sale.target' => [],
                 'sale.billing' => [],
@@ -151,6 +152,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.invoice_return'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.invoice')) {
                     array_push($permissions_group['sale.invoice'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'sale.draft_e_invoice')) {
+                    array_push($permissions_group['sale.draft_e_invoice'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.e_invoice')) {
                     array_push($permissions_group['sale.e_invoice'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.target')) {

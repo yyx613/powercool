@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Invoice')
+@section('title', 'Draft E Invoice')
 
 @vite(['resources/css/jquery.dataTables.min.css'])
 
@@ -22,66 +22,21 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice') }}</x-app.page-title>
+        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Draft E Invoice') }}</x-app.page-title>
         <div class="flex gap-x-4">
-            @can('sale.invoice.sync_to_autocount')
-                <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="sync-btn">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
-                        width="512" height="512">
-                        <g>
-                            <path
-                                d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
-                            <path
-                                d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
-                        </g>
-                    </svg>
-                    <span>{{ __('Sync to Autocount') }}</span>
-                </a>
-            @endcan
-            @can('sale.invoice.convert_to_billing')
-                <a href="{{ route('billing.to_billing') }}"
-                    class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
-                        width="512" height="512">
-                        <g>
-                            <path
-                                d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
-                            <path
-                                d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
-                        </g>
-                    </svg>
-                    <span>{{ __('Convert to Billing') }}</span>
-                </a>
-            @endcan
-            @can('sale.invoice.submit_draft_e_invoice')
-                <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="submit-btn">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
-                        width="512" height="512">
-                        <g>
-                            <path
-                                d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
-                            <path
-                                d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
-                        </g>
-                    </svg>
-                    <span>{{ __('Submit Draft E-Invoice') }}</span>
-                </a>
-            @endcan
-            @can('sale.invoice.submit_consolidated_e_invoice')
-                <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2"
-                    id="submit-consolidated-btn">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
-                        width="512" height="512">
-                        <g>
-                            <path
-                                d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
-                            <path
-                                d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
-                        </g>
-                    </svg>
-                    <span>{{ __('Submit Consolidated E-Invoice') }}</span>
-                </a>
-            @endcan
+            <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2"
+                id="submit-consolidated-btn">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
+                    width="512" height="512">
+                    <g>
+                        <path
+                            d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
+                        <path
+                            d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
+                    </g>
+                </svg>
+                <span>{{ __('Submit Consolidated E-Invoice') }}</span>
+            </a>
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -128,8 +83,6 @@
     <div id="loading-indicator" style="display: none;">
         <span class="loader"></span>
     </div>
-    <x-app.modal.update-invoice-date-modal />
-    <x-app.modal.do-inv-void-transfer-back-modal />
 @endsection
 
 @push('scripts')
@@ -294,10 +247,13 @@
                     "width": "10%",
                     "targets": 11,
                     render: function(data, type, row) {
+                        let label = ''
                         if (data == 1) {
-                            return '{!! __('Voided') !!}'
+                            label = '{!! __('Approved') !!}'
+                        } else if (data == 2) {
+                            label = '{!! __('Submitted to E-Invoice') !!}'
                         }
-                        return data
+                        return `<span class="status" data-id="${row.id}">${label}</span>`
                     }
                 },
                 {
@@ -306,14 +262,14 @@
                     orderable: false,
                     render: function(data, type, row) {
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
-                            <a href="${row.pdf_url}" class="rounded-full p-2 bg-green-200 inline-block" target="_blank" title="{!! __('View Invoice') !!}">
-                                <svg class="h-4 w-4 "id="Layer_1" height="512" viewBox="0 0 24 24" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1"><path d="m17 14a1 1 0 0 1 -1 1h-8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1zm-4 3h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0-2zm9-6.515v8.515a5.006 5.006 0 0 1 -5 5h-10a5.006 5.006 0 0 1 -5-5v-14a5.006 5.006 0 0 1 5-5h4.515a6.958 6.958 0 0 1 4.95 2.05l3.484 3.486a6.951 6.951 0 0 1 2.051 4.949zm-6.949-7.021a5.01 5.01 0 0 0 -1.051-.78v4.316a1 1 0 0 0 1 1h4.316a4.983 4.983 0 0 0 -.781-1.05zm4.949 7.021c0-.165-.032-.323-.047-.485h-4.953a3 3 0 0 1 -3-3v-4.953c-.162-.015-.321-.047-.485-.047h-4.515a3 3 0 0 0 -3 3v14a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3z"/></svg>
-                            </a>
+                            <button class="rounded-full p-2 bg-purple-200 inline-block to-e-invoice-btns ${row.status == 1 && row.tin_number != null ? '' : 'hidden'}" data-has-tin-number="${row.tin_number == null ? false : true}" data-id="${row.id}" data-invoice-id="${row.invoice_id}" data-company="${row.company_group}" title="{!! __('To E-Invoice') !!}">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512"> <g> <path d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" /> <path d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" /> </g> </svg>
+                            </button>
                             ${
                                 row.status == 1 ? '' :
-                                `<button class="rounded-full p-2 bg-red-200 inline-block delete-btns" data-id="${row.id}" title="{!! __('Cancel') !!}">
-                                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M16,8a1,1,0,0,0-1.414,0L12,10.586,9.414,8A1,1,0,0,0,8,9.414L10.586,12,8,14.586A1,1,0,0,0,9.414,16L12,13.414,14.586,16A1,1,0,0,0,16,14.586L13.414,12,16,9.414A1,1,0,0,0,16,8Z"/><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/></svg>
-                                            </button>`
+                                `<button class="rounded-full p-2 bg-green-200 inline-block approve-btns" data-id="${row.id}" title="{!! __('Approve') !!}">
+                                                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m18.214,9.098c.387.394.381,1.027-.014,1.414l-4.426,4.345c-.783.768-1.791,1.151-2.8,1.151-.998,0-1.996-.376-2.776-1.129l-1.899-1.867c-.394-.387-.399-1.02-.012-1.414.386-.395,1.021-.4,1.414-.012l1.893,1.861c.776.75,2.001.746,2.781-.018l4.425-4.344c.393-.388,1.024-.381,1.414.013Zm5.786,2.902c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/></svg>
+                                                                </button>`
                             }
                        </div>`
                     }
@@ -322,9 +278,10 @@
             ajax: {
                 data: function() {
                     var info = $('#data-table').DataTable().page.info();
-                    var url = "{{ route('invoice.get_data') }}"
+                    var url = "{{ route('invoice.get_data_draft_e_invoice') }}"
 
-                    url = `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
+                    url =
+                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }`
                     $('#data-table').DataTable().ajax.url(url);
 
                     INIT_LOAD = false
@@ -333,18 +290,6 @@
         });
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
-        })
-        $('#data-table').on('click', '.delete-btns', function() {
-            id = $(this).data('id')
-
-            $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/invoice/cancel/${id}`)
-            $('#delete-modal #txt').text("{!! __('Are you sure to cancel the record?') !!}")
-            $('#delete-modal').addClass('show-modal')
-        })
-        $('#data-table').on('click', '.delete-btns', function() {
-            id = $(this).data('id')
-
-            getOtherInvolvedInv(id);
         })
 
         function getOtherInvolvedInv(inv_id) {
@@ -440,173 +385,6 @@
 
             let allChecked = enabledCheckboxes > 0 && enabledCheckboxes === checkedEnabledCheckboxes;
             $('#select-all').prop('checked', allChecked);
-        }
-
-        $('#sync-btn').on('click', function(e) {
-            e.preventDefault();
-            if (selectedInvoices.length === 0) {
-                alert("Please select at least one order to sync.");
-                return;
-            }
-            syncEinvoice()
-        });
-
-        function syncEinvoice() {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            loadingIndicator.style.display = 'flex';
-
-            let url = "{{ config('app.url') }}";
-            url = `${url}/e-invoice/sync`;
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'POST',
-                data: JSON.stringify({
-                    invoices: selectedInvoices,
-                    company: firstCompany
-                }),
-                contentType: 'application/json',
-                success: function(response) {
-                    loadingIndicator.style.display = 'none';
-                    $('.order-checkbox').prop('checked', false);
-                    selectedInvoices = [];
-                    $('#select-all').prop('checked', false);
-                    const modal = document.getElementById('update-invoice-date-modal');
-                    if (modal && modal.classList.contains('show-modal')) {
-                        modal.classList.remove('show-modal');
-                    }
-                    alert("Sync successful Autocount will be updated within few minutes");
-                },
-                error: function(error) {
-                    loadingIndicator.style.display = 'none';
-
-                    let errorMessage = "An error occurred.";
-
-                    alert(errorMessage);
-                }
-            });
-        }
-
-        $('#submit-btn').on('click', function(e) {
-            e.preventDefault();
-            if (selectedInvoices.length === 0) {
-                alert("Please select at least one order to submit.");
-                return;
-            }
-            submitDraftEinvoice()
-        });
-
-        function submitDraftEinvoice() {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            loadingIndicator.style.display = 'flex';
-
-            let url = "{{ config('app.url') }}";
-            url = `${url}/e-invoice/submit-draft`;
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                url: url,
-                type: 'POST',
-                data: JSON.stringify({
-                    invoices: selectedInvoices,
-                    company: firstCompany
-                }),
-                contentType: 'application/json',
-                success: function(response) {
-                    loadingIndicator.style.display = 'none';
-                    $('.order-checkbox').prop('checked', false);
-                    selectedInvoices = [];
-                    $('#select-all').prop('checked', false);
-                    const modal = document.getElementById('update-invoice-date-modal');
-                    if (modal && modal.classList.contains('show-modal')) {
-                        modal.classList.remove('show-modal');
-                    }
-                    if (response.errorDetails && response.errorDetails.length > 0) {
-                        let errorMessage = "Some documents were rejected:\n";
-                        try {
-                            response.errorDetails.forEach(function(document) {
-                                errorMessage +=
-                                    `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
-
-                                document.details.forEach(function(detail) {
-                                    errorMessage +=
-                                        ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
-                                });
-                            });
-                        } catch (error) {
-                            errorMessage = ""
-                            response.errorDetails.forEach(function(document) {
-                                errorMessage +=
-                                    `\nInvoice: ${document.invoiceCodeNumber}\nError: ${document.error}\n`;
-                            });
-                        }
-
-
-                        alert(errorMessage);
-                    } else {
-                        alert(response.message || "Submit success");
-                    }
-                },
-                error: function(error) {
-                    loadingIndicator.style.display = 'none';
-
-
-                    let errorMessage = "An error occurred.";
-
-                    if (error.responseJSON) {
-                        if (error.responseJSON.error) {
-                            errorMessage = error.responseJSON.error;
-                        }
-
-
-                        if (error.responseJSON.message) {
-                            try {
-                                const parsedMessage = JSON.parse(error.responseJSON.message);
-                                if (parsedMessage.error) {
-                                    errorMessage += `\nDetails: ${parsedMessage.error}`;
-                                }
-                            } catch (e) {
-                                errorMessage += `\nDetails: ${error.responseJSON.message}`;
-                            }
-                        }
-
-                        if (error.responseJSON.overdue_invoices) {
-                            const overdueInvoices = error.responseJSON.overdue_invoices;
-
-                            const container = document.getElementById('overdue-invoices-container');
-                            container.innerHTML = '';
-
-                            overdueInvoices.forEach((invoice, index) => {
-                                const label = document.createElement('label');
-                                label.className = 'mb-1';
-                                label.innerHTML = `Invoice SKU: ${invoice.sku}`;
-
-                                const input = document.createElement('input');
-                                input.type = 'datetime-local';
-                                input.name = `invoice_date_${index}`;
-                                input.id = `invoice-date-${index}`;
-                                input.value = new Date(invoice.date).toISOString().slice(0, 16);
-
-                                input.className = 'w-full border rounded-md p-2 mb-2';
-
-                                container.appendChild(label);
-                                container.appendChild(input);
-                            });
-                            const modalTitle = document.querySelector('#update-invoice-date-modal h6');
-                            if (modalTitle) {
-                                modalTitle.textContent = `Update Invoice Date (Should Not More Than 72 hours)`;
-                            }
-                            $('#update-invoice-date-modal').addClass('show-modal');
-
-                        }
-                    }
-
-                    alert(errorMessage);
-                }
-            });
         }
 
         $('#submit-consolidated-btn').on('click', function(e) {
@@ -773,6 +551,149 @@
                 },
             });
         });
+
+        $('body').on('click', '.to-e-invoice-btns', function() {
+            let id = $(this).data('id')
+            let invoiceId = $(this).data('invoice-id')
+            let companyGroup = $(this).data('company')
+            let selectedInvoices = [{
+                'id': invoiceId,
+                'company': companyGroup
+            }]
+
+            submitEinvoice(selectedInvoices, companyGroup, id)
+        })
+        $('body').on('click', '.approve-btns', function() {
+            let id = $(this).data('id')
+
+            let url = "{{ config('app.url') }}";
+            url = `${url}/invoice/approve-draft-e-invoice/${id}`;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                contentType: 'application/json',
+                success: function(response) {
+                    $(`.to-e-invoice-btns[data-id=${id}][data-has-tin-number="true"]`).removeClass(
+                        'hidden')
+                    $(`.approve-btns[data-id=${id}]`).remove()
+                    $(`.status[data-id=${id}]`).text('{!! __('Approved') !!}')
+                },
+            })
+        })
+
+        function submitEinvoice(selectedInvoices, firstCompan, id) {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.style.display = 'flex';
+
+            let url = "{{ config('app.url') }}";
+            url = `${url}/e-invoice/submit`;
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST',
+                data: JSON.stringify({
+                    invoices: selectedInvoices,
+                    company: firstCompany
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                    loadingIndicator.style.display = 'none';
+                    $('.order-checkbox').prop('checked', false);
+                    $('#select-all').prop('checked', false);
+                    const modal = document.getElementById('update-invoice-date-modal');
+                    if (modal && modal.classList.contains('show-modal')) {
+                        modal.classList.remove('show-modal');
+                    }
+                    if (response.errorDetails && response.errorDetails.length > 0) {
+                        let errorMessage = "Some documents were rejected:\n";
+                        try {
+                            response.errorDetails.forEach(function(document) {
+                                errorMessage +=
+                                    `\nInvoice: ${document.invoiceCodeNumber}\nError Code: ${document.error_code}\nMessage: ${document.error_message}\n`;
+
+                                document.details.forEach(function(detail) {
+                                    errorMessage +=
+                                        ` - Detail Code: ${detail.code}\n   Message: ${detail.message}\n   Target: ${detail.target}\n   Path: ${detail.propertyPath}\n`;
+                                });
+                            });
+                        } catch (error) {
+                            errorMessage = ""
+                            response.errorDetails.forEach(function(document) {
+                                errorMessage +=
+                                    `\nInvoice: ${document.invoiceCodeNumber}\nError: ${document.error}\n`;
+                            });
+                        }
+
+
+                        alert(errorMessage);
+                    } else {
+                        $(`.to-e-invoice-btns[data-id=${id}]`).remove()
+                        alert(response.message || "Submit success");
+                    }
+                },
+                error: function(error) {
+                    loadingIndicator.style.display = 'none';
+
+
+                    let errorMessage = "An error occurred.";
+
+                    if (error.responseJSON) {
+                        if (error.responseJSON.error) {
+                            errorMessage = error.responseJSON.error;
+                        }
+
+
+                        if (error.responseJSON.message) {
+                            try {
+                                const parsedMessage = JSON.parse(error.responseJSON.message);
+                                if (parsedMessage.error) {
+                                    errorMessage += `\nDetails: ${parsedMessage.error}`;
+                                }
+                            } catch (e) {
+                                errorMessage += `\nDetails: ${error.responseJSON.message}`;
+                            }
+                        }
+
+                        if (error.responseJSON.overdue_invoices) {
+                            const overdueInvoices = error.responseJSON.overdue_invoices;
+
+                            const container = document.getElementById('overdue-invoices-container');
+                            container.innerHTML = '';
+
+                            overdueInvoices.forEach((invoice, index) => {
+                                const label = document.createElement('label');
+                                label.className = 'mb-1';
+                                label.innerHTML = `Invoice SKU: ${invoice.sku}`;
+
+                                const input = document.createElement('input');
+                                input.type = 'datetime-local';
+                                input.name = `invoice_date_${index}`;
+                                input.id = `invoice-date-${index}`;
+                                input.value = new Date(invoice.date).toISOString().slice(0, 16);
+
+                                input.className = 'w-full border rounded-md p-2 mb-2';
+
+                                container.appendChild(label);
+                                container.appendChild(input);
+                            });
+                            const modalTitle = document.querySelector('#update-invoice-date-modal h6');
+                            if (modalTitle) {
+                                modalTitle.textContent = `Update Invoice Date (Should Not More Than 72 hours)`;
+                            }
+                            $('#update-invoice-date-modal').addClass('show-modal');
+
+                        }
+                    }
+
+                    alert(errorMessage);
+                }
+            });
+        }
     </script>
 @endpush
 @push('styles')
