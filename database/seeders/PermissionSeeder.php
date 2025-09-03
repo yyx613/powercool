@@ -83,9 +83,10 @@ class PermissionSeeder extends Seeder
             'sale.invoice.view',
             'sale.invoice.sync_to_autocount',
             'sale.invoice.convert_to_billing',
-            'sale.invoice.submit_e_invoice',
+            'sale.invoice.submit_draft_e_invoice',
             'sale.invoice.submit_consolidated_e_invoice',
 
+            'sale.draft_e_invoice.view',
             'sale.e_invoice.view',
 
             'sale.target.view',
