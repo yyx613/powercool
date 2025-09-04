@@ -76,7 +76,8 @@
                 </td>
             </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
+        <table
+            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td
                     style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
@@ -124,7 +125,7 @@
                             </td>
                             <td style="font-size: 14px; width: 50%;">
                                 @if ($customer->tin_number != null)
-                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
+                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 @endif
                                 {{ $customer->company_name }}<br>
                                 {{ $delivery_address->address1 ?? '' }}<br>
@@ -164,8 +165,7 @@
                 <td
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
                     Item Code</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
                     Description</td>
                 <td
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
@@ -362,18 +362,25 @@
             </tr>
             <tr>
                 <td style="font-size: 12px; vertical-align: start;">9.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">
+                    The warranty will be considered void if the refrigerator has been modified or its original
+                    specifications altered without prior authorization from the manufacturer.
+                </td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">10.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Request E-invoice after 72hrs which
                     original invoice have validated by IRB will be charge 5% of the total invoice amount.
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">10.</td>
+                <td style="font-size: 12px; vertical-align: start;">11.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Company will not obligation on those
                     customers are not require to issue E-invoice.
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">11.</td>
+                <td style="font-size: 12px; vertical-align: start;">12.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Prices are subject to change without prior
                     notice.
                 </td>

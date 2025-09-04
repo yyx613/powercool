@@ -621,10 +621,17 @@ class SaleController extends Controller
             ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
             ->groupBy('sales.id');
 
+        $paid_amount_query = DB::table('sales')
+            ->select('sales.id AS sale_id', DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'))
+            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
+            ->whereNull('sale_payment_amounts.deleted_at')
+            ->groupBy('sales.id');
+
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id',
                 'sales.sku AS doc_no',
+                'sales.custom_date AS custom_date',
                 'sales.created_at AS date',
                 'sales.store AS store',
                 'sales.payment_method AS payment_method',
@@ -643,9 +650,9 @@ class SaleController extends Controller
                 'payment_methods.by_pass_conversion as by_pass_conversion',
                 'sales.created_by',
                 'serial_no_qty_query.serial_no_qty',
+                'paid_amount_query.paid_amount',
                 DB::raw('SUM(sale_products.qty) AS qty'),
                 DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sst_amount, 0)) AS total_amount'),
-                DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
@@ -654,10 +661,12 @@ class SaleController extends Controller
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
-            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
             ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
+            })
+            ->joinSub($paid_amount_query, 'paid_amount_query', function ($join) {
+                $join->on('paid_amount_query.sale_id', '=', 'sales.id');
             })
             ->groupBy('sales.id');
 
@@ -724,7 +733,7 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
-                'date' => Carbon::parse($record->date)->format('d M Y'),
+                'date' => $record->custom_date == null ? Carbon::parse($record->date)->format('d M Y') : Carbon::parse($record->custom_date)->format('d M Y'),
                 'transfer_from' => implode(', ', Sale::where('convert_to', $record->id)->pluck('sku')->toArray()),
                 'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_code' => $record->debtor_code,
@@ -827,6 +836,11 @@ class SaleController extends Controller
             $transfer_to = null;
         } else {
             $transfer_to = implode(', ', DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->pluck('sku')->toArray());
+        }
+
+        if ($sale->custom_date == null) {
+            $sale->custom_date = $sale->created_at;
+            $sale->save();
         }
 
         return view('sale_order.form', [
@@ -1159,7 +1173,6 @@ class SaleController extends Controller
                     ->distinct()
                     ->get();
 
-                dd($sales);
                 $customer_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     for ($j = 0; $j < count($sales[$i]->products); $j++) {
@@ -1782,6 +1795,7 @@ class SaleController extends Controller
                 $sale = Sale::create([
                     'type' => $req->type == 'quo' ? Sale::TYPE_QUO : Sale::TYPE_SO,
                     'sku' => $sku,
+                    'custom_date' => $req->type == 'so' ? now() : null,
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,
@@ -1820,6 +1834,7 @@ class SaleController extends Controller
                 }
 
                 $sale->update([
+                    'custom_date' => $req->custom_date ?? $sale->created_at,
                     'sale_id' => $req->sale,
                     'customer_id' => $req->customer,
                     'open_until' => $req->open_until,

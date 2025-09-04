@@ -10,19 +10,14 @@
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
-        {{-- <div class="flex flex-col">
-            <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')"
-                placeholder="{{ __('Select a company') }}">
-                <option value="">{{ __('Select a company') }}</option>
-                @foreach ($customers as $cu)
-                    <option value="{{ $cu->id }}" @selected(old('customer', isset($sale) ? $sale->customer_id : null) == $cu->id)>{{ $cu->company_name }} -
-                        {{ $cu->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</option>
-                @endforeach
-            </x-app.input.select2>
-            <x-app.message.error id="customer_err" />
-        </div> --}}
+        @if (isSuperAdmin())
+            <div class="flex flex-col">
+                <x-app.input.label id="custom_date" class="mb-1">{{ __('Date') }}</x-app.input.label>
+                <x-app.input.input name="custom_date" id="custom_date" :hasError="$errors->has('custom_date')"
+                    value="{{ isset($sale) ? $sale->custom_date : null }}" />
+                <x-app.message.error id="custom_date_err" />
+            </div>
+        @endif
         <div class="flex flex-col">
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -121,6 +116,11 @@
         INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
         SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
+
+        $('input[name="custom_date"]').daterangepicker(datepickerParam)
+        $('input[name="custom_date"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
 
         $(document).ready(function() {
             buildCompanySelect2()
