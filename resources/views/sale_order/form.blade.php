@@ -95,75 +95,10 @@
                     $('#payment-details-container .select2, #payment-details-container .select2-selection--multiple')
                         .css('backgroundColor', '#eee')
                 }
+
+                $('#quotation-details-container input[name="custom_date"]').attr('disabled', false)
+                $('#quotation-details-container input[name="custom_date"]').removeClass('!bg-gray-100')
             }
-            // if (SALE != null && SALE.is_draft == true) {
-            //     draftData = SALE.draft_data
-            //     // Quotation details
-            //     $('select[name="customer"]').val(draftData.customer).trigger('change')
-            //     $('input[name="reference_input"]').val(draftData.reference)
-            //     $('input[name="from"]').val(draftData.from)
-            //     $('input[name="cc"]').val(draftData.cc)
-            //     $('input[name="store"]').val(draftData.store)
-            //     $('select[name="sale"]').val(draftData.sale).trigger('change')
-            //     $('select[name="report_type"]').val(draftData.report_type).trigger('change')
-            //     $('select[name="billing_address"]').val(draftData.billing_address).trigger('change')
-            //     $('select[name="delivery_address"]').val(draftData.delivery_address).trigger('change')
-            //     $('select[name="status"]').val(draftData.status).trigger('change')
-            //     $('#new-billing-address input[name="address1"]').val(draftData.new_billing_address1)
-            //     $('#new-billing-address input[name="address2"]').val(draftData.new_billing_address2)
-            //     $('#new-billing-address input[name="address3"]').val(draftData.new_billing_address3)
-            //     $('#new-billing-address input[name="address4"]').val(draftData.new_billing_address4)
-            //     $('#new-delivery-address input[name="address1"]').val(draftData.new_delivery_address1)
-            //     $('#new-delivery-address input[name="address2"]').val(draftData.new_delivery_address2)
-            //     $('#new-delivery-address input[name="address3"]').val(draftData.new_delivery_address3)
-            //     $('#new-delivery-address input[name="address4"]').val(draftData.new_delivery_address4)
-            //     // Product details
-            //     for (let i = 0; i < draftData.product_id.length; i++) {
-            //         if (i != 0) {
-            //             $('#add-item-btn').click()
-            //         }
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="product_id[]"]`).val(draftData
-            //             .product_id[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="qty"]`).val(draftData.qty[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="product_desc"]`).val(draftData
-            //             .product_desc[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] input[name="discount"]`).val(draftData
-            //             .discount[i])
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="warranty_period[]"]`).val(
-            //             draftData.warranty_period[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] select[name="promotion[]"]`).val(draftData
-            //             .promotion_id[i]).trigger('change')
-            //         $(`#product-details-container .items[data-id=${i+1}] textarea[name="remark"]`).text(draftData
-            //             .product_remark[i])
-            //         if (draftData.foc[i] == 'true') {
-            //             $(`#product-details-container .items[data-id=${i+1}] .foc-btns`).click()
-            //         }
-            //         if (draftData.selling_price[i] != null) {
-            //             $(`#product-details-container .items[data-id=${i+1}] select[name="selling_price[]"]`).val(
-            //                 draftData.selling_price[i]).trigger('change')
-            //         } else {
-            //             $(`#product-details-container .items[data-id=${i+1}] input[name="override_selling_price"]`)
-            //                 .val(draftData.override_selling_price[i]).trigger('keyup')
-            //         }
-            //     }
-            //     // Payment Details
-            //     $('select[name="payment_method"]').val(draftData.payment_method).trigger('change')
-            //     $('input[name="payment_remark"]').val(draftData.payment_remark)
-            //     $('input[name="payment_due_date"]').val(draftData.payment_due_date)
-            //     $('select[name="payment_term"]').val(draftData.payment_term).trigger('change')
-
-            //     for (let i = 0; i < draftData.account_amount.length; i++) {
-            //         if (i != 0) {
-            //             $('#add-payment-amount-btn').click()
-            //         } 
-            //         $(`.payment-amounts[data-id=${i+1}] input[name="account_amount"]`).val(draftData.account_amount[i])
-            //         $(`.payment-amounts[data-id=${i+1}] input[name="account_date"]`).val(draftData.account_date[i])
-            //         $(`.payment-amounts[data-id=${i+1}] input[name="account_ref_no"]`).val(draftData.account_ref_no[i])
-            //     }
-
-            //     // Remarks
-            //     $('#additional-remark-container input[name="remark_input"]').val(draftData.remark)
-            // }
         })
 
         $('#save-as-draft-btn, #submit-btn').on('click', function() {
@@ -249,6 +184,7 @@
                 data: {
                     'sale_id': SALE != null ? SALE.id : null,
                     'quo_id': QUO != null ? QUO.id : null,
+                    'custom_date': $('input[name="custom_date"]').val(),
                     'sale': $('select[name="sale"]').val(),
                     'customer': $('select[name="customer"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(

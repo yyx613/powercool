@@ -45,7 +45,8 @@
                 </td>
             </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
+        <table
+            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td
                     style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
@@ -140,8 +141,7 @@
                 <td
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
                     Item Code</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
                     Description</td>
                 <td
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
@@ -168,24 +168,33 @@
             @endphp
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $key + 1 }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
                         {{ $prod->product->sku }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->product->model_name }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->qty }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->uom }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
                         {{ number_format($prod->unit_price, 2) }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
                         {{ number_format($prod->discount ?? 0, 2) }}</td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
-                    <td style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
                 @if ($prod->remark != null)
@@ -311,12 +320,16 @@
             </tr>
             <tr>
                 <td style="font-size: 12px; vertical-align: start;">10.</td>
+                <td style="font-size: 12px; width: 100%; text-align: left;">The warranty will be considered void if the refrigerator has been modified or its original specifications altered without prior authorization from the manufacturer.</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; vertical-align: start;">11.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Request E-invoice after 72hrs which
                     original invoice have validated by IRB will be charge 5% of
                     the total invoice amount.</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">11.</td>
+                <td style="font-size: 12px; vertical-align: start;">12.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Company will not obligation on those
                     customers are not require to issue E-invoice.</td>
             </tr>
