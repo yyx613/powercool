@@ -158,6 +158,9 @@ class Product extends Model
         $count = 0;
         for ($i = 0; $i < count($spc); $i++) {
             $sale = $spc[$i]->saleProduct->sale;
+            if ($sale == null) {
+                continue;
+            }
 
             if ($sale->status != Sale::STATUS_CONVERTED || ($sale->type == Sale::TYPE_SO && $sale->convert_to != null)) {
                 $count++;
