@@ -187,10 +187,22 @@
                     @endphp
                     <tr>
                         <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">Warranty:<br>
-                            {{ join(', ', $warranty) }}</td>
+                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
+                            Warranty:<br>
+                        </td>
                         <td></td>
                     </tr>
+                    @foreach ($warranty as $key => $w)
+                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
+                            @if (count($warranty) == $key + 1)
+                                {{ $w }}
+                            @else
+                                {{ $w }}<br>
+                            @endif
+                        </td>
+                        <td></td>
+                    @endforeach
                 @endif
                 <!-- Serial No -->
                 @if ($prod['serial_no'] != null)

@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 450px 25px 50px 25px;
+        margin: 460px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -425px;
+        top: -435px;
         left: 0px;
         right: 0px;
     }
@@ -76,7 +76,8 @@
                         <tr>
                             <td style="font-size: 14px;">Payment Due Date</td>
                             <td style="font-size: 14px; vertical-align: top;">:</td>
-                            <td style="font-size: 14px; vertical-align: top;">{{ $is_paid ? 'Paid' : ($sale->payment_due_date ?? '') }}</td>
+                            <td style="font-size: 14px; vertical-align: top;">
+                                {{ $is_paid ? 'Paid' : $sale->payment_due_date ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -234,9 +235,20 @@
                             <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
                             <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
                                 Warranty:<br>
-                                {{ join(', ', $warranty) }}</td>
                             <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                         </tr>
+                        @foreach ($warranty as $key => $w)
+                            <tr>
+                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                                <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                                    @if (count($warranty) == $key + 1)
+                                        {{ $w }}
+                                    @else
+                                        {{ $w }}<br>
+                                    @endif
+                                <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                            </tr>
+                        @endforeach
                     @endif
                 @endif
                 <!-- Serial No -->
