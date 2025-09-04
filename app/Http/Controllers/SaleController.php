@@ -649,10 +649,12 @@ class SaleController extends Controller
                 'payment_methods.name as payment_method',
                 'payment_methods.by_pass_conversion as by_pass_conversion',
                 'sales.created_by',
+                'createdBy.name as created_by_name',
+                'updatedBy.name as updated_by_name',
                 'serial_no_qty_query.serial_no_qty',
                 'paid_amount_query.paid_amount',
                 DB::raw('SUM(sale_products.qty) AS qty'),
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sst_amount, 0)) AS total_amount'),
+                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) - COALESCE(sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
@@ -662,6 +664,8 @@ class SaleController extends Controller
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
+            ->leftJoin('users as createdBy', 'createdBy.id', '=', 'sales.created_by')
+            ->leftJoin('users as updatedBy', 'updatedBy.id', '=', 'sales.updated_by')
             ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
             })
@@ -708,7 +712,7 @@ class SaleController extends Controller
                 11 => DB::raw('SUM(sale_payment_amounts.amount)'),
                 12 => 'payment_methods.name',
                 13 => 'sales.payment_status',
-                14 => 'sales.status',
+                16 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -750,6 +754,8 @@ class SaleController extends Controller
                 'is_draft' => $record->is_draft,
                 'qty' => $record->qty,
                 'serial_no_qty' => $record->serial_no_qty ?? 0,
+                'created_by' => $record->created_by_name,
+                'updated_by' => $record->updated_by_name,
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_view' => hasPermission('sale.sale_order.view_record'),
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
@@ -954,6 +960,7 @@ class SaleController extends Controller
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
             'quo_skus' => join(', ', $quo_skus),
+            'is_paid' => $sale->payment_status == Sale::PAYMENT_STATUS_PAID,
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -1851,6 +1858,7 @@ class SaleController extends Controller
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
+                    'updated_by' => Auth::user()->id,
                 ]);
             }
             // Payment method approval

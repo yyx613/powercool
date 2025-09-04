@@ -76,7 +76,7 @@
                         <tr>
                             <td style="font-size: 14px;">Payment Due Date</td>
                             <td style="font-size: 14px; vertical-align: top;">:</td>
-                            <td style="font-size: 14px; vertical-align: top;">{{ $sale->payment_due_date ?? '' }}</td>
+                            <td style="font-size: 14px; vertical-align: top;">{{ $is_paid ? 'Paid' : ($sale->payment_due_date ?? '') }}</td>
                         </tr>
                     </table>
                 </td>
