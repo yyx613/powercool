@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 400px 25px 50px 25px;
+        margin: 415px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -375px;
+        top: -390px;
         left: 0px;
         right: 0px;
     }
@@ -99,12 +99,12 @@
                         <tr>
                             <td style="font-size: 14px;">Warehouse</td>
                             <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;"></td>
+                            <td style="font-size: 14px;">{{ $sale->store ?? '' }}</td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; font-weight: 700;">Warehouse</td>
-                            <td style="font-size: 14px; font-weight: 700;">:</td>
-                            <td style="font-size: 14px; font-weight: 700;">HQ</td>
+                            <td style="font-size: 14px;">Payment Due Date</td>
+                            <td style="font-size: 14px; vertical-align: top;">:</td>
+                            <td style="font-size: 14px; vertical-align: top;">{{ $sale->payment_due_date ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
