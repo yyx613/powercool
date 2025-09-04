@@ -104,7 +104,8 @@
                         <tr>
                             <td style="font-size: 14px;">Payment Due Date</td>
                             <td style="font-size: 14px; vertical-align: top;">:</td>
-                            <td style="font-size: 14px; vertical-align: top;">{{ $is_paid ? 'Paid' : ($sale->payment_due_date ?? '') }}</td>
+                            <td style="font-size: 14px; vertical-align: top;">
+                                {{ $is_paid ? 'Paid' : $sale->payment_due_date ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -210,9 +211,20 @@
                             <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
                             <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
                                 Warranty:<br>
-                                {{ join(', ', $warranty) }}</td>
                             <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                         </tr>
+                        @foreach ($warranty as $key => $w)
+                            <tr>
+                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                                <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                                    @if (count($warranty) == $key + 1)
+                                        {{ $w }}
+                                    @else
+                                        {{ $w }}<br>
+                                    @endif
+                                <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                            </tr>
+                        @endforeach
                     @endif
                 @endif
                 <!-- Serial No -->
@@ -243,7 +255,8 @@
             @if ($sale->payment_remark != null)
                 <tr>
                     <td></td>
-                    <td colspan="3" style="font-size: 10px; padding: 15px 0;"><span style="font-weight: 700;">PAYMENT
+                    <td colspan="3" style="font-size: 10px; padding: 15px 0;"><span
+                            style="font-weight: 700;">PAYMENT
                             REMARK:</span><br>{{ $sale->payment_remark }}</td>
                     <td colspan="6"></td>
                 </tr>
