@@ -73,6 +73,11 @@
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;">{{ $sale->store ?? '' }}</td>
                         </tr>
+                        <tr>
+                            <td style="font-size: 14px;">Payment Due Date</td>
+                            <td style="font-size: 14px; vertical-align: top;">:</td>
+                            <td style="font-size: 14px; vertical-align: top;">{{ $sale->payment_due_date ?? '' }}</td>
+                        </tr>
                     </table>
                 </td>
             </tr>
@@ -361,7 +366,8 @@
             <tr>
                 <td style="font-size: 12px; vertical-align: start;">9.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">
-                    The warranty will be considered void if the refrigerator has been modified or its original specifications altered without prior authorization from the manufacturer.
+                    The warranty will be considered void if the refrigerator has been modified or its original
+                    specifications altered without prior authorization from the manufacturer.
                 </td>
             </tr>
             <tr>
