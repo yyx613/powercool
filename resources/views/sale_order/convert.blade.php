@@ -14,7 +14,8 @@
                         <path
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm1,15V7c0-.404-.244-.77-.617-.924-.375-.157-.805-.069-1.09,.217l-2.444,2.444c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l.737-.737v7.586c0,.553,.448,1,1,1s1-.447,1-1Z" />
                     </svg>
-                    <p class="text-xs">{{ $selected_customer->company_name }} - {{ $selected_customer->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</p>
+                    <p class="text-xs">{{ $selected_customer->company_name }} -
+                        {{ $selected_customer->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}</p>
                 </div>
             @endif
             @if ($step > 2 && isset($selected_salesperson) && $selected_salesperson != null)
@@ -159,7 +160,8 @@
                                     data-id="{{ $cus->id }}">
                                     <a href="{{ route('sale_order.to_delivery_order', ['cus' => $cus->id]) }}"
                                         class="text-sm flex items-center justify-between p-2 font-semibold">
-                                        {{ $cus->company_name }} - {{ $cus->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}
+                                        {{ $cus->company_name }} -
+                                        {{ $cus->company_group == 1 ? 'Power Cool' : 'Hi-Ten' }}
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                             viewBox="0 0 24 24" width="512" height="512">
                                             <path
@@ -285,10 +287,34 @@
                                         <div>
                                             <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}
                                             </h6>
-                                            <p class="text-xs text-slate-500">{{ __('SKU') }}: {{ $pro->sku }}
+                                            <p class="text-xs text-slate-500">{{ __('SKU') }}:
+                                                {{ $pro->product->sku }}
                                             </p>
                                             <p class="text-xs text-slate-500">{{ __('Description') }}:
                                                 {{ $pro->desc }}</p>
+                                            <div class="mt-2 flex items-center gap-4">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="checkbox" id="sp_{{ $pro->id }}"
+                                                        class="rounded border-gray-300 select-all" />
+                                                    <label for="sp_{{ $pro->id }}"
+                                                        class="text-sm">{{ __('Select All') }}</label>
+                                                </div>
+                                                <div>
+                                                    @php
+                                                        $available_count = 0;
+                                                    @endphp
+                                                    @foreach ($pro->children as $pc)
+                                                        @php
+                                                            if (!in_array($pc->product_children_id, $allowed_spc_ids)) {
+                                                                $available_count++;
+                                                            }
+                                                        @endphp
+                                                    @endforeach
+                                                    <span
+                                                        class="text-sm">{{ $available_count }}/{{ count($pro->children) }}
+                                                        Assigned</span>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="flex flex-col items-end">
                                             <span class="text-slate-500 text-xs">{{ __('From SO') }}</span>
@@ -304,12 +330,19 @@
                                                         continue;
                                                     }
                                                 @endphp
-                                                <label for="{{ $pc->id }}" class="w-full block">
-                                                    <input type="checkbox" name="product_children"
-                                                        id="{{ $pc->id }}" value="{{ $pc->id }}"
-                                                        class="rounded mr-1 border-gray-300">
-                                                    <span>{{ $pc->productChild->sku }}</span>
-                                                </label>
+                                                <div class="flex items-center gap-4">
+                                                    <label for="{{ $pc->id }}" class="flex items-center gap-2">
+                                                        <input type="checkbox" name="product_children"
+                                                            id="{{ $pc->id }}" value="{{ $pc->id }}"
+                                                            class="rounded border-gray-300">
+                                                        <span>{{ $pc->productChild->sku }}</span>
+                                                    </label>
+                                                    <div class="border-b border-gray-300 w-1/3 mr-4">
+                                                        <input type="text"
+                                                            class="text-sm border-none py-1 px-1.5 w-full focus:border-transparent focus:ring-0"
+                                                            placeholder="{{ __('Enter remark') }}" data-pc-id="{{ $pc->id }}">
+                                                    </div>
+                                                </div>
                                             @endforeach
                                         @elseif ($pro->product->isRawMaterial() && $pro->remainingQtyForRM() > 0)
                                             <x-app.input.input type="text" name="qty" class="int-input"
@@ -382,8 +415,15 @@
     <script>
         CUSTOMERS = @json($customers ?? null);
         SALESPERSONS = @json($salespersons ?? null);
+        DELIVERY_ADDRESSES = @json($delivery_addresses ?? []);
         SELECTED_SOS = []
         SELECTED_SALE_PRODUCTS = {};
+
+        $(document).ready(function() {
+            if (DELIVERY_ADDRESSES.length == 1) {
+                $('.delivery-address').click()
+            }
+        })
 
         $('input[name="search_customer"]').on('keyup', function() {
             let val = $(this).val()
@@ -443,7 +483,16 @@
 
             window.location.href = url
         })
-        $('.products input[type="checkbox"]').on('change', function() {
+        $('.products .select-all').on('change', function() {
+            let spId = $(this).closest('.products').attr('data-sp-id')
+            let isSelectAll = $(this).is(':checked')
+
+            $(`.products[data-sp-id=${spId}] input[name="product_children"]`).prop('checked', isSelectAll ? true :
+                false)
+
+            canConfirmStep5()
+        })
+        $('.products input[name="product_children"]').on('change', function() {
             canConfirmStep5()
         })
         $('.products input[type="text"]').on('keyup', function() {
@@ -490,20 +539,23 @@
 
             SELECTED_SALE_PRODUCTS = {}
             $('.products').each(function(i, obj) {
+                var spId = $(this).data('sp-id')
                 if ($(this).data('is-raw-material') && $(this).find('input[type="text"]').val() != null && $(this)
                     .find('input[type="text"]').val() != '') {
                     canConvert = true;
 
-                    SELECTED_SALE_PRODUCTS[$(this).data('sp-id')] = $(this).find('input[type="text"]').val()
+                    SELECTED_SALE_PRODUCTS[spId] = $(this).find('input[type="text"]').val()
                 } else if (!$(this).data('is-raw-material')) {
-                    var spId = $(this).data('sp-id')
                     SELECTED_SALE_PRODUCTS[spId] = []
 
-                    $(this).find('input[type="checkbox"]').each(function() {
+                    $(this).find('input[name="product_children"]').each(function() {
                         if ($(this).is(':checked')) {
                             canConvert = true
 
-                            SELECTED_SALE_PRODUCTS[spId].push($(this).attr('id'))
+                            SELECTED_SALE_PRODUCTS[spId].push({
+                                sale_product_child_id: $(this).attr('id'),
+                                remark: $(`.products[data-sp-id=${spId}] input[type="text"][data-pc-id=${$(this).attr('id')}]`).val()
+                            })
                         }
                     })
                 }

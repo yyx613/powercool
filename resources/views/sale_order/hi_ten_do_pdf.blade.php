@@ -189,6 +189,23 @@
                     <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['uom'] }}</td>
                 </tr>
+                <!-- Serial No -->
+                @if (count($prod['serial_no']) > 0)
+                    <tr>
+                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:<br></td>
+                        <td></td>
+                    </tr>
+                    @foreach ($prod['serial_no'] as $key => $serial_no)
+                        <tr>
+                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 12px; text-align: left; font-weight: 700;">-
+                                {{ $serial_no['sku'] }}{{ $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] }}<br>
+                            </td>
+                            <td></td>
+                        </tr>
+                    @endforeach
+                @endif
                 <!-- Warranty -->
                 @if ($prod['warranty_periods'] != null)
                     @php
@@ -205,25 +222,18 @@
                         <td></td>
                     </tr>
                     @foreach ($warranty as $key => $w)
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
-                            @if (count($warranty) == $key + 1)
-                                {{ $w }}
-                            @else
-                                {{ $w }}<br>
-                            @endif
-                        </td>
-                        <td></td>
+                        <tr>
+                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
+                                @if (count($warranty) == $key + 1)
+                                    {{ $w }}
+                                @else
+                                    {{ $w }}<br>
+                                @endif
+                            </td>
+                            <td></td>
+                        </tr>
                     @endforeach
-                @endif
-                <!-- Serial No -->
-                @if ($prod['serial_no'] != null)
-                    <tr>
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:<br>
-                            {{ join(', ', $prod['serial_no']) }}</td>
-                        <td></td>
-                    </tr>
                 @endif
                 @if ($key + 1 == count($products))
                     <tr>

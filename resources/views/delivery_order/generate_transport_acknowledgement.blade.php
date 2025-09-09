@@ -29,7 +29,7 @@
                             <option value="-1" @selected(old('dealer') == '-1')>Powercool</option>
                             <option value="-2" @selected(old('dealer') == '-2')>Hi Ten Trading</option>
                             @foreach ($dealers as $dealer)
-                                <option value="{{ $dealer->id }}" @selected(old('dealer') == $dealer->id)>{{ $dealer->name }}</option>
+                                <option value="{{ $dealer->id }}" @selected(old('dealer') == $dealer->id)>{{ $dealer->company_name }} - {{ $dealer->name }}</option>
                             @endforeach
                         </x-app.input.select2>
                          <x-input-error :messages="$errors->get('dealer')" class="mt-1" />

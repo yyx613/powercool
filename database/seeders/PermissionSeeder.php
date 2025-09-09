@@ -74,6 +74,9 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.delete',
             'sale.sale_order.convert',
 
+            'sale.cash_sale.view',
+            'sale.cash_sale.create',
+
             'sale.delivery_order.view',
             'sale.delivery_order.convert',
 
@@ -90,7 +93,6 @@ class PermissionSeeder extends Seeder
             'sale.e_invoice.view',
 
             'sale.target.view',
-            'sale.target.convert',
 
             'sale.billing.view',
 

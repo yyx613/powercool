@@ -16,6 +16,18 @@
                     </div>
                 </div>
             </div>
+            {{-- for SO --}}
+            <form class="m-0 hidden">
+                <div class="flex flex-col mb-2" id="charge-container">
+                    <x-app.input.label id="charge" class="mb-1">{{ __('Cancellation Charge') }} <span
+                            class="text-xs">{{ __('(Leave it blank, if no charge is required)') }}</span></x-app.input.label>
+                    <x-app.input.input name="charge" id="charge" class="decimal-input" />
+                </div>
+                <div class="flex flex-col mb-8">
+                    <x-app.input.label id="remark" class="mb-1">{{ __('Reason') }}</x-app.input.label>
+                    <x-app.input.textarea name="remark" id="remark" required='true' />
+                </div>
+            </form>
             <div class="flex gap-x-4">
                 <div class="flex-1">
                     <button type="button"

@@ -14,6 +14,7 @@ class DraftEInvoice extends Model
     use HasFactory;
 
     const STATUS_APPROVED = 1;
+    const STATUS_REJECTED = 3;
     const STATUS_SUBMITTED_TO_EINVOICE = 2;
 
     protected $table = 'draft_e_invoices';

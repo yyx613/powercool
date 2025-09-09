@@ -84,26 +84,28 @@ class ProductChild extends Model
         if ($sp_child != null) {
             $sale = $sp_child->saleProduct->sale;
 
-            if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
-                $dopc = DeliveryOrderProductChild::where('product_children_id', $this->id)->first();
-                if ($dopc != null) {
-                    return $dopc->doProduct->do;
+            if ($sale != null) {
+                if ($sale->type == Sale::TYPE_SO && $sale->convert_to != null) {
+                    $dopc = DeliveryOrderProductChild::where('product_children_id', $this->id)->first();
+                    if ($dopc != null) {
+                        return $dopc->doProduct->do;
+                    }
+
+                    $spc = SaleProductChild::where('product_children_id', $this->id)->first();
+                    if ($spc != null) {
+                        return $spc->saleProduct->sale;
+                    }
+
+                    if (str_contains($sale->convert_to, ',')) {
+                        $dos = DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->get();
+
+                        return $dos;
+                    }
+
+                    return DeliveryOrder::where('id', $sale->convert_to)->first();
+                } elseif ($sale->status != Sale::STATUS_CONVERTED) {
+                    return $sale;
                 }
-
-                $spc = SaleProductChild::where('product_children_id', $this->id)->first();
-                if ($spc != null) {
-                    return $spc->saleProduct->sale;
-                }
-
-                if (str_contains($sale->convert_to, ',')) {
-                    $dos = DeliveryOrder::whereIn('id', explode(',', $sale->convert_to))->get();
-
-                    return $dos;
-                }
-
-                return DeliveryOrder::where('id', $sale->convert_to)->first();
-            } elseif ($sale->status != Sale::STATUS_CONVERTED) {
-                return $sale;
             }
         }
 
@@ -132,7 +134,7 @@ class ProductChild extends Model
         while (true) {
             $str_init_idx = (string) $init_idx;
             while (strlen($str_init_idx) < $min_char) { // make it $min_char digits
-                $str_init_idx = '0'.$str_init_idx;
+                $str_init_idx = '0' . $str_init_idx;
             }
             $sku = $parent_prefix . '-' . now()->format('ymd') . '-' . $str_init_idx;
 

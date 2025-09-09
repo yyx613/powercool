@@ -8,8 +8,9 @@
     </div>
     @include('components.app.alert.parent')
 
-    <form action="{{ isset($ack) ? route('transport_ack.generate_transport_acknowledgement', ['ack' => $ack]) : route('transport_ack.generate_transport_acknowledgement') }}" method="POST" enctype="multipart/form-data"
-        class="flex flex-col gap-y-8">
+    <form
+        action="{{ isset($ack) ? route('transport_ack.generate_transport_acknowledgement', ['ack' => $ack]) : route('transport_ack.generate_transport_acknowledgement') }}"
+        method="POST" enctype="multipart/form-data" class="flex flex-col gap-y-8">
         @csrf
         <div class="bg-white p-4 border rounded-md">
             <div id="content-container">
@@ -66,7 +67,7 @@
                         <x-input-error :messages="$errors->get('type')" class="mt-1" />
                     </div>
                     <div class="flex flex-col">
-                        <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} <span
+                        <x-app.input.label id="company_name" class="mb-1">{{ __('Customer Name') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')"
                             value="{{ old('company_name', isset($ack) ? $ack->company_name : null) ?? null }}" />
@@ -133,6 +134,11 @@
                         <x-app.input.label id="description" class="mb-1">{{ __('Description') }}</x-app.input.label>
                         <x-app.input.input name="description[]" id="description" />
                     </div>
+                    <div class="flex flex-col">
+                        <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                        <x-app.input.textarea name="remark[]" id="remark" :hasError="$errors->has('remark')" />
+                        <x-input-error :messages="$errors->get('remark')" class="mt-1" />
+                    </div>
                     <div class="flex flex-col hidden" id="serial-no-container">
                         <x-app.input.label id="serial_no" class="mb-1">{{ __('Serial No') }}</x-app.input.label>
                         <x-app.input.select name="serial_no[]" placeholder="{{ __('Select a serial no') }}" multiple>
@@ -181,6 +187,12 @@
                                     <x-app.input.input name="description[]" id="description"
                                         value="{{ old('description.' . $key) ?? null }}" />
                                     <x-input-error :messages="$errors->first('description.' . $key)" class="mt-1" />
+                                </div>
+                                <div class="flex flex-col">
+                                    <x-app.input.label id="remark"
+                                        class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                                    <x-app.input.textarea name="remark[]" id="remark" :hasError="$errors->has('remark')" text="{{ old('remark.' . $key) ?? null }}" />
+                                    <x-input-error :messages="$errors->get('remark')" class="mt-1" />
                                 </div>
                                 <div class="flex flex-col" id="serial-no-container">
                                     <x-app.input.label id="serial_no"
@@ -245,6 +257,7 @@
                             'change')
                         $(`.items[data-id=${ITEM_ID}] input[name="qty[]"]`).val(element.qty)
                         $(`.items[data-id=${ITEM_ID}] input[name="description[]"]`).val(element.desc)
+                        $(`.items[data-id=${ITEM_ID}] textarea[name="remark[]"]`).text(element.remark)
                     }
                 } else {
                     $('#add-item-btn').click()
