@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\Billing;
 use App\Models\BillingProduct;
 use App\Models\Branch;
+use App\Models\CashSaleLocation;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
 use App\Models\CreditTerm;
@@ -1549,12 +1550,20 @@ class SaleController extends Controller
                 $rules['account_ref_no.*'] = 'nullable|max:250';
             }
         }
+        if ($req->type == 'cash-sale') {
+            $rules['customer'] = 'nullable';
+            $rules['custom_customer'] = 'required|max:250';
+            $rules['custom_mobile'] = 'nullable';
+            $rules['company_group'] = 'required';
+        }
 
         $req->validate($rules, [], [
             // upsertQuoDetails
             'sale' => 'sales agent',
             'report_type' => 'type',
             'customer' => 'company',
+            'custom_customer' => 'company',
+            'custom_mobile' => 'mobile',
             'open_until' => 'validity',
             'store' => 'warehouse',
             // upsertProDetails
@@ -1771,6 +1780,12 @@ class SaleController extends Controller
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
             }
+            if ($req->type == 'cash-sale') {
+                $rules['customer'] = 'nullable';
+                $rules['custom_customer'] = 'required|max:250';
+                $rules['custom_mobile'] = 'nullable';
+                $rules['company_group'] = 'required';
+            }
             if ($convert_from_quo) {
                 $rules['billing_address'] = 'nullable';
             }
@@ -1784,38 +1799,62 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            // Billing
-            if ($req->billing_address != null || $req->new_billing_address1 != null) {
-                if ($req->billing_address != null) {
-                    $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
-                } else {
-                    $bill_add = CustomerLocation::create([
-                        'customer_id' => $req->customer,
-                        'address1' => $req->new_billing_address1,
-                        'address2' => $req->new_billing_address2,
-                        'address3' => $req->new_billing_address3,
-                        'address4' => $req->new_billing_address4,
-                        'type' => CustomerLocation::TYPE_BILLING,
-                        'is_default' => false,
-                    ]);
-                    $req->merge(['billing_address' => $bill_add->id]);
+            if ($req->type == 'cash-sale') {
+                if ($req->sale_id != null) {
+                    CashSaleLocation::where('cash_sale_id', $req->sale_id)->delete();
                 }
-            }
-            // Delivery
-            if ($req->delivery_address != null || $req->new_delivery_address1 != null) {
-                if ($req->delivery_address != null) {
-                    $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
-                } else {
-                    $del_add = CustomerLocation::create([
-                        'customer_id' => $req->customer,
-                        'address1' => $req->new_delivery_address1,
-                        'address2' => $req->new_delivery_address2,
-                        'address3' => $req->new_delivery_address3,
-                        'address4' => $req->new_delivery_address4,
-                        'type' => CustomerLocation::TYPE_DELIVERY,
-                        'is_default' => false,
-                    ]);
-                    $req->merge(['delivery_address' => $del_add->id]);
+                // Billing
+                $bill_add = CashSaleLocation::create([
+                    'address1' => $req->new_billing_address1,
+                    'address2' => $req->new_billing_address2,
+                    'address3' => $req->new_billing_address3,
+                    'address4' => $req->new_billing_address4,
+                    'type' => CashSaleLocation::TYPE_BILLING,
+                ]);
+                $req->merge(['billing_address' => $bill_add->id]);
+                // Delivery
+                $del_add = CashSaleLocation::create([
+                    'address1' => $req->new_delivery_address1,
+                    'address2' => $req->new_delivery_address2,
+                    'address3' => $req->new_delivery_address3,
+                    'address4' => $req->new_delivery_address4,
+                    'type' => CashSaleLocation::TYPE_DELIVERY,
+                ]);
+                $req->merge(['delivery_address' => $del_add->id]);
+            } else {
+                // Billing
+                if ($req->billing_address != null || $req->new_billing_address1 != null) {
+                    if ($req->billing_address != null) {
+                        $bill_add = CustomerLocation::where('id', $req->billing_address)->first();
+                    } else {
+                        $bill_add = CustomerLocation::create([
+                            'customer_id' => $req->customer,
+                            'address1' => $req->new_billing_address1,
+                            'address2' => $req->new_billing_address2,
+                            'address3' => $req->new_billing_address3,
+                            'address4' => $req->new_billing_address4,
+                            'type' => CustomerLocation::TYPE_BILLING,
+                            'is_default' => false,
+                        ]);
+                        $req->merge(['billing_address' => $bill_add->id]);
+                    }
+                }
+                // Delivery
+                if ($req->delivery_address != null || $req->new_delivery_address1 != null) {
+                    if ($req->delivery_address != null) {
+                        $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
+                    } else {
+                        $del_add = CustomerLocation::create([
+                            'customer_id' => $req->customer,
+                            'address1' => $req->new_delivery_address1,
+                            'address2' => $req->new_delivery_address2,
+                            'address3' => $req->new_delivery_address3,
+                            'address4' => $req->new_delivery_address4,
+                            'type' => CustomerLocation::TYPE_DELIVERY,
+                            'is_default' => false,
+                        ]);
+                        $req->merge(['delivery_address' => $del_add->id]);
+                    }
                 }
             }
 
@@ -1823,7 +1862,11 @@ class SaleController extends Controller
                 if ($so_sku_to_use != null) {
                     $sku = $so_sku_to_use;
                 } else {
-                    $company_group = Customer::where('id', $req->customer)->value('company_group');
+                    if ($req->type == 'cash-sale') {
+                        $company_group = $req->company_group;
+                    } else {
+                        $company_group = Customer::where('id', $req->customer)->value('company_group');
+                    }
                     $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', $req->type == 'quo' ? Sale::TYPE_QUO : ($req->type == 'so' ? Sale::TYPE_SO : Sale::TYPE_CASH_SALE))->pluck('sku')->toArray();
                     $transferred_back_skus = Sale::withTrashed()->where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_TRANSFERRED_BACK)->distinct()->pluck('sku')->toArray();
                     $all_skus = array_merge($existing_skus, $transferred_back_skus);
@@ -1838,7 +1881,9 @@ class SaleController extends Controller
                     'sku' => $sku,
                     'custom_date' => $req->type == 'so' || $req->type == 'cash-sale' ? now() : null,
                     'sale_id' => $req->sale,
-                    'customer_id' => $req->customer,
+                    'customer_id' => $req->type == 'cash-sale' ? null : $req->customer,
+                    'custom_customer' => $req->type == 'cash-sale' ? $req->custom_customer : null,
+                    'custom_mobile' => $req->type == 'cash-sale' ? $req->custom_mobile : null,
                     'open_until' => $req->open_until,
                     'store' => $req->store,
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
@@ -1877,7 +1922,9 @@ class SaleController extends Controller
                 $sale->update([
                     'custom_date' => $req->custom_date ?? $sale->created_at,
                     'sale_id' => $req->sale,
-                    'customer_id' => $req->customer,
+                    'customer_id' => $req->type == 'cash-sale' ? null : $req->customer,
+                    'custom_customer' => $req->type == 'cash-sale' ? $req->custom_customer : null,
+                    'custom_mobile' => $req->type == 'cash-sale' ? $req->custom_mobile : null,
                     'open_until' => $req->open_until,
                     'reference' => $ref,
                     'store' => $req->store,
@@ -1895,8 +1942,14 @@ class SaleController extends Controller
                     'updated_by' => Auth::user()->id,
                 ]);
             }
+            if ($req->type == 'cash-sale') {
+                $bill_add->cash_sale_id = $sale->id;
+                $bill_add->save();
+                $del_add->cash_sale_id = $sale->id;
+                $del_add->save();
+            }
             // Payment method approval
-            if (!$is_draft && $req->payment_method != null) {
+            if (!$is_draft && $req->payment_method != null && $req->type != 'cash-sale') {
                 $quo_skip_approval = false;
                 if ($req->type == 'quo') {
                     $quo_skip_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)
@@ -1927,7 +1980,7 @@ class SaleController extends Controller
                             'object_type' => Sale::class,
                             'object_id' => $sale->id,
                             'status' => Approval::STATUS_PENDING_APPROVAL,
-                            'data' => $req->type == 'quo' ? json_encode([ // TODO
+                            'data' => $req->type == 'quo' ? json_encode([
                                 'is_quo' => true,
                                 'is_payment_method' => true,
                                 'description' => 'The payment method for ' . $sale->sku . ' is selected as Credit Term. (' . join(",", $terms) . ')',
@@ -2175,7 +2228,7 @@ class SaleController extends Controller
                         }
                     }
 
-                    if (!$is_draft && !$skip_approval) {
+                    if (!$is_draft && !$skip_approval && $req->type != 'cash-sale') {
                         if ($req->selling_price[$i] == null) {
                             if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                                 $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);
@@ -2184,7 +2237,7 @@ class SaleController extends Controller
                                     'object_type' => Sale::class,
                                     'object_id' => $req->sale_id,
                                     'status' => Approval::STATUS_PENDING_APPROVAL,
-                                    'data' => $req->type == 'quo' ? json_encode([ // TODO
+                                    'data' => $req->type == 'quo' ? json_encode([
                                         'is_quo' => true,
                                         'sale_product_id' => $sp->id,
                                         'description' => 'The override selling price for ' . $prod->model_name  . '(' . $prod->sku . ') is out of range, which ' . $req->override_selling_price[$i] . ' is ' . ($is_greater ? 'greater' : 'lower') . ' ' . ($is_greater ? $prod->max_price : $prod->min_price),
@@ -4176,7 +4229,7 @@ class SaleController extends Controller
     /**
      * Get Sale ids which has no serial number in production
      */
-    private function getSaleInProduction(): array
+    public function getSaleInProduction(): array
     {
         $pc_in_factory = ProductChild::where('location', ProductChild::LOCATION_FACTORY)->distinct()->pluck('id');
         $spc_in_factory = SaleProductChild::whereIn('product_children_id', $pc_in_factory)->pluck('sale_product_id');

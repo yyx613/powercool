@@ -134,19 +134,17 @@
                     'quo_id': QUO != null ? QUO.id : null,
                     'custom_date': $('input[name="custom_date"]').val(),
                     'sale': $('select[name="sale"]').val(),
-                    'customer': $('select[name="customer"]').val(),
-                    'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
-                        'select[name="billing_address"]').val(),
-                    // 'new_billing_addres1': $('#new-billing-address input[name="address1"]').val(),
-                    // 'new_billing_addres2': $('#new-billing-address input[name="address2"]').val(),
-                    // 'new_billing_addres3': $('#new-billing-address input[name="address3"]').val(),
-                    // 'new_billing_addres4': $('#new-billing-address input[name="address4"]').val(),
-                    'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
-                        'select[name="delivery_address"]').val(),
-                    // 'new_delivery_address1': $('#new-delivery-address input[name="address1"]').val(),
-                    // 'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
-                    // 'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
-                    // 'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
+                    'company_group': $('select[name="company_group"]').val(),
+                    'custom_customer': $('input[name="custom_customer"]').val(),
+                    'custom_mobile': $('input[name="custom_mobile"]').val(),
+                    'new_billing_address1': $('#new-billing-address input[name="address1"]').val(),
+                    'new_billing_address2': $('#new-billing-address input[name="address2"]').val(),
+                    'new_billing_address3': $('#new-billing-address input[name="address3"]').val(),
+                    'new_billing_address4': $('#new-billing-address input[name="address4"]').val(),
+                    'new_delivery_address1': $('#new-delivery-address input[name="address1"]').val(),
+                    'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
+                    'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
+                    'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
 
                     'reference': $('input[name="reference_input"]').val(),
                     'status': $('select[name="status"]').val(),
@@ -179,7 +177,7 @@
                     'account_amount': accountAmount,
                     'account_date': accountDate,
                     'account_ref_no': accountRefNo,
-                    
+
                     'remark': $('#additional-remark-container input[name="remark_input"]').val(),
                 },
                 success: function(res) {
@@ -204,7 +202,7 @@
                         .addClass('bg-green-400 shadow')
 
                     setTimeout(() => {
-                        window.location.href = '{{ route('sale_order.index') }}'
+                        window.location.href = '{{ route('cash_sale.index') }}'
                     }, 1000);
                 },
                 error: function(err) {

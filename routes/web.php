@@ -380,9 +380,12 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     });
     // Cash Sale
     Route::controller(CashSaleController::class)->prefix('cash-sale')->name('cash_sale.')->middleware(['can:sale.cash_sale.view'])->group(function () {
-        Route::get('/', 'indexCashSale')->name('index');
-        Route::get('/get-data', 'getDataCashSale')->name('get_data');
-        Route::get('/create', 'createCashSale')->name('create')->middleware(['can:sale.cash_sale.create']);
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:sale.cash_sale.create']);
+        Route::get('/edit/{sale}', 'edit')->name('edit');
+        Route::get('/pdf/{sale}', 'pdf')->name('pdf');
+        Route::get('/cancel/{sale}', 'cancel')->name('cancel');
     });
     // Invoice Return
     Route::controller(InvoiceReturnController::class)->prefix('invoice-return')->name('invoice_return.')->middleware(['can:sale.invoice_return.view'])->group(function () {

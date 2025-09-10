@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\CashSaleLocation;
 use App\Models\Customer;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
+use App\Models\ProductChild;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
+use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +22,7 @@ use Illuminate\Support\Facades\Session;
 
 class CashSaleController extends Controller
 {
-    public function indexCashSale()
+    public function index()
     {
         $page = Session::get('cash-sale-page');
 
@@ -27,7 +31,7 @@ class CashSaleController extends Controller
         ]);
     }
 
-    public function getDataCashSale(Request $req)
+    public function getData(Request $req)
     {
         Session::put('cash-sale-page', $req->page);
 
@@ -49,16 +53,10 @@ class CashSaleController extends Controller
                 'sales.sku AS doc_no',
                 'sales.custom_date AS custom_date',
                 'sales.created_at AS date',
-                'sales.store AS store',
                 'sales.payment_method AS payment_method',
                 'sales.payment_due_date AS payment_due_date',
-                'customers.id AS customer_id',
-                'customers.sku AS debtor_code',
-                'customers.company_name AS debtor_name',
-                'customers.company_group AS company_group',
-                'sales.convert_to AS transfer_to',
+                'sales.custom_customer AS debtor_name',
                 'sales_agents.name AS agent',
-                'currencies.name AS curr_code',
                 'sales.status AS status',
                 'sales.is_draft AS is_draft',
                 'sales.payment_status',
@@ -76,8 +74,6 @@ class CashSaleController extends Controller
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
-            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
-            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
             ->leftJoin('users as createdBy', 'createdBy.id', '=', 'sales.created_by')
@@ -106,14 +102,8 @@ class CashSaleController extends Controller
             $records = $records->where(function ($q) use ($keyword, $do_ids) {
                 $q->where('sales.sku', 'like', '%' . $keyword . '%')
                     ->orWhere('sales.created_at', 'like', '%' . $keyword . '%')
-                    ->orWhere('customers.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('customers.company_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sales_agents.name', 'like', '%' . $keyword . '%')
-                    ->orWhere('currencies.name', 'like', '%' . $keyword . '%');
-
-                for ($i = 0; $i < count($do_ids); $i++) {
-                    $q->orWhereRaw("find_in_set('" . $do_ids[$i] . "', convert_to)");
-                }
+                    ->orWhere('sales.custom_customer', 'like', '%' . $keyword . '%')
+                    ->orWhere('sales_agents.name', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -121,14 +111,13 @@ class CashSaleController extends Controller
             $map = [
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
-                4 => 'customers.sku',
-                5 => 'customers.name',
-                6 => 'sales_agents.name',
-                11 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
-                12 => DB::raw('SUM(sale_payment_amounts.amount)'),
-                13 => 'payment_methods.name',
-                14 => 'sales.payment_status',
-                17 => 'sales.status',
+                2 => 'sales.custom_customer',
+                3 => 'sales_agents.name',
+                6 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
+                7 => 'paid_amount_query.paid_amount',
+                8 => 'payment_methods.name',
+                9 => 'sales.payment_status',
+                12 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -156,14 +145,8 @@ class CashSaleController extends Controller
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
                 'date' => $record->custom_date == null ? Carbon::parse($record->date)->format('d M Y') : Carbon::parse($record->custom_date)->format('d M Y'),
-                'transfer_from' => implode(', ', Sale::where('convert_to', $record->id)->pluck('sku')->toArray()),
-                'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
-                'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
-                'debtor_company_group' => $record->company_group,
                 'agent' => $record->agent,
-                'store' => $record->store,
-                'curr_code' => $record->curr_code ?? null,
                 'paid' => number_format($record->paid_amount, 2),
                 'total' => number_format($record->total_amount, 2),
                 'payment_method' => $record->payment_method,
@@ -175,11 +158,10 @@ class CashSaleController extends Controller
                 'not_converted_serial_no_qty' => $dopc_count ?? 0,
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
-                'can_edit' => hasPermission('sale.sale_order.edit'),
-                'can_view' => hasPermission('sale.sale_order.view_record'),
+                'can_edit' => hasPermission('sale.sale_order.edit') && $record->status != Sale::STATUS_CANCELLED,
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
-                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
+                'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED && $record->status != Sale::STATUS_CANCELLED,
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
@@ -188,8 +170,7 @@ class CashSaleController extends Controller
                     'has_serial_no' => SaleProductChild::whereIn('sale_product_id', $sp_ids)->exists(),
                     'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE,
                     'no_pending_approval' => !Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
-                    'not_in_production' => !in_array($record->id, $this->getSaleInProduction()),
-                    'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
+                    'not_in_production' => !in_array($record->id, (new SaleController)->getSaleInProduction()),
                     'by_pass_for_unpaid' => $record->payment_status != Sale::PAYMENT_STATUS_UNPAID || ($record->payment_status == Sale::PAYMENT_STATUS_UNPAID && $record->by_pass_conversion)
                 ]
             ];
@@ -198,8 +179,65 @@ class CashSaleController extends Controller
         return response()->json($data);
     }
 
-    public function createCashSale(Request $req)
+    public function create(Request $req)
     {
         return view('cash_sale.form');
+    }
+
+    public function edit(Sale $sale)
+    {
+        $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'paymentAmounts');
+
+        $sale->products->each(function ($q) {
+            $q->attached_to_do = $q->attachedToDo();
+        });
+
+        if ($sale->custom_date == null) {
+            $sale->custom_date = $sale->created_at;
+            $sale->save();
+        }
+
+        return view('cash_sale.form', [
+            'sale' => $sale,
+            'billing_address' => CashSaleLocation::where('id', $sale->billing_address_id)->first(),
+            'delivery_address' => CashSaleLocation::where('id', $sale->delivery_address_id)->first(),
+        ]);
+    }
+
+    public function pdf(Sale $sale)
+    {
+        if ($sale->is_draft == true || $sale->status == Sale::STATUS_APPROVAL_PENDING || $sale->status == Sale::STATUS_APPROVAL_REJECTED) {
+            return abort(403);
+        }
+
+        $sps = $sale->products()->withTrashed()->get();
+        for ($i = 0; $i < count($sps); $i++) {
+            $pc_ids = $sps[$i]->children->pluck('product_children_id');
+            $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
+        }
+
+        $pdf = Pdf::loadView('cash_sale.' . (isHiTen($sale->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
+            'date' => now()->format('d/m/Y'),
+            'sale' => $sale,
+            'products' => $sps,
+            'saleperson' => $sale->saleperson,
+            'billing_address' => CashSaleLocation::where('id', $sale->billing_address_id)->first(),
+            'delivery_address' => CashSaleLocation::where('id', $sale->delivery_address_id)->first(),
+            'terms' => $sale->paymentTerm ?? null,
+            'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
+            'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
+            'is_paid' => $sale->payment_status == Sale::PAYMENT_STATUS_PAID,
+        ]);
+        $pdf->setPaper('A4', 'letter');
+
+        return $pdf->stream($sale->sku . '.pdf');
+    }
+
+    public function cancel(Sale $sale)
+    {
+        $sale->status = Sale::STATUS_CANCELLED;
+        $sale->save();
+
+        return redirect(route('cash_sale.index'))->with('success', 'Cash Sale cancelled');
     }
 }
