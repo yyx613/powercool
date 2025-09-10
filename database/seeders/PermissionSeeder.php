@@ -93,6 +93,7 @@ class PermissionSeeder extends Seeder
             'sale.e_invoice.view',
 
             'sale.target.view',
+            'sale.target.create',
 
             'sale.billing.view',
 
