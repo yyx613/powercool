@@ -37,6 +37,7 @@ class DealerController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%');
             });
         }
@@ -56,6 +57,7 @@ class DealerController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'name',
+                2 => 'company_name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -79,6 +81,7 @@ class DealerController extends Controller
                 'id' => $record->id,
                 'code' => $record->sku,
                 'name' => $record->name,
+                'company_name' => $record->company_name,
                 'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
                 'can_edit' => hasPermission('dealer.edit'),
                 'can_delete' => hasPermission('dealer.delete'),
@@ -119,6 +122,7 @@ class DealerController extends Controller
     {
         $req->validate([
             'name' => 'required|max:250',
+            'company_name' => 'nullable|max:250',
             'company_group' => 'required',
         ]);
 
@@ -128,6 +132,7 @@ class DealerController extends Controller
             if ($dealer->id == null) {
                 $new_dealer = Dealer::create([
                     'name' => $req->name,
+                    'company_name' => $req->company_name,
                     'company_group' => $req->company_group,
                     'sku' => (new Dealer)->generateSku(),
                 ]);
@@ -135,6 +140,7 @@ class DealerController extends Controller
                 (new Branch)->assign(Dealer::class, $new_dealer->id);
             } else {
                 $dealer->name = $req->name;
+                $dealer->company_name = $req->company_name;
                 $dealer->company_group = $req->company_group;
                 $dealer->save();
             }

@@ -88,6 +88,7 @@ class ViewServiceProvider extends ServiceProvider
                 'warranty' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
+                'sale.cash_sale' => [],
                 'sale.delivery_order' => [],
                 'sale.transport_acknowledgement' => [],
                 'sale.invoice' => [],
@@ -144,6 +145,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['sale.quotation'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.sale_order')) {
                     array_push($permissions_group['sale.sale_order'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'sale.cash_sale')) {
+                    array_push($permissions_group['sale.cash_sale'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.delivery_order')) {
                     array_push($permissions_group['sale.delivery_order'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.transport_acknowledgement')) {
@@ -341,13 +344,13 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('sales', $sales);
         });
-        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'cash_sale.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
             $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
 
             $view->with('sales_agents', $sales_agents);
         });
 
-        View::composer(['sale_order.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {
+        View::composer(['sale_order.form_step.delivery_schedule', 'cash_sale.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {
             $drivers = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::DRIVER);
             })->orderBy('id', 'desc')->get();
@@ -373,7 +376,7 @@ class ViewServiceProvider extends ServiceProvider
                 'roles' => $roles,
             ]);
         });
-        View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details'], function (ViewView $view) {
+        View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details', 'cash_sale.form_step.product_details'], function (ViewView $view) {
             $sst = Setting::where('key', Setting::SST_KEY)->value('value');
             $involved_pc_ids = getInvolvedProductChild();
 
@@ -581,7 +584,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('branches', $branches);
         });
-        View::composer(['quotation.form_step.quotation_details', 'quotation.convert', 'sale_order.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['quotation.form_step.quotation_details', 'quotation.convert', 'sale_order.form_step.quotation_details', 'cash_sale.form_step.quotation_details'], function (ViewView $view) {
             $report_types = ProjectType::orderBy('id', 'desc')->get();
 
             $view->with('report_types', $report_types);
@@ -675,7 +678,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale_orders' => $sale_orders,
             ]);
         });
-        View::composer(['sale_order.form_step.payment_details', 'quotation.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['sale_order.form_step.payment_details', 'cash_sale.form_step.payment_details', 'quotation.form_step.quotation_details'], function (ViewView $view) {
             $payment_statuses = [
                 Sale::PAYMENT_STATUS_UNPAID => 'Unpaid',
                 Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',

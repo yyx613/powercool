@@ -3,6 +3,7 @@
 use App\Http\Controllers\AgentDebtorController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\CashSaleController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
@@ -277,8 +278,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
             Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
-            Route::get('/cancel/{sale}', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
-            Route::get('/transfer-back/{sale}', 'transferBackSaleOrder')->name('transfer_back')->middleware(['can:sale.sale_order.cancel']);
+            Route::get('/cancel', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
+            Route::get('/transfer-back', 'transferBackSaleOrder')->name('transfer_back')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
             Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
@@ -306,6 +307,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/convert-to-invoice', 'convertToInvoice')->name('convert_to_invoice');
             // Route::get('/cancel', 'cancelDeliveryOrder')->name('cancel');
             Route::get('/cancel', 'cancelInvoice')->name('cancel');
+            Route::get('/get-cancellation-involved-so/{so}', 'getCancellationInvolvedSO')->name('get_cancellation_involved_so');
             Route::get('/get-cancellation-involved-do/{do}', 'getCancellationInvolvedDO')->name('get_cancellation_involved_do');
             Route::get('/generate-transport-acknowledgement', 'transportAcknowledgement')->name('transport_acknowledgement');
             Route::post('/generate-transport-acknowledgement', 'generateTransportAcknowledgement')->name('generate_transport_acknowledgement');
@@ -324,6 +326,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getDataInvoice')->name('get_data');
             Route::get('/draft-e-invoice', 'indexDraftEInvoice')->name('draft-e-invoice.index');
             Route::get('/get-data-draft-e-invoice', 'getDataDraftEInvoice')->name('get_data_draft_e_invoice');
+            Route::get('/reject-draft-e-invoice/{draft}', 'rejectDraftEInvoice')->name('reject_draft_e_invoice');
             Route::get('/approve-draft-e-invoice/{draft}', 'approveDraftEInvoice')->name('approve_draft_e_invoice');
             Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
             Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
@@ -362,6 +365,11 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{target}', 'editTarget')->name('edit');
             Route::post('/update/{target}', 'updateTarget')->name('update');
         });
+        // Sale Cancellation 
+        Route::prefix('sale-cancellation')->name('sale_cancellation.')->middleware(['can:sale.target.view'])->group(function () {
+            Route::get('/', 'indexSaleCancellation')->name('index');
+            Route::get('/get-data', 'getDataSaleCancellation')->name('get_data');
+        });
         // Billing
         Route::prefix('billing')->name('billing.')->middleware(['can:sale.billing.view'])->group(function () {
             Route::get('/', 'indexBilling')->name('index');
@@ -370,10 +378,18 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/convert-to-invoice-billing', 'convertToBilling')->name('convert_to_billing');
         });
     });
+    // Cash Sale
+    Route::controller(CashSaleController::class)->prefix('cash-sale')->name('cash_sale.')->middleware(['can:sale.cash_sale.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:sale.cash_sale.create']);
+        Route::get('/edit/{sale}', 'edit')->name('edit');
+        Route::get('/pdf/{sale}', 'pdf')->name('pdf');
+        Route::get('/cancel/{sale}', 'cancel')->name('cancel');
+    });
     // Invoice Return
     Route::controller(InvoiceReturnController::class)->prefix('invoice-return')->name('invoice_return.')->middleware(['can:sale.invoice_return.view'])->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/product-selection/{inv}', 'productSelection')->name('product_selection');
         Route::get('/product-selection-submit/{inv}', 'productSelectionSubmit')->name('product_selection_submit');
         Route::get('/view-product-selection/{inv}', 'productSelectionView')->name('view_product_selection');

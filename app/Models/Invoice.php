@@ -15,6 +15,9 @@ class Invoice extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_VOIDED = 1;
+    const STATUS_TRANSFERRED_TO_DRAFT = 2;
+    const STATUS_APPROVED = 3;
+    const STATUS_REJECTED = 4;
 
     protected $guarded = [];
 

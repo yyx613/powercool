@@ -279,6 +279,8 @@ class EInvoiceController extends Controller
                         }
 
                         $invoice = Invoice::where('sku', $invoiceCodeNumber)->first();
+                        $invoice->status = Invoice::STATUS_TRANSFERRED_TO_DRAFT;
+                        $invoice->save();
 
                         if (! $invoice->einvoice) {
                             $invoice->einvoice()->create([

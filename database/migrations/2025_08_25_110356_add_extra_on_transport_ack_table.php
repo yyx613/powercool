@@ -23,8 +23,8 @@ return new class extends Migration
             $table->unsignedBigInteger('transport_acknowledgement_id');
             $table->unsignedBigInteger('product_id');
             $table->integer('qty');
-            $table->string('desc');
-            $table->longText('product_child_id');
+            $table->string('desc')->nullable();
+            $table->longText('product_child_id')->nullable();
         });
     }
 

@@ -40,14 +40,13 @@
                 <tr>
                     <th>{{ __('Doc No.') }}</th>
                     <th>{{ __('Date') }}</th>
-                    <th>{{ __('Debtor Code') }}</th>
                     <th>{{ __('Transfer From') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
                     <th>{{ __('Debtor Name') }}</th>
                     <th>{{ __('Agent') }}</th>
                     <th>{{ __('Curr. Code') }}</th>
                     <th>{{ __('Total') }}</th>
                     <th>{{ __('Created By') }}</th>
-                    <th>{{ __('Company Group') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -93,14 +92,13 @@
             columns: [
                 { data: 'doc_no' },
                 { data: 'date' },
-                { data: 'debtor_code' },
                 { data: 'transfer_from' },
+                { data: 'debtor_code' },
                 { data: 'debtor_name' },
                 { data: 'agent' },
                 { data: 'curr_code' },
                 { data: 'total' },
                 { data: 'created_by' },
-                { data: 'company_group' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -122,14 +120,14 @@
                 {
                     "width": "10%",
                     "targets": 2,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "width": "10%",
-                    "targets": 3,
-                    orderable: false,
+                    "targets": 3,                    
                     render: function(data, type, row) {
                         return data
                     }
@@ -138,7 +136,7 @@
                     "width": "10%",
                     "targets": 4,
                     render: function(data, type, row) {
-                        return data
+                        return `${row.debtor_name}, ${row.debtor_company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
                     }
                 },
                 {
@@ -175,19 +173,6 @@
                 {
                     "width": "10%",
                     "targets": 9,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        if (data == 'powercool') {
-                            return 'Power Cool'
-                        } else if (data == 'hi_ten') {
-                            return 'Hi-Ten'
-                        }
-                        return data
-                    }
-                },
-                {
-                    "width": "10%",
-                    "targets": 10,
                     render: function(data, type, row) {
                         if (data == 1) {
                             return '{!! __("Cancelled") !!}'
@@ -197,14 +182,14 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 11,
+                    "targets": 10,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
-                            <a href="{{ config('app.url') }}/invoice-return/view-product-selection/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View Returned Products') !!}">
+                            <a href="{{ config('app.url') }}/invoice-return/view-product-selection/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('View Returned Products') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
                             </a>
-                            <a href="{{ config('app.url') }}/invoice-return/product-selection/${row.id}" class="rounded-full p-2 bg-blue-200 inline-block" title="{!! __('Return') !!}">
+                            <a href="{{ config('app.url') }}/invoice-return/product-selection/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('Return') !!}">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                     <path d="m22,12h2c0,6.617-5.383,12-12,12-4.055,0-7.794-2.058-9.995-5.368l-.005,2.368H0v-3.991c0-1.107.901-2.009,2.008-2.009h3.992v2h-2.637c1.776,3.06,5.052,5,8.637,5,5.514,0,10-4.486,10-10Zm0-9l-.005,2.353C19.806,2.04,16.106,0,12,0,5.383,0,0,5.383,0,12h2C2,6.486,6.486,2,12,2c3.64,0,6.9,1.921,8.666,5h-2.666v2h3.991c1.107,0,2.009-.901,2.009-2.009v-3.991h-2Zm-5,14H7v-7.5c0-1.379,1.122-2.5,2.5-2.5h5c1.379,0,2.5,1.121,2.5,2.5v7.5Zm-2-7.5c0-.275-.225-.5-.5-.5h-5c-.276,0-.5.225-.5.5v5.5h6v-5.5Zm-4.5,2.5h3v-2h-3v2Z"/>
                                 </svg>
