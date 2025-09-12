@@ -3142,7 +3142,7 @@ class SaleController extends Controller
                 'invoices.sku AS transfer_from',
                 'invoices.date AS date',
                 'customers.sku AS debtor_code',
-                'customers.name AS debtor_name',
+                'customers.company_name AS debtor_name',
                 'customers.tin_number AS tin_number',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
