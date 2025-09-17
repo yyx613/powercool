@@ -114,9 +114,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; width: 50%;">
-                                @if ($customer->tin_number != null)
-                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
-                                @endif
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -124,9 +122,7 @@
                                 {{ $billing_address->address4 ?? '' }}<br>
                             </td>
                             <td style="font-size: 14px; width: 50%;">
-                                @if ($customer->tin_number != null)
-                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
-                                @endif
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $delivery_address->address1 ?? '' }}<br>
                                 {{ $delivery_address->address2 ?? '' }}<br>
