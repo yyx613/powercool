@@ -45,9 +45,9 @@
                 <td style="width: 35%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 12px; width: 60%; font-weight: 700;">Delivery Order No.</td>
+                            <td style="font-size: 12px; font-weight: 700;">Delivery Order No.</td>
                             <td style="font-size: 12px; width: 10%;">:</td>
-                            <td style="font-size: 12px; font-weight: 700;">{{ $sku }}</td>
+                            <td style="font-size: 12px; width: 40%; font-weight: 700;">{{ $sku }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Date</td>
@@ -107,8 +107,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 12px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;" colspan="2">TEL: {{ $customer->phone }}</td>
                         </tr>
                     </table>
                 </td>
@@ -221,7 +220,7 @@
                 @endif
                 @if ($key + 1 == count($products))
                     <tr>
-                        <td style="padding: 25px;"></td>
+                        <td style="padding: 5px;"></td>
                     </tr>
                 @endif
                 @php

@@ -7,7 +7,7 @@
             <path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z" />
             <circle cx="12" cy="6.5" r="1.5" />
         </svg>
-        <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
+        <span class="text-lg ml-3 font-bold">{{ __('Sale Order Details') }}</span>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
         @if (isSuperAdmin())
@@ -51,6 +51,12 @@
                 @endforeach
             </x-app.input.select>
             <x-app.message.error id="sale_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="store" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
+            <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
+                value="{{ isset($sale) ? $sale->store : null }}" />
+            <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
