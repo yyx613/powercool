@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 375px 25px 50px 25px;
+        margin: 390px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -350px;
+        top: -365px;
         left: 0px;
         right: 0px;
     }
@@ -98,9 +98,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 12px;" colspan="2">
-                                @if ($customer->tin_number != null)
-                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
-                                @endif
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
                                 {{ $billing_address->address2 ?? '' }}<br>
@@ -121,9 +119,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 12px;" colspan="2">
-                                @if ($customer->tin_number != null)
-                                    <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
-                                @endif
+                                <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name ?? '' }}<br>
                                 {{ $delivery_address->address1 ?? '' }}<br>
                                 {{ $delivery_address->address2 ?? '' }}<br>
