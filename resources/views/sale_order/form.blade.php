@@ -83,7 +83,7 @@
                 $('#new-billing-address input, #new-delivery-address input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"]')
                     .parent().addClass('!bg-gray-100')
                 $('#quotation-details-container #company-container div').addClass('!bg-gray-100')
-                $('#quotation-details-container input[name="reference"]').parent().addClass('!bg-gray-100')
+                $('#quotation-details-container input[name="reference"], #quotation-details-container input[name="store"]').parent().addClass('!bg-gray-100')
                 $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
                     .css('backgroundColor', '#eee')
 
