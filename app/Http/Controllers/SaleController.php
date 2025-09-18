@@ -731,6 +731,8 @@ class SaleController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
+
+        $voided_do_ids = DeliveryOrder::where('status', DeliveryOrder::STATUS_VOIDED)->pluck('id')->toArray();
         foreach ($records_paginator as $record) {
             $sp_ids = SaleProduct::where('sale_id', $record->id)->pluck('id')->toArray();
             $dop_ids = DeliveryOrderProduct::whereIn('sale_product_id', $sp_ids)->pluck('id');
@@ -741,7 +743,7 @@ class SaleController extends Controller
                 'doc_no' => $record->doc_no,
                 'date' => $record->custom_date == null ? Carbon::parse($record->date)->format('d M Y') : Carbon::parse($record->custom_date)->format('d M Y'),
                 'transfer_from' => implode(', ', Sale::where('convert_to', $record->id)->pluck('sku')->toArray()),
-                'transfer_to' => implode(', ', DeliveryOrder::whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
+                'transfer_to' => implode(', ', DeliveryOrder::whereNotIn('id', $voided_do_ids)->whereIn('id', explode(',', $record->transfer_to))->pluck('sku')->toArray()),
                 'debtor_code' => $record->debtor_code,
                 'debtor_name' => $record->debtor_name,
                 'debtor_company_group' => $record->company_group,
@@ -3601,7 +3603,29 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $sales = Sale::where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_CONVERTED)->whereIn('sku', $so_skus)->get();
+            $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_skus)->get();
+
+            $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id')->toArray();
+
+            for ($i = 0; $i < count($sales); $i++) {
+                $convert_to = explode(',', $sales[$i]->convert_to);
+                $new_convert_to = [];
+
+                for ($j = 0; $j < count($convert_to); $j++) {
+                    if (! in_array($convert_to[$j], $do_ids)) {
+                        $new_convert_to[] = $convert_to[$j];
+                    }
+                }
+
+                if ($type == 'transfer-back') {
+                    $sales[$i]->convert_to = count($new_convert_to) == 0 ? null : implode(',', $new_convert_to);
+                }
+                $sales[$i]->status = Sale::STATUS_ACTIVE;
+                $sales[$i]->save();
+            }
+            $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id');
+            DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
+            DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
 
             if ($type == 'void') {
                 DeliveryOrder::whereIn('sku', $do_skus)->update([
@@ -3611,26 +3635,6 @@ class SaleController extends Controller
                     'status' => Invoice::STATUS_VOIDED,
                 ]);
             } elseif ($type == 'transfer-back') {
-                $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id')->toArray();
-
-                for ($i = 0; $i < count($sales); $i++) {
-                    $convert_to = explode(',', $sales[$i]->convert_to);
-                    $new_convert_to = [];
-
-                    for ($j = 0; $j < count($convert_to); $j++) {
-                        if (! in_array($convert_to[$j], $do_ids)) {
-                            $new_convert_to[] = $convert_to[$j];
-                        }
-                    }
-
-                    $sales[$i]->convert_to = count($new_convert_to) == 0 ? null : implode(',', $new_convert_to);
-                    $sales[$i]->status = Sale::STATUS_ACTIVE;
-                    $sales[$i]->save();
-                }
-
-                $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id');
-                DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
-                DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
                 DeliveryOrder::whereIn('sku', $do_skus)->delete();
                 Invoice::whereIn('sku', $inv_skus)->delete();
 
