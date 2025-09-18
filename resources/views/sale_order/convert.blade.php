@@ -311,8 +311,8 @@
                                                         @endphp
                                                     @endforeach
                                                     <span
-                                                        class="text-sm">{{ $available_count }}/{{ count($pro->children) }}
-                                                        Assigned</span>
+                                                        class="text-sm"><span class="assigned" data-available-count="{{ $available_count }}">{{ $available_count }}</span>/{{ count($pro->children) }}
+                                                        {{ __('Assigned') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -493,6 +493,16 @@
             canConfirmStep5()
         })
         $('.products input[name="product_children"]').on('change', function() {
+            let spId = $(this).closest('.products').attr('data-sp-id')
+            let count = $(`.products[data-sp-id=${spId}] .assigned`).data('available-count')
+
+            $(`.products[data-sp-id=${spId}]`).find('input[name="product_children"]').each(function() {
+                if ($(this).is(':checked')) {
+                    count++
+                }
+            })
+            $(`.products[data-sp-id=${spId}] .assigned`).text(count)
+
             canConfirmStep5()
         })
         $('.products input[type="text"]').on('keyup', function() {
