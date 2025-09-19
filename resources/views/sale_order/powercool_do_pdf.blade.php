@@ -62,22 +62,35 @@
                         <tr>
                             <td style="font-size: 12px;">Your S/O No.</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;"></td>
+                            <td style="font-size: 12px;">
+                                @php
+                                    $skus = [];
+                                    for ($i = 0; $i < count($sale_orders); $i++) {
+                                        $skus[] = $sale_orders[$i]->sku;
+                                    }
+                                @endphp
+                                {{ join(', ', $skus) }}
+                            </td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Terms</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $terms == 'cod' ? 'C.O.D' : $terms . ' Days' }}</td>
+                            <td style="font-size: 12px;">{{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Salesperson</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;"></td>
+                            <td style="font-size: 12px;">{{ $salesperson->name }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Warehouse</td>
                             <td style="font-size: 12px;">:</td>
                             <td style="font-size: 12px;">{{ $warehouse }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 12px;">Store</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $store }}</td>
                         </tr>
                     </table>
                 </td>

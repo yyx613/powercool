@@ -25,8 +25,8 @@
         <table style="width: 100%;">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
-                    <img src="{{ public_path('images/image_1.jpg') }}" alt=""
-                        style="width: 50px; margin: 0 0 10px 0;">
+                    <img src="{{ public_path('images/barcode_logo.jpeg') }}" alt=""
+                        style="width: 50%; margin: 0 0 10px 0;">
                     <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
                     <p style="margin: 0; font-size: 10px;">{{ $product_name[$i] }}</p>
                 </td>
@@ -42,17 +42,17 @@
                                 {{ $barcode[$i] ?? ($product_code[$i] ?? '') }}</td>
                         </tr>
                         <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">DIMENSION:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">DIMENSION: (mm)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $dimension[$i] ?? '' }}</td>
                         </tr>
                         <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">CAPACITY:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">CAPACITY: (L)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $capacity[$i] ?? '' }}</td>
                         </tr>
                         <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">WEIGHT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">WEIGHT: (KG)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $weight[$i] ?? '' }}</td>
                         </tr>
@@ -60,11 +60,6 @@
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">REFRIGERANT:</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $refrigerant[$i] ?? '' }}</td>
-                        </tr>
-                        <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER INPUT:</td>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
-                                {{ $power_input[$i] ?? '' }}</td>
                         </tr>
                         <tr>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">VOLTAGE / FREQUENCY:
@@ -77,6 +72,11 @@
                             </td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $standard_features[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER CONSUMPTION: (KWH/24H)</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $power_input[$i] ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -106,11 +106,7 @@
                         Careline: 6012-3868743
                     </p>
                     <p style="margin: 20px 0 0 0; font-size: 10px; text-align: center;">Made In Malaysia</p>
-                    <p style="margin: 5px 0 0 0; font-size: 10px; text-align: center;">
-                        <span style="font-weight: 700; font-family: sans-serif;">Power Cool Equipments (M) Sdn Bhd</span><br>
-                        (Reg no.:199601010696 [383045-D])<br>
-                        No. 12, RCI Park, Jln Kesidang 2, Kws. Perindustrian Sg. Choh, 48200 Serendah, Sel.
-                    </p>
+                    <p style="margin: 5px 0 0 0; font-size: 10px; text-align: center;">www.imaxrefrigerator.com.my</p>
                 </td>
             </tr>
         </table>

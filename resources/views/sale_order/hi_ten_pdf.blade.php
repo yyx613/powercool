@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 415px 25px 50px 25px;
+        margin: 440px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -390px;
+        top: -415px;
         left: 0px;
         right: 0px;
     }
@@ -95,6 +95,11 @@
                             <td style="font-size: 14px;">Salesperson</td>
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;">{{ $saleperson->name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 14px;">Warehouse</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->warehouse ?? '' }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px;">Warehouse</td>
