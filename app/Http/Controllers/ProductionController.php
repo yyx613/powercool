@@ -753,7 +753,7 @@ class ProductionController extends Controller
 
                 Notification::send($receivers, new ProductionCompleteNotification([
                     'production_id' => $prod->id,
-                    'desc' => 'The production ('.$prod->sku.') is completed for product '. $prod->product->sku,
+                    'desc' => 'The production ('.$prod->sku.') is completed for product '. $prod->product->sku . ' ('.$prod->productChild->sku.')',
                 ]));
             }
 
