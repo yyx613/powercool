@@ -58,7 +58,12 @@
             <x-app.message.error id="cc_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="store" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
+            <x-app.input.label id="warehouse" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
+            <x-app.input.input name="warehouse" id="warehouse" value="{{ $warehouse ?? '' }}" :hasError="$errors->has('warehouse')" disabled="true" />
+            <x-app.message.error id="warehouse_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
             <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
                 value="{{ isset($replicate) ? $replicate->store : (isset($sale) ? $sale->store : null) }}" />
             <x-app.message.error id="store_err" />

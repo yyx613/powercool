@@ -146,6 +146,7 @@
                     'open_until': $('input[name="open_until"]').val(),
                     'reference': $('input[name="reference"]').val(),
                     'store': $('input[name="store"]').val(),
+                    'warehouse': $('input[name="warehouse"]').val(),
                     'from': $('input[name="from"]').val(),
                     'cc': $('input[name="cc"]').val(),
                     'status': $('select[name="status"]').val(),

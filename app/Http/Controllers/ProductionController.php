@@ -31,10 +31,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Maatwebsite\Excel\Facades\Excel;
 use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
@@ -44,13 +42,21 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 class ProductionController extends Controller
 {
     protected $prod;
+
     protected $userProd;
+
     protected $ms;
+
     protected $prodMs;
+
     protected $prodMsReject;
+
     protected $prodMsMaterial;
+
     protected $prodMsMaterialPreview;
+
     protected $product;
+
     protected $productChild;
 
     public function __construct()
@@ -125,9 +131,9 @@ class ProductionController extends Controller
         if ($type != null) {
             if ($type == 'new') {
                 $records = $records->where('status', $this->prod::STATUS_TO_DO);
-            } else if ($type == 'in-progress') {
+            } elseif ($type == 'in-progress') {
                 $records = $records->where('status', $this->prod::STATUS_DOING);
-            } else if ($type == 'completed') {
+            } elseif ($type == 'completed') {
                 $records = $records->where('status', $this->prod::STATUS_COMPLETED);
             }
         }
@@ -137,15 +143,15 @@ class ProductionController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('start_date', 'like', '%' . $keyword . '%')
-                    ->orWhere('due_date', 'like', '%' . $keyword . '%')
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('start_date', 'like', '%'.$keyword.'%')
+                    ->orWhere('due_date', 'like', '%'.$keyword.'%')
                     ->orWhereHas('priority', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%' . $keyword . '%');
+                        $q->where('name', 'like', '%'.$keyword.'%');
                     })
                     ->orWhereHas('productChild', function ($q) use ($keyword) {
-                        $q->where('sku', 'like', '%' . $keyword . '%');
+                        $q->where('sku', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -190,8 +196,8 @@ class ProductionController extends Controller
                 'priority' => $record->priority,
                 'can_edit' => hasPermission('production.edit') && $record->status == Production::STATUS_TO_DO,
                 'can_delete' => hasPermission('production.delete'),
-                'can_duplicate' => !$is_production_worker,
-                'can_view' => !$is_production_worker || $record->status == Production::STATUS_DOING,
+                'can_duplicate' => ! $is_production_worker,
+                'can_view' => ! $is_production_worker || $record->status == Production::STATUS_DOING,
             ];
         }
 
@@ -225,7 +231,7 @@ class ProductionController extends Controller
                 'default_sale' => $sale,
                 'default_start_date' => Carbon::parse($sale->created_at)->format('Y-m-d'),
                 'default_due_date' => Carbon::parse($sale->created_at)->addWeekdays(3)->format('Y-m-d'),
-                'customer_name' => $customer_name
+                'customer_name' => $customer_name,
             ];
         }
 
@@ -310,7 +316,7 @@ class ProductionController extends Controller
             'production_milestone_materials' => $production_milestone_materials,
             'material_use' => $material_use,
             'can_extend_due_date' => $can_extend_due_date,
-            'is_production_worker' => isProductionWorker()
+            'is_production_worker' => isProductionWorker(),
         ]);
     }
 
@@ -362,7 +368,7 @@ class ProductionController extends Controller
         // Validate request
         $req->validate($rules, [], [
             'desc' => 'description',
-            'material_use_product' => 'milestone'
+            'material_use_product' => 'milestone',
         ]);
 
         try {
@@ -423,7 +429,7 @@ class ProductionController extends Controller
             $old_ms_ids = [];
             $milestones = json_decode($req->material_use_product);
             for ($i = 0; $i < count($milestones); $i++) {
-                if (!$milestones[$i]->is_custom) {
+                if (! $milestones[$i]->is_custom) {
                     $old_ms_ids[] = $milestones[$i]->id;
                 }
             }
@@ -603,13 +609,13 @@ class ProductionController extends Controller
                     if (! isset($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.' . $products[$i]->id => "Material's serial no is required",
+                                'materials.'.$products[$i]->id => "Material's serial no is required",
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                     } elseif ($qty_needed != count($req->materials[$products[$i]->id])) {
                         return Response::json([
                             'errors' => [
-                                'materials.' . $products[$i]->id => 'Quantity needed is not tally',
+                                'materials.'.$products[$i]->id => 'Quantity needed is not tally',
                             ],
                         ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
                     }
@@ -747,7 +753,7 @@ class ProductionController extends Controller
 
                 Notification::send($receivers, new ProductionCompleteNotification([
                     'production_id' => $prod->id,
-                    'desc' => 'The production is completed',
+                    'desc' => 'The production ('.$prod->sku.') is completed for product '. $prod->product->sku,
                 ]));
             }
 
@@ -773,12 +779,12 @@ class ProductionController extends Controller
         // Check if reject reason is ticked, when it is spare part
         $pc_ids = $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
         for ($i = 0; $i < count($pc_ids); $i++) {
-            if ($req->{'product-child-' . $pc_ids[$i]} == null) {
+            if ($req->{'product-child-'.$pc_ids[$i]} == null) {
                 $pc = ProductChild::where('id', $pc_ids[$i])->first();
 
                 return Response::json([
                     'errors' => [
-                        'materials.' . $pc->parent->id => "Please fill up all reason",
+                        'materials.'.$pc->parent->id => 'Please fill up all reason',
                     ],
                 ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
             }
@@ -798,9 +804,9 @@ class ProductionController extends Controller
             ]);
             for ($i = 0; $i < count($pc_ids); $i++) {
                 $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->where('product_child_id', $pc_ids[$i])->update([
-                    'reject_reason' => $req->{'product-child-' . $pc_ids[$i]},
+                    'reject_reason' => $req->{'product-child-'.$pc_ids[$i]},
                 ]);
-                if ($req->{'product-child-' . $pc_ids[$i]} == 'broken') {
+                if ($req->{'product-child-'.$pc_ids[$i]} == 'broken') {
                     ProductChild::where('id', $pc_ids[$i])->update([
                         'status' => ProductChild::STATUS_BROKEN,
                     ]);
@@ -901,7 +907,7 @@ class ProductionController extends Controller
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $product_children[$i]->sku;
-            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
+            $data['dimension'][] = ($prod->length ?? 0).' x '.($prod->width ?? 0).' x '.($prod->height ?? 0).'MM';
             $data['capacity'][] = $prod->capacity;
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
@@ -956,9 +962,9 @@ class ProductionController extends Controller
                 'object_id' => $production->id,
                 'status' => Approval::STATUS_PENDING_APPROVAL,
                 'data' => json_encode([
-                    'description' => Auth::user()->name . ' has requested to complete the production (' . $production->sku . ')',
+                    'description' => Auth::user()->name.' has requested to complete the production ('.$production->sku.')',
                     'user_id' => Auth::user()->id,
-                ])
+                ]),
             ]);
             (new Branch)->assign(Approval::class, $approval->id);
 

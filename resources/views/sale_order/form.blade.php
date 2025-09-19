@@ -201,6 +201,8 @@
                     // 'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
 
                     'reference': $('input[name="reference_input"]').val(),
+                    'store': $('input[name="store"]').val(),
+                    'warehouse': $('input[name="warehouse"]').val(),
                     'status': $('select[name="status"]').val(),
                     'report_type': $('select[name="report_type"]').val(),
 

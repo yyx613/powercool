@@ -231,6 +231,7 @@ class SaleController extends Controller
 
             $data['customers'] = $customers;
         }
+        $data['warehouse'] = getCurrentUserWarehouse();
 
         return view('quotation.form', $data);
     }
@@ -263,6 +264,7 @@ class SaleController extends Controller
             'customers' => $customers,
             'is_view' => $is_view,
             'transfer_to' => $transfer_to,
+            'warehouse' => getCurrentUserWarehouse(),
         ]);
     }
 
@@ -500,6 +502,7 @@ class SaleController extends Controller
                 'status' => true,
                 'type' => 'so',
                 'store' => count($quos) > 1 ? null : (count($quos) > 0 ? $quos[0]->store : null),
+                'warehouse' => count($quos) > 1 ? null : (count($quos) > 0 ? $quos[0]->warehouse : null),
                 'report_type' => $req->report_type,
                 'product_id' => $products->map(function ($q) {
                     return $q->product_id;
@@ -1389,7 +1392,8 @@ class SaleController extends Controller
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => CustomerLocation::where('id', $req->delivery_address)->first(),
                 'terms' => Session::get('convert_terms'),
-                'warehouse' => $sale_orders[0]->store ?? '',
+                'warehouse' => $sale_orders[0]->warehouse ?? '',
+                'store' => $sale_orders[0]->store ?? '',
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
@@ -1475,6 +1479,7 @@ class SaleController extends Controller
             'customer' => 'required',
             'reference' => 'nullable',
             'store' => 'nullable',
+            'warehouse' => 'nullable',
             'from' => 'nullable|max:250',
             'cc' => 'nullable|max:250',
             'status' => 'required',
@@ -1567,7 +1572,6 @@ class SaleController extends Controller
             'custom_customer' => 'company',
             'custom_mobile' => 'mobile',
             'open_until' => 'validity',
-            'store' => 'warehouse',
             // upsertProDetails
             'product_id.*' => 'product',
             'product_desc.*' => 'product description',
@@ -1760,6 +1764,7 @@ class SaleController extends Controller
                 'customer' => 'required',
                 'reference' => 'nullable',
                 'store' => 'nullable',
+                'warehouse' => 'nullable',
                 'from' => 'nullable|max:250',
                 'cc' => 'nullable|max:250',
                 'status' => 'required',
@@ -1888,6 +1893,7 @@ class SaleController extends Controller
                     'custom_mobile' => $req->type == 'cash-sale' ? $req->custom_mobile : null,
                     'open_until' => $req->open_until,
                     'store' => $req->store,
+                    'warehouse' => $req->warehouse,
                     'reference' => $req->type == 'quo' ? $req->reference : json_encode(explode(',', $req->reference)),
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
@@ -1930,6 +1936,7 @@ class SaleController extends Controller
                     'open_until' => $req->open_until,
                     'reference' => $ref,
                     'store' => $req->store,
+                    'warehouse' => $req->warehouse,
                     'quo_from' => $req->from,
                     'quo_cc' => $req->cc,
                     'status' => $sale->status == Sale::STATUS_APPROVAL_PENDING ? $sale->status : $req->status,
@@ -2853,7 +2860,8 @@ class SaleController extends Controller
                 'terms' => $term_id,
                 'overall_total' => $overall_total,
                 'sale_orders' => $sale_orders,
-                'warehouse' => $sale_orders[0]->store ?? '',
+                'warehouse' => $sale_orders[0]->warehouse ?? '',
+                'store' => $sale_orders[0]->store ?? '',
                 'salesperson' => SalesAgent::where('id', Session::get('convert_salesperson_id'))->first(),
             ]);
             $pdf->setPaper('A4', 'letter');
@@ -3670,6 +3678,8 @@ class SaleController extends Controller
         $involved_so_skus = [];
         $to_search_inv_ids = [$inv_id];
         $searched_inv_ids = [];
+        $voided_invoice_ids = Invoice::where('status', Invoice::STATUS_VOIDED)->pluck('id')->toArray();
+        $voided_do_ids = DeliveryOrder::whereIn('invoice_id', $voided_invoice_ids)->pluck('id')->toArray();
 
         while (true) {
             $inv_id_to_search = null;
@@ -3678,7 +3688,7 @@ class SaleController extends Controller
             }
             $inv_id_to_search = $to_search_inv_ids[0];
 
-            $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search);
+            $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search, $voided_do_ids);
             $searched_inv_ids[] = $inv_id_to_search;
 
             if (isset($data['inv_ids'])) {
@@ -3706,13 +3716,13 @@ class SaleController extends Controller
         ];
     }
 
-    private function getCancellationInvolvedInvFlow(int $inv_id)
+    private function getCancellationInvolvedInvFlow(int $inv_id, array $voided_do_ids)
     {
         $so_skus = [];
         $do_skus = [];
         $inv_ids = [];
 
-        $do_ids = DeliveryOrder::where('invoice_id', $inv_id)->pluck('id')->toArray();
+        $do_ids = DeliveryOrder::whereNotIn('id', $voided_do_ids)->where('invoice_id', $inv_id)->pluck('id')->toArray();
 
         $sales = Sale::where('type', Sale::TYPE_SO);
 
@@ -3732,8 +3742,8 @@ class SaleController extends Controller
             }
 
             $so_skus[] = $sales[$i]->sku;
-            $do_skus = array_merge($do_skus, DeliveryOrder::whereIn('id', $sale_do_ids)->pluck('sku')->toArray());
-            $inv_ids = array_merge($inv_ids, DeliveryOrder::whereIn('id', $sale_do_ids)->whereNotNull('invoice_id')->pluck('invoice_id')->toArray());
+            $do_skus = array_merge($do_skus, DeliveryOrder::whereNotIn('id', $voided_do_ids)->whereIn('id', $sale_do_ids)->pluck('sku')->toArray());
+            $inv_ids = array_merge($inv_ids, DeliveryOrder::whereNotIn('id', $voided_do_ids)->whereIn('id', $sale_do_ids)->whereNotNull('invoice_id')->pluck('invoice_id')->toArray());
         }
 
         return [

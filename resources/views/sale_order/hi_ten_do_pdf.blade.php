@@ -33,7 +33,7 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 50px 10px 0; text-align: center;">
-                    <span style="font-size: 16px;">HI-TEN TRADING SDN BHD <span style="font-size: 12px;">[200501027542
+                    <span style="font-size: 16px; font-weight: 700;">HI-TEN TRADING SDN BHD <span style="font-size: 12px;">[200501027542
                             (709676-X)]</span></span><br>
                     <span style="font-size: 12px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
@@ -78,7 +78,7 @@
                         <tr>
                             <td style="font-size: 12px;">Terms</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $terms == 'cod' ? 'C.O.D' : $terms . ' Days' }}</td>
+                            <td style="font-size: 12px;">{{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Salesperson</td>
@@ -89,6 +89,11 @@
                             <td style="font-size: 12px;">Warehouse</td>
                             <td style="font-size: 12px;">:</td>
                             <td style="font-size: 12px;">{{ $warehouse }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 12px;">Store</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $store }}</td>
                         </tr>
                     </table>
                 </td>

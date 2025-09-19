@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 460px 25px 50px 25px;
+        margin: 480px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -435px;
+        top: -455px;
         left: 0px;
         right: 0px;
     }
@@ -25,7 +25,7 @@
         <!-- Header -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
+                <td style="width: 65%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
                     <span style="font-size: 16px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</span><br>
                     <span style="font-size: 10px;">[199601010696 (383045-D)]</span><br>
                     <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
@@ -36,7 +36,7 @@
                     <span style="font-size: 14px;">Email : enquiry@powercool.com.my</span><br>
                     <span style="font-size: 14px;">Sales Tax ID No : B16-1809-22000036</span><br>
                 </td>
-                <td style="width: 30%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
+                <td style="width: 35%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px; width: 45%; font-weight: 700;">Sale Order No</td>
@@ -70,6 +70,11 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px;">Warehouse</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->warehouse ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 14px;">Store</td>
                             <td style="font-size: 14px;">:</td>
                             <td style="font-size: 14px;">{{ $sale->store ?? '' }}</td>
                         </tr>

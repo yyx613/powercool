@@ -20,7 +20,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Material used for ') }}{{ $sale->sku }}</x-app.page-title>
+        <x-app.page-title url="{{ route('warranty.index') }}">{{ __('Material used for ') }}{{ $sale->sku }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

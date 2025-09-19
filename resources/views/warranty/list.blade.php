@@ -98,7 +98,10 @@
             columnDefs: [{
                     "targets": 0,
                     render: function(data, type, row) {
-                        return data
+                        if (row.is_voided == true) {
+                            return `${data} (voided)`
+                        }
+                        return `${data}`
                     }
                 },
                 {

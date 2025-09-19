@@ -118,7 +118,12 @@
                         <tr>
                             <td style="font-size: 14px;">Warehouse</td>
                             <td style="font-size: 14px;">:</td>
-                            <td style="font-size: 14px;">{{ $sale->store }}</td>
+                            <td style="font-size: 14px;">{{ $sale->warehouse ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 14px;">Store</td>
+                            <td style="font-size: 14px;">:</td>
+                            <td style="font-size: 14px;">{{ $sale->store ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
