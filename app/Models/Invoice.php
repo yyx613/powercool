@@ -18,6 +18,7 @@ class Invoice extends Model
     const STATUS_TRANSFERRED_TO_DRAFT = 2;
     const STATUS_APPROVED = 3;
     const STATUS_REJECTED = 4;
+    const STATUS_VALID = 5;
 
     protected $guarded = [];
 

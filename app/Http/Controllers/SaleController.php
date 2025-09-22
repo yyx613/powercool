@@ -1226,7 +1226,6 @@ class SaleController extends Controller
                         }
                     }
                 }
-
                 $customers = Customer::whereIn('id', $customer_ids)->get();
                 $loop = false;
             }
@@ -3173,6 +3172,7 @@ class SaleController extends Controller
                 'draft_e_invoices.id AS id',
                 'invoices.id AS invoice_id',
                 'invoices.sku AS transfer_from',
+                'invoices.company AS company',
                 'invoices.date AS date',
                 'customers.sku AS debtor_code',
                 'customers.company_name AS debtor_name',
@@ -3261,6 +3261,7 @@ class SaleController extends Controller
                 'debtor_code' => $record->debtor_code,
                 'transfer_from' => $record->transfer_from,
                 'debtor_name' => $record->debtor_name,
+                'company' => $record->company ?? null,
                 'agent' => $record->agent ?? null,
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($total_amount, 2),
@@ -3303,37 +3304,86 @@ class SaleController extends Controller
         }
     }
 
-    public function approveDraftEInvoice(DraftEInvoice $draft)
+    public function approveDraftEInvoice(Request $request)
     {
         try {
             DB::beginTransaction();
 
-            // Submit einvoice
-            $req = new Request([
-                'invoices' => [
-                    [
-                        'id' => $draft->invoice_id,
-                    ],
-                ],
-                'company' => Invoice::where('id', $draft->invoice_id)->value('company'),
-            ]);
-            // Check to use back transferred SO sku
-            $res = (new EInvoiceController)->submit($req);
-            if ($res->getStatusCode() > 299) {
-                throw new Exception($res->getData()->message);
+            $draftIds = collect($request->input('invoices', []))
+                ->pluck('id')
+                ->filter()
+                ->all();
+
+            if (empty($draftIds)) {
+                return response()->json([
+                    'error' => 'No draft IDs provided',
+                ], 422);
             }
 
-            $draft->status = DraftEInvoice::STATUS_APPROVED;
-            $draft->save();
+            $drafts = DraftEInvoice::whereIn('id', $draftIds)->get();
 
-            Invoice::where('id', $draft->invoice_id)->update([
-                'status' => Invoice::STATUS_APPROVED,
-            ]);
+            if ($drafts->isEmpty()) {
+                return response()->json([
+                    'error' => 'No drafts found for provided IDs',
+                ], 404);
+            }
+
+            $company = $request->input('company');
+
+            $invoicesData = [];
+            foreach ($drafts as $draft) {
+                $invoice = Invoice::find($draft->invoice_id);
+                $delivery = DeliveryOrder::where('invoice_id', $draft->invoice_id)->first();
+                $deliveryProduct = $delivery?->products()->first();
+                $saleProduct = $deliveryProduct?->saleProduct;
+                $sale = $saleProduct?->sale;
+                $customer = $sale?->customer;
+
+                if (!$customer || !$customer->tin_number) {
+                    $invoice?->update([
+                        'status' => Invoice::STATUS_APPROVED,
+                    ]);
+                    $draft->status = DraftEInvoice::STATUS_APPROVED;
+                    $draft->save();
+                } else {
+                    $invoicesData[] = ['id' => $draft->invoice_id];
+                }
+            }
+
+            if (!empty($invoicesData)) {
+                $req = new Request([
+                    'invoices' => $invoicesData,
+                    'company' => $company,
+                ]);
+
+                $res = (new EInvoiceController)->submit($req);
+                $data = $res->getData(true);
+
+                if (!empty($data['errorDetails'])) {
+                    DB::rollBack();
+                    return $res;
+                } elseif ($res->getStatusCode() > 299) {
+                    DB::rollBack();
+                    return $res;
+                }
+
+                foreach ($invoicesData as $invData) {
+                    $draft = DraftEInvoice::where('invoice_id', $invData['id'])->first();
+                    if ($draft) {
+                        $draft->status = DraftEInvoice::STATUS_VALID;
+                        $draft->save();
+                    }
+
+                    Invoice::where('id', $invData['id'])->update([
+                        'status' => Invoice::STATUS_APPROVED,
+                    ]);
+                }
+            }
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Document approved',
+                'message' => 'Documents approved',
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -3345,6 +3395,8 @@ class SaleController extends Controller
             ], 500);
         }
     }
+
+
 
     public function indexEInvoice()
     {
@@ -3390,12 +3442,35 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            if( $record->einvoiceable instanceof Invoice){
+                $invoice = $record->einvoiceable;
+                $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
+                $deliveryProduct = $delivery?->products()->first();
+                $saleProduct = $deliveryProduct?->saleProduct;
+                $sale = $saleProduct?->sale;
+                $customer = $sale?->customer;
+            }
+
+            $dos = DeliveryOrder::where('invoice_id', $invoice->id)->get();
+            $total_amount = 0;
+
+            for ($i = 0; $i < count($dos); $i++) {
+                $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$dos[$i]->id."', convert_to)")->get();
+                for ($j = 0; $j < count($sos); $j++) {
+                    $total_amount += $sos[$j]->getTotalAmount();
+                }
+            }
+
             $data['data'][] = [
                 'uuid' => $record->uuid,
                 'status' => $record->status,
                 'submission_date' => $record->submission_date,
+                'validation_link' => (new EInvoiceController)->generateValidationLink($record->uuid, $record->longId),
                 'id' => $record->id,
                 'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing',
+                'debtor_name' => $customer?->company_name,
+                'total' => $total_amount,
+                'invoice_date'=>$invoice->date
             ];
         }
 

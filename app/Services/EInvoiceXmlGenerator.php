@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BillingProduct;
+use App\Models\ClassificationCode;
 use App\Models\ConsolidatedEInvoice;
 use App\Models\CreditNote;
 use App\Models\Customer;
@@ -65,9 +66,13 @@ class EInvoiceXmlGenerator
 
         // 添加 <cbc:IssueDate> 元素
         // $dateTime = new DateTime("now", new DateTimeZone("UTC+8")); // 设置时区为 UTC+8
-        $invoiceCreatedAt = new DateTime($invoice->date, new DateTimeZone("UTC"));
+        $invoiceCreatedAt = new DateTime($invoice->date);
+        $invoiceCreatedAt->setTimezone(new DateTimeZone("UTC"));
+        $invoiceCreatedAt->modify('-5 second');
+
         $currentTime = new DateTime("now", new DateTimeZone("UTC"));
-        
+        $currentTime->modify('-5 second');
+
         $timeDiff = $currentTime->getTimestamp() - $invoiceCreatedAt->getTimestamp();
         $hoursDiff = $timeDiff / 3600;
         
@@ -373,7 +378,7 @@ class EInvoiceXmlGenerator
                     'Exempt New Means of Transport',
                     $saleProduct->desc ?? 'No Description',
                     'MYS', // Origin country
-                    $saleProduct->product->classificationCodes,
+                    [ClassificationCode::where('code','004')->first()],
                     $saleProduct->unit_price,
                     $lineExtensionAmount,
                     true

@@ -16,6 +16,7 @@ class DraftEInvoice extends Model
     const STATUS_APPROVED = 1;
     const STATUS_REJECTED = 3;
     const STATUS_SUBMITTED_TO_EINVOICE = 2;
+    const STATUS_VALID = 4;
 
     protected $table = 'draft_e_invoices';
     protected $guarded = [];

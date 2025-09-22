@@ -239,7 +239,7 @@
                     "width": "10%",
                     "targets": 5,
                     render: function(data, type, row) {
-                        return `${row.debtor_name}, ${row.debtor_company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
+                        return `${row.debtor_name}, ${row.company === 'powercool' ? 'Power Cool' : 'Hi-Ten'}`
                     }
                 },
                 {

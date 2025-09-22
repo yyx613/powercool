@@ -48,6 +48,9 @@
             <thead>
                 <tr>
                     <th>{{ __('UUID') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Invoice Date') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th>{{ __('From') }}</th>
                     <th>{{ __('Submission Date') }}</th>
@@ -80,6 +83,9 @@
             order: [],
             columns: [
                 { data: 'uuid' },
+                { data: 'debtor_name' },
+                { data: 'total' },
+                { data: 'invoice_date' },
                 { data: 'status' },
                 { data: 'from' },
                 { data: 'submission_date' },
@@ -104,7 +110,7 @@
                     "width": "10%",
                     "targets": 2,
                     render: function(data, type, row) {
-                        return data
+                        return `RM ${data}`
                     }
                 },
                 { 
@@ -115,14 +121,41 @@
                     }
                 },
                 { 
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 4,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "10%",
+                    "targets": 6,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                { 
+                    "width": "5%",
+                    "targets": 7,
                     orderable: false,
                     render: function (data, type, row) {
                         const submissionDate = new Date(row.submission_date);
                         const currentDate = new Date();
                         const hoursDifference = Math.abs(currentDate - submissionDate) / 36e5;
                         return  `<div class="flex items-center justify-end gap-x-2 px-2">
+                            <a href="${row.validation_link}" class="rounded-full p-2 bg-gray-200 inline-block" target="_blank" title="Link For E-Invoice">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link" viewBox="0 0 16 16">
+                                <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9q-.13 0-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z"/>
+                                <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4 4 0 0 1-.82 1H12a3 3 0 1 0 0-6z"/>
+                                </svg>                            
+                            </a>
                             ${row.status !== "Cancelled" && hoursDifference <= 72 ? `
                                 <a href="#" class="rounded-full p-2 bg-green-200 inline-block" target="_blank" id="cancel_document" data-id="${row.uuid}" title="{!! __('Cancel Document') !!}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">

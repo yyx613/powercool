@@ -209,6 +209,7 @@ class EInvoiceController extends Controller
         $selectedInvoices = $request->input('invoices');
         $company = $request->input('company');
         $now = now();
+        
 
         $overdueInvoices = [];
         foreach ($selectedInvoices as $invoiceData) {
@@ -258,6 +259,7 @@ class EInvoiceController extends Controller
                 'documents' => $documents,
             ];
             $response = Http::withHeaders($headers)->post($url, $payload);
+            Log::info('e-invoice resposne for'. $invoice->sku,$response->json());
             if ($response->successful()) {
                 DB::beginTransaction();
                 try {
@@ -285,12 +287,14 @@ class EInvoiceController extends Controller
                         if (! $invoice->einvoice) {
                             $invoice->einvoice()->create([
                                 'uuid' => $uuid,
+                                'longId' => $documentDetails['longId'],
                                 'status' => 'Valid',
                                 'submission_date' => Carbon::now(),
                             ]);
                         } else {
                             $invoice->einvoice->update([
                                 'uuid' => $uuid,
+                                'longId' => $documentDetails['longId'],
                                 'status' => 'Valid',
                                 'submission_date' => Carbon::now(),
                             ]);
@@ -391,7 +395,16 @@ class EInvoiceController extends Controller
             'invoices' => 'required|array',
             'invoices.*.id' => 'required|integer',
         ]);
-        $invoices = $request->input('invoices');
+        $draftIds = collect($request->input('invoices', []))
+            ->pluck('id')
+            ->filter()
+            ->all();
+        $drafts = DraftEInvoice::whereIn('id', $draftIds)->get();
+        $invoicesData = [];
+        foreach ($drafts as $draft) {
+            $invoicesData[] = ['id' => $draft->invoice_id];
+        }
+        $invoices = $invoicesData;
         $company = $request->input('company');
 
         $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
@@ -411,6 +424,17 @@ class EInvoiceController extends Controller
             $consolidated = ConsolidatedEInvoice::create([
                 'sku' => $sku,
             ]);
+            foreach ($invoicesData as $invData) {
+                $draft = DraftEInvoice::where('invoice_id', $invData['id'])->first();
+                if ($draft) {
+                    $draft->status = DraftEInvoice::STATUS_VALID;
+                    $draft->save();
+                }
+
+                Invoice::where('id', $invData['id'])->update([
+                    'status' => Invoice::STATUS_APPROVED,
+                ]);
+            }
 
             $document = $this->xmlGenerator->generateConsolidatedXml($invoices, $consolidated, $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin);
 
@@ -426,6 +450,8 @@ class EInvoiceController extends Controller
             ];
 
             $response = Http::withHeaders($headers)->post($url, $payload);
+            Log::info('consolidated',$response->json());
+
             if ($response->successful()) {
 
                 $consolidated->invoices()->sync(array_column($invoices, 'id'));
@@ -500,10 +526,10 @@ class EInvoiceController extends Controller
                 'Accept' => 'application/json',
                 'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
             ];
-            $maxRetries = 10;
+            $maxRetries = 15;
             $retryCount = 0;
             $delay = 3;
-            while ($retryCount < $maxRetries) {
+           while ($retryCount < $maxRetries) {
                 sleep($delay);
                 $response = Http::withHeaders($headers)->get($url);
                 if ($response->successful()) {
@@ -527,16 +553,19 @@ class EInvoiceController extends Controller
                         return [
                             'uuid' => $response->json()['uuid'] ?? null,
                             'longId' => $longId,
+                            'dateTimeValidated' => Carbon::parse($response->json()['dateTimeValidated'])
+                                ->setTimezone('Asia/Kuala_Lumpur')
+                                ->format('Y-m-d H:i:s')
                         ];
                     }
-                } else {
-                    return ['error' => $response->body(), 'message' => $response->body()];
                 }
 
                 $retryCount++;
             }
         } catch (\Throwable $th) {
-            dd($th);
+            Log::error('Failed to get document details', [
+                'error' => $th->getMessage(),
+            ]);
         }
 
         return ['error' => 'Failed to retrieve longId after multiple attempts'];

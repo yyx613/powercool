@@ -327,7 +327,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/draft-e-invoice', 'indexDraftEInvoice')->name('draft-e-invoice.index');
             Route::get('/get-data-draft-e-invoice', 'getDataDraftEInvoice')->name('get_data_draft_e_invoice');
             Route::get('/reject-draft-e-invoice/{draft}', 'rejectDraftEInvoice')->name('reject_draft_e_invoice');
-            Route::get('/approve-draft-e-invoice/{draft}', 'approveDraftEInvoice')->name('approve_draft_e_invoice');
+            Route::post('/approve-draft-e-invoice', 'approveDraftEInvoice')->name('approve_draft_e_invoice');
             Route::get('/e-invoice', 'indexEInvoice')->name('e-invoice.index');
             Route::get('/get-data-e-invoice', 'getDataEInvoice')->name('get_data_e-invoice');
             Route::get('/consolidated-e-invoice', 'indexConsolidatedEInvoice')->name('consolidated-e-invoice.index');
