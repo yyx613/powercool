@@ -1403,6 +1403,8 @@ class SaleController extends Controller
             for ($i = 0; $i < count($sale_orders); $i++) {
                 if ($sale_orders[$i]->hasNoMoreQtyToConvertDO()) {
                     $sale_orders[$i]->status = Sale::STATUS_CONVERTED;
+                } else {
+                    $sale_orders[$i]->status = Sale::STATUS_PARTIALLY_CONVERTED;
                 }
 
                 $current_do_ids = [];
