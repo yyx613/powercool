@@ -2603,7 +2603,6 @@ class SaleController extends Controller
                 'invoices.sku AS transfer_to',
                 'delivery_orders.transport_ack_filename',
                 'approvals.status AS approval_status',
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) - COALESCE(sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->where('branches.object_type', DeliveryOrder::class)
@@ -2690,6 +2689,16 @@ class SaleController extends Controller
             $filename = config('app.url').str_replace('public', $path, self::DELIVERY_ORDER_PATH).$record->filename;
             $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url').str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).$record->transport_ack_filename;
 
+            $total_amount = 0;
+            $dop_ids = DeliveryOrderProduct::withTrashed()->where('delivery_order_id', $record->id)->pluck('id')->toArray();
+            $dopcs = DeliveryOrderProductChild::withTrashed()->whereIn('delivery_order_product_id', $dop_ids)->get();
+            for ($i = 0; $i < count($dopcs); $i++) {
+                $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
+                $unit_price = $sp->override_selling_price ?? $sp->unit_price;
+                $discount = ($sp->discount / $sp->qty);
+                $total_amount += $unit_price - $discount;
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -2701,7 +2710,7 @@ class SaleController extends Controller
                 'debtor_company_group' => $record->company_group,
                 'agent' => $record->agent,
                 'curr_code' => $record->curr_code ?? null,
-                'total' => number_format($record->total_amount, 2),
+                'total' => number_format($total_amount, 2),
                 'created_by' => $record->created_by ?? null,
                 'status' => $record->status,
                 'filename' => $filename,
@@ -2816,8 +2825,8 @@ class SaleController extends Controller
 
                             if ($j + 1 == count($dopcs)) {
                                 $unit_price = $dopcs[$j]->doProduct->saleProduct->override_selling_price ?? $dopcs[$j]->doProduct->saleProduct->unit_price;
-                                $discount = $dopcs[$j]->doProduct->saleProduct->discount;
-                                $total = (count($serial_no) * $unit_price) - (count($serial_no) * $discount);
+                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->discount / $dopcs[$i]->doProduct->saleProduct->qty);
+                                $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
                                     'model_name' => $dopcs[$j]->productChild->parent->model_name,
@@ -3124,13 +3133,13 @@ class SaleController extends Controller
             // Total amount
             $total_amount = 0;
             if (count($dos) > 0) {
-                $dop_ids = DeliveryOrderProduct::where('delivery_order_id', $dos[0]->id)->pluck('id')->toArray();
-                $dopcs = DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->get();
-
+                $dop_ids = DeliveryOrderProduct::withTrashed()->where('delivery_order_id', $dos[0]->id)->pluck('id')->toArray();
+                $dopcs = DeliveryOrderProductChild::withTrashed()->whereIn('delivery_order_product_id', $dop_ids)->get();
                 for ($i = 0; $i < count($dopcs); $i++) {
-                    $unit_price = $dopcs[$i]->doProduct->saleProduct->override_selling_price ?? $dopcs[$i]->doProduct->saleProduct->unit_price;
-                    $discount = $dopcs[$i]->doProduct->saleProduct->discount;
-                    $total_amount = (count($dopcs) * $unit_price) - (count($dopcs) * $discount);
+                    $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
+                    $unit_price = $sp->override_selling_price ?? $sp->unit_price;
+                    $discount = ($sp->discount / $sp->qty);
+                    $total_amount += $unit_price - $discount;
                 }
             }
 

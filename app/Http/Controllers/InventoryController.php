@@ -60,8 +60,8 @@ class InventoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('factory', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('factory', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -113,9 +113,9 @@ class InventoryController extends Controller
             $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->orWhere('model_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%');
+                $q->orWhere('model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('sku', 'like', '%'.$keyword.'%');
             });
         }
         // Category
@@ -213,7 +213,7 @@ class InventoryController extends Controller
                 return redirect(route('inventory_category.create'))->with('success', 'Inventory Category created');
             }
 
-            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category ' . ($req->category_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category '.($req->category_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -305,7 +305,7 @@ class InventoryController extends Controller
                 $product_child->stock_out_to_type = null;
                 $product_child->stock_out_at = null;
                 $product_child->save();
-            } else if ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
+            } elseif ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
                 // Update status from transferred child
                 $this->prodChild::where('id', $product_child->transferred_from)->update([
                     'status' => $this->prodChild::STATUS_RECEIVED,
@@ -347,9 +347,17 @@ class InventoryController extends Controller
                 $product_child->product_id = $product_child->parent->hi_ten_stock_code;
                 $product_child->save();
             } else {
+                if ($req->stock_out_to === 'production') {
+                    $stock_out_to_type = Production::class;
+                } elseif ($req->stock_out_to === 'customer') {
+                    $stock_out_to_type = Customer::class;
+                } else {
+                    $stock_out_to_type = User::class;
+                }
+
                 $product_child->status = $this->prodChild::STATUS_STOCK_OUT;
                 $product_child->stock_out_by = Auth::user()->id;
-                $product_child->stock_out_to_type = $req->stock_out_to === 'production' ? Production::class : ($req->stock_out_to == 'customer' ? Customer::class : User::class);
+                $product_child->stock_out_to_type = $stock_out_to_type;
                 $product_child->stock_out_to_id = $req->stock_out_to_selection;
                 $product_child->stock_out_at = now();
                 $product_child->save();
@@ -359,6 +367,9 @@ class InventoryController extends Controller
                     $product_child->save();
                     $product_child->parent->in_production = true;
                     $product_child->parent->save();
+                } elseif ($req->stock_out_to == 'product') {
+                    $product_child->product_id = $req->stock_out_to_selection;
+                    $product_child->save();
                 }
             }
 
@@ -470,9 +481,9 @@ class InventoryController extends Controller
                 'object_id' => $product_child->id,
                 'status' => Approval::STATUS_PENDING_APPROVAL,
                 'data' => json_encode([
-                    'description' => Auth::user()->name . ' has requested the product ' . $product_child->parent->model_name . ' with serial number (' . $product_child->sku . ') back to warehouse',
+                    'description' => Auth::user()->name.' has requested the product '.$product_child->parent->model_name.' with serial number ('.$product_child->sku.') back to warehouse',
                     'user_id' => Auth::user()->id,
-                ])
+                ]),
             ]);
             (new Branch)->assign(Approval::class, $approval->id);
 
@@ -510,7 +521,7 @@ class InventoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -603,7 +614,7 @@ class InventoryController extends Controller
                 return redirect(route('inventory_type.create'))->with('success', 'Inventory Type created');
             }
 
-            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type ' . ($req->type_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type '.($req->type_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

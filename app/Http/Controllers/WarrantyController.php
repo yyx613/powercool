@@ -71,7 +71,8 @@ class WarrantyController extends Controller
             });
 
         $invs = DB::table('invoices')
-            ->select('id AS inv_id', 'sku AS inv_sku', 'status AS inv_status', 'created_at');
+            ->select('id AS inv_id', 'sku AS inv_sku', 'status AS inv_status', 'created_at')
+            ->whereNull('deleted_at');
 
         $dos = DB::table('delivery_orders')
             ->select('delivery_orders.id AS do_id', 'inv.inv_id AS inv_id', 'inv.inv_sku AS inv_sku', 'inv.inv_status AS inv_status', 'inv.created_at AS inv_created_at')
@@ -109,8 +110,9 @@ class WarrantyController extends Controller
 
         $records = DB::table('product_children')
             ->select(
-                'product_children.sku AS serial_no',
-                'dopcs.inv_id AS inv_id', 'dopcs.inv_sku AS inv_sku', 'dopcs.inv_status AS inv_status', 'dopcs.so_id', 'dopcs.customer_name AS customer_name',
+                'product_children.id AS pc_id', 'product_children.sku AS serial_no',
+                'dopcs.inv_id AS inv_id', 'dopcs.inv_sku AS inv_sku', 'dopcs.inv_status AS inv_status',
+                'dopcs.so_id', 'dopcs.customer_name AS customer_name',
                 'dopcs.warranty', 'dopcs.warranty_period', 'dopcs.inv_created_at',
                 'prods.model_name AS product_name',
             )
@@ -163,6 +165,7 @@ class WarrantyController extends Controller
             $data['data'][] = [
                 'sale_order_id' => $record->so_id,
                 'invoice_sku' => $record->inv_sku,
+                'pc_id' => $record->pc_id,
                 'is_voided' => $record->inv_status == Invoice::STATUS_VOIDED,
                 'customer_name' => $record->customer_name,
                 'product_name' => $record->product_name,
@@ -175,8 +178,11 @@ class WarrantyController extends Controller
         return response()->json($data);
     }
 
-    public function view(Sale $sale)
+    public function view(Sale $sale, ProductChild $pc)
     {
+        Session::put('warranty-create-sale-id', $sale->id);
+        Session::put('warranty-create-pc-id', $pc->id);
+
         return view('warranty.view', [
             'sale' => $sale,
         ]);
@@ -190,7 +196,10 @@ class WarrantyController extends Controller
 
         $task_ids = $this->task::where('sale_order_id', $req->sale_id)->pluck('id');
         $task_ms_ids = $this->taskMs::whereIn('task_id', $task_ids)->pluck('id');
-        $records = $this->taskMsInventory::whereIn('task_milestone_id', $task_ms_ids);
+        $records = $this->taskMsInventory::whereIn('task_milestone_id', $task_ms_ids)
+            ->orWhere(function($q) {
+                $q->where('pc_id', Session::get('warranty-create-pc-id'));
+            });
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -225,5 +234,40 @@ class WarrantyController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function create()
+    {
+        $pcs = ProductChild::get();
+
+        return view('warranty.form', [
+            'pcs' => $pcs,
+            'back_url' => route('warranty.view', [
+                'sale' => Session::get('warranty-create-sale-id'),
+                'pc' => Session::get('warranty-create-pc-id'),
+            ]),
+        ]);
+    }
+
+    public function store(Request $req)
+    {
+        $req->validate([
+            'serial_no' => 'required',
+            'qty' => 'required',
+        ], [], [
+            'qty' => 'quantity',
+        ]);
+
+        TaskMilestoneInventory::create([
+            'inventory_type' => ProductChild::class,
+            'inventory_id' => $req->serial_no,
+            'qty' => $req->qty,
+            'pc_id' => Session::get('warranty-create-pc-id'),
+        ]);
+
+        return redirect(route('warranty.view', [
+            'sale' => Session::get('warranty-create-sale-id'),
+            'pc' => Session::get('warranty-create-pc-id'),
+        ]))->with('success', 'Material used created');
     }
 }
