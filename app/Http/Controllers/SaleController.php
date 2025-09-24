@@ -3367,7 +3367,7 @@ class SaleController extends Controller
 
                 $res = (new EInvoiceController)->submit($req);
                 $data = $res->getData(true);
-
+                Log::info($data);
                 if (!empty($data['errorDetails'])) {
                     DB::rollBack();
                     return $res;
