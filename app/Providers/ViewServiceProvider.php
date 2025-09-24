@@ -477,10 +477,12 @@ class ViewServiceProvider extends ServiceProvider
             $technicians = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::TECHNICIAN);
             })->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->get();
 
             $view->with([
                 'customers' => $customers,
                 'technicians' => $technicians,
+                'products' => $products,
             ]);
         });
         View::composer(['production.form'], function (ViewView $view) {
@@ -697,7 +699,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
-            $delivery_orders = DeliveryOrder::whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
+            $delivery_orders = DeliveryOrder::whereNot('status', DeliveryOrder::STATUS_VOIDED)->whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
             $dealers = Dealer::orderBy('id', 'desc')->get();
             $types = [
                 DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',

@@ -60,7 +60,7 @@
                     <tr>
                         <td style="font-size: 14px; border: solid 1px black; padding: 5px; font-family: sans-serif;">
                             {{ $is_delivery ? 'Delivery To' : 'Collection From' }}: <br>
-                            {{ $address }}
+                            {!! $address !!}
                         </td>
                     </tr>
                 </table>
