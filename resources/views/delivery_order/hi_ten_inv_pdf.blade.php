@@ -25,7 +25,8 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="width: 70%; border-bottom: solid 1px black; padding: 0 50px 10px 0; text-align: center;">
-                    <span style="font-size: 16px; font-weight: 700;">HI-TEN TRADING SDN BHD <span style="font-size: 12px;">[200501027542
+                    <span style="font-size: 16px; font-weight: 700;">HI-TEN TRADING SDN BHD <span
+                            style="font-size: 12px;">[200501027542
                             (709676-X)]</span></span><br>
                     <span style="font-size: 12px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
@@ -62,7 +63,9 @@
                                 @php
                                     $skus = [];
                                     for ($i = 0; $i < count($sale_orders); $i++) {
-                                        $skus[] = $sale_orders[$i]->sku;
+                                        if (!in_array($sale_orders[$i]->sku, $skus)) {
+                                            $skus[] = $sale_orders[$i]->sku;
+                                        }
                                     }
                                 @endphp
                                 {{ join(', ', $skus) }}
@@ -71,7 +74,8 @@
                         <tr>
                             <td style="font-size: 12px;">Terms</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
+                            <td style="font-size: 12px;">
+                                {{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Salesperson</td>
@@ -311,11 +315,6 @@
             </tr>
             <tr>
                 <td style="font-size: 12px; vertical-align: start;">6.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Prices are subjected to change without
-                    prior notice.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">7.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">For more information about our policies,
                     please visit our website at:
                     <a href="https://imaxrefrigerator.com.my/warranty-policy"
@@ -326,17 +325,17 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">8.</td>
+                <td style="font-size: 12px; vertical-align: start;">7.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Customer collect\ unloading\ handling by
                     own, Warranty will be bear by customer.</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">9.</td>
+                <td style="font-size: 12px; vertical-align: start;">8.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Wear and tear not included in Warranty
                     Claim.</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">10.</td>
+                <td style="font-size: 12px; vertical-align: start;">9.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">
                     The warranty will be considered void if the refrigerator has been modified or its original
                     specifications
@@ -344,18 +343,22 @@
                 </td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">11.</td>
+                <td style="font-size: 12px; vertical-align: start;">10.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Request E-invoice after 72hrs which
                     original invoice have validated by IRB will be charge 5% of
                     the total invoice amount.</td>
             </tr>
             <tr>
-                <td style="font-size: 12px; vertical-align: start;">12.</td>
+                <td style="font-size: 12px; vertical-align: start;">11.</td>
                 <td style="font-size: 12px; width: 100%; text-align: left;">Company will not obligation on those
                     customers are not require to issue E-invoice.</td>
             </tr>
+            <tr>
+                <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="2">This is a computer generated
+                    documents no signature required except for the acknowledgement signature by customer.</td>
+            </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        {{-- <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td style="font-size: 12px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">HI-TEN TRADING
                     SDN
@@ -370,7 +373,7 @@
                 <td></td>
                 <td></td>
             </tr>
-        </table>
+        </table> --}}
     </footer>
 
 </body>

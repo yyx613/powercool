@@ -477,10 +477,12 @@ class ViewServiceProvider extends ServiceProvider
             $technicians = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::TECHNICIAN);
             })->orderBy('id', 'desc')->get();
+            $products = Product::where('type', Product::TYPE_PRODUCT)->get();
 
             $view->with([
                 'customers' => $customers,
                 'technicians' => $technicians,
+                'products' => $products,
             ]);
         });
         View::composer(['production.form'], function (ViewView $view) {

@@ -16,6 +16,7 @@ class Attachment extends Model
     const USER_PATH = 'public/attachments/user';
     const TICKET_PATH = 'public/attachments/ticket';
     const TASK_MILESTONE_PATH = 'public/attachments/task_milestone';
+    const TASK_MILESTONE_INVENTORY_PATH = 'public/attachments/task_milestone_inventory';
     const PRODUCT_PATH = 'public/attachments/product';
 
     protected $guarded = [];
@@ -41,6 +42,8 @@ class Attachment extends Model
                 return config('app.url') . str_replace('public', $path, self::TICKET_PATH) . '/' . $this->src;
             case TaskMilestone::class:
                 return config('app.url') . str_replace('public', $path, self::TASK_MILESTONE_PATH) . '/' . $this->src;
+            case TaskMilestoneInventory::class:
+                return config('app.url') . str_replace('public', $path, self::TASK_MILESTONE_INVENTORY_PATH) . '/' . $this->src;
             case Product::class:
                 return config('app.url') . str_replace('public', $path, self::PRODUCT_PATH) . '/' . $this->src;
         }

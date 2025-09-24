@@ -58,7 +58,9 @@
                                 @php
                                     $skus = [];
                                     for ($i = 0; $i < count($sale_orders); $i++) {
-                                        $skus[] = $sale_orders[$i]->sku;
+                                        if (!in_array($sale_orders[$i]->sku, $skus)) {
+                                            $skus[] = $sale_orders[$i]->sku;
+                                        }
                                     }
                                 @endphp
                                 {{ join(', ', $skus) }}
@@ -67,7 +69,8 @@
                         <tr>
                             <td style="font-size: 12px;">Terms</td>
                             <td style="font-size: 12px;">:</td>
-                            <td style="font-size: 12px;">{{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
+                            <td style="font-size: 12px;">
+                                {{ $terms == null ? null : ($terms == 'cod' ? 'C.O.D' : $terms . ' Days') }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Salesperson</td>
@@ -355,9 +358,13 @@
                 customers are not require to issue E-invoice.
             </td>
         </tr>
+        <tr>
+            <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="2">This is a computer generated
+                documents no signature required except for the acknowledgement signature by customer.</td>
+        </tr>
     </table>
 
-    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+    {{-- <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
             <td style="font-size: 11px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">POWER COOL
                 EQUIPMENTS (M) SDN BHD</td>
@@ -371,7 +378,7 @@
             <td></td>
             <td></td>
         </tr>
-    </table>
+    </table> --}}
 
 </body>
 

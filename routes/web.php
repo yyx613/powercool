@@ -167,8 +167,10 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(WarrantyController::class)->prefix('warranty')->name('warranty.')->middleware(['can:warranty.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/view/{sale}', 'view')->name('view');
+        Route::get('/view/{sale}/{pc}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
     });
     // Service Reminder
     Route::controller(InventoryServiceReminderController::class)->prefix('service-reminder')->name('service_reminder.')->middleware(['can:service_reminder.view'])->group(function () {
@@ -184,6 +186,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/export', 'export')->name('export');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
@@ -365,7 +369,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{target}', 'editTarget')->name('edit');
             Route::post('/update/{target}', 'updateTarget')->name('update');
         });
-        // Sale Cancellation 
+        // Sale Cancellation
         Route::prefix('sale-cancellation')->name('sale_cancellation.')->middleware(['can:sale.target.view'])->group(function () {
             Route::get('/', 'indexSaleCancellation')->name('index');
             Route::get('/get-data', 'getDataSaleCancellation')->name('get_data');
@@ -668,7 +672,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{credit}', 'update')->name('update');
             Route::get('/delete/{credit}', 'delete')->name('delete');
         });
-        // Payment Method 
+        // Payment Method
         Route::controller(PaymentMethodController::class)->prefix('payment-method')->name('payment_method.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
@@ -698,7 +702,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{debtor}', 'update')->name('update');
             Route::get('/delete/{debtor}', 'delete')->name('delete');
         });
-        // Factory 
+        // Factory
         Route::controller(FactoryController::class)->prefix('factory')->name('factory.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
@@ -707,7 +711,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{factory}', 'edit')->name('edit');
             Route::post('/update/{factory}', 'update')->name('update');
         });
-        // Milestone 
+        // Milestone
         Route::controller(MilestoneController::class)->prefix('milestone')->name('milestone.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
@@ -744,7 +748,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{priority}', 'edit')->name('edit');
             Route::post('/update/{priority}', 'update')->name('update');
         });
-        // Sales Agent 
+        // Sales Agent
         Route::controller(SalesAgentController::class)->prefix('sales-agent')->name('sales_agent.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
@@ -753,7 +757,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{agent}', 'edit')->name('edit');
             Route::post('/update/{agent}', 'update')->name('update');
         });
-        // Settings 
+        // Settings
         Route::controller(SettingController::class)->prefix('settings')->name('setting.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
@@ -856,4 +860,4 @@ Route::get('/email', function () {
 //     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 // });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

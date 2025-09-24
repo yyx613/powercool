@@ -69,7 +69,9 @@
                                 @php
                                     $skus = [];
                                     for ($i = 0; $i < count($sale_orders); $i++) {
-                                        $skus[] = $sale_orders[$i]->sku;
+                                        if (!in_array($sale_orders[$i]->sku, $skus)) {
+                                            $skus[] = $sale_orders[$i]->sku;
+                                        }
                                     }
                                 @endphp
                                 {{ join(', ', $skus) }}
@@ -273,7 +275,7 @@
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 50px 0;" colspan="4">For : HI-TEN TRADING SDN BHD</td>
+                <td style="font-size: 12px; padding: 25px 0 100px 0;" colspan="4">For : HI-TEN TRADING SDN BHD</td>
             </tr>
             <tr>
                 <td
