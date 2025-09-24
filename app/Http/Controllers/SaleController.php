@@ -3346,11 +3346,7 @@ class SaleController extends Controller
             foreach ($drafts as $draft) {
                 $invoice = Invoice::find($draft->invoice_id);
                 $delivery = DeliveryOrder::where('invoice_id', $draft->invoice_id)->first();
-                $deliveryProduct = $delivery?->products()->first();
-                $saleProduct = $deliveryProduct?->saleProduct;
-                $sale = $saleProduct?->sale;
-                $customer = $sale?->customer;
-                Log::info([$invoice,$sale,$customer]);
+                $customer = Customer::find($delivery->customer_id);
 
                 if (!$customer || !$customer->tin_number) {
                     $invoice?->update([
