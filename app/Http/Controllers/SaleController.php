@@ -52,6 +52,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -3338,6 +3339,7 @@ class SaleController extends Controller
                 $saleProduct = $deliveryProduct?->saleProduct;
                 $sale = $saleProduct?->sale;
                 $customer = $sale?->customer;
+                Log::info([$invoice,$sale,$customer]);
 
                 if (!$customer || !$customer->tin_number) {
                     $invoice?->update([
