@@ -2827,7 +2827,7 @@ class SaleController extends Controller
 
                             if ($j + 1 == count($dopcs)) {
                                 $unit_price = $dopcs[$j]->doProduct->saleProduct->override_selling_price ?? $dopcs[$j]->doProduct->saleProduct->unit_price;
-                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->discount / $dopcs[$i]->doProduct->saleProduct->qty);
+                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->discount / $dopcs[$j]->doProduct->saleProduct->qty);
                                 $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
@@ -3758,42 +3758,22 @@ class SaleController extends Controller
 
     private function getCancellationInvolved(int $inv_id)
     {
-        $involved = [];
-        $involved_inv_skus = [];
-        $involved_do_skus = [];
-        $involved_so_skus = [];
-        $to_search_inv_ids = [$inv_id];
-        $searched_inv_ids = [];
-        $voided_invoice_ids = Invoice::where('status', Invoice::STATUS_VOIDED)->pluck('id')->toArray();
-        $voided_do_ids = DeliveryOrder::whereIn('invoice_id', $voided_invoice_ids)->pluck('id')->toArray();
-
-        while (true) {
-            $inv_id_to_search = null;
-            if (count($to_search_inv_ids) <= 0) {
-                break;
+        $inv_sku = Invoice::where('id', $inv_id)->value('sku');
+        $do_skus = DeliveryOrder::whereIn('invoice_id', [$inv_id])->pluck('sku')->toArray();
+        $do_ids = DeliveryOrder::whereIn('invoice_id', [$inv_id])->pluck('id')->toArray();
+        $so_skus = Sale::where(function ($q) use ($do_ids) {
+            for ($i = 0; $i < count($do_ids); $i++) {
+                $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");
             }
-            $inv_id_to_search = $to_search_inv_ids[0];
+        })->pluck('sku')->toArray();
 
-            $data = $this->getCancellationInvolvedInvFlow($inv_id_to_search, $voided_do_ids);
-            $searched_inv_ids[] = $inv_id_to_search;
-
-            if (isset($data['inv_ids'])) {
-                $diff = array_values(array_diff($data['inv_ids'], $searched_inv_ids));
-                $to_search_inv_ids = array_merge($to_search_inv_ids, $diff);
-            }
-            if (isset($data['do_skus'])) {
-                $inv_sku = Invoice::where('id', $inv_id_to_search)->value('sku');
-
-                $involved[$inv_sku] = array_merge($data['do_skus'], $data['so_skus']);
-
-                $involved_inv_skus[] = $inv_sku;
-                $involved_do_skus = array_merge($involved_do_skus, $data['do_skus']);
-                $involved_so_skus = array_merge($involved_so_skus, $data['so_skus']);
-            }
-
-            $to_search_inv_ids = array_unique(array_values(array_diff($to_search_inv_ids, [$inv_id_to_search])));
-        }
-
+        $involved = [
+            $inv_sku => array_merge($do_skus, $so_skus),
+        ];
+        $involved_inv_skus = [$inv_sku];
+        $involved_do_skus = $do_skus;
+        $involved_so_skus = $so_skus;
+        
         return [
             'involved' => $involved,
             'involved_inv_skus' => $involved_inv_skus,
@@ -4556,13 +4536,14 @@ class SaleController extends Controller
 
             $existing_skus = transportAcknowledgement::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku($req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY ? 'DL' : 'CL', $existing_skus);
+            $delivery_address = CustomerLocation::whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])->where('customer_id', $first_so->customer->id)->first();
 
             $pdf = Pdf::loadView('delivery_order.transport_acknowledgement_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
                 'do_sku' => $do->sku,
-                'address' => $first_so->customer->locations()->where('type', CustomerLocation::TYPE_DELIVERY)->value('address'),
+                'address' => $delivery_address->formatAddress(),
                 'dopcs' => $dopcs,
                 'dealer_name' => $dealer_name,
             ]);
