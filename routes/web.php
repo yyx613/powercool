@@ -70,19 +70,25 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-// Route::get('/auto-dealer', function () {
-//     $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
-//     $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
-//
-//     for ($i = 0; $i < count($customers); $i++) {
-//         $new_dealer = Dealer::create([
-//             'name' => $customers[$i]->name,
-//             'sku' => (new Dealer)->generateSku(),
-//         ]);
-//         (new Branch)->assign(Dealer::class, $new_dealer->id);
-//     }
-//     dd('done');
-// });
+Route::get('/auto-dealer', function () {
+    $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
+    $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
+
+    for ($i = 0; $i < count($customers); $i++) {
+        if ($customers[$i]->name == null || $customers[$i]->name == '') {
+            continue;
+        }
+        $dealer_exists = Dealer::where('name', $customers[$i]->name)->exists();
+        if (! $dealer_exists) {
+            $new_dealer = Dealer::create([
+                'name' => $customers[$i]->name,
+                'sku' => (new Dealer)->generateSku(),
+            ]);
+            (new Branch)->assign(Dealer::class, $new_dealer->id);
+        }
+    }
+    dd('done');
+});
 
 Route::get('/', function () {
     return redirect(route('login'));

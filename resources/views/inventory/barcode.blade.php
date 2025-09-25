@@ -25,10 +25,13 @@
         <table style="width: 100%;">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
-                    <img src="{{ public_path('images/barcode_logo.jpeg') }}" alt=""
-                        style="width: 50%; margin: 0 0 10px 0;">
-                    <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
-                    <p style="margin: 0; font-size: 10px;">{{ $product_name[$i] }}</p>
+                    @if ($product_brand[$i] == 1) {{-- IMAX --}}
+                        <img src="{{ public_path('images/barcode_logo.jpeg') }}" alt=""
+                            style="height: 50px; margin: 0 0 10px 0;">
+                    @elseif ($product_brand[$i] == 2) {{-- Hi-Ten --}}
+                        <img src="{{ public_path('images/barcode_logo.jpg') }}" alt=""
+                            style="height: 50px; margin: 0 0 10px 0;">
+                    @endif
                 </td>
             </tr>
             <tr style="width: 100%;">
@@ -74,7 +77,8 @@
                                 {{ $standard_features[$i] ?? '' }}</td>
                         </tr>
                         <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER CONSUMPTION: (KWH/24H)</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER CONSUMPTION:
+                                (KWH/24H)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $power_input[$i] ?? '' }}</td>
                         </tr>
@@ -105,8 +109,14 @@
                             style="height: 10px; width: 10px; margin: 0 5px 0 0;">
                         Careline: 6012-3868743
                     </p>
-                    <p style="margin: 20px 0 0 0; font-size: 10px; text-align: center;">Made In Malaysia</p>
-                    <p style="margin: 5px 0 0 0; font-size: 10px; text-align: center;">www.imaxrefrigerator.com.my</p>
+                    <p style="margin: 20px 0 10px 0; font-size: 10px; text-align: center;">Visit us at <a
+                            href="www.powercool.com.my">www.powercool.com.my</a></p>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
+                    <div style="width: 300px; height: 30px; margin: auto;">{!! $renderer[$i] !!}</div>
+                    <p style="margin: 0; font-size: 10px;">{{ $product_name[$i] }}</p>
                 </td>
             </tr>
         </table>

@@ -52,3 +52,26 @@
         </form>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        DELIVERY_ORDERS = @json($delivery_orders ?? null);
+        DEALERS = @json($dealers ?? null);
+
+        $('select[name="delivery_order"]').on('change', function() {
+            let val = $(this).val()
+
+            for (let i = 0; i < DELIVERY_ORDERS.length; i++) {
+                if (val == DELIVERY_ORDERS[i].id) {
+                    for (let j = 0; j < DEALERS.length; j++) {
+                        if (DELIVERY_ORDERS[i].customer.name == DEALERS[j].name) {
+                            $('select[name="dealer"]').val(DEALERS[j].id).trigger('change')
+                            break
+                        }
+                    }
+                    break
+                }
+            }
+        })
+    </script>
+@endpush

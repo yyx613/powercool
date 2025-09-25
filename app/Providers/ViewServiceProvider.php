@@ -699,7 +699,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
-            $delivery_orders = DeliveryOrder::whereNot('status', DeliveryOrder::STATUS_VOIDED)->whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
+            $delivery_orders = DeliveryOrder::with('customer')->whereNot('status', DeliveryOrder::STATUS_VOIDED)->whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
             $dealers = Dealer::orderBy('id', 'desc')->get();
             $types = [
                 DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',
@@ -727,12 +727,17 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['customer.form_step.info', 'supplier.form', 'grn.form', 'delivery_order.convert_to_invoice', 'inventory.form', 'uom.form', 'inventory_category.form', 'inventory_type.form'], function (ViewView $view) {
+            $brands = [
+                1 => 'IMAX',
+                2 => 'Hi-Ten',
+            ];
             $company_group = [
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',
             ];
 
             $view->with([
+                'brands' => $brands,
                 'company_group' => $company_group,
             ]);
         });
