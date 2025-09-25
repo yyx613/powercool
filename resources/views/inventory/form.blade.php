@@ -28,6 +28,18 @@
         <div class="bg-white p-4 border rounded-md">
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
                 <div class="flex flex-col">
+                    <x-app.input.label id="brand" class="mb-1">{{ __('Brand') }} <span
+                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="brand" id="brand" :hasError="$errors->has('brand')"
+                        placeholder="{{ __('Select a brand') }}">
+                        <option value="">{{ __('Select a brand') }}</option>
+                        @foreach ($brands as $key => $value)
+                            <option value="{{ $key }}" @selected(old('brand', isset($prod) ? $prod->brand : null) == $key)>{{ $value }}</option>
+                        @endforeach
+                    </x-app.input.select2>
+                    <x-input-error :messages="$errors->get('brand')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')"
@@ -180,7 +192,8 @@
                         <x-app.input.select2 name="supplier_id" id="supplier_id">
                             <option value="">{{ __('Select a supplier') }}</option>
                             @foreach ($suppliers as $sup)
-                                <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>{{ $sup->company_name }}
+                                <option value="{{ $sup->id }}" @selected(old('supplier_id', isset($prod) ? $prod->supplier_id : null) == $sup->id)>
+                                    {{ $sup->company_name }}
                                 </option>
                             @endforeach
                         </x-app.input.select2>

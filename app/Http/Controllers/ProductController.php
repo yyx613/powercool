@@ -641,6 +641,7 @@ class ProductController extends Controller
             $renderer = new DynamicHtmlRenderer;
 
             $data['renderer'][] = $renderer->render($barcode);
+            $data['product_brand'][] = $prod->brand;
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
@@ -671,6 +672,7 @@ class ProductController extends Controller
         }
 
         $rules = [
+            'brand' => 'required',
             'company_group' => 'required',
             'product_id' => 'nullable',
             'initial_for_production' => 'required|max:250',
@@ -777,6 +779,7 @@ class ProductController extends Controller
 
             if ($req->product_id == null) {
                 $prod = $this->prod::create([
+                    'brand' => $req->brand,
                     'company_group' => $req->company_group,
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
@@ -816,6 +819,7 @@ class ProductController extends Controller
                 $prod = $this->prod->where('id', $req->product_id)->first();
 
                 $prod->update([
+                    'brand' => $req->brand,
                     'company_group' => $req->company_group,
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
