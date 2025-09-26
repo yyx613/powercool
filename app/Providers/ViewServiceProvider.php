@@ -699,7 +699,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['delivery_order.generate_transport_acknowledgement'], function (ViewView $view) {
-            $delivery_orders = DeliveryOrder::with('customer')->whereNot('status', DeliveryOrder::STATUS_VOIDED)->whereNull('transport_ack_filename')->orderBy('id', 'desc')->get();
+            $delivery_orders = DeliveryOrder::with('customer')->whereNot('status', DeliveryOrder::STATUS_VOIDED)->orderBy('id', 'desc')->get();
             $dealers = Dealer::orderBy('id', 'desc')->get();
             $types = [
                 DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY => 'Delivery',

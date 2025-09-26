@@ -59,7 +59,8 @@
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="warehouse" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
-            <x-app.input.input name="warehouse" id="warehouse" value="{{ $warehouse ?? '' }}" :hasError="$errors->has('warehouse')" disabled="true" />
+            <x-app.input.input name="warehouse" id="warehouse" value="{{ $warehouse ?? '' }}" :hasError="$errors->has('warehouse')"
+                disabled="true" />
             <x-app.message.error id="warehouse_err" />
         </div>
         <div class="flex flex-col">
@@ -117,6 +118,33 @@
                 {{ __('Please make it empty before entering a new address') }}
             </p>
             <x-app.message.error id="delivery_address_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label id="third_party_address"
+                class="mb-1">{{ __('Third Party Address') }}</x-app.input.label>
+            <div class="rounded-md border border-gray-300 flex overflow-hidden">
+                <x-app.input.input name="third_party_address" id="third_party_address" class="border-none flex-1" />
+                <button type="button" class="cursor-pointer bg-yellow-400 text-sm px-2"
+                    id="third-party-address-btn">Add</button>
+            </div>
+            <div id="third-party-address-list" class="mt-1">
+                <div class="flex items-start hidden hover:bg-slate-100" id="template">
+                    <p class="text-xs flex-1"></p>
+                    <button type="button" class="cursor-pointer text-red-500 text-xs">Remove</button>
+                </div>
+                @php
+                    $third_party_address =
+                        isset($sale) && $sale->third_party_address != null
+                            ? json_decode($sale->third_party_address)
+                            : [];
+                @endphp
+                @foreach ($third_party_address as $key => $val)
+                    <div class="flex items-start hover:bg-slate-100 child" data-idx={{ $key }}>
+                        <p class="text-xs flex-1">{{ $val }}</p>
+                        <button type="button" class="cursor-pointer text-red-500 text-xs">Remove</button>
+                    </div>
+                @endforeach
+            </div>
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
@@ -223,7 +251,6 @@
         })
         $('select[name="delivery_address"]').on('change', function() {
             let val = $(this).val()
-            console.debug(val)
 
             if (val == 'null' || val == null || val == '') {
                 $('#new-delivery-address input').attr('disabled', false)
@@ -339,6 +366,29 @@
         })
         $('body').on('focus', '[aria-labelledby="select2-customer-container"]', function() {
             $('select[name="customer"]').select2('open')
+        })
+        $('#third-party-address-btn').on('click', function() {
+            let val = $('input[name="third_party_address"]').val()
+
+            if (val == '' || val == null) return
+
+            let clone = $('#third-party-address-list #template')[0].cloneNode(true)
+            $(clone).addClass('child')
+            $(clone).removeClass('hidden')
+            $(clone).removeAttr('id')
+            $(clone).find('p').text(val)
+            $('#third-party-address-list').append(clone)
+
+            $('input[name="third_party_address"]').val(null)
+
+            $('#third-party-address-list .child').each(function(i, obj) {
+                $(this).attr('data-idx', i)
+            })
+        })
+        $('body').on('click', '#third-party-address-list .child button', function() {
+            let idx = $(this).closest('.child').attr('data-idx')
+
+            $(`.child[data-idx=${idx}]`).remove()
         })
 
         function buildCompanySelect2() {

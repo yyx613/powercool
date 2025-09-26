@@ -321,6 +321,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-cancellation-involved-do/{do}', 'getCancellationInvolvedDO')->name('get_cancellation_involved_do');
             Route::get('/generate-transport-acknowledgement', 'transportAcknowledgement')->name('transport_acknowledgement');
             Route::post('/generate-transport-acknowledgement', 'generateTransportAcknowledgement')->name('generate_transport_acknowledgement');
+            Route::get('/get-third-party-address/{do}', 'getThirdPartyAddress')->name('get_third_party_address');
         });
         // Transport Acknowledgement
         Route::prefix('transport-acknowledgement')->name('transport_ack.')->middleware(['can:sale.transport_acknowledgement.view'])->group(function () {
