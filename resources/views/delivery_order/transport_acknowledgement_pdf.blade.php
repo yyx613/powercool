@@ -81,13 +81,13 @@
                 style="font-size: 14px; border: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 10%; padding: 5px 10px; font-family: sans-serif; font-weight: 700;">
                 Quantity</td>
         </tr>
-        @foreach ($dopcs as $key => $dopc)
+        @foreach ($pcs as $key => $pc)
             <tr>
                 <td
                     style="font-size: 14px; padding: 5px; text-align: center; padding: 0 10px; width: 10%; font-family: sans-serif;">
                     {{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left; padding: 5px 10px; font-family: sans-serif;">
-                    {{ $dopc->productChild->sku }}</td>
+                    {{ $pc->sku }}</td>
                 <td
                     style="font-size: 14px; text-align: center; width: 10%; padding: 5px 10px; font-family: sans-serif;">
                     1</td>

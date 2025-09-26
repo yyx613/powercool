@@ -103,6 +103,24 @@
             <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="third_party_address"
+                class="mb-1">{{ __('Third Party Address') }}</x-app.input.label>
+            <x-app.input.input id="third_party_address" name="third_party_address" />
+            <div id="third-party-address-list" class="mt-1">
+                @php
+                    $third_party_address =
+                        isset($sale) && $sale->third_party_address != null
+                            ? json_decode($sale->third_party_address)
+                            : [];
+                @endphp
+                @foreach ($third_party_address as $key => $val)
+                    <div class="flex items-start hover:bg-slate-100 child" data-idx={{ $key }}>
+                        <p class="text-xs flex-1">{{ $val }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">

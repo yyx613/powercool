@@ -27,6 +27,7 @@ use App\Models\ObjectCreditTerm;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\ProductCost;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
@@ -485,6 +486,7 @@ class SaleController extends Controller
             $references = collect();
             $remarks = collect();
             $products = collect();
+            $third_party_address = [];
 
             DB::beginTransaction();
 
@@ -492,6 +494,9 @@ class SaleController extends Controller
                 $references = $references->merge($quos[$i]->reference);
                 $remarks = $remarks->merge($quos[$i]->remark);
                 $products = $products->merge($quos[$i]->products);
+                if ($quos[$i]->third_party_address != null) {
+                    $third_party_address = array_merge(json_decode($quos[$i]->third_party_address), $third_party_address); 
+                }
             }
 
             // Create quotation details
@@ -509,6 +514,7 @@ class SaleController extends Controller
                 })->toArray(),
                 'billing_address' => $quos[0]->billing_address_id,
                 'delivery_address' => $quos[0]->delivery_address_id,
+                'third_party_address' => $third_party_address,
                 'payment_method' => $quos[0]->payment_method,
             ]);
             // Check to use back transferred SO sku
@@ -1463,6 +1469,7 @@ class SaleController extends Controller
 
     public function upsertDetails(Request $req)
     {
+        dd($req->all());
         if ($req->type == 'so' || $req->type == 'cash-sale') {
             if ($req->sale_id == null) {
                 $convert_from_quo = false;
@@ -1500,6 +1507,7 @@ class SaleController extends Controller
             $rules['new_delivery_address2'] = 'nullable|max:250';
             $rules['new_delivery_address3'] = 'nullable|max:250';
             $rules['new_delivery_address4'] = 'nullable|max:250';
+            $rules['third_party_address'] = 'array';
         }
         if ($req->type == 'quo') {
             $rules['open_until'] = 'required';
@@ -1784,6 +1792,8 @@ class SaleController extends Controller
                 $rules['new_delivery_address2'] = 'nullable|max:250';
                 $rules['new_delivery_address3'] = 'nullable|max:250';
                 $rules['new_delivery_address4'] = 'nullable|max:250';
+
+                $rules['third_party_address'] = 'array';
             }
             if ($req->type == 'quo') {
                 $rules['open_until'] = 'required';
@@ -1905,6 +1915,7 @@ class SaleController extends Controller
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
+                    'third_party_address' => count($req->third_party_address) <= 0 ? null : json_encode($req->third_party_address),
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
                     'created_by' => $created_by,
@@ -1947,6 +1958,7 @@ class SaleController extends Controller
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
+                    'third_party_address' => count($req->third_party_address) <= 0 ? null : json_encode($req->third_party_address),
                     'payment_term' => $req->payment_term,
                     'payment_method' => $req->payment_method,
                     'updated_by' => Auth::user()->id,
@@ -3350,7 +3362,7 @@ class SaleController extends Controller
                 $sale = $saleProduct?->sale;
                 $customer = $sale?->customer;
 
-                if (!$customer || !$customer->tin_number) {
+                if (! $customer || ! $customer->tin_number) {
                     $invoice?->update([
                         'status' => Invoice::STATUS_APPROVED,
                     ]);
@@ -3361,7 +3373,7 @@ class SaleController extends Controller
                 }
             }
 
-            if (!empty($invoicesData)) {
+            if (! empty($invoicesData)) {
                 $req = new Request([
                     'invoices' => $invoicesData,
                     'company' => $company,
@@ -3370,11 +3382,13 @@ class SaleController extends Controller
                 $res = (new EInvoiceController)->submit($req);
                 $data = $res->getData(true);
 
-                if (!empty($data['errorDetails'])) {
+                if (! empty($data['errorDetails'])) {
                     DB::rollBack();
+
                     return $res;
                 } elseif ($res->getStatusCode() > 299) {
                     DB::rollBack();
+
                     return $res;
                 }
 
@@ -3406,8 +3420,6 @@ class SaleController extends Controller
             ], 500);
         }
     }
-
-
 
     public function indexEInvoice()
     {
@@ -3453,7 +3465,7 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            if( $record->einvoiceable instanceof Invoice){
+            if ($record->einvoiceable instanceof Invoice) {
                 $invoice = $record->einvoiceable;
                 $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
                 $deliveryProduct = $delivery?->products()->first();
@@ -3481,7 +3493,7 @@ class SaleController extends Controller
                 'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing',
                 'debtor_name' => $customer?->company_name,
                 'total' => $total_amount,
-                'invoice_date'=>$invoice->date
+                'invoice_date' => $invoice->date,
             ];
         }
 
@@ -3773,7 +3785,7 @@ class SaleController extends Controller
         $involved_inv_skus = [$inv_sku];
         $involved_do_skus = $do_skus;
         $involved_so_skus = $so_skus;
-        
+
         return [
             'involved' => $involved,
             'involved_inv_skus' => $involved_inv_skus,
@@ -4508,9 +4520,12 @@ class SaleController extends Controller
             'delivery_order' => 'required',
             'dealer' => 'required',
             'type' => 'required',
+            'third_party_address' => 'required',
+            'serial_no' => 'required|array',
         ];
         $req->validate($rules);
 
+        // dd($req->all());
         try {
             DB::beginTransaction();
 
@@ -4525,26 +4540,29 @@ class SaleController extends Controller
             }
 
             $do = DeliveryOrder::where('id', $req->delivery_order)->first();
+            $pcs = ProductChild::whereIn('id', $req->serial_no)->get();
             $first_so = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$do->id."', convert_to)")->first();
-            $dopcs = collect();
+            // $dopcs = collect();
 
-            for ($i = 0; $i < count($do->products); $i++) {
-                for ($j = 0; $j < count($do->products[$i]->children); $j++) {
-                    $dopcs->push($do->products[$i]->children[$j]);
-                }
-            }
+            // for ($i = 0; $i < count($do->products); $i++) {
+            //     for ($j = 0; $j < count($do->products[$i]->children); $j++) {
+            //         $dopcs->push($do->products[$i]->children[$j]);
+            //     }
+            // }
+
 
             $existing_skus = transportAcknowledgement::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku($req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY ? 'DL' : 'CL', $existing_skus);
-            $delivery_address = CustomerLocation::whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])->where('customer_id', $first_so->customer->id)->first();
+            // $delivery_address = CustomerLocation::whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])->where('customer_id', $first_so->customer->id)->first();
 
             $pdf = Pdf::loadView('delivery_order.transport_acknowledgement_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
                 'do_sku' => $do->sku,
-                'address' => $delivery_address->formatAddress(),
-                'dopcs' => $dopcs,
+                // 'address' => $delivery_address->formatAddress(),
+                'address' => $req->third_party_address,
+                'pcs' => $pcs,
                 'dealer_name' => $dealer_name,
             ]);
             $pdf->setPaper('A4', 'letter');
@@ -4573,6 +4591,25 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong, Please contact administrator');
         }
+    }
+
+    public function getThirdPartyAddress(DeliveryOrder $do) {
+        $address = Sale::whereRaw("find_in_set('".$do->id."', convert_to)")->pluck('third_party_address')->toArray();
+
+        $third_party_address = [];
+        for ($i=0; $i < count($address); $i++) { 
+            if ($address[$i] != null) {
+                $third_party_address = array_merge($third_party_address, json_decode($address[$i]));
+            }
+        }
+
+        $pc_ids = DeliveryOrderProductChild::whereIn('delivery_order_product_id', DeliveryOrderProduct::where('delivery_order_id', $do->id)->pluck('id')->toArray())->pluck('product_children_id')->toArray();
+        $serial_no = ProductChild::whereIn('id', $pc_ids)->get();
+
+        return response()->json([
+            'third_party_address' => $third_party_address,
+            'serial_no' => $serial_no,
+        ]);
     }
 
     public function indexTransportAck()
