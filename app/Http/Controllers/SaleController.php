@@ -1470,7 +1470,6 @@ class SaleController extends Controller
 
     public function upsertDetails(Request $req)
     {
-        dd($req->all());
         if ($req->type == 'so' || $req->type == 'cash-sale') {
             if ($req->sale_id == null) {
                 $convert_from_quo = false;
@@ -2966,7 +2965,6 @@ class SaleController extends Controller
 
     public function cancelSaleOrderFlow(Sale $sale, bool $cancel_from_converted, ?float $charge = null, ?array $do_skus = null)
     {
-        dd($sale);
         SaleOrderCancellation::calCancellation($sale, $cancel_from_converted ? 3 : 1, null);
 
         $sp_ids = SaleProduct::where('sale_id', $sale->id)->pluck('id');
@@ -4517,7 +4515,6 @@ class SaleController extends Controller
         ];
         $req->validate($rules);
 
-        // dd($req->all());
         try {
             DB::beginTransaction();
 
