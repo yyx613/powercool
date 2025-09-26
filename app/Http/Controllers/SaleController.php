@@ -3379,14 +3379,9 @@ class SaleController extends Controller
 
                 $res = (new EInvoiceController)->submit($req);
                 $data = $res->getData(true);
-
-                if (! empty($data['errorDetails'])) {
+                Log::info($data);
+                if (!empty($data['errorDetails']) || $res->getStatusCode() > 299 || !empty($data['error'])) {
                     DB::rollBack();
-
-                    return $res;
-                } elseif ($res->getStatusCode() > 299) {
-                    DB::rollBack();
-
                     return $res;
                 }
                 foreach ($invoicesData as $invData) {
