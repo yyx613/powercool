@@ -105,6 +105,7 @@
 
         $(document).ready(function() {
             if (SALE != null) {
+                $('select[name="payment_method"]').trigger('change')
                 $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
 
                 if (SALE.can_by_pass_conversion) $('#by-pass-conversion-hint').removeClass('hidden')
