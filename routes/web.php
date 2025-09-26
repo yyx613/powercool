@@ -50,12 +50,26 @@ use App\Http\Controllers\VehicleServiceController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WarrantyPeriodController;
 use App\Models\ActivityLog;
+use App\Models\Approval;
+use App\Models\Billing;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Dealer;
 use App\Models\DebtorType;
+use App\Models\DeliveryOrder;
+use App\Models\DeliveryOrderProduct;
+use App\Models\DeliveryOrderProductChild;
+use App\Models\Invoice;
+use App\Models\Sale;
+use App\Models\SalePaymentAmount;
+use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
+use App\Models\SaleProductionRequest;
+use App\Models\SaleProductWarrantyPeriod;
 use App\Models\Scopes\BranchScope;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -70,25 +84,67 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-Route::get('/auto-dealer', function () {
-    $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
-    $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
 
-    for ($i = 0; $i < count($customers); $i++) {
-        if ($customers[$i]->name == null || $customers[$i]->name == '') {
-            continue;
-        }
-        $dealer_exists = Dealer::where('name', $customers[$i]->name)->exists();
-        if (! $dealer_exists) {
-            $new_dealer = Dealer::create([
-                'name' => $customers[$i]->name,
-                'sku' => (new Dealer)->generateSku(),
-            ]);
-            (new Branch)->assign(Dealer::class, $new_dealer->id);
+Route::get('/get-branch-classes', function () {
+    $classes = [];
+    $branches = DB::table('branches')->get();
+    for ($i=0; $i < count($branches); $i++) { 
+        if (!in_array($branches[$i]->object_type, $classes)) {
+            $classes[] = $branches[$i]->object_type;
         }
     }
+
+    dd('123', $classes);
+});
+Route::get('/reset-sales', function () {
+    // DO
+    DB::table('branches')->where('object_type', DeliveryOrder::class)->delete();
+    DB::table('delivery_order_product_children')->delete();
+    DB::table('delivery_order_products')->delete();
+    DB::table('delivery_orders')->delete();
+    // INV
+    DB::table('branches')->where('object_type', Invoice::class)->delete();
+    DB::table('invoices')->delete();
+    // QUO & SO
+    DB::table('branches')->where('object_type', Sale::class)->delete();
+    DB::table('branches')->where('object_type', SaleProductionRequest::class)->delete();
+    DB::table('sale_product_warranty_periods')->delete();
+    DB::table('sale_production_requests')->delete();
+    DB::table('sale_payment_amounts')->delete();
+    DB::table('sales_sales_agents')->delete();
+    DB::table('sale_product_children')->delete();
+    DB::table('sale_products')->delete();
+    DB::table('sales')->delete();
+    // Approval
+    DB::table('branches')->where('object_type', Approval::class)->delete();
+    DB::table('approvals')->delete();
+    // Billing
+    DB::table('branches')->where('object_type', Billing::class)->delete();
+    DB::table('billings')->delete();
+    // Notification
+    DB::table('notifications')->delete();
+
     dd('done');
 });
+// Route::get('/auto-dealer', function () {
+//     $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
+//     $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
+
+//     for ($i = 0; $i < count($customers); $i++) {
+//         if ($customers[$i]->name == null || $customers[$i]->name == '') {
+//             continue;
+//         }
+//         $dealer_exists = Dealer::where('name', $customers[$i]->name)->exists();
+//         if (! $dealer_exists) {
+//             $new_dealer = Dealer::create([
+//                 'name' => $customers[$i]->name,
+//                 'sku' => (new Dealer)->generateSku(),
+//             ]);
+//             (new Branch)->assign(Dealer::class, $new_dealer->id);
+//         }
+//     }
+//     dd('done');
+// });
 
 Route::get('/', function () {
     return redirect(route('login'));
