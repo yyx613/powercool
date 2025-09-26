@@ -125,6 +125,10 @@
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
+            let thirdPartyAddress = []
+            $('#third-party-address-list .child').each(function(i, obj) {
+                thirdPartyAddress.push($(this).find('p').text())
+            })
             if (REPLICATE != null) {
                 prodOrderId = []
             }
@@ -165,6 +169,7 @@
                     'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
                     'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
                     'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
+                    'third_party_address': thirdPartyAddress,
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
