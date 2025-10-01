@@ -13,6 +13,7 @@
         size: 10cm 15cm;
         margin-left: 15px;
         margin-right: 15px;
+        margin-bottom: 0;
     }
 
     body {
@@ -25,10 +26,12 @@
         <table style="width: 100%;">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
-                    @if ($product_brand[$i] == 1) {{-- IMAX --}}
+                    @if ($product_brand[$i] == 1)
+                        {{-- IMAX --}}
                         <img src="{{ public_path('images/barcode_logo.jpeg') }}" alt=""
                             style="height: 50px; margin: 0 0 10px 0;">
-                    @elseif ($product_brand[$i] == 2) {{-- Hi-Ten --}}
+                    @elseif ($product_brand[$i] == 2)
+                        {{-- Hi-Ten --}}
                         <img src="{{ public_path('images/barcode_logo.jpg') }}" alt=""
                             style="height: 50px; margin: 0 0 10px 0;">
                     @endif
@@ -77,10 +80,15 @@
                                 {{ $standard_features[$i] ?? '' }}</td>
                         </tr>
                         <tr>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER INPUT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $power_input[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER CONSUMPTION:
                                 (KWH/24H)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
-                                {{ $power_input[$i] ?? '' }}</td>
+                                {{ $power_consumption[$i] ?? '' }}</td>
                         </tr>
                     </table>
                 </td>

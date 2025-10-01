@@ -349,6 +349,12 @@
                     <x-input-error :messages="$errors->get('power_input')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="power_consumption" class="mb-1">{{ __('Power Consumption (KWH/24H)') }}</x-app.input.label>
+                    <x-app.input.input name="power_consumption" id="power_consumption"
+                        value="{{ old('power_consumption', isset($prod) ? $prod->power_consumption : ($dup_prod != null ? $dup_prod->power_consumption : null)) }}" />
+                    <x-input-error :messages="$errors->get('power_consumption')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="voltage_frequency"
                         class="mb-1">{{ __('Voltage / Frequency') }}</x-app.input.label>
                     <x-app.input.input name="voltage_frequency" id="voltage_frequency"
