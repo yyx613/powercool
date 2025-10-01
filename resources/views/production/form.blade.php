@@ -181,6 +181,7 @@
         SELECTED_MILESTONE_ID = null
         MATERIAL_USE = []
         CUSTOM_MILESTONE_IDX = 0
+        IS_DUPLICATE = @json($is_duplicate ?? null);
 
         $(document).ready(function() {
             if (PRODUCTION == null) {
@@ -215,25 +216,27 @@
                     $('#milestone-list-container').append(clone)
 
                     material_use_product_ids = []
-                    for (let j = 0; j < PRODUCTION_MILESTONE_MATERIAL_PREVIEW.length; j++) {
-                        if (element.pivot.id == PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].production_milestone_id) {
-                            material_use_product_ids.push(PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].product_id)
+                    if (PRODUCTION_MILESTONE_MATERIAL_PREVIEW != null) {
+                        for (let j = 0; j < PRODUCTION_MILESTONE_MATERIAL_PREVIEW.length; j++) {
+                            if (element.pivot.id == PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].production_milestone_id) {
+                                material_use_product_ids.push(PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].product_id)
+                            }
                         }
-                    }
-                    if (material_use_product_ids.length > 0) {
-                        $(`.milestones[data-milestone-id="ms-${element.id}"] .first-half input`)
-                            .attr('checked', true)
-                        $(`input[name="required_serial_no[]"][data-milestone-id="ms-${element.id}"`)
-                            .attr('checked', true)
-                        $(`.milestones[data-milestone-id="ms-${element.id}"] .view-material-use-selection-btns`)
-                            .removeClass('hidden')
-                    }
-
-                    MILESTONES[`ms-${element.id}`] = {
-                        material_use_product_ids: material_use_product_ids,
-                        sequence: i + 1,
-                        is_checked: true,
-                        title: element.name,
+                        if (material_use_product_ids.length > 0) {
+                            $(`.milestones[data-milestone-id="ms-${element.id}"] .first-half input`)
+                                .attr('checked', true)
+                            $(`input[name="required_serial_no[]"][data-milestone-id="ms-${element.id}"`)
+                                .attr('checked', true)
+                            $(`.milestones[data-milestone-id="ms-${element.id}"] .view-material-use-selection-btns`)
+                                .removeClass('hidden')
+                        }
+    
+                        MILESTONES[`ms-${element.id}`] = {
+                            material_use_product_ids: material_use_product_ids,
+                            sequence: i + 1,
+                            is_checked: true,
+                            title: element.name,
+                        }
                     }
                 }
                 INIT_EDIT = false
@@ -360,7 +363,7 @@
 
             if (productId == null || productId == '') return
 
-            getProductMilestones(productId, INIT_EDIT ? true : false)
+            getProductMilestones(productId, IS_DUPLICATE == true ? false : (INIT_EDIT ? true : false))
         })
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {
@@ -494,7 +497,6 @@
                 }
             }
         })
-
 
         function getProductMilestones(product_id, get_material_use_only = false) {
             let url = '{{ config('app.url') }}'

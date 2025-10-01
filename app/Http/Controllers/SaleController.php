@@ -4743,7 +4743,7 @@ class SaleController extends Controller
                     'desc' => $req->description[$i] != null ? $req->description[$i] : $product->model_desc,
                     'remark' => $req->remark[$i] != null ? $req->remark[$i] : null,
                     'qty' => $req->qty[$i],
-                    'product_child_id' => $req->{'serial_no_'.$req->product[$i]} != null && $req->{'serial_no_'.$req->product[$i]} != '' ? $req->{'serial_no_'.$req->product[$i]} : null,
+                    'product_child_id' => $req->{'serial_no_'.$req->product[$i]} != null && $req->{'serial_no_'.$req->product[$i]} != '' ? join(',', $req->{'serial_no_'.$req->product[$i]}) : null,
                 ];
             }
 
