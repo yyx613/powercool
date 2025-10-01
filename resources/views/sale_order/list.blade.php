@@ -577,7 +577,7 @@
 
                     for (let i = 0; i < res.products.length; i++) {
                         const elem = res.products[i];
-                        var totalCount = 0
+                        var totalCount = res.sale_product_details[i].qty
                         var assignedCount = 0
                         var requestedCount = 0
 
@@ -590,7 +590,7 @@
                         }
                         for (let j = 0; j < res.requested_details.length; j++) {
                             if (res.requested_details[j].product_id == elem.id) {
-                                totalCount = res.requested_details[j].count
+                                requestedCount = res.requested_details[j].count
                                 break
                             }
                         }
