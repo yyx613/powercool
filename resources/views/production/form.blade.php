@@ -181,6 +181,7 @@
         SELECTED_MILESTONE_ID = null
         MATERIAL_USE = []
         CUSTOM_MILESTONE_IDX = 0
+        IS_DUPLICATE = @json($is_duplicate ?? null);
 
         $(document).ready(function() {
             if (PRODUCTION == null) {
@@ -362,7 +363,7 @@
 
             if (productId == null || productId == '') return
 
-            getProductMilestones(productId, INIT_EDIT ? true : false)
+            getProductMilestones(productId, IS_DUPLICATE == true ? false : (INIT_EDIT ? true : false))
         })
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {
@@ -496,7 +497,6 @@
                 }
             }
         })
-
 
         function getProductMilestones(product_id, get_material_use_only = false) {
             let url = '{{ config('app.url') }}'
