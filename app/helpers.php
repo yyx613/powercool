@@ -45,6 +45,9 @@ if (! function_exists('getUserRoleId')) {
 if (! function_exists('hasPermission')) {
     function hasPermission(string $permission): bool
     {
+        if (Auth::user() == null) {
+            return false;
+        }
         return Auth::user()->hasPermissionTo($permission);
     }
 }
@@ -67,6 +70,9 @@ if (! function_exists('isSalesOnly')) {
     function isSalesOnly(): bool
     {
         $is_sales_role_only = false;
+        if (Auth::user() == null) {
+            return false;
+        }
         if (count(getUserRoleId(Auth::user())) === 1 && in_array(Role::SALE, getUserRoleId(Auth::user()))) {
             $is_sales_role_only = true;
         }

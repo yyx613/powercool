@@ -272,7 +272,7 @@ class CustomerController extends Controller
             $rules['phone_number'] = 'required|max:250';
             $rules['email'] = 'required|email|max:250';
             $rules['identity_type'] = 'required_if:category,==,2|max:250';
-            $rules['identity_no'] = 'required|max:250';
+            $rules['identity_no'] = 'required_if:category,==,2|max:250';
         }
         // Validate request
         $req->validate($rules, [

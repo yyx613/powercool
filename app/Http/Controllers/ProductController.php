@@ -650,6 +650,7 @@ class ProductController extends Controller
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
             $data['power_input'][] = $prod->power_input;
+            $data['power_consumption'][] = $prod->power_consumption;
             $data['voltage_frequency'][] = $prod->voltage_frequency;
             $data['standard_features'][] = $prod->standard_features;
         }
@@ -703,6 +704,7 @@ class ProductController extends Controller
             'capacity' => 'nullable|max:250',
             'refrigerant' => 'nullable|max:250',
             'power_input' => 'nullable|max:250',
+            'power_consumption' => 'nullable|max:250',
             'voltage_frequency' => 'nullable|max:250',
             'standard_features' => 'nullable|max:250',
             'dimension_length' => 'nullable',
@@ -801,6 +803,7 @@ class ProductController extends Controller
                     'capacity' => $req->capacity,
                     'refrigerant' => $req->refrigerant,
                     'power_input' => $req->power_input,
+                    'power_consumption' => $req->power_consumption,
                     'voltage_frequency' => $req->voltage_frequency,
                     'standard_features' => $req->standard_features,
                     'is_active' => $req->boolean('status'),
@@ -840,6 +843,7 @@ class ProductController extends Controller
                     'capacity' => $req->capacity,
                     'refrigerant' => $req->refrigerant,
                     'power_input' => $req->power_input,
+                    'power_consumption' => $req->power_consumption,
                     'voltage_frequency' => $req->voltage_frequency,
                     'standard_features' => $req->standard_features,
                     'is_active' => $req->boolean('status'),

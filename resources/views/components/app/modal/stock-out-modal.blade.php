@@ -50,7 +50,7 @@
                             name="stock_out_to_selection">
                             <option value="">{{ __('Select a customer') }}</option>
                             @foreach ($customers as $cus)
-                                <option value="{{ $cus->id }}">{{ $cus->name }}</option>
+                                <option value="{{ $cus->id }}">{{ $cus->name }} - {{ $cus->company_name }}</option>
                             @endforeach
                         </x-app.input.select>
                         <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="technician"
