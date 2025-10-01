@@ -250,6 +250,7 @@
                 if (TRANSPORT_ACK != null) {
                     for (let i = 0; i < TRANSPORT_ACK.products.length; i++) {
                         const element = TRANSPORT_ACK.products[i];
+                        console.log(element)
 
                         $('#add-item-btn').click()
 
@@ -258,6 +259,8 @@
                         $(`.items[data-id=${ITEM_ID}] input[name="qty[]"]`).val(element.qty)
                         $(`.items[data-id=${ITEM_ID}] input[name="description[]"]`).val(element.desc)
                         $(`.items[data-id=${ITEM_ID}] textarea[name="remark[]"]`).text(element.remark)
+                        let serialNo = element.product_child_id.split(',')
+                        $(`.items[data-id=${ITEM_ID}] select[name="serial_no_${element.product_id}[]"]`).val(serialNo).trigger('change')
                     }
                 } else {
                     $('#add-item-btn').click()
