@@ -102,7 +102,25 @@
         ITEMS_COUNT = 0
 
         $(document).ready(function() {
-            if (CUSTOMER != null) {
+            if (DUPLICATE != null) {
+                for (let i = 0; i < DUPLICATE.locations.length; i++) {
+                    const loc = DUPLICATE.locations[i];
+
+                    $('#add-item-btn').click()
+
+                    $(`.items[data-id="${i+1}"]`).attr('data-location-id', loc.id)
+                    $(`.items[data-id="${i+1}"] input[name="address1"]`).val(loc.address1)
+                    $(`.items[data-id="${i+1}"] input[name="address2"]`).val(loc.address2)
+                    $(`.items[data-id="${i+1}"] input[name="address3"]`).val(loc.address3)
+                    $(`.items[data-id="${i+1}"] input[name="address4"]`).val(loc.address4)
+                    $(`.items[data-id="${i+1}"] input[name="city"]`).val(loc.city)
+                    $(`.items[data-id="${i+1}"] input[name="zip_code"]`).val(loc.zip_code)
+                    $(`.items[data-id="${i+1}"] select[name="type"]`).val(loc.type)
+                    $(`.items[data-id="${i+1}"] select[name="is_default"]`).val(loc.is_default)
+                }
+
+                if (DUPLICATE.locations.length <= 0) $('#add-item-btn').click()
+            } else if (CUSTOMER != null) {
                 for (let i = 0; i < CUSTOMER.locations.length; i++) {
                     const loc = CUSTOMER.locations[i];
 

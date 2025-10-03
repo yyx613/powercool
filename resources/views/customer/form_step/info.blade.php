@@ -14,7 +14,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" name="for_einvoice" id="for_einvoice" class="rounded-sm"
-                    @checked(isset($customer) ? $customer->for_einvoice : null) />
+                    @checked(isset($duplicate) ? $duplicate->for_einvoice : (isset($customer) ? $customer->for_einvoice : null)) />
                 <x-app.input.label id="for_einvoice">{{ __('For E-Invoice') }}</x-app.input.label>
             </div>
         </div>
@@ -26,7 +26,7 @@
                     placeholder="{{ __('Select a category') }}">
                     <option value="">{{ __('Select a category') }}</option>
                     @foreach ($business_types as $key => $value)
-                        <option value="{{ $key }}" @selected(old('category', isset($customer) ? $customer->category : null) == $key)>{{ $value }}</option>
+                        <option value="{{ $key }}" @selected(old('category', isset($duplicate) ? $duplicate->category: (isset($customer) ? $customer->category : null)) == $key)>{{ $value }}</option>
                     @endforeach
                 </x-app.input.select2>
                 <x-app.message.error id="category_err" />
@@ -36,8 +36,8 @@
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.select name="local_oversea" id="local_oversea" :hasError="$errors->has('local_oversea')">
                     <option value="">{{ __('Select a type') }}</option>
-                    <option value="1" @selected(old('type', isset($customer) ? $customer->type : null) == 1)>{{ __('Local') }}</option>
-                    <option value="2" @selected(old('type', isset($customer) ? $customer->type : null) == 2)>{{ __('Oversea') }}</option>
+                    <option value="1" @selected(old('type', isset($duplicate) ? $duplicate->type : (isset($customer) ? $customer->type : null)) == 1)>{{ __('Local') }}</option>
+                    <option value="2" @selected(old('type', isset($duplicate) ? $duplicate->type : (isset($customer) ? $customer->type : null)) == 2)>{{ __('Oversea') }}</option>
                 </x-app.input.select>
                 <x-app.message.error id="local_oversea_err" />
             </div>
@@ -45,14 +45,14 @@
                 <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')"
-                    value="{{ old('tin_number', isset($customer) ? $customer->tin_number : null) }}" />
+                    value="{{ old('tin_number', isset($duplicate) ? $duplicate->tin_number : (isset($customer) ? $customer->tin_number : null)) }}" />
                 <x-app.message.error id="tin_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="company_registration_number" class="mb-1">{{ __('Business Reg No.') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="company_registration_number" id="company_registration_number" :hasError="$errors->has('company_registration_number')"
-                    value="{{ old('company_registration_number', isset($customer) ? $customer->company_registration_number : null) }}" />
+                    value="{{ old('company_registration_number', isset($duplicate) ? $duplicate->company_registration_number : (isset($customer) ? $customer->company_registration_number : null)) }}" />
                 <x-app.message.error id="company_registration_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
@@ -62,7 +62,7 @@
                     placeholder="{{ __('Select a MSIC Code') }}">
                     <option value="">{{ __('Select a Msic Code') }}</option>
                     @foreach ($msics as $msic)
-                        <option value="{{ $msic->id }}" @selected(old('msic_code', $customer->msicCode->id ?? null) == $msic->id)>{{ $msic->code }} -
+                        <option value="{{ $msic->id }}" @selected(old('msic_code', isset($duplicate) ? $duplicate->msicCode->id : (isset($customer) ? $customer->msicCode->id : null)) == $msic->id)>{{ $msic->code }} -
                             {{ $msic->description }}</option>
                     @endforeach
                 </x-app.input.select2>
@@ -72,27 +72,27 @@
                 <x-app.input.label id="business_activity_desc"
                     class="mb-1">{{ __('Business Activity Desc.') }}</x-app.input.label>
                 <x-app.input.input name="business_activity_desc" id="business_activity_desc" :hasError="$errors->has('business_activity_desc')"
-                    value="{{ $customer->business_act_desc ?? null }}" :disabled="true" />
+                    value="{{ isset($duplicate) ? $duplicate->business_act_desc : ($customer->business_act_desc ?? null) }}" :disabled="true" />
                 <x-app.message.error id="business_activity_desc_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="sst_number" class="mb-1">{{ __('SST Reg No.') }}</x-app.input.label>
                 <x-app.input.input name="sst_number" id="sst_number" :hasError="$errors->has('sst_number')"
-                    value="{{ old('sst_number', isset($customer) ? $customer->sst_number : null) }}" />
+                    value="{{ old('sst_number', isset($duplicate) ? $duplicate->sst_number : (isset($customer) ? $customer->sst_number : null)) }}" />
                 <x-app.message.error id="sst_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="tourism_tax_reg_no"
                     class="mb-1">{{ __('Tourism Tax Reg No.') }}</x-app.input.label>
                 <x-app.input.input name="tourism_tax_reg_no" id="tourism_tax_reg_no" :hasError="$errors->has('tourism_tax_reg_no')"
-                    value="{{ old('tourism_tax_reg_no', isset($customer) ? $customer->tourism_tax_reg_no : null) }}" />
+                    value="{{ old('tourism_tax_reg_no', isset($duplicate) ? $duplicate->tourism_tax_reg_no : (isset($customer) ? $customer->tourism_tax_reg_no : null)) }}" />
                 <x-app.message.error id="tourism_tax_reg_no_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="prev_gst_reg_no"
                     class="mb-1">{{ __('Prev. GST Reg No.') }}</x-app.input.label>
                 <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" :hasError="$errors->has('prev_gst_reg_no')"
-                    value="{{ old('prev_gst_reg_no', isset($customer) ? $customer->prev_gst_reg_no : null) }}" />
+                    value="{{ old('prev_gst_reg_no', isset($duplicate) ? $duplicate->prev_gst_reg_no : (isset($customer) ? $customer->prev_gst_reg_no : null)) }}" />
                 <x-app.message.error id="prev_gst_reg_no_err" />
             </div>
             <div class="flex flex-col hidden individual-fields-container">
@@ -100,34 +100,34 @@
                     <span class="text-sm text-red-500 hidden for_einvoice-required">*</span>
                 </x-app.input.label>
                 <x-app.input.input name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')"
-                    value="{{ old('identity_type', isset($customer) ? $customer->identity_type : null) }}" />
+                    value="{{ old('identity_type', isset($duplicate) ? $duplicate->identity_type : (isset($customer) ? $customer->identity_type : null)) }}" />
                 <x-app.message.error id="identity_type_err" />
             </div>
             <div class="flex flex-col hidden individual-fields-container">
                 <x-app.input.label id="identity_no" class="mb-1">{{ __('Identity No.') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="identity_no" id="identity_no" :hasError="$errors->has('identity_no')"
-                    value="{{ old('identity_no', isset($customer) ? $customer->identity_no : null) }}" />
+                    value="{{ old('identity_no', isset($duplicate) ? $duplicate->identity_no : (isset($customer) ? $customer->identity_no : null)) }}" />
                 <x-app.message.error id="identity_no_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="registered_name" class="mb-1">{{ __('Registered Name') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="registered_name" id="registered_name" :hasError="$errors->has('registered_name')"
-                    value="{{ old('registered_name', isset($customer) ? $customer->registered_name : null) }}" />
+                    value="{{ old('registered_name', isset($duplicate) ? $duplicate->registered_name : (isset($customer) ? $customer->registered_name : null)) }}" />
                 <x-app.message.error id="registered_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }} </x-app.input.label>
                 <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')"
-                    value="{{ old('trade_name', isset($customer) ? $customer->trade_name : null) }}" />
+                    value="{{ old('trade_name', isset($duplicate) ? $duplicate->trade_name : (isset($customer) ? $customer->trade_name : null)) }}" />
                 <x-app.message.error id="trade_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')"
-                    value="{{ old('phone_number', isset($customer) ? $customer->phone : null) }}" />
+                    value="{{ old('phone_number', isset($duplicate) ? $duplicate->phone : (isset($customer) ? $customer->phone : null)) }}" />
                 <span class="text-sm text-slate-500">{{ __('"+6" is not required') }}</span>
                 <x-app.message.error id="phone_number_err" />
             </div>
@@ -135,7 +135,7 @@
                 <x-app.input.label id="email" class="mb-1">{{ __('Email Address') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="email" id="email" type="email" :hasError="$errors->has('email')"
-                    value="{{ old('email', isset($customer) ? $customer->email : null) }}" />
+                    value="{{ old('email', isset($duplicate) ? $duplicate->email : (isset($customer) ? $customer->email : null)) }}" />
                 <x-app.message.error id="email_err" />
             </div>
         </div>
@@ -143,19 +143,19 @@
             <div class="flex flex-col">
                 <x-app.input.label id="address" class="mb-1">{{ __('Address') }} </x-app.input.label>
                 <x-app.input.input name="address" id="address" :hasError="$errors->has('address')"
-                    value="{{ old('city', isset($customer) ? $customer->address : null) }}" />
+                    value="{{ old('city', isset($duplicate) ? $duplicate->address : (isset($customer) ? $customer->address : null)) }}" />
                 <x-app.message.error id="address_err" />
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="city" class="mb-1">{{ __('City') }}</x-app.input.label>
                 <x-app.input.input name="city" id="city" :hasError="$errors->has('city')"
-                    value="{{ old('city', isset($customer) ? $customer->city : null) }}" />
+                    value="{{ old('city', isset($duplicate) ? $duplicate->city : (isset($customer) ? $customer->city : null)) }}" />
                 <x-app.message.error id="city_err" />
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="zip_code" class="mb-1">{{ __('Zip Code') }}</x-app.input.label>
                 <x-app.input.input name="zip_code" id="zip_code" :hasError="$errors->has('zip_code')"
-                    value="{{ old('zip_code', isset($customer) ? $customer->zipcode : null) }}" class="int-input" />
+                    value="{{ old('zip_code', isset($duplicate) ? $duplicate->zipcode : (isset($customer) ? $customer->zipcode : null)) }}" class="int-input" />
                 <x-app.message.error id="zip_code_err" />
             </div>
         </div>
@@ -195,7 +195,7 @@
                     placeholder="{{ __('Select a company group') }}">
                     <option value="">{{ __('Select a company group') }}</option>
                     @foreach ($company_group as $key => $value)
-                        <option value="{{ $key }}" @selected(old('company_group', isset($customer) ? $customer->company_group : null) == $key)>{{ $value }}</option>
+                        <option value="{{ $key }}" @selected(old('company_group', isset($duplicate) ? $duplicate->company_group : (isset($customer) ? $customer->company_group : null)) == $key)>{{ $value }}</option>
                     @endforeach
                 </x-app.input.select2>
                 <x-app.message.error id="company_group_err" />
@@ -206,7 +206,7 @@
                     placeholder="{{ __('Select a prefix') }}">
                     <option value="">{{ __('Select a prefix') }}</option>
                     @foreach ($prefix as $key => $value)
-                        <option value="{{ $key }}" @selected(old('prefix', isset($customer) ? $customer->prefix : null) == $key)>{{ $value }}</option>
+                        <option value="{{ $key }}" @selected(old('prefix', isset($duplicate) ? $duplicate->prefix : (isset($customer) ? $customer->prefix : null)) == $key)>{{ $value }}</option>
                     @endforeach
                 </x-app.input.select2>
                 <x-app.message.error id="prefix_err" />
@@ -215,25 +215,25 @@
                 <x-app.input.label id="customer_name" class="mb-1">{{ __('Customer Name') }} <span
                         class="text-sm text-red-500">*</span></x-app.input.label>
                 <x-app.input.input name="customer_name" id="customer_name" :hasError="$errors->has('customer_name')"
-                    value="{{ old('customer_name', isset($customer) ? $customer->name : null) }}" />
+                    value="{{ old('customer_name', isset($duplicate) ? $duplicate->name : (isset($customer) ? $customer->name : null)) }}" />
                 <x-app.message.error id="customer_name_err" />
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} </x-app.input.label>
                 <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')"
-                    value="{{ old('company_name', isset($customer) ? $customer->company_name : null) }}" />
+                    value="{{ old('company_name', isset($duplicate) ? $duplicate->company_name : (isset($customer) ? $customer->company_name : null)) }}" />
                 <x-app.message.error id="company_name_err" />
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="mobile_number" class="mb-1">{{ __('Mobile Number') }}</x-app.input.label>
                 <x-app.input.input name="mobile_number" id="mobile_number" :hasError="$errors->has('mobile_number')"
-                    value="{{ old('mobile_number', isset($customer) ? $customer->mobile_number : null) }}" />
+                    value="{{ old('mobile_number', isset($duplicate) ? $duplicate->mobile_number : (isset($customer) ? $customer->mobile_number : null)) }}" />
                 <x-app.message.error id="mobile_number_err" />
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="website" class="mb-1">{{ __('Website') }}</x-app.input.label>
                 <x-app.input.input name="website" id="website" :hasError="$errors->has('website')"
-                    value="{{ old('website', isset($customer) ? $customer->website : null) }}" />
+                    value="{{ old('website', isset($duplicate) ? $duplicate->website : (isset($customer) ? $customer->website : null)) }}" />
                 <x-app.message.error id="website_err" />
             </div>
             @if (!isCreateLink())
@@ -242,7 +242,7 @@
                     <x-app.input.select name="currency" id="currency" :hasError="$errors->has('currency')">
                         <option value="">{{ __('Select a currency') }}</option>
                         @foreach ($currencies as $curr)
-                            <option value="{{ $curr->id }}" @selected(old('currency', isset($customer) ? $customer->currency_id : null) == $curr->id)>{{ $curr->name }}
+                            <option value="{{ $curr->id }}" @selected(old('currency', isset($duplicate) ? $duplicate->currency_id : (isset($customer) ? $customer->currency_id : null)) == $curr->id)>{{ $curr->name }}
                             </option>
                         @endforeach
                     </x-app.input.select>
@@ -255,7 +255,7 @@
                     <x-app.input.select name="area" id="area" :hasError="$errors->has('area')">
                         <option value="">{{ __('Select a area') }}</option>
                         @foreach ($areas as $area)
-                            <option value="{{ $area->id }}" @selected(old('area', isset($customer) ? $customer->area_id : null) == $area->id)>{{ $area->name }}
+                            <option value="{{ $area->id }}" @selected(old('area', isset($duplicate) ? $duplicate->area : (isset($customer) ? $customer->area_id : null)) == $area->id)>{{ $area->name }}
                             </option>
                         @endforeach
                     </x-app.input.select>
@@ -268,7 +268,7 @@
                     <x-app.input.select name="debtor_type" id="debtor_type" :hasError="$errors->has('debtor_type')">
                         <option value="">{{ __('Select a debtor type') }}</option>
                         @foreach ($debtor_types as $debtor_type)
-                            <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($customer) ? $customer->debtor_type_id : null) == $debtor_type->id)>
+                            <option value="{{ $debtor_type->id }}" @selected(old('debtor_type', isset($duplicate) ? $duplicate->debtor_type_id : (isset($customer) ? $customer->debtor_type_id : null)) == $debtor_type->id)>
                                 {{ $debtor_type->name }}</option>
                         @endforeach
                     </x-app.input.select>
@@ -282,7 +282,7 @@
                         placeholder="{{ __('Select a sale agent') }}" multiple>
                         <option value="">{{ __('Select a sale agent') }}</option>
                         @foreach ($sales_agents as $sa)
-                            <option value="{{ $sa->id }}" @selected(isset($customer) && isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }}
+                            <option value="{{ $sa->id }}" @selected(isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }}
                             </option>
                         @endforeach
                     </x-app.input.select2>
@@ -295,7 +295,7 @@
                     <x-app.input.select name="platform" id="platform" :hasError="$errors->has('platform')">
                         <option value="">{{ __('Select a platform') }}</option>
                         @foreach ($platforms as $platform)
-                            <option value="{{ $platform->id }}" @selected(old('platform', isset($customer) ? $customer->platform_id : null) == $platform->id)>{{ $platform->name }}
+                            <option value="{{ $platform->id }}" @selected(old('platform',isset($duplicate) ? $duplicate->platform_id : (isset($customer) ? $customer->platform_id : null)) == $platform->id)>{{ $platform->name }}
                             </option>
                         @endforeach
                     </x-app.input.select>
@@ -307,7 +307,7 @@
                     <x-app.input.label id="credit_term" class="mb-1">{{ __('Credit Terms') }}</x-app.input.label>
                     <x-app.input.select name="credit_term[]" multiple>
                         @foreach ($credit_terms as $ct)
-                            <option value="{{ $ct->id }}" @selected(old('credit_term', isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null))>{{ $ct->name }}
+                            <option value="{{ $ct->id }}" @selected(old('credit_term', isset($duplicate) ? in_array($ct->id, $duplicate->creditTerms()->pluck('credit_term_id')->toArray()) : (isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null)))>{{ $ct->name }}
                             </option>
                         @endforeach
                     </x-app.input.select>
@@ -341,12 +341,12 @@
                     @else
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
                         @if (isset($customer) && $customer->status == 4)
-                            <option value="4" @selected(old('status', isset($customer) ? $customer->status : null) == 4)>{{ __('Rejected') }}</option>
+                            <option value="4" @selected(old('status', isset($duplicate) ? $duplicate->status : (isset($customer) ? $customer->status : null)) == 4)>{{ __('Rejected') }}</option>
                         @elseif (isset($customer) && $customer->status == 5)
-                            <option value="5" @selected(old('status', isset($customer) ? $customer->status : null) == 5)>{{ __('Approved') }}</option>
+                            <option value="5" @selected(old('status', isset($duplicate) ? $duplicate->status : (isset($customer) ? $customer->status : null)) == 5)>{{ __('Approved') }}</option>
                         @else
-                            <option value="1" @selected(old('status', isset($customer) ? $customer->status : null) == 1)>{{ __('Active') }}</option>
-                            <option value="0" @selected(old('status', isset($customer) ? $customer->status : null) === 0)>{{ __('Inactive') }}</option>
+                            <option value="1" @selected(old('status', isset($duplicate) ? $duplicate->status : (isset($customer) ? $customer->status : null)) == 1)>{{ __('Active') }}</option>
+                            <option value="0" @selected(old('status', isset($duplicate) ? $duplicate->status : (isset($customer) ? $customer->status : null)) === 0)>{{ __('Inactive') }}</option>
                         @endif
                     @endif
                 </x-app.input.select>
@@ -355,7 +355,7 @@
             <div class="flex flex-col col-span-2">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                 <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')"
-                    value="{{ old('remark', isset($customer) ? $customer->remark : null) }}" />
+                    value="{{ old('remark', isset($duplicate) ? $duplicate->remark : (isset($customer) ? $customer->remark : null)) }}" />
                 <x-app.message.error id="remark_err" />
             </div>
         </div>
@@ -371,6 +371,7 @@
 @push('scripts')
     <script>
         CUSTOMER = @json($customer ?? null);
+        DUPLICATE = @json($duplicate ?? null);
         INFO_FORM_CAN_SUBMIT = true
         DEFAULT_BRANCH = @json($default_branch ?? null);
         IS_CREATE_LINK = @json($is_create_link ?? null);
@@ -379,10 +380,10 @@
         INIT_DONE = false
 
         $(document).ready(function() {
-            if (CUSTOMER != null && CUSTOMER.category != null) {
+            if ((CUSTOMER != null && CUSTOMER.category != null) || (DUPLICATE != null && DUPLICATE.category != null)) {
                 $('select[name="category"]').trigger('change')
             }
-            if (CUSTOMER != null)[
+            if (CUSTOMER != null || DUPLICATE != null)[
                 $('select[name="msic_code"]').trigger('change')
             ]
             $('input[name="for_einvoice"]').trigger('change')

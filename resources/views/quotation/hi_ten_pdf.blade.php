@@ -89,7 +89,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
-                            <td style="font-size: 14px; padding: 10px 0 0 0;">ATT: {{ $customer->name ?? '' }}</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -202,6 +202,35 @@
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
+                <!-- Warranty -->
+                @if ($prod->warrantyPeriods != null)
+                    @php
+                        $warranty = [];
+                        foreach ($prod->warrantyPeriods as $wp) {
+                            $warranty[] = $wp->warrantyPeriod->name;
+                        }
+                    @endphp
+                    @if (count($warranty) > 0)
+                        <tr>
+                            <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                                Warranty:<br>
+                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                        </tr>
+                        @foreach ($warranty as $key => $w)
+                            <tr>
+                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                                <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                                    @if (count($warranty) == $key + 1)
+                                        {{ $w }}
+                                    @else
+                                        {{ $w }}<br>
+                                    @endif
+                                <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                            </tr>
+                        @endforeach
+                    @endif
+                @endif
                 @if ($prod->remark != null)
                     <tr>
                         <td colspan="7" style="padding: 15px 0 0 0;"></td>

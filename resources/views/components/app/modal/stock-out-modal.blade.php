@@ -46,27 +46,27 @@
                                 </div>
                             @endif
                         </div>
-                        <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="customer"
-                            name="stock_out_to_selection">
+                        <x-app.input.select2 class="w-full mt-4 hidden stock-out-to-selection" data-type="customer"
+                            name="stock_out_to_selection_1" placeholder="{{ __('Select a customer') }}">
                             <option value="">{{ __('Select a customer') }}</option>
                             @foreach ($customers as $cus)
                                 <option value="{{ $cus->id }}">{{ $cus->name }} - {{ $cus->company_name }}</option>
                             @endforeach
-                        </x-app.input.select>
-                        <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="technician"
-                            name="stock_out_to_selection">
+                        </x-app.input.select2>
+                        <x-app.input.select2 class="w-full mt-4 hidden stock-out-to-selection" data-type="technician"
+                            name="stock_out_to_selection_2" placeholder="{{ __('Select a technician') }}">
                             <option value="">{{ __('Select a technician') }}</option>
                             @foreach ($technicians as $te)
                                 <option value="{{ $te->id }}">{{ $te->name }}</option>
                             @endforeach
-                        </x-app.input.select>
-                        <x-app.input.select class="w-full mt-4 hidden stock-out-to-selection" data-type="product"
-                            name="stock_out_to_selection">
+                        </x-app.input.select2>
+                        <x-app.input.select2 class="w-full mt-4 hidden stock-out-to-selection" data-type="product"
+                            name="stock_out_to_selection_3" placeholder="{{ __('Select a product') }}">
                             <option value="">{{ __('Select a product') }}</option>
                             @foreach ($products as $pro)
                                 <option value="{{ $pro->id }}">{{ $pro->sku }} - {{ $pro->model_name }}</option>
                             @endforeach
-                        </x-app.input.select>
+                        </x-app.input.select2>
                     </div>
                 </div>
             </div>
@@ -95,8 +95,7 @@
             let val = $(this).val()
 
             $('#stock-out-modal .stock-out-to-selection').addClass('hidden')
-            $('#stock-out-modal select[name="stock_out_to_selection"]').val(null)
-            $('#stock-out-modal select[name="stock_out_to_selection"]').trigger('change')
+            $('#stock-out-modal select[name="stock_out_to_selection_1"], #stock-out-modal select[name="stock_out_to_selection_2"], #stock-out-modal select[name="stock_out_to_selection_3"]').val(null).trigger('change')
 
             if (val === 'customer') {
                 $('#stock-out-modal .stock-out-to-selection[data-type="customer"]').removeClass('hidden')
@@ -115,7 +114,7 @@
             url = `${url}?stock_out_to=${val}`
             $('#stock-out-modal #yes-btn').attr('href', url)
         })
-        $('#stock-out-modal select[name="stock_out_to_selection"]').on('change', function() {
+        $('#stock-out-modal select[name="stock_out_to_selection_1"], #stock-out-modal select[name="stock_out_to_selection_2"], #stock-out-modal select[name="stock_out_to_selection_3"]').on('change', function() {
             let val = $(this).val()
 
             $('#stock-out-modal #yes-btn').addClass('hidden')

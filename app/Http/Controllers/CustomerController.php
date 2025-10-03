@@ -175,15 +175,23 @@ class CustomerController extends Controller
                 'status' => $record->statusToLabel($record->status),
                 'can_edit' => hasPermission('customer.edit') && $record->status != Customer::STATUS_APPROVAL_PENDING,
                 'can_delete' => hasPermission('customer.delete'),
+                'can_duplicate' => hasPermission('customer.create'),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function create()
+    public function create(Request $req)
     {
-        return view('customer.form');
+        $data = [];
+        if ($req->has('id')) {
+            $customer = Customer::where('id', $req->id)->first();
+            $customer->load('pictures', 'locations');
+            $data['duplicate'] = $customer;
+            $data['sales_agent_ids'] = $customer->salesAgents->pluck('sales_agent_id')->toArray();
+        }
+        return view('customer.form', $data);
     }
 
     public function edit(Customer $customer)

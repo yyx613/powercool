@@ -114,7 +114,7 @@ class InventoryController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->orWhere('model_name', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_sku', 'like', '%'.$keyword.'%')
                     ->orWhere('sku', 'like', '%'.$keyword.'%');
             });
         }
@@ -153,6 +153,8 @@ class InventoryController extends Controller
         foreach ($records_paginator as $record) {
             $data['data'][] = [
                 'name' => $record->model_name,
+                'sku' => $record->sku,
+                'category' => $record->type == Product::TYPE_PRODUCT ? 'Product' : ($record->is_sparepart == true ? 'Sparepart' : 'Raw Material'),
                 'image' => $record->image,
                 'remaining_qty' => $record->warehouseAvailableStock(),
             ];
