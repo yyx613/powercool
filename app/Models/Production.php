@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 #[ScopedBy([BranchScope::class])]
 class Production extends Model
@@ -149,7 +150,11 @@ class Production extends Model
         $milestone_all_count = ProductionMilestone::where('production_id', $production->id)->count();
         $milestone_completed_count = ProductionMilestone::where('production_id', $production->id)->whereNotNull('submitted_at')->count();
 
-        $progress = number_format(($milestone_completed_count / $milestone_all_count) * 100, 2);
+        if ($milestone_all_count == 0) {
+            $progress = number_format(1 * 100, 2);
+        } else {
+            $progress = number_format(($milestone_completed_count / $milestone_all_count) * 100, 2);
+        }
 
         if (str_contains($progress, '.00')) {
             $progress = (int) $progress;

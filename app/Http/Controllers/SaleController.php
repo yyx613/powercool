@@ -27,7 +27,6 @@ use App\Models\ObjectCreditTerm;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
-use App\Models\ProductCost;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
@@ -496,7 +495,7 @@ class SaleController extends Controller
                 $remarks = $remarks->merge($quos[$i]->remark);
                 $products = $products->merge($quos[$i]->products);
                 if ($quos[$i]->third_party_address != null) {
-                    $third_party_address = array_merge(json_decode($quos[$i]->third_party_address), $third_party_address); 
+                    $third_party_address = array_merge(json_decode($quos[$i]->third_party_address), $third_party_address);
                 }
             }
 
@@ -776,13 +775,14 @@ class SaleController extends Controller
                 'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
+                'can_to_sale_production_request' => isSuperAdmin() || isSalesCoordinator(),
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
                     'payment_due_date_filled' => $record->paid_amount >= $record->total_amount || $record->payment_due_date != null,
                     'has_product' => count($sp_ids) > 0,
                     'has_serial_no' => SaleProductChild::whereIn('sale_product_id', $sp_ids)->exists(),
-                    'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE,
+                    'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE || $record->status == Sale::STATUS_PARTIALLY_CONVERTED,
                     'no_pending_approval' => ! Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
                     'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
@@ -1014,7 +1014,7 @@ class SaleController extends Controller
                 Session::put('convert_terms', $req->term);
 
                 // Allowed spc ids
-                $so_ids = Sale::where('is_draft', false)->where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])->pluck('id');
+                $so_ids = Sale::where('is_draft', false)->where('type', Sale::TYPE_SO)->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])->pluck('id');
                 $sp_ids = SaleProduct::whereIn('sale_id', $so_ids)->pluck('id');
                 $spc_ids = SaleProductChild::distinct()
                     ->whereIn('sale_product_id', $sp_ids)
@@ -1031,7 +1031,7 @@ class SaleController extends Controller
                     ->where('is_draft', false)
                     ->whereNotNull('payment_method')
                     ->whereNotIn('id', $this->getSaleInProduction())
-                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->where(function ($q) {
                         $q->where(function ($q) {
                             $q->whereHas('products.product', function ($q) {
@@ -1065,7 +1065,7 @@ class SaleController extends Controller
                     ->where('is_draft', false)
                     ->whereNotNull('payment_method')
                     ->whereNotIn('id', $this->getSaleInProduction())
-                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->whereIn('id', explode(',', $req->so))
                     ->where('customer_id', Session::get('convert_customer_id'))
                     ->where('sale_id', Session::get('convert_salesperson_id'))
@@ -1115,7 +1115,7 @@ class SaleController extends Controller
                     ->where('is_draft', false)
                     ->whereNotNull('payment_method')
                     ->whereNotIn('id', $this->getSaleInProduction())
-                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->where('customer_id', Session::get('convert_customer_id'))
                     ->where('sale_id', Session::get('convert_salesperson_id'))
                     ->where(function ($q) {
@@ -1156,7 +1156,7 @@ class SaleController extends Controller
                     ->where('is_draft', false)
                     ->whereNotNull('payment_method')
                     ->whereNotIn('id', $this->getSaleInProduction())
-                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->where('customer_id', $req->cus)
                     ->where(function ($q) {
                         $q->whereHas('approval', function ($q) {
@@ -1193,7 +1193,7 @@ class SaleController extends Controller
                 $sales = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
                     ->whereNotIn('id', $this->getSaleInProduction())
-                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
+                    ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->whereNotNull('payment_method')
                     ->where(function ($q) {
                         $q->whereHas('approval', function ($q) {
@@ -3378,8 +3378,9 @@ class SaleController extends Controller
                 $res = (new EInvoiceController)->submit($req);
                 $data = $res->getData(true);
                 Log::info($data);
-                if (!empty($data['errorDetails']) || $res->getStatusCode() > 299 || !empty($data['error'])) {
+                if (! empty($data['errorDetails']) || $res->getStatusCode() > 299 || ! empty($data['error'])) {
                     DB::rollBack();
+
                     return $res;
                 }
                 foreach ($invoicesData as $invData) {
@@ -4539,7 +4540,6 @@ class SaleController extends Controller
             //     }
             // }
 
-
             $existing_skus = transportAcknowledgement::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku($req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY ? 'DL' : 'CL', $existing_skus);
             // $delivery_address = CustomerLocation::whereIn('type', [CustomerLocation::TYPE_BILLING_ADN_DELIVERY, CustomerLocation::TYPE_DELIVERY])->where('customer_id', $first_so->customer->id)->first();
@@ -4582,11 +4582,12 @@ class SaleController extends Controller
         }
     }
 
-    public function getThirdPartyAddress(DeliveryOrder $do) {
+    public function getThirdPartyAddress(DeliveryOrder $do)
+    {
         $address = Sale::whereRaw("find_in_set('".$do->id."', convert_to)")->pluck('third_party_address')->toArray();
 
         $third_party_address = [];
-        for ($i=0; $i < count($address); $i++) { 
+        for ($i = 0; $i < count($address); $i++) {
             if ($address[$i] != null) {
                 $third_party_address = array_merge($third_party_address, json_decode($address[$i]));
             }
@@ -4743,7 +4744,7 @@ class SaleController extends Controller
                     'desc' => $req->description[$i] != null ? $req->description[$i] : $product->model_desc,
                     'remark' => $req->remark[$i] != null ? $req->remark[$i] : null,
                     'qty' => $req->qty[$i],
-                    'product_child_id' => $req->{'serial_no_'.$req->product[$i]} != null && $req->{'serial_no_'.$req->product[$i]} != '' ? join(',', $req->{'serial_no_'.$req->product[$i]}) : null,
+                    'product_child_id' => $req->{'serial_no_'.$req->product[$i]} != null && $req->{'serial_no_'.$req->product[$i]} != '' ? implode(',', $req->{'serial_no_'.$req->product[$i]}) : null,
                 ];
             }
 

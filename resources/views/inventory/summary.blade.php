@@ -148,6 +148,7 @@
                         <thead>
                             <tr>
                                 <th>{{ __('Name') }}</th>
+                                <th>{{ __('Category') }}</th>
                                 <th>{{ __('Remaining Qty') }}</th>
                             </tr>
                         </thead>
@@ -242,6 +243,9 @@
                     data: 'name'
                 },
                 {
+                    data: 'category'
+                },
+                {
                     data: 'remaining_qty'
                 },
             ],
@@ -258,7 +262,9 @@
                                             `<x-app.no-image-icon class="p-1"/>`
                                     }
                                 </div>
-                                <span>${data}</span>
+                                <div class="flex-1">
+                                    <span>${row.name} (${row.sku})</span>
+                                </div>
                             </div>
                         `
                     }
@@ -266,6 +272,14 @@
                 {
                     "width": '10%',
                     "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
                         return data

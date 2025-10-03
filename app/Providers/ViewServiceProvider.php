@@ -430,7 +430,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['inventory.form'], function (ViewView $view) {
-            $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get();
+            $suppliers = Supplier::where('is_active', true)->orderBy('id', 'desc')->get(); // DISCUSS
             $inv_cats = InventoryCategory::where('is_active', true)->orderBy('id', 'desc')->get();
             $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
             $classificationCodes = ClassificationCode::withoutGlobalScope(BranchScope::class)->get();
@@ -572,7 +572,7 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
             $sales_agent_ids = DB::table('sales_sales_agents')->pluck('sales_agent_id')->toArray();
-            $sales_agents = SalesAgent::whereNotIn('id', $sales_agent_ids)->orderBy('name')->get();
+            $sales_agents = SalesAgent::whereNotIn('id', $sales_agent_ids)->orderBy('name')->get(); // DISCUSS
 
             $view->with('branches', $branches);
             $view->with('sales_agents', $sales_agents);

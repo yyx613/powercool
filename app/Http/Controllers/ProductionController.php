@@ -849,7 +849,7 @@ class ProductionController extends Controller
             DB::beginTransaction();
 
             $production_ids = explode(',', $req->productionIds);
-            $productions = Production::whereIn('id', $production_ids)->where('status', Production::STATUS_TO_DO)->get();
+            $productions = Production::whereIn('id', $production_ids)->where('status', Production::STATUS_TO_DO)->get(); // DISCUSS
 
             for ($i = 0; $i < count($productions); $i++) {
                 // Create product
@@ -904,6 +904,7 @@ class ProductionController extends Controller
             $renderer = new DynamicHtmlRenderer;
 
             $data['renderer'][] = $renderer->render($barcode);
+            $data['product_brand'][] = $prod->brand;
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $product_children[$i]->sku;

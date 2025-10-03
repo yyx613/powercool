@@ -125,7 +125,7 @@
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
                             </td>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">ATT:
-                                {{ $customer->name ?? '' }}</td>
+                                {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
