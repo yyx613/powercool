@@ -60,14 +60,23 @@ class CustomerController extends Controller
     {
         $records = new Customer;
 
-        if (isSalesOnly()) {
+        if ($req->find_customer != null && $req->find_customer != '') {
+        } else if (isSalesOnly()) {
             $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
             $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
 
             $records = $records->whereIn('id', $customer_ids);
         }
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
+        if ($req->has('find_customer') && $req->find_customer != null && $req->find_customer != '') {
+            $keyword = $req->find_customer;
+
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
+            });
+        } else if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
@@ -461,10 +470,11 @@ class CustomerController extends Controller
                     'data' =>  json_encode([
                         'is_credit_term' => true,
                         'to_credit_term_ids' => $req->credit_term,
+                        'sale_agent_ids' => $req->sale_agent == null ? null : join(',', $req->sale_agent),
                         'description' =>
                         $req->credit_term == null ?
-                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to Empty credit term' :
-                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has changed to (' . join(",", $terms) . ')',
+                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has requested to Empty credit term' :
+                            'The credit term for ' . $customer->company_name . ' (' . $customer->name . ') has requested to (' . join(",", $terms) . ')',
                     ])
                 ]);
                 (new Branch)->assign(Approval::class, $approval->id);

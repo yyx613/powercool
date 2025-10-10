@@ -125,9 +125,13 @@
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
-            let thirdPartyAddress = []
+            let thirdPartyAddressAddress = []
+            let thirdPartyAddressMobile = []
+            let thirdPartyAddressName = []
             $('#third-party-address-list .child').each(function(i, obj) {
-                thirdPartyAddress.push($(this).find('p').text())
+                thirdPartyAddressAddress.push($(this).find('input[name="address"]').val())
+                thirdPartyAddressMobile.push($(this).find('input[name="mobile_number"]').val())
+                thirdPartyAddressName.push($(this).find('input[name="name"]').val())
             })
             if (REPLICATE != null) {
                 prodOrderId = []
@@ -169,7 +173,9 @@
                     'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
                     'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
                     'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
-                    'third_party_address': thirdPartyAddress,
+                    'third_party_address_address': thirdPartyAddressAddress,
+                    'third_party_address_mobile': thirdPartyAddressMobile,
+                    'third_party_address_name': thirdPartyAddressName,
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
@@ -229,6 +235,14 @@
                                         .find('p').text(errors[key])
                                     $(`#new-billing-address #${key.replace('new_billing_', '') }_err`)
                                         .removeClass('hidden')
+                                } else if (key.includes('third_party_address')) {
+                                    let field = key.split('.')[0]
+                                    let idx = key.split('.')[1]
+                                    idx++
+                                    $(`#third-party-address-list .child[data-id="${idx}"] #${field}_err`).find('p').text(
+                                        errors[key])
+                                    $(`#third-party-address-list .child[data-id="${idx}"] #${field}_err`).removeClass(
+                                        'hidden')
                                 } else if (key.includes('.')) {
                                     let field = key.split('.')[0]
                                     let idx = key.split('.')[1]

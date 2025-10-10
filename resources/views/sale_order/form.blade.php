@@ -5,6 +5,9 @@
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
             url="{{ route('sale_order.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Sale Order - ' : 'Edit Sale Order - ') . $sale->sku : __('Create Sale Order') }}</x-app.page-title>
+        @if ($can_edit_payment && isset($sale))
+            <a href="{{ route('sale_order.edit_payment', ['sale' => $sale->id]) }}" class="text-sm bg-yellow-400 p-2 rounded hover:bg-yellow-300 hover:shadow transition-all duration-300">{{ __('Create / Edit Payment') }}</a>
+        @endif
     </div>
     @include('components.app.alert.parent')
     <div class="mb-2">
@@ -38,7 +41,6 @@
 
             @include('sale_order.form_step.quotation_details')
             @include('sale_order.form_step.product_details')
-            @include('sale_order.form_step.payment_details')
             @include('sale_order.form_step.remarks')
 
             @if (!isset($is_view) || (isset($is_view) && $is_view == false))
@@ -69,7 +71,6 @@
         FORM_CAN_SUBMIT = true
         SALE = @json($sale ?? null);
         QUO = @json($quo ?? null);
-        CAN_EDIT_PAYMENT = @json($can_edit_payment ?? null);
         IS_VIEW = @json($is_view ?? null);
 
         $(document).ready(function() {
@@ -80,21 +81,12 @@
                     .attr('disabled', true)
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
                     .addClass('!bg-gray-100')
-                $('#new-billing-address input, #new-delivery-address input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"]')
+                $('#new-billing-address input, #new-delivery-address input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"], #third-party-address-list input')
                     .parent().addClass('!bg-gray-100')
                 $('#quotation-details-container #company-container div').addClass('!bg-gray-100')
                 $('#quotation-details-container input[name="reference"], #quotation-details-container input[name="store"], #quotation-details-container input[name="third_party_address"]').parent().addClass('!bg-gray-100')
                 $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
                     .css('backgroundColor', '#eee')
-
-                if (CAN_EDIT_PAYMENT == false) {
-                    $('#payment-details-container input, #payment-details-container select').attr('disabled', true)
-                    $('#payment-details-container input, #payment-details-container select').addClass(
-                        '!bg-gray-100')
-                    $('#payment-details-container input').parent().addClass('!bg-gray-100')
-                    $('#payment-details-container .select2, #payment-details-container .select2-selection--multiple')
-                        .css('backgroundColor', '#eee')
-                }
 
                 $('#quotation-details-container input[name="custom_date"]').attr('disabled', false)
                 $('#quotation-details-container input[name="custom_date"]').removeClass('!bg-gray-100')
@@ -162,14 +154,14 @@
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
             // Prepare payment amounts 
-            let accountAmount = []
-            let accountDate = []
-            let accountRefNo = []
-            $('#payment-amounts-container .payment-amounts').each(function(i, obj) {
-                accountAmount.push($(this).find('input[name="account_amount"]').val())
-                accountDate.push($(this).find('input[name="account_date"]').val())
-                accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
-            })
+            // let accountAmount = []
+            // let accountDate = []
+            // let accountRefNo = []
+            // $('#payment-amounts-container .payment-amounts').each(function(i, obj) {
+            //     accountAmount.push($(this).find('input[name="account_amount"]').val())
+            //     accountDate.push($(this).find('input[name="account_date"]').val())
+            //     accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
+            // })
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -225,14 +217,14 @@
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
 
-                    'payment_term': $('select[name="payment_term"]').val(),
-                    'payment_method': $('select[name="payment_method"]').val(),
-                    'payment_due_date': $('input[name="payment_due_date"]').val(),
-                    'payment_remark': $('input[name="payment_remark"]').val(),
-                    'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
-                    'account_amount': accountAmount,
-                    'account_date': accountDate,
-                    'account_ref_no': accountRefNo,
+                    // 'payment_term': $('select[name="payment_term"]').val(),
+                    // 'payment_method': $('select[name="payment_method"]').val(),
+                    // 'payment_due_date': $('input[name="payment_due_date"]').val(),
+                    // 'payment_remark': $('input[name="payment_remark"]').val(),
+                    // 'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
+                    // 'account_amount': accountAmount,
+                    // 'account_date': accountDate,
+                    // 'account_ref_no': accountRefNo,
 
                     // 'driver': $('select[name="driver"]').val(),
                     // 'delivery_date': $('input[name="delivery_date"]').val(),

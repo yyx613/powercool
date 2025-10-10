@@ -81,6 +81,17 @@
                     </div>
                 </x-app.input.input>
             </div>
+            <div class="flex-1">
+                <x-app.input.input name="filter_find_customer" id="filter_find_customer" class="flex items-center"
+                    placeholder="{{ __('Find Debtor') }}">
+                    <div class="rounded-md border border-transparent p-1 ml-1">
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24">
+                            <path
+                                d="M23.707,22.293l-5.969-5.969a10.016,10.016,0,1,0-1.414,1.414l5.969,5.969a1,1,0,0,0,1.414-1.414ZM10,18a8,8,0,1,1,8-8A8.009,8.009,0,0,1,10,18Z" />
+                        </svg>
+                    </div>
+                </x-app.input.input>
+            </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_debt_type' id='filter_debt_type' class="w-full capitalize">
                     <option value="">Select a debt type</option>
@@ -157,6 +168,7 @@
         DEFAULT_SALES_AGENT = @json($default_sales_agent ?? null);
         FOR_ROLE = @json($for_role ?? null);
         TABLE_FILTER = {
+            'find_customer': '',
             'debt_type': DEFAULT_DEBT_TYPE ?? '',
             'company_group': DEFAULT_COMPANY_GROUP ?? '',
             'category': DEFAULT_CATEGORY ?? '',
@@ -332,16 +344,21 @@
                     var url = "{{ route('customer.get_data') }}"
 
                     url =
-                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&debt_type=${ TABLE_FILTER['debt_type'] }&company_group=${ TABLE_FILTER['company_group'] }&category=${ TABLE_FILTER['category'] }&sales_agent=${ TABLE_FILTER['sales_agent'] }`
+                        `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&debt_type=${ TABLE_FILTER['debt_type'] }&company_group=${ TABLE_FILTER['company_group'] }&category=${ TABLE_FILTER['category'] }&sales_agent=${ TABLE_FILTER['sales_agent'] }&find_customer=${ TABLE_FILTER['find_customer'] }`
                     $('#data-table').DataTable().ajax.url(url);
 
                     INIT_LOAD = false
                 },
             },
         });
-        $('#filter_search').on('keyup', function() {
+        $('#filter_search').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
             dt.search($(this).val()).draw()
-        })
+        }))
+        $('#filter_find_customer').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
+            TABLE_FILTER['find_customer'] = $(this).val()
+
+            dt.draw()
+        }))
         $('#filter_debt_type').on('change', function() {
             TABLE_FILTER['debt_type'] = $(this).val()
 

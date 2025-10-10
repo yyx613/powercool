@@ -39,9 +39,9 @@
                 <td style="width: 35%; border-bottom: solid 1px black; padding: 0 0 10px 0; vertical-align: text-top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px; width: 45%; font-weight: 700;">Sale Order No</td>
+                            <td style="font-size: 14px; width: 45%; font-weight: 700;">Pro Inv No</td>
                             <td style="font-size: 14px; width: 10%;">:</td>
-                            <td style="font-size: 14px; font-weight: 700;">{{ $sale->sku }}</td>
+                            <td style="font-size: 14px; font-weight: 700;">{{ $is_proforma_invoice ? str_replace('SO', 'PRO', $sale->sku) : $sale->sku }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 14px;">Quotation</td>
@@ -92,7 +92,7 @@
             style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0px 0; border-bottom: solid 1px black;">
             <tr>
                 <td style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;"
-                    colspan="2">SALES ORDER</td>
+                    colspan="2">{{ $is_proforma_invoice ? 'PROFORMA INVOICE' : 'SALES ORDER' }}</td>
             </tr>
             <tr>
                 <td style="padding: 0 35px 0 0;" colspan="2">
