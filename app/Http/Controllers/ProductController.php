@@ -817,6 +817,7 @@ class ProductController extends Controller
                     'woo_commerce_sku' => $req->woo_commerce_sku,
                     'hi_ten_stock_code' => $req->hi_ten_stock_code,
                     'sst' => $req->sst == null ? false : true,
+                    'created_by' => Auth::user()->id,
                 ]);
 
                 (new Branch)->assign(Product::class, $prod->id);
