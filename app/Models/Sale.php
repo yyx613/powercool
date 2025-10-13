@@ -84,6 +84,10 @@ class Sale extends Model
         return $this->morphOne(Approval::class, 'object');
     }
 
+    public function thirdPartyAddresses() {
+        return $this->hasMany(SaleThirdPartyAddress::class);
+    }
+
     public function getReferenceAttribute($val)
     {
         if ($this->type == self::TYPE_QUO) {

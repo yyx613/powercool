@@ -38,7 +38,7 @@
                     <span style="font-size: 12px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 12px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 12px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
-                    <span style="font-size: 12px;">H/P:012-386 8164, 03-6094 1122</span><br>
+                    <span style="font-size: 12px;">H/P:012-386 8210, 03-6094 1122</span><br>
                     <span style="font-size: 12px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 12px;">Email add : <a
                             href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>

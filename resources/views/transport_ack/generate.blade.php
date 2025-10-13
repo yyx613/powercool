@@ -47,7 +47,7 @@
                             <option value="-1" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-1')>Powercool</option>
                             <option value="-2" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-2')>Hi Ten Trading</option>
                             @foreach ($dealers as $dealer)
-                                <option value="{{ $dealer->id }}" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == $dealer->id)>{{ $dealer->name }}
+                                <option value="{{ $dealer->id }}" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == $dealer->id)>{{ $dealer->name }} - {{ $dealer->company_name }}
                                 </option>
                             @endforeach
                         </x-app.input.select2>

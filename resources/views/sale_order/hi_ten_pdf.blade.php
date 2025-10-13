@@ -31,7 +31,7 @@
                     <span style="font-size: 14px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
                     <span style="font-size: 14px;">KAWASAN PERINDUSTRIAN SUNGAI CHOH,</span><br>
                     <span style="font-size: 14px;">48200 SERENDAH, SELANGOR DARUL EHSAN, MALAYSIA.</span><br>
-                    <span style="font-size: 14px;">H/P:012-386 8164, 03-6094 1122</span><br>
+                    <span style="font-size: 14px;">H/P:012-386 8210, 03-6094 1122</span><br>
                     <span style="font-size: 14px;">Service Hotline (HQ-Selangor) : 012-386 8743</span><br>
                     <span style="font-size: 14px;">Email add : <a
                             href="mailto:enquiry@powercool.com.my">enquiry@powercool.com.my</a></span><br>
@@ -45,10 +45,10 @@
             <tr>
                 <td colspan="2"
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: right;">
-                    SALES ORDER</td>
+                    {{ $is_proforma_invoice ? 'PROFORMA INVOICE' : 'SALES ORDER' }}</td>
                 <td style="font-size: 14px; font-weight: 700; width: 35%; padding: 15px 0 10px 0; text-align: center;">
                     No. :
-                    {{ $sale->sku }}</td>
+                    {{ $is_proforma_invoice ? str_replace('SO', 'PRO', $sale->sku) : $sale->sku }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding: 0 35px 0 0;">

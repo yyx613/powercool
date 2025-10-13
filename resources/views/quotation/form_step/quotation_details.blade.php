@@ -120,33 +120,6 @@
             <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="third_party_address"
-                class="mb-1">{{ __('Third Party Address') }}</x-app.input.label>
-            <div class="rounded-md border border-gray-300 flex overflow-hidden">
-                <x-app.input.input name="third_party_address" id="third_party_address" class="border-none flex-1" />
-                <button type="button" class="cursor-pointer bg-yellow-400 text-sm px-2"
-                    id="third-party-address-btn">Add</button>
-            </div>
-            <div id="third-party-address-list" class="mt-1">
-                <div class="flex items-start hidden hover:bg-slate-100" id="template">
-                    <p class="text-xs flex-1"></p>
-                    <button type="button" class="cursor-pointer text-red-500 text-xs">Remove</button>
-                </div>
-                @php
-                    $third_party_address =
-                        isset($sale) && $sale->third_party_address != null
-                            ? json_decode($sale->third_party_address)
-                            : [];
-                @endphp
-                @foreach ($third_party_address as $key => $val)
-                    <div class="flex items-start hover:bg-slate-100 child" data-idx={{ $key }}>
-                        <p class="text-xs flex-1">{{ $val }}</p>
-                        <button type="button" class="cursor-pointer text-red-500 text-xs">Remove</button>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-        <div class="flex flex-col">
             <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
             <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
                 placeholder="{{ __('Select a method') }}">
@@ -199,7 +172,7 @@
         </div>
     </div>
     {{-- Custom Address --}}
-    <div class="pt-4 border-t border-slate-200">
+    <div class="pt-4 border-t border-slate-200 mb-8">
         <div class="mb-8" id="new-billing-address">
             @include('components.app.address-field', [
                 'title' => 'Billing Address',
@@ -211,6 +184,45 @@
             ])
         </div>
     </div>
+    {{-- Third Party Address --}}
+    <div class="pt-4 border-t border-slate-200">
+        <div class="mb-4">
+            <span class="text-md font-semibold">{{ __('Third Party Address') }}</span>
+            <p class="text-sm text-slate-500 leading-none">{{ __('Delivery address is not required if presented') }}</p>
+        </div>
+        <div id="third-party-address-list" class="grid gap-4"></div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden" id="third-party-address-template">
+            <div class="flex flex-col">
+                <x-app.input.label id="address" class="mb-1">{{ __('Address') }}</x-app.input.label>
+                <x-app.input.input name="address" id="address1" :hasError="$errors->has('address')" />
+                <x-app.message.error id="third_party_address_address_err" />
+            </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="mobile_number" class="mb-1">{{ __('Mobile Number') }} </x-app.input.label>
+                <x-app.input.input name="mobile_number" id="mobile_number" :hasError="$errors->has('mobile_number')" />
+                <x-app.message.error id="third_party_address_mobile_err" />
+            </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="name" class="mb-1">{{ __('Name') }} </x-app.input.label>
+                <x-app.input.input name="name" id="name" :hasError="$errors->has('name')" />
+                <x-app.message.error id="third_party_address_name_err" />
+            </div>
+        </div>
+        <!-- Add Third Party Address -->
+        <div class="flex justify-end mt-4">
+            <button type="button"
+                class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow"
+                id="add-third-party-address-btn">
+                <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512"
+                    style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                    <path
+                        d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z" />
+                </svg>
+                <span class="text-sm">{{ __('Add Item') }}</span>
+            </button>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -219,13 +231,23 @@
         CUSTOMERS = @json($customers ?? []);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
         SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
-
+        
         $(document).ready(function() {
             buildCompanySelect2()
 
             if (SALE != null) {
                 $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
+
+                for (let i = 0; i < SALE.third_party_addresses.length; i++) {
+                    $('#add-third-party-address-btn').click()
+
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE.third_party_addresses[i].address)
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE.third_party_addresses[i].mobile)
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE.third_party_addresses[i].name)
+                }
+            } else {
+                $('#add-third-party-address-btn').click()
             }
             QUOTATION_DETAILS_INIT_EDIT = false
         })
@@ -367,28 +389,17 @@
         $('body').on('focus', '[aria-labelledby="select2-customer-container"]', function() {
             $('select[name="customer"]').select2('open')
         })
-        $('#third-party-address-btn').on('click', function() {
-            let val = $('input[name="third_party_address"]').val()
+        $('#add-third-party-address-btn').on('click', function() {
+            let clone = $('#third-party-address-template')[0].cloneNode(true)
 
-            if (val == '' || val == null) return
-
-            let clone = $('#third-party-address-list #template')[0].cloneNode(true)
-            $(clone).addClass('child')
             $(clone).removeClass('hidden')
-            $(clone).removeAttr('id')
-            $(clone).find('p').text(val)
+            $(clone).addClass('child')
+            $(clone).find('input').val(null)
             $('#third-party-address-list').append(clone)
 
-            $('input[name="third_party_address"]').val(null)
-
             $('#third-party-address-list .child').each(function(i, obj) {
-                $(this).attr('data-idx', i)
+                $(this).attr('data-id', i+1)
             })
-        })
-        $('body').on('click', '#third-party-address-list .child button', function() {
-            let idx = $(this).closest('.child').attr('data-idx')
-
-            $(`.child[data-idx=${idx}]`).remove()
         })
 
         function buildCompanySelect2() {

@@ -96,6 +96,11 @@ class Product extends Model
         return $this->belongsTo(InventoryType::class, 'item_type');
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
+    }
+
     public function getQtyAttribute($val)
     {
         if ($this->type == self::TYPE_PRODUCT || ($this->type == self::TYPE_RAW_MATERIAL && (bool) $this->is_sparepart == true)) {

@@ -116,7 +116,7 @@
                 type: 'GET',
                 success: function(res) {
                     for (let i = 0; i < res.third_party_address.length; i++) {
-                        let opt = new Option(res.third_party_address[i], res.third_party_address[i])
+                        let opt = new Option(`${res.third_party_address[i].address} - ${res.third_party_address[i].mobile} - ${res.third_party_address[i].name}`, res.third_party_address[i].id)
 
                         $('select[name="third_party_address"]').append(opt)
                     }

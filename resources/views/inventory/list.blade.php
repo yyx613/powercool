@@ -154,6 +154,7 @@
                     @if ($is_production == false)
                         <th>{{ __('Status') }}</th>
                     @endif
+                    <th>{{ __('Created By') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -197,6 +198,9 @@
             },
             {
                 data: 'status'
+            },
+            {
+                data: 'created_by'
             },
             {
                 data: 'action'
@@ -296,6 +300,14 @@
                 "targets": 7,
                 orderable: false,
                 render: function(data, type, row) {
+                    return data == null ? null : data.name
+                }
+            },
+            {
+                "width": "5%",
+                "targets": 8,
+                orderable: false,
+                render: function(data, type, row) {
                     if (IS_SALES_ONLY == true) {
                         return `<div class="flex items-center justify-end gap-x-2 px-2">
                             <a href="{{ config('app.url') }}/${IS_PRODUCT ? 'product' : 'raw-material'}/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
@@ -373,15 +385,16 @@
         if (IS_PRODUCTION) {
             columns.splice(4, 1)
             columnDefs.splice(4, 1)
-            columnDefs[4]['targets'] = 4
-            columnDefs[5]['targets'] = 5
-            columnDefs[6]['targets'] = 6
-
             columns.splice(5, 1)
             columnDefs.splice(5, 1)
-            columnDefs[5]['targets'] = 5
 
             columnDefs[3]['orderable'] = false
+
+            if (!IS_PRODUCT) {
+                columnDefs[4]['targets'] = 4
+                columnDefs[5]['targets'] = 5
+                columnDefs[6]['targets'] = 6
+            }
         } else {
             columnDefs[3]['orderable'] = false
             columnDefs[4]['orderable'] = false
@@ -391,11 +404,13 @@
                 columns.splice(4, 1)
                 columnDefs.splice(4, 1)
                 columnDefs[4]['targets'] = 4
+                columnDefs[5]['targets'] = 5
             } else {
                 columns.splice(5, 1)
                 columnDefs.splice(5, 1)
                 columnDefs[5]['targets'] = 5
                 columnDefs[6]['targets'] = 6
+                columnDefs[7]['targets'] = 7
             }
         }
 

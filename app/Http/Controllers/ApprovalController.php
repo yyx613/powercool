@@ -17,13 +17,11 @@ use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Sale;
 use App\Models\SaleProduct;
-use App\Models\SaleProductionRequest;
+use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
-use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -183,6 +181,7 @@ class ApprovalController extends Controller
         ];
         foreach ($records_paginator as $key => $record) {
             $obj = $record->object()->withoutGlobalScope(ApprovedScope::class)->withTrashed()->first();
+            $payload = $record->data == null ? null : json_decode($record->data);
             $view_url = null;
             if ($obj != null) {
                 if (get_class($obj) == DeliveryOrder::class) {
@@ -197,11 +196,17 @@ class ApprovalController extends Controller
             }
 
             $remark = null;
-            if ($record->data != null) {
-                $payload = json_decode($record->data);
+            if ($payload != null) {
                 if (isset($payload->cancellation_remark)) {
                     $remark = $payload->cancellation_remark;
                 }
+            }
+            // Sale agent name
+            $sale_agents = [];
+            if (get_class($obj) == Sale::class) {
+                $sale_agents[] = $obj->saleperson->name;
+            } else if (get_class($obj) == Customer::class && $payload != null && isset($payload->sale_agent_ids)) {
+                $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray(); 
             }
 
             $data['data'][] = [
@@ -218,7 +223,7 @@ class ApprovalController extends Controller
                 'remark' => $remark,
                 'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
                 'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->company_name : null,
-                'sales_agent_name' => get_class($obj) == Sale::class ? $obj->saleperson->name : null,
+                'sales_agent_name' => count($sale_agents) > 0 ? join(', ', $sale_agents) : null,
                 'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
@@ -342,7 +347,7 @@ class ApprovalController extends Controller
         }
     }
 
-    public function reject(Approval $approval)
+    public function reject(Request $req, Approval $approval)
     {
         try {
             DB::beginTransaction();
@@ -350,6 +355,7 @@ class ApprovalController extends Controller
             $obj = $approval->object()->withoutGlobalScope(ApprovedScope::class)->first();
 
             $approval->status = Approval::STATUS_REJECTED;
+            $approval->reject_remark = $req->remark;
             $approval->save();
 
             // QUO/SO/DO
@@ -400,14 +406,6 @@ class ApprovalController extends Controller
             // Check approval count
             $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
             Cache::put('unread_approval_count', $pending_approval_count);
-            // Update respective QUO/SO/DO
-            // if (get_class($obj) == Sale::class) {
-            //     $obj->status = Sale::STATUS_APPROVAL_REJECTED;
-            //     $obj->save();
-            // } else if (get_class($obj) == DeliveryOrder::class) {
-            //     $obj->status = DeliveryOrder::STATUS_APPROVAL_REJECTED;
-            //     $obj->save();
-            // }
 
             // Production Material Transfer Request
             if (get_class($obj) == FactoryRawMaterial::class) {

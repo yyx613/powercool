@@ -114,6 +114,7 @@ Route::get('/reset-sales', function () {
     DB::table('sales_sales_agents')->delete();
     DB::table('sale_product_children')->delete();
     DB::table('sale_products')->delete();
+    DB::table('sale_third_party_addresses')->delete();
     DB::table('sales')->delete();
     // Approval
     DB::table('branches')->where('object_type', Approval::class)->delete();
@@ -194,7 +195,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/approve/{approval}', 'approve')->name('approve');
-        Route::get('/reject/{approval}', 'reject')->name('reject');
+        Route::post('/reject/{approval}', 'reject')->name('reject');
         Route::get('/stock-in/{approval}', 'stockIn')->name('stock_in');
         Route::get('/has-pending', 'hasPending')->name('has_pending');
     });
@@ -348,11 +349,13 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
             Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
+            Route::get('/edit/payment/{sale}', 'editSaleOrder')->name('edit_payment')->middleware(['can:sale.sale_order.edit']);
             Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
             Route::get('/cancel', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/transfer-back', 'transferBackSaleOrder')->name('transfer_back')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
+            Route::get('/proforma-invoice/pdf/{sale}', 'pdfSaleOrder')->name('proforma_invoice_pdf');
             Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
             Route::get('/get-next-sku', 'getNextSku')->name('get_next_sku');
@@ -364,7 +367,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             // Route::post('/upsert-quotation-details', 'upsertQuoDetails')->name('upsert_quo_details');
             // Route::post('/upsert-product-details', 'upsertProDetails')->name('upsert_pro_details');
             // Route::post('/upsert-remark', 'upsertRemark')->name('upsert_remark');
-            // Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
+            Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             // Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
             Route::get('/get-products/{sale}', 'getProducts')->name('get_products');
             Route::get('/to-sale-production-request/{sale}/{product}', 'toSaleProductionReqeust')->name('to_sale_production_request');
@@ -410,6 +413,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data-debit-note', 'getDataDebitNote')->name('get_data_debit-note');
             Route::get('/cancel', 'cancelInvoice')->name('cancel');
             Route::get('/get-cancellation-involved-inv/{inv}', 'getCancellationInvolvedInv')->name('get_cancellation_involved_inv');
+            Route::get('/swap-serial-no/{inv}', 'swapSerialNo')->name('swap_serial_no');
+            Route::post('/swap-serial-no/{inv}', 'swapSerialNoPost')->name('swap_serial_no_post');
         });
         // Invoice
         // Route::prefix('invoice')->name('invoice.')->middleware(['can:sale.invoice.view'])->group(function () {
