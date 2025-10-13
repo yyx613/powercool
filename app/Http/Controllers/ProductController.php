@@ -259,6 +259,7 @@ class ProductController extends Controller
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
                 'status' => $record->is_active,
+                'created_by' => $record->createdBy,
                 'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
                 'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
                 'approval_id' => $filter_type == 'waiting' ? $approvals->where('object_id', $frm_id)->value('id') : null,
@@ -349,6 +350,7 @@ class ProductController extends Controller
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
                 'status' => $record->is_active,
+                'created_by' => $record->createdBy,
                 'can_edit' => false,
                 'can_delete' => false,
                 'frm_id' => $frms->where('product_id', $record->id)->value('id')
