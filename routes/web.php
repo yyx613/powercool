@@ -60,6 +60,7 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\Invoice;
+use App\Models\Production;
 use App\Models\Sale;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
@@ -106,6 +107,11 @@ Route::get('/reset-sales', function () {
     DB::table('branches')->where('object_type', Invoice::class)->delete();
     DB::table('invoices')->delete();
     // QUO & SO
+    DB::table('branches')->where('object_type', Production::class)->delete();
+    DB::table('production_milestone')->delete();
+    DB::table('user_production')->delete();
+    DB::table('productions')->delete();
+
     DB::table('branches')->where('object_type', Sale::class)->delete();
     DB::table('branches')->where('object_type', SaleProductionRequest::class)->delete();
     DB::table('sale_product_warranty_periods')->delete();

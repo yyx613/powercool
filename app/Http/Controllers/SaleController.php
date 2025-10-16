@@ -2022,7 +2022,9 @@ class SaleController extends Controller
                     'updated_by' => Auth::user()->id,
                 ]);
                 // Delete current third party address
-                SaleThirdPartyAddress::where('sale_id', $sale->id)->delete();
+                if ($req->type == 'quo') {
+                    SaleThirdPartyAddress::where('sale_id', $sale->id)->delete();
+                }
             }
             if ($req->type == 'cash-sale') {
                 $bill_add->cash_sale_id = $sale->id;
@@ -2031,7 +2033,7 @@ class SaleController extends Controller
                 $del_add->save();
             }
             // Third party address
-            if ($req->third_party_address_address != null) {
+            if ($req->type == 'quo' && $req->third_party_address_address != null) {
                 $addr = [];
                 for ($i = 0; $i < count($req->third_party_address_address); $i++) {
                     if ($req->third_party_address_address[$i] == null) {
@@ -4593,6 +4595,7 @@ class SaleController extends Controller
 
     public function generateTransportAcknowledgement(Request $req)
     {
+        // dd($req->all());
         // Validate form
         $rules = [
             'delivery_order' => 'required',
@@ -4619,7 +4622,8 @@ class SaleController extends Controller
             $do = DeliveryOrder::where('id', $req->delivery_order)->first();
             $pcs = ProductChild::whereIn('id', $req->serial_no)->get();
             $first_so = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$do->id."', convert_to)")->first();
-
+            $third_party_address = SaleThirdPartyAddress::where('id', $req->third_party_address)->first();
+            
             $existing_skus = transportAcknowledgement::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku($req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY ? 'DL' : 'CL', $existing_skus);
 
@@ -4628,7 +4632,7 @@ class SaleController extends Controller
                 'sku' => $sku,
                 'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
                 'do_sku' => $do->sku,
-                'address' => SaleThirdPartyAddress::where('id', $req->third_party_address)->first(),
+                'address' => $third_party_address,
                 'pcs' => $pcs,
                 'dealer_name' => $dealer_name,
             ]);
@@ -4648,6 +4652,16 @@ class SaleController extends Controller
 
             $do->transport_ack_filename = $filename;
             $do->save();
+
+            // Create agent debtor
+            $agent = AgentDebtor::create([
+                'sku' => (new AgentDebtor)->generateSku(),
+                'company_name' => $third_party_address->name,
+                'phone' => $third_party_address->mobile,
+                'address' => $third_party_address->address,
+                'dealer_id' => $req->dealer,
+            ]);
+            (new Branch)->assign(AgentDebtor::class, $agent->id);
 
             DB::commit();
 

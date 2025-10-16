@@ -61,6 +61,7 @@ class CustomerController extends Controller
         $records = new Customer;
 
         if ($req->find_customer != null && $req->find_customer != '') {
+            $records = $records->withoutGlobalScope(BranchScope::class);
         } else if (isSalesOnly()) {
             $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
             $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
@@ -72,9 +73,9 @@ class CustomerController extends Controller
             $keyword = $req->find_customer;
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
+                $q->where('name', $keyword)
+                    ->orWhere('phone', $keyword)
+                    ->orWhere('company_name', $keyword);
             });
         } else if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
