@@ -57,7 +57,8 @@
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="third_party_address"
-                            class="mb-1">{{ __('Third Party Address') }}</x-app.input.label>
+                            class="mb-1">{{ __('Third Party Address') }} <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select2 name="third_party_address" id="third_party_address" :hasError="$errors->has('third_party_address')"
                             placeholder="{{ __('Select third party address') }}">
                             <option value="">{{ __('Select third party address') }}</option>
@@ -66,7 +67,8 @@
                     </div>
                     <div class="flex flex-col">
                         <x-app.input.label id="serial_no[]"
-                            class="mb-1">{{ __('Serial No') }}</x-app.input.label>
+                            class="mb-1">{{ __('Serial No') }} <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select2 name="serial_no[]" id="serial_no[]" :hasError="$errors->has('serial_no')"
                             placeholder="{{ __('Select serial no') }}" multiple="true">
                             <option value="">{{ __('Select serila no') }}</option>
@@ -115,11 +117,14 @@
                 url: url,
                 type: 'GET',
                 success: function(res) {
+                    $('select[name="third_party_address"] option').remove()
                     for (let i = 0; i < res.third_party_address.length; i++) {
                         let opt = new Option(`${res.third_party_address[i].address} - ${res.third_party_address[i].mobile} - ${res.third_party_address[i].name}`, res.third_party_address[i].id)
 
                         $('select[name="third_party_address"]').append(opt)
                     }
+
+                    $('select[name="serial_no[]"] option').remove()
                     for (let i = 0; i < res.serial_no.length; i++) {
                         let opt = new Option(res.serial_no[i].sku, res.serial_no[i].id)
 
