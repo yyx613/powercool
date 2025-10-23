@@ -60,13 +60,16 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\Invoice;
+use App\Models\PaymentMethod;
 use App\Models\Production;
+use App\Models\ProjectType;
 use App\Models\Sale;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\SaleProductionRequest;
 use App\Models\SaleProductWarrantyPeriod;
+use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\App;
@@ -85,7 +88,33 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-
+Route::get('/mig-project-types', function () {
+    $pms = ProjectType::get(); 
+    for ($i=0; $i < count($pms); $i++) { 
+        $newPm = $pms[$i]->replicate();
+        $newPm->save();
+        (new Branch)->assign(ProjectType::class, $newPm->id, Branch::LOCATION_PENANG);
+    }
+    dd('123', $pms);
+});
+Route::get('/mig-sale-agents', function () {
+    $pms = SalesAgent::get(); 
+    for ($i=0; $i < count($pms); $i++) { 
+        $newPm = $pms[$i]->replicate();
+        $newPm->save();
+        (new Branch)->assign(SalesAgent::class, $newPm->id, Branch::LOCATION_PENANG);
+    }
+    dd('123', $pms);
+});
+Route::get('/mig-payment-method', function () {
+    $pms = PaymentMethod::get(); 
+    for ($i=0; $i < count($pms); $i++) { 
+        $newPm = $pms[$i]->replicate();
+        $newPm->save();
+        (new Branch)->assign(PaymentMethod::class, $newPm->id, Branch::LOCATION_PENANG);
+    }
+    dd('123', $pms);
+});
 Route::get('/get-branch-classes', function () {
     $classes = [];
     $branches = DB::table('branches')->get();
@@ -365,6 +394,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
             Route::get('/get-next-sku', 'getNextSku')->name('get_next_sku');
+            Route::post('/transfer/{sale}', 'transferSaleOrder')->name('transfer');
         });
 
         Route::prefix('sale')->name('sale.')->group(function () {

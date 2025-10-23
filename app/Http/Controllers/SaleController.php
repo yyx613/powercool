@@ -27,6 +27,7 @@ use App\Models\ObjectCreditTerm;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductChild;
+use App\Models\ProjectType;
 use App\Models\Role;
 use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
@@ -78,10 +79,18 @@ class SaleController extends Controller
         if ($req->has('sku')) {
             Session::put('quo-sku', $req->sku);
         }
+        if ($req->transfer_type != null) {
+            $transfer_type = Sale::labelToKey($req->transfer_type);
+        }
         $page = Session::get('quotation-page');
 
         return view('quotation.list', [
+            'so_types' => [
+                Sale::TRANSFER_TYPE_NORMAL => 'Normal',
+                Sale::TRANSFER_TYPE_TRANSFER_TO => 'Transfer To',
+            ],
             'default_page' => $page ?? null,
+            'default_so_type' => $transfer_type ?? Sale::TRANSFER_TYPE_NORMAL,
         ]);
     }
 
@@ -110,7 +119,7 @@ class SaleController extends Controller
                 DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_QUO)
-            ->where('branches.object_type', 'like', '%Sale')
+            ->where('branches.object_type', Sale::class)
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
@@ -119,6 +128,13 @@ class SaleController extends Controller
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('branches', 'sales.id', '=', 'branches.object_id')
             ->groupBy('sales.id');
+        if ($req->transfer_type == Sale::TRANSFER_TYPE_NORMAL) {
+            $quo_ids = Sale::withTrashed()->where('type', Sale::TYPE_SO)->whereNotNull('transfer_from')->pluck('transfer_from')->toArray();
+            $records = $records->whereNotIn('sales.id', $quo_ids);
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+            $quo_ids = Sale::withTrashed()->where('type', Sale::TYPE_SO)->whereNotNull('transfer_from')->pluck('transfer_from')->toArray();
+            $records = $records->whereIn('sales.id', $quo_ids);
+        }
 
         if (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
             $records = $records->where('branches.location', getCurrentUserBranch());
@@ -180,6 +196,24 @@ class SaleController extends Controller
                     ->where('data', 'like', '%is_quo%')->where('data', 'like', '%is_cancellation%')->exists();
             }
 
+            if ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+                $so = Sale::where('type', Sale::TYPE_SO)
+                    ->where('transfer_from', $record->id)
+                    ->first();
+                if ($so != null) {
+                    $transferred_so = Sale::withoutGlobalScope(BranchScope::class)
+                        ->where('type', Sale::TYPE_SO)
+                        ->where('transfer_from', $so->id)
+                        ->first();
+                    if ($transferred_so != null) {
+                        $record->branch_location = DB::table('branches')
+                            ->where('object_type', Sale::class)
+                            ->where('object_id', $transferred_so->id)
+                            ->value('location');
+                    }
+                }
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -194,14 +228,14 @@ class SaleController extends Controller
                 'curr_code' => $record->curr_code ?? null,
                 'total' => number_format($record->total_amount, 2),
                 'status' => $record->status,
+                'transfer_to_branch' => ! isset($record->branch_location) ? null : (new Branch)->keyToLabel($record->branch_location),
                 'expired_at' => $record->expired_at,
                 'is_draft' => $record->is_draft,
                 'can_view_pdf' => $record->is_draft == false && ! in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_APPROVAL_REJECTED]),
                 'can_edit' => hasPermission('sale.quotation.edit') && $owned,
                 'can_view' => hasPermission('sale.quotation.view_record') && in_array($record->status, [Sale::STATUS_CANCELLED, Sale::STATUS_CONVERTED, Sale::STATUS_APPROVAL_PENDING]),
-                // 'can_delete' => hasPermission('sale.quotation.delete'),
                 'can_delete' => false,
-                'can_cancel' => ! in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED]),
+                'can_cancel' => ! in_array($record->status, [Sale::STATUS_APPROVAL_PENDING, Sale::STATUS_CANCELLED, Sale::STATUS_CONVERTED]),
                 'can_reuse' => $record->status == Sale::STATUS_CANCELLED,
                 'is_approval_cancellation' => $is_approval_cancellation,
                 'conditions_to_convert' => [
@@ -618,12 +652,21 @@ class SaleController extends Controller
         }
     }
 
-    public function indexSaleOrder()
+    public function indexSaleOrder(Request $req)
     {
         $page = Session::get('sale-order-page');
+        if ($req->transfer_type != null) {
+            $transfer_type = Sale::labelToKey($req->transfer_type);
+        }
 
         return view('sale_order.list', [
+            'so_types' => [
+                Sale::TRANSFER_TYPE_NORMAL => 'Normal',
+                Sale::TRANSFER_TYPE_TRANSFER_TO => 'Transfer To',
+                Sale::TRANSFER_TYPE_TRANSFER_FROM => 'Transfer From',
+            ],
             'default_page' => $page ?? null,
+            'default_so_type' => $transfer_type ?? Sale::TRANSFER_TYPE_NORMAL,
             'is_sale_coordinator_only' => isSalesCoordinatorOnly(),
         ]);
     }
@@ -632,17 +675,52 @@ class SaleController extends Controller
     {
         Session::put('sale-order-page', $req->page);
 
+        if (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_TO])) {
+            $quo_ids = Sale::where('type', Sale::TYPE_QUO)->pluck('id')->toArray();
+        } elseif (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_FROM])) {
+            $so_ids_from_other_branch = Sale::withoutGlobalScope(BranchScope::class)
+                ->where('type', Sale::TYPE_SO)
+                ->whereHas('branch', function ($q) {
+                    $q->where('location', '!=', getCurrentUserBranch());
+                })
+                ->pluck('id')->toArray();
+        }
+
         $serial_no_qty_query = DB::table('sales')
             ->select('sales.id AS sale_id', DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'))
+            ->where('branches.object_type', Sale::class)
+            ->where('branches.location', getCurrentUserBranch())
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
+            ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
             ->groupBy('sales.id');
+        if ($req->transfer_type == Sale::TRANSFER_TYPE_NORMAL) {
+            $serial_no_qty_query = $serial_no_qty_query->whereNull('sales.transfer_from');
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+            $serial_no_qty_query = $serial_no_qty_query->whereNotNull('sales.transfer_from')->whereIn('sales.transfer_from', $quo_ids);
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
+            $serial_no_qty_query = $serial_no_qty_query->whereIn('sales.transfer_from', $so_ids_from_other_branch);
+        } elseif (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
+            $serial_no_qty_query = $serial_no_qty_query->where('branches.location', getCurrentUserBranch());
+        }
 
         $paid_amount_query = DB::table('sales')
             ->select('sales.id AS sale_id', DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'))
+            ->where('branches.object_type', Sale::class)
+            ->where('branches.location', getCurrentUserBranch())
             ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
             ->whereNull('sale_payment_amounts.deleted_at')
+            ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
             ->groupBy('sales.id');
+        if ($req->transfer_type == Sale::TRANSFER_TYPE_NORMAL) {
+            $paid_amount_query = $paid_amount_query->whereNull('sales.transfer_from');
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+            $paid_amount_query = $paid_amount_query->whereNotNull('sales.transfer_from')->whereIn('sales.transfer_from', $quo_ids);
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
+            $paid_amount_query = $paid_amount_query->whereIn('sales.transfer_from', $so_ids_from_other_branch);
+        } elseif (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
+            $paid_amount_query = $paid_amount_query->where('branches.location', getCurrentUserBranch());
+        }
 
         $records = DB::table('sales')
             ->select(
@@ -676,6 +754,8 @@ class SaleController extends Controller
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
+            ->where('branches.object_type', Sale::class)
+            ->where('branches.location', getCurrentUserBranch())
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
@@ -683,6 +763,7 @@ class SaleController extends Controller
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
             ->leftJoin('users as createdBy', 'createdBy.id', '=', 'sales.created_by')
             ->leftJoin('users as updatedBy', 'updatedBy.id', '=', 'sales.updated_by')
+            ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
             ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
             })
@@ -690,6 +771,15 @@ class SaleController extends Controller
                 $join->on('paid_amount_query.sale_id', '=', 'sales.id');
             })
             ->groupBy('sales.id');
+        if ($req->transfer_type == Sale::TRANSFER_TYPE_NORMAL) {
+            $records = $records->whereNull('sales.transfer_from')->whereNull('sales.transfer_from');
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+            $records = $records->whereNotNull('sales.transfer_from')->whereIn('sales.transfer_from', $quo_ids);
+        } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
+            $records = $records->whereIn('sales.transfer_from', $so_ids_from_other_branch);
+        } elseif (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
+            $records = $records->where('branches.location', getCurrentUserBranch());
+        }
 
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
@@ -755,6 +845,31 @@ class SaleController extends Controller
             $dop_ids = DeliveryOrderProduct::whereIn('sale_product_id', $sp_ids)->pluck('id');
             $dopc_count = DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->count();
 
+            if ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
+                $transferred_so = Sale::withoutGlobalScope(BranchScope::class)
+                    ->where('type', Sale::TYPE_SO)
+                    ->where('transfer_from', $record->id)
+                    ->first();
+                if ($transferred_so != null) {
+                    $record->branch_location = DB::table('branches')
+                        ->where('object_type', Sale::class)
+                        ->where('object_id', $transferred_so->id)
+                        ->value('location');
+                }
+            } else if ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
+                $transferred_so = Sale::withoutGlobalScope(BranchScope::class)
+                    ->where('type', Sale::TYPE_SO)
+                    ->where('id', $record->id)
+                    ->first();
+
+                if ($transferred_so != null) {
+                    $record->branch_location = DB::table('branches')
+                        ->where('object_type', Sale::class)
+                        ->where('object_id', $transferred_so->transfer_from)
+                        ->value('location');
+                }
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -772,19 +887,22 @@ class SaleController extends Controller
                 'payment_method' => $record->payment_method,
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
+                'transfer_to_branch' => ! isset($record->branch_location) ? null : (new Branch)->keyToLabel($record->branch_location),
+                'transfer_from_branch' => ! isset($record->branch_location) ? null : (new Branch)->keyToLabel($record->branch_location),
                 'is_draft' => $record->is_draft,
                 'qty' => $record->qty,
                 'serial_no_qty' => $record->serial_no_qty ?? 0,
                 'not_converted_serial_no_qty' => $dopc_count ?? 0,
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
-                'can_edit' => hasPermission('sale.sale_order.edit'),
-                'can_edit_payment' => isSuperAdmin() || isFinance(),
+                'can_edit' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
+                'can_edit_payment' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && isSuperAdmin() || isFinance(),
                 'can_view' => hasPermission('sale.sale_order.view_record'),
-                'can_cancel' => hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
+                'can_cancel' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
-                'can_to_sale_production_request' => isSuperAdmin() || isSalesCoordinator(),
+                'can_to_sale_production_request' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && (isSuperAdmin() || isSalesCoordinator()),
+                'can_transfer' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL]),
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
@@ -821,13 +939,13 @@ class SaleController extends Controller
     {
         $is_view = str_contains(Route::currentRouteName(), '.view');
         $is_payment = str_contains(Route::currentRouteName(), 'edit_payment');
-        if (!$is_view) {
+        if (! $is_view) {
             $owned = isSuperAdmin() || isSalesCoordinator() || Auth::user()->id == $sale->created_by;
             if (! $owned) {
                 abort(403);
             }
         }
-        if ($is_payment && !(isSuperAdmin() || isFinance())) {
+        if ($is_payment && ! (isSuperAdmin() || isFinance())) {
             abort(403);
         }
         if ($sale->status == Sale::STATUS_CANCELLED) {
@@ -886,6 +1004,7 @@ class SaleController extends Controller
                 'transfer_to' => $transfer_to,
             ]);
         }
+
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
@@ -905,22 +1024,36 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $approval = Approval::create([
-                'object_type' => Sale::class,
-                'object_id' => $sale->id,
-                'status' => Approval::STATUS_PENDING_APPROVAL,
-                'data' => json_encode([
-                    'is_quo' => false,
-                    'is_cancellation' => true,
-                    'description' => Auth::user()->name.' has requested to cancel the sale order.',
-                    'cancellation_remark' => $req->remark ?? null,
-                    'charge' => $req->charge,
-                ]),
-            ]);
-            (new Branch)->assign(Approval::class, $approval->id);
+            // Update QUO status to active, if SO is transferred from another branch
+            $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sale->transfer_from)->first();
+            if ($transfer_from_so != null) {
+                $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
+                $quo->status = Sale::STATUS_ACTIVE;
+                $quo->save();
 
-            $sale->status = Sale::STATUS_APPROVAL_PENDING;
-            $sale->save();
+                $transfer_from_so->status = Sale::STATUS_CANCELLED;
+                $transfer_from_so->save();
+
+                $sale->status = Sale::STATUS_CANCELLED;
+                $sale->save();
+            } else {
+                $approval = Approval::create([
+                    'object_type' => Sale::class,
+                    'object_id' => $sale->id,
+                    'status' => Approval::STATUS_PENDING_APPROVAL,
+                    'data' => json_encode([
+                        'is_quo' => false,
+                        'is_cancellation' => true,
+                        'description' => Auth::user()->name.' has requested to cancel the sale order.',
+                        'cancellation_remark' => $req->remark ?? null,
+                        'charge' => $req->charge,
+                    ]),
+                ]);
+                (new Branch)->assign(Approval::class, $approval->id);
+
+                $sale->status = Sale::STATUS_APPROVAL_PENDING;
+                $sale->save();
+            }
 
             DB::commit();
 
@@ -940,24 +1073,44 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            $sale->status = Sale::STATUS_TRANSFERRED_BACK;
-            $sale->save();
+            // Update QUO status to active, if SO is transferred from another branch
+            $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sale->transfer_from)->first();
+            if ($transfer_from_so != null) {
+                $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
+                $quo->status = Sale::STATUS_ACTIVE;
+                $quo->save();
 
-            // Change converted QUO back to active
-            $quos = Sale::where('type', Sale::TYPE_QUO)->where('convert_to', $sale->id)->get();
-            for ($i = 0; $i < count($quos); $i++) {
-                if ($quos[$i]->open_until >= now()->format('Y-m-d')) {
-                    $quos[$i]->expired_at = null;
-                } else {
-                    $quos[$i]->expired_at = now()->format('Y-m-d');
+                $transfer_from_so->status = Sale::STATUS_TRANSFERRED_BACK;
+                $transfer_from_so->save();
+                $transfer_from_so->delete();
+
+                $sale->status = Sale::STATUS_TRANSFERRED_BACK;
+                $sale->save();
+                $sale->delete();
+            } else {
+                $sale->status = Sale::STATUS_TRANSFERRED_BACK;
+                $sale->save();
+
+                // Change converted QUO back to active
+                $quos = Sale::where('type', Sale::TYPE_QUO)->where('convert_to', $sale->id)->get();
+                for ($i = 0; $i < count($quos); $i++) {
+                    if ($quos[$i]->open_until >= now()->format('Y-m-d')) {
+                        $quos[$i]->expired_at = null;
+                    } else {
+                        $quos[$i]->expired_at = now()->format('Y-m-d');
+                    }
+                    $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
+                    $quos[$i]->save();
                 }
-                $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
-                $quos[$i]->save();
+
+                $sale->delete();
             }
 
-            $sale->delete();
-
             DB::commit();
+
+            if ($transfer_from_so != null) {
+                return back()->with('success', 'Sale Order transferred back. The quotation '.$quo->sku.' is re-activated from another branch.');
+            }
 
             return back()->with('success', 'Sale Order transferred back.');
         } catch (\Throwable $th) {
@@ -2504,7 +2657,7 @@ class SaleController extends Controller
             }
             $req->validate($rules, [], [
                 'account_amount.*' => 'amount',
-                'account_date.*' => 'date'
+                'account_date.*' => 'date',
             ]);
         }
 
@@ -2530,7 +2683,7 @@ class SaleController extends Controller
                         return Response::json([
                             'errors' => [
                                 'err_msg' => 'Please enter atleast 50% of the total amount, RM'.number_format($sale->getTotalAmount(), 2),
-                            ]
+                            ],
                         ], HttpFoundationResponse::HTTP_BAD_REQUEST);
                     }
                 }
@@ -3794,6 +3947,31 @@ class SaleController extends Controller
             $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id')->toArray();
 
             for ($i = 0; $i < count($sales); $i++) {
+                // Update QUO status to active, if SO is transferred from another branch
+                $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sales[$i]->transfer_from)->first();
+                if ($transfer_from_so != null) {
+                    $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
+                    $quo->status = Sale::STATUS_ACTIVE;
+                    $quo->save();
+
+                    if ($type == 'transfer-back') {
+                        $transfer_from_so->status = Sale::STATUS_TRANSFERRED_BACK;
+                        $transfer_from_so->save();
+                        $transfer_from_so->delete();
+
+                        $sales[$i]->status = Sale::STATUS_TRANSFERRED_BACK;
+                        $sales[$i]->save();
+                        $sales[$i]->delete();
+                    } elseif ($type == 'void') {
+                        $transfer_from_so->status = Sale::STATUS_CANCELLED;
+                        $transfer_from_so->save();
+
+                        $sales[$i]->status = Sale::STATUS_CANCELLED;
+                        $sales[$i]->status = Sale::STATUS_CANCELLED;
+                        $sales[$i]->save();
+                    }
+                }
+
                 $convert_to = explode(',', $sales[$i]->convert_to);
                 $new_convert_to = [];
 
@@ -4595,7 +4773,6 @@ class SaleController extends Controller
 
     public function generateTransportAcknowledgement(Request $req)
     {
-        // dd($req->all());
         // Validate form
         $rules = [
             'delivery_order' => 'required',
@@ -4623,7 +4800,7 @@ class SaleController extends Controller
             $pcs = ProductChild::whereIn('id', $req->serial_no)->get();
             $first_so = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$do->id."', convert_to)")->first();
             $third_party_address = SaleThirdPartyAddress::where('id', $req->third_party_address)->first();
-            
+
             $existing_skus = transportAcknowledgement::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
             $sku = generateSku($req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY ? 'DL' : 'CL', $existing_skus);
 
@@ -4960,7 +5137,7 @@ class SaleController extends Controller
             $do = DeliveryOrder::where('invoice_id', $inv->id)->first();
             // Regenerate DO pdf
             $sale_orders = collect();
-            for ($i=0; $i < count($do->products); $i++) { 
+            for ($i = 0; $i < count($do->products); $i++) {
                 $sale_orders->push($do->products[$i]->saleProduct->sale);
             }
             $is_hi_ten = false;
@@ -5105,6 +5282,146 @@ class SaleController extends Controller
             report($th);
 
             return back()->with('error', 'Something went wrong');
+        }
+    }
+
+    public function transferSaleOrder(Request $req, Sale $sale)
+    {
+        // if ($sale->convert_to != null) {
+        //     return back()->with('error', 'Sale Order already converted, cannot transfer');
+        // } elseif ($sale->transfer_to != null) {
+        //     return back()->with('error', 'Sale Order already transferred, cannot transfer again');
+        // }
+
+        try {
+            DB::beginTransaction();
+
+            // Create new sale order for new branch
+            $newSale = $sale->replicate();
+
+            $company_group = Customer::where('id', $sale->customer_id)->value('company_group');
+            $existing_skus = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->pluck('sku')->toArray();
+            $transferred_back_skus = Sale::withTrashed()->where('type', Sale::TYPE_SO)->where('status', Sale::STATUS_TRANSFERRED_BACK)->distinct()->pluck('sku')->toArray();
+            $all_skus = array_merge($existing_skus, $transferred_back_skus);
+            $sku = generateSku('SO', $all_skus, isHiTen($company_group));
+            $newSale->sku = $sku;
+
+            $payment_method_name = PaymentMethod::where('id', $sale->payment_method)->value('name');
+            $newSale->payment_method = PaymentMethod::withoutGlobalScope(BranchScope::class)
+                ->where('name', $payment_method_name)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->value('id');
+
+            $sale_agent = SalesAgent::where('id', $sale->sale_id)->first();
+            $newSale->sale_id = SalesAgent::withoutGlobalScope(BranchScope::class)
+                ->where('name', $sale_agent->name)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->value('id');
+
+            $project_type = ProjectType::where('id', $sale->report_type)->first();
+            $newSale->report_type = ProjectType::withoutGlobalScope(BranchScope::class)
+                ->where('name', $project_type->name)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->value('id');
+
+            $newSale->save();
+            (new Branch)->assign(Sale::class, $newSale->id, $req->branch);
+            // Create sale products for new sale order
+            foreach ($sale->products as $sp) {
+                $newSp = $sp->replicate();
+                $newSp->sale_id = $newSale->id;
+                $newSp->product_id = Product::withoutGlobalScope(BranchScope::class)
+                    ->where('sku', $sp->product->sku)
+                    ->whereHas('branch', function ($q) use ($req) {
+                        $q->where('location', $req->branch);
+                    })
+                    ->value('id');
+                $newSp->save();
+                // Create sale warranty periods
+                foreach ($sp->warrantyPeriods as $sw) {
+                    $newSw = $sw->replicate();
+                    $newSw->sale_product_id = $newSp->id;
+                    $newSw->save();
+                }
+            }
+            // Create sale third party address
+            foreach ($sale->thirdPartyAddresses as $addr) {
+                $newAddr = $addr->replicate();
+                $newAddr->sale_id = $newSale->id;
+                $newAddr->save();
+            }
+            // Create sale payment amounts
+            foreach ($sale->paymentAmounts as $spa) {
+                $newSpa = $spa->replicate();
+                $newSpa->sale_id = $newSale->id;
+                $newSpa->save();
+            }
+            // Update new sale order customer id if customer does not exists in new branch
+            $customer = Customer::where('id', $sale->customer_id)->first();
+            $newCustomer = Customer::withoutGlobalScope(BranchScope::class)
+                ->where('company_name', $customer->company_name)
+                ->where('company_group', $customer->company_group)
+                ->whereHas('branch', function ($q) use ($req) {
+                    $q->where('location', $req->branch);
+                })
+                ->first();
+
+            if ($newCustomer == null) { // Replicate customer for new branch
+                $newCustomer = $customer->replicate();
+                $newCustomer->save();
+                (new Branch)->assign(Customer::class, $newCustomer->id, $req->branch);
+            }
+            $newSale->customer_id = $newCustomer->id; // Update new sale order customer id
+            // Check locations exists for new customer
+            $billAddr = CustomerLocation::where('id', $sale->billing_address_id)->first();
+            $deliAddr = CustomerLocation::where('id', $sale->delivery_address_id)->first();
+
+            $newBillAddr = CustomerLocation::where('customer_id', $newCustomer->id)
+                ->whereIn('type', [CustomerLocation::TYPE_BILLING, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])
+                ->where('address1', $billAddr->address1)
+                ->first();
+            if ($newBillAddr != null) {
+                $newSale->billing_address_id = $newBillAddr->id;
+            } else { // Replicate billing address for new customer
+                $newBillAddr = $billAddr->replicate();
+                $newBillAddr->customer_id = $newCustomer->id;
+                $newBillAddr->save();
+                $newSale->billing_address_id = $newBillAddr->id;
+            }
+
+            $newDeliAddr = CustomerLocation::where('customer_id', $newCustomer->id)
+                ->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])
+                ->where('address1', $deliAddr->address1)
+                ->first();
+            if ($newDeliAddr != null) {
+                $newSale->billing_address_id = $newDeliAddr->id;
+            } else { // Replicate delivery address for new customer
+                $newDeliAddr = $deliAddr->replicate();
+                $newDeliAddr->customer_id = $newCustomer->id;
+                $newDeliAddr->save();
+                $newSale->delivery_address_id = $newDeliAddr->id;
+            }
+
+            $newSale->transfer_from = $sale->id;
+            $newSale->save();
+
+            $sale->transfer_from = Sale::where('convert_to', $sale->id)->value('id');
+            $sale->save();
+
+            DB::commit();
+
+            return redirect(route('sale_order.index'))->with('success', 'Sale Order Transferred');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong, Please contact administrator');
         }
     }
 }

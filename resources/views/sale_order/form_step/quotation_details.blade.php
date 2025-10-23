@@ -113,6 +113,8 @@
                     <option value="7" selected>{{ __('Rejected') }}</option>
                 @elseif (isset($sale) && $sale->status == 5)
                     <option value="5" selected>{{ __('Approved') }}</option>
+                @elseif (isset($sale) && $sale->status == 8)
+                    <option value="5" selected>{{ __('Partially Converted') }}</option>
                 @else
                     <option value="1" @selected(old('status', isset($sale) ? $sale->status : null) == 1)>{{ __('Active') }}</option>
                     <option value="0" @selected(old('status', isset($sale) ? $sale->status : null) === 0)>{{ __('Inactive') }}</option>
