@@ -577,7 +577,7 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('branches', $branches);
             $view->with('sales_agents', $sales_agents);
         });
-        View::composer(['components.app.modal.transfer-modal'], function (ViewView $view) {
+        View::composer(['components.app.modal.transfer-modal', 'components.app.modal.transfer-so-modal'], function (ViewView $view) {
             $branches = [
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),

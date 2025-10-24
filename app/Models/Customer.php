@@ -124,7 +124,7 @@ class Customer extends Model
     public static function forEinvoiceFilled(int $id): bool
     {
         $cus = self::where('id', $id)->first();
-        if ($cus->for_einvoice == true) {
+        if ($cus != null && $cus->for_einvoice == true) {
             if (
                 $cus->type == null || $cus->tin_number == null || $cus->company_registration_number == null ||
                 $cus->msic_id == null || $cus->registered_name == null || $cus->phone == null ||

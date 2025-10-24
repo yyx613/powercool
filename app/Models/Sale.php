@@ -31,6 +31,9 @@ class Sale extends Model
     const PAYMENT_STATUS_UNPAID = 1;
     const PAYMENT_STATUS_PARTIALLY_PAID = 2;
     const PAYMENT_STATUS_PAID = 3;
+    const TRANSFER_TYPE_NORMAL = 1;
+    const TRANSFER_TYPE_TRANSFER_TO = 2;
+    const TRANSFER_TYPE_TRANSFER_FROM = 3;
 
     protected $guarded = [];
 
@@ -160,7 +163,7 @@ class Sale extends Model
 
     public function paymentMethod()
     {
-        return $this->belongsTo(paymentMethod::class, 'payment_method');
+        return $this->belongsTo(PaymentMethod::class, 'payment_method');
     }
 
     public function convertFromQuo(): bool
@@ -211,5 +214,18 @@ class Sale extends Model
             ->value('paid_amount');
 
         return ($total_amount ?? 0) - ($paid_amount ?? 0);
+    }
+
+    public static function labelToKey(string $label): ?int {
+        switch (strtolower($label)) {
+            case 'normal':
+                return self::TRANSFER_TYPE_NORMAL;
+            case 'transfer to':
+                return self::TRANSFER_TYPE_TRANSFER_TO;
+            case 'transfer from':
+                return self::TRANSFER_TYPE_TRANSFER_FROM;
+            default:
+                return null;
+        }
     }
 }
