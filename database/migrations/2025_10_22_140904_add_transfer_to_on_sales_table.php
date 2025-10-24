@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('sales', function (Blueprint $table) {
             $table->dropForeign('sales_sale_id_foreign');
-            $table->unsignedBigInteger('transfer_from')->nullable()->after('transfer_to')->comment('Transferred from SO id (if not current branch), QUO id (if current branch)');
+            $table->unsignedBigInteger('transfer_from')->nullable()->after('cancellation_charge')->comment('Transferred from SO id (if not current branch), QUO id (if current branch)');
         });
         Schema::table('delivery_orders', function (Blueprint $table) {
             $table->dropForeign('sales_sale_id_foreign');
