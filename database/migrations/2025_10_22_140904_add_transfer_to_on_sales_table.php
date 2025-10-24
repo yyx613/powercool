@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('transfer_from')->nullable()->after('cancellation_charge')->comment('Transferred from SO id (if not current branch), QUO id (if current branch)');
         });
         Schema::table('delivery_orders', function (Blueprint $table) {
-            $table->dropForeign('sales_sale_id_foreign');
+            $table->dropForeign('delivery_orders_sale_id_foreign');
         });
     }
 
