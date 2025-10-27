@@ -13,7 +13,7 @@
         size: 10cm 15cm;
         margin-left: 15px;
         margin-right: 15px;
-        margin-top: 10px;
+        margin-top: 0;
         margin-bottom: 0;
     }
 
@@ -24,7 +24,7 @@
 
 <body>
     @for ($i = 0; $i < count($barcode); $i++)
-        <table style="width: 100%;">
+        <table style="width: 100%; {{ $product_brand[$i] == 1 ? 'padding: 30px 0 0 0;' : 'padding: 20px 0 0 0;' }}">
             <tr>
                 <td style="text-align: center; padding: 0 0 20px 0;" colspan="2">
                     @if ($product_brand[$i] == 1)
@@ -44,10 +44,16 @@
                 <td colspan="2" style="padding: 0 0 10px 0;">
                     <table style="width: 100%; border: solid 1px black; border-collapse: collapse;">
                         <tr>
+                            <td style="width: 40%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">Product Code:</td>
+                            <td
+                                style="width: 60%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                {{ $product_code[$i] ?? '' }}</td>
+                        </tr>
+                        <tr>
                             <td style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">SERIAL
                                 NO:</td>
                             <td
-                                style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right; font-weight: 700;">
                                 {{ $barcode[$i] ?? ($product_code[$i] ?? '') }}</td>
                         </tr>
                         <tr>
@@ -156,7 +162,7 @@
             @endif
         </table>
         @if ($i != count($barcode) - 1)
-            <div style="page-break-before:always">&nbsp;</div>
+            <div style="page-break-before:always"></div>
         @endif
     @endfor
 </body>

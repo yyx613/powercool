@@ -53,6 +53,7 @@ use App\Models\ActivityLog;
 use App\Models\Approval;
 use App\Models\Billing;
 use App\Models\Branch;
+use App\Models\ClassificationCode;
 use App\Models\Customer;
 use App\Models\Dealer;
 use App\Models\DebtorType;
@@ -61,6 +62,7 @@ use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
+use App\Models\Product;
 use App\Models\Production;
 use App\Models\ProjectType;
 use App\Models\Sale;
@@ -88,104 +90,116 @@ use Illuminate\Support\Facades\Session;
 |
 */
 
-Route::get('/mig-project-types', function () {
-    $pms = ProjectType::get(); 
-    for ($i=0; $i < count($pms); $i++) { 
-        $newPm = $pms[$i]->replicate();
-        $newPm->save();
-        (new Branch)->assign(ProjectType::class, $newPm->id, Branch::LOCATION_PENANG);
-    }
-    dd('123', $pms);
-});
-Route::get('/mig-sale-agents', function () {
-    $pms = SalesAgent::get(); 
-    for ($i=0; $i < count($pms); $i++) { 
-        $newPm = $pms[$i]->replicate();
-        $newPm->save();
-        (new Branch)->assign(SalesAgent::class, $newPm->id, Branch::LOCATION_PENANG);
-    }
-    dd('123', $pms);
-});
-Route::get('/mig-payment-method', function () {
-    $pms = PaymentMethod::get(); 
-    for ($i=0; $i < count($pms); $i++) { 
-        $newPm = $pms[$i]->replicate();
-        $newPm->save();
-        (new Branch)->assign(PaymentMethod::class, $newPm->id, Branch::LOCATION_PENANG);
-    }
-    dd('123', $pms);
-});
-Route::get('/get-branch-classes', function () {
-    $classes = [];
-    $branches = DB::table('branches')->get();
-    for ($i=0; $i < count($branches); $i++) { 
-        if (!in_array($branches[$i]->object_type, $classes)) {
-            $classes[] = $branches[$i]->object_type;
-        }
-    }
+// Route::get('/classi', function () {
+//     $cc = ClassificationCode::where('code', '022')->first();
+//     foreach (Product::cursor() as $key => $value) {
+//         DB::table('classification_code_product')->insert([
+//             'classification_code_id' => $cc->id,
+//             'product_id' => $value->id,
+//             'created_at' => now(),
+//             'updated_at' => now(),
+//         ]);
+//     }
+//     dd('done');
+// });
+// Route::get('/mig-project-types', function () {
+//     $pms = ProjectType::get(); 
+//     for ($i=0; $i < count($pms); $i++) { 
+//         $newPm = $pms[$i]->replicate();
+//         $newPm->save();
+//         (new Branch)->assign(ProjectType::class, $newPm->id, Branch::LOCATION_PENANG);
+//     }
+//     dd('123', $pms);
+// });
+// Route::get('/mig-sale-agents', function () {
+//     $pms = SalesAgent::get(); 
+//     for ($i=0; $i < count($pms); $i++) { 
+//         $newPm = $pms[$i]->replicate();
+//         $newPm->save();
+//         (new Branch)->assign(SalesAgent::class, $newPm->id, Branch::LOCATION_PENANG);
+//     }
+//     dd('123', $pms);
+// });
+// Route::get('/mig-payment-method', function () {
+//     $pms = PaymentMethod::get(); 
+//     for ($i=0; $i < count($pms); $i++) { 
+//         $newPm = $pms[$i]->replicate();
+//         $newPm->save();
+//         (new Branch)->assign(PaymentMethod::class, $newPm->id, Branch::LOCATION_PENANG);
+//     }
+//     dd('123', $pms);
+// });
+// Route::get('/get-branch-classes', function () {
+//     $classes = [];
+//     $branches = DB::table('branches')->get();
+//     for ($i=0; $i < count($branches); $i++) { 
+//         if (!in_array($branches[$i]->object_type, $classes)) {
+//             $classes[] = $branches[$i]->object_type;
+//         }
+//     }
 
-    dd('123', $classes);
-});
-Route::get('/reset-sales', function () {
-    // DO
-    DB::table('branches')->where('object_type', DeliveryOrder::class)->delete();
-    DB::table('delivery_order_product_children')->delete();
-    DB::table('delivery_order_products')->delete();
-    DB::table('delivery_orders')->delete();
-    // INV
-    DB::table('branches')->where('object_type', Invoice::class)->delete();
-    DB::table('invoices')->delete();
-    // QUO & SO
-    DB::table('branches')->where('object_type', Production::class)->delete();
-    DB::table('production_milestone')->delete();
-    DB::table('user_production')->delete();
-    DB::table('productions')->delete();
+//     dd('123', $classes);
+// });
+// Route::get('/reset-sales', function () {
+//     // DO
+//     DB::table('branches')->where('object_type', DeliveryOrder::class)->delete();
+//     DB::table('delivery_order_product_children')->delete();
+//     DB::table('delivery_order_products')->delete();
+//     DB::table('delivery_orders')->delete();
+//     // INV
+//     DB::table('branches')->where('object_type', Invoice::class)->delete();
+//     DB::table('invoices')->delete();
+//     // QUO & SO
+//     DB::table('branches')->where('object_type', Production::class)->delete();
+//     DB::table('production_milestone')->delete();
+//     DB::table('user_production')->delete();
+//     DB::table('productions')->delete();
 
-    DB::table('branches')->where('object_type', Sale::class)->delete();
-    DB::table('branches')->where('object_type', SaleProductionRequest::class)->delete();
-    DB::table('sale_product_warranty_periods')->delete();
-    DB::table('sale_production_requests')->delete();
-    DB::table('sale_payment_amounts')->delete();
-    DB::table('sales_sales_agents')->delete();
-    DB::table('sale_product_children')->delete();
-    DB::table('sale_products')->delete();
-    DB::table('sale_third_party_addresses')->delete();
-    DB::table('sales')->delete();
-    // Approval
-    DB::table('branches')->where('object_type', Approval::class)->delete();
-    DB::table('approvals')->delete();
-    // Billing
-    DB::table('branches')->where('object_type', Billing::class)->delete();
-    DB::table('billings')->delete();
-    // Notification
-    DB::table('notifications')->delete();
+//     DB::table('branches')->where('object_type', Sale::class)->delete();
+//     DB::table('branches')->where('object_type', SaleProductionRequest::class)->delete();
+//     DB::table('sale_product_warranty_periods')->delete();
+//     DB::table('sale_production_requests')->delete();
+//     DB::table('sale_payment_amounts')->delete();
+//     DB::table('sales_sales_agents')->delete();
+//     DB::table('sale_product_children')->delete();
+//     DB::table('sale_products')->delete();
+//     DB::table('sale_third_party_addresses')->delete();
+//     DB::table('sales')->delete();
+//     // Approval
+//     DB::table('branches')->where('object_type', Approval::class)->delete();
+//     DB::table('approvals')->delete();
+//     // Billing
+//     DB::table('branches')->where('object_type', Billing::class)->delete();
+//     DB::table('billings')->delete();
+//     // Notification
+//     DB::table('notifications')->delete();
 
-    dd('done');
-});
-Route::get('/auto-dealer', function () {
-    DB::table('dealers')->delete();
-    DB::table('branches')->where('object_type', Dealer::class)->delete();
+//     dd('done');
+// });
+// Route::get('/auto-dealer', function () {
+//     DB::table('dealers')->delete();
+//     DB::table('branches')->where('object_type', Dealer::class)->delete();
 
-    $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
-    $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
+//     $debt_type_id = DebtorType::withoutGlobalScope(BranchScope::class)->where('name', 'DEALER')->value('id');
+//     $customers = Customer::withoutGlobalScope(BranchScope::class)->where('debtor_type_id', $debt_type_id)->get();
 
-    for ($i = 0; $i < count($customers); $i++) {
-        if ($customers[$i]->name == null || $customers[$i]->name == '') {
-            continue;
-        }
-        $dealer_exists = Dealer::where('name', $customers[$i]->name)->exists();
-        if (! $dealer_exists) {
-            $new_dealer = Dealer::create([
-                'name' => $customers[$i]->name,
-                'sku' => (new Dealer)->generateSku(),
-                'company_name' => $customers[$i]->company_name,
-                'company_group' => $customers[$i]->company_group,
-            ]);
-            (new Branch)->assign(Dealer::class, $new_dealer->id);
-        }
-    }
-    dd('done');
-});
+//     for ($i = 0; $i < count($customers); $i++) {
+//         if ($customers[$i]->name == null || $customers[$i]->name == '') {
+//             continue;
+//         }
+//         $dealer_exists = Dealer::where('name', $customers[$i]->name)->exists();
+//         if (! $dealer_exists) {
+//             $new_dealer = Dealer::create([
+//                 'name' => $customers[$i]->name,
+//                 'sku' => (new Dealer)->generateSku(),
+//                 'company_name' => $customers[$i]->company_name,
+//                 'company_group' => $customers[$i]->company_group,
+//             ]);
+//             (new Branch)->assign(Dealer::class, $new_dealer->id);
+//         }
+//     }
+//     dd('done');
+// });
 
 Route::get('/', function () {
     return redirect(route('login'));

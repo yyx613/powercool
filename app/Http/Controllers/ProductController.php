@@ -379,7 +379,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load('image', 'children', 'sellingPrices', 'milestones');
+        $product->load('images', 'children', 'sellingPrices', 'milestones');
         $material_uses = MaterialUse::with('materials.material', 'approval')->where('product_id', $product->id)->get();
         $material_use = [];
 
@@ -397,7 +397,7 @@ class ProductController extends Controller
 
     public function view(Product $product)
     {
-        $product->load('image', 'stockHiTen');
+        $product->load('images', 'stockHiTen');
 
         return view('inventory.view', [
             'prod' => $product,
@@ -885,6 +885,7 @@ class ProductController extends Controller
             $classificationCodes = $req->input('classification_code', []);
             $prod->classificationCodes()->sync($classificationCodes);
 
+            // Images
             if ($req->hasFile('image')) {
                 if ($req->product_id != null) {
                     Attachment::where([

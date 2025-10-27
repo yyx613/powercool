@@ -171,17 +171,19 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">{{ __('Image') }}</x-app.input.label>
-                    <x-app.input.file id="image[]" :hasError="$errors->has('image')" />
+                    <x-app.input.file id="image[]" :hasError="$errors->has('image')" multiple />
                     <x-input-error :messages="$errors->get('image')" class="mt-1" />
                     <div class="uploaded-file-preview-container" data-id="image">
                         <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 hidden" id="uploaded-file-template">
                             <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                         </div>
-                        @if (isset($prod) && $prod->image != null)
-                            <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
-                                <a href="{{ $prod->image->url }}" target="_blank"
-                                    class="text-blue-700 text-xs">{{ $prod->image->src }}</a>
-                            </div>
+                        @if (isset($prod) && $prod->images != null)
+                            @foreach ($prod->images as $img)
+                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
+                                    <a href="{{ $img->url }}" target="_blank"
+                                        class="text-blue-700 text-xs">{{ $img->src }}</a>
+                                </div>
+                            @endforeach
                         @endif
                     </div>
                 </div>
