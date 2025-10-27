@@ -32,9 +32,9 @@ class Product extends Model
         return $date;
     }
 
-    public function image()
+    public function images()
     {
-        return $this->morphOne(Attachment::class, 'object')->orderBy('id', 'desc');
+        return $this->morphMany(Attachment::class, 'object')->orderBy('id', 'desc');
     }
 
     public function category()

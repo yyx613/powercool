@@ -84,11 +84,17 @@
 
     <!-- Product -->
     <div class="mb-6 flex gap-x-4">
-        @if ($prod->image != null)
-            <div class="h-12 w-12 rounded overflow-hidden">
-                <img src="{{ $prod->image->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
-            </div>
+        @if ($prod->images != null)
+            @foreach ($prod->images as $img)
+                <div class="h-12 w-12 rounded overflow-hidden">
+                    <a href="{{ $img->url }}" target="_blank">
+                        <img src="{{ $img->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
+                    </a>
+                </div>
+            @endforeach
         @endif
+    </div>
+    <div class="mb-6 flex gap-x-4">
         <div class="flex flex-col flex-1">
             <div class="flex items-center mb-2 gap-x-4">
                 <h1 class="text-lg font-semibold leading-none">{{ $prod->model_name }}</h1>
