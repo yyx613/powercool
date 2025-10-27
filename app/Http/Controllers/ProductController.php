@@ -642,12 +642,25 @@ class ProductController extends Controller
             // Output the barcode as HTML in the browser with a HTML Renderer
             $renderer = new DynamicHtmlRenderer;
 
+            $length = $prod->length ?? 0;
+            $width = $prod->width ?? 0;
+            $height = $prod->height ?? 0;
+            if (str_contains($prod->length ?? 0, '.00')) {
+                $length = (int)$prod->length;
+            }
+            if (str_contains($prod->width ?? 0, '.00')) {
+                $width = (int)$prod->width;
+            }
+            if (str_contains($prod->height ?? 0, '.00')) {
+                $height = (int)$prod->height;
+            }
+
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_brand'][] = $prod->brand;
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
-            $data['dimension'][] = ($prod->length ?? 0) . ' x ' . ($prod->width ?? 0) . ' x ' . ($prod->height ?? 0) . 'MM';
+            $data['dimension'][] = $length . ' x ' . $width . ' x ' . $height . 'MM';
             $data['capacity'][] = $prod->capacity;
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;

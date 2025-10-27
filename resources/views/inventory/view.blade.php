@@ -113,19 +113,19 @@
             @if ($prod->length != null || $prod->width != null || $prod->height != null || $prod->weight != null)
                 <div class="flex gap-x-4 mb-1">
                     @if ($prod->length != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ $prod->length }}
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Length') }}: {{ str_contains($prod->length, '.00') ? (int)$prod->length : $prod->length }}
                             MM</span>
                     @endif
                     @if ($prod->width != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ $prod->width }}
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Width') }}: {{ str_contains($prod->width, '.00') ? (int)$prod->width : $prod->width }}
                             MM</span>
                     @endif
                     @if ($prod->height != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ $prod->height }}
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Height') }}: {{ str_contains($prod->height, '.00') ? (int)$prod->height : $prod->height }}
                             MM</span>
                     @endif
                     @if ($prod->weight != null)
-                        <span class="text-xs font-semibold text-slate-500">{{ __('Weight') }}: {{ $prod->weight }}
+                        <span class="text-xs font-semibold text-slate-500">{{ __('Weight') }}: {{ str_contains($prod->weight, '.00') ? (int)$prod->weight : $prod->weight }}
                             KG</span>
                     @endif
                 </div>
@@ -183,7 +183,9 @@
                 <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
                     <thead>
                         <tr>
-                            <th></th>
+                            <th>
+                                <input type="checkbox" id="select-all-checkbox" class="border-slate-400 rounded">
+                            </th>
                             <th>{{ __('Serial Number') }}</th>
                             <th>{{ __('Location') }}</th>
                             <th>{{ __('Assigned Order ID') }}</th>
@@ -643,6 +645,26 @@
 
             $('#data-table-container').toggleClass('hidden')
             $('#cost-table-container').toggleClass('hidden')
+        })
+        $('#select-all-checkbox').on('change', function() {
+            const isChecked = $(this).is(':checked')
+
+            $('.checkboxes').each(function() {
+                const id = $(this).data('id')
+
+                if (isChecked) {
+                    if (!CHECKED_CHECKBOXES.includes(id)) {
+                        CHECKED_CHECKBOXES.push(id)
+                    }
+                } else {
+                    const index = CHECKED_CHECKBOXES.indexOf(id);
+                    if (index > -1) {
+                        CHECKED_CHECKBOXES.splice(index, 1);
+                    }
+                }
+
+                $(this).prop('checked', isChecked)
+            })
         })
     </script>
 @endpush
