@@ -77,7 +77,7 @@
                                 {{ $refrigerant[$i] ?? '' }}</td>
                         </tr>
                         <tr>
-                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER INPUT:</td>
+                            <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">POWER INPUT: (W)</td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
                                 {{ $power_input[$i] ?? '' }}</td>
                         </tr>
