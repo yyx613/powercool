@@ -20,6 +20,12 @@
     body {
         font-family: sans-serif;
     }
+
+    .limit-text {
+        height: auto; 
+        max-height: 38px;
+        overflow: hidden; 
+    }
 </style>
 
 <body>
@@ -97,7 +103,10 @@
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px;">STANDARD FEATURES:
                             </td>
                             <td style="border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
-                                {{ $standard_features[$i] ?? '' }}</td>
+                                <div class="limit-text">
+                                    {{ $standard_features[$i] ?? '' }}
+                                </div>
+                            </td>
                         </tr>
                     </table>
                 </td>
