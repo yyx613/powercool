@@ -23,10 +23,10 @@ jobs:
       - name: Synchronize Files To Server
         uses: easingthemes/ssh-deploy@v2.1.7
         env:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-          remote-user: ${{ secrets.VPS_USER }}
-          server-ip: ${{ secrets.VPS_HOST }}
-          remote-path: /public_html/powercool.at-easese.com
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          REMOTE_USER: ${{ secrets.VPS_USER }}
+          REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          TARGET: /public_html/powercool.at-easese.com
           ssh-port: ${{ secrets.VPS_PORT }}
           
       - name: Run Remote/Artisan Commands
