@@ -13,6 +13,11 @@ class FactoryRawMaterial extends Model
 {
     use HasFactory;
 
+    const STATUS_IN_TRANSIT = 1;
+    const STATUS_REJECTED = 2;
+    const STATUS_ACCEPTED = 3;
+    const STATUS_APPROVAL_REJECTED = 4;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -28,6 +33,11 @@ class FactoryRawMaterial extends Model
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 
     public function records()

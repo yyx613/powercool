@@ -77,6 +77,9 @@ class VehicleController extends Controller
                 'tarikh_pendaftaran' => $record->tarikh_pendaftaran,
                 'department' => $record->department,
                 'area_control' => $record->area_control,
+                'status' => $record->status,
+                'sold_date' => $record->sold_date,
+                'type' => $record->type == Vehicle::TYPE_CAR ? 'Car' : 'Lorry',
             ];
         }
 
@@ -110,6 +113,11 @@ class VehicleController extends Controller
             'tarikh_pendaftaran' => 'nullable|max:250',
             'department' => 'nullable|max:250',
             'area_control' => 'nullable|max:250',
+            'type' => 'required',
+            'status' => 'required',
+            'sold_date' => 'required_if:status,2',
+        ], [
+            'sold_date.required_if' => 'The sold date field is required when status is sold',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -131,6 +139,9 @@ class VehicleController extends Controller
                     'tarikh_pendaftaran' => $req->tarikh_pendaftaran,
                     'department' => $req->department,
                     'area_control' => $req->area_control,
+                    'type' => $req->type,
+                    'status' => $req->status,
+                    'sold_date' => $req->sold_date,
                 ]);
                 (new Branch)->assign(Vehicle::class, $new_vehicle->id);
             } else {
@@ -146,6 +157,9 @@ class VehicleController extends Controller
                     'tarikh_pendaftaran' => $req->tarikh_pendaftaran,
                     'department' => $req->department,
                     'area_control' => $req->area_control,
+                    'type' => $req->type,
+                    'status' => $req->status,
+                    'sold_date' => $req->sold_date,
                 ]);
             }
 

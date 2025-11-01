@@ -378,29 +378,6 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['quotation.form_step.product_details', 'sale_order.form_step.product_details', 'cash_sale.form_step.product_details'], function (ViewView $view) {
             $sst = Setting::where('key', Setting::SST_KEY)->value('value');
-            $involved_pc_ids = getInvolvedProductChild();
-
-            // Exclude current sale, if edit
-            if (str_contains(Route::currentRouteName(), '.edit')) {
-                $sale = request()->route()->parameter('sale');
-                $sp_ids = $sale->products()->pluck('id')->toArray();
-                $pc_for_sale = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
-
-                $involved_pc_ids = array_diff($involved_pc_ids, $pc_for_sale);
-            }
-
-            $productCursor = Product::with(['children' => function ($q) use ($involved_pc_ids) {
-                $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
-            }])
-                ->with('sellingPrices')
-                ->where('is_active', true)
-                ->orderBy('id', 'desc')
-                ->lazy();
-
-            $products = collect();
-            foreach ($productCursor as $val) {
-                $products->add($val);
-            }
 
             // Warranty Periods
             $wps = WarrantyPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
@@ -414,14 +391,9 @@ class ViewServiceProvider extends ServiceProvider
                 ->get();
 
             // UOM
-            $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get();
-
-            if (str_contains(Route::currentRouteName(), 'quotation.')) {
-                $products = $products->keyBy('id')->all();
-            }
+            $uoms = UOM::where('is_active', true)->orderBy('id', 'desc')->get(); 
 
             $view->with([
-                'products' => $products,
                 'warranty_periods' => $wps,
                 'promotions' => $promotions,
                 'uoms' => $uoms,
@@ -478,54 +450,36 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::TECHNICIAN);
             })->orderBy('id', 'desc')->get();
             $products = Product::where('type', Product::TYPE_PRODUCT)->get();
+            $factories = Factory::orderBy('id', 'desc')->get();
 
             $view->with([
                 'customers' => $customers,
                 'technicians' => $technicians,
                 'products' => $products,
+                'factories' => $factories,
+            ]);
+        });
+        View::composer(['components.app.modal.raw-material-transfer-modal'], function (ViewView $view) {
+            $factories = Factory::orderBy('id', 'desc')->get();
+
+            $view->with([
+                'factories' => $factories,
             ]);
         });
         View::composer(['production.form'], function (ViewView $view) {
             $req = app(\Illuminate\Http\Request::class);
             // $milestones = Milestone::where('type', Milestone::TYPE_PRODUCTION)->get();
             // $material_uses = MaterialUse::with('materials.material')->get();
-            $sales = Sale::with('products')->where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
+            $sales = Sale::with('products.product')->where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
             $priorities = Priority::orderBy('id', 'desc')->get();
 
             $users = User::whereHas('roles', function ($q) {
                 $q->where('id', Role::PRODUCTION_WORKER);
             })->orderBy('id', 'desc')->get();
 
-            if ($req->product_id != null) {
-                $products = Product::where('id', $req->product_id)
-                    ->withCount('materialUse')
-                    ->having('material_use_count', '>', 0)
-                    ->get();
-            } else {
-                $products = Product::where('type', Product::TYPE_PRODUCT)
-                    ->orWhere(function ($q) {
-                        $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
-                    })
-                    ->withCount('materialUse')
-                    ->having('material_use_count', '>', 0)
-                    ->orderBy('id', 'desc')
-                    ->get();
-            }
-
             $view->with('users', $users);
-            // $view->with('milestones', $milestones);
-            $view->with('products', $products);
-            $view->with('sales', $sales);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
-            // $view->with('material_uses', $material_uses);
-        });
-        View::composer(['material_use.form'], function (ViewView $view) {
-            $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('id', 'desc')->get();
-            $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('id', 'desc')->get();
-
-            $view->with('products', $products);
-            $view->with('materials', $materials);
         });
         View::composer(['components.app.language-selector'], function (ViewView $view) {
             $languages = [

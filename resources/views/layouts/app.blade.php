@@ -166,6 +166,26 @@
             },
         });
     }
+
+    function bulidSelect2Ajax({selector, url, placeholder, disabled = false, extraDataParams = {}, processResults}) {
+        $(selector).select2({
+            placeholder: placeholder,
+            minimumInputLength: 1,
+            disabled: disabled,
+            ajax: {
+                url: url,
+                dataType: 'json',
+                delay: DEBOUNCE_DURATION,
+                data: function(params) {
+                    return {
+                        keyword: params.term,
+                        ...extraDataParams
+                    };
+                },
+                processResults: processResults,
+            },
+        });
+    }
 </script>
 
 @stack('scripts')

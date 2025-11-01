@@ -65,6 +65,31 @@
                     <x-app.input.input name="area_control" id="area_control" :hasError="$errors->has('area_control')" value="{{ old('area_control', isset($vehicle) ? $vehicle->area_control : null) }}" />
                     <x-input-error :messages="$errors->get('area_control')" class="mt-1" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="type" class="mb-1">{{ __('Type') }} <span
+                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="type" id="type" :hasError="$errors->has('type')">
+                        <option value="">{{ __('Select a type') }}</option>
+                        <option value="1" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 1)>{{ __('Car') }}</option>
+                        <option value="2" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 2)>{{ __('Lorry') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('type')" class="mt-2" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
+                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
+                        <option value="">{{ __('Select a status') }}</option>
+                        <option value="1" @selected(old('status', isset($vehicle) ? $vehicle->status : null) == 1)>{{ __('Active') }}</option>
+                        <option value="2" @selected(old('status', isset($vehicle) ? $vehicle->status : null) == 2)>{{ __('Sold') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('status')" class="mt-2" />
+                </div>
+                 <div class="flex flex-col">
+                    <x-app.input.label id="sold_date" class="mb-1">{{ __('Sold Date') }}</x-app.input.label>
+                    <x-app.input.input name="sold_date" id="sold_date" :hasError="$errors->has('sold_date')" value="{{ old('sold_date', isset($vehicle) ? $vehicle->sold_date : null) }}" />
+                    <x-input-error :messages="$errors->get('sold_date')" class="mt-1" />
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
                 @if (!isset($vehicle))
@@ -78,6 +103,11 @@
 
 @push('scripts')
     <script>
+        $('input[name="sold_date"]').daterangepicker(datepickerParam)
+        $('input[name="sold_date"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
+
         $('#submit-create-btn').on('click', function(e) {
             let url = $('#form').attr('action')
             url = `${url}?create_again=true`

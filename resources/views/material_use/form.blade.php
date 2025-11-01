@@ -12,16 +12,11 @@
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="w-full md:w-1/3">
                 <!-- Product -->
-                <div class="flex flex-col mb-4">
-                    <x-app.input.label id="product" class="mb-1">{{ __('Product Name') }} <span
+                <div class="flex flex-col mb-4" id="product-container">
+                    <x-app.input.label class="mb-1">{{ __('Product') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="product" id="product" :hasError="$errors->has('product')"
-                        placeholder="{{ __('Select a product') }}">
-                        <option value="">{{ __('Select a product') }}</option>
-                        @foreach ($products as $pro)
-                            <option value="{{ $pro->id }}">{{ $pro->model_name }}</option>
-                        @endforeach
-                    </x-app.input.select2>
+                    <x-app.input.select name="product" id="product" :hasError="$errors->has('product')">
+                    </x-app.input.select>
                     <x-app.message.error id="product_err" />
                 </div>
             </div>
@@ -36,10 +31,6 @@
                         <div class="flex items-center gap-4 w-full rounded-md">
                             <div class="flex flex-col flex-1">
                                 <x-app.input.select name="material[]" placeholder="{{ __('Select a material') }}">
-                                    <option value="">{{ __('Select a material') }}</option>
-                                    @foreach ($materials as $m)
-                                        <option value="{{ $m->id }}">({{ $m->sku }}) {{ $m->model_name }}</option>
-                                    @endforeach
                                 </x-app.input.select>
                             </div>
                             <div class="flex flex-col flex-1">
@@ -97,12 +88,36 @@
         SPR_ID = @json($spr_id ?? null); // Sale Production Request Id
         FOR_PID = @json($for_pid ?? null);
         MATERIAL = @json($material ?? null);
+        PRODUCT_AND_MATERIALS = @json($product_and_materials ?? null);
         FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
 
         $(document).ready(function() {
+            // Build product select2 ajax
+            bulidSelect2Ajax({
+                selector: '#product',
+                placeholder: '{{ __('Search a product') }}',
+                url: '{{ route('material_use.search_product') }}',
+                extraDataParams: {
+                    type: 'product',
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
+            })
+            $(`#product-container .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+
             if (MATERIAL != null) {
-                $('select[name="product"]').val(FOR_PID ?? MATERIAL.product_id).trigger('change')
+                let opt = new Option(
+                    `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                $('select[name="product"]').append(opt)
 
                 for (let i = 0; i < MATERIAL.materials.length; i++) {
                     const m = MATERIAL.materials[i];
@@ -110,7 +125,9 @@
                     $('#add-material-btn').click()
 
                     $(`.items[data-id="${i+1}"]`).attr('data-order-idx', m.id)
-                    $(`.items[data-id="${i+1}"] select[name="material[]"]`).val(m.product_id).trigger('change')
+                    let opt = new Option(
+                    `${PRODUCT_AND_MATERIALS[m.product_id].sku} - ${PRODUCT_AND_MATERIALS[m.product_id].model_name}`, m.product_id, true, true);
+                    $(`.items[data-id="${i+1}"] select[name="material[]"]`).append(opt)
                     $(`.items[data-id="${i+1}"] input[name="qty[]"]`).val(m.qty)
                     $(`.items[data-id="${i+1}"] .toggle-status-btns`).attr('data-active', m.status == 1 ? false :
                         true)
@@ -134,8 +151,26 @@
 
             $('#material-container').append(clone)
 
-            // Build material select2
-            buildMaterialSelect2(ITEMS_COUNT)
+            // Build material select2 ajax
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="material[]"]`,
+                placeholder: '{{ __('Search a material') }}',
+                url: '{{ route('material_use.search_product') }}',
+                extraDataParams: {
+                    type: 'raw_material',
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.materials, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
+            })
+            $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
         })
         $('body').on('click', '.delete-item-btns', function() {
             let id = $(this).data('id')
@@ -264,12 +299,5 @@
                 },
             });
         })
-
-        function buildMaterialSelect2(item_id) {
-            $(`.items[data-id="${item_id}"] select[name="material[]"]`).select2({
-                placeholder: "{!! __('Select a material') !!}"
-            })
-            $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
-        }
     </script>
 @endpush

@@ -70,9 +70,9 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="product_id[]">
                 <option value=""></option>
-                @foreach ($products as $p)
+                {{-- @foreach ($products as $p)
                     <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_name }}</option>
-                @endforeach
+                @endforeach --}}
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
         </div>
@@ -153,12 +153,19 @@
             <x-app.input.input name="discount" id="discount" :hasError="$errors->has('discount')" class="decimal-input" />
             <x-app.message.error id="discount_err" />
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col" id="warranty-period-container">
             <x-app.input.label id="warranty_period" class="mb-1">{{ __('Warranty Period') }}</x-app.input.label>
             <x-app.input.select name="warranty_period[]" multiple>
                 <option value=""></option>
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err" />
+        </div>
+        <div class="flex flex-col">
+            <x-app.input.label class="mb-1">{{ __('Accessories') }}</x-app.input.label>
+            <x-app.input.select name="accessory_id[]" multiple>
+                <option value=""></option>
+            </x-app.input.select>
+            <x-app.message.error id="accessory_id_err" />
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
             <div class="flex flex-col flex-1 col-span-2">
@@ -228,7 +235,6 @@
     </div>
 </div>
 
-
 @push('scripts')
     <script>
         SST = @json($sst ?? null);
@@ -239,7 +245,7 @@
         CUSTOMIZE_PRODUCT_IDS = @json($customize_product_ids ?? []);
         PRODUCT_FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
-        INIT_EDIT = true
+        PRODUCT_DETAILS_INIT_EDIT = true
 
         $(document).ready(function() {
             if (SALE != null) {
@@ -249,7 +255,8 @@
                     $('#add-item-btn').click()
 
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
-                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
+                    var opt = new Option(`${sp.product.sku} - ${sp.product.model_name}`, sp.product_id, true, true);
+                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).append(opt).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
                     $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? true : false)
                     $(`.items[data-id="${i+1}"] .sst-btns`).attr('data-with-sst', sp.with_sst == 1 ? false : true)
@@ -280,6 +287,13 @@
                         temp.push(sp.warranty_periods[j].warranty_period_id)
                     }
                     $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(temp)
+                    var opts = []
+                    for (let i = 0; i < sp.accessories.length; i++) {
+                        opts.push(new Option(
+                            `${sp.accessories[i].product.sku} - ${sp.accessories[i].product.model_name}`, sp
+                            .accessories[i].accessory_id, true, true))
+                    }
+                    $(`.items[data-id="${i+1}"] select[name="accessory_id[]"]`).append(opts)
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
                     $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
                     if (sp.override_selling_price != null) {
@@ -308,8 +322,7 @@
             }
 
             sortProduct()
-
-            INIT_EDIT = false
+            PRODUCT_DETAILS_INIT_EDIT = false
         })
         $('#add-item-btn').on('click', function() {
             let clone = $('#item-template')[0].cloneNode(true);
@@ -329,17 +342,54 @@
 
             $('#items-container').append(clone)
 
-            $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
-                placeholder: "{!! __('Select a product') !!}"
+            // Build product select2
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`,
+                placeholder: '{{ __('Search a product') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                disabled: SALE != null ? true : false,
+                extraDataParams: {
+                    sale_id: SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
             })
             // Build warranty period select2
             buildWarrantyPeriodSelect2(ITEMS_COUNT)
-            if (!INIT_EDIT) {
+            if (!PRODUCT_DETAILS_INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
             // Build selling price select2
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="selling_price[]"]`).select2({
-                placeholder: "{!! __('Select a selling price') !!}"
+                placeholder: "{!! __('Select a selling price') !!}",
+                disabled: SALE != null ? true : false
+            })
+            // Build accessory select2
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="accessory_id[]"]`,
+                placeholder: '{{ __('Search a accessory') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                extraDataParams: {
+                    sale_id: SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
             })
 
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass(
@@ -347,7 +397,7 @@
 
             hideDeleteBtnWhenOnlyOneItem()
 
-            if (INIT_EDIT == false) {
+            if (!PRODUCT_DETAILS_INIT_EDIT) {
                 sortProduct()
             }
         })
@@ -392,11 +442,11 @@
             $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val($(this).val())
         })
         $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',
-            function() {
-                let idx = $(this).parent().parent().parent().data('id')
+        function() {
+            let idx = $(this).parent().parent().parent().data('id')
 
-                calItemTotal(idx)
-            })
+            calItemTotal(idx)
+        })
         $('body').on('change', 'select[name="promotion[]"], select[name="selling_price[]"]', function() {
             let idx = $(this).parent().parent().data('id')
 
@@ -457,6 +507,8 @@
             }
         })
         $('body').on('click', '.foc-btns', function() {
+            if (SALE != null) return
+
             let isFoc = $(this).attr('data-is-foc')
             let id = $(this).data('id')
 
@@ -483,6 +535,8 @@
             }
         })
         $('body').on('click', '.sst-btns', function() {
+            if (!PRODUCT_DETAILS_INIT_EDIT && SALE != null) return
+
             let withSST = $(this).attr('data-with-sst')
             let id = $(this).data('id')
 
@@ -509,12 +563,13 @@
         $('body').on('click', '.to-production-btns', function() {
             let id = $(this).data('id')
             let productId = $(`.items[data-id=${id}] select[name="product_id[]"]`).val()
+            let saleProductId = $(`.items[data-id=${id}]`).attr('data-product-id')
 
             if (productId == null || productId == undefined) return
 
             $('#to-production-modal #product-selector').addClass('hidden')
             $('#to-production-modal #product-selector').attr('data-product-id', productId)
-            $('#to-production-modal #yes-btn').attr('data-id', SALE.id)
+            $('#to-production-modal #yes-btn').attr('data-sp-id', saleProductId)
             $('#to-production-modal #yes-btn').removeClass('hidden')
             $('#to-production-modal').addClass('show-modal')
         })
@@ -706,7 +761,8 @@
 
         function buildWarrantyPeriodSelect2(item_id) {
             $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).select2({
-                placeholder: "{!! __('Select a warranty') !!}"
+                placeholder: "{!! __('Select a warranty') !!}",
+                disabled: SALE != null ? true : false,
             })
 
             for (let i = 0; i < WARRANTY_PERIODS.length; i++) {

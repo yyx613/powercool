@@ -62,7 +62,7 @@
                     placeholder="{{ __('Select a MSIC Code') }}">
                     <option value="">{{ __('Select a Msic Code') }}</option>
                     @foreach ($msics as $msic)
-                        <option value="{{ $msic->id }}" @selected(old('msic_code', isset($duplicate) ? $duplicate->msicCode->id : (isset($customer) ? $customer->msicCode->id : null)) == $msic->id)>{{ $msic->code }} -
+                        <option value="{{ $msic->id }}" @selected(old('msic_code', isset($duplicate) && $duplicate->msicCode != null ? $duplicate->msicCode->id : (isset($customer) && $customer->msicCode != null ? $customer->msicCode->id : null)) == $msic->id)>{{ $msic->code }} -
                             {{ $msic->description }}</option>
                     @endforeach
                 </x-app.input.select2>

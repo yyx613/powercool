@@ -21,15 +21,18 @@
         </button>
         <div class="col-span-4 flex items-center gap-4">
             <div class="flex gap-2">
-                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn" title="{{ __('Move Down') }}">
+                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn"
+                    title="{{ __('Move Down') }}">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24"
                         width="512" height="512">
                         <path
                             d="M17.71,12.71a1,1,0,0,0-1.42,0L13,16V6a1,1,0,0,0-2,0V16L7.71,12.71a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41l4.3,4.29A2,2,0,0,0,12,19h0a2,2,0,0,0,1.4-.59l4.3-4.29A1,1,0,0,0,17.71,12.71Z" />
                     </svg>
                 </button>
-                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-up-btn" title="{{ __('Move Up') }}">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
+                <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-up-btn"
+                    title="{{ __('Move Up') }}">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512"
+                        height="512">
                         <g id="_01_align_center" data-name="01 align center">
                             <path
                                 d="M17.707,9.879,13.414,5.586a2,2,0,0,0-2.828,0L6.293,9.879l1.414,1.414L11,8V19h2V8l3.293,3.293Z" />
@@ -53,9 +56,9 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="product_id[]">
                 <option value=""></option>
-                @foreach ($products as $p)
+                {{-- @foreach ($products as $p)
                     <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_name }}</option>
-                @endforeach
+                @endforeach --}}
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
         </div>
@@ -218,6 +221,7 @@
         PRODUCT_FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
         PRODUCT_DETAILS_INIT_EDIT = true
+        SEARCH_PRODUCTS_URL = '{{ route('product.get_by_keyword') }}'
 
         $(document).ready(function() {
             if (SALE != null) {
@@ -227,7 +231,8 @@
                     $('#add-item-btn').click()
 
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
-                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).val(sp.product_id).trigger('change')
+                    let opt = new Option(`${sp.product.sku} - ${sp.product.model_name}`, sp.product_id, true, true);
+                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).append(opt).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
                     $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? true : false)
                     $(`.items[data-id="${i+1}"] .sst-btns`).attr('data-with-sst', sp.with_sst == 1 ? false : true)
@@ -303,9 +308,31 @@
 
             $('#items-container').append(clone)
             // Build product select2
-            $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
-                placeholder: "{!! __('Select a product') !!}"
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`,
+                placeholder: '{{ __('Search a product') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                extraDataParams: {
+                    sale_id: REPLICATE == null && SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    for (const key in data.products) {
+                        const element = data.products[key];
+
+                        if (PRODUCTS[key] !== undefined) continue;
+                        PRODUCTS[key] = element
+                    }
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
             })
+            // buildProductSelect2(ITEMS_COUNT)
             // Build selling price select2
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="selling_price[]"]`).select2({
                 placeholder: "{!! __('Select a selling price') !!}"

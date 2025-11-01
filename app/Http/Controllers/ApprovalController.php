@@ -291,12 +291,13 @@ class ApprovalController extends Controller
                 $data = json_decode($approval->data);
                 $obj->qty -= $data->qty;
                 $obj->to_warehouse_qty -= $data->qty;
+                Product::where('id', $obj->product_id)->increment('qty', $data->qty);
 
                 $obj->save();
             }
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
-                $obj->status = ProductChild::STATUS_TRANSFER_APPROVED;
+                $obj->status = ProductChild::STATUS_WAREHOUSE_STOCK_OUT;
                 $obj->save();
             }
             // Complete Production 
@@ -411,11 +412,12 @@ class ApprovalController extends Controller
             if (get_class($obj) == FactoryRawMaterial::class) {
                 $data = json_decode($approval->data);
                 $obj->to_warehouse_qty -= $data->qty;
+                $obj->status = FactoryRawMaterial::STATUS_APPROVAL_REJECTED;
                 $obj->save();
             }
             // Product Child 
             if (get_class($obj) == ProductChild::class) {
-                $obj->status = ProductChild::STATUS_STOCK_OUT;
+                $obj->status = ProductChild::STATUS_TRANSFER_REJECTED;
                 $obj->save();
             }
             // Complete Production 
