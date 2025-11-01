@@ -117,6 +117,11 @@ class SaleProduct extends Model
         return $this->hasMany(SaleProductWarrantyPeriod::class);
     }
 
+    public function accessories()
+    {
+        return $this->hasMany(SaleProductAccessory::class);
+    }
+
     public function billings()
     {
         return $this->belongsToMany(Billing::class, 'billing_sale_product', 'sale_product_id', 'billing_id')

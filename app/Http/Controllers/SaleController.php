@@ -33,6 +33,7 @@ use App\Models\Sale;
 use App\Models\SaleOrderCancellation;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
+use App\Models\SaleProductAccessory;
 use App\Models\SaleProductChild;
 use App\Models\SaleProductionRequest;
 use App\Models\SaleProductWarrantyPeriod;
@@ -295,8 +296,12 @@ class SaleController extends Controller
             $transfer_to = implode(', ', Sale::whereIn('id', explode(',', $sale->convert_to))->pluck('sku')->toArray());
         }
 
+        $products = Product::with('children', 'sellingPrices')->whereIn('id', $sale->products->pluck('product_id')->toArray())->get();
+        $products = $products->keyBy('id')->all();
+
         return view('quotation.form', [
             'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'thirdPartyAddresses'),
+            'products' => $products,
             'customers' => $customers,
             'is_view' => $is_view,
             'transfer_to' => $transfer_to,
@@ -729,7 +734,7 @@ class SaleController extends Controller
                 'sales.custom_date AS custom_date',
                 'sales.created_at AS date',
                 'sales.store AS store',
-                'sales.payment_method AS payment_method',
+                'sales.payment_term AS payment_method_id',
                 'sales.payment_due_date AS payment_due_date',
                 'customers.id AS customer_id',
                 'customers.sku AS debtor_code',
@@ -840,6 +845,7 @@ class SaleController extends Controller
         ];
 
         $voided_do_ids = DeliveryOrder::where('status', DeliveryOrder::STATUS_VOIDED)->pluck('id')->toArray();
+        $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
         foreach ($records_paginator as $record) {
             $sp_ids = SaleProduct::where('sale_id', $record->id)->pluck('id')->toArray();
             $dop_ids = DeliveryOrderProduct::whereIn('sale_product_id', $sp_ids)->pluck('id');
@@ -856,7 +862,7 @@ class SaleController extends Controller
                         ->where('object_id', $transferred_so->id)
                         ->value('location');
                 }
-            } else if ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
+            } elseif ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_FROM) {
                 $transferred_so = Sale::withoutGlobalScope(BranchScope::class)
                     ->where('type', Sale::TYPE_SO)
                     ->where('id', $record->id)
@@ -906,7 +912,7 @@ class SaleController extends Controller
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
-                    'payment_due_date_filled' => $record->paid_amount >= $record->total_amount || $record->payment_due_date != null,
+                    'payment_due_date_filled' => in_array($record->payment_method_id, $credit_term_payment_method_ids) ? true : $record->paid_amount >= $record->total_amount || $record->payment_due_date != null,
                     'has_product' => count($sp_ids) > 0,
                     'has_serial_no' => SaleProductChild::whereIn('sale_product_id', $sp_ids)->exists(),
                     'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE || $record->status == Sale::STATUS_PARTIALLY_CONVERTED,
@@ -963,11 +969,12 @@ class SaleController extends Controller
                     }]);
                 },
                 'products.warrantyPeriods',
+                'products.accessories.product',
                 'paymentAmounts',
                 'thirdPartyAddresses',
             ]);
         } else {
-            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'paymentAmounts', 'thirdPartyAddresses');
+            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'paymentAmounts', 'thirdPartyAddresses');
         }
 
         $sale->products->each(function ($q) {
@@ -1162,6 +1169,7 @@ class SaleController extends Controller
     {
         $step = 1;
         $loop = true;
+        $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
         while ($loop) {
             if ($req->has('pc')) {
@@ -1224,12 +1232,11 @@ class SaleController extends Controller
                             });
                         });
                     })
-                    ->whereIn('id', explode(',', $req->so))
                     ->get();
 
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if ($sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $products = $products->merge($sales[$i]->products);
@@ -1273,7 +1280,7 @@ class SaleController extends Controller
                 $payment_term_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if ($sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $payment_term_ids[] = $sales[$i]->payment_term;
@@ -1320,7 +1327,7 @@ class SaleController extends Controller
                 $sale_orders = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if ($sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $sale_orders[] = $sales[$i];
@@ -1361,7 +1368,7 @@ class SaleController extends Controller
                 $salesperson_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if ($sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $salesperson_ids[] = $sales[$i]->sale_id;
@@ -1399,7 +1406,7 @@ class SaleController extends Controller
                 $customer_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if ($sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
 
@@ -1637,6 +1644,16 @@ class SaleController extends Controller
                 ]);
             }
 
+            // Update payment due date for SOs if payment method is credit term and payment due date is null
+            $credit_term_payment_term_ids = getPaymentMethodCreditTermIds();
+            for ($i=0; $i < count($sales); $i++) { 
+                if (in_array($sales[$i]->payment_term, $credit_term_payment_term_ids) && $sales[$i]->payment_due_date == null) {
+                    $daysToAdd = str_replace(' Days', '', $sales[$i]->paymentTerm->name);
+                    $sales[$i]->payment_due_date = now()->addDays($daysToAdd)->format('Y-m-d');
+                    $sales[$i]->save();
+                }
+            }
+
             DB::commit();
 
             return redirect(route('delivery_order.index'))->with('success', 'Sale Order has converted');
@@ -1735,6 +1752,9 @@ class SaleController extends Controller
             $rules['warranty_period'] = 'nullable';
             $rules['warranty_period.*'] = 'nullable';
             $rules['warranty_period.*.*'] = 'nullable';
+            $rules['accessory'] = 'nullable';
+            $rules['accessory.*'] = 'nullable';
+            $rules['accessory.*.*'] = 'nullable';
             $rules['discount'] = 'required';
             $rules['discount.*'] = 'nullable';
             $rules['product_remark'] = 'required';
@@ -1744,8 +1764,7 @@ class SaleController extends Controller
         }
         if ($req->type == 'cash-sale') {
             // upsertPayDetails
-            $credit_payment_method_ids = PaymentMethod::where('name', 'like', '%credit%')->pluck('id')->toArray();
-            if (in_array($req->payment_method, $credit_payment_method_ids)) {
+            if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
                 $rules['payment_term'] = 'required';
             } else {
                 $rules['payment_term'] = 'nullable';
@@ -1789,6 +1808,7 @@ class SaleController extends Controller
             'unit_price.*' => 'unit price',
             'product_serial_no.*' => 'product serial no',
             'warranty_period.*.*' => 'warranty period',
+            'accessory.*.*' => 'accessory',
             'discount.*' => 'discount',
             'remark' => 'remark',
             'override_selling_price' => 'override selling price',
@@ -2129,8 +2149,6 @@ class SaleController extends Controller
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
-                    'payment_term' => $req->payment_term,
-                    'payment_method' => $req->payment_method,
                     'created_by' => $created_by,
                 ]);
                 (new Branch)->assign(Sale::class, $sale->id);
@@ -2170,8 +2188,6 @@ class SaleController extends Controller
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
-                    'payment_term' => $req->payment_term,
-                    'payment_method' => $req->payment_method,
                     'updated_by' => Auth::user()->id,
                 ]);
                 // Delete current third party address
@@ -2216,8 +2232,7 @@ class SaleController extends Controller
                 if (! $quo_skip_approval) {
                     $approval_required = false;
                     if ($req->type == 'quo') {
-                        $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
-                        $approval_required = in_array($req->payment_method, $credit_term_payment_method_ids);
+                        $approval_required = in_array($req->payment_method, getPaymentMethodCreditTermIds());
                     } elseif ($req->type == 'so' || $req->type == 'cash-sale') {
                         $customer_ct_ids = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $req->customer)->pluck('credit_term_id')->toArray();
                         $approval_required = ($req->payment_term) > 0 && ! in_array($req->payment_term, $customer_ct_ids);
@@ -2308,6 +2323,9 @@ class SaleController extends Controller
                 'warranty_period' => 'nullable',
                 'warranty_period.*' => 'nullable',
                 'warranty_period.*.*' => 'nullable',
+                'accessory' => 'nullable',
+                'accessory.*' => 'nullable',
+                'accessory.*.*' => 'nullable',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
@@ -2324,6 +2342,7 @@ class SaleController extends Controller
                 'unit_price.*' => 'unit price',
                 'product_serial_no.*' => 'product serial no',
                 'warranty_period.*' => 'warranty period',
+                'accessory.*' => 'accessory',
                 'discount.*' => 'discount',
                 'product_remark.*' => 'remark',
                 'override_selling_price.*' => 'override selling price',
@@ -2574,9 +2593,23 @@ class SaleController extends Controller
                         // Update product sequence
                         $sp->sequence = $req->sequence[$i] ?? null;
                         $sp->save();
+                        // Accessory
+                        SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
+                        if ($req->accessory != null && $req->accessory[$i] != null) {
+                            $data = [];
+                            for ($j=0; $j < count($req->accessory[$i]); $j++) { 
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'accessory_id' => $req->accessory[$i][$j],
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            }
+                            SaleProductAccessory::insert($data);
+                        }
                     }
                 }
-            }
+            } 
 
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
                 ->pluck('id')
@@ -2641,9 +2674,9 @@ class SaleController extends Controller
                 'payment_due_date' => 'required',
                 'payment_remark' => 'nullable|max:250',
             ];
-            $credit_payment_method_ids = PaymentMethod::where('name', 'like', '%credit%')->pluck('id')->toArray();
-            if (in_array($req->payment_method, $credit_payment_method_ids)) {
+            if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
                 $rules['payment_term'] = 'required';
+                $rules['payment_due_date'] = 'nullable';
             } else {
                 $rules['payment_term'] = 'nullable';
             }
@@ -2807,17 +2840,25 @@ class SaleController extends Controller
         ], HttpFoundationResponse::HTTP_OK);
     }
 
-    public function toSaleProductionReqeust(Request $req, Sale $sale, Product $product)
+    public function toSaleProductionReqeust(Request $req, SaleProduct $saleProduct)
     {
         try {
             DB::beginTransaction();
 
             for ($i = 0; $i < ($req->qty ?? 1); $i++) {
                 $spr = SaleProductionRequest::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $product->id,
+                    'sale_id' => $saleProduct->sale->id,
+                    'product_id' => $saleProduct->product->id,
                 ]);
                 (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+                // Accessory
+                for ($j=0; $j < count($saleProduct->accessories); $j++) { 
+                    $spr = SaleProductionRequest::create([
+                        'sale_id' => $saleProduct->sale->id,
+                        'product_id' => $saleProduct->accessories[$j]->accessory_id,
+                    ]);
+                    (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+                }
             }
 
             DB::commit();

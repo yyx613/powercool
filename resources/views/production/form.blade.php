@@ -63,17 +63,12 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
-                <div class="flex flex-col">
+                <div class="flex flex-col" id="product-select-container">
                     <x-app.input.label class="mb-1">{{ __('Product') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="product" id="product" placeholder="{{ __('Select a product') }}"
-                        :hasError="$errors->has('product')">
+                    <x-app.input.select name="product" id="product" :hasError="$errors->has('product')">
                         <option value="">{{ __('Select a product') }}</option>
-                        @foreach ($products as $pro)
-                            <option value="{{ $pro->id }}" @selected(old('product', isset($production) ? $production->product_id : (isset($default_product) ? $default_product->id : null)) == $pro->id)>{{ $pro->sku }}
-                            </option>
-                        @endforeach
-                    </x-app.input.select2>
+                    </x-app.input.select>
                     <x-input-error :messages="$errors->get('product')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
@@ -172,7 +167,7 @@
     <script>
         CAN_SUBMIT = false
         INIT_EDIT = false
-        PRODUCTS = @json($products ?? null);
+        PRODUCTS = @json($products ?? []);
         DEFAULT_PRODUCT = @json($default_product ?? null);
         SALES = @json($sales ?? null);
         PRODUCTION = @json($production ?? null);
@@ -182,8 +177,29 @@
         MATERIAL_USE = []
         CUSTOM_MILESTONE_IDX = 0
         IS_DUPLICATE = @json($is_duplicate ?? null);
+        SELECTED_PRODUCT = @json($selected_product ?? null);
 
         $(document).ready(function() {
+            // Build product select2 ajax
+            bulidSelect2Ajax({
+                selector: '#product',
+                placeholder: '{{ __('Search a product') }}',
+                url: '{{ route('production.search_product') }}',
+                processResults: function(data) {
+                    PRODUCTS = data.products
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
+            })
+            $(`#product-select-container .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+
+            // Start Init
             if (PRODUCTION == null) {
                 var elem = document.getElementById('milestone-list-container')
                 var sortable = Sortable.create(elem, {
@@ -191,12 +207,13 @@
                         sortMilestone()
                     },
                 })
-            }
-
-            if (PRODUCTION != null) {
+            } else if (PRODUCTION != null) {
                 INIT_EDIT = true
 
-                $('select[name="product"]').trigger('change')
+                if (SELECTED_PRODUCT != null) {
+                    let opt = new Option(SELECTED_PRODUCT.model_name, SELECTED_PRODUCT.id, true, true)
+                    $('select[name="product"]').append(opt)
+                }
 
                 for (let i = 0; i < PRODUCTION.milestones.length; i++) {
                     const element = PRODUCTION.milestones[i];
@@ -218,7 +235,8 @@
                     material_use_product_ids = []
                     if (PRODUCTION_MILESTONE_MATERIAL_PREVIEW != null) {
                         for (let j = 0; j < PRODUCTION_MILESTONE_MATERIAL_PREVIEW.length; j++) {
-                            if (element.pivot.id == PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].production_milestone_id) {
+                            if (element.pivot.id == PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j]
+                                .production_milestone_id) {
                                 material_use_product_ids.push(PRODUCTION_MILESTONE_MATERIAL_PREVIEW[j].product_id)
                             }
                         }
@@ -230,7 +248,7 @@
                             $(`.milestones[data-milestone-id="ms-${element.id}"] .view-material-use-selection-btns`)
                                 .removeClass('hidden')
                         }
-    
+
                         MILESTONES[`ms-${element.id}`] = {
                             material_use_product_ids: material_use_product_ids,
                             sequence: i + 1,
@@ -242,7 +260,8 @@
                 INIT_EDIT = false
             }
             if (DEFAULT_PRODUCT != null) {
-                $('select[name="product"]').trigger('change')
+                let opt = new Option(DEFAULT_PRODUCT.model_name, DEFAULT_PRODUCT.id, true, true)
+                $('select[name="product"]').append(opt)
             }
         })
 
@@ -302,29 +321,24 @@
                 MILESTONES[milestoneId].is_checked = false
             }
         })
-        $('select[name="order"]').on('change', function() {
-            let val = $(this).val()
+        // $('select[name="order"]').on('change', function() {
+        //     let val = $(this).val()
 
-            if (SALES != null) {
-                for (let i = 0; i < SALES.length; i++) {
-                    if (SALES[i].id == val) {
-                        $('select[name="product"] option').not(':first').remove()
+        //     if (SALES != null) {
+        //         for (let i = 0; i < SALES.length; i++) {
+        //             if (SALES[i].id == val) {
+        //                 // $('select[name="product"] option').not(':first').remove()
 
-                        for (let j = 0; j < SALES[i].products.length; j++) {
-                            for (let k = 0; k < PRODUCTS.length; k++) {
-                                if (SALES[i].products[j].product_id == PRODUCTS[k].id) {
-                                    let opt = new Option(PRODUCTS[k].model_name, PRODUCTS[k].id)
-                                    $('select[name="product"]').append(opt)
-                                    break
-                                }
-                            }
-                        }
-                        $('select[name="product"]').trigger('change')
-                        break
-                    }
-                }
-            }
-        })
+        //                 for (let j = 0; j < SALES[i].products.length; j++) {
+        //                     let opt = new Option(SALES[i].products[j].product.model_name, SALES[i].products[j].product.id)
+        //                     $('select[name="product"]').append(opt)
+        //                 }
+        //                 $('select[name="product"]').val(null).trigger('change')
+        //                 break
+        //             }
+        //         }
+        //     }
+        // })
         $('#submit-btn').on('click', function() {
             CAN_SUBMIT = true
 

@@ -215,6 +215,7 @@ class ProductionController extends Controller
             $data = [
                 'production' => $production,
                 'is_duplicate' => true,
+                'default_product' => $production->product,
             ];
 
             if ($req->is_modify != null) {
@@ -254,6 +255,7 @@ class ProductionController extends Controller
 
         return view('production.form', [
             'production' => $production,
+            'selected_product' => $production->product,
             'production_milestone_material_previews' => $production_milestone_material_previews,
         ]);
     }
@@ -753,7 +755,7 @@ class ProductionController extends Controller
 
                 Notification::send($receivers, new ProductionCompleteNotification([
                     'production_id' => $prod->id,
-                    'desc' => 'The production ('.$prod->sku.') is completed for product '. $prod->product->sku . ' ('.$prod->productChild->sku.')',
+                    'desc' => 'The production ('.$prod->sku.') is completed for product '.$prod->product->sku.' ('.$prod->productChild->sku.')',
                 ]));
             }
 
@@ -981,5 +983,68 @@ class ProductionController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    public function addMilestone(Request $req, Production $production)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Add new milestone
+            $milestone = $this->ms::create([
+                'type' => $this->ms::TYPE_PRODUCTION,
+                'name' => $req->name,
+                'is_custom' => true,
+            ]);
+            // Assign to production ms & preview
+            $prodMsId = $this->prodMs::insertGetId([
+                'production_id' => $production->id,
+                'milestone_id' => $milestone->id,
+                'created_at' => now(),
+            ]);
+            foreach ($req->all() as $key => $value) {
+                if (str_starts_with($key, 'material-use-')) {
+                    $material_use_product_id = str_replace('material-use-', '', $key);
+                    $mup = DB::table('material_use_products')->where('id', $material_use_product_id)->first();
+
+                    $this->prodMsMaterialPreview::insert([
+                        'production_milestone_id' => $prodMsId,
+                        'product_id' => $mup->product_id,
+                        'qty' => $mup->qty,
+                        'created_at' => now(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Milestone added');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function searchProduct(Request $req)
+    {
+        $keyword = $req->keyword;
+
+        $products = Product::where(function ($q) {
+            $q->where('type', Product::TYPE_PRODUCT)
+                ->orWhere(function ($q) {
+                    $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true);
+                });
+        })
+            ->where(function ($q) use ($keyword) {
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_name', 'like', '%'.$keyword.'%');
+            })
+            ->get();
+
+        return Response::json([
+            'products' => $products,
+        ], HttpFoundationResponse::HTTP_OK);
     }
 }

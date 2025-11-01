@@ -188,7 +188,8 @@
     <div class="pt-4 border-t border-slate-200">
         <div class="mb-4">
             <span class="text-md font-semibold">{{ __('Third Party Address') }}</span>
-            <p class="text-sm text-slate-500 leading-none">{{ __('Delivery address is not required if presented') }}</p>
+            <p class="text-sm text-slate-500 leading-none">{{ __('Delivery address is not required if presented') }}
+            </p>
         </div>
         <div id="third-party-address-list" class="grid gap-4"></div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden" id="third-party-address-template">
@@ -231,9 +232,26 @@
         CUSTOMERS = @json($customers ?? []);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
         SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
-        
+
         $(document).ready(function() {
-            buildCompanySelect2()
+            // Build product select2 ajax
+            bulidSelect2Ajax({
+                selector: 'select[name="customer"]',
+                placeholder: '{{ __('Search a company') }}',
+                url: `${SEARCH_CUSTOMERS_URL}?is_edit=${REPLICATE == null && SALE != null}`,
+                processResults: function(data) {
+                    CUSTOMERS = data.customers
+                    return {
+                        results: $.map(data.customers, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.company_name} - ${item.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
+                            };
+                        })
+                    }
+                }
+            })
+            $('select[name="customer"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
 
             if (SALE != null) {
                 $('select[name="customer"]').trigger('change')
@@ -242,9 +260,12 @@
                 for (let i = 0; i < SALE.third_party_addresses.length; i++) {
                     $('#add-third-party-address-btn').click()
 
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE.third_party_addresses[i].address)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE.third_party_addresses[i].mobile)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE.third_party_addresses[i].name)
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE
+                        .third_party_addresses[i].address)
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE
+                        .third_party_addresses[i].mobile)
+                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE
+                        .third_party_addresses[i].name)
                 }
             } else {
                 $('#add-third-party-address-btn').click()
@@ -398,39 +419,8 @@
             $('#third-party-address-list').append(clone)
 
             $('#third-party-address-list .child').each(function(i, obj) {
-                $(this).attr('data-id', i+1)
+                $(this).attr('data-id', i + 1)
             })
         })
-
-        function buildCompanySelect2() {
-            $('select[name="customer"]').select2({
-                minimumInputLength: 1,
-                placeholder: 'Search for a company',
-                ajax: {
-                    url: `${SEARCH_CUSTOMERS_URL}?is_edit=${REPLICATE == null && SALE != null}`,
-                    delay: DEBOUNCE_DURATION,
-                    dataType: 'json',
-                    data: function(params) {
-                        var query = {
-                            keyword: params.term,
-                        }
-                        return query;
-                    },
-                    processResults: function(data) {
-                        CUSTOMERS = data.customers
-
-                        return {
-                            results: $.map(data.customers, function(item) {
-                                return {
-                                    id: item.id,
-                                    text: `${item.company_name} - ${item.company_group == 1 ? 'Power Cool' : 'Hi-Ten'}`
-                                };
-                            })
-                        }
-                    }
-                }
-            })
-            $('select[name="customer"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
-        }
     </script>
 @endpush

@@ -77,19 +77,17 @@
             if (SALE == null) {
                 getNextSku()
             } else {
-                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="product_id[]"], #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container input, #product-details-container textarea, #additional-remark-container input')
-                    .attr('disabled', true)
-                $('#quotation-details-container input, #quotation-details-container select, #product-details-container select[name="selling_price[]"], #product-details-container select[name="promotion[]"], #product-details-container .select2, #product-details-container input, #product-details-container textarea, #additional-remark-container input')
-                    .addClass('!bg-gray-100')
-                $('#new-billing-address input, #new-delivery-address input, #additional-remark-container input, #product-details-container textarea, #product-details-container input[name="discount"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="qty"], #product-details-container input[name="product_desc"], #third-party-address-list input')
-                    .parent().addClass('!bg-gray-100')
-                $('#quotation-details-container #company-container div').addClass('!bg-gray-100')
-                $('#quotation-details-container input[name="reference"], #quotation-details-container input[name="store"], #quotation-details-container input[name="third_party_address"]').parent().addClass('!bg-gray-100')
-                $('#quotation-details-container .select2, #product-details-container .select2-selection--multiple')
-                    .css('backgroundColor', '#eee')
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container input[name="qty"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="discount"], #product-details-container input[name="product_desc"], #product-details-container textarea[name="remark"], #additional-remark-container input').css('backgroundColor', '#eee')
+                $('#quotation-details-container input, #product-details-container input[name="qty"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="discount"], #product-details-container input[name="product_desc"], #product-details-container textarea[name="remark"], #additional-remark-container input').parent().css('backgroundColor', '#eee')
+                $('#product-details-container select[name="promotion[]"]').css('backgroundColor', '#eee')
+                $('#quotation-details-container .select2, #product-details-container .select2-container--disabled').css('backgroundColor', '#eee')
+
+                $('#quotation-details-container input, #quotation-details-container select, #product-details-container input[name="qty"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="discount"], #product-details-container input[name="product_desc"], #product-details-container textarea[name="remark"], #additional-remark-container input').attr('disabled', true)
+                $('#product-details-container select[name="promotion[]"]').attr('disabled', true)
 
                 $('#quotation-details-container input[name="custom_date"]').attr('disabled', false)
-                $('#quotation-details-container input[name="custom_date"]').removeClass('!bg-gray-100')
+                $('#quotation-details-container input[name="custom_date"]').css('backgroundColor', '#fff')
+                $('#quotation-details-container input[name="custom_date"]').parent().css('backgroundColor', '#fff')
             }
         })
 
@@ -128,6 +126,7 @@
             let warrantyPeriod = []
             let remark = []
             let overrideSellingPrice = []
+            let accessory = []
             $('#product-details-container .items').each(function(i, obj) {
                 prodOrderId.push($(this).data('product-id') ?? null)
                 prodId.push($(this).find('select[name="product_id[]"]').val())
@@ -152,16 +151,8 @@
                     prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
+                accessory.push($(this).find('select[name="accessory_id[]"]').val())
             })
-            // Prepare payment amounts 
-            // let accountAmount = []
-            // let accountDate = []
-            // let accountRefNo = []
-            // $('#payment-amounts-container .payment-amounts').each(function(i, obj) {
-            //     accountAmount.push($(this).find('input[name="account_amount"]').val())
-            //     accountDate.push($(this).find('input[name="account_date"]').val())
-            //     accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
-            // })
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -181,16 +172,8 @@
                     'customer': $('select[name="customer"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
-                    // 'new_billing_addres1': $('#new-billing-address input[name="address1"]').val(),
-                    // 'new_billing_addres2': $('#new-billing-address input[name="address2"]').val(),
-                    // 'new_billing_addres3': $('#new-billing-address input[name="address3"]').val(),
-                    // 'new_billing_addres4': $('#new-billing-address input[name="address4"]').val(),
                     'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
                         'select[name="delivery_address"]').val(),
-                    // 'new_delivery_address1': $('#new-delivery-address input[name="address1"]').val(),
-                    // 'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
-                    // 'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
-                    // 'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
 
                     'reference': $('input[name="reference_input"]').val(),
                     'store': $('input[name="store"]').val(),
@@ -213,25 +196,10 @@
                     'promotion_id': promo,
                     'product_serial_no': prodSerialNo,
                     'warranty_period': warrantyPeriod,
+                    'accessory': accessory,
                     'discount': discount,
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
-
-                    // 'payment_term': $('select[name="payment_term"]').val(),
-                    // 'payment_method': $('select[name="payment_method"]').val(),
-                    // 'payment_due_date': $('input[name="payment_due_date"]').val(),
-                    // 'payment_remark': $('input[name="payment_remark"]').val(),
-                    // 'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
-                    // 'account_amount': accountAmount,
-                    // 'account_date': accountDate,
-                    // 'account_ref_no': accountRefNo,
-
-                    // 'driver': $('select[name="driver"]').val(),
-                    // 'delivery_date': $('input[name="delivery_date"]').val(),
-                    // 'delivery_time': $('input[name="delivery_time"]').val(),
-                    // 'delivery_instruction': $('input[name="delivery_instruction"]').val(),
-                    // 'delivery_address': $('select[name="delivery_address"]').val() === 'null' ? null : $('select[name="delivery_address"]').val(),
-                    // 'delivery_status': $('select[name="delivery_status"]').val(),
 
                     'remark': $('#additional-remark-container input[name="remark_input"]').val(),
                 },

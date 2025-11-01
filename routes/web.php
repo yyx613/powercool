@@ -271,6 +271,10 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
         Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
         Route::get('/to-warehouse/{product_child}', 'toWarehouse')->name('to_warehouse');
+        Route::get('/accept-production-stock-out/{product_child}', 'acceptProductionStockOut');
+        Route::get('/reject-production-stock-out/{product_child}', 'rejectProductionStockOut');
+        Route::get('/accept-production-stock-out-rm/{frm}', 'acceptProductionStockOutRM');
+        Route::get('/reject-production-stock-out-rm/{frm}', 'rejectProductionStockOutRM');
     });
     Route::controller(InventoryController::class)->prefix('inventory-type')->name('inventory_type.')->group(function () { // Inventory Category
         Route::get('/', 'indexType')->name('index');
@@ -332,6 +336,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
         Route::get('/get/{product}', 'get')->name('get')->withoutMiddleware(['can:inventory.product.view']);
+        Route::get('/get-by-keyword', 'getByKeyword')->name('get_by_keyword');
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -396,7 +401,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('sale-order')->name('sale_order.')->middleware(['can:sale.sale_order.view'])->group(function () {
             Route::get('/', 'indexSaleOrder')->name('index');
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
-            Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
+            // Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
             Route::get('/edit/payment/{sale}', 'editSaleOrder')->name('edit_payment')->middleware(['can:sale.sale_order.edit']);
             Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
@@ -420,7 +425,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             // Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
             Route::get('/get-products/{sale}', 'getProducts')->name('get_products');
-            Route::get('/to-sale-production-request/{sale}/{product}', 'toSaleProductionReqeust')->name('to_sale_production_request');
+            Route::get('/to-sale-production-request/{saleProduct}', 'toSaleProductionReqeust')->name('to_sale_production_request');
         });
 
         // Delivery Order
@@ -568,6 +573,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::post('/extend-due-date/{production}', 'extendDueDate')->name('extend_due_date');
         Route::get('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
+        Route::post('/add-milestone/{production}', 'addMilestone')->name('add_milestone');
+        Route::get('/search-product', 'searchProduct')->name('search_product');
     });
     // Production Finish Good
     Route::controller(ProductController::class)->prefix('production-finish-good')->name('production_finish_good.')->middleware(['can:production_material.view'])->group(function () {
@@ -730,6 +737,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{material}', 'edit')->name('edit');
             Route::get('/delete/{material}', 'delete')->name('delete');
             Route::post('/upsert', 'upsert')->name('upsert');
+            Route::get('/search-product', 'searchProduct')->name('search_product');
         });
         // Sync
         Route::controller(SyncController::class)->prefix('sync')->name('sync.')->group(function () {

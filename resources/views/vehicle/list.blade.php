@@ -56,6 +56,9 @@
                     <th>{{ __('Tarikh Pendaftaran') }}</th>
                     <th>{{ __('Department') }}</th>
                     <th>{{ __('Area Control') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Sold Date') }}</th>
+                    <th>{{ __('Type') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -92,6 +95,9 @@
                 { data: 'tarikh_pendaftaran' },
                 { data: 'department' },
                 { data: 'area_control' },
+                { data: 'status' },
+                { data: 'sold_date' },
+                { data: 'type' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -183,8 +189,37 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 11,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        switch (data) {
+                            case 1:
+                                return '{{ __("Active") }}'; 
+                            case 2:
+                                return '{{ __("Sold") }}'; 
+                        }
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 12,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 13,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 14,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

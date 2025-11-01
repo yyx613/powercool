@@ -76,8 +76,8 @@
                         @if ($pro->isLowStock())
                             <div class="mb-2 flex items-center gap-4">
                                 <div class="h-8 w-8">
-                                    @if ($pro->image != null)
-                                        <img src="{{ $pro->image->url }}" alt=""
+                                    @if ($pro->images != null && count($pro->images) > 0)
+                                        <img src="{{ $pro->images[0]->url }}" alt=""
                                             class="h-full w-full object-contain">
                                     @else
                                         <x-app.no-image-icon class="p-1" />
@@ -100,8 +100,8 @@
                         @if ($pro->isLowStock())
                             <div class="mb-2 flex items-center gap-4">
                                 <div class="h-8 w-8">
-                                    @if ($pro->image != null)
-                                        <img src="{{ $pro->image->url }}" alt=""
+                                    @if ($pro->images != null && count($pro->images) > 0)
+                                        <img src="{{ $pro->images[0]->url }}" alt=""
                                             class="h-full w-full object-contain">
                                     @else
                                         <x-app.no-image-icon class="p-1" />

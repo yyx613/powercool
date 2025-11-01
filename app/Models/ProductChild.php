@@ -14,15 +14,36 @@ class ProductChild extends Model
     use HasFactory, SoftDeletes;
 
     const LOCATION_WAREHOUSE = 'warehouse';
+
     const LOCATION_FACTORY = 'factory';
 
     const STATUS_STOCK_OUT = 1;
+
     const STATUS_IN_TRANSIT = 2;
+
     const STATUS_TO_BE_RECEIVED = 3;
+
     const STATUS_RECEIVED = 4;
+
     const STATUS_PENDING_APPROVAL = 5;
+
     const STATUS_TRANSFER_APPROVED = 6;
+
+    const STATUS_TRANSFER_REJECTED = 14;
+
     const STATUS_BROKEN = 7;
+
+    const STATUS_PRODUCTION_STOCK_OUT = 8;
+
+    const STATUS_PRODUCTION_ACCEPTED = 9;
+
+    const STATUS_PRODUCTION_REJECTED = 10;
+
+    const STATUS_WAREHOUSE_STOCK_OUT = 11;
+
+    const STATUS_WAREHOUSE_ACCEPTED = 12;
+
+    const STATUS_WAREHOUSE_REJECTED = 13;
 
     protected $guarded = [];
 
@@ -134,9 +155,9 @@ class ProductChild extends Model
         while (true) {
             $str_init_idx = (string) $init_idx;
             while (strlen($str_init_idx) < $min_char) { // make it $min_char digits
-                $str_init_idx = '0' . $str_init_idx;
+                $str_init_idx = '0'.$str_init_idx;
             }
-            $sku = $parent_prefix . '-' . now()->format('ymd') . '-' . $str_init_idx;
+            $sku = $parent_prefix.'-'.now()->format('ymd').'-'.$str_init_idx;
 
             if (! in_array($sku, $existing_skus)) {
                 break;
@@ -150,5 +171,18 @@ class ProductChild extends Model
         }
 
         return $sku;
+    }
+
+    // Exchange between Production and Warehouse
+    public static function inTransitProcess(array $extra = []): array
+    {
+        return array_merge([
+            self::STATUS_PRODUCTION_STOCK_OUT,
+            self::STATUS_PRODUCTION_REJECTED,
+            self::STATUS_PRODUCTION_ACCEPTED,
+            self::STATUS_WAREHOUSE_STOCK_OUT,
+            self::STATUS_WAREHOUSE_ACCEPTED,
+            self::STATUS_WAREHOUSE_REJECTED,
+        ], $extra);
     }
 }

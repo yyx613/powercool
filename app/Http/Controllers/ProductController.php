@@ -20,9 +20,12 @@ use App\Models\Production;
 use App\Models\ProductionMilestoneMaterial;
 use App\Models\ProductMilestone;
 use App\Models\ProductSellingPrice;
+use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
 use App\Models\TaskMilestoneInventory;
 use App\Models\UOM;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -82,7 +85,7 @@ class ProductController extends Controller
     {
         if ($req->type == 'waiting') {
             Session::put('type', 'waiting');
-        } else if ($req->type == 'usage') {
+        } elseif ($req->type == 'usage') {
             Session::put('type', 'usage');
         } else {
             Session::remove('type');
@@ -90,9 +93,9 @@ class ProductController extends Controller
 
         if (str_contains(Route::currentRouteName(), 'production_finish_good.')) {
             $page = Session::get('production-finish-good-page');
-        } else if (str_contains(Route::currentRouteName(), 'production_material.')) {
+        } elseif (str_contains(Route::currentRouteName(), 'production_material.')) {
             $page = Session::get('production-material-page');
-        } else if (str_contains(Route::currentRouteName(), 'product.')) {
+        } elseif (str_contains(Route::currentRouteName(), 'product.')) {
             $page = Session::get('finish-good-page');
         } else {
             $page = Session::get('raw-material-page');
@@ -150,10 +153,15 @@ class ProductController extends Controller
         if ($req->boolean('is_production') == true) {
             if ($req->boolean('is_product') == true) {
                 $product_ids = Production::where('status', Production::STATUS_COMPLETED)->pluck('product_id')->toArray();
-                $records = $records->whereIn('id', $product_ids);
+                $records = $records->where(function($q) use ($product_ids) {
+                    $q->whereIn('id', $product_ids)->orWhereHas('children', function ($qq) {
+                        $qq->where('location', ProductChild::LOCATION_FACTORY);
+                    });
+                });
             } else {
                 $records = $records->withCount(['children' => function ($q) {
-                    $q->where('location', ProductChild::LOCATION_FACTORY);
+                    $q->where('location', ProductChild::LOCATION_FACTORY)
+                        ->orWhere('status', ProductChild::STATUS_PRODUCTION_STOCK_OUT);
                 }])->having('children_count', '>', 0);
             }
         }
@@ -177,13 +185,13 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
-                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('model_desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('min_price', 'like', '%'.$keyword.'%')
+                    ->orWhere('max_price', 'like', '%'.$keyword.'%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
-                        $qq->where('name', 'like', '%' . $keyword . '%');
+                        $qq->where('name', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -255,6 +263,9 @@ class ProductController extends Controller
                 'model_name' => $record->model_name,
                 'category' => $record->category->name,
                 'qty' => $qty,
+                'has_factory_child' => $record->orWhereHas('children', function ($qq) {
+                    $qq->where('location', ProductChild::LOCATION_FACTORY);
+                })->exists(),
                 'min_price' => number_format($record->min_price, 2),
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
@@ -263,7 +274,7 @@ class ProductController extends Controller
                 'can_edit' => $req->boolean('is_product') ? hasPermission('inventory.product.edit') : hasPermission('inventory.raw_material.edit'),
                 'can_delete' => $req->boolean('is_product') ? hasPermission('inventory.product.delete') : hasPermission('inventory.raw_material.delete'),
                 'approval_id' => $filter_type == 'waiting' ? $approvals->where('object_id', $frm_id)->value('id') : null,
-                'ready_for_production' => $ready_for_production
+                'ready_for_production' => $ready_for_production,
             ];
         }
         if ($req->boolean('is_production') == true && $req->boolean('is_product') == false) {
@@ -285,81 +296,76 @@ class ProductController extends Controller
 
     private function getFactoryRawMaterial($keyword = null, $orders = null, $product_ids_only = null, $show_usage = false)
     {
-        $frms = FactoryRawMaterial::get();
-
-        $records = $this->prod->whereIn('id', $frms->pluck('product_id')->toArray())->with(['category' => function ($q) {
-            $q->withTrashed();
-        }]);
+        $records = DB::table('factory_raw_materials as frm')
+            ->select('frm.*', 'products.sku', 'products.model_name', 'products.model_desc', 'products.min_price', 'products.max_price', 'products.is_sparepart', 'products.created_by', 'inventory_categories.name as category_name', 'factories.name as factory')
+            ->join('products', 'frm.product_id', '=', 'products.id')
+            ->join('inventory_categories', 'products.inventory_category_id', '=', 'inventory_categories.id')
+            ->join('factories', 'frm.factory_id', '=', 'factories.id')
+            ->whereNot('frm.status', FactoryRawMaterial::STATUS_REJECTED);
 
         if ($product_ids_only != null) {
-            $records = $records->whereIn('id', $product_ids_only);
+            $records = $records->whereIn('products.id', $product_ids_only);
         }
         // Search
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('min_price', 'like', '%' . $keyword . '%')
-                    ->orWhere('max_price', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('category', function ($qq) use ($keyword) {
-                        $qq->where('name', 'like', '%' . $keyword . '%');
-                    });
+                $q->where('products.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.model_desc', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.min_price', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.max_price', 'like', '%'.$keyword.'%')
+                    ->orWhere('inventory_categories.name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
         if ($orders != null) {
             $map = [
-                0 => 'sku',
-                1 => 'model_name',
-                2 => 'category',
-                3 => 'qty',
+                0 => 'products.sku',
+                1 => 'products.model_name',
+                2 => 'inventory_categories.name',
             ];
             foreach ($orders as $order) {
-                if ($order['column'] == 2) {
-                    $records = $records->orderBy($this->invCat::select('name')->whereColumn('inventory_categories.id', 'products.inventory_category_id'), $order['dir']);
-                } else {
-                    $records = $records->orderBy($map[$order['column']], $order['dir']);
-                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
             $records = $records->orderBy('id', 'desc');
         }
 
-        $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
 
         $data = [];
         foreach ($records_paginator as $key => $record) {
-            $qty = $frms->where('product_id', $record->id)->first()->remainingQty();
+            $frm = FactoryRawMaterial::where('id', $record->id)->first();
+            $qty = $frm->remainingQty();
             if ($show_usage == true && $qty > 0) {
                 continue;
-            } else if (($show_usage == false || $show_usage == null) && $qty <= 0) {
+            } elseif (($show_usage == false || $show_usage == null) && $qty <= 0) {
                 continue;
             }
 
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'image' => $record->image ?? null,
+                'image' => $record->product->image ?? null,
                 'model_name' => $record->model_name,
-                'category' => $record->category->name,
+                'category' => $record->category_name,
                 'qty' => $qty,
                 'min_price' => number_format($record->min_price, 2),
                 'max_price' => number_format($record->max_price, 2),
                 'is_sparepart' => $record->is_sparepart,
-                'status' => $record->is_active,
-                'created_by' => $record->createdBy,
+                'status' => $record->status,
+                'created_by' => User::where('id', $record->created_by)->value('name'),
                 'can_edit' => false,
                 'can_delete' => false,
-                'frm_id' => $frms->where('product_id', $record->id)->value('id')
+                'frm_id' => $record->id,
+                'stock_out_factory' => $record->factory ?? null,
             ];
         }
         $data['recordsTotal'] = isset($data['data']) ? count($data['data']) : 0;
         $data['recordsFiltered'] = isset($data['data']) ? count($data['data']) : 0;
         $data['records_ids'] = $records_ids;
-        if (!isset($data['data'])) {
+        if (! isset($data['data'])) {
             $data['data'] = [];
         }
 
@@ -391,22 +397,24 @@ class ProductController extends Controller
 
         return view('inventory.form', [
             'prod' => $product,
-            'material_use' => $material_use
+            'material_use' => $material_use,
         ]);
     }
 
-    public function view(Product $product)
+    public function view(Request $req, Product $product)
     {
+        $table_type = $req->query('table-type', 'normal');
         $product->load('images', 'stockHiTen');
 
         return view('inventory.view', [
+            'table_type' => $table_type,
             'prod' => $product,
             'warehouse_available_stock' => $product->warehouseAvailableStock(),
             'warehouse_reserved_stock' => $product->warehouseReservedStock(),
             'warehouse_on_hold_stock' => $product->warehouseOnHoldStock(),
             'production_stock' => $product->productionStock(),
             'production_reserved_stock' => $product->productionReservedStock(),
-            'has_permission_to_action' => hasPermission('inventory.view_action')
+            'has_permission_to_action' => hasPermission('inventory.view_action'),
         ]);
     }
 
@@ -415,16 +423,45 @@ class ProductController extends Controller
         $records = $this->prodChild::where('product_id', $req->product_id);
 
         if ($req->boolean('is_production') == true) {
-            $records = $records->where('location', 'factory');
-        }
-
+            if ($req->query('table-type') == 'normal') {
+                $records = $records->where('location', ProductChild::LOCATION_FACTORY)
+                    ->where(function($q) {
+                        $q->whereNotIn('status', [ProductChild::STATUS_WAREHOUSE_STOCK_OUT, ProductChild::STATUS_WAREHOUSE_ACCEPTED, ProductChild::STATUS_WAREHOUSE_REJECTED])
+                            ->orWhereNull('status');
+                    });
+            } else if ($req->query('table-type') == 'in-transit') {
+                $records = $records->where(function($q) {
+                    $q->where(function($q) {
+                        $q->where('location', ProductChild::LOCATION_WAREHOUSE)
+                            ->whereIn('status', ProductChild::inTransitProcess());
+                    })->orWhere(function($q) {
+                        $q->where('location', ProductChild::LOCATION_FACTORY)
+                            ->whereIn('status', ProductChild::inTransitProcess());
+                    });
+                });
+            }
+        } else {
+            if ($req->query('table-type') == 'normal') {
+                $records = $records->where('location', ProductChild::LOCATION_WAREHOUSE)
+                    ->where(function($q) {
+                        $q->whereNotIn('status', ProductChild::inTransitProcess([ProductChild::STATUS_PENDING_APPROVAL]))
+                            ->orWhere('status', ProductChild::STATUS_WAREHOUSE_ACCEPTED)
+                            ->orWhereNull('status');
+                    });
+            } else if ($req->query('table-type') == 'in-transit') {
+                $records = $records->where(function($q) {
+                    $q->whereIn('status', ProductChild::inTransitProcess())
+                        ->whereNot('status', ProductChild::STATUS_WAREHOUSE_ACCEPTED);
+                });
+            }
+        } 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('location', 'like', '%' . $keyword . '%');
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('location', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -472,9 +509,11 @@ class ProductController extends Controller
                 'order_id' => $assigned_to,
                 'status' => $record->status,
                 'stock_out_to' => $record->stock_out_to_type == Production::class ? 'production' : ($record->status != ProductChild::STATUS_STOCK_OUT ? null : $record->stockOutTo),
-                'done_by' => $record->status == ProductChild::STATUS_STOCK_OUT ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
-                'done_at' => $record->status == ProductChild::STATUS_STOCK_OUT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
+                'stock_out_factory' => $record->stock_out_to_type == Production::class ? ($record->stock_out_to_id == InventoryCategory::FACTORY_17 ? '17' : '22') : null,
+                'done_by' => in_array($record->status, [ProductChild::STATUS_STOCK_OUT, ProductChild::STATUS_PRODUCTION_STOCK_OUT]) ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
+                'done_at' => in_array($record->status, [ProductChild::STATUS_STOCK_OUT, ProductChild::STATUS_PRODUCTION_STOCK_OUT]) ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
                 'progress' => $record->location != 'factory' || $production == null ? null : $production->getProgress($production),
+                'remark' => $record->reject_reason ?? null,
             ];
         }
 
@@ -646,13 +685,13 @@ class ProductController extends Controller
             $width = $prod->width ?? 0;
             $height = $prod->height ?? 0;
             if (str_contains($prod->length ?? 0, '.00')) {
-                $length = (int)$prod->length;
+                $length = (int) $prod->length;
             }
             if (str_contains($prod->width ?? 0, '.00')) {
-                $width = (int)$prod->width;
+                $width = (int) $prod->width;
             }
             if (str_contains($prod->height ?? 0, '.00')) {
-                $height = (int)$prod->height;
+                $height = (int) $prod->height;
             }
 
             $data['renderer'][] = $renderer->render($barcode);
@@ -660,7 +699,7 @@ class ProductController extends Controller
             $data['product_name'][] = $prod->model_name;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
-            $data['dimension'][] = $length . ' x ' . $width . ' x ' . $height . 'MM';
+            $data['dimension'][] = $length.' x '.$width.' x '.$height.'MM';
             $data['capacity'][] = $prod->capacity;
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
@@ -785,7 +824,7 @@ class ProductController extends Controller
                 }
                 if (! ($req->selling_price[$i] > $req->min_price && $req->selling_price[$i] < $req->max_price) && ! ($req->selling_price[$i] != $req->min_price || $req->selling_price[$i] != $req->max_price)) {
                     throw ValidationException::withMessages([
-                        'selling_price.' . $i => 'The price is not between ' . $req->min_price . ' and ' . $req->max_price,
+                        'selling_price.'.$i => 'The price is not between '.$req->min_price.' and '.$req->max_price,
                     ]);
                 }
             }
@@ -920,7 +959,7 @@ class ProductController extends Controller
             // Milestones
             $data = [];
             $milestones = json_decode($req->milestones);
-            for ($i = 0; $i < count((array)$milestones); $i++) {
+            for ($i = 0; $i < count((array) $milestones); $i++) {
                 foreach ($milestones as $key => $value) {
                     if ($value->sequence == $i + 1) {
                         $data[] = [
@@ -985,13 +1024,13 @@ class ProductController extends Controller
                     return redirect(route('product.create'))->with('success', 'Product created');
                 }
 
-                return redirect(route('product.index'))->with('success', 'Product ' . ($req->product_id == null ? 'created' : 'updated'));
+                return redirect(route('product.index'))->with('success', 'Product '.($req->product_id == null ? 'created' : 'updated'));
             }
             if ($req->create_again == true) {
                 return redirect(route('raw_material.create'))->with('success', 'Raw Material created');
             }
 
-            return redirect(route('raw_material.index'))->with('success', 'Raw Material ' . ($req->product_id == null ? 'created' : 'updated'));
+            return redirect(route('raw_material.index'))->with('success', 'Raw Material '.($req->product_id == null ? 'created' : 'updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -1036,25 +1075,20 @@ class ProductController extends Controller
             return back()->with('warning', 'The quantity must not greater than 0')->withInput();
         }
         if ($product->qty < $req->qty) {
-            return back()->with('warning', 'The quantity must not greater than ' . $product->qty)->withInput();
+            return back()->with('warning', 'The quantity must not greater than '.$product->qty)->withInput();
         }
 
         try {
             DB::beginTransaction();
 
             // Transfer
-            $frm = FactoryRawMaterial::where('product_id', $product->id)->first();
-
-            if ($frm != null) {
-                $frm->qty += $req->qty;
-                $frm->save();
-            } else {
-                $frm = FactoryRawMaterial::create([
-                    'product_id' => $product->id,
-                    'qty' => $req->qty,
-                ]);
-                (new Branch)->assign(FactoryRawMaterial::class, $frm->id);
-            }
+            $frm = FactoryRawMaterial::create([
+                'product_id' => $product->id,
+                'qty' => $req->qty,
+                'status' => FactoryRawMaterial::STATUS_IN_TRANSIT,
+                'factory_id' => $req->factory,
+            ]);
+            (new Branch)->assign(FactoryRawMaterial::class, $frm->id);
 
             $product->qty -= $req->qty;
             $product->save();
@@ -1065,6 +1099,7 @@ class ProductController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
+
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
@@ -1077,7 +1112,7 @@ class ProductController extends Controller
             return back()->with('warning', 'The quantity must not greater than 0')->withInput();
         }
         if ($frm->remainingQty() < $req->qty) {
-            return back()->with('warning', 'The quantity must not greater than ' . $frm->remainingQty())->withInput();
+            return back()->with('warning', 'The quantity must not greater than '.$frm->remainingQty())->withInput();
         }
 
         try {
@@ -1089,9 +1124,9 @@ class ProductController extends Controller
                 'status' => Approval::STATUS_PENDING_APPROVAL,
                 'data' => json_encode([
                     'qty' => $req->qty,
-                    'description' => Auth::user()->name . ' has requested to transfer ' . $req->qty . ' ' . $product->model_name . ' (' . $product->sku . ')',
-                    'user_id' => Auth::user()->id
-                ])
+                    'description' => Auth::user()->name.' has requested to transfer '.$req->qty.' '.$product->model_name.' ('.$product->sku.')',
+                    'user_id' => Auth::user()->id,
+                ]),
             ]);
             (new Branch)->assign(Approval::class, $approval->id);
 
@@ -1104,6 +1139,7 @@ class ProductController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
+
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
     }
@@ -1130,14 +1166,14 @@ class ProductController extends Controller
             'uom' => 'nullable',
             'remark' => 'nullable|max:250',
         ], [], [
-            'qty' => 'quantity'
+            'qty' => 'quantity',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
         if ($req->qty > $frm->qty) {
             throw ValidationException::withMessages([
-                'qty' => 'The quantity must not greater than ' . $frm->qty,
+                'qty' => 'The quantity must not greater than '.$frm->qty,
             ]);
         }
 
@@ -1173,7 +1209,7 @@ class ProductController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('qty', 'like', '%' . $keyword . '%');
+                $q->where('qty', 'like', '%'.$keyword.'%');
             });
         }
         $records_count = $records->count();
@@ -1199,5 +1235,50 @@ class ProductController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function getByKeyword(Request $req)
+    {
+        try {
+            $keyword = $req->keyword;
+            $sale_id = $req->sale_id;
+
+            $involved_pc_ids = getInvolvedProductChild();
+            // Exclude current sale, if edit
+            if ($sale_id != null) {
+                $sale = Sale::where('id', $sale_id)->first();
+                $sp_ids = $sale->products()->pluck('id')->toArray();
+                $pc_for_sale = SaleProductChild::whereIn('sale_product_id', $sp_ids)->pluck('product_children_id')->toArray();
+
+                $involved_pc_ids = array_diff($involved_pc_ids, $pc_for_sale);
+            }
+
+            $productCursor = Product::with(['children' => function ($q) use ($involved_pc_ids) {
+                $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
+            }])
+                ->with('sellingPrices')
+                ->where('is_active', true)
+                ->where(function ($q) use ($keyword) {
+                    $q->where('model_name', 'like', '%'.$keyword.'%')
+                        ->orWhere('sku', 'like', '%'.$keyword.'%');
+                })
+                ->orderBy('id', 'desc');
+
+            $products = collect();
+            foreach ($productCursor->lazy() as $val) {
+                $products->add($val);
+            }
+            $products = $products->keyBy('id')->all();
+
+            return response()->json([
+                'products' => $products,
+            ], 200);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return response()->json([
+                'msg' => 'Something went wrong',
+            ], 500);
+        }
     }
 }

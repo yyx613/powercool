@@ -1,3 +1,7 @@
+@props([
+    'hasFactory' => false,
+])
+
 <x-app.modal.base-modal id="raw-material-transfer-modal">
     <div class="aspect-[2/1] flex flex-col">
         <div class="py-2 px-4 bg-purple-100 flex items-center">
@@ -14,6 +18,16 @@
                     <span class="font-medium text-sm mb-1 block">{{ __('Quantity') }}</span>
                     <x-app.input.input name="qty" id="qty" class="int-input" />
                 </div>
+                @if ($hasFactory)
+                    <div class="mb-4">
+                        <span class="font-medium text-sm mb-1 block">{{ __('Factory') }}</span>
+                        <x-app.input.select name="factory" id="factory" class="w-full">
+                            @foreach ($factories as $factory)
+                                <option value="{{ $factory->id }}">{{ $factory->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                    </div>
+                @endif
             </div>
             <div class="flex gap-x-6">
                 <div class="flex-1">

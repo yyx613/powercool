@@ -48,9 +48,9 @@
             let qty = $('#to-production-modal input').val()
             if (productId == 'null') return
 
-            let id = $(this).data('id')
+            let saleProductId = $(this).data('sp-id')
             let url = "{{ config('app.url') }}"
-            url = `${url}/sale/to-sale-production-request/${id}/${productId}`
+            url = `${url}/sale/to-sale-production-request/${saleProductId}`
             if (qty != 'null' && qty != null && qty != '') {
                 url = `${url}?qty=${qty}`
             }

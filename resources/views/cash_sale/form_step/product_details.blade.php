@@ -70,9 +70,9 @@
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="product_id[]">
                 <option value=""></option>
-                @foreach ($products as $p)
+                {{-- @foreach ($products as $p)
                     <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_name }}</option>
-                @endforeach
+                @endforeach --}}
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
         </div>
@@ -329,8 +329,30 @@
 
             $('#items-container').append(clone)
 
-            $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).select2({
-                placeholder: "{!! __('Select a product') !!}"
+            // Build product select2
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`,
+                placeholder: '{{ __('Search a product') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                extraDataParams: {
+                    sale_id: SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    for (const key in data.products) {
+                        const element = data.products[key];
+
+                        if (PRODUCTS[key] !== undefined) continue;
+                        PRODUCTS[key] = element
+                    }
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
             })
             // Build warranty period select2
             buildWarrantyPeriodSelect2(ITEMS_COUNT)
@@ -369,19 +391,17 @@
             let idx = $(this).parent().parent().data('id')
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
             let val = $(this).val()
+            let prod = PRODUCTS[productId]
 
             $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val(null)
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                if (PRODUCTS[i].id == productId) {
-                    for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                        if (PRODUCTS[i].selling_prices[j].id == val) {
-                            $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val(PRODUCTS[i].selling_prices[
-                                j].price)
-                            break
-                        }
+            if (prod !== undefined) {
+                for (let j = 0; j < prod.selling_prices.length; j++) {
+                    if (prod.selling_prices[j].id == val) {
+                        $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val(prod.selling_prices[
+                            j].price)
+                        break
                     }
-                    break;
                 }
             }
         })
@@ -405,35 +425,31 @@
         $('body').on('change', 'select[name="product_id[]"]', function() {
             let id = $(this).parent().parent().attr('data-id')
             let val = $(this).val()
+            let prod = PRODUCTS[val]
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const prod = PRODUCTS[i];
+            if (prod !== undefined) {
+                $(`.items[data-id="${id}"]`).attr('data-selected-product', prod.type === 1)
+                $(`.items[data-id="${id}"] .sst-btns`).attr('data-with-sst', prod.sst === 1)
+                $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
+                $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
+                $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
 
-                if (prod.id == val) {
-                    $(`.items[data-id="${id}"]`).attr('data-selected-product', prod.type === 1)
-                    $(`.items[data-id="${id}"] .sst-btns`).attr('data-with-sst', prod.sst === 1)
-                    $(`.items[data-id="${id}"] #min_price`).text(priceFormat(prod.min_price))
-                    $(`.items[data-id="${id}"] #max_price`).text(priceFormat(prod.max_price))
-                    $(`.items[data-id="${id}"] #price-hint`).removeClass('hidden')
+                $(`.items[data-id="${id}"] input[name="uom"]`).val(null)
 
-                    $(`.items[data-id="${id}"] input[name="uom"]`).val(null)
-
-                    for (let j = 0; j < UOMS.length; j++) {
-                        if (UOMS[j].id == prod.uom) {
-                            $(`.items[data-id="${id}"] input[name="uom"]`).val(UOMS[j].name)
-                            break
-                        }
+                for (let j = 0; j < UOMS.length; j++) {
+                    if (UOMS[j].id == prod.uom) {
+                        $(`.items[data-id="${id}"] input[name="uom"]`).val(UOMS[j].name)
+                        break
                     }
-                    $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
-                    // Append selling prices
-                    for (let j = 0; j < prod.selling_prices.length; j++) {
-                        let opt = new Option(
-                            `${prod.selling_prices[j].name} (RM ${priceFormat(prod.selling_prices[j].price)})`,
-                            prod.selling_prices[j].id)
+                }
+                $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
+                // Append selling prices
+                for (let j = 0; j < prod.selling_prices.length; j++) {
+                    let opt = new Option(
+                        `${prod.selling_prices[j].name} (RM ${priceFormat(prod.selling_prices[j].price)})`,
+                        prod.selling_prices[j].id)
 
-                        $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append(opt)
-                    }
-                    break
+                    $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append(opt)
                 }
             }
             buildSerialNoOptions(val, id)
@@ -524,16 +540,11 @@
             let totalQty = 0
             let selectedQty = $(`.items[data-id=${itemId}] select[name="product_serial_no[]"] option:checked`)
                 .length
+            let prod = PRODUCTS[productId]
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const prod = PRODUCTS[i];
-
-                if (prod.id == productId) {
-                    totalQty = prod.children.length
-                    break
-                }
+            if (prod !== undefined) {
+                totalQty = prod.children.length
             }
-
             $(`.items[data-id="${itemId}"] #available-qty`).text(`Available Qty: ${totalQty - selectedQty}`)
         })
         $('select[name="promotion_id"]').on('change', function() {
@@ -567,15 +578,12 @@
             if (overrideSellingPrice != '') {
                 unitPrice = overrideSellingPrice
             } else {
-                for (let i = 0; i < PRODUCTS.length; i++) {
-                    if (PRODUCTS[i].id == productId) {
-                        for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                            if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                                unitPrice = PRODUCTS[i].selling_prices[j].price
-                                break
-                            }
-                        }
-                        break;
+                let prod = PRODUCTS[productId]
+
+                for (let j = 0; j < prod.selling_prices.length; j++) {
+                    if (prod.selling_prices[j].id == sellingPrice) {
+                        unitPrice = prod.selling_prices[j].price
+                        break
                     }
                 }
             }
@@ -648,15 +656,11 @@
                 if (overrideSellingPrice != '') {
                     unitPrice = overrideSellingPrice
                 } else {
-                    for (let i = 0; i < PRODUCTS.length; i++) {
-                        if (PRODUCTS[i].id == productId) {
-                            for (let j = 0; j < PRODUCTS[i].selling_prices.length; j++) {
-                                if (PRODUCTS[i].selling_prices[j].id == sellingPrice) {
-                                    unitPrice = PRODUCTS[i].selling_prices[j].price
-                                    break
-                                }
-                            }
-                            break;
+                    let prod = PRODUCTS[productId]
+                    for (let j = 0; j < prod.selling_prices.length; j++) {
+                        if (prod.selling_prices[j].id == sellingPrice) {
+                            unitPrice = prod.selling_prices[j].price
+                            break
                         }
                     }
                 }
@@ -719,6 +723,7 @@
 
         function buildSerialNoOptions(product_id, item_id, sale_product_id = null) {
             let selectedQty = 0
+            let prod = PRODUCTS[product_id]
             if (SALE != null) {
                 for (let i = 0; i < SALE.products.length; i++) {
                     if (SALE.products[i].product_id == product_id) {
@@ -728,25 +733,20 @@
                 }
             }
 
-            for (let i = 0; i < PRODUCTS.length; i++) {
-                const prod = PRODUCTS[i];
+            if (prod !== undefined) {
+                $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
 
-                if (prod.id == product_id) {
-                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
+                for (let j = 0; j < prod.children.length; j++) {
+                    const child = prod.children[j];
+                    let selected = selectedSerialNo(child.id, sale_product_id)
 
-                    for (let j = 0; j < prod.children.length; j++) {
-                        const child = prod.children[j];
-                        let selected = selectedSerialNo(child.id, sale_product_id)
-
-                        let opt = new Option(child.sku, child.id, selected, selected)
-                        opt.selected = selected
-                        opt.value = child.id
-                        $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
-                    }
-                    $(`.items[data-id="${item_id}"] #available-qty`).text(
-                        `Available Qty: ${prod.children.length - selectedQty}`)
-                    break
+                    let opt = new Option(child.sku, child.id, selected, selected)
+                    opt.selected = selected
+                    opt.value = child.id
+                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                 }
+                $(`.items[data-id="${item_id}"] #available-qty`).text(
+                    `Available Qty: ${prod.children.length - selectedQty}`)
             }
         }
 

@@ -494,8 +494,6 @@
             })
             columnDefs[columnDefs.length - 1].targets = 19
         }
-        console.log(columns)
-        console.log(columnDefs)
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
             pagingType: 'numbers',

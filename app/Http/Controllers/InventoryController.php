@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\FactoryRawMaterial;
 use App\Models\InventoryCategory;
 use App\Models\InventoryType;
 use App\Models\Product;
@@ -114,7 +115,6 @@ class InventoryController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->orWhere('model_name', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_sku', 'like', '%'.$keyword.'%')
                     ->orWhere('sku', 'like', '%'.$keyword.'%');
             });
         }
@@ -155,7 +155,7 @@ class InventoryController extends Controller
                 'name' => $record->model_name,
                 'sku' => $record->sku,
                 'category' => $record->type == Product::TYPE_PRODUCT ? 'Product' : ($record->is_sparepart == true ? 'Sparepart' : 'Raw Material'),
-                'image' => $record->image,
+                'image' => $record->images()->first() ?? null,
                 'remaining_qty' => $record->warehouseAvailableStock(),
             ];
         }
@@ -236,8 +236,8 @@ class InventoryController extends Controller
     public function indexSummary()
     {
         // Low stock
-        $products = $this->prod->with('image')->where('type', Product::TYPE_PRODUCT)->get();
-        $raw_materials = $this->prod->with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
+        $products = $this->prod->with('images')->where('type', Product::TYPE_PRODUCT)->get();
+        $raw_materials = $this->prod->with('images')->where('type', Product::TYPE_RAW_MATERIAL)->get();
         // Summary
         $active_product_count = $this->prod->where('is_active', true)->count();
         $inactive_product_count = $this->prod->where('is_active', false)->count();
@@ -300,12 +300,18 @@ class InventoryController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($product_child->status == ProductChild::STATUS_TRANSFER_APPROVED) {
-                $product_child->location = ProductChild::LOCATION_WAREHOUSE;
+            if (in_array($product_child->status,[ProductChild::STATUS_TRANSFER_APPROVED, ProductChild::STATUS_PRODUCTION_REJECTED, ProductChild::STATUS_WAREHOUSE_REJECTED])) { 
+                if ($product_child->status == ProductChild::STATUS_PRODUCTION_REJECTED) {
+                    $product_child->location = ProductChild::LOCATION_WAREHOUSE;
+                } else if ($product_child->status == ProductChild::STATUS_WAREHOUSE_REJECTED) {
+                    $product_child->location = ProductChild::LOCATION_FACTORY;
+                }
                 $product_child->status = null;
                 $product_child->stock_out_by = null;
                 $product_child->stock_out_to_type = null;
+                $product_child->stock_out_to_id = null;
                 $product_child->stock_out_at = null;
+                $product_child->reject_reason = null;
                 $product_child->save();
             } elseif ($product_child->status == $this->prodChild::STATUS_TO_BE_RECEIVED) { // Stock in from another branch
                 // Update status from transferred child
@@ -365,7 +371,7 @@ class InventoryController extends Controller
                 $product_child->save();
 
                 if ($req->stock_out_to === 'production') {
-                    $product_child->location = ProductChild::LOCATION_FACTORY;
+                    $product_child->status = $this->prodChild::STATUS_PRODUCTION_STOCK_OUT;
                     $product_child->save();
                     $product_child->parent->in_production = true;
                     $product_child->parent->save();
@@ -495,6 +501,97 @@ class InventoryController extends Controller
             DB::commit();
 
             return back()->with('success', 'Transfer Request is created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function acceptProductionStockOut(ProductChild $product_child)
+    {
+        try {
+            DB::beginTransaction();
+
+            if ($product_child->status == ProductChild::STATUS_PRODUCTION_STOCK_OUT) {
+                $product_child->status = ProductChild::STATUS_PRODUCTION_ACCEPTED;
+                $product_child->location = ProductChild::LOCATION_FACTORY;
+            } else if ($product_child->status == ProductChild::STATUS_WAREHOUSE_STOCK_OUT) {
+                $product_child->status = ProductChild::STATUS_WAREHOUSE_ACCEPTED;
+                $product_child->location = ProductChild::LOCATION_WAREHOUSE;
+            }
+            $product_child->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Accepted');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function rejectProductionStockOut(Request $req, ProductChild $product_child)
+    {
+        try {
+            DB::beginTransaction();
+
+            if ($product_child->status == ProductChild::STATUS_PRODUCTION_STOCK_OUT) {
+                $product_child->status = ProductChild::STATUS_PRODUCTION_REJECTED;
+            } else if ($product_child->status == ProductChild::STATUS_WAREHOUSE_STOCK_OUT) {
+                $product_child->status = ProductChild::STATUS_WAREHOUSE_REJECTED;
+            }
+            $product_child->reject_reason = $req->remark;
+            $product_child->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Rejected');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function acceptProductionStockOutRM(FactoryRawMaterial $frm)
+    {
+        try {
+            DB::beginTransaction();
+
+            $frm->status = FactoryRawMaterial::STATUS_ACCEPTED;
+            $frm->save();
+
+            DB::commit();
+
+            return back()->with('success', 'Accepted');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
+    public function rejectProductionStockOutRM(Request $req, FactoryRawMaterial $frm)
+    {
+        try {
+            DB::beginTransaction();
+
+            $frm->status = FactoryRawMaterial::STATUS_REJECTED;
+            $frm->reject_reason = $req->remark;
+            $frm->save();
+
+            // Add back to warehouse stock
+            $this->prod->where('id', $frm->product_id)->increment('qty', $frm->qty);
+
+            DB::commit();
+
+            return back()->with('success', 'Rejected');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

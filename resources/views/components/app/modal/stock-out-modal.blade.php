@@ -39,12 +39,10 @@
                                 <input type="radio" name="stock_out_to" id="product" value="product">
                                 <label for="product" class="text-sm">{{ __('Product') }}</label>
                             </div>
-                            @if ($is_product == false)
-                                <div class="flex-1 gap-x-2 flex items-center">
-                                    <input type="radio" name="stock_out_to" id="production" value="production">
-                                    <label for="production" class="text-sm">{{ __('Factory') }}</label>
-                                </div>
-                            @endif
+                            <div class="flex-1 gap-x-2 flex items-center">
+                                <input type="radio" name="stock_out_to" id="production" value="production">
+                                <label for="production" class="text-sm">{{ __('Factory') }}</label>
+                            </div>
                         </div>
                         <x-app.input.select2 class="w-full mt-4 hidden stock-out-to-selection" data-type="customer"
                             name="stock_out_to_selection_1" placeholder="{{ __('Select a customer') }}">
@@ -65,6 +63,13 @@
                             <option value="">{{ __('Select a product') }}</option>
                             @foreach ($products as $pro)
                                 <option value="{{ $pro->id }}">{{ $pro->sku }} - {{ $pro->model_name }}</option>
+                            @endforeach
+                        </x-app.input.select2>
+                        <x-app.input.select2 class="w-full mt-4 hidden stock-out-to-selection" data-type="production"
+                            name="stock_out_to_selection_4" placeholder="{{ __('Select a factory') }}">
+                            <option value="">{{ __('Select a factory') }}</option>
+                            @foreach ($factories as $fac)
+                                <option value="{{ $fac->id }}">{{ $fac->name }}</option>
                             @endforeach
                         </x-app.input.select2>
                     </div>
@@ -104,17 +109,14 @@
             } else if (val === 'product') {
                 $('#stock-out-modal .stock-out-to-selection[data-type="product"]').removeClass('hidden')
             } else if (val === 'production') {
-                $('#stock-out-modal .stock-out-to-selection[data-type="customer"]').addClass('hidden')
-                $('#stock-out-modal .stock-out-to-selection[data-type="technician"]').addClass('hidden')
-
-                $('#stock-out-modal #yes-btn').removeClass('hidden')
+                $('#stock-out-modal .stock-out-to-selection[data-type="production"]').removeClass('hidden')
             }
 
             let url = $('#stock-out-modal #yes-btn').attr('href')
             url = `${url}?stock_out_to=${val}`
             $('#stock-out-modal #yes-btn').attr('href', url)
         })
-        $('#stock-out-modal select[name="stock_out_to_selection_1"], #stock-out-modal select[name="stock_out_to_selection_2"], #stock-out-modal select[name="stock_out_to_selection_3"]').on('change', function() {
+        $('#stock-out-modal select[name="stock_out_to_selection_1"], #stock-out-modal select[name="stock_out_to_selection_2"], #stock-out-modal select[name="stock_out_to_selection_3"], #stock-out-modal select[name="stock_out_to_selection_4"]').on('change', function() {
             let val = $(this).val()
 
             $('#stock-out-modal #yes-btn').addClass('hidden')

@@ -92,11 +92,15 @@ class MaterialUseController extends Controller
         if ($req->has('sprid') && $req->has('to_pid')) {
             $spr = SaleProductionRequest::where('id', $req->sprid)->first();
             $material_use = MaterialUse::with('materials')->where('product_id', $req->to_pid)->first();
+
+            $product_ids = [$material_use->product_id, ...$material_use->materials->pluck('product_id')->toArray()];
+            $product_and_materials = Product::whereIn('id', $product_ids)->get()->keyBy('id');
         }
         return view('material_use.form', [
             'material' => $material_use ?? null,
             'for_pid' => isset($spr) ? $spr->product_id : null,
             'spr_id' => isset($spr) ? $spr->id : null,
+            'product_and_materials' => $product_and_materials ?? null,
         ]);
     }
 
@@ -104,8 +108,12 @@ class MaterialUseController extends Controller
     {
         $material->load('materials');
 
+        $product_ids = [$material->product_id, ...$material->materials->pluck('product_id')->toArray()];
+        $product_and_materials = Product::whereIn('id', $product_ids)->get()->keyBy('id');
+
         return view('material_use.form', [
-            'material' => $material
+            'material' => $material,
+            'product_and_materials' => $product_and_materials,
         ]);
     }
 
@@ -228,5 +236,32 @@ class MaterialUseController extends Controller
                 'result' => false
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function searchProduct(Request $req)
+    {
+        $keyword = $req->keyword;
+        $type = $req->type;
+
+        if ($type == 'product') {
+            $products = Product::where('type', Product::TYPE_PRODUCT)
+                ->where(function ($q) use ($keyword) {
+                    $q->where('model_name', 'like', '%' . $keyword . '%')
+                        ->orWhere('sku', 'like', '%' . $keyword . '%');
+                })
+                ->orderBy('id', 'desc')->get();
+        } else if ($type == 'raw_material') {
+            $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)
+                ->where(function ($q) use ($keyword) {
+                    $q->where('model_name', 'like', '%' . $keyword . '%')
+                        ->orWhere('sku', 'like', '%' . $keyword . '%');
+                })
+                ->orderBy('id', 'desc')->get();
+        }
+
+        return Response::json([
+            'products' => $products ?? null,
+            'materials' => $materials ?? null,
+        ], HttpFoundationResponse::HTTP_OK);
     }
 }
