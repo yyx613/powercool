@@ -21,16 +21,16 @@ jobs:
         run: npm run build
 
       - name: Synchronize Files To Server
-        uses: easingthemes/ssh-deploy@v2.1.5
+        uses: easingthemes/ssh-deploy@v2.1.7
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.VPS_HOST }}
-          REMOTE_USER: ${{ secrets.VPS_USER }}
-          SSH_PORT: ${{ secrets.VPS_PORT }}
-          target: /public_html/powercool.at-easese.com
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+          remote-user: ${{ secrets.VPS_USER }}
+          server-ip: ${{ secrets.VPS_HOST }}
+          remote-path: /public_html/powercool.at-easese.com
+          ssh-port: ${{ secrets.VPS_PORT }}
           
       - name: Run Remote/Artisan Commands
-        uses: appleboy/ssh-action@v0.1.6
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
