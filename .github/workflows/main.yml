@@ -22,12 +22,11 @@ jobs:
 
       - name: Synchronize Files To Server
         uses: easingthemes/ssh-deploy@v2.1.7
-        with:
-          ssh-port: ${{ secrets.VPS_PORT }}
         env:
           SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
           REMOTE_USER: ${{ secrets.VPS_USER }}
           REMOTE_HOST: ${{ secrets.VPS_HOST }}
+          REMOTE_PORT: ${{ secrets.VPS_PORT }}
           TARGET: /public_html/powercool.at-easese.com
           
       - name: Run Remote/Artisan Commands
