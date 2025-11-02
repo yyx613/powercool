@@ -20,6 +20,12 @@ jobs:
       - name: Build NPM Assets
         run: npm run build
 
+      - name: Add SSH key
+        run: |
+          mkdir -p /home/atease/.ssh
+          echo "powercool" > /home/atease/.ssh/powercool
+          chmod 600 /home/atease/.ssh/powercool
+
       - name: Synchronize Files To Server
         uses: easingthemes/ssh-deploy@v2.1.7
         env:
