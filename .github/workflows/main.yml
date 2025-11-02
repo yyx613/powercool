@@ -20,16 +20,10 @@ jobs:
       - name: Build NPM Assets
         run: npm run build
 
-      - name: Add SSH key
-        run: |
-          mkdir -p /home/atease/.ssh
-          echo "powercool" > /home/atease/.ssh/powercool
-          chmod 600 /home/atease/.ssh/powercool
-
       - name: Synchronize Files To Server
         uses: easingthemes/ssh-deploy@v2.1.7
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_PRIVATE_KEY: ${{ env.SSH_PRIVATE_KEY }}
           REMOTE_USER: ${{ secrets.VPS_USER }}
           REMOTE_HOST: ${{ secrets.VPS_HOST }}
           REMOTE_PORT: ${{ secrets.VPS_PORT }}
@@ -42,7 +36,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
                 cd /public_html/powercool.at-easese.com
