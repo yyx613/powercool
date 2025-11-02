@@ -27,7 +27,9 @@ jobs:
           REMOTE_USER: ${{ secrets.VPS_USER }}
           REMOTE_HOST: ${{ secrets.VPS_HOST }}
           REMOTE_PORT: ${{ secrets.VPS_PORT }}
-          TARGET: /public_html/powercool.at-easese.com
+          SOURCE: "./"
+          TARGET: "/public_html/powercool.at-easese.com"
+          DEBUG: true
           
       - name: Run Remote/Artisan Commands
         uses: appleboy/ssh-action@v0.1.7
