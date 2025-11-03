@@ -529,8 +529,9 @@
 
                     if (get_material_use_only) return
 
-                    for (let i = 0; i < res.product_milestones
-                        .length; i++) {
+                    // Clear existing milestones
+                    $('#milestone-list-container .milestones').remove()
+                    for (let i = 0; i < res.product_milestones.length; i++) {
                         const productMilestone = res.product_milestones[i];
 
                         let clone = $('#milestone-template')[0].cloneNode(true);
