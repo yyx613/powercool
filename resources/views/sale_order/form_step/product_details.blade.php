@@ -256,7 +256,8 @@
 
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
                     var opt = new Option(`${sp.product.sku} - ${sp.product.model_name}`, sp.product_id, true, true);
-                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).append(opt).trigger('change')
+                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).append(opt)
+                    $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
                     $(`.items[data-id="${i+1}"] .foc-btns`).attr('data-is-foc', sp.is_foc == 1 ? true : false)
                     $(`.items[data-id="${i+1}"] .sst-btns`).attr('data-with-sst', sp.with_sst == 1 ? false : true)

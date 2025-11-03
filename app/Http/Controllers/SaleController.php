@@ -1012,6 +1012,14 @@ class SaleController extends Controller
             ]);
         }
 
+        $products = Product::withTrashed()
+            ->with(['sellingPrices' => function ($q) {
+                $q->withTrashed();
+            }])
+            ->with(['children' => function ($q) {
+                $q->withTrashed();
+            }])->whereIn('id', $sale->products->pluck('product_id'))->get();
+
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
@@ -1021,6 +1029,7 @@ class SaleController extends Controller
             'customers' => $customers,
             'transfer_from' => $transfer_from,
             'transfer_to' => $transfer_to,
+            'products' => $products ?? []
         ]);
     }
 
@@ -4202,6 +4211,7 @@ class SaleController extends Controller
                 'id' => $record->id,
                 'sales' => $record->salesperson->name,
                 'amount' => number_format($record->amount, 2),
+                'reached_amount' => number_format(Target::getReachedAmount($record->id), 2),
                 'date' => Carbon::parse($record->date)->format('M Y'),
                 'can_create' => hasPermission('sale.target.create'),
                 'can_edit' => hasPermission('sale.target.edit'),
@@ -4307,6 +4317,64 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    public function targetViewProgress(Target $target)
+    {
+        return view('target.progress', [
+            'target' => $target,
+            'default_page' => Session::get('target-progress-page') ?? 1,
+        ]);
+    }
+
+    public function getDataTargetViewProgress(Request $req, Target $target)
+    {
+        $salesperson_sale_agents_ids = $target->salesperson->salesAgents->pluck('id')->toArray();
+
+        $records = DB::table('invoices')
+            ->select(
+                'invoices.id AS id',
+                'invoices.sku AS doc_no',
+            )
+            ->where('sales.type', Sale::TYPE_SO)
+            ->whereNull('invoices.deleted_at')
+            ->whereIn('sales.sale_id', $salesperson_sale_agents_ids)
+            ->whereNot('delivery_orders.status', DeliveryOrder::STATUS_APPROVAL_PENDING)
+            ->whereBetween('invoices.created_at', [Carbon::parse($target->date)->startOfMonth(), Carbon::parse($target->date)->endOfMonth()])  
+            ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
+            ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
+            ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
+            ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
+            ->groupBy('invoices.id');
+
+        if ($req->has('is_return')) {
+            Session::put('target-progress-page', $req->page);
+        } else {
+            Session::put('target-progress-page', $req->page);
+        }
+       
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+
+        foreach ($records_paginator as $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'doc_no' => $record->doc_no,
+                'total' => number_format(Invoice::getTotal($record->id), 2),
+            ];
+        }
+
+        return response()->json($data);
     }
 
     public function indexSaleCancellation()

@@ -94,6 +94,7 @@ class PermissionSeeder extends Seeder
 
             'sale.target.view',
             'sale.target.create',
+            'sale.target.edit',
 
             'sale.billing.view',
 
