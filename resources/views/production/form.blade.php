@@ -152,7 +152,6 @@
                 </div>
             </div>
             @if (!isset($production) || (isset($is_duplicate) && $is_duplicate == true))
-                <!-- Not completed -->
                 <div class="mt-8 flex justify-end">
                     <x-app.button.submit type="button" id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
@@ -262,6 +261,9 @@
             if (DEFAULT_PRODUCT != null) {
                 let opt = new Option(DEFAULT_PRODUCT.model_name, DEFAULT_PRODUCT.id, true, true)
                 $('select[name="product"]').append(opt)
+            }
+            if (PRODUCTION != null || DEFAULT_PRODUCT != true) {
+                $('select[name="product"]').trigger('change')
             }
         })
 
