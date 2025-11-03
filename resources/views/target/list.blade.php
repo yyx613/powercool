@@ -92,7 +92,7 @@
                     "width": "20%",
                     "targets": 1,
                     render: function(data, type, row) {
-                        return data
+                        return `${data} / ${row.reached_amount}` 
                     }
                 },
                 {
@@ -108,6 +108,9 @@
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
+                            <a href="{{ config('app.url') }}/target/view-progress/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View Progress') !!}">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M7,6H23a1,1,0,0,0,0-2H7A1,1,0,0,0,7,6Z"/><path d="M23,11H7a1,1,0,0,0,0,2H23a1,1,0,0,0,0-2Z"/><path d="M23,18H7a1,1,0,0,0,0,2H23a1,1,0,0,0,0-2Z"/><circle cx="2" cy="5" r="2"/><circle cx="2" cy="12" r="2"/><circle cx="2" cy="19" r="2"/></svg>
+                            </a>
                             ${
                                 row.can_create ? `
                                 <a href="{{ config('app.url') }}/target/create?t=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">

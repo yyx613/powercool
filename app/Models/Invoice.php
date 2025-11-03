@@ -15,9 +15,13 @@ class Invoice extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_VOIDED = 1;
+
     const STATUS_TRANSFERRED_TO_DRAFT = 2;
+
     const STATUS_APPROVED = 3;
+
     const STATUS_REJECTED = 4;
+
     const STATUS_VALID = 5;
 
     protected $guarded = [];
@@ -60,5 +64,25 @@ class Invoice extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
+    }
+
+    public static function getTotal($invoice_id)
+    {
+        $dos = DeliveryOrder::where('invoice_id', $invoice_id)->get();
+
+        // Total amount
+        $total_amount = 0;
+        if (count($dos) > 0) {
+            $dop_ids = DeliveryOrderProduct::withTrashed()->where('delivery_order_id', $dos[0]->id)->pluck('id')->toArray();
+            $dopcs = DeliveryOrderProductChild::withTrashed()->whereIn('delivery_order_product_id', $dop_ids)->get();
+            for ($i = 0; $i < count($dopcs); $i++) {
+                $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
+                $unit_price = $sp->override_selling_price ?? $sp->unit_price;
+                $discount = ($sp->discount / $sp->qty);
+                $total_amount += $unit_price - $discount;
+            }
+        }
+
+        return $total_amount;
     }
 }

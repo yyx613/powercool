@@ -496,6 +496,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/store', 'storeTarget')->name('store');
             Route::get('/edit/{target}', 'editTarget')->name('edit');
             Route::post('/update/{target}', 'updateTarget')->name('update');
+            Route::get('/view-progress/{target}', 'targetViewProgress')->name('view_progress');
+            Route::get('/get_data_view_progress/{target}', 'getDataTargetViewProgress')->name('get_data_view_progress');
         });
         // Sale Cancellation
         Route::prefix('sale-cancellation')->name('sale_cancellation.')->middleware(['can:sale.target.view'])->group(function () {
