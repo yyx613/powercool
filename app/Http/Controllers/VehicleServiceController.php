@@ -84,6 +84,7 @@ class VehicleServiceController extends Controller
                 'vehicle_plate_number' => $record->plateNumber,
                 'service' => VehicleService::types[$record->type],
                 'date' => $record->date == null ? null : Carbon::parse($record->date)->format('Y M d'),
+                'to_date' => $record->to_date == null ? null : Carbon::parse($record->to_date)->format('Y M d'),
                 'reminder_date' => $record->remind_at == null ? null : Carbon::parse($record->remind_at)->format('Y M d'),
                 'amount' => $record->amount == null ? null : number_format($record->amount, 2),
             ];
@@ -115,9 +116,19 @@ class VehicleServiceController extends Controller
             'name.*' => 'nullable',
             'amount' => 'required',
             'amount.*' => 'nullable',
+            'warranty_expiry_date' => 'nullable',
+            'warranty_expiry_date.*' => 'nullable|date',
+            'warranty_term' => 'nullable',
+            'warranty_term.*' => 'nullable|string',
         ];
         if ($req->service != null) {
-            if ($req->service == 1 || $req->service == 2) {
+            if ($req->service == 1) {
+                // Insurance - require from date, to date, reminder date and amount
+                $rules['date'] = 'required';
+                $rules['to_date'] = 'required|date|after_or_equal:date';
+                $rules['reminder_date'] = 'required';
+                $rules['service_amount'] = 'required';
+            } elseif ($req->service == 2) {
                 $rules['date'] = 'required';
                 $rules['reminder_date'] = 'required';
                 $rules['service_amount'] = 'required';
@@ -158,6 +169,7 @@ class VehicleServiceController extends Controller
                     'vehicle_id' => $req->vehicle,
                     'type' => $req->service,
                     'date' => $req->date,
+                    'to_date' => $req->to_date,
                     'remind_at' => $req->reminder_date,
                     'amount' => $req->service_amount,
                 ]);
@@ -167,6 +179,7 @@ class VehicleServiceController extends Controller
                     'vehicle_id' => $req->vehicle,
                     'type' => $req->service,
                     'date' => $req->date,
+                    'to_date' => $req->to_date,
                     'remind_at' => $req->reminder_date,
                     'amount' => $req->service_amount,
                 ]);
@@ -184,6 +197,8 @@ class VehicleServiceController extends Controller
                     'vehicle_service_id' => $new_service->id ?? $service->id,
                     'name' => $req->name[$i],
                     'amount' => $req->amount[$i],
+                    'warranty_expiry_date' => $req->warranty_expiry_date[$i] ?? null,
+                    'warranty_term' => $req->warranty_term[$i] ?? null,
                 ];
             }
 

@@ -48,6 +48,7 @@
                     <th>{{ __('Vehicle Plate Number') }}</th>
                     <th>{{ __('Service') }}</th>
                     <th>{{ __('Date') }}</th>
+                    <th>{{ __('To Date') }}</th>
                     <th>{{ __('Reminder Date') }}</th>
                     <th>{{ __('Amount') }}</th>
                     <th></th>
@@ -78,6 +79,7 @@
                 { data: 'vehicle_plate_number' },
                 { data: 'service' },
                 { data: 'date' },
+                { data: 'to_date' },
                 { data: 'reminder_date' },
                 { data: 'amount' },
                 { data: 'action' },
@@ -120,8 +122,15 @@
                     }
                 },
                 {
-                    "width": "5%",
+                    "width": "10%",
                     "targets": 5,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 6,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

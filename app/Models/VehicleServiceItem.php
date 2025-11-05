@@ -15,10 +15,16 @@ class VehicleServiceItem extends Model
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
+        'warranty_expiry_date' => 'date',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
+    }
+
+    public function getWarrantyExpiryDateAttribute($val)
+    {
+        return $val == null ? null : \Carbon\Carbon::parse($val)->format('Y-m-d');
     }
 }
