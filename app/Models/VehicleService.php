@@ -58,6 +58,11 @@ class VehicleService extends Model
         return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
     }
 
+    public function getToDateAttribute($val)
+    {
+        return $val == null ? null : Carbon::parse($val)->format('Y-m-d');
+    }
+
     public function getRemindAtAttribute($val)
     {
         return $val == null ? null : Carbon::parse($val)->format('Y-m-d');

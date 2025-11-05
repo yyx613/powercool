@@ -35,9 +35,14 @@
                     <x-input-error :messages="$errors->get('service')" class="mt-1" />
                 </div>
                 <div class="flex flex-col" id="date_container">
-                    <x-app.input.label id="date" class="mb-1">{{ __('Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="date" class="mb-1"><span id="date_label">{{ __('Date') }}</span> <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="date" id="date" :hasError="$errors->has('date')" value="{{ old('date', isset($service) ? $service->date : null) }}" />
                     <x-input-error :messages="$errors->get('date')" class="mt-1" />
+                </div>
+                <div class="flex flex-col hidden" id="to_date_container">
+                    <x-app.input.label id="to_date" class="mb-1">{{ __('To Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="to_date" id="to_date" :hasError="$errors->has('to_date')" value="{{ old('to_date', isset($service) ? $service->to_date : null) }}" />
+                    <x-input-error :messages="$errors->get('to_date')" class="mt-1" />
                 </div>
                 <div class="flex flex-col hidden" id="reminder_date_container">
                     <x-app.input.label id="reminder_date" class="mb-1">{{ __('Reminder Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -46,7 +51,7 @@
                 </div>
                 <div class="flex flex-col hidden" id="amount_container">
                     <x-app.input.label id="service_amount" class="mb-1">{{ __('Amount') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="service_amount" id="service_amount" :hasError="$errors->has('service_amount')" value="{{ old('service_amount', isset($service) ? $service->service_amount : null) }}" class="decimal-input" />
+                    <x-app.input.input name="service_amount" id="service_amount" :hasError="$errors->has('service_amount')" value="{{ old('service_amount', isset($service) ? $service->amount : null) }}" class="decimal-input" />
                     <x-input-error :messages="$errors->get('service_amount')" class="mt-1" />
                 </div>
             </div>
@@ -67,6 +72,16 @@
                     <x-app.input.label id="amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
                     <x-app.input.input name="amount[]" id="amount" :hasError="$errors->has('amount')" class="decimal-input" />
                     <x-input-error :messages="$errors->get('amount')" class="mt-1" />
+                </div>
+                <div class="flex flex-col flex-1 warranty-field">
+                    <x-app.input.label id="warranty_expiry_date" class="mb-1">{{ __('Warranty Expiry Date') }}</x-app.input.label>
+                    <x-app.input.input name="warranty_expiry_date[]" id="warranty_expiry_date" :hasError="$errors->has('warranty_expiry_date')" class="warranty-date-input" />
+                    <x-input-error :messages="$errors->get('warranty_expiry_date')" class="mt-1" />
+                </div>
+                <div class="flex flex-col flex-1 warranty-field">
+                    <x-app.input.label id="warranty_term" class="mb-1">{{ __('Warranty Term') }}</x-app.input.label>
+                    <x-app.input.input name="warranty_term[]" id="warranty_term" :hasError="$errors->has('warranty_term')" />
+                    <x-input-error :messages="$errors->get('warranty_term')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <button type="button" class="bg-red-500 rounded-full aspect-square w-7 flex items-center justify-center remove-item-btns">
@@ -90,6 +105,16 @@
                                 <x-app.input.input name="amount[]" id="amount" value="{{ $item->amount }}" class="decimal-input" />
                                 <x-input-error :messages="$errors->first('amount.'.$key)" class="mt-1" />
                             </div>
+                            <div class="flex flex-col flex-1 warranty-field">
+                                <x-app.input.label id="warranty_expiry_date" class="mb-1">{{ __('Warranty Expiry Date') }}</x-app.input.label>
+                                <x-app.input.input name="warranty_expiry_date[]" id="warranty_expiry_date" value="{{ $item->warranty_expiry_date }}" class="warranty-date-input" />
+                                <x-input-error :messages="$errors->first('warranty_expiry_date.'.$key)" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col flex-1 warranty-field">
+                                <x-app.input.label id="warranty_term" class="mb-1">{{ __('Warranty Term') }}</x-app.input.label>
+                                <x-app.input.input name="warranty_term[]" id="warranty_term" value="{{ $item->warranty_term }}" />
+                                <x-input-error :messages="$errors->first('warranty_term.'.$key)" class="mt-1" />
+                            </div>
                             <div class="flex flex-col">
                                 <button type="button" class="bg-red-500 rounded-full aspect-square w-7 flex items-center justify-center remove-item-btns" data-id="{{ $key + 1 }}">
                                     <svg class="h-4 w-4 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M21,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H3A1,1,0,0,0,3,6H4V19a5.006,5.006,0,0,0,5,5h6a5.006,5.006,0,0,0,5-5V6h1a1,1,0,0,0,0-2ZM11,2h2a3.006,3.006,0,0,1,2.829,2H8.171A3.006,3.006,0,0,1,11,2Zm7,17a3,3,0,0,1-3,3H9a3,3,0,0,1-3-3V6H18Z"/><path d="M10,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,10,18Z"/><path d="M14,18a1,1,0,0,0,1-1V11a1,1,0,0,0-2,0v6A1,1,0,0,0,14,18Z"/></svg>
@@ -112,6 +137,16 @@
                                 <x-app.input.label id="amount" class="mb-1">{{ __('Amount') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                                 <x-app.input.input name="amount[]" id="amount" value="{{ old('amount.'.$key) ?? null }}" class="decimal-input" />
                                 <x-input-error :messages="$errors->first('amount.'.$key)" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col flex-1 warranty-field">
+                                <x-app.input.label id="warranty_expiry_date" class="mb-1">{{ __('Warranty Expiry Date') }}</x-app.input.label>
+                                <x-app.input.input name="warranty_expiry_date[]" id="warranty_expiry_date" value="{{ old('warranty_expiry_date.'.$key) ?? null }}" class="warranty-date-input" />
+                                <x-input-error :messages="$errors->first('warranty_expiry_date.'.$key)" class="mt-1" />
+                            </div>
+                            <div class="flex flex-col flex-1 warranty-field">
+                                <x-app.input.label id="warranty_term" class="mb-1">{{ __('Warranty Term') }}</x-app.input.label>
+                                <x-app.input.input name="warranty_term[]" id="warranty_term" value="{{ old('warranty_term.'.$key) ?? null }}" />
+                                <x-input-error :messages="$errors->first('warranty_term.'.$key)" class="mt-1" />
                             </div>
                             <div class="flex flex-col">
                                 <button type="button" class="bg-red-500 rounded-full aspect-square w-7 flex items-center justify-center remove-item-btns" data-id="{{ $key + 1 }}">
@@ -150,6 +185,10 @@
         $('input[name="date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
+        $('input[name="to_date"]').daterangepicker(datepickerParam)
+        $('input[name="to_date"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
         $('input[name="reminder_date"]').daterangepicker(datepickerParam)
         $('input[name="reminder_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
@@ -162,8 +201,25 @@
                 ITEM_ID = $('input[name="old_val_count"]').val() + 1
             }
 
+            // Initialize date pickers for existing warranty date inputs
+            initWarrantyDatePickers()
+
             $('select[name="service"]').change()
         })
+
+        function initWarrantyDatePickers() {
+            $('.warranty-date-input input').each(function() {
+                // Check if datepicker is already initialized
+                if ($(this).data('daterangepicker')) {
+                    $(this).data('daterangepicker').remove();
+                }
+
+                $(this).daterangepicker(datepickerParam);
+                $(this).off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+                    $(this).val(picker.startDate.format('YYYY-MM-DD'));
+                });
+            });
+        }
 
         $('#add-item-btn').on('click', function() {
             let clone = $('#item-template')[0].cloneNode(true);
@@ -173,6 +229,15 @@
             $(clone).find('.remove-item-btns').attr('data-id', ITEM_ID)
 
             $('#item-container').append(clone)
+
+            // Check service type and show/hide warranty fields
+            toggleWarrantyFields()
+
+            // Initialize date picker for the new warranty date input
+            $(clone).find('.warranty-date-input input').daterangepicker(datepickerParam);
+            $(clone).find('.warranty-date-input input').off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD'));
+            });
 
             ITEM_ID++
         })
@@ -186,10 +251,34 @@
 
             $(this).submit()
         })
+        function toggleWarrantyFields() {
+            let val = $('select[name="service"]').val()
+
+            // Show warranty fields only for service types 5 (Repair Item) and 6 (Service Item)
+            if (val == 5 || val == 6) {
+                $('.warranty-field').removeClass('hidden')
+                // Re-initialize date pickers after showing fields
+                initWarrantyDatePickers()
+            } else {
+                $('.warranty-field').addClass('hidden')
+            }
+        }
+
         $('select[name="service"]').on('change', function() {
             let val = $(this).val()
 
-            if (val == 1 || val == 2) {
+            // Reset to default label and hide to_date
+            $('#date_label').text('{{ __('Date') }}')
+            $('#to_date_container').addClass('hidden')
+
+            if (val == 1) {
+                // Insurance - show from/to date fields
+                $('#date_label').text('{{ __('From Date') }}')
+                $('#to_date_container').removeClass('hidden')
+                $('#reminder_date_container').removeClass('hidden')
+                $('#amount_container').removeClass('hidden')
+            } else if (val == 2) {
+                $('#date_label').text('{{ __('Expiration Date') }}')
                 $('#reminder_date_container').removeClass('hidden')
                 $('#amount_container').removeClass('hidden')
             } else if (val == 3) {
@@ -205,6 +294,9 @@
                 $('#reminder_date_container').addClass('hidden')
                 $('#amount_container').removeClass('hidden')
             }
+
+            // Toggle warranty fields based on service type
+            toggleWarrantyFields()
         })
     </script>
 @endpush

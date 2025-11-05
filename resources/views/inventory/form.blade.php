@@ -473,7 +473,7 @@
                 <h6 class="font-medium text-lg">{{ __('Serial No') }}</h6>
                 <span class="text-sm text-slate-500">{{ __('Serial No Qty:') }} <span id="serial-no-qty">0</span></span>
             </div>
-            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" placeholder="{{ __('Enter Serial No') }}" />
+            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" placeholder="{{ __('Enter Serial No') }}" value="{{ old('serial_no_ipt') }}" />
             <x-app.input.input name="order_idx" id="order_idx" class="hidden" />
             <ul class="my-2" id="serial_no_list">
                 <!-- Template -->
@@ -545,6 +545,18 @@
             } else {
                 $('#add-selling-price-btn').trigger('click')
             }
+
+            // Restore serial numbers from validation failure
+            @if(old('serial_no'))
+                const oldSerialNos = @json(old('serial_no'));
+                if (Array.isArray(oldSerialNos)) {
+                    oldSerialNos.forEach(function(serialNo) {
+                        if (serialNo && serialNo.trim() !== '') {
+                            addSerialNo(serialNo);
+                        }
+                    });
+                }
+            @endif
         })
         $('#submit-create-btn').on('click', function(e) {
             let url = $('#form').attr('action')
