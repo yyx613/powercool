@@ -146,6 +146,13 @@
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err" />
         </div>
+        <div class="flex flex-col">
+            <x-app.input.label class="mb-1">{{ __('Accessories') }}</x-app.input.label>
+            <x-app.input.select name="accessory_id[]" multiple>
+                <option value=""></option>
+            </x-app.input.select>
+            <x-app.message.error id="accessory_id_err" />
+        </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
             {{-- <div class="flex flex-col flex-1 col-span-2">
                 <x-app.input.label id="product_serial_no"
@@ -263,6 +270,13 @@
                         temp.push(sp.warranty_periods[j].warranty_period_id)
                     }
                     $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(temp)
+                    var opts = []
+                    for (let i = 0; i < sp.accessories.length; i++) {
+                        opts.push(new Option(
+                            `${sp.accessories[i].product.sku} - ${sp.accessories[i].product.model_name}`, sp
+                            .accessories[i].accessory_id, true, true))
+                    }
+                    $(`.items[data-id="${i+1}"] select[name="accessory_id[]"]`).append(opts)
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
                     $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
                     if (sp.override_selling_price != null) {
@@ -342,6 +356,25 @@
             if (!PRODUCT_DETAILS_INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
+            // Build accessory select2
+            bulidSelect2Ajax({
+                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="accessory_id[]"]`,
+                placeholder: '{{ __('Search a accessory') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                extraDataParams: {
+                    sale_id: REPLICATE == null && SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
+            })
 
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass(
                 'border border-gray-300 rounded-md overflow-hidden')
