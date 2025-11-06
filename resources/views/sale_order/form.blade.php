@@ -88,6 +88,11 @@
                 $('#quotation-details-container input[name="custom_date"]').attr('disabled', false)
                 $('#quotation-details-container input[name="custom_date"]').css('backgroundColor', '#fff')
                 $('#quotation-details-container input[name="custom_date"]').parent().css('backgroundColor', '#fff')
+
+                @if (in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())))
+                    $('#product-details-container select[name="product_serial_no[]"]').attr('disabled', false)
+                    $('#product-details-container select[name="product_serial_no[]"]').css('backgroundColor', '#eee')
+                @endif
             }
         })
 

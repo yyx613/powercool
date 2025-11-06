@@ -1,6 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Quotation')
 
+@push('styles')
+    <style>
+        /* Custom styling for warranty period select2 delete button */
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            display: none;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title

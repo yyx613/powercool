@@ -200,7 +200,7 @@
                 </x-app.input.select2>
                 <x-app.message.error id="company_group_err" />
             </div>
-            <div class="flex flex-col">
+            {{-- <div class="flex flex-col">
                 <x-app.input.label id="prefix" class="mb-1">{{ __('Prefix') }}</x-app.input.label>
                 <x-app.input.select2 name="prefix" id="prefix" :hasError="$errors->has('prefix')"
                     placeholder="{{ __('Select a prefix') }}">
@@ -210,7 +210,7 @@
                     @endforeach
                 </x-app.input.select2>
                 <x-app.message.error id="prefix_err" />
-            </div>
+            </div> --}}
             <div class="flex flex-col">
                 <x-app.input.label id="customer_name" class="mb-1">{{ __('Customer Name') }} <span
                         class="text-sm text-red-500">*</span></x-app.input.label>
@@ -225,9 +225,50 @@
                 <x-app.message.error id="company_name_err" />
             </div>
             <div class="flex flex-col">
-                <x-app.input.label id="mobile_number" class="mb-1">{{ __('Mobile Number') }}</x-app.input.label>
-                <x-app.input.input name="mobile_number" id="mobile_number" :hasError="$errors->has('mobile_number')"
-                    value="{{ old('mobile_number', isset($duplicate) ? $duplicate->mobile_number : (isset($customer) ? $customer->mobile_number : null)) }}" />
+                <div class="flex justify-between items-center mb-1">
+                    <x-app.input.label id="mobile_number">{{ __('Mobile Number') }}</x-app.input.label>
+                    <button type="button" id="add-mobile-number-btn" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">+ {{ __('Add') }}</button>
+                </div>
+                <div id="mobile-numbers-container">
+                    @if(isset($customer) && $customer->mobile_number && is_array($customer->mobile_number) && count($customer->mobile_number) > 0)
+                        @foreach($customer->mobile_number as $index => $mobile)
+                            <div class="flex items-center gap-2 mb-2 mobile-number-row">
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
+                                @if($index > 0)
+                                    <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
+                                        <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                            viewBox="0 0 24 24" width="512" height="512">
+                                            <path
+                                                d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                                        </svg>
+                                    </button>
+                                @endif
+                            </div>
+                        @endforeach
+                    @elseif(isset($duplicate) && $duplicate->mobile_number)
+                        @php
+                            $duplicateMobiles = is_array($duplicate->mobile_number) ? $duplicate->mobile_number : [$duplicate->mobile_number];
+                        @endphp
+                        @foreach($duplicateMobiles as $index => $mobile)
+                            <div class="flex items-center gap-2 mb-2 mobile-number-row">
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
+                                @if($index > 0)
+                                    <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
+                                        <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                                            viewBox="0 0 24 24" width="512" height="512">
+                                            <path
+                                                d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                                        </svg>
+                                    </button>
+                                @endif
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="flex items-center gap-2 mb-2 mobile-number-row">
+                            <x-app.input.input name="mobile_number[]" class="flex-1" value="" />
+                        </div>
+                    @endif
+                </div>
                 <x-app.message.error id="mobile_number_err" />
             </div>
             <div class="flex flex-col">
@@ -556,6 +597,28 @@
                     }, 300);
                 },
             });
+        })
+
+        // Handle adding new mobile number field
+        $('#add-mobile-number-btn').on('click', function() {
+            const newRow = `
+                <div class="flex items-center gap-2 mb-2 mobile-number-row">
+                    <input type="text" name="mobile_number[]" class="flex-1 border border-gray-300 rounded px-3 py-2" value="" />
+                    <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
+                        <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                            viewBox="0 0 24 24" width="512" height="512">
+                            <path
+                                d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            $('#mobile-numbers-container').append(newRow);
+        })
+
+        // Handle removing mobile number field
+        $('body').on('click', '.remove-mobile-number-btn', function() {
+            $(this).closest('.mobile-number-row').remove();
         })
     </script>
 @endpush

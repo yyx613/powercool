@@ -93,18 +93,23 @@ class ProductController extends Controller
 
         if (str_contains(Route::currentRouteName(), 'production_finish_good.')) {
             $page = Session::get('production-finish-good-page');
+            $search = Session::get('production-finish-good-search');
         } elseif (str_contains(Route::currentRouteName(), 'production_material.')) {
             $page = Session::get('production-material-page');
+            $search = Session::get('production-material-search');
         } elseif (str_contains(Route::currentRouteName(), 'product.')) {
             $page = Session::get('finish-good-page');
+            $search = Session::get('finish-good-search');
         } else {
             $page = Session::get('raw-material-page');
+            $search = Session::get('raw-material-search');
         }
 
         return view('inventory.list', [
             'type' => $req->type ?? null,
             'is_sales_only' => isSalesOnly(),
             'default_page' => $page ?? null,
+            'default_search' => $search ?? null,
         ]);
     }
 
@@ -166,24 +171,39 @@ class ProductController extends Controller
             }
         }
 
+        // Determine session keys based on route
         if ($req->boolean('is_production') == true) {
             if ($req->boolean('is_product') == true) {
                 Session::put('production-finish-good-page', $req->page);
+                $search_session_key = 'production-finish-good-search';
             } else {
                 Session::put('production-material-page', $req->page);
+                $search_session_key = 'production-material-search';
             }
         } else {
             if ($req->boolean('is_product') == true) {
                 Session::put('finish-good-page', $req->page);
+                $search_session_key = 'finish-good-search';
             } else {
                 Session::put('raw-material-page', $req->page);
+                $search_session_key = 'raw-material-search';
             }
         }
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put($search_session_key, $keyword);
+            } else {
+                Session::remove($search_session_key);
+            }
+        } else if (Session::get($search_session_key) != null) {
+            $keyword = Session::get($search_session_key);
+        }
 
+        if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
                     ->orWhere('model_name', 'like', '%'.$keyword.'%')
@@ -467,8 +487,8 @@ class ProductController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sku',
-                1 => 'location',
+                1 => 'sku',
+                2 => 'location',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

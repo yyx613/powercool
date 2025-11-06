@@ -730,6 +730,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/create', 'create')->name('create');
             Route::get('/edit/{vehicle}', 'edit')->name('edit');
             Route::post('/upsert/{vehicle?}', 'upsert')->name('upsert');
+            Route::get('/view/{vehicle}', 'view')->name('view');
         });
         // Material Use
         Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function () {

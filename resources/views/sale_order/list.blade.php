@@ -25,6 +25,19 @@
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Order') }}</x-app.page-title>
         <div class="flex gap-x-4">
             @can('sale.sale_order.convert')
+                <a href="{{ route('quotation.to_sale_order') }}"
+                    class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
+                        width="512" height="512">
+                        <g>
+                            <path
+                                d="M23,16H2.681l.014-.015L4.939,13.7a1,1,0,1,0-1.426-1.4L1.274,14.577c-.163.163-.391.413-.624.676a2.588,2.588,0,0,0,0,3.429c.233.262.461.512.618.67l2.245,2.284a1,1,0,0,0,1.426-1.4L2.744,18H23a1,1,0,0,0,0-2Z" />
+                            <path
+                                d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
+                        </g>
+                    </svg>
+                    <span>{{ __('Convert From Quotation') }}</span>
+                </a>
                 <a href="{{ route('sale_order.to_delivery_order') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
@@ -123,6 +136,7 @@
         DEFAULT_PAGE = @json($default_page ?? null);
         IS_SALE_COORDINATOR_ONLY = @json($is_sale_coordinator_only ?? null);
         DEFAULT_TRANSFER_TYPE = @json($default_so_type ?? null);
+        IS_SALES_ROLE = @json(in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())));
         const urlParams = new URLSearchParams(window.location.search);
         const PROVIDED_SKU = urlParams.get('sku')
         
@@ -425,7 +439,7 @@
                                     </button>` : ''
                         }
                         ${
-                            row.can_transfer ? `
+                            row.can_transfer && !IS_SALES_ROLE ? `
                                     <button class="rounded-full p-2 bg-emerald-200 inline-block transfer-btns" data-id="${row.id}" data-sku="${row.doc_no}" title="{!! __('Transfer') !!}">
                                         <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M24,12.649a5,5,0,0,0-.256-1.581L22.405,7.051A3,3,0,0,0,19.559,5H17V4a3,3,0,0,0-3-3H3A3,3,0,0,0,0,4V19.5a3.517,3.517,0,0,0,6,2.447A3.517,3.517,0,0,0,12,19.5V19h3v.5a3.5,3.5,0,0,0,7,0V19h2ZM19.559,7a1,1,0,0,1,.948.684L21.613,11H17V7ZM2,4A1,1,0,0,1,3,3H14a1,1,0,0,1,1,1V17H2ZM3.5,21A1.5,1.5,0,0,1,2,19.5V19H5v.5A1.5,1.5,0,0,1,3.5,21ZM10,19.5a1.5,1.5,0,0,1-3,0V19h3Zm10,0a1.5,1.5,0,0,1-3,0V19h3ZM17,17V13h5v4Z"/></svg>
                                     </button>` : ''

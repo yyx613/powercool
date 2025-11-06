@@ -1832,6 +1832,15 @@ class SaleController extends Controller
 
         // Check duplicate serial no is selected (upsertProDetails)
         if (isset($req->product_serial_no)) {
+            // Check if sales role is trying to submit serial numbers
+            if (in_array(Role::SALE, getUserRoleId(Auth::user()))) {
+                return Response::json([
+                    'errors' => [
+                        'product_serial_no' => 'Sales role is not allowed to select serial numbers',
+                    ],
+                ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+            }
+
             $serial_no = [];
             for ($i = 0; $i < count($req->product_serial_no); $i++) {
                 if ($req->product_serial_no[$i] == null) {

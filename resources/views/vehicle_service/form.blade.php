@@ -45,9 +45,9 @@
                     <x-input-error :messages="$errors->get('to_date')" class="mt-1" />
                 </div>
                 <div class="flex flex-col hidden" id="reminder_date_container">
-                    <x-app.input.label id="reminder_date" class="mb-1">{{ __('Reminder Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="reminder_date" id="reminder_date" :hasError="$errors->has('reminder_date')" value="{{ old('reminder_date', isset($service) ? $service->remind_at : null) }}" />
-                    <x-input-error :messages="$errors->get('reminder_date')" class="mt-1" />
+                    <x-app.input.label id="reminder_months" class="mb-1">{{ __('Reminder (Months Before Expiry)') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="reminder_months" id="reminder_months" :hasError="$errors->has('reminder_months')" value="{{ old('reminder_months', $reminder_months ?? null) }}" class="int-input" />
+                    <x-input-error :messages="$errors->get('reminder_months')" class="mt-1" />
                 </div>
                 <div class="flex flex-col hidden" id="amount_container">
                     <x-app.input.label id="service_amount" class="mb-1">{{ __('Amount') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
@@ -187,10 +187,6 @@
         });
         $('input[name="to_date"]').daterangepicker(datepickerParam)
         $('input[name="to_date"]').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD'));
-        });
-        $('input[name="reminder_date"]').daterangepicker(datepickerParam)
-        $('input[name="reminder_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
 

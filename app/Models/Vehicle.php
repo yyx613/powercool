@@ -35,4 +35,9 @@ class Vehicle extends Model
     {
         return $this->morphOne(Branch::class, 'object');
     }
+
+    public function services()
+    {
+        return $this->hasMany(VehicleService::class);
+    }
 }

@@ -46,6 +46,17 @@
         IS_VIEW = @json($is_view ?? null);
 
         $(document).ready(function() {
+            // Disable and grey out serial number field for sales role
+            @if (in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())))
+                $('#product-details-container select[name="product_serial_no[]"]').attr('disabled', true)
+                $('#product-details-container select[name="product_serial_no[]"]').css({
+                    'backgroundColor': '#f1f5f9',
+                    'opacity': '0.6',
+                    'cursor': 'not-allowed'
+                })
+                $('#product-details-container select[name="product_serial_no[]"]').addClass('select2-disabled')
+            @endif
+
             getNextSku()
         })
 

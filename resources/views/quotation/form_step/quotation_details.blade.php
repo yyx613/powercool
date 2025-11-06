@@ -322,7 +322,12 @@
 
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
-            $('input[name="mobile"]').val(element.phone ?? element.mobile_number)
+            // Show the first mobile number or '-' if not available
+            if (element.mobile_number.length > 0) {
+                $('input[name="mobile"]').val(element.mobile_number[0])
+            } else {
+                $('input[name="mobile"]').val('-')
+            }
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();
 

@@ -91,6 +91,29 @@ class VehicleController extends Controller
         return view('vehicle.form');
     }
 
+    public function view(Vehicle $vehicle)
+    {
+        // Load all services
+        $vehicle->load('services');
+
+        // Get only the latest service per service type
+        $latestServices = $vehicle->services
+            ->groupBy('type')
+            ->map(function ($services) {
+                // For each service type, return the latest one
+                // For Insurance (type 1), sort by to_date; for others, sort by date
+                return $services->sortByDesc(function ($service) {
+                    return $service->type == 1 ? $service->to_date : $service->date;
+                })->first();
+            })
+            ->values(); // Reset keys to sequential numbers
+
+        return view('vehicle.view', [
+            'vehicle' => $vehicle,
+            'latest_services' => $latestServices,
+        ]);
+    }
+
     public function edit(Vehicle $vehicle)
     {
         return view('vehicle.form', [
