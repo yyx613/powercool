@@ -378,6 +378,7 @@
                 selector: `.items[data-id="${ITEMS_COUNT}"] select[name="accessory_id[]"]`,
                 placeholder: '{{ __('Search a accessory') }}',
                 url: '{{ route('product.get_by_keyword') }}',
+                disabled: SALE != null ? true : false,
                 extraDataParams: {
                     sale_id: SALE != null ? SALE.id : null,
                 },

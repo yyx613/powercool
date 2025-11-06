@@ -259,7 +259,7 @@ class SaleController extends Controller
         $data = [];
         if ($req->has('quo')) {
             $replicate = Sale::where('id', $req->quo)->first();
-            $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods');
+            $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product');
 
             $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
                 ->where('id', $replicate->customer_id)
@@ -300,7 +300,7 @@ class SaleController extends Controller
         $products = $products->keyBy('id')->all();
 
         return view('quotation.form', [
-            'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'thirdPartyAddresses'),
+            'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'thirdPartyAddresses'),
             'products' => $products,
             'customers' => $customers,
             'is_view' => $is_view,
@@ -520,7 +520,7 @@ class SaleController extends Controller
     public function converToSaleOrder(Request $req)
     {
         $quo_ids = explode(',', $req->quo);
-        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->get();
+        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with('products.accessories')->get();
 
         try {
             $references = collect();
@@ -611,6 +611,11 @@ class SaleController extends Controller
                 'warranty_period' => $products->map(function ($q) {
                     return $q->warrantyPeriods->map(function ($q) {
                         return $q->warranty_period_id;
+                    });
+                })->toArray(),
+                'accessory' => $products->map(function ($q) {
+                    return $q->accessories->map(function ($q) {
+                        return $q->accessory_id;
                     });
                 })->toArray(),
                 'discount' => $products->map(function ($q) {
@@ -1029,7 +1034,7 @@ class SaleController extends Controller
             'customers' => $customers,
             'transfer_from' => $transfer_from,
             'transfer_to' => $transfer_to,
-            'products' => $products ?? []
+            'products' => $products ?? [],
         ]);
     }
 
@@ -1245,7 +1250,7 @@ class SaleController extends Controller
 
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $products = $products->merge($sales[$i]->products);
@@ -1289,7 +1294,7 @@ class SaleController extends Controller
                 $payment_term_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $payment_term_ids[] = $sales[$i]->payment_term;
@@ -1336,7 +1341,7 @@ class SaleController extends Controller
                 $sale_orders = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $sale_orders[] = $sales[$i];
@@ -1377,7 +1382,7 @@ class SaleController extends Controller
                 $salesperson_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
                     $salesperson_ids[] = $sales[$i]->sale_id;
@@ -1415,7 +1420,7 @@ class SaleController extends Controller
                 $customer_ids = [];
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
-                    if (!in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                    if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
 
@@ -1655,7 +1660,7 @@ class SaleController extends Controller
 
             // Update payment due date for SOs if payment method is credit term and payment due date is null
             $credit_term_payment_term_ids = getPaymentMethodCreditTermIds();
-            for ($i=0; $i < count($sales); $i++) { 
+            for ($i = 0; $i < count($sales); $i++) {
                 if (in_array($sales[$i]->payment_term, $credit_term_payment_term_ids) && $sales[$i]->payment_due_date == null) {
                     $daysToAdd = str_replace(' Days', '', $sales[$i]->paymentTerm->name);
                     $sales[$i]->payment_due_date = now()->addDays($daysToAdd)->format('Y-m-d');
@@ -1704,9 +1709,11 @@ class SaleController extends Controller
         ];
         if ($req->type == 'quo') {
             $has_third_party_address = false;
-            for ($i = 0; $i < count($req->third_party_address_address); $i++) {
-                if ($req->third_party_address_address[$i] != null) {
-                    $has_third_party_address = true;
+            if ($req->third_party_address_address != null) {
+                for ($i = 0; $i < count($req->third_party_address_address); $i++) {
+                    if ($req->third_party_address_address[$i] != null) {
+                        $has_third_party_address = true;
+                    }
                 }
             }
 
@@ -2572,6 +2579,20 @@ class SaleController extends Controller
                         }
                         SaleProductChild::insert($data);
                     }
+                    // Accessory
+                    SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
+                    if ($req->accessory != null && $req->accessory[$i] != null) {
+                        $data = [];
+                        for ($j=0; $j < count($req->accessory[$i]); $j++) { 
+                            $data[] = [
+                                'sale_product_id' => $sp->id,
+                                'accessory_id' => $req->accessory[$i][$j],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                        SaleProductAccessory::insert($data);
+                    }
                 }
             } else {
                 $now = now();
@@ -2606,7 +2627,7 @@ class SaleController extends Controller
                         SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
                         if ($req->accessory != null && $req->accessory[$i] != null) {
                             $data = [];
-                            for ($j=0; $j < count($req->accessory[$i]); $j++) { 
+                            for ($j = 0; $j < count($req->accessory[$i]); $j++) {
                                 $data[] = [
                                     'sale_product_id' => $sp->id,
                                     'accessory_id' => $req->accessory[$i][$j],
@@ -2618,7 +2639,7 @@ class SaleController extends Controller
                         }
                     }
                 }
-            } 
+            }
 
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
                 ->pluck('id')
@@ -2861,7 +2882,7 @@ class SaleController extends Controller
                 ]);
                 (new Branch)->assign(SaleProductionRequest::class, $spr->id);
                 // Accessory
-                for ($j=0; $j < count($saleProduct->accessories); $j++) { 
+                for ($j = 0; $j < count($saleProduct->accessories); $j++) {
                     $spr = SaleProductionRequest::create([
                         'sale_id' => $saleProduct->sale->id,
                         'product_id' => $saleProduct->accessories[$j]->accessory_id,
@@ -4340,7 +4361,7 @@ class SaleController extends Controller
             ->whereNull('invoices.deleted_at')
             ->whereIn('sales.sale_id', $salesperson_sale_agents_ids)
             ->whereNot('delivery_orders.status', DeliveryOrder::STATUS_APPROVAL_PENDING)
-            ->whereBetween('invoices.created_at', [Carbon::parse($target->date)->startOfMonth(), Carbon::parse($target->date)->endOfMonth()])  
+            ->whereBetween('invoices.created_at', [Carbon::parse($target->date)->startOfMonth(), Carbon::parse($target->date)->endOfMonth()])
             ->leftJoin('delivery_orders', 'invoices.id', '=', 'delivery_orders.invoice_id')
             ->leftJoin('sales', DB::raw('FIND_IN_SET(delivery_orders.id, sales.convert_to)'), '>', DB::raw("'0'"))
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
@@ -4354,7 +4375,7 @@ class SaleController extends Controller
         } else {
             Session::put('target-progress-page', $req->page);
         }
-       
+
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);

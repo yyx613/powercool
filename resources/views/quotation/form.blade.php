@@ -99,6 +99,7 @@
             let warrantyPeriod = []
             let remark = []
             let overrideSellingPrice = []
+            let accessory = []
             $('#product-details-container .items').each(function(i, obj) {
                 prodOrderId.push($(this).data('product-id') ?? null)
                 prodId.push($(this).find('select[name="product_id[]"]').val())
@@ -124,6 +125,7 @@
                     prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
+                accessory.push($(this).find('select[name="accessory_id[]"]').val())
             })
             let thirdPartyAddressAddress = []
             let thirdPartyAddressMobile = []
@@ -192,6 +194,7 @@
                     'promotion_id': promo,
                     'product_serial_no': prodSerialNo,
                     'warranty_period': warrantyPeriod,
+                    'accessory': accessory,
                     'discount': discount,
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
