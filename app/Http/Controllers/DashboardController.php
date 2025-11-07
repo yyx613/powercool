@@ -42,8 +42,8 @@ class DashboardController extends Controller
             Production::STATUS_TRANSFERRED => (new Production)->statusToHumanRead(Production::STATUS_TRANSFERRED),
         ];
         // Low stock
-        $products = Product::with('image')->where('type', Product::TYPE_PRODUCT)->get();
-        $raw_materials = Product::with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
+        $products = Product::with('images')->where('type', Product::TYPE_PRODUCT)->get();
+        $raw_materials = Product::with('images')->where('type', Product::TYPE_RAW_MATERIAL)->get();
         // Suppliers & Customers count
         $suppliers_count = Supplier::count();
         $customers_count = Customer::count();

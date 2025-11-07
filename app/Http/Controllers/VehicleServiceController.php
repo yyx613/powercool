@@ -102,8 +102,21 @@ class VehicleServiceController extends Controller
     {
         $service->load('items');
 
+        // Calculate reminder months from remind_at
+        $reminderMonths = null;
+        if ($service->remind_at) {
+            // For Insurance (type 1), use to_date as base; for others, use date
+            $baseDate = ($service->type == 1) ? $service->to_date : $service->date;
+            if ($baseDate) {
+                $remindAtDate = Carbon::parse($service->remind_at);
+                $baseDateCarbon = Carbon::parse($baseDate);
+                $reminderMonths = $baseDateCarbon->diffInMonths($remindAtDate);
+            }
+        }
+
         return view('vehicle_service.form', [
             'service' => $service,
+            'reminder_months' => $reminderMonths,
         ]);
     }
 
@@ -123,30 +136,30 @@ class VehicleServiceController extends Controller
         ];
         if ($req->service != null) {
             if ($req->service == 1) {
-                // Insurance - require from date, to date, reminder date and amount
+                // Insurance - require from date, to date, reminder months and amount
                 $rules['date'] = 'required';
                 $rules['to_date'] = 'required|date|after_or_equal:date';
-                $rules['reminder_date'] = 'required';
+                $rules['reminder_months'] = 'required|integer|min:1';
                 $rules['service_amount'] = 'required';
             } elseif ($req->service == 2) {
                 $rules['date'] = 'required';
-                $rules['reminder_date'] = 'required';
+                $rules['reminder_months'] = 'required|integer|min:1';
                 $rules['service_amount'] = 'required';
             } elseif ($req->service == 3) {
                 $rules['date'] = 'required';
-                $rules['reminder_date'] = 'required';
+                $rules['reminder_months'] = 'required|integer|min:1';
                 $rules['service_amount'] = 'nullable';
             } elseif ($req->service == 4) {
                 $rules['date'] = 'nullable';
-                $rules['reminder_date'] = 'required';
+                $rules['reminder_months'] = 'required|integer|min:1';
                 $rules['service_amount'] = 'nullable';
             } elseif ($req->service == 5 || $req->service == 6) {
                 $rules['date'] = 'nullable';
-                $rules['reminder_date'] = 'nullable';
+                $rules['reminder_months'] = 'nullable';
                 $rules['service_amount'] = 'nullable';
             } elseif ($req->service == 7 || $req->service == 8) {
                 $rules['date'] = 'nullable';
-                $rules['reminder_date'] = 'nullable';
+                $rules['reminder_months'] = 'nullable';
                 $rules['service_amount'] = 'required';
             }
         }
@@ -164,13 +177,23 @@ class VehicleServiceController extends Controller
         try {
             DB::beginTransaction();
 
+            // Calculate remind_at from reminder_months
+            $remindAt = null;
+            if ($req->reminder_months != null) {
+                // For Insurance (type 1), use to_date as base; for others, use date
+                $baseDate = ($req->service == 1) ? $req->to_date : $req->date;
+                if ($baseDate) {
+                    $remindAt = Carbon::parse($baseDate)->subMonths($req->reminder_months);
+                }
+            }
+
             if ($service == null) {
                 $new_service = $this->vs::create([
                     'vehicle_id' => $req->vehicle,
                     'type' => $req->service,
                     'date' => $req->date,
                     'to_date' => $req->to_date,
-                    'remind_at' => $req->reminder_date,
+                    'remind_at' => $remindAt,
                     'amount' => $req->service_amount,
                 ]);
                 (new Branch)->assign(VehicleService::class, $new_service->id);
@@ -180,7 +203,7 @@ class VehicleServiceController extends Controller
                     'type' => $req->service,
                     'date' => $req->date,
                     'to_date' => $req->to_date,
-                    'remind_at' => $req->reminder_date,
+                    'remind_at' => $remindAt,
                     'amount' => $req->service_amount,
                 ]);
             }

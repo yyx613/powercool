@@ -252,7 +252,8 @@ class CustomerController extends Controller
             'customer_name' => 'required|max:250',
             'company_name' => 'nullable|max:250',
             'phone_number' => 'nullable|max:250',
-            'mobile_number' => 'nullable|max:250',
+            'mobile_number' => 'nullable|array',
+            'mobile_number.*' => 'nullable|string|max:250',
             'email' => 'nullable|email|max:250',
             'website' => 'nullable|max:250',
             'currency' => 'nullable',
@@ -322,11 +323,16 @@ class CustomerController extends Controller
             DB::beginTransaction();
 
             if ($req->customer_id == null || $req->customer_id == 'null') {
+                // Filter out empty mobile numbers
+                $mobileNumbers = $req->mobile_number ? array_values(array_filter($req->mobile_number, function($value) {
+                    return !empty(trim($value));
+                })) : [];
+
                 $customer = Customer::create([
                     'sku' => (new Customer)->generateSku($req->company_name != null ? $req->company_name[0] : $req->customer_name[0]),
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'mobile_number' => $req->mobile_number,
+                    'mobile_number' => $mobileNumbers,
                     'currency_id' => $req->currency,
                     'status' => $req->status,
                     'company_name' => $req->company_name ?? $req->customer_name,
@@ -359,11 +365,16 @@ class CustomerController extends Controller
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
             } else {
+                // Filter out empty mobile numbers
+                $mobileNumbers = $req->mobile_number ? array_values(array_filter($req->mobile_number, function($value) {
+                    return !empty(trim($value));
+                })) : [];
+
                 $customer = Customer::where('id', $req->customer_id)->first();
                 $customer->update([
                     'name' => $req->customer_name,
                     'phone' => $req->phone_number,
-                    'mobile_number' => $req->mobile_number,
+                    'mobile_number' => $mobileNumbers,
                     'currency_id' => $req->currency,
                     'status' => $req->status,
                     'company_name' => $req->company_name ?? $req->customer_name,

@@ -47,8 +47,8 @@
                 <tr>
                     <th>{{ __('Vehicle Plate Number') }}</th>
                     <th>{{ __('Service') }}</th>
-                    <th>{{ __('Date') }}</th>
-                    <th>{{ __('To Date') }}</th>
+                    <th>{{ __('Key In Date') }}</th>
+                    <th>{{ __('Expiration Date') }}</th>
                     <th>{{ __('Reminder Date') }}</th>
                     <th>{{ __('Amount') }}</th>
                     <th></th>

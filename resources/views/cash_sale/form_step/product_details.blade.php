@@ -167,8 +167,11 @@
                         class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
                     <span class="text-sm text-slate-400" id="available-qty"></span>
                 </div>
-                <x-app.input.select name="product_serial_no[]" multiple class="h-36 md:h-full">
+                <x-app.input.select name="product_serial_no[]" multiple class="h-36 md:h-full {{ in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())) ? 'bg-slate-100 cursor-not-allowed opacity-60' : '' }}" :disabled="in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user()))">
                 </x-app.input.select>
+                @if (in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())))
+                    <p class="text-xs text-slate-500 mt-1">{{ __('Serial number selection is disabled for your role') }}</p>
+                @endif
                 <x-app.message.error id="product_serial_no_err" />
             </div>
             <div class="flex flex-col flex-1 col-span-2">

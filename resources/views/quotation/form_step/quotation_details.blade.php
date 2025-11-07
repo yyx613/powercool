@@ -257,15 +257,17 @@
                 $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
 
-                for (let i = 0; i < SALE.third_party_addresses.length; i++) {
-                    $('#add-third-party-address-btn').click()
-
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE
-                        .third_party_addresses[i].address)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE
-                        .third_party_addresses[i].mobile)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE
-                        .third_party_addresses[i].name)
+                if (SALE.third_party_addresses && SALE.third_party_addresses.length > 0) {
+                    for (let i = 0; i < SALE.third_party_addresses.length; i++) {
+                        $('#add-third-party-address-btn').click()
+    
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE
+                            .third_party_addresses[i].address)
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE
+                            .third_party_addresses[i].mobile)
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE
+                            .third_party_addresses[i].name)
+                    }
                 }
             } else {
                 $('#add-third-party-address-btn').click()
@@ -322,7 +324,12 @@
 
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
-            $('input[name="mobile"]').val(element.phone ?? element.mobile_number)
+            // Show the first mobile number or '-' if not available
+            if (element.mobile_number.length > 0) {
+                $('input[name="mobile"]').val(element.mobile_number[0])
+            } else {
+                $('input[name="mobile"]').val('-')
+            }
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();
 

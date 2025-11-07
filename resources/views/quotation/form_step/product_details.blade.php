@@ -146,12 +146,56 @@
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err" />
         </div>
-        <div class="flex flex-col">
-            <x-app.input.label class="mb-1">{{ __('Accessories') }}</x-app.input.label>
-            <x-app.input.select name="accessory_id[]" multiple>
-                <option value=""></option>
-            </x-app.input.select>
-            <x-app.message.error id="accessory_id_err" />
+        <div class="flex flex-col col-span-2 md:col-span-4">
+            <div class="flex justify-between items-center mb-2">
+                <x-app.input.label class="mb-0">{{ __('Accessories') }}</x-app.input.label>
+                <button type="button" class="add-accessory-btn text-xs bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600">+ {{ __('Add Accessory') }}</button>
+            </div>
+            <div class="accessories-container space-y-2">
+                <!-- Empty state will be added by JavaScript -->
+            </div>
+
+            <!-- Hidden accessory row template -->
+            <div id="accessory-row-template" class="hidden">
+                <div class="accessory-row flex gap-4 lg:gap-8 py-2 px-3 border rounded bg-white">
+                    <div class="flex flex-col" style="flex: 1;">
+                        <x-app.input.label class="mb-1">{{ __('Accessory') }}</x-app.input.label>
+                        <x-app.input.select name="accessory_id[]" class="accessory-select">
+                            <option value="">{{ __('Select accessory') }}</option>
+                        </x-app.input.select>
+                    </div>
+                    <div class="flex flex-col" style="flex: 1;">
+                        <x-app.input.label class="mb-1">{{ __('Quantity') }}</x-app.input.label>
+                        <x-app.input.input name="accessory_qty[]" type="number" class="int-input" min="1" value="1" />
+                    </div>
+                    <div class="flex flex-col" style="flex: 1;">
+                        <x-app.input.label class="mb-1">{{ __('Selling Price') }} <span class="text-xs hidden accessory-price-hint">(<span class="accessory-min-price"></span> - <span class="accessory-max-price"></span>)</span></x-app.input.label>
+                        <x-app.input.select name="accessory_selling_price[]" class="accessory-price-select">
+                            <option value="">{{ __('Select price') }}</option>
+                        </x-app.input.select>
+                    </div>
+                    <div class="flex flex-col" style="flex: 1;">
+                        <x-app.input.label class="mb-1">{{ __('Override Selling Price') }}</x-app.input.label>
+                        <x-app.input.input name="accessory_override_price[]" type="number" step="0.01" class="decimal-input" />
+                    </div>
+                    <div class="flex items-end justify-center" style="min-width: 40px;">
+                        <button type="button" class="remove-accessory-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
+                            <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden empty state template -->
+            <div class="accessory-empty-state text-center py-8 bg-slate-50 border border-dashed border-slate-300 rounded">
+                <svg class="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p class="mt-2 text-sm text-slate-500">{{ __('No accessories added') }}</p>
+                <p class="text-xs text-slate-400">{{ __('Click "Add Accessory" button to add accessories') }}</p>
+            </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
             {{-- <div class="flex flex-col flex-1 col-span-2">
@@ -221,6 +265,7 @@
     <script>
         SST = @json($sst ?? null);
         PRODUCTS = @json($products ?? []);
+        ACCESSORIES = {};
         WARRANTY_PERIODS = @json($warranty_periods ?? []);
         PROMOTIONS = @json($promotions ?? []);
         UOMS = @json($uoms ?? []);
@@ -270,13 +315,12 @@
                         temp.push(sp.warranty_periods[j].warranty_period_id)
                     }
                     $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(temp)
-                    var opts = []
-                    for (let i = 0; i < sp.accessories.length; i++) {
-                        opts.push(new Option(
-                            `${sp.accessories[i].product.sku} - ${sp.accessories[i].product.model_name}`, sp
-                            .accessories[i].accessory_id, true, true))
+
+                    // Load accessories
+                    if (sp.accessories && sp.accessories.length > 0) {
+                        loadExistingAccessories(i+1, sp.accessories);
                     }
-                    $(`.items[data-id="${i+1}"] select[name="accessory_id[]"]`).append(opts)
+
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
                     $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
                     if (sp.override_selling_price != null) {
@@ -316,6 +360,7 @@
             $(clone).find('.delete-item-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.foc-btns').attr('data-id', ITEMS_COUNT)
             $(clone).find('.sst-btns').attr('data-id', ITEMS_COUNT)
+            $(clone).find('.accessory-empty-state').attr('data-id', ITEMS_COUNT)
             $(clone).addClass('items')
             $(clone).removeClass('hidden')
             $(clone).removeAttr('id')
@@ -356,25 +401,6 @@
             if (!PRODUCT_DETAILS_INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
-            // Build accessory select2
-            bulidSelect2Ajax({
-                selector: `.items[data-id="${ITEMS_COUNT}"] select[name="accessory_id[]"]`,
-                placeholder: '{{ __('Search a accessory') }}',
-                url: '{{ route('product.get_by_keyword') }}',
-                extraDataParams: {
-                    sale_id: REPLICATE == null && SALE != null ? SALE.id : null,
-                },
-                processResults: function(data) {
-                    return {
-                        results: $.map(data.products, function(item) {
-                            return {
-                                id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
-                            };
-                        })
-                    }
-                }
-            })
 
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass(
                 'border border-gray-300 rounded-md overflow-hidden')
@@ -457,6 +483,7 @@
                 }
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(product.model_desc)
                 // Append selling prices
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).empty()
                 for (let j = 0; j < product.selling_prices.length; j++) {
                     let opt = new Option(
                         `${product.selling_prices[j].name} (RM ${priceFormat(product.selling_prices[j].price)})`,
@@ -686,7 +713,33 @@
 
         function buildWarrantyPeriodSelect2(item_id) {
             $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`).select2({
-                placeholder: "{!! __('Select a warranty') !!}"
+                placeholder: "{!! __('Select a warranty') !!}",
+                templateSelection: function(data) {
+                    if (!data.id) {
+                        return data.text;
+                    }
+
+                    var $selection = $(
+                        '<span class="select2-selection__choice__custom">' +
+                            '<button type="button" class="m-1 select2-selection__choice__remove__custom" tabindex="-1" title="Remove">' +
+                                '<svg class="h-3 w-3 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+                                    '<path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>' +
+                                '</svg>' +
+                            '</button>' +
+                            '<span class="select2-selection__choice__display">' + data.text + '</span>' +
+                        '</span>'
+                    );
+
+                    $selection.find('.select2-selection__choice__remove__custom').on('click', function(e) {
+                        e.stopPropagation();
+                        var $select = $(`.items[data-id="${item_id}"] select[name="warranty_period[]"]`);
+                        var values = $select.val() || [];
+                        var newValues = values.filter(function(v) { return v != data.id; });
+                        $select.val(newValues).trigger('change');
+                    });
+
+                    return $selection;
+                }
             })
 
             for (let i = 0; i < WARRANTY_PERIODS.length; i++) {
@@ -778,6 +831,209 @@
                 $(this).find('.move-down-btn').attr('data-sequence', sequence)
                 $(this).find('.move-up-btn').attr('data-sequence', sequence)
             })
+        }
+
+        // Accessory Management
+        let ACCESSORY_COUNTER = 0;
+
+        $('body').on('click', '.add-accessory-btn', function() {
+            const itemId = $(this).closest('.items').data('id');
+            ACCESSORY_COUNTER++;
+
+            // Hide empty state and show accessories container
+            $(`.items[data-id="${itemId}"] .accessory-empty-state`).addClass('hidden');
+
+            // Clone the template
+            const newRow = $('#accessory-row-template .accessory-row')[0].cloneNode(true);
+            $(newRow).attr('data-accessory-id', ACCESSORY_COUNTER);
+
+            const $container = $(this).closest('.items').find('.accessories-container');
+            $container.find('.accessory-empty-state').remove();
+            $container.append(newRow);
+
+            // Initialize select2 for the new accessory select
+            const $newSelect = $(this).closest('.items').find('.accessory-row[data-accessory-id="' + ACCESSORY_COUNTER + '"] .accessory-select');
+            bulidSelect2Ajax({
+                selector: $newSelect,
+                placeholder: '{{ __('Search an accessory') }}',
+                url: '{{ route('product.get_by_keyword') }}',
+                extraDataParams: {
+                    sale_id: REPLICATE == null && SALE != null ? SALE.id : null,
+                },
+                processResults: function(data) {
+                    // Store products data for later use
+                    $.each(data.products, function(key, item) {
+                        ACCESSORIES[item.id] = item;
+                    });
+
+                    return {
+                        results: $.map(data.products, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.model_name}`
+                            };
+                        })
+                    }
+                }
+            });
+            $(`.items[data-id="${itemId}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+        });
+
+        // Handle accessory selection to populate selling prices
+        $('body').on('change', '.accessory-select', function() {
+            const itemId = $(this).closest('.items').data('id');
+            const $row = $(this).closest('.accessory-row');
+            const productId = $(this).val();
+
+            if (productId && ACCESSORIES && ACCESSORIES[productId]) {
+                const product = ACCESSORIES[productId];
+                const $priceSelect = $row.find('.accessory-price-select');
+                const $priceHint = $row.find('.accessory-price-hint');
+                const $minPrice = $row.find('.accessory-min-price');
+                const $maxPrice = $row.find('.accessory-max-price');
+
+                // Show min and max price if set
+                if (product.min_price == null || product.max_price == null) {
+                    $priceHint.addClass('hidden');
+                } else {
+                    $priceHint.removeClass('hidden');
+                    $minPrice.text(priceFormat(product.min_price));
+                    $maxPrice.text(priceFormat(product.max_price));
+                }
+                // Append selling prices & make it select2
+                $priceSelect.empty();
+                for (let j = 0; j < product.selling_prices.length; j++) {
+                    let opt = new Option(
+                        `${product.selling_prices[j].name} (RM ${priceFormat(product.selling_prices[j].price)})`,
+                        product.selling_prices[j].id);
+                    $priceSelect.append(opt);
+                }
+                $priceSelect.select2({
+                    placeholder: "{!! __('Select a selling price') !!}"
+                });
+                $(`.items[data-id="${itemId}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            }
+        });
+
+        $('body').on('click', '.remove-accessory-btn', function() {
+            // Remove the accessory row
+            const $row = $(this).closest('.accessory-row');
+            const itemId = $(this).closest('.items').data('id');
+            $row.remove();
+            // If no more accessories, show empty state
+            const $container = $(`.items[data-id="${itemId}"] .accessories-container`);
+            if ($container.find('.accessory-row').length === 0) {
+                $(`.items[data-id="${itemId}"] .accessory-empty-state`).removeClass('hidden');
+            }
+        });
+
+        // Load existing accessories when editing
+        function loadExistingAccessories(itemId, accessories) {
+            const $container = $(`.items[data-id="${itemId}"] .accessories-container`);
+            $container.empty();
+
+            if (accessories.length > 0) {
+                $(`.accessory-empty-state[data-id="${itemId}"]`).addClass('hidden');
+            } else {
+                $(`.accessory-empty-state[data-id="${itemId}"]`).removeClass('hidden');
+            }
+
+            accessories.forEach(function(accessory) {
+                ACCESSORY_COUNTER++;
+
+                // Store product data in ACCESSORIES object for later use
+                if (accessory.product) {
+                    ACCESSORIES[accessory.accessory_id] = {
+                        id: accessory.accessory_id,
+                        sku: accessory.product.sku,
+                        model_name: accessory.product.model_name,
+                        sellingPrices: accessory.product.selling_prices || []
+                    };
+                }
+
+                // Clone the template
+                var $newRow = $('#accessory-row-template .accessory-row')[0].cloneNode(true);
+                $newRow = $($newRow);
+                $newRow.attr('data-accessory-id', ACCESSORY_COUNTER);
+
+                const $priceHint = $newRow.find('.accessory-price-hint');
+                const $minPrice = $newRow.find('.accessory-min-price');
+                const $maxPrice = $newRow.find('.accessory-max-price');
+
+                // Show min and max price if set
+                if (accessory.product.min_price == null || accessory.product.max_price == null) {
+                    $priceHint.addClass('hidden');
+                } else {
+                    $priceHint.removeClass('hidden');
+                    $minPrice.text(priceFormat(accessory.product.min_price));
+                    $maxPrice.text(priceFormat(accessory.product.max_price));
+                }
+
+                // Populate accessory select
+                const $accessorySelect = $newRow.find('.accessory-select');
+                $accessorySelect.empty();
+                $accessorySelect.append(`<option value="${accessory.accessory_id}" selected>${accessory.product.sku} - ${accessory.product.model_name}</option>`);
+
+                // Populate quantity
+                $newRow.find('input[name="accessory_qty[]"]').val(accessory.qty || 1);
+
+                // Populate selling prices
+                const $priceSelect = $newRow.find('.accessory-price-select');
+
+                $priceSelect.empty();
+                $priceSelect.append('<option value="">{{ __('Select price') }}</option>');
+
+                if (accessory.product && accessory.product.selling_prices && accessory.product.selling_prices.length > 0) {
+                    accessory.product.selling_prices.forEach(function(sp) {
+                        const selected = (accessory.selling_price_id && parseInt(sp.id) === parseInt(accessory.selling_price_id)) ? 'selected' : '';
+                        $priceSelect.append(`<option value="${sp.id}" ${selected}>${sp.name} (RM ${priceFormat(sp.price)})</option>`);
+                    });
+                } else if (accessory.product && accessory.selling_price != null) {
+                    $priceSelect.append(`<option value="${accessory.selling_price.id}" selected>${accessory.selling_price.name} (RM ${priceFormat(accessory.selling_price.price)})</option>`);
+                }
+
+                // Populate override price
+                if (accessory.override_selling_price) {
+                    $newRow.find('input[name="accessory_override_price[]"]').val(accessory.override_selling_price);
+                }
+
+                $container.append($newRow);
+            });
+
+            // Initialize Select2 for all loaded accessory selects
+            $container.find('.accessory-select').each(function() {
+                const $select = $(this);
+                bulidSelect2Ajax({
+                    selector: $select,
+                    placeholder: '{{ __('Search an accessory') }}',
+                    url: '{{ route('product.get_by_keyword') }}',
+                    extraDataParams: {
+                        sale_id: REPLICATE == null && SALE != null ? SALE.id : null,
+                    },
+                    processResults: function(data) {
+                        // Store products data for later use
+                        $.each(data.products, function(key, item) {
+                            ACCESSORIES[item.id] = item;
+                        });
+
+                        return {
+                            results: $.map(data.products, function(item) {
+                                return {
+                                    id: item.id,
+                                    text: `${item.sku} - ${item.model_name}`
+                                };
+                            })
+                        };
+                    },
+                });
+            });
+            // Initialize Select2 for all loaded accessory price selects
+            $container.find('.accessory-price-select').each(function() {
+                $(this).select2({
+                    placeholder: "{!! __('Select a selling price') !!}"
+                });
+            });
+            $(`.items[data-id="${itemId}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
         }
     </script>
 @endpush
