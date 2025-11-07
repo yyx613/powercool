@@ -27,4 +27,9 @@ class SaleProductAccessory extends Model
     {
         return $this->belongsTo(Product::class, 'accessory_id', 'id');
     }
+
+    public function sellingPrice()
+    {
+        return $this->belongsTo(ProductSellingPrice::class, 'selling_price_id', 'id');
+    }
 }

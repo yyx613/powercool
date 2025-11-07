@@ -43,7 +43,7 @@
                         </g>
                     </svg>
                 </button>
-                @if (isset($sale))
+                @if (isset($sale) && !in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())))
                     <button type="button" class="text-sm p-1.5 rounded-full bg-purple-200 to-production-btns"
                         title="{{ __('To Sale Production Request') }}">
                         <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
@@ -444,11 +444,11 @@
             $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val($(this).val())
         })
         $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',
-        function() {
-            let idx = $(this).parent().parent().parent().data('id')
+            function() {
+                let idx = $(this).parent().parent().parent().data('id')
 
-            calItemTotal(idx)
-        })
+                calItemTotal(idx)
+            })
         $('body').on('change', 'select[name="promotion[]"], select[name="selling_price[]"]', function() {
             let idx = $(this).parent().parent().data('id')
 

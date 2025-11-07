@@ -503,6 +503,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('sale-cancellation')->name('sale_cancellation.')->middleware(['can:sale.target.view'])->group(function () {
             Route::get('/', 'indexSaleCancellation')->name('index');
             Route::get('/get-data', 'getDataSaleCancellation')->name('get_data');
+            Route::get('/view/{saleperson_id}/{product_id}', 'viewSaleCancellation')->name('view');
+            Route::get('/get-view-data/{saleperson_id}/{product_id}', 'getViewDataSaleCancellation')->name('get_view_data');
         });
         // Billing
         Route::prefix('billing')->name('billing.')->middleware(['can:sale.billing.view'])->group(function () {

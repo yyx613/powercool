@@ -134,7 +134,21 @@
                     prodSerialNo.push($(this).find('select[name="product_serial_no[]"]').val())
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
-                accessory.push($(this).find('select[name="accessory_id[]"]').val())
+
+                // Collect accessory data with qty and pricing
+                let accessories = [];
+                $(this).find('.accessory-row').each(function() {
+                    const accessoryId = $(this).find('select[name="accessory_id[]"]').val();
+                    if (accessoryId) {
+                        accessories.push({
+                            id: accessoryId,
+                            qty: $(this).find('input[name="accessory_qty[]"]').val(),
+                            selling_price: $(this).find('select[name="accessory_selling_price[]"]').val(),
+                            override_price: $(this).find('input[name="accessory_override_price[]"]').val()
+                        });
+                    }
+                });
+                accessory.push(accessories);
             })
             let thirdPartyAddressAddress = []
             let thirdPartyAddressMobile = []

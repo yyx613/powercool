@@ -259,14 +259,26 @@ class SaleController extends Controller
         $data = [];
         if ($req->has('quo')) {
             $replicate = Sale::where('id', $req->quo)->first();
-            $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product');
+            $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'products.accessories.sellingPrice');
 
             $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
                 ->where('id', $replicate->customer_id)
                 ->orderBy('id', 'desc')->get();
             $customers = $customers->keyBy('id')->all();
 
+            $products = Product::withTrashed()
+                ->with(['sellingPrices' => function ($q) {
+                    $q->withTrashed();
+                }])
+                ->with(['children' => function ($q) {
+                    $q->withTrashed();
+                }])
+                ->whereIn('id', $replicate->products->pluck('product_id'))
+                ->get()
+                ->keyBy('id');
+
             $data['customers'] = $customers;
+            $data['products'] = $products;
         }
         $data['warehouse'] = getCurrentUserWarehouse();
 
@@ -300,7 +312,7 @@ class SaleController extends Controller
         $products = $products->keyBy('id')->all();
 
         return view('quotation.form', [
-            'sale' => $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'thirdPartyAddresses'),
+            'sale' => $sale->load('products.product.children', 'products.product.sellingPrices', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'products.accessories.product.sellingPrices', 'products.accessories.sellingPrice', 'thirdPartyAddresses'),
             'products' => $products,
             'customers' => $customers,
             'is_view' => $is_view,
@@ -614,9 +626,7 @@ class SaleController extends Controller
                     });
                 })->toArray(),
                 'accessory' => $products->map(function ($q) {
-                    return $q->accessories->map(function ($q) {
-                        return $q->accessory_id;
-                    });
+                    return $q->accessories;
                 })->toArray(),
                 'discount' => $products->map(function ($q) {
                     return $q->discount;
@@ -2351,6 +2361,10 @@ class SaleController extends Controller
                 'accessory' => 'nullable',
                 'accessory.*' => 'nullable',
                 'accessory.*.*' => 'nullable',
+                'accessory.*.*.id' => 'required_with:accessory.*.*|exists:products,id',
+                'accessory.*.*.qty' => 'required_with:accessory.*.*|integer|min:1',
+                'accessory.*.*.selling_price' => 'nullable|exists:selling_prices,id',
+                'accessory.*.*.override_price' => 'nullable|numeric|min:0',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
@@ -2368,6 +2382,10 @@ class SaleController extends Controller
                 'product_serial_no.*' => 'product serial no',
                 'warranty_period.*' => 'warranty period',
                 'accessory.*' => 'accessory',
+                'accessory.*.*.id' => 'accessory product',
+                'accessory.*.*.qty' => 'accessory quantity',
+                'accessory.*.*.selling_price' => 'accessory selling price',
+                'accessory.*.*.override_price' => 'accessory override price',
                 'discount.*' => 'discount',
                 'product_remark.*' => 'remark',
                 'override_selling_price.*' => 'override selling price',
@@ -2592,13 +2610,31 @@ class SaleController extends Controller
                     SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
                     if ($req->accessory != null && $req->accessory[$i] != null) {
                         $data = [];
-                        for ($j=0; $j < count($req->accessory[$i]); $j++) { 
-                            $data[] = [
-                                'sale_product_id' => $sp->id,
-                                'accessory_id' => $req->accessory[$i][$j],
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
+                        for ($j=0; $j < count($req->accessory[$i]); $j++) {
+                            $accessoryData = $req->accessory[$i][$j];
+                            // Handle both old format (just ID) and new format (object with id, qty, pricing)
+                            if (is_array($accessoryData)) {
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'accessory_id' => $accessoryData['id'],
+                                    'qty' => $accessoryData['qty'] ?? 1,
+                                    'selling_price_id' => $accessoryData['selling_price'] ?? null,
+                                    'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            } else {
+                                // Old format compatibility
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'accessory_id' => $accessoryData,
+                                    'qty' => 1,
+                                    'selling_price_id' => null,
+                                    'override_selling_price' => null,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            }
                         }
                         SaleProductAccessory::insert($data);
                     }
@@ -2637,12 +2673,30 @@ class SaleController extends Controller
                         if ($req->accessory != null && $req->accessory[$i] != null) {
                             $data = [];
                             for ($j = 0; $j < count($req->accessory[$i]); $j++) {
-                                $data[] = [
-                                    'sale_product_id' => $sp->id,
-                                    'accessory_id' => $req->accessory[$i][$j],
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
+                                $accessoryData = $req->accessory[$i][$j];
+                                // Handle both old format (just ID) and new format (object with id, qty, pricing)
+                                if (is_array($accessoryData)) {
+                                    $data[] = [
+                                        'sale_product_id' => $sp->id,
+                                        'accessory_id' => $accessoryData['id'],
+                                        'qty' => $accessoryData['qty'] ?? 1,
+                                        'selling_price_id' => $accessoryData['selling_price'] ?? null,
+                                        'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ];
+                                } else {
+                                    // Old format compatibility
+                                    $data[] = [
+                                        'sale_product_id' => $sp->id,
+                                        'accessory_id' => $accessoryData,
+                                        'qty' => 1,
+                                        'selling_price_id' => null,
+                                        'override_selling_price' => null,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ];
+                                }
                             }
                             SaleProductAccessory::insert($data);
                         }
@@ -2891,12 +2945,15 @@ class SaleController extends Controller
                 ]);
                 (new Branch)->assign(SaleProductionRequest::class, $spr->id);
                 // Accessory
-                for ($j = 0; $j < count($saleProduct->accessories); $j++) {
-                    $spr = SaleProductionRequest::create([
-                        'sale_id' => $saleProduct->sale->id,
-                        'product_id' => $saleProduct->accessories[$j]->accessory_id,
-                    ]);
-                    (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+                $accessories = $saleProduct->accessories;
+                for ($j = 0; $j < count($accessories); $j++) {
+                    for ($k=0; $k < $accessories[$j]->qty; $k++) { 
+                        $spr = SaleProductionRequest::create([
+                            'sale_id' => $saleProduct->sale->id,
+                            'product_id' => $accessories[$j]->accessory_id,
+                        ]);
+                        (new Branch)->assign(SaleProductionRequest::class, $spr->id);
+                    }
                 }
             }
 
@@ -4433,7 +4490,11 @@ class SaleController extends Controller
             ->groupBy('product_id');
 
         $records = DB::table('sale_order_cancellation')
-            ->select('products.sku AS product_sku', 'users.name AS saleperson', DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0)) AS qty'))
+            ->select(
+                'sale_order_cancellation.id', 'sale_order_cancellation.product_id', 'sale_order_cancellation.saleperson_id',
+                'products.sku AS product_sku', 'products.model_name AS product_name', 'sales_agents.name AS saleperson',
+                DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0)) AS qty')
+            )
             ->leftJoinSub($qty_to_sell, 'qty_to_sell', function ($join) {
                 $join->on('sale_order_cancellation.product_id', '=', 'qty_to_sell.product_id');
             })
@@ -4441,25 +4502,25 @@ class SaleController extends Controller
                 $join->on('sale_order_cancellation.product_id', '=', 'qty_to_on_hold.product_id');
             })
             ->leftJoin('products', 'products.id', '=', 'sale_order_cancellation.product_id')
-            ->leftJoin('users', 'users.id', '=', 'sale_order_cancellation.saleperson_id')
+            ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sale_order_cancellation.saleperson_id')
             ->whereNull('on_hold_sale_id')
             ->whereNull('sale_order_cancellation.deleted_at')
-            ->having('qty', '>', 0)
-            ->groupBy('sale_order_cancellation.product_id');
+            ->groupBy('sale_order_cancellation.product_id', 'sale_order_cancellation.saleperson_id');
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('users.name', 'like', '%'.$keyword.'%')
-                    ->orWhere('products.sku', 'like', '%'.$keyword.'%');
+                $q->where('sales_agents.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'users.name',
+                0 => 'sales_agents.name',
                 1 => 'products.sku',
                 2 => DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0))'),
             ];
@@ -4482,9 +4543,113 @@ class SaleController extends Controller
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
-                'product' => $record->product_sku,
+                'saleperson_id' => $record->saleperson_id,
+                'product_id' => $record->product_id,
+                'product_sku' => $record->product_sku,
+                'product_name' => $record->product_name,
                 'qty' => $record->qty,
                 'saleperson' => $record->saleperson,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function viewSaleCancellation(Request $req, int $saleperson_id, int $product_id)
+    {
+        $page = Session::get('sale-cancellation-view-page');
+
+        $saleperson = SalesAgent::find($saleperson_id);
+        $product = Product::find($product_id);
+
+        // Calculate available qty
+        $qty_to_on_hold = DB::table('sale_order_cancellation')
+            ->where('product_id', $product_id)
+            ->where('saleperson_id', $saleperson_id)
+            ->whereNotNull('on_hold_sale_id')
+            ->whereNull('deleted_at')
+            ->sum(DB::raw('qty - COALESCE(extra, 0)'));
+
+        $qty_to_sell = DB::table('sale_order_cancellation')
+            ->where('product_id', $product_id)
+            ->where('saleperson_id', $saleperson_id)
+            ->whereNull('on_hold_sale_id')
+            ->whereNull('deleted_at')
+            ->sum('qty');
+
+        $available_qty = ($qty_to_sell ?? 0) - ($qty_to_on_hold ?? 0);
+
+        return view('sale_cancellation.view', [
+            'default_page' => $page ?? null,
+            'saleperson_id' => $saleperson_id,
+            'product_id' => $product_id,
+            'saleperson' => $saleperson,
+            'product' => $product,
+            'available_qty' => $available_qty,
+        ]);
+    }
+
+    public function getViewDataSaleCancellation(Request $req, int $saleperson_id, int $product_id)
+    {
+        Session::put('sale-cancellation-view-page', $req->page);
+
+        $records = DB::table('sale_order_cancellation')
+            ->select(
+                'sale_order_cancellation.id',
+                'sale_order_cancellation.sale_id',
+                'sale_order_cancellation.on_hold_sale_id',
+                'sale_order_cancellation.qty',
+                'sale_order_cancellation.extra',
+                'sale_order_cancellation.created_at',
+                'sales.sku as sale_sku',
+                'reference_sales.sku as reference_sku'
+            )
+            ->leftJoin('sales', 'sales.id', '=', 'sale_order_cancellation.sale_id')
+            ->leftJoin('sales as reference_sales', 'reference_sales.id', '=', 'sale_order_cancellation.on_hold_sale_id')
+            ->where('sale_order_cancellation.product_id', $product_id)
+            ->where('sale_order_cancellation.saleperson_id', $saleperson_id)
+            ->whereNull('sale_order_cancellation.deleted_at');
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sale_order_cancellation.created_at',
+                1 => 'sale_order_cancellation.on_hold_sale_id',
+                2 => 'sales.sku',
+                3 => 'reference_sales.sku',
+                4 => 'sale_order_cancellation.qty',
+                5 => 'sale_order_cancellation.extra',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('sale_order_cancellation.created_at', 'desc');
+        }
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('sale_order_cancellation.id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+
+        foreach ($records_paginator as $key => $record) {
+            $type = is_null($record->on_hold_sale_id)
+                ? '<span class="badge badge-cancelled">Cancelled SO</span>'
+                : '<span class="badge badge-used">Used Credit</span>';
+
+            $data['data'][] = [
+                'date' => \Carbon\Carbon::parse($record->created_at)->format('Y-m-d H:i:s'),
+                'type' => $type,
+                'sale_sku' => $record->sale_sku ?? '-',
+                'reference_sku' => $record->reference_sku,
+                'qty' => $record->qty,
+                'extra' => $record->extra,
             ];
         }
 

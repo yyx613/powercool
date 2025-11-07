@@ -257,15 +257,17 @@
                 $('select[name="customer"]').trigger('change')
                 $('select[name="billing_address"]').trigger('change')
 
-                for (let i = 0; i < SALE.third_party_addresses.length; i++) {
-                    $('#add-third-party-address-btn').click()
-
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE
-                        .third_party_addresses[i].address)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE
-                        .third_party_addresses[i].mobile)
-                    $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE
-                        .third_party_addresses[i].name)
+                if (SALE.third_party_addresses && SALE.third_party_addresses.length > 0) {
+                    for (let i = 0; i < SALE.third_party_addresses.length; i++) {
+                        $('#add-third-party-address-btn').click()
+    
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="address"]`).val(SALE
+                            .third_party_addresses[i].address)
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="mobile_number"]`).val(SALE
+                            .third_party_addresses[i].mobile)
+                        $(`#third-party-address-list .child[data-id="${i+1}"] input[name="name"]`).val(SALE
+                            .third_party_addresses[i].name)
+                    }
                 }
             } else {
                 $('#add-third-party-address-btn').click()
