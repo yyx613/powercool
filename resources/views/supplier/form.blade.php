@@ -35,12 +35,12 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN') }} <span class="text-sm text-red-500" id="tin_number_required_star">*</span></x-app.input.label>
-                    <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')" value="{{ old('tin_number', isset($supplier) ? $supplier->tin_number : null) }}" />
+                    <x-app.input.input name="tin_number" id="tin_number" class="uppercase-input" :hasError="$errors->has('tin_number')" value="{{ old('tin_number', isset($supplier) ? $supplier->tin_number : null) }}" />
                     <x-input-error :messages="$errors->get('tin_number')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
                     <x-app.input.label id="company_registration_number" class="mb-1">{{ __('Business Reg No.') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="company_registration_number" id="company_registration_number" :hasError="$errors->has('company_registration_number')" value="{{ old('company_registration_number', isset($supplier) ? $supplier->company_registration_number : null) }}"/>
+                    <x-app.input.input name="company_registration_number" id="company_registration_number" class="uppercase-input" :hasError="$errors->has('company_registration_number')" value="{{ old('company_registration_number', isset($supplier) ? $supplier->company_registration_number : null) }}"/>
                     <x-input-error :messages="$errors->get('company_registration_number')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
@@ -60,37 +60,37 @@
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
                     <x-app.input.label id="sst_number" class="mb-1">{{ __('SST Reg No.') }}</x-app.input.label>
-                    <x-app.input.input name="sst_number" id="sst_number" :hasError="$errors->has('sst_number')" value="{{ old('sst_number', isset($supplier) ? $supplier->sst_number: null) }}"/>
+                    <x-app.input.input name="sst_number" id="sst_number" class="uppercase-input" :hasError="$errors->has('sst_number')" value="{{ old('sst_number', isset($supplier) ? $supplier->sst_number: null) }}"/>
                     <x-input-error :messages="$errors->get('sst_number')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
                     <x-app.input.label id="tourism_tax_reg_no" class="mb-1">{{ __('Tourism Tax Reg No.') }}</x-app.input.label>
-                    <x-app.input.input name="tourism_tax_reg_no" id="tourism_tax_reg_no" :hasError="$errors->has('tourism_tax_reg_no')" value="{{ old('tourism_tax_reg_no', isset($supplier) ? $supplier->tourism_tax_reg_no: null) }}"/>
+                    <x-app.input.input name="tourism_tax_reg_no" id="tourism_tax_reg_no" class="uppercase-input" :hasError="$errors->has('tourism_tax_reg_no')" value="{{ old('tourism_tax_reg_no', isset($supplier) ? $supplier->tourism_tax_reg_no: null) }}"/>
                     <x-input-error :messages="$errors->get('tourism_tax_reg_no')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden non-individual-fields-container">
                     <x-app.input.label id="prev_gst_reg_no" class="mb-1">{{ __('Prev. GST Reg No.') }}</x-app.input.label>
-                    <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" :hasError="$errors->has('prev_gst_reg_no')" value="{{ old('prev_gst_reg_no', isset($supplier) ? $supplier->prev_gst_reg_no : null) }}"/>
+                    <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" class="uppercase-input" :hasError="$errors->has('prev_gst_reg_no')" value="{{ old('prev_gst_reg_no', isset($supplier) ? $supplier->prev_gst_reg_no : null) }}"/>
                     <x-input-error :messages="$errors->get('prev_gst_reg_no')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden individual-fields-container"">
                     <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')" value="{{ old('identity_type', isset($supplier) ? $supplier->identity_type : null) }}"/>
+                    <x-app.input.input name="identity_type" id="identity_type" class="uppercase-input" :hasError="$errors->has('identity_type')" value="{{ old('identity_type', isset($supplier) ? $supplier->identity_type : null) }}"/>
                     <x-input-error :messages="$errors->get('identity_type')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden individual-fields-container"">
                     <x-app.input.label id="identity_no" class="mb-1">{{ __('Identity No.') }}</x-app.input.label>
-                    <x-app.input.input name="identity_no" id="identity_no" :hasError="$errors->has('identity_no')" value="{{ old('identity_no', isset($supplier) ? $supplier->identity_no : null) }}"/>
+                    <x-app.input.input name="identity_no" id="identity_no" class="uppercase-input" :hasError="$errors->has('identity_no')" value="{{ old('identity_no', isset($supplier) ? $supplier->identity_no : null) }}"/>
                     <x-input-error :messages="$errors->get('identity_no')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="registered_name" class="mb-1">{{ __('Registered Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="registered_name" id="registered_name" :hasError="$errors->has('registered_name')" value="{{ old('registered_name', isset($supplier) ? $supplier->registered_name : null) }}"/>
+                    <x-app.input.input name="registered_name" id="registered_name" class="uppercase-input" :hasError="$errors->has('registered_name')" value="{{ old('registered_name', isset($supplier) ? $supplier->registered_name : null) }}"/>
                     <x-input-error :messages="$errors->get('registered_name')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }}</x-app.input.label>
-                    <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')" value="{{ old('trade_name', isset($supplier) ? $supplier->trade_name: null) }}"/>
+                    <x-app.input.input name="trade_name" id="trade_name" class="uppercase-input" :hasError="$errors->has('trade_name')" value="{{ old('trade_name', isset($supplier) ? $supplier->trade_name: null) }}"/>
                     <x-input-error :messages="$errors->get('trade_name')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
@@ -159,7 +159,7 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')" value="{{ old('company_name', isset($supplier) ? $supplier->company_name : null) }}" />
+                    <x-app.input.input name="company_name" id="company_name" class="uppercase-input" :hasError="$errors->has('company_name')" value="{{ old('company_name', isset($supplier) ? $supplier->company_name : null) }}" />
                     <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">

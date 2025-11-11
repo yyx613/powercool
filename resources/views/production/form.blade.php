@@ -22,7 +22,7 @@
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="name" id="name" :hasError="$errors->has('name')"
+                    <x-app.input.input name="name" id="name" class="uppercase-input" :hasError="$errors->has('name')"
                         value="{{ old('name', isset($from_ticket) ? $from_ticket->subject : (isset($production) ? $production->name : (isset($customer_name) ? $customer_name : null))) }}" />
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>

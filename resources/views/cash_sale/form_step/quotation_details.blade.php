@@ -32,7 +32,7 @@
         <div class="flex flex-col">
             <x-app.input.label id="custom_customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
-            <x-app.input.input name="custom_customer" id="custom_customer" :hasError="$errors->has('custom_customer')"
+            <x-app.input.input name="custom_customer" id="custom_customer" class="uppercase-input" :hasError="$errors->has('custom_customer')"
                 value="{{ isset($sale) ? $sale->custom_customer : null }}" />
             <x-app.message.error id="custom_customer_err" />
         </div>
@@ -57,7 +57,7 @@
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
-            <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')"
+            <x-app.input.multi-input name="reference" id="reference" class="uppercase-input" :hasError="$errors->has('reference')"
                 value="{{ isset($sale) ? $sale->reference : null }}" />
             <x-app.message.error id="reference_err" />
         </div>
