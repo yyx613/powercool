@@ -134,82 +134,65 @@
                         <x-app.input.label id="description" class="mb-1">{{ __('Description') }}</x-app.input.label>
                         <x-app.input.input name="description[]" id="description" />
                     </div>
-                    <div class="flex flex-col">
-                        <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
-                        <x-app.input.textarea name="remark[]" id="remark" :hasError="$errors->has('remark')" />
-                        <x-input-error :messages="$errors->get('remark')" class="mt-1" />
-                    </div>
                     <div class="flex flex-col hidden" id="serial-no-container">
                         <x-app.input.label id="serial_no" class="mb-1">{{ __('Serial No') }}</x-app.input.label>
                         <x-app.input.select name="serial_no[]" placeholder="{{ __('Select a serial no') }}" multiple>
                             <option value="">{{ __('Select a serial no') }}</option>
                         </x-app.input.select>
                     </div>
+                    <div class="flex flex-col col-span-3">
+                        <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                        <textarea name="remark[]" id="remark" class="hidden" text="{{ old('remark.' . $key) ?? null }}"></textarea>
+                        <x-input-error :messages="$errors->get('remark')" class="mt-1" />
+                    </div>
                 </div>
                 <div id="item-container">
                     @if (old('product') != null)
-                        <input type="hidden" name="has_old_val" value="{{ count(old('product')) }}">
-                        @foreach (old('product') as $key => $old_pro)
-                            <div class="grid grid-cols-3 items-start gap-6 w-full mb-4 p-4 relative group transition durtion-300 hover:bg-slate-50 items"
-                                data-id="{{ $key + 1 }}">
-                                <button type="button"
-                                    class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block remove-item-btns"
-                                    title="Delete Product" data-id="{{ $key + 1 }}">
-                                    <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
-                                        data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
-                                        <path
-                                            d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                        @foreach (old('product') as $key => $val)
+                            <div class="grid grid-cols-3 items-start gap-6 w-full mb-4 p-4 relative group transition durtion-300 hover:bg-slate-50 items" data-id="{{ $key + 1 }}">
+                                <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block remove-item-btns" title="Delete Product" data-id="{{ $key + 1 }}">
+                                    <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                                        <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
                                     </svg>
                                 </button>
                                 <div class="flex flex-col">
-                                    <x-app.input.label id="product" class="mb-1">{{ __('Product') }} <span
-                                            class="text-sm text-red-500">*</span></x-app.input.label>
-                                    <x-app.input.select2 name="product[]" :hasError="$errors->has('product')"
-                                        placeholder="{{ __('Select a product') }}">
+                                    <x-app.input.label id="product" class="mb-1">{{ __('Product') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                    <x-app.input.select2 name="product[]" :hasError="$errors->has('product')" placeholder="{{ __('Select a product') }}">
                                         <option value="">{{ __('Select a product') }}</option>
                                         @foreach ($products as $pro)
-                                            <option value="{{ $pro->id }}" @selected(old('product.' . $key) == $pro->id)>
-                                                {{ $pro->sku }} ({{ $pro->model_name }})</option>
+                                            <option value="{{ $pro->id }}" @selected(old('product.' . $key) == $pro->id)>{{ $pro->sku }} ({{ $pro->model_name }})</option>
                                         @endforeach
                                     </x-app.input.select2>
                                     <x-input-error :messages="$errors->first('product.' . $key)" class="mt-1" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
-                                            class="text-sm text-red-500">*</span></x-app.input.label>
-                                    <x-app.input.input name="qty[]" id="qty"
-                                        value="{{ old('qty.' . $key) ?? null }}" class="int-input" />
+                                    <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                    <x-app.input.input name="qty[]" id="qty" value="{{ old('qty.' . $key) ?? null }}" class="int-input" />
                                     <x-input-error :messages="$errors->first('qty.' . $key)" class="mt-1" />
                                 </div>
                                 <div class="flex flex-col">
-                                    <x-app.input.label id="description"
-                                        class="mb-1">{{ __('Description') }}</x-app.input.label>
-                                    <x-app.input.input name="description[]" id="description"
-                                        value="{{ old('description.' . $key) ?? null }}" />
+                                    <x-app.input.label id="description" class="mb-1">{{ __('Description') }}</x-app.input.label>
+                                    <x-app.input.input name="description[]" id="description" value="{{ old('description.' . $key) ?? null }}" />
                                     <x-input-error :messages="$errors->first('description.' . $key)" class="mt-1" />
                                 </div>
-                                <div class="flex flex-col">
-                                    <x-app.input.label id="remark"
-                                        class="mb-1">{{ __('Remark') }}</x-app.input.label>
-                                    <x-app.input.textarea name="remark[]" id="remark" :hasError="$errors->has('remark')" text="{{ old('remark.' . $key) ?? null }}" />
-                                    <x-input-error :messages="$errors->get('remark')" class="mt-1" />
-                                </div>
                                 <div class="flex flex-col" id="serial-no-container">
-                                    <x-app.input.label id="serial_no"
-                                        class="mb-1">{{ __('Serial No') }}</x-app.input.label>
-                                    <x-app.input.select2 name="serial_no_{{ $key + 1 }}[]"
-                                        placeholder="{{ __('Select a serial no') }}" multiple>
+                                    <x-app.input.label id="serial_no" class="mb-1">{{ __('Serial No') }}</x-app.input.label>
+                                    <x-app.input.select2 name="serial_no_{{ old('product.' . $key) }}[]" placeholder="{{ __('Select a serial no') }}" multiple>
                                         <option value="">{{ __('Select a serial no') }}</option>
                                         @foreach ($products as $pro)
                                             @if ($pro->id == old('product.' . $key))
-                                                @foreach ($pro->children as $pc)
-                                                    <option value="{{ $pc->id }}" @selected(old('serial_no_' . $pro->id) != null && in_array($pc->id, old('serial_no_' . $pro->id)))>
-                                                        {{ $pc->sku }}
-                                                    </option>
+                                                @foreach ($pro->children as $child)
+                                                    <option value="{{ $child->id }}">{{ $child->sku }}</option>
                                                 @endforeach
                                             @endif
                                         @endforeach
                                     </x-app.input.select2>
+                                    <x-input-error :messages="$errors->first('serial_no.' . $key)" class="mt-1" />
+                                </div>
+                                <div class="flex flex-col col-span-3">
+                                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                                    <textarea name="remark[]" id="remark" class="hidden">{{ old('remark.' . $key) ?? null }}</textarea>
+                                    <x-input-error :messages="$errors->get('remark')" class="mt-1" />
                                 </div>
                             </div>
                         @endforeach
@@ -244,29 +227,54 @@
         ITEM_ID = 0
         PRODUCTS = @json($products ?? []);
         TRANSPORT_ACK = @json($ack ?? null);
+        INIT_OLD = false
 
         $(document).ready(function() {
-            if ($('input[name="has_old_val"]').length <= 0) {
-                if (TRANSPORT_ACK != null) {
-                    for (let i = 0; i < TRANSPORT_ACK.products.length; i++) {
-                        const element = TRANSPORT_ACK.products[i];
-                        console.log(element)
+            // Check if there are items already rendered (from old values after validation)
+            var existingItems = $('.items').length;
 
-                        $('#add-item-btn').click()
+            if (existingItems > 0) {
+                INIT_OLD = true
+                // Items exist from old() values - initialize them
+                ITEM_ID = existingItems;
 
-                        $(`.items[data-id=${ITEM_ID}] select[name="product[]"]`).val(element.product_id).trigger(
-                            'change')
-                        $(`.items[data-id=${ITEM_ID}] input[name="qty[]"]`).val(element.qty)
-                        $(`.items[data-id=${ITEM_ID}] input[name="description[]"]`).val(element.desc)
-                        $(`.items[data-id=${ITEM_ID}] textarea[name="remark[]"]`).text(element.remark)
-                        let serialNo = element.product_child_id.split(',')
-                        $(`.items[data-id=${ITEM_ID}] select[name="serial_no_${element.product_id}[]"]`).val(serialNo).trigger('change')
+                // Initialize Quill editors and Select2 for existing items
+                $('.items').each(function(index) {
+                    var itemId = $(this).attr('data-id');
+
+                    // Initialize product select2
+                    buildProductSelect2(itemId);
+
+                    // Initialize Quill editor for remark
+                    buildRemarkQuillEditor(itemId);
+
+                    // Get product value to set up serial no select2
+                    var productVal = $(this).find('select[name="product[]"]').val();
+                    if (productVal) {
+                        buildSerialNoSelect2(itemId, productVal);
+                        $(this).find('#serial-no-container').removeClass('hidden');
                     }
-                } else {
+                });
+                INIT_OLD = false
+            } else if (TRANSPORT_ACK != null) {
+                // Load from TRANSPORT_ACK (edit mode)
+                for (let i = 0; i < TRANSPORT_ACK.products.length; i++) {
+                    const element = TRANSPORT_ACK.products[i];
+                    console.log(element)
+
                     $('#add-item-btn').click()
+
+                    $(`.items[data-id=${ITEM_ID}] select[name="product[]"]`).val(element.product_id).trigger(
+                        'change')
+                    $(`.items[data-id=${ITEM_ID}] input[name="qty[]"]`).val(element.qty)
+                    $(`.items[data-id=${ITEM_ID}] input[name="description[]"]`).val(element.desc)
+                    $(`.items[data-id=${ITEM_ID}] textarea[name="remark[]"]`).text(element.remark)
+                    let serialNo = element.product_child_id.split(',')
+                    $(`.items[data-id=${ITEM_ID}] select[name="serial_no_${element.product_id}[]"]`).val(serialNo).trigger('change')
                 }
             } else {
-                ITEM_ID = $('input[name="has_old_val"]').val()
+                // No items - add one empty item
+                $('#add-item-btn').click()
             }
         })
 
@@ -288,6 +296,7 @@
             $('#item-container').append(clone)
 
             buildProductSelect2(ITEM_ID)
+            buildRemarkQuillEditor(ITEM_ID)
         })
         $('body').on('click', '.remove-item-btns', function() {
             let id = $(this).data('id')
@@ -316,9 +325,17 @@
             }
         })
 
-        $('form').one('submit', function() {
+        $('form').one('submit', function(e) {
+            e.preventDefault()
+
             $('#item-template').remove()
 
+            $('.items').each((i, obj) => {
+                let item_id = $(obj).attr('data-id')
+                let content = $(obj).find('.ql-editor').html()
+
+                $(`.items[data-id="${item_id}"] textarea[name="remark[]"]`).val(content)
+            });
             $(this).submit()
         })
 
@@ -326,14 +343,116 @@
             $(`.items[data-id="${item_id}"] select[name="product[]"]`).select2({
                 placeholder: "{!! __('Select a product') !!}"
             })
-            $(`.items[data-id="${item_id}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            if (!INIT_OLD) {
+                $(`.items[data-id="${item_id}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            }
         }
 
         function buildSerialNoSelect2(item_id, product_id) {
             $(`.items[data-id="${item_id}"] select[name="serial_no_${product_id}[]"]`).select2({
                 placeholder: "{!! __('Select a serial no') !!}"
             })
-            $(`.items[data-id="${item_id}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            if (!INIT_OLD) {
+                $(`.items[data-id="${item_id}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            }
+        }
+
+        function buildRemarkQuillEditor(item_id) {
+            // Create div wrapper for quill (jQuery)
+            var $quill = $(`
+                <div class="quill-wrapper rounded-md border border-gray-300 bg-white">
+                    <div id="remark-quill-${item_id}"></div>
+                </div>
+            `);
+
+            $(`.items[data-id="${item_id}"] textarea[name="remark[]"]`).after($quill);
+
+            var quill = new Quill(`#remark-quill-${item_id}`, {
+                theme: 'snow',
+                placeholder: "{!! __('Remark') !!}",
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['image'],
+                        ],
+                        handlers: {
+                            image: function() {
+                                // Create and trigger file input
+                                var input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
+
+                                input.onchange = function() {
+                                    var file = input.files[0];
+                                    if (!file) return;
+
+                                    // Validate file type
+                                    if (!file.type.match('image.*')) {
+                                        alert('Please select an image file.');
+                                        return;
+                                    }
+
+                                    // Validate file size (max 5MB)
+                                    if (file.size > 5 * 1024 * 1024) {
+                                        alert('Image size should be less than 5MB.');
+                                        return;
+                                    }
+
+                                    // Prepare upload
+                                    var formData = new FormData();
+                                    formData.append('image', file);
+                                    var range = quill.getSelection(true);
+
+                                    // Show loading
+                                    quill.insertText(range.index, 'Uploading image...');
+                                    quill.setSelection(range.index + 19);
+
+                                    // Upload to server
+                                    $.ajax({
+                                        url: '{{ route("quill.upload.image") }}',
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        },
+                                        success: function(response) {
+                                            quill.deleteText(range.index, 19);
+                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.setSelection(range.index + 1);
+                                            // Sync to textarea
+                                            var html = quill.root.innerHTML;
+                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
+                                            $(`.items[data-id="${item_id}"] textarea[name="remark[]"]`).val(isEmpty ? '' : html);
+                                        },
+                                        error: function(xhr) {
+                                            quill.deleteText(range.index, 19);
+                                            var errorMsg = 'Failed to upload image.';
+                                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                                errorMsg = xhr.responseJSON.message;
+                                            }
+                                            alert(errorMsg);
+                                        }
+                                    });
+                                };
+                            }
+                        }
+                    }
+                },
+            });
+
+            // Load existing content from textarea (for old values after validation)
+            setTimeout(function() {
+                var existingContent = $(`.items[data-id="${item_id}"] textarea[name="remark[]"]`).val();
+                if (existingContent && existingContent.trim() !== '') {
+                    quill.root.innerHTML = existingContent;
+                }
+            }, 100);
         }
     </script>
 @endpush

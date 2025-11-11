@@ -125,3 +125,15 @@
     z-index: 2;
     transform: scale(1);
 }
+
+.ql-toolbar.ql-snow,
+.ql-container.ql-snow {
+    border: none!important;
+}
+.ql-toolbar.ql-snow {
+    border-bottom: solid 1px rgb(209 213 219) !important;
+}
+.ql-container.ql-snow {
+    min-height: 100px;
+    border: none!important;
+}

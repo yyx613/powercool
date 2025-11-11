@@ -207,7 +207,7 @@
             </div> --}}
             <div class="flex flex-col flex-1 col-span-4">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
-                <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" />
+                <textarea name="remark" id="remark" class="hidden"></textarea>
                 <x-app.message.error id="remark_err" />
             </div>
         </div>
@@ -391,7 +391,6 @@
                     }
                 }
             })
-            // buildProductSelect2(ITEMS_COUNT)
             // Build selling price select2
             $(`.items[data-id="${ITEMS_COUNT}"] select[name="selling_price[]"]`).select2({
                 placeholder: "{!! __('Select a selling price') !!}"
@@ -401,6 +400,7 @@
             if (!PRODUCT_DETAILS_INIT_EDIT) {
                 buildPromotionSelect(ITEMS_COUNT) // Build promotion select
             }
+            buildRemarkQuillEditor(ITEMS_COUNT) // Build remark quill editor
 
             $(`.items[data-id="${ITEMS_COUNT}"] .select2`).addClass(
                 'border border-gray-300 rounded-md overflow-hidden')
@@ -1034,6 +1034,104 @@
                 });
             });
             $(`.items[data-id="${itemId}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+        }
+
+        function buildRemarkQuillEditor(item_id) {
+            // Create div wrapper for quill (jQuery)
+            var $quill = $(`
+                <div class="quill-wrapper rounded-md border border-gray-300 bg-white">
+                    <div id="remark-quill-${item_id}"></div>
+                </div>
+            `);
+
+            $(`.items[data-id="${item_id}"] textarea[name="remark"]`).after($quill);
+
+            var quill = new Quill(`#remark-quill-${item_id}`, {
+                theme: 'snow',
+                placeholder: "{!! __('Remark') !!}",
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['image'],
+                        ],
+                        handlers: {
+                            image: function() {
+                                // Create and trigger file input
+                                var input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
+
+                                input.onchange = function() {
+                                    var file = input.files[0];
+                                    if (!file) return;
+
+                                    // Validate file type
+                                    if (!file.type.match('image.*')) {
+                                        alert('Please select an image file.');
+                                        return;
+                                    }
+
+                                    // Validate file size (max 5MB)
+                                    if (file.size > 5 * 1024 * 1024) {
+                                        alert('Image size should be less than 5MB.');
+                                        return;
+                                    }
+
+                                    // Prepare upload
+                                    var formData = new FormData();
+                                    formData.append('image', file);
+                                    var range = quill.getSelection(true);
+
+                                    // Show loading
+                                    quill.insertText(range.index, 'Uploading image...');
+                                    quill.setSelection(range.index + 19);
+
+                                    // Upload to server
+                                    $.ajax({
+                                        url: '{{ route("quill.upload.image") }}',
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        },
+                                        success: function(response) {
+                                            quill.deleteText(range.index, 19);
+                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.setSelection(range.index + 1);
+                                            // Sync to textarea
+                                            var html = quill.root.innerHTML;
+                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
+                                            $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val(isEmpty ? '' : html);
+                                        },
+                                        error: function(xhr) {
+                                            quill.deleteText(range.index, 19);
+                                            var errorMsg = 'Failed to upload image.';
+                                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                                errorMsg = xhr.responseJSON.message;
+                                            }
+                                            alert(errorMsg);
+                                        }
+                                    });
+                                };
+                            }
+                        }
+                    }
+                },
+            });
+
+            // Load existing content from textarea (for old values after validation)
+            setTimeout(function() {
+                var existingContent = $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val();
+                if (existingContent && existingContent.trim() !== '') {
+                    quill.root.innerHTML = existingContent;
+                }
+            }, 100);
         }
     </script>
 @endpush

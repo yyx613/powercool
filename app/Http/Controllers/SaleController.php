@@ -5269,7 +5269,7 @@ class SaleController extends Controller
             'description' => 'nullable',
             'description.*' => 'nullable|max:250',
             'remark' => 'nullable',
-            'remark.*' => 'nullable|max:250',
+            'remark.*' => 'nullable',
         ];
         $req->validate($rules, [
             'product.*.required' => 'The product at row :position is required',

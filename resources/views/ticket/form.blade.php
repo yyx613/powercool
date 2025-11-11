@@ -53,7 +53,7 @@
                 </div>
                 <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label id="body" class="mb-1">{{ __('Body') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.textarea name="body" id="body" :hasError="$errors->has('body')" text="{{ old('body', isset($ticket) ? $ticket->body : null) }}" />
+                    <textarea name="body" id="body" class="hidden">{!! old('body', isset($ticket) ? $ticket->body : null) !!}</textarea>
                     <x-input-error :messages="$errors->get('body')" class="mt-1" />
                 </div>
             </div>
@@ -191,7 +191,7 @@
                     </div>
                 @endforeach
             @endif
-        <div id="items-container" class="col-span-3"></div>
+            <div id="items-container" class="col-span-3"></div>
             <!-- Add Items -->
             <div class="flex justify-end px-4">
                 <button type="button" class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow" id="add-item-btn">
@@ -213,6 +213,8 @@
         ITEMS_COUNT = 0
 
         $(document).ready(function() {
+            buildRemarkQuillEditor()
+
             ITEMS_COUNT = $('.items').length
 
             if (ITEMS_COUNT == 0) $('#add-item-btn').click()
@@ -326,8 +328,107 @@
             e.preventDefault()
 
             $('#item-template').remove();
+            $('textarea[name="body"]').val($('.ql-editor').html())  
 
             $(this).submit()
         })
+
+        function buildRemarkQuillEditor() {
+            // Create div wrapper for quill (jQuery)
+            var $quill = $(`
+                <div class="quill-wrapper rounded-md border border-gray-300 bg-white">
+                    <div id="remark"></div>
+                </div>
+            `);
+
+            $(`textarea[name="body"]`).after($quill);
+
+            var quill = new Quill(`#remark`, {
+                theme: 'snow',
+                placeholder: "{!! __('Remark') !!}",
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['image'],
+                        ],
+                        handlers: {
+                            image: function() {
+                                // Create and trigger file input
+                                var input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
+
+                                input.onchange = function() {
+                                    var file = input.files[0];
+                                    if (!file) return;
+
+                                    // Validate file type
+                                    if (!file.type.match('image.*')) {
+                                        alert('Please select an image file.');
+                                        return;
+                                    }
+
+                                    // Validate file size (max 5MB)
+                                    if (file.size > 5 * 1024 * 1024) {
+                                        alert('Image size should be less than 5MB.');
+                                        return;
+                                    }
+
+                                    // Prepare upload
+                                    var formData = new FormData();
+                                    formData.append('image', file);
+                                    var range = quill.getSelection(true);
+
+                                    // Show loading
+                                    quill.insertText(range.index, 'Uploading image...');
+                                    quill.setSelection(range.index + 19);
+
+                                    // Upload to server
+                                    $.ajax({
+                                        url: '{{ route("quill.upload.image") }}',
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        },
+                                        success: function(response) {
+                                            quill.deleteText(range.index, 19);
+                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.setSelection(range.index + 1);
+                                            // Sync to textarea
+                                            var html = quill.root.innerHTML;
+                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
+                                            $(`textarea[name="body"]`).val(isEmpty ? '' : html);
+                                        },
+                                        error: function(xhr) {
+                                            quill.deleteText(range.index, 19);
+                                            var errorMsg = 'Failed to upload image.';
+                                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                                errorMsg = xhr.responseJSON.message;
+                                            }
+                                            alert(errorMsg);
+                                        }
+                                    });
+                                };
+                            }
+                        }
+                    }
+                },
+            });
+
+            // Load existing content from textarea (for old values after validation)
+            setTimeout(function() {
+                var existingContent = $(`textarea[name="body"]`).val();
+                if (existingContent && existingContent.trim() !== '') {
+                    quill.root.innerHTML = existingContent;
+                }
+            }, 100);
+        }
     </script>
 @endpush
