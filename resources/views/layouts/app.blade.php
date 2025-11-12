@@ -113,6 +113,18 @@
         }
     })
 
+    $('body').on('input', '.uppercase-input', function(e) {
+        let input = $(this).is('input') ? $(this) : $(this).find('input')
+        let cursorPos = input[0].selectionStart
+        let val = input.val()
+        let upperVal = val.toUpperCase()
+
+        if (val !== upperVal) {
+            input.val(upperVal)
+            input[0].setSelectionRange(cursorPos, cursorPos)
+        }
+    })
+
     $('body').on('keydown', '.decimal-input', function(e) {
         let allowedKeys = ['backspace', '.', 'arrowleft', 'arrowright', 'tab']
         let val = $(this).find('input').val()

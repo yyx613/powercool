@@ -65,6 +65,7 @@
     <script>
         INIT_LOAD = true;
         DEFAULT_PAGE = @json($default_page ?? null);
+        DEFAULT_SEARCH = @json($default_search ?? null);
 
         // Datatable
         var dt = new DataTable('#data-table', {
@@ -75,6 +76,9 @@
             serverSide: true,
             order: [],
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
+            search: {
+                "search": "{{ isset($default_search) && $default_search != null ? $default_search : '' }}"
+            },
             columns: [
                 { data: 'vehicle_plate_number' },
                 { data: 'service' },
@@ -153,10 +157,14 @@
                 },
             },
         });
-        $('#filter_search').on('keyup', function() {
+        $('#filter_search').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
             dt.search($(this).val()).draw()
-        })
+        }))
 
+        // Populate search input with saved value
+        if (DEFAULT_SEARCH != null) {
+            $('#filter_search').val(DEFAULT_SEARCH);
+        }
 
         $('#data-table').on('click', '.delete-btns', function() {
             id = $(this).data('id')

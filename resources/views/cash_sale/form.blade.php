@@ -129,6 +129,7 @@
                 accountDate.push($(this).find('input[name="account_date"]').val())
                 accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
             })
+            let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -189,7 +190,7 @@
                     'account_date': accountDate,
                     'account_ref_no': accountRefNo,
 
-                    'remark': $('#additional-remark-container input[name="remark_input"]').val(),
+                    'remark': additionalRemark,
                 },
                 success: function(res) {
                     if (res.data != undefined && res.data.sale) {

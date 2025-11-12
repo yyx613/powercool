@@ -1715,7 +1715,7 @@ class SaleController extends Controller
             'report_type' => 'required',
             'payment_term' => 'nullable',
             // upsertRemark
-            'remark' => 'nullable|max:250',
+            'remark' => 'nullable',
         ];
         if ($req->type == 'quo') {
             $has_third_party_address = false;
@@ -1784,7 +1784,7 @@ class SaleController extends Controller
             $rules['discount'] = 'required';
             $rules['discount.*'] = 'nullable';
             $rules['product_remark'] = 'required';
-            $rules['product_remark.*'] = 'nullable|max:250';
+            $rules['product_remark.*'] = 'nullable';
             $rules['override_selling_price'] = 'nullable';
             $rules['override_selling_price.*'] = 'nullable';
         }
@@ -2368,7 +2368,7 @@ class SaleController extends Controller
                 'discount' => 'required',
                 'discount.*' => 'nullable',
                 'product_remark' => 'required',
-                'product_remark.*' => 'nullable|max:250',
+                'product_remark.*' => 'nullable',
                 'override_selling_price' => 'nullable',
                 'override_selling_price.*' => 'nullable',
             ];
@@ -2730,7 +2730,7 @@ class SaleController extends Controller
             // Validate form
             $rules = [
                 'sale_id' => 'required',
-                'remark' => 'nullable|max:250',
+                'remark' => 'nullable',
             ];
             $req->validate($rules);
         }
@@ -5269,7 +5269,7 @@ class SaleController extends Controller
             'description' => 'nullable',
             'description.*' => 'nullable|max:250',
             'remark' => 'nullable',
-            'remark.*' => 'nullable|max:250',
+            'remark.*' => 'nullable',
         ];
         $req->validate($rules, [
             'product.*.required' => 'The product at row :position is required',

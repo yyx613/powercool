@@ -66,14 +66,14 @@
                 <div class="flex flex-col" id="initial-container">
                     <x-app.input.label id="initial_for_production" class="mb-1">{{ __('Initial For Production') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="initial_for_production" id="initial_for_production"
+                    <x-app.input.input name="initial_for_production" id="initial_for_production" class="uppercase-input"
                         value="{{ old('initial_for_production', isset($prod) ? $prod->initial_for_production : null) }}" />
                     <x-input-error :messages="$errors->get('initial_for_production')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="model_code" class="mb-1">{{ __('Model Code / Supplier Barcode Info') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="model_code" id="model_code"
+                    <x-app.input.input name="model_code" id="model_code" class="uppercase-input"
                         value="{{ old('model_code', isset($prod) ? $prod->sku : null) }}" />
                     <x-input-error :messages="$errors->get('model_code')" class="mt-1" />
                 </div>
@@ -393,26 +393,26 @@
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
                 <div class="flex flex-col">
                     <x-app.input.label id="lazada_sku" class="mb-1">{{ __('Lazada Sku') }}</x-app.input.label>
-                    <x-app.input.input name="lazada_sku" id="lazada_sku"
+                    <x-app.input.input name="lazada_sku" id="lazada_sku" class="uppercase-input"
                         value="{{ old('lazada_sku', isset($prod) ? $prod->lazada_sku : ($dup_prod != null ? $dup_prod->lazada_sku : null)) }}" />
                     <x-input-error :messages="$errors->get('lazada_sku')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="shopee_sku" class="mb-1">{{ __('Shopee Sku') }}</x-app.input.label>
-                    <x-app.input.input name="shopee_sku" id="shopee_sku"
+                    <x-app.input.input name="shopee_sku" id="shopee_sku" class="uppercase-input"
                         value="{{ old('shopee_sku', isset($prod) ? $prod->shopee_sku : ($dup_prod != null ? $dup_prod->shopee_sku : null)) }}" />
                     <x-input-error :messages="$errors->get('shopee_sku')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="tiktok_sku" class="mb-1">{{ __('Tiktok Sku') }}</x-app.input.label>
-                    <x-app.input.input name="tiktok_sku" id="tiktok_sku"
+                    <x-app.input.input name="tiktok_sku" id="tiktok_sku" class="uppercase-input"
                         value="{{ old('tiktok_sku', isset($prod) ? $prod->tiktok_sku : ($dup_prod != null ? $dup_prod->tiktok_sku : null)) }}" />
                     <x-input-error :messages="$errors->get('tiktok_sku')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="woo_commerce_sku"
                         class="mb-1">{{ __('Woo Commerce Sku') }}</x-app.input.label>
-                    <x-app.input.input name="woo_commerce_sku" id="woo_commerce_sku"
+                    <x-app.input.input name="woo_commerce_sku" id="woo_commerce_sku" class="uppercase-input"
                         value="{{ old('woo_commerce_sku', isset($prod) ? $prod->woo_commerce_sku : ($dup_prod != null ? $dup_prod->woo_commerce_sku : null)) }}" />
                     <x-input-error :messages="$errors->get('woo_commerce_sku')" class="mt-1" />
                 </div>
@@ -473,7 +473,7 @@
                 <h6 class="font-medium text-lg">{{ __('Serial No') }}</h6>
                 <span class="text-sm text-slate-500">{{ __('Serial No Qty:') }} <span id="serial-no-qty">0</span></span>
             </div>
-            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" placeholder="{{ __('Enter Serial No') }}" value="{{ old('serial_no_ipt') }}" />
+            <x-app.input.input name="serial_no_ipt" id="serial_no_ipt" class="uppercase-input" placeholder="{{ __('Enter Serial No') }}" value="{{ old('serial_no_ipt') }}" />
             <x-app.input.input name="order_idx" id="order_idx" class="hidden" />
             <ul class="my-2" id="serial_no_list">
                 <!-- Template -->

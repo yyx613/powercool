@@ -23,11 +23,15 @@ class SupplierController extends Controller
         if (Session::get('supplier-company_group') != null) {
             $company_group = Session::get('supplier-company_group');
         }
+        if (Session::get('supplier-search') != null) {
+            $search = Session::get('supplier-search');
+        }
         $page = Session::get('supplier-page');
 
         return view('supplier.list', [
             'default_company_group' => $company_group ?? null,
             'default_page' => $page ?? null,
+            'default_search' => $search ?? null,
         ]);
     }
 
@@ -35,10 +39,20 @@ class SupplierController extends Controller
     {
         $records = new Supplier;
 
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        // Search with session persistence
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put('supplier-search', $keyword);
+            } else {
+                Session::remove('supplier-search');
+            }
+        } else if (Session::get('supplier-search') != null) {
+            $keyword = Session::get('supplier-search');
+        }
 
+        if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%')

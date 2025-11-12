@@ -44,14 +44,14 @@
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="tin_number" class="mb-1">{{ __('TIN') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
-                <x-app.input.input name="tin_number" id="tin_number" :hasError="$errors->has('tin_number')"
+                <x-app.input.input name="tin_number" id="tin_number" class="uppercase-input" :hasError="$errors->has('tin_number')"
                     value="{{ old('tin_number', isset($duplicate) ? $duplicate->tin_number : (isset($customer) ? $customer->tin_number : null)) }}" />
                 <x-app.message.error id="tin_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="company_registration_number" class="mb-1">{{ __('Business Reg No.') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
-                <x-app.input.input name="company_registration_number" id="company_registration_number" :hasError="$errors->has('company_registration_number')"
+                <x-app.input.input name="company_registration_number" id="company_registration_number" class="uppercase-input" :hasError="$errors->has('company_registration_number')"
                     value="{{ old('company_registration_number', isset($duplicate) ? $duplicate->company_registration_number : (isset($customer) ? $customer->company_registration_number : null)) }}" />
                 <x-app.message.error id="company_registration_number_err" />
             </div>
@@ -77,21 +77,21 @@
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="sst_number" class="mb-1">{{ __('SST Reg No.') }}</x-app.input.label>
-                <x-app.input.input name="sst_number" id="sst_number" :hasError="$errors->has('sst_number')"
+                <x-app.input.input name="sst_number" id="sst_number" class="uppercase-input" :hasError="$errors->has('sst_number')"
                     value="{{ old('sst_number', isset($duplicate) ? $duplicate->sst_number : (isset($customer) ? $customer->sst_number : null)) }}" />
                 <x-app.message.error id="sst_number_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="tourism_tax_reg_no"
                     class="mb-1">{{ __('Tourism Tax Reg No.') }}</x-app.input.label>
-                <x-app.input.input name="tourism_tax_reg_no" id="tourism_tax_reg_no" :hasError="$errors->has('tourism_tax_reg_no')"
+                <x-app.input.input name="tourism_tax_reg_no" id="tourism_tax_reg_no" class="uppercase-input" :hasError="$errors->has('tourism_tax_reg_no')"
                     value="{{ old('tourism_tax_reg_no', isset($duplicate) ? $duplicate->tourism_tax_reg_no : (isset($customer) ? $customer->tourism_tax_reg_no : null)) }}" />
                 <x-app.message.error id="tourism_tax_reg_no_err" />
             </div>
             <div class="flex flex-col hidden non-individual-fields-container">
                 <x-app.input.label id="prev_gst_reg_no"
                     class="mb-1">{{ __('Prev. GST Reg No.') }}</x-app.input.label>
-                <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" :hasError="$errors->has('prev_gst_reg_no')"
+                <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" class="uppercase-input" :hasError="$errors->has('prev_gst_reg_no')"
                     value="{{ old('prev_gst_reg_no', isset($duplicate) ? $duplicate->prev_gst_reg_no : (isset($customer) ? $customer->prev_gst_reg_no : null)) }}" />
                 <x-app.message.error id="prev_gst_reg_no_err" />
             </div>
@@ -99,27 +99,27 @@
                 <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }}
                     <span class="text-sm text-red-500 hidden for_einvoice-required">*</span>
                 </x-app.input.label>
-                <x-app.input.input name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')"
+                <x-app.input.input name="identity_type" id="identity_type" class="uppercase-input" :hasError="$errors->has('identity_type')"
                     value="{{ old('identity_type', isset($duplicate) ? $duplicate->identity_type : (isset($customer) ? $customer->identity_type : null)) }}" />
                 <x-app.message.error id="identity_type_err" />
             </div>
             <div class="flex flex-col hidden individual-fields-container">
                 <x-app.input.label id="identity_no" class="mb-1">{{ __('Identity No.') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
-                <x-app.input.input name="identity_no" id="identity_no" :hasError="$errors->has('identity_no')"
+                <x-app.input.input name="identity_no" id="identity_no" class="uppercase-input" :hasError="$errors->has('identity_no')"
                     value="{{ old('identity_no', isset($duplicate) ? $duplicate->identity_no : (isset($customer) ? $customer->identity_no : null)) }}" />
                 <x-app.message.error id="identity_no_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="registered_name" class="mb-1">{{ __('Registered Name') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
-                <x-app.input.input name="registered_name" id="registered_name" :hasError="$errors->has('registered_name')"
+                <x-app.input.input name="registered_name" id="registered_name" class="uppercase-input" :hasError="$errors->has('registered_name')"
                     value="{{ old('registered_name', isset($duplicate) ? $duplicate->registered_name : (isset($customer) ? $customer->registered_name : null)) }}" />
                 <x-app.message.error id="registered_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="trade_name" class="mb-1">{{ __('Trade Name') }} </x-app.input.label>
-                <x-app.input.input name="trade_name" id="trade_name" :hasError="$errors->has('trade_name')"
+                <x-app.input.input name="trade_name" id="trade_name" class="uppercase-input" :hasError="$errors->has('trade_name')"
                     value="{{ old('trade_name', isset($duplicate) ? $duplicate->trade_name : (isset($customer) ? $customer->trade_name : null)) }}" />
                 <x-app.message.error id="trade_name_err" />
             </div>
@@ -220,7 +220,7 @@
             </div>
             <div class="flex flex-col">
                 <x-app.input.label id="company_name" class="mb-1">{{ __('Company Name') }} </x-app.input.label>
-                <x-app.input.input name="company_name" id="company_name" :hasError="$errors->has('company_name')"
+                <x-app.input.input name="company_name" id="company_name" class="uppercase-input" :hasError="$errors->has('company_name')"
                     value="{{ old('company_name', isset($duplicate) ? $duplicate->company_name : (isset($customer) ? $customer->company_name : null)) }}" />
                 <x-app.message.error id="company_name_err" />
             </div>

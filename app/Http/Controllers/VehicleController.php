@@ -21,9 +21,11 @@ class VehicleController extends Controller
     public function index()
     {
         $page = Session::get('vehicle-page');
+        $search = Session::get('vehicle-search');
 
         return view('vehicle.list', [
             'default_page' => $page ?? null,
+            'default_search' => $search ?? null,
         ]);
     }
 
@@ -33,10 +35,20 @@ class VehicleController extends Controller
 
         $records = $this->vehi;
 
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        // Search with session persistence
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put('vehicle-search', $keyword);
+            } else {
+                Session::remove('vehicle-search');
+            }
+        } else if (Session::get('vehicle-search') != null) {
+            $keyword = Session::get('vehicle-search');
+        }
 
+        if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('plate_number', 'like', '%'.$keyword.'%')
                     ->orWhere('chasis', 'like', '%'.$keyword.'%')

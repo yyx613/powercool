@@ -133,13 +133,13 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="epf" class="mb-1">{{ __('EPF No') }}</x-app.input.label>
-                    <x-app.input.input name="epf" id="epf" :hasError="$errors->has('epf')"
+                    <x-app.input.input name="epf" id="epf" class="uppercase-input" :hasError="$errors->has('epf')"
                         value="{{ old('epf', isset($user) ? $user->epf : null) }}" />
                     <x-input-error :messages="$errors->get('epf')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="car_plate" class="mb-1">{{ __('Car Plate') }}</x-app.input.label>
-                    <x-app.input.input name="car_plate" id="car_plate" :hasError="$errors->has('car_plate')"
+                    <x-app.input.input name="car_plate" id="car_plate" class="uppercase-input" :hasError="$errors->has('car_plate')"
                         value="{{ old('car_plate', isset($user) ? $user->car_plate : null) }}" />
                     <x-input-error :messages="$errors->get('car_plate')" class="mt-1" />
                 </div>

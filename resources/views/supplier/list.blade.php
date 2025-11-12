@@ -113,6 +113,7 @@
         INIT_LOAD = true;
         DEFAULT_PAGE = @json($default_page ?? null);
         DEFAULT_COMPANY_GROUP = @json($default_company_group ?? null);
+        DEFAULT_SEARCH = @json($default_search ?? null);
         TABLE_FILTER = {
             'company_group': DEFAULT_COMPANY_GROUP ?? '',
         }
@@ -127,6 +128,9 @@
             serverSide: true,
             order: [],
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
+            search: {
+                "search": "{{ isset($default_search) && $default_search != null ? $default_search : '' }}"
+            },
             columns: [{
                     data: 'id'
                 },
@@ -232,9 +236,15 @@
                 },
             },
         });
-        $('#filter_search').on('keyup', function() {
+        $('#filter_search').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
             dt.search($(this).val()).draw()
-        })
+        }))
+
+        // Populate search input with saved value
+        if (DEFAULT_SEARCH != null) {
+            $('#filter_search').val(DEFAULT_SEARCH);
+        }
+
         $('#filter_company_group').on('change', function() {
             TABLE_FILTER['company_group'] = $(this).val()
 

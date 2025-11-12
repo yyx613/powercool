@@ -6,72 +6,114 @@
     <div class="grid grid-cols-3 gap-8 w-full mb-8">
         <div class="flex flex-col col-span-3">
             <x-app.input.label id="remark" class="mb-1">{{ __('Additional Note') }}</x-app.input.label>
-            <x-app.input.textarea name="remark" id="remark" :hasError="$errors->has('remark')" text="{{ isset($replicate) ? $replicate->remark : (isset($sale) ? $sale->remark : null) }}" />
+            <textarea name="remark" id="remark" class="hidden">{!! isset($replicate) ? $replicate->remark : (isset($sale) ? $sale->remark : null) !!}</textarea>
             <x-app.message.error id="remark_err"/>
         </div>
     </div>
 </div>
 
-
 @push('scripts')
     <script>
-        // REMARK_FORM_CAN_SUBMIT = true
+        $(document).ready(function() {
+            buildAddRemarkQuillEditor();
+        });
 
-        // $('#remark-form').on('submit', function(e) {
-        //     e.preventDefault()
+        function buildAddRemarkQuillEditor() {
+            // Create div wrapper for quill (jQuery)
+            var $quill = $(`
+                <div class="quill-wrapper rounded-md border border-gray-300 bg-white">
+                    <div id="add-remark"></div>
+                </div>
+            `);
 
-        //     if (!REMARK_FORM_CAN_SUBMIT) return
+            $('#additional-remark-container textarea[name="remark"]').after($quill);
 
-        //     REMARK_FORM_CAN_SUBMIT = false
+            var quill = new Quill(`#add-remark`, {
+                theme: 'snow',
+                placeholder: "{!! __('Remark') !!}",
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['image'],
+                        ],
+                        handlers: {
+                            image: function() {
+                                // Create and trigger file input
+                                var input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
 
-        //     $('#remark-form #submit-btn').text('Updating')
-        //     $('#remark-form #submit-btn').removeClass('bg-yellow-400 shadow')
-        //     $('.err_msg').addClass('hidden') // Remove error messages
-        //     // Submit
-        //     let url = ''
-        //     url = `${url}?type=quo`
+                                input.onchange = function() {
+                                    var file = input.files[0];
+                                    if (!file) return;
 
-        //     $.ajax({
-        //         headers: {
-        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //         },
-        //         url: url,
-        //         type: 'POST',
-        //         data: {
-        //             'sale_id': typeof SALE !== 'undefined' && SALE != null ? SALE.id : null,
-        //             'remark': $('#remark-form textarea[name="remark"]').val(),
-        //         },
-        //         success: function(res) {
-        //             setTimeout(() => {
-        //                 $('#remark-form #submit-btn').text('Updated')
-        //                 $('#remark-form #submit-btn').addClass('bg-green-400 shadow')
+                                    // Validate file type
+                                    if (!file.type.match('image.*')) {
+                                        alert('Please select an image file.');
+                                        return;
+                                    }
 
-        //                 setTimeout(() => {
-        //                     $('#remark-form #submit-btn').text('Save and Update')
-        //                     $('#remark-form #submit-btn').removeClass('bg-green-400')
-        //                     $('#remark-form #submit-btn').addClass('bg-yellow-400 shadow')
-                            
-        //                     REMARK_FORM_CAN_SUBMIT = true
-        //                 }, 2000);
-        //             }, 300);
-        //         },
-        //         error: function(err) {
-        //             setTimeout(() => {
-        //                 if (err.status == StatusCodes.UNPROCESSABLE_ENTITY) {
-        //                     let errors = err.responseJSON.errors
-    
-        //                     for (const key in errors) {
-        //                         $(`#remark-form #${key}_err`).find('p').text(errors[key])
-        //                         $(`#remark-form #${key}_err`).removeClass('hidden')
-        //                     }
-        //                 }
-        //                 $('#remark-form #submit-btn').text('Save and Update')
-        //                 $('#remark-form #submit-btn').addClass('bg-yellow-400 shadow')
+                                    // Validate file size (max 5MB)
+                                    if (file.size > 5 * 1024 * 1024) {
+                                        alert('Image size should be less than 5MB.');
+                                        return;
+                                    }
 
-        //                 REMARK_FORM_CAN_SUBMIT = true
-        //             }, 300);
-        //         },
-        //     });
-        // })
+                                    // Prepare upload
+                                    var formData = new FormData();
+                                    formData.append('image', file);
+                                    var range = quill.getSelection(true);
+
+                                    // Show loading
+                                    quill.insertText(range.index, 'Uploading image...');
+                                    quill.setSelection(range.index + 19);
+
+                                    // Upload to server
+                                    $.ajax({
+                                        url: '{{ route("quill.upload.image") }}',
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        },
+                                        success: function(response) {
+                                            quill.deleteText(range.index, 19);
+                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.setSelection(range.index + 1);
+                                            // Sync to textarea
+                                            var html = quill.root.innerHTML;
+                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
+                                            $('#additional-remark-container textarea[name="remark"]').val(isEmpty ? '' : html);
+                                        },
+                                        error: function(xhr) {
+                                            quill.deleteText(range.index, 19);
+                                            var errorMsg = 'Failed to upload image.';
+                                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                                errorMsg = xhr.responseJSON.message;
+                                            }
+                                            alert(errorMsg);
+                                        }
+                                    });
+                                };
+                            }
+                        }
+                    }
+                },
+            });
+
+            // Load existing content from textarea (for old values after validation)
+            setTimeout(function() {
+                let existingContent = $('#additional-remark-container textarea[name="remark"]').val();
+                if (existingContent && existingContent.trim() !== '') {
+                    quill.root.innerHTML = existingContent;
+                }
+            }, 100);
+        }
     </script>
 @endpush

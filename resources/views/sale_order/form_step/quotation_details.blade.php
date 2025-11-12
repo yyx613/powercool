@@ -54,19 +54,19 @@
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="warehouse" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
-            <x-app.input.input name="warehouse" id="warehouse" value="{{ isset($sale) ? $sale->warehouse : null }}"
+            <x-app.input.input name="warehouse" id="warehouse" class="uppercase-input" value="{{ isset($sale) ? $sale->warehouse : null }}"
                 :hasError="$errors->has('warehouse')" />
             <x-app.message.error id="warehouse_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
-            <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
+            <x-app.input.input name="store" id="store" class="uppercase-input" :hasError="$errors->has('store')"
                 value="{{ isset($sale) ? $sale->store : null }}" />
             <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
-            <x-app.input.multi-input name="reference" id="reference" :hasError="$errors->has('reference')"
+            <x-app.input.multi-input name="reference" id="reference" class="uppercase-input" :hasError="$errors->has('reference')"
                 value="{{ isset($sale) ? $sale->reference : null }}" />
             <x-app.message.error id="reference_err" />
         </div>

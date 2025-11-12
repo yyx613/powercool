@@ -32,6 +32,7 @@ use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProductionRequestController;
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\QuillController;
 use App\Http\Controllers\RawMaterialRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -229,6 +230,9 @@ Route::get('/change-language/{lang}', function ($locale) {
 })->name('change_language');
 
 Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(function () {
+    // Quill Editor Image Upload
+    Route::post('/quill/upload-image', [QuillController::class, 'uploadImage'])->name('quill.upload.image');
+
     // View activty log data
     Route::get('/view-log/{log}', function (ActivityLog $log) {
         return $log->data ?? 'No Data Found';

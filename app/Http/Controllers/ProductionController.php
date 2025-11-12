@@ -516,25 +516,27 @@ class ProductionController extends Controller
             }
             // Create Raw Material Request
             $material_use = MaterialUse::with('materials')->where('product_id', $req->product)->first();
-            $rmq = RawMaterialRequest::create([
-                'production_id' => $production->id,
-                'material_use_id' => $material_use->id,
-                'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
-                'requested_by' => Auth::user()->id,
-            ]);
-            (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
-
-            $data = [];
-            for ($i = 0; $i < count($material_use->materials); $i++) {
-                $data[] = [
-                    'raw_material_request_id' => $rmq->id,
-                    'product_id' => $material_use->materials[$i]->product_id,
-                    'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
-                    'qty' => $material_use->materials[$i]->material->is_sparepart ? 1 : $material_use->materials[$i]->qty,
-                    'created_at' => now(),
-                ];
+            if ($material_use != null) {
+                $rmq = RawMaterialRequest::create([
+                    'production_id' => $production->id,
+                    'material_use_id' => $material_use->id,
+                    'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+                    'requested_by' => Auth::user()->id,
+                ]);
+                (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
+    
+                $data = [];
+                for ($i = 0; $i < count($material_use->materials); $i++) {
+                    $data[] = [
+                        'raw_material_request_id' => $rmq->id,
+                        'product_id' => $material_use->materials[$i]->product_id,
+                        'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                        'qty' => $material_use->materials[$i]->material->is_sparepart ? 1 : $material_use->materials[$i]->qty,
+                        'created_at' => now(),
+                    ];
+                }
+                RawMaterialRequestMaterial::insert($data);
             }
-            RawMaterialRequestMaterial::insert($data);
 
             DB::commit();
 

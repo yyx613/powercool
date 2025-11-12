@@ -41,31 +41,31 @@
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Reference') }}</x-app.input.label>
-            <x-app.input.input name="reference" id="reference" :hasError="$errors->has('reference')"
+            <x-app.input.input name="reference" id="reference" class="uppercase-input" :hasError="$errors->has('reference')"
                 value="{{ isset($replicate) ? $replicate->reference : (isset($sale) ? $sale->reference : null) }}" />
             <x-app.message.error id="reference_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="from" class="mb-1">{{ __('From') }}</x-app.input.label>
-            <x-app.input.input name="from" id="from" :hasError="$errors->has('from')"
+            <x-app.input.input name="from" id="from" class="uppercase-input" :hasError="$errors->has('from')"
                 value="{{ isset($replicate) ? $replicate->quo_from : (isset($sale) ? $sale->quo_from : null) }}" />
             <x-app.message.error id="from_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="cc" class="mb-1">{{ __('C.C.') }}</x-app.input.label>
-            <x-app.input.input name="cc" id="cc" :hasError="$errors->has('cc')"
+            <x-app.input.input name="cc" id="cc" class="uppercase-input" :hasError="$errors->has('cc')"
                 value="{{ isset($replicate) ? $replicate->quo_cc : (isset($sale) ? $sale->quo_cc : null) }}" />
             <x-app.message.error id="cc_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="warehouse" class="mb-1">{{ __('Warehouse') }}</x-app.input.label>
-            <x-app.input.input name="warehouse" id="warehouse" value="{{ $warehouse ?? '' }}" :hasError="$errors->has('warehouse')"
+            <x-app.input.input name="warehouse" id="warehouse" class="uppercase-input" value="{{ $warehouse ?? '' }}" :hasError="$errors->has('warehouse')"
                 disabled="true" />
             <x-app.message.error id="warehouse_err" />
         </div>
         <div class="flex flex-col">
             <x-app.input.label id="store" class="mb-1">{{ __('Store') }}</x-app.input.label>
-            <x-app.input.input name="store" id="store" :hasError="$errors->has('store')"
+            <x-app.input.input name="store" id="store" class="uppercase-input" :hasError="$errors->has('store')"
                 value="{{ isset($replicate) ? $replicate->store : (isset($sale) ? $sale->store : null) }}" />
             <x-app.message.error id="store_err" />
         </div>

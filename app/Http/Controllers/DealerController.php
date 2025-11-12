@@ -17,11 +17,15 @@ class DealerController extends Controller
         if (Session::get('dealer-company_group') != null) {
             $company_group = Session::get('dealer-company_group');
         }
+        if (Session::get('dealer-search') != null) {
+            $search = Session::get('dealer-search');
+        }
         $page = Session::get('dealer-page');
 
         return view('dealer.list', [
             'default_company_group' => $company_group ?? null,
             'default_page' => $page ?? null,
+            'default_search' => $search ?? null,
         ]);
     }
 
@@ -31,10 +35,20 @@ class DealerController extends Controller
 
         Session::put('dealer-page', $req->page);
 
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        // Search with session persistence
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put('dealer-search', $keyword);
+            } else {
+                Session::remove('dealer-search');
+            }
+        } else if (Session::get('dealer-search') != null) {
+            $keyword = Session::get('dealer-search');
+        }
 
+        if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('company_name', 'like', '%' . $keyword . '%')
