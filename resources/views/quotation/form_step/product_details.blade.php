@@ -1127,7 +1127,7 @@
 
             // Load existing content from textarea (for old values after validation)
             setTimeout(function() {
-                var existingContent = $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val();
+                let existingContent = $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val();
                 if (existingContent && existingContent.trim() !== '') {
                     quill.root.innerHTML = existingContent;
                 }

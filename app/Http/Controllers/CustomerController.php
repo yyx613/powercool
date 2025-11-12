@@ -45,6 +45,9 @@ class CustomerController extends Controller
         if (Session::get('debtor-sales_agent') != null) {
             $sales_agent = Session::get('debtor-sales_agent');
         }
+        if (Session::get('debtor-search') != null) {
+            $search = Session::get('debtor-search');
+        }
         $page = Session::get('debtor-page');
 
         return view('customer.list', [
@@ -52,7 +55,8 @@ class CustomerController extends Controller
             'default_company_group' => $company_group ?? null,
             'default_category' => $category ?? null,
             'default_sales_agent' => $sales_agent ?? null,
-            'default_page' => $page ?? null
+            'default_page' => $page ?? null,
+            'default_search' => $search ?? null
         ]);
     }
 
@@ -77,18 +81,31 @@ class CustomerController extends Controller
                     ->orWhere('phone', $keyword)
                     ->orWhere('company_name', $keyword);
             });
-        } else if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        } else {
+            // General search with session persistence
+            $keyword = null;
+            if ($req->has('search')) {
+                if ($req->search['value'] != null) {
+                    $keyword = $req->search['value'];
+                    Session::put('debtor-search', $keyword);
+                } else {
+                    Session::remove('debtor-search');
+                }
+            } else if (Session::get('debtor-search') != null) {
+                $keyword = Session::get('debtor-search');
+            }
 
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('platform', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%' . $keyword . '%');
-                    });
-            });
+            if ($keyword != null) {
+                $records = $records->where(function ($q) use ($keyword) {
+                    $q->where('name', 'like', '%' . $keyword . '%')
+                        ->orWhere('sku', 'like', '%' . $keyword . '%')
+                        ->orWhere('phone', 'like', '%' . $keyword . '%')
+                        ->orWhere('company_name', 'like', '%' . $keyword . '%')
+                        ->orWhereHas('platform', function ($q) use ($keyword) {
+                            $q->where('name', 'like', '%' . $keyword . '%');
+                        });
+                });
+            }
         }
 
         Session::put('debtor-page', $req->page);

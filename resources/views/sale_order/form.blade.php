@@ -158,6 +158,7 @@
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
                 accessory.push($(this).find('select[name="accessory_id[]"]').val())
             })
+            let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -206,7 +207,7 @@
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
 
-                    'remark': $('#additional-remark-container input[name="remark_input"]').val(),
+                    'remark': additionalRemark,
                 },
                 success: function(res) {
                     if (res.data != undefined && res.data.sale) {

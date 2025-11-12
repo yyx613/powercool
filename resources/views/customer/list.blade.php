@@ -166,6 +166,7 @@
         DEFAULT_COMPANY_GROUP = @json($default_company_group ?? null);
         DEFAULT_CATEGORY = @json($default_category ?? null);
         DEFAULT_SALES_AGENT = @json($default_sales_agent ?? null);
+        DEFAULT_SEARCH = @json($default_search ?? null);
         FOR_ROLE = @json($for_role ?? null);
         TABLE_FILTER = {
             'find_customer': '',
@@ -184,6 +185,9 @@
             serverSide: true,
             order: [],
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
+            "search": {
+                "search": "{{ isset($default_search) && $default_search != null ? $default_search : '' }}"
+            },
             columns: [{
                     data: 'id'
                 },
@@ -354,6 +358,12 @@
         $('#filter_search').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
             dt.search($(this).val()).draw()
         }))
+
+        // Populate search input with saved value
+        if (DEFAULT_SEARCH != null) {
+            $('#filter_search').val(DEFAULT_SEARCH);
+        }
+
         $('#filter_find_customer').on('keyup', $.debounce(DEBOUNCE_DURATION, function() {
             TABLE_FILTER['find_customer'] = $(this).val()
 

@@ -39,12 +39,6 @@
                         value="{{ old('start_date', isset($production) ? $production->start_date : (isset($default_start_date) ? $default_start_date : null)) }}" />
                     <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                 </div>
-                <div class="flex flex-col col-span-1 md:col-span-2">
-                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
-                    <x-app.input.input name="remark" id="remark" :hasError="$errors->has('remark')"
-                        value="{{ old('remark', isset($production) ? $production->remark : null) }}" />
-                    <x-input-error :messages="$errors->get('remark')" class="mt-2" />
-                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="due_date" class="mb-1">{{ __('Due Date') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -93,6 +87,11 @@
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('priority')" class="mt-2" />
+                </div>
+                <div class="flex flex-col col-span-2 md:col-span-3">
+                    <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
+                    <textarea name="remark" id="remark" class="hidden">{!! old('remark', isset($production) ? $production->remark : null) !!}</textarea>
+                    <x-input-error :messages="$errors->get('remark')" class="mt-2" />
                 </div>
                 <div class="flex flex-col col-span-2 md:col-span-3">
                     <x-app.input.label id="assign" class="mb-1">{{ __('Assigned Staff') }} <span
@@ -197,6 +196,8 @@
                 }
             })
             $(`#product-select-container .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+
+            buildRemarkQuillEditor()
 
             // Start Init
             if (PRODUCTION == null) {
@@ -371,6 +372,7 @@
             } else {
                 $('input[name="material_use_product"]').val(JSON.stringify(materialUseProduct))
             }
+            $('textarea[name="remark"]').val($(`#remark-quill .ql-editor`).html())
             $('form').submit()
         })
         // Filter milestones based on selected product
@@ -578,6 +580,104 @@
                 sequence++
                 MILESTONES[$(this).attr('data-milestone-id')].sequence = sequence
             })
+        }
+
+        function buildRemarkQuillEditor() {
+            // Create div wrapper for quill (jQuery)
+            var $quill = $(`
+                <div class="quill-wrapper rounded-md border border-gray-300 bg-white">
+                    <div id="remark-quill"></div>
+                </div>
+            `);
+
+            $(`textarea[name="remark"]`).after($quill);
+
+            var quill = new Quill(`#remark-quill`, {
+                theme: 'snow',
+                placeholder: "{!! __('Remark') !!}",
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['image'],
+                        ],
+                        handlers: {
+                            image: function() {
+                                // Create and trigger file input
+                                var input = document.createElement('input');
+                                input.setAttribute('type', 'file');
+                                input.setAttribute('accept', 'image/*');
+                                input.click();
+
+                                input.onchange = function() {
+                                    var file = input.files[0];
+                                    if (!file) return;
+
+                                    // Validate file type
+                                    if (!file.type.match('image.*')) {
+                                        alert('Please select an image file.');
+                                        return;
+                                    }
+
+                                    // Validate file size (max 5MB)
+                                    if (file.size > 5 * 1024 * 1024) {
+                                        alert('Image size should be less than 5MB.');
+                                        return;
+                                    }
+
+                                    // Prepare upload
+                                    var formData = new FormData();
+                                    formData.append('image', file);
+                                    var range = quill.getSelection(true);
+
+                                    // Show loading
+                                    quill.insertText(range.index, 'Uploading image...');
+                                    quill.setSelection(range.index + 19);
+
+                                    // Upload to server
+                                    $.ajax({
+                                        url: '{{ route("quill.upload.image") }}',
+                                        type: 'POST',
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        },
+                                        success: function(response) {
+                                            quill.deleteText(range.index, 19);
+                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.setSelection(range.index + 1);
+                                            // Sync to textarea
+                                            var html = quill.root.innerHTML;
+                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
+                                            $(`textarea[name="remark"]`).val(isEmpty ? '' : html);
+                                        },
+                                        error: function(xhr) {
+                                            quill.deleteText(range.index, 19);
+                                            var errorMsg = 'Failed to upload image.';
+                                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                                errorMsg = xhr.responseJSON.message;
+                                            }
+                                            alert(errorMsg);
+                                        }
+                                    });
+                                };
+                            }
+                        }
+                    }
+                },
+            });
+
+            // Load existing content from textarea (for old values after validation)
+            setTimeout(function() {
+                var existingContent = $(`textarea[name="remark"]`).val();
+                if (existingContent && existingContent.trim() !== '') {
+                    quill.root.innerHTML = existingContent;
+                }
+            }, 100);
         }
     </script>
 @endpush

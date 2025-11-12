@@ -25,10 +25,14 @@ class VehicleServiceController extends Controller
 
     public function index()
     {
+        if (Session::get('vehicle-service-search') != null) {
+            $search = Session::get('vehicle-service-search');
+        }
         $page = Session::get('vehicle-service-page');
 
         return view('vehicle_service.list', [
             'default_page' => $page ?? null,
+            'default_search' => $search ?? null,
         ]);
     }
 
@@ -44,10 +48,20 @@ class VehicleServiceController extends Controller
             ->leftJoin('vehicles', 'vehicles.id', '=', 'vehicle_services.vehicle_id');
             
 
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
+        // Search with session persistence
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put('vehicle-service-search', $keyword);
+            } else {
+                Session::remove('vehicle-service-search');
+            }
+        } else if (Session::get('vehicle-service-search') != null) {
+            $keyword = Session::get('vehicle-service-search');
+        }
 
+        if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('vehicles.plate_number', 'like', '%'.$keyword.'%')
                     ->orWhere('vehicle_services.amount', 'like', '%'.$keyword.'%');
