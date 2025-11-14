@@ -22,16 +22,18 @@
                             class="text-xs rounded border-slate-200 p-1" />
                     </div>
                     <div class="border px-2 rounded overflow-y-auto max-h-64" id="material-use-selection-container">
-                        @foreach ($materialUse->materials as $key => $mat)
-                            <div class="py-2 flex items-center {{ $key > 0 ? 'border-t' : '' }}">
-                                <input id="material-use-{{ $mat->id }}" name="material-use-{{ $mat->id }}" type="checkbox"
-                                    class="rounded-full border-slate-400">
-                                <label for="material-use-{{ $mat->id }}" class="text-sm ml-2 flex flex-col flex-1">
-                                    <span>{{ $mat->material->model_name }}</span>
-                                    <span class="text-slate-400 text-sm">Quantity needed: x{{ $mat->qty }}</span>
-                                </label>
-                            </div>
-                        @endforeach
+                        @if (isset($materialUse))
+                            @foreach ($materialUse->materials as $key => $mat)
+                                <div class="py-2 flex items-center {{ $key > 0 ? 'border-t' : '' }}">
+                                    <input id="material-use-{{ $mat->id }}" name="material-use-{{ $mat->id }}" type="checkbox"
+                                        class="rounded-full border-slate-400">
+                                    <label for="material-use-{{ $mat->id }}" class="text-sm ml-2 flex flex-col flex-1">
+                                        <span>{{ $mat->material->model_name }}</span>
+                                        <span class="text-slate-400 text-sm">Quantity needed: x{{ $mat->qty }}</span>
+                                    </label>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
 

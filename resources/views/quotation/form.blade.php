@@ -144,7 +144,8 @@
                             id: accessoryId,
                             qty: $(this).find('input[name="accessory_qty[]"]').val(),
                             selling_price: $(this).find('select[name="accessory_selling_price[]"]').val(),
-                            override_price: $(this).find('input[name="accessory_override_price[]"]').val()
+                            override_price: $(this).find('input[name="accessory_override_price[]"]').val(),
+                            is_foc: $(this).find('.accessory-is-foc-input').val()
                         });
                     }
                 });

@@ -164,14 +164,14 @@
 
                     return `
                         <span>${data}</span>
-                        <div class="flex items-center gap-2 mt-1.5">
+                        <div class="flex items-center gap-3 mt-1.5">
                             <div class="group relative">
                                 ${
                                     convertable || row.status == 2 ?
                                     `<svg class="h-3.5 w-3.5 fill-green-500" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z"/></svg>` :
                                     `<svg class="h-3.5 w-3.5 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>`
                                 }
-                                <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-0 opacity-0 z-[-10] w-56">
+                                <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-3.5 opacity-0 z-[-10] w-56">
                                     <div class="rounded shadow border bg-white">
                                         <div class="flex items-center gap-2 border-b px-3 py-2">
                                             <svg class="h-3.5 w-3.5 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M12,0A12,12,0,1,0,24,12,12.013,12.013,0,0,0,12,0Zm0,22A10,10,0,1,1,22,12,10.011,10.011,0,0,1,12,22Z"/><path d="M12,10H11a1,1,0,0,0,0,2h1v6a1,1,0,0,0,2,0V12A2,2,0,0,0,12,10Z"/><circle cx="12" cy="6.5" r="1.5"/></svg>
@@ -191,6 +191,23 @@
                                     </div>
                                 </div>
                             </div>
+                            ${
+                                row.rejected_reason != null ? 
+                                `<div class="group relative">
+                                    <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                    <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-3.5 opacity-0 z-[-10] w-56">
+                                        <div class="rounded shadow border bg-white">
+                                            <div class="flex items-center gap-2 border-b px-3 py-2">
+                                                <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                                <p class="font-medium">Rejected Reason</p>
+                                            </div>
+                                            <div class="px-3 py-2">
+                                                ${ row.rejected_reason ?? '-' }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>` : ''
+                            }
                             <span class="text-xs text-blue-700 ${row.is_draft == true ? '' : 'hidden'}">Draft</span>
                         </div>
                     `

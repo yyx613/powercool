@@ -6,6 +6,7 @@ use App\Exports\ProductExport;
 use App\Models\Approval;
 use App\Models\Attachment;
 use App\Models\Branch;
+use App\Models\CustomizeProduct;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\FactoryRawMaterial;
@@ -396,6 +397,8 @@ class ProductController extends Controller
     {
         if ($req->has('id')) {
             $dup_prod = Product::where('id', $req->id)->first();
+        } else if ($req->has('cp')) {
+            $dup_prod = CustomizeProduct::where('id', $req->cp)->first();
         }
 
         return view('inventory.form', [

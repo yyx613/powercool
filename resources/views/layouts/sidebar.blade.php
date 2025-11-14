@@ -414,6 +414,15 @@
                                             </a>
                                         </li>
                                     @endcan
+                                    @can('inventory.customize.view')
+                                        <li>
+                                            <a href="{{ route('customize.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'customize.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Customize') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
                                     @can('inventory.raw_material_request.view')
                                         <li>
                                             <a href="{{ route('raw_material_request.index') }}"
@@ -1308,6 +1317,15 @@
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                 <span
                                     class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('inventory.customize.view')
+                        <li>
+                            <a href="{{ route('customize.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'customize.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Customize') }}</span>
                             </a>
                         </li>
                     @endcan
@@ -2274,6 +2292,15 @@
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('inventory.customize.view')
+                                        <li>
+                                            <a href="{{ route('customize.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'customize.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Customize') }}</span>
                                             </a>
                                         </li>
                                     @endcan

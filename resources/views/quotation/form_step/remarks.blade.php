@@ -114,6 +114,14 @@
                     quill.root.innerHTML = existingContent;
                 }
             }, 100);
+
+            var toolbar = quill.container.previousSibling;
+            toolbar.querySelector('button.ql-bold').setAttribute('title', 'Bold');
+            toolbar.querySelector('button.ql-italic').setAttribute('title', 'Italic');
+            toolbar.querySelector('button.ql-underline').setAttribute('title', 'Underline');
+            toolbar.querySelector('button.ql-list[aria-label="list: ordered"]').setAttribute('title', 'Ordered List');
+            toolbar.querySelector('button.ql-list[aria-label="list: bullet"]').setAttribute('title', 'Bullet List');
+            toolbar.querySelector('button.ql-image').setAttribute('title', 'Insert Image');
         }
     </script>
 @endpush

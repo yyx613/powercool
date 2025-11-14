@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 #[ScopedBy([BranchScope::class])]
 class Production extends Model
@@ -17,11 +15,22 @@ class Production extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_TO_DO = 1;
+
     const STATUS_DOING = 2;
+
     const STATUS_COMPLETED = 3;
+
     const STATUS_TRANSFERRED = 4;
+
     const STATUS_MODIFIED = 5;
+
     const STATUS_PENDING_APPROVAL = 6;
+
+    const STATUS_REJECTED = 7;
+
+    const TYPE_NORMAL = 1;
+
+    const TYPE_RND = 2;
 
     protected $guarded = [];
 
@@ -70,6 +79,11 @@ class Production extends Model
         return $this->hasOne(RawMaterialRequest::class);
     }
 
+    public function customizeProduct()
+    {
+        return $this->hasOne(CustomizeProduct::class);
+    }
+
     public function oldProduction()
     {
         return $this->belongsTo(Production::class, 'old_production');
@@ -79,7 +93,8 @@ class Production extends Model
     {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
             ->withPivot('id', 'submitted_at', 'submitted_by')
-            ->using(ProductionMilestone::class);
+            ->using(ProductionMilestone::class)
+            ->orderBy('production_milestone.sequence', 'asc');
     }
 
     public function branch()
@@ -98,9 +113,9 @@ class Production extends Model
 
         if ($user_branch != null) {
             if ($user_branch == Branch::LOCATION_PENANG) {
-                $formatted_prefix = 'P' . $formatted_prefix;
+                $formatted_prefix = 'P'.$formatted_prefix;
             } elseif ($user_branch == Branch::LOCATION_KL) {
-                $formatted_prefix = 'W' . $formatted_prefix;
+                $formatted_prefix = 'W'.$formatted_prefix;
             }
         }
 
@@ -108,12 +123,12 @@ class Production extends Model
             $digits = (string) $staring_num;
 
             while (strlen($digits) < $digits_length) {
-                $digits = '0' . $digits;
+                $digits = '0'.$digits;
             }
             if ($formatted_prefix == '') {
                 $sku = strtoupper($digits);
             } else {
-                $sku = strtoupper($formatted_prefix . '-' . $digits);
+                $sku = strtoupper($formatted_prefix.'-'.$digits);
             }
 
             if (! in_array($sku, $existing_skus)) {
@@ -139,6 +154,19 @@ class Production extends Model
             case self::STATUS_PENDING_APPROVAL:
                 return 'Pending Approval';
         }
+
+        return null;
+    }
+
+    public function typeToHumanRead($val): ?string
+    {
+        switch ($val) {
+            case self::TYPE_NORMAL:
+                return 'Normal';
+            case self::TYPE_RND:
+                return 'R&D';
+        }
+
         return null;
     }
 
@@ -161,5 +189,19 @@ class Production extends Model
         }
 
         return $progress;
+    }
+
+    public function getLatestApprovalRejectedReason(): ?string
+    {
+        $approval = Approval::where('object_type', Production::class)
+            ->where('object_id', $this->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($approval != null && $approval->status == Approval::STATUS_REJECTED) {
+            return $approval->reject_remark;
+        }
+
+        return null;
     }
 }

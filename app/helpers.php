@@ -406,7 +406,7 @@ if (! function_exists('getInvolvedProductChild')) {
 }
 
 if (! function_exists('generateSku')) {
-    function generateSku(string $prefix, array $existing_skus, ?bool $is_hi_ten = null): string
+    function generateSku(string $prefix, array $existing_skus = [], ?bool $is_hi_ten = null): string
     {
         $sku = null;
         $year = now()->format('y');

@@ -81,6 +81,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.category' => [],
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
+                'inventory.customize' => [],
                 'inventory.raw_material_request' => [],
                 'grn' => [],
                 'service_reminder' => [],
@@ -133,6 +134,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.raw_material_request'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.raw_material')) {
                     array_push($permissions_group['inventory.raw_material'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'inventory.customize')) {
+                    array_push($permissions_group['inventory.customize'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'grn')) {
                     array_push($permissions_group['grn'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'service_reminder')) {

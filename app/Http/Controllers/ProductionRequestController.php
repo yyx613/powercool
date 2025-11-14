@@ -138,7 +138,10 @@ class ProductionRequestController extends Controller
         $records = new SaleProductionRequest;
 
         $records = $records
-            ->select('sale_production_requests.*', 'products.sku AS productSku', 'sales.sku AS soSku', 'productions.sku AS productionSku')
+            ->select(
+                'sale_production_requests.*', 'products.sku AS productSku', 'sales.sku AS soSku',
+                'productions.sku AS productionSku', 'sale_production_requests.remark'
+            )
             ->leftJoin('products', 'products.id', '=', 'sale_production_requests.product_id')
             ->leftJoin('productions', 'productions.id', '=', 'sale_production_requests.production_id')
             ->leftJoin('sales', 'sales.id', '=', 'sale_production_requests.sale_id');
@@ -186,7 +189,11 @@ class ProductionRequestController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
-            $remark = SaleProduct::where('sale_id', $record->sale_id)->where('product_id', $record->product_id)->value('remark');
+            if ($record->remark == null) {
+                $remark = SaleProduct::where('sale_id', $record->sale_id)->where('product_id', $record->product_id)->value('remark');
+            } else {
+                $remark = $record->remark;
+            }
 
             $data['data'][] = [
                 'no' => $key + 1,
