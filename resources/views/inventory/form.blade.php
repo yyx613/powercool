@@ -240,7 +240,14 @@
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="selling_price" class="mb-1">{{ __('Price') }}</x-app.input.label>
-                    <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input" />
+                    <div class="flex items-center gap-2">
+                        <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input flex-1" />
+                        <button type="button" class="delete-selling-price-btn bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 flex-shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <x-input-error :messages="$errors->get('selling_price')" class="mt-1" />
                 </div>
             </div>
@@ -258,8 +265,15 @@
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price"
                                     class="mb-1">{{ __('Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input"
-                                    value="{{ old('selling_price.' . $key) }}" />
+                                <div class="flex items-center gap-2">
+                                    <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input flex-1"
+                                        value="{{ old('selling_price.' . $key) }}" />
+                                    <button type="button" class="delete-selling-price-btn bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <x-input-error :messages="$errors->get('selling_price.' . $key)" class="mt-1" />
                             </div>
                         </div>
@@ -277,8 +291,15 @@
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price"
                                     class="mb-1">{{ __('Price') }}</x-app.input.label>
-                                <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input"
-                                    value="{{ $sp->price }}" />
+                                <div class="flex items-center gap-2">
+                                    <x-app.input.input name="selling_price[]" id="selling_price" class="decimal-input flex-1"
+                                        value="{{ $sp->price }}" />
+                                    <button type="button" class="delete-selling-price-btn bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <x-input-error :messages="$errors->get('selling_price')" class="mt-1" />
                             </div>
                         </div>
@@ -633,6 +654,9 @@
             $(clone).removeAttr('id')
 
             $('#selling-price-container').append(clone)
+        })
+        $('body').on('click', '.delete-selling-price-btn', function() {
+            $(this).closest('.selling-prices').remove()
         })
         $('#form').one('submit', function(e) {
             e.preventDefault()
