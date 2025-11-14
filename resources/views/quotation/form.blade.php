@@ -125,7 +125,7 @@
                 unitPrice.push($(this).find('input[name="unit_price[]"]').val())
                 promo.push($(this).find('select[name="promotion[]"]').val())
                 discount.push($(this).find('input[name="discount"]').val())
-                remark.push($(this).find('textarea[name="remark"]').val())
+                remark.push($(this).find('.ql-editor').html())
                 overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
                 if ($(this).find('select[name="product_serial_no[]"]').val() == null || $(this).find(
                         'select[name="product_serial_no[]"]').val().length <= 0) {
