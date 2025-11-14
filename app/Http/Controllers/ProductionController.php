@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\ProductionExport;
 use App\Models\Approval;
 use App\Models\Branch;
+use App\Models\CustomizeProduct;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
 use App\Models\Milestone;
@@ -31,6 +32,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
@@ -74,6 +76,18 @@ class ProductionController extends Controller
 
     public function index(Request $req)
     {
+        // $prod = Production::latest()->first();
+        // $approval = Approval::create([
+        //     'object_type' => Production::class,
+        //     'object_id' => $prod->id,
+        //     'status' => Approval::STATUS_PENDING_APPROVAL,
+        //     'data' => json_encode([
+        //         'type' => 'r&d',
+        //         'description' => 'The production ('.$prod->sku.') is completed for product ('.$prod->customizeProduct->sku.')',
+        //     ]),
+        // ]);
+        // (new Branch)->assign(Approval::class, $approval->id);
+
         Session::remove('production-type');
         if ($req->type != null) {
             Session::put('production-type', $req->type);
@@ -159,8 +173,8 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
-                5 => 'start_date',
-                6 => 'due_date',
+                6 => 'start_date',
+                7 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -183,9 +197,10 @@ class ProductionController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'type' => $record->typeToHumanRead($record->type),
                 'old_production_sku' => $record->oldProduction->sku ?? null,
                 'factory' => $record->product->category->fromFactory->name ?? null,
-                'product_serial_no' => $record->productChild->sku ?? null,
+                'product_serial_no' => $record->type == Production::TYPE_RND ? $record->customizeProduct->sku : $record->productChild->sku ?? null,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,
@@ -198,6 +213,9 @@ class ProductionController extends Controller
                 'can_delete' => hasPermission('production.delete'),
                 'can_duplicate' => ! $is_production_worker,
                 'can_view' => ! $is_production_worker || $record->status == Production::STATUS_DOING,
+                'can_edit_customize_product' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit'),
+                'customize_product_id' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit') ? $record->customizeProduct->id : null,
+                'rejected_reason' => $record->status == Production::STATUS_REJECTED ? $record->getLatestApprovalRejectedReason() : null,
             ];
         }
 
@@ -257,6 +275,8 @@ class ProductionController extends Controller
             'production' => $production,
             'selected_product' => $production->product,
             'production_milestone_material_previews' => $production_milestone_material_previews,
+            'customize_product' => $production->customizeProduct,
+            'customize_product_material_use' => MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first(),
         ]);
     }
 
@@ -360,12 +380,13 @@ class ProductionController extends Controller
             'start_date' => 'required',
             'due_date' => 'required',
             'status' => 'required',
-            'product' => 'required',
+            'type' => 'required|in:1,2',
+            'product' => 'required_unless:type,2',
             'order' => 'nullable',
             'priority' => 'nullable',
             'assign' => 'required',
             'assign.*' => 'exists:users,id',
-            'material_use_product' => 'required',
+            'material_use_product' => 'required_unless:type,2',
         ];
         // Validate request
         $req->validate($rules, [], [
@@ -378,6 +399,24 @@ class ProductionController extends Controller
 
             $now = now();
 
+            // If type is R&D, then auto create new customize product
+            if ($req->type == Production::TYPE_RND && $production == null) {
+                $cp = CustomizeProduct::create([
+                    'sku' => generateSku(CustomizeProduct::SKU_PREFIX),
+                ]);
+                (new Branch)->assign(CustomizeProduct::class, $cp->id);
+
+                $req->merge([
+                    'product' => $cp->id,
+                ]);
+
+                // Create B.O.M Material Use for customize product
+                $mu = MaterialUse::create([
+                    'customize_product_id' => $cp->id,
+                ]);
+                (new Branch)->assign(MaterialUse::class, $mu->id);
+            }
+            
             if ($production->id == null) {
                 $production = $this->prod::create([
                     'sku' => $this->prod->generateSku(),
@@ -389,6 +428,7 @@ class ProductionController extends Controller
                     'start_date' => $req->start_date,
                     'due_date' => $req->due_date,
                     'status' => $req->status,
+                    'type' => $req->type,
                     'priority_id' => $req->priority,
                     'old_production' => $req->modify_from == null ? null : $req->modify_from,
                 ]);
@@ -399,7 +439,7 @@ class ProductionController extends Controller
                 }
                 (new Branch)->assign(Production::class, $production->id);
             } else {
-                $production->update([
+                $req_data = [
                     'product_id' => $req->product,
                     'sale_id' => $req->order,
                     'name' => $req->name,
@@ -408,12 +448,22 @@ class ProductionController extends Controller
                     'start_date' => $req->start_date,
                     'due_date' => $req->due_date,
                     'status' => $req->status,
+                    'type' => $req->type,
                     'priority_id' => $req->priority,
-                ]);
+                ];
+                if ($production->type == Production::TYPE_RND) {
+                    unset($req_data['product_id']);
+                }
+                $production->update($req_data);
             }
-            $this->product::where('id', $req->product)->update([
-                'in_production' => true,
-            ]);
+            if ($req->type != Production::TYPE_RND) {
+                $this->product::where('id', $req->product)->update([
+                    'in_production' => true,
+                ]);
+            } else if (isset($cp)) {
+                $cp->production_id = $production->id;
+                $cp->save();
+            }
 
             // Assign
             $this->userProd::where('production_id', $production->id)->whereNotIn('user_id', $req->assign ?? [])->delete();
@@ -429,7 +479,7 @@ class ProductionController extends Controller
 
             // Milestone
             $old_ms_ids = [];
-            $milestones = json_decode($req->material_use_product);
+            $milestones = $req->material_use_product == null ? [] : json_decode($req->material_use_product);
             for ($i = 0; $i < count($milestones); $i++) {
                 if (! $milestones[$i]->is_custom) {
                     $old_ms_ids[] = $milestones[$i]->id;
@@ -437,81 +487,84 @@ class ProductionController extends Controller
             }
 
             // Create milestone
-            $this->prodMs::where('production_id', $production->id)->whereNotIn('milestone_id', $old_ms_ids ?? [])->delete();
-            for ($k = 0; $k < count((array) $milestones); $k++) {
-                for ($i = 0; $i < count($milestones); $i++) {
-                    if ($milestones[$i]->is_custom == true || $k + 1 != $milestones[$i]->sequence) { // Allow for non-custom and sequence matched
-                        continue;
-                    }
-
-                    $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $milestones[$i]->id)->first();
-                    if ($ms == null) {
-                        $ms = $this->prodMs::create([
-                            'production_id' => $production->id,
-                            'milestone_id' => $milestones[$i]->id,
-                        ]);
-                    }
-                    $ms_id = $this->prodMs::where('production_id', $ms->production_id)->where('milestone_id', $ms->milestone_id)->value('id');
-
-                    $ms_material_use_product = [];
-                    if ($milestones[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
-                        for ($j = 0; $j < count($milestones[$i]->value); $j++) {
-                            $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
-
-                            $ms_material_use_product[] = [
-                                'production_milestone_id' => $ms_id,
-                                'product_id' => $milestones[$i]->value[$j],
-                                'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
-                                'created_at' => $now,
-                            ];
-                        }
-                    }
-                    if ($ms == null) {
-                        if (count($ms_material_use_product) > 0) {
-                            $this->prodMsMaterialPreview::insert($ms_material_use_product);
-                        }
-                    } else {
-                        $this->prodMsMaterialPreview::where('production_milestone_id', $ms_id)->delete();
-                        $this->prodMsMaterialPreview::insert($ms_material_use_product);
-                    }
-                    break;
+            $submitted_production_ms_ids = $this->prodMs::where('production_id', $production->id)->whereNotNull('submitted_at')->pluck('milestone_id')->toArray();
+            $this->prodMs::where('production_id', $production->id)->whereNotIn('milestone_id', $old_ms_ids ?? [])->whereNull('submitted_at')->delete();
+            for ($i = 0; $i < count($milestones); $i++) {
+                if ($milestones[$i]->is_custom == true || in_array($milestones[$i]->id, $submitted_production_ms_ids)) { // Allow for non-custom, sequence matched, not submitted
+                    continue;
                 }
-            }
 
-            // Create custom milestones
-            for ($k = 0; $k < count((array) $milestones); $k++) {
-                for ($i = 0; $i < count($milestones); $i++) {
-                    if ($milestones[$i]->is_custom == false || $k + 1 != $milestones[$i]->sequence) { // Allow for custom and sequence matched
-                        continue;
-                    }
-
-                    $custom_ms = $this->ms::create([
-                        'type' => $this->ms::TYPE_PRODUCTION,
-                        'name' => $milestones[$i]->title,
-                        'is_custom' => true,
-                        'product_id' => $req->product,
-                    ]);
-                    $pms = $this->prodMs::create([
+                $ms = $this->prodMs::where('production_id', $production->id)->where('milestone_id', $milestones[$i]->id)->first();
+                if ($ms == null) {
+                    $ms = $this->prodMs::create([
                         'production_id' => $production->id,
-                        'milestone_id' => $custom_ms->id,
+                        'milestone_id' => $milestones[$i]->id,
+                        'sequence' => $milestones[$i]->sequence,
                     ]);
+                } else {
+                    $ms->sequence = $milestones[$i]->sequence;
+                    $ms->save();
+                }
 
-                    $ms_material_use_product = [];
+                $ms_id = $this->prodMs::where('production_id', $ms->production_id)->where('milestone_id', $ms->milestone_id)->value('id');
+
+                $ms_material_use_product = [];
+                if ($milestones[$i]->id == ($ms == null ? $ms_id : $ms->milestone_id)) {
                     for ($j = 0; $j < count($milestones[$i]->value); $j++) {
                         $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
 
                         $ms_material_use_product[] = [
-                            'production_milestone_id' => $this->prodMs::where('production_id', $production->id)->where('milestone_id', $custom_ms->id)->value('id'),
+                            'production_milestone_id' => $ms_id,
                             'product_id' => $milestones[$i]->value[$j],
                             'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
                             'created_at' => $now,
                         ];
                     }
-
+                }
+                if ($ms == null) {
                     if (count($ms_material_use_product) > 0) {
                         $this->prodMsMaterialPreview::insert($ms_material_use_product);
                     }
-                    break;
+                } else {
+                    $this->prodMsMaterialPreview::where('production_milestone_id', $ms_id)->delete();
+                    $this->prodMsMaterialPreview::insert($ms_material_use_product);
+                }
+            }
+
+            // Create custom milestones
+            for ($i = 0; $i < count($milestones); $i++) {
+                if ($milestones[$i]->is_custom == false) { // Allow for custom
+                    continue;
+                }
+                Log::info('Creating custom milestone: ' . $milestones[$i]->title);
+
+                $custom_ms = $this->ms::create([
+                    'type' => $this->ms::TYPE_PRODUCTION,
+                    'name' => $milestones[$i]->title,
+                    'is_custom' => true,
+                    'product_id' => $req->product,
+                ]);
+                (new Branch)->assign(Milestone::class, $custom_ms->id);
+                $this->prodMs::create([
+                    'production_id' => $production->id,
+                    'milestone_id' => $custom_ms->id,
+                    'sequence' => $milestones[$i]->sequence,
+                ]);
+
+                $ms_material_use_product = [];
+                for ($j = 0; $j < count($milestones[$i]->value); $j++) {
+                    $material_use_id = MaterialUse::where('product_id', $req->product)->value('id');
+
+                    $ms_material_use_product[] = [
+                        'production_milestone_id' => $this->prodMs::where('production_id', $production->id)->where('milestone_id', $custom_ms->id)->value('id'),
+                        'product_id' => $milestones[$i]->value[$j],
+                        'qty' => MaterialUseProduct::where('material_use_id', $material_use_id)->where('product_id', $milestones[$i]->value[$j])->value('qty'),
+                        'created_at' => $now,
+                    ];
+                }
+
+                if (count($ms_material_use_product) > 0) {
+                    $this->prodMsMaterialPreview::insert($ms_material_use_product);
                 }
             }
             // Create Raw Material Request
@@ -639,8 +692,34 @@ class ProductionController extends Controller
 
             $prod = $this->prod::where('id', $pm->production_id)->first();
             if ($this->prod->getProgress($prod) >= 100) {
-                $prod->status = $this->prod::STATUS_COMPLETED;
-                $prod->save();
+                // Create approval if type is R&D
+                if ($prod->type == Production::TYPE_RND) {
+                    $prod->status = Production::STATUS_PENDING_APPROVAL;
+                    $prod->save();
+
+                    $approval = Approval::create([
+                        'object_type' => Production::class,
+                        'object_id' => $prod->id,
+                        'status' => Approval::STATUS_PENDING_APPROVAL,
+                        'data' => json_encode([
+                            'type' => 'r&d',
+                            'description' => 'The R&D production is completed for product ('.$prod->customizeProduct->sku.')',
+                        ]),
+                    ]);
+                    (new Branch)->assign(Approval::class, $approval->id);
+                } else if ($prod->type == Production::TYPE_NORMAL) { // Send notification if type is normal
+                    $prod->status = $this->prod::STATUS_COMPLETED;
+                    $prod->save();
+
+                    $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
+                        $q->whereIn('name', ['notification.production_complete_notification']);
+                    })->get();
+    
+                    Notification::send($receivers, new ProductionCompleteNotification([
+                        'production_id' => $prod->id,
+                        'desc' => 'The production ('.$prod->sku.') is completed for product '.$prod->product->sku.' ('.$prod->productChild->sku.')',
+                    ]));
+                }
             } elseif ($this->prod->getProgress($prod) > 0) {
                 $prod->status = $this->prod::STATUS_DOING;
                 $prod->save();
@@ -749,24 +828,10 @@ class ProductionController extends Controller
                 ]);
             }
 
-            if ($this->prod->getProgress($prod) >= 100) {
-                // Send notification
-                $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
-                    $q->whereIn('name', ['notification.production_complete_notification']);
-                })->get();
-
-                Notification::send($receivers, new ProductionCompleteNotification([
-                    'production_id' => $prod->id,
-                    'desc' => 'The production ('.$prod->sku.') is completed for product '.$prod->product->sku.' ('.$prod->productChild->sku.')',
-                ]));
-            }
-
             DB::commit();
 
             return Response::json([
                 'result' => true,
-                // 'status' => $this->prod->statusToHumanRead($prod->status),
-                // 'progress' => $this->prod->getProgress($prod),
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -892,13 +957,14 @@ class ProductionController extends Controller
     public function generateBarcode(Request $req)
     {
         $production_ids = explode(',', $req->productionIds);
-        $product_child_ids = Production::whereIn('id', $production_ids)->whereNotNull('product_child_id')->pluck('product_child_id');
+        $product_child_ids = Production::where('type', Production::TYPE_NORMAL)->whereIn('id', $production_ids)->whereNotNull('product_child_id')->pluck('product_child_id');
         $product_children = ProductChild::whereIn('id', $product_child_ids)->get();
 
         $data = [
             'barcode' => [],
             'renderer' => [],
         ];
+        // Normal
         for ($i = 0; $i < count($product_children); $i++) {
             $prod = $product_children[$i]->parent;
 
@@ -917,9 +983,49 @@ class ProductionController extends Controller
             $data['weight'][] = $prod->weight;
             $data['refrigerant'][] = $prod->refrigerant;
             $data['power_input'][] = $prod->power_input;
+            $data['power_consumption'][] = $prod->power_consumption;
             $data['voltage_frequency'][] = $prod->voltage_frequency;
             $data['standard_features'][] = $prod->standard_features;
         }
+
+        // R&D
+        $product_child_ids = Production::where('type', Production::TYPE_RND)->whereIn('id', $production_ids)->pluck('product_id');
+        $customize_products = CustomizeProduct::whereIn('id', $product_child_ids)->get();
+
+        for ($i = 0; $i < count($customize_products); $i++) {
+            $barcode = (new TypeCode128)->getBarcode($customize_products[$i]->sku);
+            $renderer = new DynamicHtmlRenderer;
+    
+            // Format dimensions to remove .00
+            $length = $customize_products[$i]->length ?? 0;
+            $width = $customize_products[$i]->width ?? 0;
+            $height = $customize_products[$i]->height ?? 0;
+    
+            if (str_contains($length, '.00')) {
+                $length = (int) $length;
+            }
+            if (str_contains($width, '.00')) {
+                $width = (int) $width;
+            }
+            if (str_contains($height, '.00')) {
+                $height = (int) $height;
+            }
+    
+            $data['barcode'][] = $customize_products[$i]->sku;
+            $data['renderer'][] = $renderer->render($barcode);
+            $data['product_brand'][] = $customize_products[$i]->production->product->brand ?? 1;
+            $data['product_name'][] = $customize_products[$i]->production->name ?? '';
+            $data['product_code'][] = $customize_products[$i]->production->sku ?? '';
+            $data['dimension'][] = $length . ' x ' . $width . ' x ' . $height . 'MM';
+            $data['capacity'][] = $customize_products[$i]->capacity;
+            $data['weight'][] = $customize_products[$i]->weight;
+            $data['refrigerant'][] = $customize_products[$i]->refrigerant;
+            $data['power_input'][] = $customize_products[$i]->power_input;
+            $data['power_consumption'][] = $customize_products[$i]->power_consumption;
+            $data['voltage_frequency'][] = $customize_products[$i]->voltage_frequency;
+            $data['standard_features'][] = $customize_products[$i]->standard_features;
+        }
+
         $pdf = Pdf::loadView('inventory.barcode', $data);
         $pdf->setPaper('A4', 'letter');
 

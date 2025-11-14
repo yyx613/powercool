@@ -49,12 +49,14 @@
             <tr style="width: 100%;">
                 <td colspan="2" style="padding: 0 0 10px 0;">
                     <table style="width: 100%; border: solid 1px black; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 40%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">PRODUCT CODE:</td>
-                            <td
-                                style="width: 60%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
-                                {{ $product_code[$i] ?? '' }}</td>
-                        </tr>
+                        @if (!str_contains($barcode[$i], 'CP-'))
+                            <tr>
+                                <td style="width: 40%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">PRODUCT CODE:</td>
+                                <td
+                                    style="width: 60%; border: solid 1px black; padding: 0px 5px; font-size: 10px; text-align: right;">
+                                    {{ $product_code[$i] ?? '' }}</td>
+                            </tr>
+                        @endif
                         <tr>
                             <td style="width: 50%; border: solid 1px black; padding: 0px 5px; font-size: 10px;">SERIAL
                                 NO:</td>

@@ -215,6 +215,17 @@ class SaleController extends Controller
                 }
             }
 
+            // Rejected reason
+            $rejected_reason = null;
+            if ($record->status == Sale::STATUS_APPROVAL_REJECTED) {
+                $rejected_reason = Approval::where('object_type', Sale::class)
+                    ->where('object_id', $record->id)
+                    ->where('status', Approval::STATUS_REJECTED)
+                    ->where('data', 'like', '%is_quo%')
+                    ->orderBy('id', 'desc')
+                    ->value('reject_remark');
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -248,6 +259,7 @@ class SaleController extends Controller
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
                     'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
                 ],
+                'rejected_reason' => $rejected_reason
             ];
         }
 
@@ -2620,6 +2632,7 @@ class SaleController extends Controller
                                     'qty' => $accessoryData['qty'] ?? 1,
                                     'selling_price_id' => $accessoryData['selling_price'] ?? null,
                                     'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                    'is_foc' => $accessoryData['is_foc'] ?? false,
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ];
@@ -2631,6 +2644,7 @@ class SaleController extends Controller
                                     'qty' => 1,
                                     'selling_price_id' => null,
                                     'override_selling_price' => null,
+                                    'is_foc' => false,
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ];
@@ -2682,6 +2696,7 @@ class SaleController extends Controller
                                         'qty' => $accessoryData['qty'] ?? 1,
                                         'selling_price_id' => $accessoryData['selling_price'] ?? null,
                                         'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                        'is_foc' => $accessoryData['is_foc'] ?? false,
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                     ];
@@ -2693,6 +2708,7 @@ class SaleController extends Controller
                                         'qty' => 1,
                                         'selling_price_id' => null,
                                         'override_selling_price' => null,
+                                        'is_foc' => false,
                                         'created_at' => now(),
                                         'updated_at' => now(),
                                     ];
@@ -2942,6 +2958,7 @@ class SaleController extends Controller
                 $spr = SaleProductionRequest::create([
                     'sale_id' => $saleProduct->sale->id,
                     'product_id' => $saleProduct->product->id,
+                    'remark' => $req->remark ?? null,
                 ]);
                 (new Branch)->assign(SaleProductionRequest::class, $spr->id);
                 // Accessory
@@ -2951,6 +2968,7 @@ class SaleController extends Controller
                         $spr = SaleProductionRequest::create([
                             'sale_id' => $saleProduct->sale->id,
                             'product_id' => $accessories[$j]->accessory_id,
+                            'remark' => $req->remark ?? null,
                         ]);
                         (new Branch)->assign(SaleProductionRequest::class, $spr->id);
                     }

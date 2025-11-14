@@ -137,3 +137,7 @@
     min-height: 100px;
     border: none!important;
 }
+.ql-editor {
+    text-transform: uppercase;
+}
+  

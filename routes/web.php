@@ -6,6 +6,7 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CashSaleController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\CustomizeProductController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DealerController;
@@ -358,6 +359,13 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/transfer-to-factory', 'transferToFactory')->name('transfer_to_factory');
         Route::get('/transfer-to-warehouse', 'transferToWarehouse')->name('transfer_to_warehouse');
     });
+    Route::controller(CustomizeProductController::class)->prefix('customize')->name('customize.')->middleware(['can:inventory.customize.view'])->group(function () { // Product
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/generate-barcode/{customizeProduct}', 'generateBarcode')->name('generate_barcode');
+        Route::get('/edit/{customizeProduct}', 'edit')->name('edit')->middleware(['can:inventory.customize.edit']);
+        Route::post('/update/{customizeProduct}', 'update')->name('update');
+    });
     // Raw Material Request
     Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material_request.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -429,7 +437,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/upsert-payment-details', 'upsertPayDetails')->name('upsert_pay_details');
             // Route::post('/upsert-delivery-schedule', 'upsertDelSchedule')->name('upsert_delivery_schedule');
             Route::get('/get-products/{sale}', 'getProducts')->name('get_products');
-            Route::get('/to-sale-production-request/{saleProduct}', 'toSaleProductionReqeust')->name('to_sale_production_request');
+            Route::post('/to-sale-production-request/{saleProduct}', 'toSaleProductionReqeust')->name('to_sale_production_request');
         });
 
         // Delivery Order

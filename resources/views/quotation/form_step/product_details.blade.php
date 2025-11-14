@@ -79,7 +79,7 @@
             </div>
             <x-app.message.error id="qty_err" />
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col selling-price-container" >
             <x-app.input.label id="selling_price" class="mb-1">{{ __('Selling Price') }} <span
                     class="text-xs mt-1 hidden" id="price-hint">(<span id="min_price"></span> - <span
                         id="max_price"></span>)</span></x-app.input.label>
@@ -166,9 +166,14 @@
                     </div>
                     <div class="flex flex-col" style="flex: 1;">
                         <x-app.input.label class="mb-1">{{ __('Quantity') }}</x-app.input.label>
-                        <x-app.input.input name="accessory_qty[]" type="number" class="int-input" min="1" value="1" />
+                        <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                            <x-app.input.input name="accessory_qty[]" type="number" class="int-input border-none flex-1" min="1" value="1" />
+                            <button type="button"
+                                class="accessory-foc-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[is-foc=false]:bg-slate-100 data-[is-foc=true]:bg-emerald-100"
+                                data-is-foc="false">FOC</button>
+                        </div>
                     </div>
-                    <div class="flex flex-col" style="flex: 1;">
+                    <div class="flex flex-col selling-price-container" style="flex: 1;">
                         <x-app.input.label class="mb-1">{{ __('Selling Price') }} <span class="text-xs hidden accessory-price-hint">(<span class="accessory-min-price"></span> - <span class="accessory-max-price"></span>)</span></x-app.input.label>
                         <x-app.input.select name="accessory_selling_price[]" class="accessory-price-select">
                             <option value="">{{ __('Select price') }}</option>
@@ -178,6 +183,7 @@
                         <x-app.input.label class="mb-1">{{ __('Override Selling Price') }}</x-app.input.label>
                         <x-app.input.input name="accessory_override_price[]" type="number" step="0.01" class="decimal-input" />
                     </div>
+                    <input type="hidden" name="accessory_is_foc[]" value="0" class="accessory-is-foc-input" />
                     <div class="flex items-end justify-center" style="min-width: 40px;">
                         <button type="button" class="remove-accessory-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                             <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -523,6 +529,7 @@
 
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('disabled', false)
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('aria-disabled', false)
+                $(`.items[data-id="${id}"] .selling-price-container .select2-container`).removeClass('!bg-[#eeeeee]')
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', false)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', false)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).parent().attr('aria-disabled',
@@ -533,6 +540,7 @@
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).val(null).trigger('change')
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('disabled', true)
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).attr('aria-disabled', true)
+                $(`.items[data-id="${id}"] .selling-price-container .select2-container`).addClass('!bg-[#eeeeee]')
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).val(null).trigger('keyup')
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('disabled', true)
                 $(`.items[data-id="${id}"] input[name="override_selling_price"]`).attr('aria-disabled', true)
@@ -540,6 +548,37 @@
                     true)
             }
         })
+
+        // Accessory FOC button handler
+        $('body').on('click', '.accessory-foc-btns', function() {
+            let isFoc = $(this).attr('data-is-foc')
+            let $accessoryRow = $(this).closest('.accessory-row')
+
+            if (isFoc === 'true') {
+                $(this).attr('data-is-foc', false)
+                $accessoryRow.find('.accessory-is-foc-input').val(0)
+
+                $accessoryRow.find('select[name="accessory_selling_price[]"]').attr('disabled', false)
+                $accessoryRow.find('select[name="accessory_selling_price[]"]').attr('aria-disabled', false)
+                $accessoryRow.find('.selling-price-container .select2-container').removeClass('!bg-[#eeeeee]')
+                $accessoryRow.find('input[name="accessory_override_price[]"]').attr('disabled', false)
+                $accessoryRow.find('input[name="accessory_override_price[]"]').attr('aria-disabled', false)
+                $accessoryRow.find('input[name="accessory_override_price[]"]').parent().attr('aria-disabled', false)
+            } else {
+                $(this).attr('data-is-foc', true)
+                $accessoryRow.find('.accessory-is-foc-input').val(1)
+
+                $accessoryRow.find('select[name="accessory_selling_price[]"]').val(null).trigger('change')
+                $accessoryRow.find('select[name="accessory_selling_price[]"]').attr('disabled', true)
+                $accessoryRow.find('select[name="accessory_selling_price[]"]').attr('aria-disabled', true)
+                $accessoryRow.find('.selling-price-container .select2-container').addClass('!bg-[#eeeeee]')
+                $accessoryRow.find('input[name="accessory_override_price[]"]').val(null)
+                $accessoryRow.find('input[name="accessory_override_price[]"]').attr('disabled', true)
+                $accessoryRow.find('input[name="accessory_override_price[]"]').attr('aria-disabled', true)
+                $accessoryRow.find('input[name="accessory_override_price[]"]').parent().attr('aria-disabled', true)
+            }
+        })
+
         $('body').on('click', '.sst-btns', function() {
             let withSST = $(this).attr('data-with-sst')
             let id = $(this).data('id')
@@ -902,6 +941,8 @@
                 }
                 // Append selling prices & make it select2
                 $priceSelect.empty();
+                // Add default option
+                $priceSelect.append('<option value="">{{ __('Select price') }}</option>');
                 for (let j = 0; j < product.selling_prices.length; j++) {
                     let opt = new Option(
                         `${product.selling_prices[j].name} (RM ${priceFormat(product.selling_prices[j].price)})`,
@@ -995,6 +1036,14 @@
                 // Populate override price
                 if (accessory.override_selling_price) {
                     $newRow.find('input[name="accessory_override_price[]"]').val(accessory.override_selling_price);
+                }
+
+                // Set FOC state
+                if (accessory.is_foc == 1) {
+                    $newRow.find('.accessory-is-foc-input').val(1);
+                    setTimeout(() => {
+                        $newRow.find('.accessory-foc-btns').trigger('click')
+                    }, 100);
                 }
 
                 $container.append($newRow);
@@ -1132,6 +1181,14 @@
                     quill.root.innerHTML = existingContent;
                 }
             }, 100);
+
+            var toolbar = quill.container.previousSibling;
+            toolbar.querySelector('button.ql-bold').setAttribute('title', 'Bold');
+            toolbar.querySelector('button.ql-italic').setAttribute('title', 'Italic');
+            toolbar.querySelector('button.ql-underline').setAttribute('title', 'Underline');
+            toolbar.querySelector('button.ql-list[aria-label="list: ordered"]').setAttribute('title', 'Ordered List');
+            toolbar.querySelector('button.ql-list[aria-label="list: bullet"]').setAttribute('title', 'Bullet List');
+            toolbar.querySelector('button.ql-image').setAttribute('title', 'Insert Image');
         }
     </script>
 @endpush

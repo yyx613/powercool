@@ -47,7 +47,7 @@
     @include('production_request.list_sale_production_request')
 
     <x-app.modal.delete-modal />
-    <x-app.modal.to-material-use-modal />
+    {{-- <x-app.modal.to-material-use-modal /> --}}
 @endsection
 
 @push('scripts')

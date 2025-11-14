@@ -44,6 +44,9 @@ class PermissionSeeder extends Seeder
             'inventory.raw_material.edit',
             'inventory.raw_material.delete',
 
+            'inventory.customize.view',
+            'inventory.customize.edit',
+
             'inventory.raw_material_request.view',
 
             'grn.view',

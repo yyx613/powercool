@@ -422,7 +422,12 @@ class ApprovalController extends Controller
             }
             // Complete Production 
             if (get_class($obj) == Production::class) {
-                $obj->status = Production::STATUS_DOING;
+                $data = json_decode($approval->data);
+                if (isset($data->type) && $data->type == 'r&d') {
+                    $obj->status = Production::STATUS_REJECTED;
+                } else {
+                    $obj->status = Production::STATUS_DOING;
+                }
                 $obj->save();
             }
             // Sale Production Request 

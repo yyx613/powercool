@@ -174,7 +174,7 @@
                 @endif
                 <x-app.message.error id="product_serial_no_err" />
             </div>
-            <div class="flex flex-col flex-1 col-span-2">
+            <div class="flex flex-col flex-1 col-span-4">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                 <textarea name="remark" id="remark" class="hidden"></textarea>
                 <x-app.message.error id="remark_err" />
@@ -917,6 +917,14 @@
                     quill.root.innerHTML = existingContent;
                 }
             }, 100);
+
+            var toolbar = quill.container.previousSibling;
+            toolbar.querySelector('button.ql-bold').setAttribute('title', 'Bold');
+            toolbar.querySelector('button.ql-italic').setAttribute('title', 'Italic');
+            toolbar.querySelector('button.ql-underline').setAttribute('title', 'Underline');
+            toolbar.querySelector('button.ql-list[aria-label="list: ordered"]').setAttribute('title', 'Ordered List');
+            toolbar.querySelector('button.ql-list[aria-label="list: bullet"]').setAttribute('title', 'Bullet List');
+            toolbar.querySelector('button.ql-image').setAttribute('title', 'Insert Image');
         }
     </script>
 @endpush

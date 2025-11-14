@@ -88,6 +88,7 @@
         SPR_ID = @json($spr_id ?? null); // Sale Production Request Id
         FOR_PID = @json($for_pid ?? null);
         MATERIAL = @json($material ?? null);
+        CUSTOMIZE_PRODUCT = @json($customize_product ?? null);
         PRODUCT_AND_MATERIALS = @json($product_and_materials ?? null);
         FORM_CAN_SUBMIT = true
         ITEMS_COUNT = 0
@@ -101,6 +102,7 @@
                 extraDataParams: {
                     type: 'product',
                 },
+                disabled: MATERIAL != null,
                 processResults: function(data) {
                     return {
                         results: $.map(data.products, function(item) {
@@ -113,10 +115,17 @@
                 }
             })
             $(`#product-container .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
+            if (MATERIAL != null) {
+                $(`#product-container .select2-container`).addClass('!bg-[#eee]')
+            }
 
             if (MATERIAL != null) {
-                let opt = new Option(
-                    `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                if (CUSTOMIZE_PRODUCT != null) {
+                    var opt = new Option(CUSTOMIZE_PRODUCT.sku, CUSTOMIZE_PRODUCT.id, true, true);
+                } else {
+                    var opt = new Option(
+                        `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                }
                 $('select[name="product"]').append(opt)
 
                 for (let i = 0; i < MATERIAL.materials.length; i++) {
@@ -133,6 +142,12 @@
                         true)
                 }
                 if (MATERIAL.materials.length <= 0) $('#add-item-btn').click()
+            } if (SPR_ID != null && FOR_PID != null){ 
+                let opt = new Option(
+                    `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                $('select[name="product"]').append(opt)
+
+                $('#add-material-btn').click()
             } else {
                 $('#add-material-btn').click()
             }
@@ -233,6 +248,7 @@
                     'material': material,
                     'qty': qty,
                     'active': active,
+                    'type': CUSTOMIZE_PRODUCT != null ? 'customize-product' : 'product',
                 },
                 success: function(res) {
                     MATERIAL = res.material

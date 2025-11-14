@@ -8,6 +8,9 @@
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
             url="{{ route('production.index') }}">{{ !isset($is_duplicate) && isset($production) ? __('Edit Production - ') . $production->sku : __('Create Production') }}</x-app.page-title>
+        @if (isset($production) && $production->type == 2)
+            <a href="{{ route('material_use.edit', ['material' => $customize_product_material_use->id]) }}" class="text-sm bg-yellow-400 p-2 rounded hover:bg-yellow-300 hover:shadow transition-all duration-300">{{ __('Go to B.O.M Material Use') }}</a>
+        @endif
     </div>
     @include('components.app.alert.parent')
     <form
@@ -57,6 +60,15 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="type" class="mb-1">{{ __('Type') }} <span
+                            class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="type" id="type" :hasError="$errors->has('type')">
+                        <option value="1" @selected(old('type', isset($production) ? $production->type : 1) == 1)>{{ __('Normal') }}</option>
+                        <option value="2" @selected(old('type', isset($production) ? $production->type : null) == 2)>{{ __('R&D') }}</option>
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('type')" class="mt-2" />
+                </div>
                 <div class="flex flex-col" id="product-select-container">
                     <x-app.input.label class="mb-1">{{ __('Product') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -104,7 +116,7 @@
                     <x-input-error :messages="$errors->get('assign')" class="mt-2" />
                 </div>
                 {{-- Milestones --}}
-                <div class="flex flex-col col-span-2 md:col-span-3">
+                <div class="flex flex-col col-span-2 md:col-span-3" id="milestone-container">
                     <x-app.input.label class="mb-2">{{ __('Milestones') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="custom_milestone" class="mb-2"
@@ -150,7 +162,7 @@
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
-            @if (!isset($production) || (isset($is_duplicate) && $is_duplicate == true))
+            @if (!isset($production) || (isset($production) && $production->type == 2) || (isset($is_duplicate) && $is_duplicate == true))
                 <div class="mt-8 flex justify-end">
                     <x-app.button.submit type="button" id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
@@ -176,6 +188,8 @@
         CUSTOM_MILESTONE_IDX = 0
         IS_DUPLICATE = @json($is_duplicate ?? null);
         SELECTED_PRODUCT = @json($selected_product ?? null);
+        CUSTOMIZE_PRODUCT_MATERIAL_USE = @json($customize_product_material_use ?? null);
+        console.log(CUSTOMIZE_PRODUCT_MATERIAL_USE)
 
         $(document).ready(function() {
             // Build product select2 ajax
@@ -200,17 +214,16 @@
             buildRemarkQuillEditor()
 
             // Start Init
-            if (PRODUCTION == null) {
-                var elem = document.getElementById('milestone-list-container')
-                var sortable = Sortable.create(elem, {
-                    onEnd: function(evt) {
-                        sortMilestone()
-                    },
-                })
-            } else if (PRODUCTION != null) {
+            var elem = document.getElementById('milestone-list-container') // Sortable milestone list
+            var sortable = Sortable.create(elem, {
+                onEnd: function(evt) {
+                    sortMilestone()
+                },
+            })
+            if (PRODUCTION != null) {
                 INIT_EDIT = true
 
-                if (SELECTED_PRODUCT != null) {
+                if (PRODUCTION.type != 2 && SELECTED_PRODUCT != null) {
                     let opt = new Option(SELECTED_PRODUCT.model_name, SELECTED_PRODUCT.id, true, true)
                     $('select[name="product"]').append(opt)
                 }
@@ -223,8 +236,7 @@
                     $(clone).find('.ms-name').attr('for', `ms-${element.id}`)
                     $(clone).find('.first-half input').attr('id', `ms-${element.id}`)
                     $(clone).find('.first-half input').attr('checked', true)
-                    $(clone).find('.second-half input').attr('data-milestone-id',
-                        `ms-${element.id}`)
+                    $(clone).find('.second-half input').attr('data-milestone-id', `ms-${element.id}`)
                     $(clone).attr('data-milestone-id', `ms-${element.id}`)
                     $(clone).removeClass('hidden')
                     $(clone).addClass('milestones')
@@ -265,6 +277,9 @@
             }
             if (PRODUCTION != null || DEFAULT_PRODUCT != true) {
                 $('select[name="product"]').trigger('change')
+            }
+            if (CUSTOMIZE_PRODUCT_MATERIAL_USE != null) {
+                MATERIAL_USE = [CUSTOMIZE_PRODUCT_MATERIAL_USE]
             }
         })
 
@@ -308,7 +323,7 @@
 
                 MILESTONES[`cms-${CUSTOM_MILESTONE_IDX}`] = {
                     material_use_product_ids: [],
-                    sequence: $('.milestones').length + 1,
+                    sequence: $('.milestones').length,
                     is_checked: false,
                     title: val,
                 }
@@ -324,24 +339,6 @@
                 MILESTONES[milestoneId].is_checked = false
             }
         })
-        // $('select[name="order"]').on('change', function() {
-        //     let val = $(this).val()
-
-        //     if (SALES != null) {
-        //         for (let i = 0; i < SALES.length; i++) {
-        //             if (SALES[i].id == val) {
-        //                 // $('select[name="product"] option').not(':first').remove()
-
-        //                 for (let j = 0; j < SALES[i].products.length; j++) {
-        //                     let opt = new Option(SALES[i].products[j].product.model_name, SALES[i].products[j].product.id)
-        //                     $('select[name="product"]').append(opt)
-        //                 }
-        //                 $('select[name="product"]').val(null).trigger('change')
-        //                 break
-        //             }
-        //         }
-        //     }
-        // })
         $('#submit-btn').on('click', function() {
             CAN_SUBMIT = true
 
@@ -383,6 +380,25 @@
 
             getProductMilestones(productId, IS_DUPLICATE == true ? false : (INIT_EDIT ? true : false))
         })
+
+        // Toggle product field and asterisks based on production type (Normal vs R&D)
+        $('select[name="type"]').on('change', function() {
+            let typeValue = $(this).val()
+            let productContainer = $('#product-select-container')
+            let milestoneAsterisk = $('#milestone-container label span.text-red-500')
+
+            if (typeValue == '2') { // R&D type
+                productContainer.addClass('hidden')
+                milestoneAsterisk.addClass('hidden')
+            } else { // Normal type
+                productContainer.removeClass('hidden')
+                milestoneAsterisk.removeClass('hidden')
+            }
+        })
+
+        // Set initial state on page load
+        $('select[name="type"]').trigger('change')
+
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {
             let milestoneId = $(this).data('milestone-id')
@@ -598,9 +614,15 @@
                 modules: {
                     toolbar: {
                         container: [
-                            [{ 'header': [1, 2, false] }],
+                            [{
+                                'header': [1, 2, false]
+                            }],
                             ['bold', 'italic', 'underline'],
-                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            [{
+                                'list': 'ordered'
+                            }, {
+                                'list': 'bullet'
+                            }],
                             ['image'],
                         ],
                         handlers: {
@@ -638,22 +660,26 @@
 
                                     // Upload to server
                                     $.ajax({
-                                        url: '{{ route("quill.upload.image") }}',
+                                        url: '{{ route('quill.upload.image') }}',
                                         type: 'POST',
                                         data: formData,
                                         processData: false,
                                         contentType: false,
                                         headers: {
-                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                                'content')
                                         },
                                         success: function(response) {
                                             quill.deleteText(range.index, 19);
-                                            quill.insertEmbed(range.index, 'image', response.url);
+                                            quill.insertEmbed(range.index, 'image', response
+                                                .url);
                                             quill.setSelection(range.index + 1);
                                             // Sync to textarea
                                             var html = quill.root.innerHTML;
-                                            var isEmpty = html === '<p><br></p>' || quill.getText().trim() === '';
-                                            $(`textarea[name="remark"]`).val(isEmpty ? '' : html);
+                                            var isEmpty = html === '<p><br></p>' || quill
+                                                .getText().trim() === '';
+                                            $(`textarea[name="remark"]`).val(isEmpty ? '' :
+                                                html);
                                         },
                                         error: function(xhr) {
                                             quill.deleteText(range.index, 19);
