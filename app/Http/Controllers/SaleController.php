@@ -2620,7 +2620,7 @@ class SaleController extends Controller
                     }
                     // Accessory
                     SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
-                    if ($req->accessory != null && $req->accessory[$i] != null) {
+                    if ($req->accessory != null && isset($req->accessory[$i]) && $req->accessory[$i] != null) {
                         $data = [];
                         for ($j=0; $j < count($req->accessory[$i]); $j++) {
                             $accessoryData = $req->accessory[$i][$j];
