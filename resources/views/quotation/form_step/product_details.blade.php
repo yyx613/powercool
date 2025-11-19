@@ -437,12 +437,14 @@
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
             let val = $(this).val()
             let product = PRODUCTS[productId]
+            console.log(product)
 
             $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val(null)
 
             if (product != undefined) {
                 for (let j = 0; j < product.selling_prices.length; j++) {
                     if (product.selling_prices[j].id == val) {
+                        console.log('eer')
                         $(`.items[data-id="${idx}"] input[name="unit_price[]"]`).val(product.selling_prices[j]
                             .price)
                         break
@@ -490,6 +492,7 @@
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(product.model_desc)
                 // Append selling prices
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).empty()
+                $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append('<option value="">{{ __('Select price') }}</option>')
                 for (let j = 0; j < product.selling_prices.length; j++) {
                     let opt = new Option(
                         `${product.selling_prices[j].name} (RM ${priceFormat(product.selling_prices[j].price)})`,

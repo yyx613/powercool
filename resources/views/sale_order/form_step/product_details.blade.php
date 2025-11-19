@@ -538,6 +538,8 @@
                     }
                     $(`.items[data-id="${id}"] input[name="product_desc"]`).val(prod.model_desc)
                     // Append selling prices
+                    $(`.items[data-id="${id}"] select[name="selling_price[]"]`).empty()
+                    $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append('<option value="">{{ __('Select price') }}</option>')
                     for (let j = 0; j < prod.selling_prices.length; j++) {
                         let opt = new Option(
                             `${prod.selling_prices[j].name} (RM ${priceFormat(prod.selling_prices[j].price)})`,
