@@ -38,6 +38,7 @@ use App\Http\Controllers\RawMaterialRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SaleEnquiryController;
 use App\Http\Controllers\SalesAgentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingController;
@@ -380,6 +381,19 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/material/complete/{rmqm}', 'materialComplete')->name('material_complete');
         Route::get('/material/incomplete/{rmqm}', 'materialIncomplete')->name('material_incomplete');
     });
+    // Sale Enquiry
+    Route::controller(SaleEnquiryController::class)->prefix('sale-enquiry')->name('sale_enquiry.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/get-products', 'getProducts')->name('get_products');
+        Route::get('/view/{enquiry}', 'view')->name('view')->middleware(['can:sale_enquiry.view']);
+        Route::get('/view-get-data', 'getViewData')->name('view_get_data')->middleware(['can:sale_enquiry.view']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:sale_enquiry.create']);
+        Route::post('/store', 'store')->name('store')->middleware(['can:sale_enquiry.create']);
+        Route::get('/edit/{enquiry}', 'edit')->name('edit')->middleware(['can:sale_enquiry.edit']);
+        Route::post('/update/{enquiry}', 'update')->name('update')->middleware(['can:sale_enquiry.edit']);
+        Route::get('/delete/{enquiry}', 'delete')->name('delete')->middleware(['can:sale_enquiry.delete']);
+    });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
         // Quotation
@@ -591,6 +605,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
         Route::post('/add-milestone/{production}', 'addMilestone')->name('add_milestone');
         Route::get('/search-product', 'searchProduct')->name('search_product');
+        Route::post('/update-factory/{production}', 'updateFactory')->name('update_factory');
     });
     // Production Finish Good
     Route::controller(ProductController::class)->prefix('production-finish-good')->name('production_finish_good.')->middleware(['can:production_material.view'])->group(function () {

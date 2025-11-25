@@ -87,6 +87,7 @@ class ViewServiceProvider extends ServiceProvider
                 'service_reminder' => [],
                 'service_history' => [],
                 'warranty' => [],
+                'sale_enquiry' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
                 'sale.cash_sale' => [],
@@ -144,6 +145,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['service_history'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'warranty')) {
                     array_push($permissions_group['warranty'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'sale_enquiry')) {
+                    array_push($permissions_group['sale_enquiry'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.quotation')) {
                     array_push($permissions_group['sale.quotation'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.sale_order')) {
@@ -483,6 +486,16 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('users', $users);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
+        });
+        View::composer(['sale_enquiry.form'], function (ViewView $view) {
+            // Get users for assigned staff dropdown (sales role)
+            $users = User::whereHas('roles', function ($q) {
+                $q->where('id', Role::SALE);
+            })->orderBy('name', 'asc')->get();
+
+            $view->with([
+                'users' => $users,
+            ]);
         });
         View::composer(['components.app.language-selector'], function (ViewView $view) {
             $languages = [

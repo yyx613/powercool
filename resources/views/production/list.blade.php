@@ -128,6 +128,7 @@
         INIT_LOAD = true;
         DEFAULT_PAGE = @json($default_page ?? null);
         IS_SALES_ONLY = @json($is_sales_only ?? null);
+        FACTORIES = @json($factories ?? []);
 
         // Datatable
         var dt = new DataTable('#data-table', {
@@ -233,7 +234,31 @@
                     "targets": 4,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data
+                        if (data == null) return null
+                        
+                        let factoryOpts = ''
+                        for (let i = 0; i < FACTORIES.length; i++) {
+                            factoryOpts += `<option value="${FACTORIES[i].id}" ${FACTORIES[i].id == data.id ? 'selected' : ''}>${FACTORIES[i].name}</option>`
+                        }
+
+                        return `
+                            <div class="factory-container" data-id="${row.id}">
+                                <div class="flex items-center gap-2 edit-container">
+                                    <span>${data.name}</span>
+                                    <button type="button" class="rounded p-1 border border-blue-500 edit-factory-btns" title="{{ __('Edit Factory') }}">
+                                        <svg class="h-4 w-4 fill-blue-500" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M22.853,1.148a3.626,3.626,0,0,0-5.124,0L1.465,17.412A4.968,4.968,0,0,0,0,20.947V23a1,1,0,0,0,1,1H3.053a4.966,4.966,0,0,0,3.535-1.464L22.853,6.271A3.626,3.626,0,0,0,22.853,1.148ZM5.174,21.122A3.022,3.022,0,0,1,3.053,22H2V20.947a2.98,2.98,0,0,1,.879-2.121L15.222,6.483l2.3,2.3ZM21.438,4.857,18.932,7.364l-2.3-2.295,2.507-2.507a1.623,1.623,0,1,1,2.295,2.3Z"/></svg>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 hidden confirm-container">
+                                    <select name="factory_id" class="p-1 w-32 rounded border border-gray-300 text-sm">
+                                        ${factoryOpts}
+                                    </select>
+                                    <button type="button" class="rounded p-1 border border-green-500 confirm-factory-btns" title="{{ __('Confirm') }}">
+                                        <svg class="h-4 w-4 fill-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512"><g id="_01_align_center" data-name="01 align center"><path d="M7.8,20.53a2.99,2.99,0,0,1-2.121-.877L.086,14.061,1.5,12.646l5.593,5.593a1,1,0,0,0,1.414,0L22.5,4.246,23.914,5.66,9.921,19.653A2.99,2.99,0,0,1,7.8,20.53Z"/></g></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `
                     }
                 },
                 {
@@ -326,7 +351,7 @@
                             </div>`
                         }
 
-                        return `<div class="flex items-center justify-end gap-x-2 px-2">
+                        return `<div class="flex flex-wrap w-32 items-center justify-end gap-2 px-2">
                             ${
                                 row.status == 4 ?
                                 `
@@ -457,6 +482,41 @@
             } else {
                 $('body').find('.row-checkbox').prop('checked', false)
             }
+        })
+        $('body').on('click', '.edit-factory-btns', function() {
+            let id = $(this).closest('.factory-container').data('id')
+
+            $(`.factory-container[data-id="${id}"] .edit-container`).addClass('hidden')
+            $(`.factory-container[data-id="${id}"] .confirm-container`).removeClass('hidden')
+        })
+        $('body').on('click', '.confirm-factory-btns', function() {
+            let id = $(this).closest('.factory-container').data('id')
+            let val = $(`.factory-container[data-id="${id}"] select`).val()
+            let url = '{{ config('app.url') }}'
+            url = `${url}/production/update-factory/${id}`
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'POST',
+                data: {
+                    factory: val
+                },
+                success: function(res) {
+                    for (let i = 0; i < FACTORIES.length; i++) {
+                        if (FACTORIES[i].id == val) {
+                            $(`.factory-container[data-id="${id}"] span`).text(FACTORIES[i].name)
+                            $(`.factory-container[data-id="${id}"] select option[value="${FACTORIES[i].id}"]`).attr('selected')
+                            
+                            $(`.factory-container[data-id="${id}"] .edit-container`).removeClass('hidden')
+                            $(`.factory-container[data-id="${id}"] .confirm-container`).addClass('hidden')
+                            break
+                        }
+                    }
+                },
+            });
         })
     </script>
 @endpush

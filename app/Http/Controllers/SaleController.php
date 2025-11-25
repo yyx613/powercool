@@ -30,6 +30,7 @@ use App\Models\ProductChild;
 use App\Models\ProjectType;
 use App\Models\Role;
 use App\Models\Sale;
+use App\Models\SaleEnquiry;
 use App\Models\SaleOrderCancellation;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
@@ -1208,7 +1209,27 @@ class SaleController extends Controller
         $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
         while ($loop) {
-            if ($req->has('pc')) {
+            if ($req->has('enq') || $req->has('skip_enq')) {
+                // Step 7: Sale Enquiry Selection (optional)
+                if ($req->has('enq') && $req->enq != null) {
+                    Session::put('convert_sale_enquiry_id', $req->enq);
+                } else {
+                    Session::put('convert_sale_enquiry_id', null);
+                }
+
+                // Proceed to convert
+                return redirect()->route('sale_order.convert_to_delivery_order')->with([
+                    'delivery_address' => Session::get('convert_delivery_address')
+                ]);
+            } elseif ($req->has('delivery_address')) {
+                $step = 7;
+
+                Session::put('convert_delivery_address', $req->delivery_address);
+                
+                $sale_enquiries = SaleEnquiry::latest()->get();
+
+                $loop = false;
+            } elseif ($req->has('pc')) {
                 $errors = [];
                 $pc_inputs = json_decode($req->pc, true);
 
@@ -1250,12 +1271,14 @@ class SaleController extends Controller
                 $allowed_spc_ids = array_merge(array_diff($spc_ids, $dopc_ids), array_diff($dopc_ids, $spc_ids));
 
                 // Get sp
+                $selected_so = explode(',', Session::get('convert_sale_order_id'));
                 $products = collect();
                 $sales = Sale::where('type', Sale::TYPE_SO)
                     ->where('is_draft', false)
                     ->whereNotNull('payment_method')
                     ->whereNotIn('id', $this->getSaleInProduction())
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
+                    ->whereIn('id', $selected_so)
                     ->where(function ($q) {
                         $q->where(function ($q) {
                             $q->whereHas('products.product', function ($q) {
@@ -1484,6 +1507,7 @@ class SaleController extends Controller
             'terms' => $terms ?? [],
             'allowed_spc_ids' => $allowed_spc_ids ?? [],
             'delivery_addresses' => $delivery_addresses ?? [],
+            'sale_enquiries' => $sale_enquiries ?? [],
             'selected_customer' => $selected_customer ?? null,
             'selected_salesperson' => $selected_salesperson ?? null,
             'selected_term' => $selected_term ?? null,
@@ -1493,6 +1517,9 @@ class SaleController extends Controller
 
     public function converToDeliveryOrder(Request $req)
     {
+        $req->merge([
+            'delivery_address' => Session::get('convert_delivery_address')
+        ]);
         $sp_ids = [];
         $pc_inputs = Session::get('convert_product_children');
 
@@ -1644,6 +1671,13 @@ class SaleController extends Controller
                 $current_do_ids[] = $do->id;
 
                 $sale_orders[$i]->convert_to = implode(',', $current_do_ids);
+
+                // Link sale enquiry if selected
+                $sale_enquiry_id = Session::get('convert_sale_enquiry_id');
+                if ($sale_enquiry_id != null) {
+                    $sale_orders[$i]->sale_enquiry_id = $sale_enquiry_id;
+                }
+
                 $sale_orders[$i]->save();
 
                 if ($approval_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_method, $by_pass_payment_method_ids)) {

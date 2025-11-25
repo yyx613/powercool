@@ -141,6 +141,18 @@
                 </div>
                 <h6 class="font-semibold mx-4">Delivery Address Selection</h6>
             </div>
+            <!-- Step 7 -->
+            <div
+                class="min-w-[250px] flex-1 lg:flex-0 flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 7 ? 'opacity-25' : '' }}">
+                <div class="bg-yellow-300 p-2 flex items-center justify-center h-full">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm-1.132,15.497l4.921-8.603c.312-.625,.279-1.352-.088-1.946-.367-.594-1.003-.948-1.701-.948h-5c-.552,0-1,.447-1,1s.448,1,1,1l5.026-.05-4.895,8.553c-.274,.479-.108,1.091,.372,1.365,.157,.09,.327,.132,.496,.132,.347,0,.684-.181,.869-.503Z" />
+                    </svg>
+                </div>
+                <h6 class="font-semibold mx-4">Sale Enquiry Selection (Optional)</h6>
+            </div>
         </div>
         <!-- Steps Content -->
         <div class="flex-[3]">
@@ -310,8 +322,8 @@
                                                             }
                                                         @endphp
                                                     @endforeach
-                                                    <span
-                                                        class="text-sm"><span class="assigned" data-available-count="{{ $available_count }}">{{ $available_count }}</span>/{{ count($pro->children) }}
+                                                    <span class="text-sm"><span class="assigned"
+                                                            data-available-count="{{ $available_count }}">{{ $available_count }}</span>/{{ count($pro->children) }}
                                                         {{ __('Assigned') }}</span>
                                                 </div>
                                             </div>
@@ -340,7 +352,8 @@
                                                     <div class="border-b border-gray-300 w-1/3 mr-4">
                                                         <input type="text"
                                                             class="text-sm border-none py-1 px-1.5 w-full focus:border-transparent focus:ring-0"
-                                                            placeholder="{{ __('Enter remark') }}" data-pc-id="{{ $pc->id }}">
+                                                            placeholder="{{ __('Enter remark') }}"
+                                                            data-pc-id="{{ $pc->id }}">
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -387,9 +400,63 @@
                             @endforeach
                         </div>
                         <div class="flex justify-end mt-8">
-                            <a href="{{ route('sale_order.convert_to_delivery_order') }}"
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
                                 id="step-6-confirm-btn">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
+                                    data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                                    <path
+                                        d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
+                                </svg>
+                                <span class="text-sm font-semibold">Confirm</span>
+                            </a>
+                        </div>
+                    @else
+                        @include('components.app.no-data')
+                    @endif
+                </div>
+            @endif
+            <!-- Step 7 -->
+            @if ($step == 7)
+                <div class="flex flex-col h-full">
+                    <div class="mb-4">
+                        <h5 class="text-md font-semibold">Select a sale enquiry to link (Optional)</h5>
+                        <p class="text-xs text-gray-600 mt-1">You can skip this step if you don't want to link a sale
+                            enquiry</p>
+                    </div>
+                    @if (count($sale_enquiries) > 0)
+                        <div class="flex flex-col gap-4 flex-1 overflow-y-auto">
+                            @foreach ($sale_enquiries as $enq)
+                                <div class="p-3 rounded-md border border-slate-200 hover:border-slate-400 transition-colors cursor-pointer sale-enquiry"
+                                    data-id="{{ $enq->id }}">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold">{{ $enq->sku }}</p>
+                                            <p class="text-xs text-gray-600 mt-1">{{ $enq->name }} -
+                                                {{ $enq->phone_number }}</p>
+                                            @if ($enq->email)
+                                                <p class="text-xs text-gray-600">{{ $enq->email }}</p>
+                                            @endif
+                                            @if ($enq->product)
+                                                <p class="text-xs text-gray-600 mt-1">Product: {{ $enq->product->sku }} -
+                                                    {{ $enq->product->model_name }}</p>
+                                            @endif
+                                            <p class="text-xs text-gray-500 mt-1">Enquiry Date:
+                                                {{ $enq->enquiry_date->format('d/m/Y H:i') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="flex justify-between mt-8">
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
+                                class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
+                                id="step-7-skip-btn">
+                                <span class="text-sm font-semibold">Skip</span>
+                            </a>
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
+                                class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
+                                id="step-7-confirm-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                     viewBox="0 0 24 24" width="512" height="512">
                                     <g>
@@ -403,7 +470,14 @@
                             </a>
                         </div>
                     @else
-                        @include('components.app.no-data')
+                        <div class="flex flex-col items-center justify-center flex-1">
+                            <p class="text-sm text-gray-600 mb-4">No matching sale enquiries found</p>
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
+                                class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
+                                id="step-7-skip-btn-no-data">
+                                <span class="text-sm font-semibold">Skip & Continue</span>
+                            </a>
+                        </div>
                     @endif
                 </div>
             @endif
@@ -540,6 +614,39 @@
 
             window.location.href = url
         })
+
+        // Step 7: Sale Enquiry Selection
+        $('.sale-enquiry').on('click', function() {
+            $('.sale-enquiry').removeAttr('data-selected')
+            $('.sale-enquiry').removeClass('!border-black')
+
+            $(this).attr('data-selected', true)
+            $(this).addClass('!border-black')
+
+            $('#step-7-confirm-btn').addClass('bg-green-200')
+            $('#step-7-confirm-btn').removeClass('bg-slate-100')
+        })
+        $('#step-7-confirm-btn').on('click', function(e) {
+            e.preventDefault()
+
+            let selectedEnquiryId = $('.sale-enquiry[data-selected="true"]').data('id')
+
+            if (selectedEnquiryId === undefined) return
+
+            let url = $(this).attr('href')
+            url = `${url}?enq=${selectedEnquiryId}`
+
+            window.location.href = url
+        })
+        $('#step-7-skip-btn, #step-7-skip-btn-no-data').on('click', function(e) {
+            e.preventDefault()
+
+            let url = $(this).attr('href')
+            url = `${url}?skip_enq=1`
+
+            window.location.href = url
+        })
+
         $('#previous-page-btn').on('click', function() {
             history.back()
         })
@@ -564,7 +671,9 @@
 
                             SELECTED_SALE_PRODUCTS[spId].push({
                                 sale_product_child_id: $(this).attr('id'),
-                                remark: $(`.products[data-sp-id=${spId}] input[type="text"][data-pc-id=${$(this).attr('id')}]`).val()
+                                remark: $(
+                                    `.products[data-sp-id=${spId}] input[type="text"][data-pc-id=${$(this).attr('id')}]`
+                                ).val()
                             })
                         }
                     })

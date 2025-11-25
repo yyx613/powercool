@@ -69,6 +69,11 @@ class Production extends Model
         return $this->belongsTo(Priority::class);
     }
 
+    public function factory()
+    {
+        return $this->belongsTo(Factory::class);
+    }
+
     public function sale()
     {
         return $this->belongsTo(Sale::class);
