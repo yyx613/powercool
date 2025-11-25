@@ -6,6 +6,7 @@ use App\Exports\ProductionExport;
 use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\CustomizeProduct;
+use App\Models\Factory;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
 use App\Models\Milestone;
@@ -76,18 +77,6 @@ class ProductionController extends Controller
 
     public function index(Request $req)
     {
-        // $prod = Production::latest()->first();
-        // $approval = Approval::create([
-        //     'object_type' => Production::class,
-        //     'object_id' => $prod->id,
-        //     'status' => Approval::STATUS_PENDING_APPROVAL,
-        //     'data' => json_encode([
-        //         'type' => 'r&d',
-        //         'description' => 'The production ('.$prod->sku.') is completed for product ('.$prod->customizeProduct->sku.')',
-        //     ]),
-        // ]);
-        // (new Branch)->assign(Approval::class, $approval->id);
-
         Session::remove('production-type');
         if ($req->type != null) {
             Session::put('production-type', $req->type);
@@ -126,6 +115,7 @@ class ProductionController extends Controller
             'can_start_task' => $can_start_task,
             'is_sales_only' => isSalesOnly(),
             'default_page' => $page ?? null,
+            'factories' => Factory::get(),
         ]);
     }
 
@@ -199,7 +189,7 @@ class ProductionController extends Controller
                 'sku' => $record->sku,
                 'type' => $record->typeToHumanRead($record->type),
                 'old_production_sku' => $record->oldProduction->sku ?? null,
-                'factory' => $record->product->category->fromFactory->name ?? null,
+                'factory' => $record->factory,
                 'product_serial_no' => $record->type == Production::TYPE_RND ? $record->customizeProduct->sku : $record->productChild->sku ?? null,
                 'name' => $record->name,
                 'start_date' => $record->start_date,
@@ -418,6 +408,14 @@ class ProductionController extends Controller
             }
             
             if ($production->id == null) {
+                $factory_id = null;
+                if ($req->product != null) {
+                    $product = Product::find($req->product)->first();
+                    if ($product != null) {
+                        $factory_id = $product->category->fromFactory->id;
+                    }
+                }
+
                 $production = $this->prod::create([
                     'sku' => $this->prod->generateSku(),
                     'product_id' => $req->product,
@@ -430,6 +428,7 @@ class ProductionController extends Controller
                     'status' => $req->status,
                     'type' => $req->type,
                     'priority_id' => $req->priority,
+                    'factory_id' => $factory_id,
                     'old_production' => $req->modify_from == null ? null : $req->modify_from,
                 ]);
                 if ($req->modify_from != null) {
@@ -1154,5 +1153,21 @@ class ProductionController extends Controller
         return Response::json([
             'products' => $products,
         ], HttpFoundationResponse::HTTP_OK);
+    }
+
+    public function updateFactory(Request $req, Production $production) {
+        try {
+            $production->factory_id = $req->factory;
+            $production->save();
+            
+            return Response::json([
+                'result' => true,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -72,6 +72,11 @@ class Sale extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function saleEnquiry()
+    {
+        return $this->belongsTo(SaleEnquiry::class, 'sale_enquiry_id');
+    }
+
     public function platform()
     {
         return $this->belongsTo(Platform::class, 'platform_id');
