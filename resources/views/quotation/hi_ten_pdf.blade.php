@@ -271,7 +271,7 @@
                     {{ $sale->open_until }}</td>
                 <td
                     style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black;">
-                    Total RM{{ number_format($total - $total_tax, 2) }}</td>
+                    Total RM{{ number_format($total + $total_tax, 2) }}</td>
             </tr>
             <tr>
                 <td style="font-size: 12px; font-weight: 700;">Payment Method</td>
