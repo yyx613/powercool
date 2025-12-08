@@ -316,7 +316,7 @@
                 <td style="padding: 0px 0 0 0;">
                     <p
                         style="margin: 0; font-size: 12px; font-weight: 700; border: solid 1px black; padding: 2.5px 10px; text-align: right;">
-                        {{ number_format($total - $total_tax, 2) }}</p>
+                        {{ number_format($total + $total_tax, 2) }}</p>
                 </td>
             </tr>
         </table>

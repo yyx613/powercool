@@ -275,7 +275,7 @@
                     {{ priceToWord(number_format($total, 2)) }}</td>
                 <td
                     style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; width: 15%; vertical-align: text-top;">
-                    Total {{ number_format($total - $total_tax, 2) }}</td>
+                    Total {{ number_format($total + $total_tax, 2) }}</td>
             </tr>
         </table>
 

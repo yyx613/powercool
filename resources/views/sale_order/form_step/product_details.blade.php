@@ -854,7 +854,7 @@
             $('#promo-amount').text(priceFormat(overallPromoAmount))
             $('#discount-amount').text(priceFormat(overallDiscountAmount))
             $('#tax-amount').text(priceFormat(overallTaxAmount))
-            $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount - overallTaxAmount))
+            $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount + overallTaxAmount))
         }
 
         function buildWarrantyPeriodSelect2(item_id) {
