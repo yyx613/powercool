@@ -580,6 +580,14 @@
                 $accessoryRow.find('input[name="accessory_override_price[]"]').attr('aria-disabled', true)
                 $accessoryRow.find('input[name="accessory_override_price[]"]').parent().attr('aria-disabled', true)
             }
+            calSummary()
+        })
+        // Live update for accessory fields
+        $('body').on('keyup', 'input[name="accessory_qty[]"], input[name="accessory_override_price[]"]', function() {
+            calSummary()
+        })
+        $('body').on('change', 'select[name="accessory_selling_price[]"]', function() {
+            calSummary()
         })
 
         $('body').on('click', '.sst-btns', function() {
@@ -710,6 +718,29 @@
                 }
                 let subtotal = (qty * unitPrice)
 
+                // Calculate accessory subtotal for this product item
+                $(this).find('.accessories-container .accessory-row').each(function() {
+                    let isFoc = $(this).find('.accessory-is-foc-input').val()
+                    if (isFoc == '1') return // Skip FOC accessories
+
+                    let accQty = $(this).find('input[name="accessory_qty[]"]').val() || 0
+                    let accOverridePrice = $(this).find('input[name="accessory_override_price[]"]').val()
+                    let accSellingPriceSelect = $(this).find('select[name="accessory_selling_price[]"]')
+
+                    let accUnitPrice = 0
+                    if (accOverridePrice != '' && accOverridePrice != null) {
+                        accUnitPrice = parseFloat(accOverridePrice)
+                    } else {
+                        // Extract price from selected option text (format: "Name (RM X.XX)")
+                        let selectedText = accSellingPriceSelect.find('option:selected').text()
+                        let priceMatch = selectedText.match(/RM\s*([\d,]+\.?\d*)/)
+                        if (priceMatch) {
+                            accUnitPrice = parseFloat(priceMatch[1].replace(',', ''))
+                        }
+                    }
+
+                    subtotal += (accQty * accUnitPrice)
+                })
 
                 // Apply Promotion
                 let promoAmount = 0
