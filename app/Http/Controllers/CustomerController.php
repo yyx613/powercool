@@ -64,6 +64,18 @@ class CustomerController extends Controller
     {
         $records = new Customer;
 
+        // Get customer IDs that have pending delete approvals
+        $pendingDeleteCustomerIds = Approval::where('object_type', Customer::class)
+            ->where('status', Approval::STATUS_PENDING_APPROVAL)
+            ->where('data', 'like', '%"is_delete":true%')
+            ->pluck('object_id')
+            ->toArray();
+
+        // Exclude customers with pending delete approvals
+        if (!empty($pendingDeleteCustomerIds)) {
+            $records = $records->whereNotIn('id', $pendingDeleteCustomerIds);
+        }
+
         if ($req->find_customer != null && $req->find_customer != '') {
             $records = $records->withoutGlobalScope(BranchScope::class);
         } else if (isSalesOnly()) {
