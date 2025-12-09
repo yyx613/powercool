@@ -441,7 +441,7 @@ class SaleController extends Controller
         $pdf = Pdf::loadView('quotation.'.(isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
-            'products' => $sale->products,
+            'products' => $sale->products->load('accessories.product'),
             'customer' => $sale->customer,
             'billing_address' => CustomerLocation::where('id', $sale->billing_address_id)->first(),
             'delivery_address' => CustomerLocation::where('id', $sale->delivery_address_id)->first(),
@@ -1175,7 +1175,7 @@ class SaleController extends Controller
             $is_proforma_invoice = true;
         }
 
-        $sps = $sale->products()->withTrashed()->get();
+        $sps = $sale->products()->withTrashed()->with('accessories.product')->get();
         for ($i = 0; $i < count($sps); $i++) {
             $pc_ids = $sps[$i]->children->pluck('product_children_id');
             $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
