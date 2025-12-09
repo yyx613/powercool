@@ -72,5 +72,6 @@ class Kernel extends HttpKernel
         'notification' => NotificationMiddleware::class,
         'approval' => ApprovalMiddleware::class,
         'productionWorkerCanAccess' => ProductionWorkerCanAccessMiddleware::class,
+        'branch.selected' => \App\Http\Middleware\EnsureBranchSelected::class,
     ];
 }
