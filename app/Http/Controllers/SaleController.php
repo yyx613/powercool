@@ -1886,8 +1886,8 @@ class SaleController extends Controller
             'override_selling_price' => 'override selling price',
         ]);
 
-        // Check duplicate serial no is selected (upsertProDetails)
-        if (isset($req->product_serial_no)) {
+        // Check duplicate serial no is selected (upsertProDetails) - only for SO and Cash Sale
+        if (($req->type == 'so' || $req->type == 'cash-sale') && isset($req->product_serial_no)) {
             // Check if sales role is trying to submit serial numbers
             if (in_array(Role::SALE, getUserRoleId(Auth::user()))) {
                 return Response::json([
