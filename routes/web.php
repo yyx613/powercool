@@ -3,6 +3,7 @@
 use App\Http\Controllers\AgentDebtorController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\BranchSelectionController;
 use App\Http\Controllers\CashSaleController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
@@ -232,6 +233,12 @@ Route::get('/change-language/{lang}', function ($locale) {
 })->name('change_language');
 
 Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(function () {
+    // Branch Selection
+    Route::controller(BranchSelectionController::class)->prefix('branch')->name('branch.')->group(function () {
+        Route::get('/select', 'index')->name('select');
+        Route::post('/select', 'store')->name('store');
+    });
+
     // Quill Editor Image Upload
     Route::post('/quill/upload-image', [QuillController::class, 'uploadImage'])->name('quill.upload.image');
 
@@ -268,8 +275,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(InventoryController::class)->prefix('inventory-category')->name('inventory_category.')->middleware(['can:inventory.category.view'])->group(function () { // Inventory Category
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.category.create']);
-        Route::get('/edit/{cat}', 'edit')->name('edit')->middleware(['can:inventory.category.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.category.create', 'branch.selected']);
+        Route::get('/edit/{cat}', 'edit')->name('edit')->middleware(['can:inventory.category.edit', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{cat}', 'delete')->name('delete')->middleware(['can:inventory.category.delete']);
 
@@ -285,8 +292,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(InventoryController::class)->prefix('inventory-type')->name('inventory_type.')->group(function () { // Inventory Category
         Route::get('/', 'indexType')->name('index');
         Route::get('/get-data', 'getDataType')->name('get_data');
-        Route::get('/create', 'createType')->name('create');
-        Route::get('/edit/{type}', 'editType')->name('edit');
+        Route::get('/create', 'createType')->name('create')->middleware('branch.selected');
+        Route::get('/edit/{type}', 'editType')->name('edit')->middleware('branch.selected');
         Route::post('/upsert', 'upsertType')->name('upsert');
         Route::get('/delete/{type}', 'deleteType')->name('delete');
     });
@@ -320,8 +327,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:grn.create']);
-        Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:grn.create', 'branch.selected']);
+        Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
@@ -331,8 +338,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data')->withoutMiddleware(['can:inventory.view']);
-        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.product.create']);
-        Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.product.create', 'branch.selected']);
+        Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.product.delete']);
         Route::get('/view/{product}', 'view')->name('view');
@@ -347,8 +354,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.raw_material.create']);
-        Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.raw_material.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:inventory.raw_material.create', 'branch.selected']);
+        Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.raw_material.edit', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.raw_material.delete']);
         Route::get('/view/{product}', 'view')->name('view');
@@ -371,7 +378,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material_request.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create');
+        Route::get('/create', 'create')->name('create')->middleware('branch.selected');
         Route::post('/store', 'store')->name('store');
         Route::get('/view/{rmqm}/logs', 'viewLogs')->name('view_logs');
         Route::get('/view-logs-get-data', 'viewLogsGetData')->name('view_logs_get_data');
@@ -400,8 +407,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::prefix('quotation')->name('quotation.')->middleware(['can:sale.quotation.view'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create')->middleware(['can:sale.quotation.create']);
-            Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['can:sale.quotation.edit']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:sale.quotation.create', 'branch.selected']);
+            Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['can:sale.quotation.edit', 'branch.selected']);
             Route::get('/view/{sale}', 'edit')->name('view');
             Route::get('/cancel/{sale}', 'cancel')->name('cancel');
             Route::get('/reuse/{sale}', 'reuse')->name('reuse');
@@ -428,7 +435,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/', 'indexSaleOrder')->name('index');
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
             // Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
-            Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit']);
+            Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit', 'branch.selected']);
             Route::get('/edit/payment/{sale}', 'editSaleOrder')->name('edit_payment')->middleware(['can:sale.sale_order.edit']);
             Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
             Route::get('/cancel', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
@@ -544,8 +551,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(CashSaleController::class)->prefix('cash-sale')->name('cash_sale.')->middleware(['can:sale.cash_sale.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:sale.cash_sale.create']);
-        Route::get('/edit/{sale}', 'edit')->name('edit');
+        Route::get('/create', 'create')->name('create')->middleware(['can:sale.cash_sale.create', 'branch.selected']);
+        Route::get('/edit/{sale}', 'edit')->name('edit')->middleware(['branch.selected']);
         Route::get('/pdf/{sale}', 'pdf')->name('pdf');
         Route::get('/cancel/{sale}', 'cancel')->name('cancel');
     });
@@ -563,27 +570,27 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
 
         Route::prefix('driver')->name('driver.')->middleware(['can:task_driver.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task_driver.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_driver.create', 'branch.selected']);
             Route::post('/store', 'driverStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_driver.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_driver.edit', 'branch.selected']);
             Route::post('/update/{task}', 'driverUpdate')->name('update');
         });
         Route::prefix('technician')->name('technician.')->middleware(['can:task_technician.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task_technician.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_technician.create', 'branch.selected']);
             Route::post('/store', 'technicianStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_technician.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_technician.edit', 'branch.selected']);
             Route::post('/update/{task}', 'technicianUpdate')->name('update');
             Route::get('/generate-report', 'generate99ServiceReport')->name('generate_99_servie_report');
         });
         Route::prefix('sale')->name('sale.')->middleware(['can:task_sale.view'])->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('/create', 'create')->name('create')->middleware(['can:task_sale.create']);
+            Route::get('/create', 'create')->name('create')->middleware(['can:task_sale.create', 'branch.selected']);
             Route::post('/store', 'saleStore')->name('store');
             Route::get('/view/{task}', 'view')->name('view');
-            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_sale.edit']);
+            Route::get('/edit/{task}', 'edit')->name('edit')->middleware(['can:task_sale.edit', 'branch.selected']);
             Route::post('/update/{task}', 'saleUpdate')->name('update');
         });
     });
@@ -591,8 +598,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(ProductionController::class)->prefix('production')->name('production.')->middleware(['can:production.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:production.create']);
-        Route::get('/edit/{production}', 'edit')->name('edit')->middleware(['can:production.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:production.create', 'branch.selected']);
+        Route::get('/edit/{production}', 'edit')->name('edit')->middleware(['can:production.edit', 'branch.selected']);
         Route::get('/view/{production}', 'view')->name('view')->middleware('productionWorkerCanAccess');
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
@@ -625,7 +632,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/get-data-sale-production-request', 'getDataSaleProductionRequest')->name('get_data_sale_production_request');
-        Route::get('/create', 'create')->name('create');
+        Route::get('/create', 'create')->name('create')->middleware('branch.selected');
         Route::post('/store', 'store')->name('store');
         Route::get('/view/{pq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
@@ -639,9 +646,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(TicketController::class)->prefix('ticket')->name('ticket.')->middleware(['can:ticket.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:ticket.create']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:ticket.create', 'branch.selected']);
         Route::post('/store', 'store')->name('store');
-        Route::get('/edit/{ticket}', 'edit')->name('edit')->middleware(['can:ticket.edit']);
+        Route::get('/edit/{ticket}', 'edit')->name('edit')->middleware(['can:ticket.edit', 'branch.selected']);
         Route::post('/update/{ticket}', 'update')->name('update');
         Route::get('/delete/{ticket}', 'delete')->name('delete')->middleware(['can:ticket.delete']);
         Route::get('/get-products', 'getProducts')->name('get_products');
@@ -695,8 +702,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(CustomerController::class)->prefix('customer')->name('customer.')->middleware(['can:customer.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:customer.create']);
-        Route::get('/edit/{customer}', 'edit')->name('edit')->middleware(['can:customer.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:customer.create', 'branch.selected']);
+        Route::get('/edit/{customer}', 'edit')->name('edit')->middleware(['can:customer.edit', 'branch.selected']);
         Route::get('/view/{customer}', 'view')->name('view');
         Route::get('/delete/{customer}', 'delete')->name('delete')->middleware(['can:customer.delete']);
         Route::post('/upsert-info', 'upsertInfo')->name('upsert_info')->withoutMiddleware(['can:customer.view', 'auth', 'select_lang']);
@@ -711,8 +718,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(SupplierController::class)->prefix('supplier')->name('supplier.')->middleware(['can:supplier.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:supplier.create']);
-        Route::get('/edit/{supplier}', 'edit')->name('edit')->middleware(['can:supplier.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:supplier.create', 'branch.selected']);
+        Route::get('/edit/{supplier}', 'edit')->name('edit')->middleware(['can:supplier.edit', 'branch.selected']);
         Route::get('/delete/{supplier}', 'delete')->name('delete')->middleware(['can:supplier.delete']);
         Route::post('/upsert/{supplier?}', 'upsert')->name('upsert');
         Route::get('/grn-history/{supplier}', 'grnHistory')->name('grn_history');
@@ -723,8 +730,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(DealerController::class)->prefix('dealer')->name('dealer.')->middleware(['can:dealer.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware(['can:dealer.create']);
-        Route::get('/edit/{dealer}', 'edit')->name('edit')->middleware(['can:dealer.edit']);
+        Route::get('/create', 'create')->name('create')->middleware(['can:dealer.create', 'branch.selected']);
+        Route::get('/edit/{dealer}', 'edit')->name('edit')->middleware(['can:dealer.edit', 'branch.selected']);
         Route::get('/view/{dealer}', 'view')->name('view');
         Route::get('/delete/{dealer}', 'delete')->name('delete')->middleware(['can:dealer.delete']);
         Route::post('/upsert/{dealer?}', 'upsert')->name('upsert');
@@ -748,16 +755,16 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(VehicleServiceController::class)->prefix('vehicle-service')->name('vehicle_service.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
-            Route::get('/edit/{service}', 'edit')->name('edit');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
+            Route::get('/edit/{service}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/upsert/{service?}', 'upsert')->name('upsert');
         });
         // Vehicle
         Route::controller(VehicleController::class)->prefix('vehicle')->name('vehicle.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
-            Route::get('/edit/{vehicle}', 'edit')->name('edit');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
+            Route::get('/edit/{vehicle}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/upsert/{vehicle?}', 'upsert')->name('upsert');
             Route::get('/view/{vehicle}', 'view')->name('view');
         });
@@ -765,8 +772,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(MaterialUseController::class)->prefix('material-use')->name('material_use.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
-            Route::get('/edit/{material}', 'edit')->name('edit');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
+            Route::get('/edit/{material}', 'edit')->name('edit')->middleware('branch.selected');
             Route::get('/delete/{material}', 'delete')->name('delete');
             Route::post('/upsert', 'upsert')->name('upsert');
             Route::get('/search-product', 'searchProduct')->name('search_product');
@@ -779,9 +786,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(WarrantyPeriodController::class)->prefix('warranty-period')->name('warranty_period.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{warranty}', 'edit')->name('edit');
+            Route::get('/edit/{warranty}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{warranty}', 'update')->name('update');
             Route::get('/delete/{warranty}', 'delete')->name('delete');
         });
@@ -789,9 +796,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(PromotionController::class)->prefix('promotion')->name('promotion.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{promotion}', 'edit')->name('edit');
+            Route::get('/edit/{promotion}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{promotion}', 'update')->name('update');
             Route::get('/delete/{promotion}', 'delete')->name('delete');
         });
@@ -799,9 +806,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(ProjectTypeController::class)->prefix('project-type')->name('project_type.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{type}', 'edit')->name('edit');
+            Route::get('/edit/{type}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{type}', 'update')->name('update');
             Route::get('/delete/{type}', 'delete')->name('delete');
         });
@@ -809,9 +816,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(ServiceController::class)->prefix('service')->name('service.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{service}', 'edit')->name('edit');
+            Route::get('/edit/{service}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{service}', 'update')->name('update');
             Route::get('/delete/{service}', 'delete')->name('delete');
         });
@@ -819,9 +826,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(CurrencyController::class)->prefix('currency')->name('currency.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{currency}', 'edit')->name('edit');
+            Route::get('/edit/{currency}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{currency}', 'update')->name('update');
             Route::get('/delete/{currency}', 'delete')->name('delete');
         });
@@ -829,9 +836,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(CreditTermController::class)->prefix('credit-term')->name('credit_term.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{credit}', 'edit')->name('edit');
+            Route::get('/edit/{credit}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{credit}', 'update')->name('update');
             Route::get('/delete/{credit}', 'delete')->name('delete');
         });
@@ -839,9 +846,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(PaymentMethodController::class)->prefix('payment-method')->name('payment_method.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{method}', 'edit')->name('edit');
+            Route::get('/edit/{method}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{method}', 'update')->name('update');
             Route::get('/delete/{method}', 'delete')->name('delete');
         });
@@ -849,9 +856,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(AreaController::class)->prefix('area')->name('area.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{area}', 'edit')->name('edit');
+            Route::get('/edit/{area}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{area}', 'update')->name('update');
             Route::get('/delete/{area}', 'delete')->name('delete');
         });
@@ -859,9 +866,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(DebtorTypeController::class)->prefix('debtor-type')->name('debtor_type.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{debtor}', 'edit')->name('edit');
+            Route::get('/edit/{debtor}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{debtor}', 'update')->name('update');
             Route::get('/delete/{debtor}', 'delete')->name('delete');
         });
@@ -869,18 +876,18 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(FactoryController::class)->prefix('factory')->name('factory.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{factory}', 'edit')->name('edit');
+            Route::get('/edit/{factory}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{factory}', 'update')->name('update');
         });
         // Milestone
         Route::controller(MilestoneController::class)->prefix('milestone')->name('milestone.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{batch}', 'edit')->name('edit');
+            Route::get('/edit/{batch}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{batch}', 'update')->name('update');
             Route::get('/get/{category_id}/{type_id}', 'get')->name('get');
         });
@@ -888,36 +895,36 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(UOMController::class)->prefix('uom')->name('uom.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{uom}', 'edit')->name('edit');
+            Route::get('/edit/{uom}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{uom}', 'update')->name('update');
         });
         // Platform
         Route::controller(PlatformController::class)->prefix('platform')->name('platform.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{platform}', 'edit')->name('edit');
+            Route::get('/edit/{platform}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{platform}', 'update')->name('update');
         });
         // Priorities
         Route::controller(PriorityController::class)->prefix('priority')->name('priority.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{priority}', 'edit')->name('edit');
+            Route::get('/edit/{priority}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{priority}', 'update')->name('update');
         });
         // Sales Agent
         Route::controller(SalesAgentController::class)->prefix('sales-agent')->name('sales_agent.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
+            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
             Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{agent}', 'edit')->name('edit');
+            Route::get('/edit/{agent}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{agent}', 'update')->name('update');
         });
         // Settings
