@@ -252,6 +252,31 @@
                         @endforeach
                     @endif
                 @endif
+                <!-- Accessories -->
+                @if ($prod->accessories != null && count($prod->accessories) > 0)
+                    <tr>
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                            Accessories:
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                    </tr>
+                    @foreach ($prod->accessories as $accessory)
+                        <tr>
+                            <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
+                            <td style="font-size: 10px; text-align: left;" colspan="3">
+                                - {{ $accessory->product->model_name ?? 'N/A' }}
+                                (Qty: {{ $accessory->qty ?? 1 }})
+                                @if($accessory->is_foc)
+                                    - FOC
+                                @else
+                                    - RM {{ number_format($accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0), 2) }}
+                                @endif
+                            </td>
+                            <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        </tr>
+                    @endforeach
+                @endif
                 <!-- Serial No -->
                 @if ($prod->serial_no != null)
                     <tr>
