@@ -354,7 +354,7 @@
                         $('.accessory-empty-state').removeClass('hidden')
                     }
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
-                    $(`.items[data-id="${i+1}"] textarea[name="remark"]`).val(sp.remark)
+                    setRemarkQuillContent(i+1, sp.remark)
                     if (sp.override_selling_price != null) {
                         $(`.items[data-id="${i+1}"] input[name="override_selling_price"]`).val(sp
                             .override_selling_price).trigger('keyup')
@@ -1268,14 +1268,20 @@
                 },
             });
             quill.enable(false)
+        }
 
-            // Load existing content from textarea (for old values after validation)
-            setTimeout(function() {
-                var existingContent = $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val();
-                if (existingContent && existingContent.trim() !== '') {
-                    quill.root.innerHTML = existingContent;
+        function setRemarkQuillContent(item_id, content) {
+            var quillContainer = document.querySelector(`#remark-quill-${item_id}`);
+            if (quillContainer) {
+                var quill = Quill.find(quillContainer);
+                if (quill && content && content.trim() !== '') {
+                    quill.root.innerHTML = content;
+                    // Remove placeholder by clearing the ql-blank class from the editor element
+                    $(quill.root).removeClass('ql-blank');
+                    // Also update the hidden textarea
+                    $(`.items[data-id="${item_id}"] textarea[name="remark"]`).val(content);
                 }
-            }, 100);
+            }
         }
     </script>
 @endpush
