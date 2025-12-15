@@ -14,13 +14,18 @@
 
     header {
         position: fixed;
-        top: -425px;
+        top: -440px;
         left: 0px;
         right: 0px;
     }
 
     #invalid {
         color: red;
+    }
+
+    p {
+        margin: 0;
+        padding: 0;
     }
 </style>
 
@@ -220,34 +225,22 @@
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
-                <!-- Warranty -->
-                @if ($prod->warrantyPeriods != null)
-                    @php
-                        $warranty = [];
-                        foreach ($prod->warrantyPeriods as $wp) {
-                            $warranty[] = $wp->warrantyPeriod->name;
-                        }
-                    @endphp
-                    @if (count($warranty) > 0)
-                        <tr>
-                            <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
-                                Warranty:<br>
-                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
-                        </tr>
-                        @foreach ($warranty as $key => $w)
-                            <tr>
-                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                                <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
-                                    @if (count($warranty) == $key + 1)
-                                        {{ $w }}
-                                    @else
-                                        {{ $w }}<br>
-                                    @endif
-                                <td style="font-size: 10px; text-align: left;" colspan="5"></td>
-                            </tr>
-                        @endforeach
-                    @endif
+                <!-- Product Remark -->
+                @if ($prod->remark != null && $prod->remark !== '<p><br></p>')
+                    <tr>
+                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                            Remark:
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="3">
+                            {!! nl2br($prod->remark) !!}
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                    </tr>
                 @endif
                 <!-- Accessories -->
                 @if ($prod->accessories != null && count($prod->accessories) > 0)
@@ -274,16 +267,34 @@
                         </tr>
                     @endforeach
                 @endif
-                @if ($prod->remark != null)
-                    <tr>
-                        <td colspan="7" style="padding: 15px 0 0 0;"></td>
-                    </tr>
-                    <tr>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;" colspan="2">
-                            {!! nl2br($prod->remark) !!}</td>
-                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="3"></td>
-                    </tr>
+                <!-- Warranty -->
+                @if ($prod->warrantyPeriods != null)
+                    @php
+                        $warranty = [];
+                        foreach ($prod->warrantyPeriods as $wp) {
+                            $warranty[] = $wp->warrantyPeriod->name;
+                        }
+                    @endphp
+                    @if (count($warranty) > 0)
+                        <tr>
+                            <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                                Warranty:<br>
+                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                        </tr>
+                        @foreach ($warranty as $key => $w)
+                            <tr>
+                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
+                                <td style="font-size: 10px; text-align: left;" colspan="3">
+                                    @if (count($warranty) == $key + 1)
+                                        {{ $w }}
+                                    @else
+                                        {{ $w }}<br>
+                                    @endif
+                                <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                            </tr>
+                        @endforeach
+                    @endif
                 @endif
                 @php
                     $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
