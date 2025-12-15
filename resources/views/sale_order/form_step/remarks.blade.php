@@ -29,9 +29,13 @@
 
             $('#additional-remark-container textarea[name="remark"]').after($quill);
 
+            // Check if there's existing content - if so, don't show placeholder
+            var existingContent = $('#additional-remark-container textarea[name="remark"]').val();
+            var hasExistingContent = existingContent && existingContent.trim() !== '';
+
             var quill = new Quill(`#add-remark`, {
                 theme: 'snow',
-                placeholder: "{!! __('Remark') !!}",
+                placeholder: hasExistingContent ? '' : "{!! __('Remark') !!}",
                 modules: {
                     toolbar: {
                         container: [
@@ -109,13 +113,11 @@
             });
             quill.enable(false)
 
-            // Load existing content from textarea (for old values after validation)
-            setTimeout(function() {
-                let existingContent = $('#additional-remark-container textarea[name="remark"]').val();
-                if (existingContent && existingContent.trim() !== '') {
-                    quill.root.innerHTML = existingContent;
-                }
-            }, 100);
+            // Load existing content from textarea
+            if (hasExistingContent) {
+                quill.root.innerHTML = existingContent;
+                $(quill.root).removeClass('ql-blank');
+            }
         }
     </script>
 @endpush
