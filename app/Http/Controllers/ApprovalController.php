@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\Sale;
+use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
 use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
@@ -38,6 +39,7 @@ class ApprovalController extends Controller
         1 => 'Sale Order',
         2 => 'Delivery Order',
         3 => 'Customer',
+        4 => 'Payment Record',
     ];
 
     public function index()
@@ -62,6 +64,9 @@ class ApprovalController extends Controller
         }
         if (!hasPermission('approval.type_customer')) {
             unset($types[3]);
+        }
+        if (!hasPermission('approval.type_payment_record')) {
+            unset($types[4]);
         }
 
         return view('approval.list', [
@@ -134,6 +139,11 @@ class ApprovalController extends Controller
                     $q->whereNot('object_type', Customer::class);
                 });
             }
+            if (!hasPermission('approval.type_payment_record')) {
+                $q->orWhere(function ($q) {
+                    $q->whereNot('object_type', SalePaymentAmount::class);
+                });
+            }
         });
         if ($request->has('type')) {
             if ($request->type == null) {
@@ -150,6 +160,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 3) {
                 $records = $records->where('object_type', Customer::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 4) {
+                $records = $records->where('object_type', SalePaymentAmount::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -158,9 +171,10 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
             } elseif (Session::get('approval-type') == 2) {
                 $records = $records->where('object_type', DeliveryOrder::class);
-            } elseif ($request->type == 3) {
+            } elseif (Session::get('approval-type') == 3) {
                 $records = $records->where('object_type', Customer::class);
-                Session::put('approval-type', $request->type);
+            } elseif (Session::get('approval-type') == 4) {
+                $records = $records->where('object_type', SalePaymentAmount::class);
             }
         }
 
@@ -192,13 +206,19 @@ class ApprovalController extends Controller
                     } else {
                         $view_url = route('sale_order.index', ['sku' => $obj->sku]);
                     }
+                } elseif (get_class($obj) == SalePaymentAmount::class) {
+                    $view_url = route('sale_order.edit_payment', ['sale' => $obj->sale_id]);
                 }
             }
 
             $remark = null;
+            $cancellation_charge = null;
             if ($payload != null) {
                 if (isset($payload->cancellation_remark)) {
                     $remark = $payload->cancellation_remark;
+                }
+                if (isset($payload->charge)) {
+                    $cancellation_charge = $payload->charge;
                 }
             }
             // Sale agent name
@@ -209,11 +229,21 @@ class ApprovalController extends Controller
                 $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray(); 
             }
 
+            // Determine object_sku
+            $object_sku = null;
+            if ($obj != null) {
+                if (get_class($obj) == SalePaymentAmount::class) {
+                    $object_sku = $payload->sale_sku ?? null;
+                } else {
+                    $object_sku = $obj->sku;
+                }
+            }
+
             $data['data'][] = [
                 'no' => ($key + 1),
                 'id' => $record->id,
                 'type' => $obj == null ? null : get_class($obj),
-                'object_sku' => $obj == null ? null : $obj->sku,
+                'object_sku' => $object_sku,
                 'date' => $record->created_at,
                 'data' => $record->data == null ? null : json_decode($record->data),
                 'pending_approval' => $record->status == Approval::STATUS_PENDING_APPROVAL,
@@ -221,10 +251,11 @@ class ApprovalController extends Controller
                 'status' => $record->status,
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
                 'remark' => $remark,
+                'cancellation_charge' => $cancellation_charge,
                 'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
                 'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->company_name : null,
                 'sales_agent_name' => count($sale_agents) > 0 ? join(', ', $sale_agents) : null,
-                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -332,6 +363,27 @@ class ApprovalController extends Controller
                     $obj->save();
                 }
             }
+            // Payment Record (SalePaymentAmount)
+            if (get_class($obj) == SalePaymentAmount::class) {
+                $data = json_decode($approval->data);
+
+                if (isset($data->is_payment_edit)) {
+                    // Apply the proposed changes
+                    $obj->payment_method = $data->proposed->payment_method;
+                    $obj->payment_term = $data->proposed->payment_term;
+                    $obj->amount = $data->proposed->amount;
+                    $obj->date = $data->proposed->date;
+                    $obj->reference_number = $data->proposed->reference_number;
+                    $obj->approval_status = SalePaymentAmount::STATUS_ACTIVE;
+                    $obj->save();
+                } elseif (isset($data->is_payment_delete)) {
+                    // Soft delete the payment record
+                    $obj->delete();
+                }
+
+                // Recalculate sale payment status
+                $this->recalculateSalePaymentStatus($data->sale_id);
+            }
 
             DB::commit();
 
@@ -435,7 +487,7 @@ class ApprovalController extends Controller
                 MaterialUseProduct::where('material_use_id', $obj->id)->delete();
                 MaterialUse::where('id', $obj->id)->delete();
             }
-            // Customer (credit term) do nothing 
+            // Customer (credit term) do nothing
             if (get_class($obj) == Customer::class) {
                 $data = json_decode($approval->data);
 
@@ -444,6 +496,11 @@ class ApprovalController extends Controller
                     $obj->status = Customer::STATUS_APPROVAL_REJECTED;
                     $obj->save();
                 }
+            }
+            // Payment Record (SalePaymentAmount) - reset status back to active
+            if (get_class($obj) == SalePaymentAmount::class) {
+                $obj->approval_status = SalePaymentAmount::STATUS_ACTIVE;
+                $obj->save();
             }
 
             DB::commit();
@@ -501,5 +558,26 @@ class ApprovalController extends Controller
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function recalculateSalePaymentStatus($sale_id)
+    {
+        $sale = Sale::find($sale_id);
+        if ($sale == null) {
+            return;
+        }
+
+        $to_be_paid_amount = $sale->getTotalAmount();
+        $paid_amount = $sale->getPaidAmount();
+
+        $status = Sale::PAYMENT_STATUS_UNPAID;
+        if ($paid_amount >= $to_be_paid_amount) {
+            $status = Sale::PAYMENT_STATUS_PAID;
+        } elseif ($paid_amount > 0 && $paid_amount < $to_be_paid_amount) {
+            $status = Sale::PAYMENT_STATUS_PARTIALLY_PAID;
+        }
+
+        $sale->payment_status = $status;
+        $sale->save();
     }
 }

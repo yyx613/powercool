@@ -55,6 +55,7 @@ use Exception;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -591,7 +592,12 @@ class SaleController extends Controller
             ]);
             // Check to use back transferred SO sku
             if ($quos[0]->convert_to != null) {
-                $sku_to_use = Sale::withTrashed()->where('id', $quos[0]->convert_to)->value('sku');
+                $potential_sku = Sale::withTrashed()->where('id', $quos[0]->convert_to)->value('sku');
+                // Only reuse SKU if it's not already in use by an active (non-deleted) SO
+                $sku_in_use = Sale::where('type', Sale::TYPE_SO)->where('sku', $potential_sku)->exists();
+                if (! $sku_in_use) {
+                    $sku_to_use = $potential_sku;
+                }
             }
             $res = $this->upsertQuoDetails($request, false, true, isset($sku_to_use) ? $sku_to_use : null, false)->getData();
             if ($res->result != true) {
@@ -998,11 +1004,11 @@ class SaleController extends Controller
                 },
                 'products.warrantyPeriods',
                 'products.accessories.product',
-                'paymentAmounts',
+                'paymentAmounts.approval',
                 'thirdPartyAddresses',
             ]);
         } else {
-            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'paymentAmounts', 'thirdPartyAddresses');
+            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'paymentAmounts.approval', 'thirdPartyAddresses');
         }
 
         $sale->products->each(function ($q) {
@@ -2653,39 +2659,41 @@ class SaleController extends Controller
                         SaleProductChild::insert($data);
                     }
                     // Accessory
-                    SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
-                    if ($req->accessory != null && isset($req->accessory[$i]) && $req->accessory[$i] != null) {
-                        $data = [];
-                        for ($j=0; $j < count($req->accessory[$i]); $j++) {
-                            $accessoryData = $req->accessory[$i][$j];
-                            // Handle both old format (just ID) and new format (object with id, qty, pricing)
-                            if (is_array($accessoryData)) {
-                                $data[] = [
-                                    'sale_product_id' => $sp->id,
-                                    'accessory_id' => $accessoryData['id'],
-                                    'qty' => $accessoryData['qty'] ?? 1,
-                                    'selling_price_id' => $accessoryData['selling_price'] ?? null,
-                                    'override_selling_price' => $accessoryData['override_price'] ?? null,
-                                    'is_foc' => $accessoryData['is_foc'] ?? false,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
-                            } else {
-                                // Old format compatibility
-                                $data[] = [
-                                    'sale_product_id' => $sp->id,
-                                    'accessory_id' => $accessoryData,
-                                    'qty' => 1,
-                                    'selling_price_id' => null,
-                                    'override_selling_price' => null,
-                                    'is_foc' => false,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ];
-                            }
-                        }
-                        SaleProductAccessory::insert($data);
+                    $accessories = $req->accessory != null && isset($req->accessory[$i]) && $req->accessory[$i] != null? $req->accessory[$i] : [];
+                    if (!is_array($accessories)) {
+                        $accessories = [$accessories];
                     }
+                    SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
+                    $data = [];
+                    for ($j=0; $j < count($accessories); $j++) {
+                        $accessoryData = $accessories[$j];
+                        // Handle both old format (just ID) and new format (object with id, qty, pricing)
+                        if (is_array($accessoryData)) {
+                            $data[] = [
+                                'sale_product_id' => $sp->id,
+                                'accessory_id' => $accessoryData['id'],
+                                'qty' => $accessoryData['qty'] ?? 1,
+                                'selling_price_id' => $accessoryData['selling_price'] ?? null,
+                                'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                'is_foc' => $accessoryData['is_foc'] ?? false,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        } else {
+                            // Old format compatibility
+                            $data[] = [
+                                'sale_product_id' => $sp->id,
+                                'accessory_id' => $accessoryData,
+                                'qty' => 1,
+                                'selling_price_id' => null,
+                                'override_selling_price' => null,
+                                'is_foc' => false,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                    }
+                    SaleProductAccessory::insert($data);
                 }
             } else {
                 $now = now();
@@ -2717,39 +2725,41 @@ class SaleController extends Controller
                         $sp->sequence = $req->sequence[$i] ?? null;
                         $sp->save();
                         // Accessory
-                        SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
-                        if ($req->accessory != null && $req->accessory[$i] != null) {
-                            $data = [];
-                            for ($j = 0; $j < count($req->accessory[$i]); $j++) {
-                                $accessoryData = $req->accessory[$i][$j];
-                                // Handle both old format (just ID) and new format (object with id, qty, pricing)
-                                if (is_array($accessoryData)) {
-                                    $data[] = [
-                                        'sale_product_id' => $sp->id,
-                                        'accessory_id' => $accessoryData['id'],
-                                        'qty' => $accessoryData['qty'] ?? 1,
-                                        'selling_price_id' => $accessoryData['selling_price'] ?? null,
-                                        'override_selling_price' => $accessoryData['override_price'] ?? null,
-                                        'is_foc' => $accessoryData['is_foc'] ?? false,
-                                        'created_at' => now(),
-                                        'updated_at' => now(),
-                                    ];
-                                } else {
-                                    // Old format compatibility
-                                    $data[] = [
-                                        'sale_product_id' => $sp->id,
-                                        'accessory_id' => $accessoryData,
-                                        'qty' => 1,
-                                        'selling_price_id' => null,
-                                        'override_selling_price' => null,
-                                        'is_foc' => false,
-                                        'created_at' => now(),
-                                        'updated_at' => now(),
-                                    ];
-                                }
-                            }
-                            SaleProductAccessory::insert($data);
+                        $accessories = $req->accessory != null && isset($req->accessory[$i]) && $req->accessory[$i] != null? $req->accessory[$i] : [];
+                        if (!is_array($accessories)) {
+                            $accessories = [$accessories];
                         }
+                        SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
+                        $data = [];
+                        for ($j = 0; $j < count($accessories); $j++) {
+                            $accessoryData = $accessories[$j];
+                            // Handle both old format (just ID) and new format (object with id, qty, pricing)
+                            if (is_array($accessoryData)) {
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'accessory_id' => $accessoryData['id'],
+                                    'qty' => $accessoryData['qty'] ?? 1,
+                                    'selling_price_id' => $accessoryData['selling_price'] ?? null,
+                                    'override_selling_price' => $accessoryData['override_price'] ?? null,
+                                    'is_foc' => $accessoryData['is_foc'] ?? false,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            } else {
+                                // Old format compatibility
+                                $data[] = [
+                                    'sale_product_id' => $sp->id,
+                                    'accessory_id' => $accessoryData,
+                                    'qty' => 1,
+                                    'selling_price_id' => null,
+                                    'override_selling_price' => null,
+                                    'is_foc' => false,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ];
+                            }
+                        }
+                        SaleProductAccessory::insert($data);
                     }
                 }
             }
@@ -2824,6 +2834,10 @@ class SaleController extends Controller
                 $rules['payment_term'] = 'nullable';
             }
             if (in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
+                $rules['account_payment_method'] = 'nullable';
+                $rules['account_payment_method.*'] = 'nullable';
+                $rules['account_payment_term'] = 'nullable';
+                $rules['account_payment_term.*'] = 'nullable';
                 $rules['account_amount'] = 'nullable';
                 $rules['account_amount.*'] = 'nullable';
                 $rules['account_date'] = 'nullable';
@@ -2865,24 +2879,67 @@ class SaleController extends Controller
                 }
                 // Payment Amounts
                 if ($req->account_amount != null) {
-                    SalePaymentAmount::where('sale_id', $sale->id)->delete();
-
+                    $existing_payment_ids = $req->existing_payment_id ?? [];
+                    $submitted_ids = [];
                     $data = [];
+
                     for ($i = 0; $i < count($req->account_amount); $i++) {
                         if ($req->account_amount[$i] == null) {
                             continue;
                         }
-                        $data[] = [
-                            'sale_id' => $sale->id,
-                            'amount' => $req->account_amount[$i],
-                            'date' => $req->account_date[$i],
-                            'reference_number' => $req->account_ref_no[$i],
-                            'by_id' => Auth::user()->id,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+
+                        $payment_id = $existing_payment_ids[$i] ?? null;
+
+                        if ($payment_id) {
+                            // Existing record - check for changes
+                            $submitted_ids[] = $payment_id;
+                            $existing = SalePaymentAmount::find($payment_id);
+
+                            if ($existing && !$existing->hasPendingApproval()) {
+                                $proposed = [
+                                    'payment_method' => $req->account_payment_method[$i] ?? null,
+                                    'payment_term' => $req->account_payment_term[$i] ?? null,
+                                    'amount' => $req->account_amount[$i],
+                                    'date' => $req->account_date[$i],
+                                    'reference_number' => $req->account_ref_no[$i] ?? null,
+                                ];
+
+                                // Check if any field changed
+                                if ($this->paymentHasChanged($existing, $proposed)) {
+                                    $this->createPaymentEditApproval($existing, $proposed);
+                                }
+                            }
+                        } else {
+                            // New record - insert directly without approval
+                            $data[] = [
+                                'sale_id' => $sale->id,
+                                'payment_method' => $req->account_payment_method[$i] ?? null,
+                                'payment_term' => $req->account_payment_term[$i] ?? null,
+                                'amount' => $req->account_amount[$i],
+                                'date' => $req->account_date[$i],
+                                'reference_number' => $req->account_ref_no[$i],
+                                'by_id' => Auth::user()->id,
+                                'approval_status' => SalePaymentAmount::STATUS_ACTIVE,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
                     }
-                    SalePaymentAmount::insert($data);
+
+                    // Insert new records
+                    if (count($data) > 0) {
+                        SalePaymentAmount::insert($data);
+                    }
+
+                    // Records not in submitted list = to be deleted (need approval)
+                    $to_delete = SalePaymentAmount::where('sale_id', $sale->id)
+                        ->where('approval_status', SalePaymentAmount::STATUS_ACTIVE)
+                        ->whereNotIn('id', $submitted_ids)
+                        ->get();
+
+                    foreach ($to_delete as $payment) {
+                        $this->createPaymentDeleteApproval($payment);
+                    }
                 }
 
                 $to_be_paid_amount = $sale->getTotalAmount();
@@ -5779,5 +5836,75 @@ class SaleController extends Controller
 
             return back()->with('error', 'Something went wrong, Please contact administrator');
         }
+    }
+
+    private function paymentHasChanged(SalePaymentAmount $existing, array $proposed): bool
+    {
+        return $existing->payment_method != $proposed['payment_method'] ||
+               $existing->payment_term != $proposed['payment_term'] ||
+               (float)$existing->amount != (float)$proposed['amount'] ||
+               $existing->date != $proposed['date'] ||
+               $existing->reference_number != $proposed['reference_number'];
+    }
+
+    private function createPaymentEditApproval(SalePaymentAmount $payment, array $proposed): void
+    {
+        $approval = Approval::create([
+            'object_type' => SalePaymentAmount::class,
+            'object_id' => $payment->id,
+            'status' => Approval::STATUS_PENDING_APPROVAL,
+            'data' => json_encode([
+                'is_payment_edit' => true,
+                'sale_id' => $payment->sale_id,
+                'sale_sku' => $payment->sale->sku,
+                'original' => [
+                    'payment_method' => $payment->payment_method,
+                    'payment_term' => $payment->payment_term,
+                    'amount' => $payment->amount,
+                    'date' => $payment->date,
+                    'reference_number' => $payment->reference_number,
+                ],
+                'proposed' => $proposed,
+                'description' => Auth::user()->name . ' requested to edit payment record (RM' . number_format($payment->amount, 2) . ' -> RM' . number_format($proposed['amount'], 2) . ') for ' . $payment->sale->sku,
+                'user_id' => Auth::user()->id,
+            ]),
+        ]);
+        (new Branch)->assign(Approval::class, $approval->id);
+
+        $payment->approval_status = SalePaymentAmount::STATUS_PENDING_EDIT;
+        $payment->save();
+
+        $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
+        Cache::put('unread_approval_count', $pending_approval_count);
+    }
+
+    private function createPaymentDeleteApproval(SalePaymentAmount $payment): void
+    {
+        $approval = Approval::create([
+            'object_type' => SalePaymentAmount::class,
+            'object_id' => $payment->id,
+            'status' => Approval::STATUS_PENDING_APPROVAL,
+            'data' => json_encode([
+                'is_payment_delete' => true,
+                'sale_id' => $payment->sale_id,
+                'sale_sku' => $payment->sale->sku,
+                'original' => [
+                    'payment_method' => $payment->payment_method,
+                    'payment_term' => $payment->payment_term,
+                    'amount' => $payment->amount,
+                    'date' => $payment->date,
+                    'reference_number' => $payment->reference_number,
+                ],
+                'description' => Auth::user()->name . ' requested to delete payment record (RM' . number_format($payment->amount, 2) . ') for ' . $payment->sale->sku,
+                'user_id' => Auth::user()->id,
+            ]),
+        ]);
+        (new Branch)->assign(Approval::class, $approval->id);
+
+        $payment->approval_status = SalePaymentAmount::STATUS_PENDING_DELETE;
+        $payment->save();
+
+        $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
+        Cache::put('unread_approval_count', $pending_approval_count);
     }
 }

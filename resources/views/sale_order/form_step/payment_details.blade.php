@@ -49,6 +49,16 @@
         <div id="payment-amounts-container" class="pt-4 border-t border-slate-200">
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full p-4 hover:bg-slate-50 relative group hidden"
                 id="payment-amount-template">
+                <input type="hidden" name="existing_payment_id" class="existing-payment-id" value="">
+                <div class="hidden col-span-full" id="approval-status-container">
+                    <span id="pending-status"
+                        class="hidden border rounded border-slate-500 text-slate-500 text-sm font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
+                    <span id="rejected-status"
+                        class="hidden border rounded border-red-600 text-red-600 text-sm font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
+                    <span class="rejection-remark hidden text-red-600 text-xs ml-2">
+                        <span class="remark-text"></span>
+                    </span>
+                </div>
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-payment-amount-btns"
                     title="Delete Payment Amount">
@@ -58,6 +68,26 @@
                             d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
                     </svg>
                 </button>
+                <div class="flex flex-col">
+                    <x-app.input.label id="account_payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
+                    <x-app.input.select name="account_payment_method" id="account_payment_method" :hasError="$errors->has('account_payment_method')" class="account-payment-method-select">
+                        <option value="">{{ __('Select a method') }}</option>
+                        @foreach ($payment_methods as $method)
+                            <option value="{{ $method->id }}">{{ $method->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="account_payment_method_err" />
+                </div>
+                <div class="flex flex-col account-payment-term-container hidden">
+                    <x-app.input.label id="account_payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
+                    <x-app.input.select name="account_payment_term" id="account_payment_term" :hasError="$errors->has('account_payment_term')" class="account-payment-term-select">
+                        <option value="">{{ __('Select a term') }}</option>
+                        @foreach ($credit_terms as $term)
+                            <option value="{{ $term->id }}">{{ $term->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-app.message.error id="account_payment_term_err" />
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="account_amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
                     <x-app.input.input name="account_amount" id="account_amount" :hasError="$errors->has('account_amount')" class="int-input" />
@@ -116,12 +146,32 @@
                     for (let i = 0; i < SALE.payment_amounts.length; i++) {
                         $('#add-payment-amount-btn').click()
 
-                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_amount"]`).val(SALE
-                            .payment_amounts[i].amount)
-                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_date"]`).val(SALE.payment_amounts[
-                            i].date)
-                        $(`.payment-amounts[data-id="${i+1}"] input[name="account_ref_no"]`).val(SALE
-                            .payment_amounts[i].reference_number)
+                        let $row = $(`.payment-amounts[data-id="${i+1}"]`)
+                        $row.find('select[name="account_payment_method"]').val(SALE.payment_amounts[i].payment_method)
+                        $row.find('select[name="account_payment_method"]').trigger('change')
+                        $row.find('select[name="account_payment_term"]').val(SALE.payment_amounts[i].payment_term)
+                        $row.find('input[name="account_amount"]').val(SALE.payment_amounts[i].amount)
+                        $row.find('input[name="account_date"]').val(SALE.payment_amounts[i].date)
+                        $row.find('input[name="account_ref_no"]').val(SALE.payment_amounts[i].reference_number)
+
+                        // Set existing payment ID
+                        $row.find('.existing-payment-id').val(SALE.payment_amounts[i].id)
+
+                        // Check for pending approval status (2 = pending edit, 3 = pending delete)
+                        if (SALE.payment_amounts[i].approval_status == 2 || SALE.payment_amounts[i].approval_status == 3) {
+                            $row.find('input, select').prop('disabled', true)
+                            $row.find('#approval-status-container').removeClass('hidden')
+                            $row.find('#pending-status').removeClass('hidden')
+                            $row.find('.delete-payment-amount-btns').removeClass('group-hover:block').addClass('hidden')
+                        }
+
+                        // Show rejection remark if exists
+                        if (SALE.payment_amounts[i].approval && SALE.payment_amounts[i].approval.reject_remark) {
+                            $row.find('#approval-status-container').removeClass('hidden')
+                            $row.find('#rejected-status').removeClass('hidden')
+                            $row.find('.rejection-remark').removeClass('hidden')
+                            $row.find('.rejection-remark .remark-text').text(SALE.payment_amounts[i].approval.reject_remark)
+                        }
                     }
                 }
             } else {
@@ -151,6 +201,19 @@
             $(clone).find('input[name="account_date"]').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD'));
             });
+
+            // Handle payment term visibility when payment method changes
+            $(clone).find('select[name="account_payment_method"]').on('change', function() {
+                let val = $(this).val()
+                let container = $(this).closest('.payment-amounts').find('.account-payment-term-container')
+
+                if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                    container.removeClass('hidden')
+                } else {
+                    container.addClass('hidden')
+                    container.find('select[name="account_payment_term"]').val('')
+                }
+            })
 
             $('#payment-amounts-container').append(clone)
         })

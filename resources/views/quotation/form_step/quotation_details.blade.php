@@ -230,6 +230,7 @@
     <script>
         QUOTATION_DETAILS_INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
+        SALES_AGENTS = @json($sales_agents ?? []);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
         SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
 
@@ -329,6 +330,15 @@
                 $('input[name="mobile"]').val(element.mobile_number[0])
             } else {
                 $('input[name="mobile"]').val('-')
+            }
+            // Filter sales agents by company group
+            $('select[name="sale"]').find('option').not(':first').remove();
+            for (let i = 0; i < SALES_AGENTS.length; i++) {
+                const sa = SALES_AGENTS[i];
+                if (sa.company_group == element.company_group) {
+                    let opt = new Option(sa.name, sa.id)
+                    $('select[name="sale"]').append(opt)
+                }
             }
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();

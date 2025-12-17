@@ -31,6 +31,23 @@
         @endif
     </div>
 
+    @if (isset($sale))
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <span class="text-sm text-blue-600">{{ __('SO Total Amount') }}</span>
+                <p class="text-xl font-bold text-blue-800">RM {{ number_format($sale->getTotalAmount(), 2) }}</p>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <span class="text-sm text-green-600">{{ __('Paid Amount') }}</span>
+                <p class="text-xl font-bold text-green-800">RM {{ number_format($sale->getPaidAmount(), 2) }}</p>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <span class="text-sm text-amber-600">{{ __('Balance Amount') }}</span>
+                <p class="text-xl font-bold text-amber-800">RM {{ number_format($sale->getTotalAmount() - $sale->getPaidAmount(), 2) }}</p>
+            </div>
+        </div>
+    @endif
+
     <div class="grid gap-y-8">
         <form action="{{ isset($sale) ? route('sale.upsert_details', ['sale' => $sale]) : route('sale.upsert_details') }}"
             method="POST" enctype="multipart/form-data" class="flex flex-col gap-4">
@@ -78,11 +95,17 @@
             $(`form #submit-btn`).removeClass(
                 '!bg-blue-200 bg-yellow-400 shadow')
             $('.err_msg').addClass('hidden') // Remove error messages
-            // Prepare payment amounts 
+            // Prepare payment amounts
+            let existingPaymentId = []
+            let accountPaymentMethod = []
+            let accountPaymentTerm = []
             let accountAmount = []
             let accountDate = []
             let accountRefNo = []
             $('#payment-amounts-container .payment-amounts').each(function(i, obj) {
+                existingPaymentId.push($(this).find('.existing-payment-id').val())
+                accountPaymentMethod.push($(this).find('select[name="account_payment_method"]').val())
+                accountPaymentTerm.push($(this).find('select[name="account_payment_term"]').val())
                 accountAmount.push($(this).find('input[name="account_amount"]').val())
                 accountDate.push($(this).find('input[name="account_date"]').val())
                 accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
@@ -103,6 +126,9 @@
                     'payment_due_date': $('input[name="payment_due_date"]').val(),
                     'payment_remark': $('input[name="payment_remark"]').val(),
                     'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
+                    'existing_payment_id': existingPaymentId,
+                    'account_payment_method': accountPaymentMethod,
+                    'account_payment_term': accountPaymentTerm,
                     'account_amount': accountAmount,
                     'account_date': accountDate,
                     'account_ref_no': accountRefNo,

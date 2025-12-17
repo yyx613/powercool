@@ -80,7 +80,7 @@
                 </tr>
             @endif
             <tr>
-                <td colspan="2" style="padding: 0 35px 0 0;">
+                <td colspan="2" style="padding: 0 35px 0 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 14px;" colspan="2">
@@ -210,33 +210,33 @@
                 <!-- Product Remark -->
                 @if ($prod->remark != null && $prod->remark !== '<p><br></p>')
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                     </tr>
                     <tr>
-                        <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
                             {!! nl2br($prod->remark) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                     </tr>
                 @endif
                 <!-- Accessories -->
                 @if ($prod->accessories != null && count($prod->accessories) > 0)
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Accessories:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                     </tr>
                     @foreach ($prod->accessories as $accessory)
                         <tr>
-                            <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left;" colspan="3">
+                            <td colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
                                 - {{ $accessory->product->model_name ?? 'N/A' }}
                                 (Qty: {{ $accessory->qty ?? 1 }})
                                 @if($accessory->is_foc)
@@ -245,7 +245,7 @@
                                     - RM {{ number_format($accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0), 2) }}
                                 @endif
                             </td>
-                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                            <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                         </tr>
                     @endforeach
                 @endif
@@ -259,21 +259,23 @@
                     @endphp
                     @if (count($warranty) > 0)
                         <tr>
-                            <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
-                                Warranty:<br>
-                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                            <td colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                                Warranty:
+                            </td>
+                            <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                         </tr>
                         @foreach ($warranty as $key => $w)
                             <tr>
-                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                                <td style="font-size: 10px; text-align: left;" colspan="3">
+                                <td colspan="2"></td>
+                                <td style="font-size: 10px; text-align: left;">
                                     @if (count($warranty) == $key + 1)
                                         {{ $w }}
                                     @else
                                         {{ $w }}<br>
                                     @endif
-                                <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                                </td>
+                                <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                             </tr>
                         @endforeach
                     @endif
@@ -287,9 +289,9 @@
             @if ($sale->remark != null)
                 <tr>
                     <td colspan="2"></td>
-                    <td colspan="2" style="font-size: 12px; padding: 0px 0;"><span
+                    <td style="font-size: 12px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
-                    <td colspan="2"></td>
+                    <td colspan="6"></td>
                 </tr>
             @endif
         </table>
