@@ -46,6 +46,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Company Group') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -72,19 +73,28 @@
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'name' },
+                { data: 'company_group' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
-                    "width": "5%",
+                {
+                    "width": "10%",
                     "targets": 1,
+                    "orderable": false,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "5%",
+                    "targets": 2,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

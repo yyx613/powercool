@@ -158,6 +158,8 @@
                                 return 'Production Material Transfer Request';
                             } else if (data.includes('ProductChild')) {
                                 return 'Transfer To Warehouse Request';
+                            } else if (data.includes('SalePaymentAmount')) {
+                                return 'Payment Record';
                             } else if (data.includes('DeliveryOrder')) {
                                 return 'Delivery Order';
                             } else if (row.data != null && row.data.is_quo == true) {
@@ -194,6 +196,9 @@
                         display = `${display}<br>`
                         if (row.remark != null) {
                             display = `${display}<br><span class="text-xs">Reason: ${row.remark}</span>`
+                        }
+                        if (row.cancellation_charge != null) {
+                            display = `${display}<br><span class="text-xs">Cancellation Charge: RM ${row.cancellation_charge}</span>`
                         }
                         if (row.debtor_name != null && row.debtor_code != null) {
                             display =

@@ -30,7 +30,7 @@
     <header>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="width: 33.33%; border-bottom: solid 1px black; padding: 0 0 10px 0; text-align: center;">
+                <td style="width: 33.33%; border-bottom: solid 1px black; padding: 0 0 10px 0; text-align: center; vertical-align: top;">
                     <span style="font-size: 16px; font-weight: 700;">HI-TEN TRADING SDN BHD <span
                             style="font-size: 12px;">[200501027542 (709676-X)]</span></span><br>
                     <span style="font-size: 14px;">NO. 12, RCI PARK, JALAN KESIDANG 2,</span><br>
@@ -56,10 +56,10 @@
                     {{ $is_proforma_invoice ? str_replace('SO', 'PRO', $sale->sku) : $sale->sku }}</td>
             </tr>
             <tr>
-                <td colspan="2" style="padding: 0 35px 0 0;">
+                <td colspan="2" style="padding: 0 35px 0 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="font-size: 14px;" colspan="2">
+                            <td style="font-size: 14px; vertical-align: top;" colspan="2">
                                 <span style="font-weight: 700;">{{ $customer->tin_number ?? '' }}</span><br>
                                 {{ $customer->company_name }}<br>
                                 {{ $billing_address->address1 ?? '' }}<br>
@@ -200,33 +200,33 @@
                 <!-- Product Remark -->
                 @if ($prod->remark != null && $prod->remark !== '<p><br></p>')
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                     </tr>
                     <tr>
-                        <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
                             {!! nl2br($prod->remark) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                     </tr>
                 @endif
                 <!-- Accessories -->
                 @if ($prod->accessories != null && count($prod->accessories) > 0)
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Accessories:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                     </tr>
                     @foreach ($prod->accessories as $accessory)
                         <tr>
-                            <td style="font-size: 10px; padding: 2px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left;" colspan="3">
+                            <td colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
                                 - {{ $accessory->product->model_name ?? 'N/A' }}
                                 (Qty: {{ $accessory->qty ?? 1 }})
                                 @if($accessory->is_foc)
@@ -235,7 +235,7 @@
                                     - RM {{ number_format($accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0), 2) }}
                                 @endif
                             </td>
-                            <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                            <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                         </tr>
                     @endforeach
                 @endif
@@ -249,21 +249,23 @@
                     @endphp
                     @if (count($warranty) > 0)
                         <tr>
-                            <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                            <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
-                                Warranty:<br>
-                            <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                            <td colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                                Warranty:
+                            </td>
+                            <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                         </tr>
                         @foreach ($warranty as $key => $w)
                             <tr>
-                                <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                                <td style="font-size: 10px; text-align: left;" colspan="3">
+                                <td colspan="2"></td>
+                                <td style="font-size: 10px; text-align: left;">
                                     @if (count($warranty) == $key + 1)
                                         {{ $w }}
                                     @else
                                         {{ $w }}<br>
                                     @endif
-                                <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                                </td>
+                                <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                             </tr>
                         @endforeach
                     @endif
@@ -271,10 +273,10 @@
                 <!-- Serial No -->
                 @if ($prod->serial_no != null)
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">Serial No:<br>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">Serial No:<br>
                             {{ join(', ', $prod->serial_no) }}</td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                     </tr>
                 @endif
                 @php
@@ -286,20 +288,20 @@
             <!-- Remark -->
             @if ($sale->remark != null)
                 <tr>
-                    <td></td>
-                    <td colspan="3" style="font-size: 10px; padding: 15px 0;"><span
+                    <td colspan="2"></td>
+                    <td style="font-size: 10px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
-                    <td colspan="6"></td>
+                    <td colspan="7"></td>
                 </tr>
             @endif
             <!-- Payment Remark -->
             @if ($sale->payment_remark != null)
                 <tr>
-                    <td></td>
-                    <td colspan="3" style="font-size: 10px; padding: 15px 0;"><span
+                    <td colspan="2"></td>
+                    <td style="font-size: 10px; padding: 15px 0;"><span
                             style="font-weight: 700;">PAYMENT
                             REMARK:</span><br>{{ $sale->payment_remark }}</td>
-                    <td colspan="6"></td>
+                    <td colspan="7"></td>
                 </tr>
             @endif
         </table>

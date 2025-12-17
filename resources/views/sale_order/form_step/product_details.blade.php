@@ -348,10 +348,10 @@
                     $(`.items[data-id="${i+1}"] select[name="warranty_period[]"]`).val(temp)
                     // Load accessories
                     if (sp.accessories && sp.accessories.length > 0) {
-                        $('.accessory-empty-state').addClass('hidden')
                         loadExistingAccessories(i+1, sp.accessories);
+                        $(`.items[data-id="${i+1}"] .accessory-empty-state`).addClass('hidden')
                     } else {
-                        $('.accessory-empty-state').removeClass('hidden')
+                        $(`.items[data-id="${i+1}"] .accessory-empty-state`).removeClass('hidden')
                     }
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
                     setRemarkQuillContent(i+1, sp.remark)
@@ -886,6 +886,10 @@
                 const prod = PRODUCTS[i];
 
                 if (prod.id == product_id) {
+                    // Destroy existing Select2 before rebuilding
+                    if ($(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).hasClass('select2-hidden-accessible')) {
+                        $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).select2('destroy')
+                    }
                     $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
 
                     for (let j = 0; j < prod.children.length; j++) {
@@ -899,6 +903,12 @@
                     }
                     $(`.items[data-id="${item_id}"] #available-qty`).text(
                         `Available Qty: ${prod.children.length - selectedQty}`)
+
+                    // Initialize Select2
+                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).select2({
+                        placeholder: "{!! __('Select serial no') !!}"
+                    })
+                    $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).next('.select2').addClass('border border-gray-300 rounded-md overflow-hidden')
                     break
                 }
             }
@@ -1131,11 +1141,11 @@
 
                 // Disable inputs
                 $newRow.find('input[name="accessory_qty[]"]').attr('disabled', true)
-                $newRow.find('input[name="accessory_qty[]"]').addClass('bg-[#eee]')
-                $newRow.find('input[name="accessory_qty[]"]').parent().addClass('bg-[#eee]')
+                $newRow.find('input[name="accessory_qty[]"]').addClass('!bg-gray-100')
+                $newRow.find('input[name="accessory_qty[]"]').parent().addClass('!bg-gray-100')
                 $newRow.find('input[name="accessory_override_price[]"]').attr('disabled', true)
-                $newRow.find('input[name="accessory_override_price[]"]').addClass('bg-[#eee]')
-                $newRow.find('input[name="accessory_override_price[]"]').parent().addClass('bg-[#eee]')
+                $newRow.find('input[name="accessory_override_price[]"]').addClass('!bg-gray-100')
+                $newRow.find('input[name="accessory_override_price[]"]').parent().addClass('!bg-gray-100')
                 $accessorySelect.attr('disabled', true)
 
                 $container.append($newRow);

@@ -47,6 +47,8 @@
                         <span
                             class="text-sm text-red-500 border border-red-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
                     @else
+                        <x-app.button.submit id="save-and-preview-btn"
+                            class="!bg-green-200">{{ __('Save and Preview') }}</x-app.button.submit>
                         <x-app.button.submit id="save-as-draft-btn"
                             class="!bg-blue-200">{{ __('Save As Draft') }}</x-app.button.submit>
                         <x-app.button.submit id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
@@ -73,7 +75,7 @@
             }
         })
 
-        $('#save-as-draft-btn, #submit-btn').on('click', function() {
+        $('#save-as-draft-btn, #submit-btn, #save-and-preview-btn').on('click', function() {
             $(this).attr('data-triggered', true)
         })
 
@@ -84,10 +86,12 @@
 
             FORM_CAN_SUBMIT = false
             isSaveAsDraft = $('#save-as-draft-btn').attr('data-triggered')
+            isSaveAndPreview = $('#save-and-preview-btn').attr('data-triggered')
 
-            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).text('Updating')
-            $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn'}`).removeClass(
-                '!bg-blue-200 bg-yellow-400 shadow')
+            // Determine which button to update
+            let activeBtn = isSaveAsDraft == 'true' ? '#save-as-draft-btn' : (isSaveAndPreview == 'true' ? '#save-and-preview-btn' : '#submit-btn')
+            $(`form ${activeBtn}`).text('Updating')
+            $(`form ${activeBtn}`).removeClass('!bg-blue-200 !bg-green-200 bg-yellow-400 shadow')
             $('.err_msg').addClass('hidden') // Remove error messages
             // Prepare data
             let prodOrderId = []
@@ -237,10 +241,13 @@
                             $(this).attr('data-product-id', product_ids[i])
                         })
                     }
-                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`).text(
-                        'Updated')
-                    $(`form ${isSaveAsDraft == 'true' ? '#save-as-draft-btn' : '#submit-btn' }`)
-                        .addClass('bg-green-400 shadow')
+                    $(`form ${activeBtn}`).text('Updated')
+                    $(`form ${activeBtn}`).addClass('bg-green-400 shadow')
+
+                    // If save and preview, open PDF in new tab
+                    if (isSaveAndPreview == 'true' && res.data != undefined && res.data.sale) {
+                        window.open(`{{ config('app.url') }}/quotation/pdf/${res.data.sale.id}`, '_blank')
+                    }
 
                     setTimeout(() => {
                         window.location.href = '{{ route('quotation.index') }}'
@@ -293,6 +300,9 @@
                         if (isSaveAsDraft == 'true') {
                             $('form #save-as-draft-btn').text('Save As Draft')
                             $('form #save-as-draft-btn').addClass('!bg-blue-200 shadow')
+                        } else if (isSaveAndPreview == 'true') {
+                            $('form #save-and-preview-btn').text('Save and Preview')
+                            $('form #save-and-preview-btn').addClass('!bg-green-200 shadow')
                         } else {
                             $('form #submit-btn').text('Save and Update')
                             $('form #submit-btn').addClass('bg-yellow-400 shadow')

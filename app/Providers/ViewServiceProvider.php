@@ -711,6 +711,16 @@ class ViewServiceProvider extends ServiceProvider
                 'company_group' => $company_group,
             ]);
         });
+        View::composer(['sales_agent.form'], function (ViewView $view) {
+            $company_group = [
+                1 => 'Power Cool',
+                2 => 'Hi-Ten',
+            ];
+
+            $view->with([
+                'company_group' => $company_group,
+            ]);
+        });
         View::composer(['inventory_category.form'], function (ViewView $view) {
             $factories = Factory::orderBy('id', 'desc')->get();
 

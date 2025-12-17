@@ -128,7 +128,7 @@
                     INVOICE</td>
             </tr>
             <tr>
-                <td style="padding: 0 35px 15px 0;">
+                <td style="padding: 0 35px 15px 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="font-size: 12px; font-weight: 700; padding: 0 0 10px 0;">{{ $customer->name }}
@@ -149,7 +149,7 @@
                         </tr>
                     </table>
                 </td>
-                <td style="padding: 0 35px 15px 0; vertical-align: text-bottom;"></td>
+                <td style="padding: 0 35px 15px 0; vertical-align: top;"></td>
             </tr>
         </table>
     </header>
@@ -214,16 +214,16 @@
                 @if (count($prod['serial_no']) > 0)
                     <tr>
                         <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:<br></td>
-                        <td></td>
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:</td>
+                        <td colspan="5"></td>
                     </tr>
                     @foreach ($prod['serial_no'] as $key => $serial_no)
                         <tr>
                             <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left; font-weight: 700;">-
-                                {{ $serial_no['sku'] }}{{ $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] }}<br>
+                            <td style="font-size: 12px; text-align: left;">-
+                                {{ $serial_no['sku'] }}{{ $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] }}
                             </td>
-                            <td></td>
+                            <td colspan="5"></td>
                         </tr>
                     @endforeach
                 @endif
@@ -237,22 +237,22 @@
                     @endphp
                     <tr>
                         <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
-                            Warranty:<br>
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
+                            Warranty:
                         </td>
-                        <td></td>
+                        <td colspan="5"></td>
                     </tr>
                     @foreach ($warranty as $key => $w)
                         <tr>
                             <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left; vertical-align: top; font-weight: 700;">
+                            <td style="font-size: 12px; text-align: left;">
                                 @if (count($warranty) == $key + 1)
                                     {{ $w }}
                                 @else
                                     {{ $w }}<br>
                                 @endif
                             </td>
-                            <td></td>
+                            <td colspan="5"></td>
                         </tr>
                     @endforeach
                 @endif

@@ -22,6 +22,7 @@ class PermissionSeeder extends Seeder
             'approval.type_sale_order',
             'approval.type_delivery_order',
             'approval.type_customer',
+            'approval.type_payment_record',
 
             'dashboard.view',
 

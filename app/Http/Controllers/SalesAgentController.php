@@ -63,10 +63,16 @@ class SalesAgentController extends Controller
             "data" => [],
             'records_ids' => $records_ids,
         ];
+        $company_group_labels = [
+            1 => 'Power Cool',
+            2 => 'Hi-Ten',
+        ];
+
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'company_group' => $record->company_group ? ($company_group_labels[$record->company_group] ?? null) : null,
             ];
         }
 
@@ -83,6 +89,7 @@ class SalesAgentController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'company_group' => 'required|in:1,2',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -93,6 +100,7 @@ class SalesAgentController extends Controller
 
             $sa = $this->salesAgent::create([
                 'name' => $req->name,
+                'company_group' => $req->company_group,
             ]);
             (new Branch)->assign(SalesAgent::class, $sa->id);
 
@@ -122,6 +130,7 @@ class SalesAgentController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'company_group' => 'required|in:1,2',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -132,6 +141,7 @@ class SalesAgentController extends Controller
 
             $agent->update([
                 'name' => $req->name,
+                'company_group' => $req->company_group,
             ]);
 
             DB::commit();

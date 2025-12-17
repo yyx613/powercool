@@ -11,6 +11,10 @@ class SalePaymentAmount extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const STATUS_ACTIVE = 1;
+    const STATUS_PENDING_EDIT = 2;
+    const STATUS_PENDING_DELETE = 3;
+
     protected $guarded = [];
 
     protected $casts = [
@@ -21,5 +25,33 @@ class SalePaymentAmount extends Model
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date;
+    }
+
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class, 'payment_method');
+    }
+
+    public function paymentTerm()
+    {
+        return $this->belongsTo(CreditTerm::class, 'payment_term');
+    }
+
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
+    public function approval()
+    {
+        return $this->morphOne(Approval::class, 'object')->latestOfMany();
+    }
+
+    public function hasPendingApproval(): bool
+    {
+        return in_array($this->approval_status, [
+            self::STATUS_PENDING_EDIT,
+            self::STATUS_PENDING_DELETE
+        ]);
     }
 }
