@@ -575,8 +575,8 @@
 
             let url = $(this).attr('href')
             let charge = $('#do-inv-void-transfer-back-modal input[name="charge"]').val()
-            let reason = $('#do-inv-void-transfer-back-modal textarea[name="remark"]').text()
-            url = `${url}&charge=${charge}&reason=${reason}`
+            let reason = $('#do-inv-void-transfer-back-modal textarea[name="remark"]').val()
+            url = `${url}&charge=${charge}&remark=${reason}`
 
             window.location.href = url
         })
