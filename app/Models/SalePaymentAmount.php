@@ -15,6 +15,9 @@ class SalePaymentAmount extends Model
     const STATUS_PENDING_EDIT = 2;
     const STATUS_PENDING_DELETE = 3;
 
+    const TYPE_IN = 1;
+    const TYPE_OUT = 2;
+
     protected $guarded = [];
 
     protected $casts = [

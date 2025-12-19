@@ -34,7 +34,7 @@
     @if (isset($sale))
         <div class="grid grid-cols-3 gap-4 mb-6">
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <span class="text-sm text-blue-600">{{ __('SO Total Amount') }}</span>
+                <span class="text-sm text-blue-600">{{ __('Total Amount') }}</span>
                 <p class="text-xl font-bold text-blue-800">RM {{ number_format($sale->getTotalAmount(), 2) }}</p>
             </div>
             <div class="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -61,7 +61,7 @@
                         @if (isset($sale) && $sale->status == 2)
                             <span
                                 class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Converted') }}</span>
-                        @elseif (isset($sale) && $sale->status == 3)
+                        @elseif (isset($sale) && $sale->status == 3 && $sale->cancellation_charge == null)
                             <span
                                 class="text-sm text-slate-500 border border-slate-500 py-1 px-1.5 w-fit rounded">{{ __('Cancelled') }}</span>
                         @else

@@ -119,7 +119,7 @@ class SaleController extends Controller
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
-                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sst_amount, 0)) AS total_amount'),
+                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', Sale::class)
@@ -761,6 +761,17 @@ class SaleController extends Controller
             $paid_amount_query = $paid_amount_query->where('branches.location', getCurrentUserBranch());
         }
 
+        // Check if any payment record was added/updated after SO was cancelled with charge
+        $payment_after_void_query = DB::table('sales')
+            ->select('sales.id AS sale_id', DB::raw('CASE WHEN EXISTS (
+                SELECT 1 FROM sale_payment_amounts spa
+                WHERE spa.sale_id = sales.id
+                AND spa.deleted_at IS NULL
+                AND (spa.created_at >= sales.updated_at OR spa.updated_at >= sales.updated_at)
+            ) THEN 1 ELSE 0 END AS has_payment_after_void'))
+            ->where('sales.status', Sale::STATUS_CANCELLED)
+            ->whereNotNull('sales.cancellation_charge');
+
         $records = DB::table('sales')
             ->select(
                 'sales.id AS id',
@@ -778,6 +789,7 @@ class SaleController extends Controller
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
+                'sales.cancellation_charge AS cancellation_charge',
                 'sales.is_draft AS is_draft',
                 'sales.payment_status',
                 'payment_methods.name as payment_method',
@@ -787,12 +799,19 @@ class SaleController extends Controller
                 'updatedBy.name as updated_by_name',
                 'serial_no_qty_query.serial_no_qty',
                 'paid_amount_query.paid_amount',
+                'pav.has_payment_after_void AS has_payment_after_void',
                 DB::raw('SUM(sale_products.qty) AS qty'),
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) - COALESCE(sst_amount, 0)) AS total_amount'),
+                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
-            ->whereNull('sale_products.deleted_at')
+            ->where(function ($q) {
+                $q->whereNull('sale_products.deleted_at')
+                    ->orWhere(function ($q2) {
+                        $q2->where('sales.status', Sale::STATUS_CANCELLED)
+                            ->whereNotNull('sales.cancellation_charge');
+                    });
+            })
             ->where('branches.object_type', Sale::class)
             ->where('branches.location', getCurrentUserBranch())
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
@@ -808,6 +827,9 @@ class SaleController extends Controller
             })
             ->joinSub($paid_amount_query, 'paid_amount_query', function ($join) {
                 $join->on('paid_amount_query.sale_id', '=', 'sales.id');
+            })
+            ->leftJoinSub($payment_after_void_query, 'pav', function ($join) {
+                $join->on('pav.sale_id', '=', 'sales.id');
             })
             ->groupBy('sales.id');
         if ($req->transfer_type == Sale::TRANSFER_TYPE_NORMAL) {
@@ -910,6 +932,17 @@ class SaleController extends Controller
                 }
             }
 
+            // Rejected reason
+            $rejected_reason = null;
+            if ($record->status == Sale::STATUS_APPROVAL_REJECTED) {
+                $rejected_reason = Approval::where('object_type', Sale::class)
+                    ->where('object_id', $record->id)
+                    ->where('status', Approval::STATUS_REJECTED)
+                    ->where('data', 'like', '%"is_quo":false%')
+                    ->orderBy('id', 'desc')
+                    ->value('reject_remark');
+            }
+
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
@@ -927,6 +960,9 @@ class SaleController extends Controller
                 'payment_method' => $record->payment_method,
                 'payment_status' => $record->payment_status,
                 'status' => $record->status,
+                'rejected_reason' => $rejected_reason,
+                'cancellation_charge' => $record->cancellation_charge,
+                'has_payment_after_void' => $record->has_payment_after_void ?? 0,
                 'transfer_to_branch' => ! isset($record->branch_location) ? null : (new Branch)->keyToLabel($record->branch_location),
                 'transfer_from_branch' => ! isset($record->branch_location) ? null : (new Branch)->keyToLabel($record->branch_location),
                 'is_draft' => $record->is_draft,
@@ -936,7 +972,8 @@ class SaleController extends Controller
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
                 'can_edit' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
-                'can_edit_payment' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && isSuperAdmin() || isFinance(),
+                'can_edit_payment' => (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && (isSuperAdmin() || isFinance()))
+                    || ($record->status == Sale::STATUS_CANCELLED && $record->cancellation_charge != null && (isSuperAdmin() || isFinance())),
                 'can_view' => hasPermission('sale.sale_order.view_record'),
                 'can_cancel' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
@@ -2844,6 +2881,8 @@ class SaleController extends Controller
                 $rules['account_date.*'] = 'required_with:account_amount.*';
                 $rules['account_ref_no'] = 'nullable';
                 $rules['account_ref_no.*'] = 'nullable|max:250';
+                $rules['account_type'] = 'nullable';
+                $rules['account_type.*'] = 'nullable|in:1,2';
             }
             $req->validate($rules, [], [
                 'account_amount.*' => 'amount',
@@ -2902,6 +2941,7 @@ class SaleController extends Controller
                                     'amount' => $req->account_amount[$i],
                                     'date' => $req->account_date[$i],
                                     'reference_number' => $req->account_ref_no[$i] ?? null,
+                                    'type' => $req->account_type[$i] ?? SalePaymentAmount::TYPE_IN,
                                 ];
 
                                 // Check if any field changed
@@ -2918,6 +2958,7 @@ class SaleController extends Controller
                                 'amount' => $req->account_amount[$i],
                                 'date' => $req->account_date[$i],
                                 'reference_number' => $req->account_ref_no[$i],
+                                'type' => $req->account_type[$i] ?? SalePaymentAmount::TYPE_IN,
                                 'by_id' => Auth::user()->id,
                                 'approval_status' => SalePaymentAmount::STATUS_ACTIVE,
                                 'created_at' => now(),
@@ -5844,7 +5885,8 @@ class SaleController extends Controller
                $existing->payment_term != $proposed['payment_term'] ||
                (float)$existing->amount != (float)$proposed['amount'] ||
                $existing->date != $proposed['date'] ||
-               $existing->reference_number != $proposed['reference_number'];
+               $existing->reference_number != $proposed['reference_number'] ||
+               $existing->type != ($proposed['type'] ?? SalePaymentAmount::TYPE_IN);
     }
 
     private function createPaymentEditApproval(SalePaymentAmount $payment, array $proposed): void
@@ -5863,6 +5905,7 @@ class SaleController extends Controller
                     'amount' => $payment->amount,
                     'date' => $payment->date,
                     'reference_number' => $payment->reference_number,
+                    'type' => $payment->type,
                 ],
                 'proposed' => $proposed,
                 'description' => Auth::user()->name . ' requested to edit payment record (RM' . number_format($payment->amount, 2) . ' -> RM' . number_format($proposed['amount'], 2) . ') for ' . $payment->sale->sku,

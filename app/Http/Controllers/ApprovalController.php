@@ -374,6 +374,7 @@ class ApprovalController extends Controller
                     $obj->amount = $data->proposed->amount;
                     $obj->date = $data->proposed->date;
                     $obj->reference_number = $data->proposed->reference_number;
+                    $obj->type = $data->proposed->type ?? $obj->type;
                     $obj->approval_status = SalePaymentAmount::STATUS_ACTIVE;
                     $obj->save();
                 } elseif (isset($data->is_payment_delete)) {

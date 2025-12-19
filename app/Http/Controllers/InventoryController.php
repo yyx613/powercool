@@ -6,12 +6,18 @@ use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\FactoryRawMaterial;
+use App\Models\FactoryRawMaterialRecord;
 use App\Models\InventoryCategory;
 use App\Models\InventoryType;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
+use App\Models\ProductionMilestoneMaterial;
+use App\Models\Sale;
+use App\Models\SaleProduct;
+use App\Models\SaleProductChild;
 use App\Models\Supplier;
+use App\Models\TaskMilestoneInventory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -260,8 +266,8 @@ class InventoryController extends Controller
     public function getDataSummary()
     {
         try {
-            $products = $this->prod->with('image')->where('type', Product::TYPE_PRODUCT)->get();
-            $raw_materials = $this->prod->with('image')->where('type', Product::TYPE_RAW_MATERIAL)->get();
+            $products = $this->prod->where('type', Product::TYPE_PRODUCT)->get();
+            $raw_materials = $this->prod->where('type', Product::TYPE_RAW_MATERIAL)->get();
             // Stock summary
             $warehouse_stock = 0;
             $warehouse_reserved_stock = 0;
@@ -285,6 +291,155 @@ class InventoryController extends Controller
                 'warehouse_reserved_stock' => $warehouse_reserved_stock,
                 'production_stock' => $production_stock,
                 'production_reserved_stock' => $production_reserved_stock,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'result' => false,
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getDataSummaryV2()
+    {
+        try {
+            // ===== PRODUCTS (TYPE_PRODUCT) =====
+            // Warehouse stock for products
+            $productWarehouseStock = ProductChild::whereNull('status')
+                ->where('location', ProductChild::LOCATION_WAREHOUSE)
+                ->whereHas('parent', fn ($q) => $q->where('type', Product::TYPE_PRODUCT))
+                ->count();
+
+            // Production/Factory stock for products
+            $productProductionStock = ProductChild::whereNull('status')
+                ->where('location', ProductChild::LOCATION_FACTORY)
+                ->whereHas('parent', fn ($q) => $q->where('type', Product::TYPE_PRODUCT))
+                ->count();
+
+            // Get warehouse product child IDs for reserved calculations
+            $warehouseProductChildIds = ProductChild::whereNull('status')
+                ->where('location', ProductChild::LOCATION_WAREHOUSE)
+                ->whereHas('parent', fn ($q) => $q->where('type', Product::TYPE_PRODUCT))
+                ->pluck('id');
+
+            // Reserved in Sales (not converted, or SO with convert_to)
+            $productWarehouseSaleReserved = SaleProductChild::whereIn('product_children_id', $warehouseProductChildIds)
+                ->whereHas('saleProduct.sale', function ($q) {
+                    $q->where(function ($q2) {
+                        $q2->where('status', '!=', Sale::STATUS_CONVERTED)
+                            ->orWhere(function ($q3) {
+                                $q3->where('type', Sale::TYPE_SO)->whereNotNull('convert_to');
+                            });
+                    });
+                })
+                ->distinct('product_children_id')
+                ->count('product_children_id');
+
+            // Reserved in Production (on_hold = false)
+            $productWarehouseProductionReserved = ProductionMilestoneMaterial::where('on_hold', false)
+                ->whereIn('product_child_id', $warehouseProductChildIds)
+                ->count();
+
+            // Reserved in Tasks
+            $productWarehouseTaskReserved = TaskMilestoneInventory::where('inventory_type', ProductChild::class)
+                ->whereIn('inventory_id', $warehouseProductChildIds)
+                ->count();
+
+            $productWarehouseReserved = $productWarehouseSaleReserved + $productWarehouseProductionReserved + $productWarehouseTaskReserved;
+
+            // On-hold stock for products (warehouse)
+            $productWarehouseOnHold = ProductionMilestoneMaterial::where('on_hold', true)
+                ->whereIn('product_child_id', $warehouseProductChildIds)
+                ->count();
+
+            // Get factory product child IDs for production reserved calculations
+            $factoryProductChildIds = ProductChild::whereNull('status')
+                ->where('location', ProductChild::LOCATION_FACTORY)
+                ->whereHas('parent', fn ($q) => $q->where('type', Product::TYPE_PRODUCT))
+                ->pluck('id');
+
+            // Production reserved in Sales
+            $productProductionSaleReserved = SaleProductChild::whereIn('product_children_id', $factoryProductChildIds)
+                ->whereHas('saleProduct.sale', function ($q) {
+                    $q->where(function ($q2) {
+                        $q2->where('status', '!=', Sale::STATUS_CONVERTED)
+                            ->orWhere(function ($q3) {
+                                $q3->where('type', Sale::TYPE_SO)->whereNotNull('convert_to');
+                            });
+                    });
+                })
+                ->distinct('product_children_id')
+                ->count('product_children_id');
+
+            // Production reserved in ProductionMilestoneMaterial
+            $productProductionMilestoneReserved = ProductionMilestoneMaterial::whereIn('product_child_id', $factoryProductChildIds)->count();
+
+            $productProductionReserved = $productProductionSaleReserved + $productProductionMilestoneReserved;
+
+            // ===== RAW MATERIALS (TYPE_RAW_MATERIAL) =====
+            // Warehouse stock for raw materials (uses qty field)
+            $rawMaterialWarehouseStock = Product::where('type', Product::TYPE_RAW_MATERIAL)->sum('qty');
+
+            // Get raw material IDs (sparepart type) for reserved calculations
+            $sparepartRawMaterialIds = Product::where('type', Product::TYPE_RAW_MATERIAL)
+                ->where('is_sparepart', true)
+                ->pluck('id');
+
+            // Get all raw material IDs for on-hold calculation
+            $allRawMaterialIds = Product::where('type', Product::TYPE_RAW_MATERIAL)->pluck('id');
+
+            // Reserved for non-sparepart raw materials (in SaleProduct)
+            $rawMaterialSaleReserved = SaleProduct::whereHas('product', function ($q) {
+                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
+            })->sum('qty');
+
+            // Reserved for sparepart raw materials (in Production)
+            $rawMaterialProductionReserved = ProductionMilestoneMaterial::where('on_hold', false)
+                ->whereIn('product_id', $sparepartRawMaterialIds)
+                ->sum('qty');
+
+            // Reserved for sparepart raw materials (in Tasks)
+            $rawMaterialTaskReserved = TaskMilestoneInventory::where('inventory_type', Product::class)
+                ->whereIn('inventory_id', $sparepartRawMaterialIds)
+                ->sum('qty');
+
+            $rawMaterialWarehouseReserved = $rawMaterialSaleReserved + $rawMaterialProductionReserved + $rawMaterialTaskReserved;
+
+            // On-hold stock for raw materials
+            $rawMaterialOnHold = ProductionMilestoneMaterial::where('on_hold', true)
+                ->whereIn('product_id', $allRawMaterialIds)
+                ->sum('qty');
+
+            // Production stock for raw materials (from FactoryRawMaterial)
+            $rawMaterialProductionStock = FactoryRawMaterial::join('products', 'factory_raw_materials.product_id', '=', 'products.id')
+                ->where('products.type', Product::TYPE_RAW_MATERIAL)
+                ->select(DB::raw('SUM(factory_raw_materials.qty - COALESCE(factory_raw_materials.to_warehouse_qty, 0)) as total'))
+                ->value('total') ?? 0;
+
+            // Subtract used qty from records
+            $usedQty = FactoryRawMaterialRecord::join('factory_raw_materials', 'factory_raw_material_records.factory_raw_material_id', '=', 'factory_raw_materials.id')
+                ->join('products', 'factory_raw_materials.product_id', '=', 'products.id')
+                ->where('products.type', Product::TYPE_RAW_MATERIAL)
+                ->sum('factory_raw_material_records.qty');
+
+            $rawMaterialProductionStock = $rawMaterialProductionStock - $usedQty;
+
+            // ===== COMBINE TOTALS =====
+            $warehouseAvailableStock = ($productWarehouseStock - $productWarehouseReserved - $productWarehouseOnHold)
+                + ($rawMaterialWarehouseStock - $rawMaterialWarehouseReserved - $rawMaterialOnHold);
+
+            $warehouseReservedStock = $productWarehouseReserved + $rawMaterialWarehouseReserved;
+
+            $productionStock = $productProductionStock + $rawMaterialProductionStock;
+
+            $productionReservedStock = $productProductionReserved; // Raw materials return 0 for production reserved
+
+            return Response::json([
+                'warehouse_available_stock' => $warehouseAvailableStock,
+                'warehouse_reserved_stock' => $warehouseReservedStock,
+                'production_stock' => $productionStock,
+                'production_reserved_stock' => $productionReservedStock,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             report($th);
