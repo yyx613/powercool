@@ -138,7 +138,7 @@ class Sale extends Model
 
         $total = 0;
         for ($i = 0; $i < count($prods); $i++) {
-            $total += (($prods[$i]->qty * $prods[$i]->unit_price) - ($prods[$i]->discount ?? 0) - ($prods[$i]->sst_amount ?? 0));
+            $total += (($prods[$i]->qty * $prods[$i]->unit_price) - ($prods[$i]->discount ?? 0) + ($prods[$i]->sst_amount ?? 0));
         }
 
         return $total;
@@ -201,7 +201,7 @@ class Sale extends Model
     public function remainingAmountToPay()
     {
         $total_amount = DB::table('sales')
-            ->select(DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) - COALESCE(sst_amount, 0)) AS total_amount'),)
+            ->select(DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),)
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
             ->where('sales.type', Sale::TYPE_SO)

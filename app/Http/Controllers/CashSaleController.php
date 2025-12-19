@@ -68,7 +68,7 @@ class CashSaleController extends Controller
                 'serial_no_qty_query.serial_no_qty',
                 'paid_amount_query.paid_amount',
                 DB::raw('SUM(sale_products.qty) AS qty'),
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) - COALESCE(sst_amount, 0)) AS total_amount'),
+                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_CASH_SALE)
             ->whereNull('sales.deleted_at')

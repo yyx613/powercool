@@ -103,6 +103,13 @@
                     <x-app.input.input name="account_ref_no" id="account_ref_no" :hasError="$errors->has('account_ref_no')" />
                     <x-app.message.error id="account_ref_no_err" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="account_type" class="mb-1">{{ __('Type') }}</x-app.input.label>
+                    <x-app.input.select name="account_type" id="account_type" class="account-type-select">
+                        <option value="1">{{ __('IN') }}</option>
+                        <option value="2">{{ __('OUT') }}</option>
+                    </x-app.input.select>
+                </div>
             </div>
         </div>
         <x-app.message.error id="account_err" />
@@ -153,6 +160,7 @@
                         $row.find('input[name="account_amount"]').val(SALE.payment_amounts[i].amount)
                         $row.find('input[name="account_date"]').val(SALE.payment_amounts[i].date)
                         $row.find('input[name="account_ref_no"]').val(SALE.payment_amounts[i].reference_number)
+                        $row.find('select[name="account_type"]').val(SALE.payment_amounts[i].type || 1)
 
                         // Set existing payment ID
                         $row.find('.existing-payment-id').val(SALE.payment_amounts[i].id)
