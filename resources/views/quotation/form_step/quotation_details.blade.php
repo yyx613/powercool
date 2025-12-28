@@ -331,11 +331,13 @@
             } else {
                 $('input[name="mobile"]').val('-')
             }
-            // Filter sales agents by company group
+            // Filter sales agents by customer's assigned agents only
             $('select[name="sale"]').find('option').not(':first').remove();
-            for (let i = 0; i < SALES_AGENTS.length; i++) {
-                const sa = SALES_AGENTS[i];
-                if (sa.company_group == element.company_group) {
+            for (let i = 0; i < element.sales_agents.length; i++) {
+                const assignedAgent = element.sales_agents[i];
+                // Find the agent details from SALES_AGENTS
+                const sa = SALES_AGENTS.find(agent => agent.id == assignedAgent.sales_agent_id);
+                if (sa) {
                     let opt = new Option(sa.name, sa.id)
                     $('select[name="sale"]').append(opt)
                 }
