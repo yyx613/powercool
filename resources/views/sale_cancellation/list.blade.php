@@ -45,8 +45,11 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>{{ __('SO/INV') }}</th>
+                    <th>{{ __('Date') }}</th>
                     <th>{{ __('Salesperson') }}</th>
                     <th>{{ __('Product') }}</th>
+                    <th>{{ __('Debtor') }}</th>
                     <th>{{ __('Qty') }}</th>
                     <th></th>
                 </tr>
@@ -73,10 +76,19 @@
             order: [],
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [{
+                    data: 'so_inv'
+                },
+                {
+                    data: 'cancel_date'
+                },
+                {
                     data: 'saleperson'
                 },
                 {
                     data: 'product_sku'
+                },
+                {
+                    data: 'customer_name'
                 },
                 {
                     data: 'qty'
@@ -86,29 +98,52 @@
                 },
             ],
             columnDefs: [{
-                    "width": "20%",
+                    "width": "12%",
                     "targets": 0,
                     render: function(data, type, row) {
-                        return data
+                        return data ?? '-'
                     }
                 },
                 {
-                    "width": "20%",
+                    "width": "10%",
                     "targets": 1,
+                    render: function(data, type, row) {
+                        if (!data) return '-';
+                        return data.split(' ')[0];
+                    }
+                },
+                {
+                    "width": "12%",
+                    "targets": 2,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "18%",
+                    "targets": 3,
                     render: function(data, type, row) {
                         return `${row.product_sku} - ${row.product_name}`
                     }
                 },
                 {
-                    "width": "20%",
-                    "targets": 2,
+                    "width": "18%",
+                    "targets": 4,
+                    render: function(data, type, row) {
+                        if (!row.customer_code && !row.customer_name) return '-';
+                        return `${row.customer_code ?? ''} - ${row.customer_name ?? ''}`
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 5,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "width": "0%",
-                    "targets": 3,
+                    "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
                         const viewUrl = "{{ route('sale_cancellation.view', ['saleperson_id' => ':saleperson_id', 'product_id' => ':product_id']) }}"

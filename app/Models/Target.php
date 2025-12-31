@@ -27,7 +27,8 @@ class Target extends Model
     }
 
     public function salesperson() {
-        return $this->belongsTo(User::class, 'sale_id');
+        return $this->belongsTo(User::class, 'sale_id')
+            ->withoutGlobalScope(BranchScope::class);
     }
     
     public function branch() {

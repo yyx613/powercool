@@ -645,7 +645,15 @@ class SaleController extends Controller
                     });
                 })->toArray(),
                 'accessory' => $products->map(function ($q) {
-                    return $q->accessories;
+                    return $q->accessories->map(function ($acc) {
+                        return [
+                            'id' => $acc->accessory_id,
+                            'qty' => $acc->qty ?? 1,
+                            'selling_price' => $acc->selling_price_id,
+                            'override_price' => $acc->override_selling_price,
+                            'is_foc' => $acc->is_foc ?? false,
+                        ];
+                    })->toArray();
                 })->toArray(),
                 'discount' => $products->map(function ($q) {
                     return $q->discount;
@@ -985,7 +993,7 @@ class SaleController extends Controller
                     'payment_method_filled' => $record->payment_method != null,
                     'payment_due_date_filled' => in_array($record->payment_method_id, $credit_term_payment_method_ids) ? true : $record->paid_amount >= $record->total_amount || $record->payment_due_date != null,
                     'has_product' => count($sp_ids) > 0,
-                    'has_serial_no' => SaleProductChild::whereIn('sale_product_id', $sp_ids)->exists(),
+                    'has_serial_no' => $this->hasSerialNoForNonRawMaterials($sp_ids),
                     'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE || $record->status == Sale::STATUS_PARTIALLY_CONVERTED,
                     'no_pending_approval' => ! Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
@@ -1932,7 +1940,7 @@ class SaleController extends Controller
         // Check duplicate serial no is selected (upsertProDetails) - only for SO and Cash Sale
         if (($req->type == 'so' || $req->type == 'cash-sale') && isset($req->product_serial_no)) {
             // Check if sales role is trying to submit serial numbers
-            if (in_array(Role::SALE, getUserRoleId(Auth::user()))) {
+            if (in_array(Role::SALE, getUserRoleId(Auth::user())) && !isSuperAdmin()) {
                 return Response::json([
                     'errors' => [
                         'product_serial_no' => 'Sales role is not allowed to select serial numbers',
@@ -4642,7 +4650,9 @@ class SaleController extends Controller
         $records = DB::table('sale_order_cancellation')
             ->select(
                 'sale_order_cancellation.id', 'sale_order_cancellation.product_id', 'sale_order_cancellation.saleperson_id',
+                'sale_order_cancellation.created_at AS cancel_date',
                 'products.sku AS product_sku', 'products.model_name AS product_name', 'sales_agents.name AS saleperson',
+                'sales.sku AS so_inv', 'customers.sku AS customer_code', 'customers.company_name AS customer_name',
                 DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0)) AS qty')
             )
             ->leftJoinSub($qty_to_sell, 'qty_to_sell', function ($join) {
@@ -4653,6 +4663,8 @@ class SaleController extends Controller
             })
             ->leftJoin('products', 'products.id', '=', 'sale_order_cancellation.product_id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sale_order_cancellation.saleperson_id')
+            ->leftJoin('sales', 'sales.id', '=', 'sale_order_cancellation.sale_id')
+            ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->whereNull('on_hold_sale_id')
             ->whereNull('sale_order_cancellation.deleted_at')
             ->groupBy('sale_order_cancellation.product_id', 'sale_order_cancellation.saleperson_id');
@@ -4664,15 +4676,21 @@ class SaleController extends Controller
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sales_agents.name', 'like', '%'.$keyword.'%')
                     ->orWhere('products.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%');
+                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('sales.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('customers.company_name', 'like', '%'.$keyword.'%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'sales_agents.name',
-                1 => 'products.sku',
-                2 => DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0))'),
+                0 => 'sales.sku',
+                1 => 'sale_order_cancellation.created_at',
+                2 => 'sales_agents.name',
+                3 => 'products.sku',
+                4 => 'customers.company_name',
+                5 => DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0))'),
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -4699,6 +4717,10 @@ class SaleController extends Controller
                 'product_name' => $record->product_name,
                 'qty' => $record->qty,
                 'saleperson' => $record->saleperson,
+                'so_inv' => $record->so_inv,
+                'cancel_date' => $record->cancel_date,
+                'customer_code' => $record->customer_code,
+                'customer_name' => $record->customer_name,
             ];
         }
 
@@ -5949,5 +5971,31 @@ class SaleController extends Controller
 
         $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
         Cache::put('unread_approval_count', $pending_approval_count);
+    }
+
+    private function hasSerialNoForNonRawMaterials(array $saleProductIds): bool
+    {
+        if (empty($saleProductIds)) {
+            return false;
+        }
+
+        $saleProducts = SaleProduct::with('product')
+            ->whereIn('id', $saleProductIds)
+            ->get();
+
+        foreach ($saleProducts as $saleProduct) {
+            // Skip raw materials - they don't need serial numbers
+            if ($saleProduct->product && $saleProduct->product->isRawMaterial()) {
+                continue;
+            }
+
+            // For products and spareparts, check if they have at least 1 serial number
+            $hasSerialNo = SaleProductChild::where('sale_product_id', $saleProduct->id)->exists();
+            if (! $hasSerialNo) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
