@@ -344,9 +344,22 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
         View::composer(['target.form'], function (ViewView $view) {
-            $sales = User::whereHas('roles', function ($q) {
-                $q->where('id', Role::SALE);
-            })->orderBy('id', 'desc')->get();
+            $current_branch = getCurrentUserBranch();
+
+            $sales = User::withoutGlobalScope(BranchScope::class)
+                ->whereHas('roles', function ($q) {
+                    $q->where('id', Role::SALE);
+                })
+                ->where(function ($q) use ($current_branch) {
+                    // Include users from current branch
+                    $q->whereHas('branch', function ($b) use ($current_branch) {
+                        $b->where('location', $current_branch);
+                    })
+                    // OR include users with no branch (every branch agents)
+                    ->orWhereDoesntHave('branch');
+                })
+                ->orderBy('id', 'desc')
+                ->get();
 
             $view->with('sales', $sales);
         });

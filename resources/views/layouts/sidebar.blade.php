@@ -2903,7 +2903,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes(
                             'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
-                            'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
+                            'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
                         CURRENT_ROUTE_NAME.includes('task.driver.') ||
@@ -2975,7 +2975,7 @@
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes(
                         'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
-                        'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.')) {
+                        'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
                     CURRENT_ROUTE_NAME.includes('task.driver.') ||

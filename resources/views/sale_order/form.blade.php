@@ -279,15 +279,15 @@
                                         errors[key])
                                     $(`.items[data-id="${idx}"] #${field}_err`).removeClass(
                                         'hidden')
+                                } else if (key == 'product_serial_no') {
+                                    // Show error on all items since no specific index is provided
+                                    $(`.items #${key}_err`).find('p').text(errors[key])
+                                    $(`.items #${key}_err`).removeClass('hidden')
                                 } else {
                                     $(`#${key}_err`).find('p').text(errors[key])
                                     $(`#${key}_err`).removeClass('hidden')
                                 }
                             }
-                        } else if (err.status == StatusCodes.BAD_REQUEST) {
-                            $(`.items #product_serial_no_err`).find('p').text(err.responseJSON
-                                .product_serial_no)
-                            $(`.items #product_serial_no_err`).removeClass('hidden')
                         }
 
                         if (isSaveAsDraft == 'true') {
