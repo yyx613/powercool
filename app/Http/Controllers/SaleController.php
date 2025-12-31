@@ -1131,6 +1131,32 @@ class SaleController extends Controller
 
                 $sale->status = Sale::STATUS_CANCELLED;
                 $sale->save();
+
+                // Delete service reminders linked to invoices from both SOs' delivery orders
+                $all_so_convert_to = array_filter([
+                    $transfer_from_so->convert_to,
+                    $sale->convert_to,
+                ]);
+                if (! empty($all_so_convert_to)) {
+                    $do_ids = [];
+                    foreach ($all_so_convert_to as $convert_to) {
+                        if (str_contains($convert_to, ',')) {
+                            $do_ids = array_merge($do_ids, explode(',', $convert_to));
+                        } else {
+                            $do_ids[] = $convert_to;
+                        }
+                    }
+                    $invoice_ids = DeliveryOrder::withoutGlobalScope(BranchScope::class)
+                        ->whereIn('id', $do_ids)
+                        ->whereNotNull('invoice_id')
+                        ->pluck('invoice_id')
+                        ->toArray();
+                    if (! empty($invoice_ids)) {
+                        InventoryServiceReminder::where('attached_type', Invoice::class)
+                            ->whereIn('attached_id', $invoice_ids)
+                            ->delete();
+                    }
+                }
             } else {
                 $approval = Approval::create([
                     'object_type' => Sale::class,
@@ -1182,6 +1208,32 @@ class SaleController extends Controller
                 $sale->status = Sale::STATUS_TRANSFERRED_BACK;
                 $sale->save();
                 $sale->delete();
+
+                // Delete service reminders linked to invoices from both SOs' delivery orders
+                $all_so_convert_to = array_filter([
+                    $transfer_from_so->convert_to,
+                    $sale->convert_to,
+                ]);
+                if (! empty($all_so_convert_to)) {
+                    $do_ids = [];
+                    foreach ($all_so_convert_to as $convert_to) {
+                        if (str_contains($convert_to, ',')) {
+                            $do_ids = array_merge($do_ids, explode(',', $convert_to));
+                        } else {
+                            $do_ids[] = $convert_to;
+                        }
+                    }
+                    $invoice_ids = DeliveryOrder::withoutGlobalScope(BranchScope::class)
+                        ->whereIn('id', $do_ids)
+                        ->whereNotNull('invoice_id')
+                        ->pluck('invoice_id')
+                        ->toArray();
+                    if (! empty($invoice_ids)) {
+                        InventoryServiceReminder::where('attached_type', Invoice::class)
+                            ->whereIn('attached_id', $invoice_ids)
+                            ->delete();
+                    }
+                }
             } else {
                 $sale->status = Sale::STATUS_TRANSFERRED_BACK;
                 $sale->save();
@@ -1196,6 +1248,23 @@ class SaleController extends Controller
                     }
                     $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                     $quos[$i]->save();
+                }
+
+                // Delete service reminders linked to invoices from this SO's delivery orders
+                if ($sale->convert_to != null) {
+                    $do_ids = str_contains($sale->convert_to, ',')
+                        ? explode(',', $sale->convert_to)
+                        : [$sale->convert_to];
+                    $invoice_ids = DeliveryOrder::withoutGlobalScope(BranchScope::class)
+                        ->whereIn('id', $do_ids)
+                        ->whereNotNull('invoice_id')
+                        ->pluck('invoice_id')
+                        ->toArray();
+                    if (! empty($invoice_ids)) {
+                        InventoryServiceReminder::where('attached_type', Invoice::class)
+                            ->whereIn('attached_id', $invoice_ids)
+                            ->delete();
+                    }
                 }
 
                 $sale->delete();
@@ -3519,6 +3588,23 @@ class SaleController extends Controller
         $sale->cancellation_charge = $charge;
         $sale->status = Sale::STATUS_CANCELLED;
         $sale->save();
+
+        // Delete service reminders linked to invoices from this SO's delivery orders
+        if ($sale->convert_to != null) {
+            $do_ids = str_contains($sale->convert_to, ',')
+                ? explode(',', $sale->convert_to)
+                : [$sale->convert_to];
+            $invoice_ids = DeliveryOrder::withoutGlobalScope(BranchScope::class)
+                ->whereIn('id', $do_ids)
+                ->whereNotNull('invoice_id')
+                ->pluck('invoice_id')
+                ->toArray();
+            if (! empty($invoice_ids)) {
+                InventoryServiceReminder::where('attached_type', Invoice::class)
+                    ->whereIn('attached_id', $invoice_ids)
+                    ->delete();
+            }
+        }
     }
 
     public function getCancellationInvolvedSO(Request $req, Sale $so)
