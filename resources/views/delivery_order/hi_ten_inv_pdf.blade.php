@@ -221,7 +221,7 @@
                         <tr>
                             <td style="font-size: 12px; text-align: left;" colspan="2"></td>
                             <td style="font-size: 12px; text-align: left;">-
-                                {{ $serial_no['sku'] }}{{ $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] }}
+                                {{ $serial_no['sku'] }}{!! $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] !!}
                             </td>
                             <td colspan="5"></td>
                         </tr>
