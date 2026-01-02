@@ -338,7 +338,7 @@
                                         @if (!$pro->product->isRawMaterial() && $pro->remainingQty() > 0)
                                             @foreach ($pro->children as $pc)
                                                 @php
-                                                    if (!in_array($pc->product_children_id, $allowed_spc_ids)) {
+                                                    if (!in_array($pc->product_children_id, $allowed_spc_ids) || $pc->productChild == null) {
                                                         continue;
                                                     }
                                                 @endphp

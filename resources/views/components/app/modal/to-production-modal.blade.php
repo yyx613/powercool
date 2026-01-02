@@ -1,7 +1,10 @@
 <x-app.modal.base-modal id="to-production-modal">
     <div class="flex flex-col">
-        <div class="py-2 px-4 bg-gray-100">
+        <div class="py-2 px-4 bg-gray-100 flex items-center justify-between">
             <h6 class="text-lg font-black">{{ __('To Sale Production Request') }}</h6>
+            <button type="button" class="rounded-full p-1.5 hover:bg-gray-200" id="close-btn" title="Close">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M18,6h0a1,1,0,0,0-1.414,0L12,10.586,7.414,6A1,1,0,0,0,6,6H6A1,1,0,0,0,6,7.414L10.586,12,6,16.586A1,1,0,0,0,6,18H6a1,1,0,0,0,1.414,0L12,13.414,16.586,18A1,1,0,0,0,18,18h0a1,1,0,0,0,0-1.414L13.414,12,18,7.414A1,1,0,0,0,18,6Z"/></svg>
+            </button>
         </div>
         <div class="flex-1 flex flex-col p-4 overflow-auto max-h-96">
             <form action="" method="POST">
@@ -44,6 +47,9 @@
 @push('scripts')
     <script>
         $('#to-production-modal #no-btn').on('click', function() {
+            $('#to-production-modal').removeClass('show-modal')
+        })
+        $('#to-production-modal #close-btn').on('click', function() {
             $('#to-production-modal').removeClass('show-modal')
         })
         $('#to-production-modal form').one('submit', function(e) {

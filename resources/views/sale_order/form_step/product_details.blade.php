@@ -650,6 +650,7 @@
         $('body').on('change', 'select[name="product_serial_no[]"]', function() {
             let itemId = $(this).closest('.items').attr('data-id')
             let productId = $(`.items[data-id=${itemId}] select[name="product_id[]"]`).val()
+            let productQty = parseInt($(`.items[data-id="${itemId}"] input[name="qty"]`).val()) || 0
             let totalQty = 0
             let selectedQty = $(`.items[data-id=${itemId}] select[name="product_serial_no[]"] option:checked`)
                 .length
@@ -661,6 +662,11 @@
                     totalQty = prod.children.length
                     break
                 }
+            }
+
+            // Alert if selected serial numbers exceed product quantity
+            if (selectedQty > productQty) {
+                alert(`{{ __('You have selected') }} ${selectedQty} {{ __('serial number(s), but the quantity is only') }} ${productQty}. {{ __('Please reduce your selection.') }}`)
             }
 
             $(`.items[data-id="${itemId}"] #available-qty`).text(`Available Qty: ${totalQty - selectedQty}`)

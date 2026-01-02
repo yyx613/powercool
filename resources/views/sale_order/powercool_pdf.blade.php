@@ -23,6 +23,10 @@
         margin: 0;
         padding: 0;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -99,6 +103,14 @@
                 <td style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;"
                     colspan="2">{{ $is_proforma_invoice ? 'PROFORMA INVOICE' : 'SALES ORDER' }}</td>
             </tr>
+            @if ($sale->status == 3)
+                <tr>
+                    <td style="font-size: 14px; font-weight: 700; padding: 0px 35px 10px 0; text-align: center;"
+                        colspan="2" id="invalid">
+                        VOIDED
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td style="padding: 0 35px 0 0; vertical-align: top;" colspan="2">
                     <table style="width: 100%; border-collapse: collapse;">
