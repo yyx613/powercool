@@ -25,6 +25,10 @@
         left: 0px;
         right: 0px;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -106,6 +110,14 @@
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
                     DELIVERY ORDER</td>
             </tr>
+            @if (isset($do_status) && $do_status == 1)
+                <tr>
+                    <td style="font-size: 14px; font-weight: 700; padding: 0px 35px 10px 0; text-align: center;"
+                        colspan="2" id="invalid">
+                        VOIDED
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td style="padding: 0 35px 15px 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -123,8 +135,8 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px; padding: 10px 0 0 0;" colspan="2">TEL:
-                                {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -145,6 +157,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>

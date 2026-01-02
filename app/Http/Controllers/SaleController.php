@@ -1295,10 +1295,15 @@ class SaleController extends Controller
             $is_proforma_invoice = true;
         }
 
-        $sps = $sale->products()->withTrashed()->with('accessories.product')->get();
+        $sps = $sale->products()->withTrashed()->with([
+            'accessories.product',
+            'children' => function ($q) {
+                $q->withTrashed();
+            }
+        ])->get();
         for ($i = 0; $i < count($sps); $i++) {
             $pc_ids = $sps[$i]->children->pluck('product_children_id');
-            $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
+            $sps[$i]->serial_no = ProductChild::withTrashed()->whereIn('id', $pc_ids)->pluck('sku')->toArray();
         }
         $quo_skus = Sale::where('type', Sale::TYPE_QUO)->where('convert_to', $sale->id)->pluck('sku')->toArray();
 
@@ -1770,6 +1775,7 @@ class SaleController extends Controller
                 'terms' => Session::get('convert_terms'),
                 'warehouse' => $sale_orders[0]->warehouse ?? '',
                 'store' => $sale_orders[0]->store ?? '',
+                'do_status' => $do->status ?? null,
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
@@ -2403,7 +2409,7 @@ class SaleController extends Controller
                 $del_add->save();
             }
             // Third party address
-            if ($req->type == 'quo' && $req->third_party_address_address != null) {
+            if ($req->third_party_address_address != null) {
                 $addr = [];
                 for ($i = 0; $i < count($req->third_party_address_address); $i++) {
                     if ($req->third_party_address_address[$i] == null) {
@@ -3491,6 +3497,7 @@ class SaleController extends Controller
                 'warehouse' => $sale_orders[0]->warehouse ?? '',
                 'store' => $sale_orders[0]->store ?? '',
                 'salesperson' => SalesAgent::where('id', Session::get('convert_salesperson_id'))->first(),
+                'inv_status' => $inv->status ?? null,
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
@@ -5755,6 +5762,7 @@ class SaleController extends Controller
                 'terms' => $do->payment_terms,
                 'warehouse' => $sale_orders[0]->warehouse ?? '',
                 'store' => $sale_orders[0]->store ?? '',
+                'do_status' => $do->status ?? null,
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();
@@ -5830,6 +5838,7 @@ class SaleController extends Controller
                 'warehouse' => $sale_orders[0]->warehouse ?? '',
                 'store' => $sale_orders[0]->store ?? '',
                 'salesperson' => SalesAgent::where('id', $do->sale_id)->first(),
+                'inv_status' => $inv->status ?? null,
             ]);
             $pdf->setPaper('A4', 'letter');
             $content = $pdf->download()->getOriginalContent();

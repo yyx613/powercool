@@ -23,6 +23,10 @@
         margin: 0;
         padding: 0;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -55,6 +59,18 @@
                     No. :
                     {{ $is_proforma_invoice ? str_replace('SO', 'PRO', $sale->sku) : $sale->sku }}</td>
             </tr>
+            @if ($sale->status == 3)
+                <tr>
+                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
+                    </td>
+                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
+                        id="invalid">
+                        VOIDED
+                    </td>
+                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td colspan="2" style="padding: 0 35px 0 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">

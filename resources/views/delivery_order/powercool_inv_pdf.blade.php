@@ -17,6 +17,10 @@
         left: 0px;
         right: 0px;
     }
+
+    #invalid {
+        color: red;
+    }
 </style>
 
 <body>
@@ -98,6 +102,14 @@
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
                     INVOICE</td>
             </tr>
+            @if (isset($inv_status) && $inv_status == 1)
+                <tr>
+                    <td style="font-size: 14px; font-weight: 700; padding: 0px 35px 10px 0; text-align: center;"
+                        colspan="2" id="invalid">
+                        VOIDED
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td style="padding: 0 35px 15px 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -116,6 +128,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -136,6 +149,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -254,6 +268,17 @@
                 @if ($key + 1 == count($products))
                     <tr>
                         <td style="padding: 5px;"></td>
+                    </tr>
+                @endif
+            @endforeach
+            <!-- Remark -->
+            @foreach ($sale_orders as $key => $so)
+                @if ($so->remark != null)
+                    <tr>
+                        <td colspan="2"></td>
+                        <td colspan="6" style="font-size: 12px; padding: 15px 0;"><span
+                                style="font-weight: 700;">REMARK:</span><br>{!! $so->remark !!}</td>
+                        <td></td>
                     </tr>
                 @endif
             @endforeach
