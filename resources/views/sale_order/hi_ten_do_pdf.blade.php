@@ -251,7 +251,7 @@
                     <tr>
                         <td colspan="2"></td>
                         <td colspan="2" style="font-size: 12px; padding: 15px 0;"><span
-                                style="font-weight: 700;">REMARK:</span><br>{{ $so->remark }}</td>
+                                style="font-weight: 700;">REMARK:</span><br>{!! $so->remark !!}</td>
                         <td></td>
                     </tr>
                 @endif
