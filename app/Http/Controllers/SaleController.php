@@ -17,6 +17,7 @@ use App\Models\Dealer;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
+use App\Models\DeliveryOrderProductAccessory;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\DraftEInvoice;
 use App\Models\EInvoice;
@@ -1332,10 +1333,11 @@ class SaleController extends Controller
         $step = 1;
         $loop = true;
         $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
+        $by_pass_payment_method_ids = PaymentMethod::where('by_pass_conversion', true)->pluck('id')->toArray();
 
         while ($loop) {
             if ($req->has('enq') || $req->has('skip_enq')) {
-                // Step 7: Sale Enquiry Selection (optional)
+                // Step 8: Sale Enquiry Selection (optional)
                 if ($req->has('enq') && $req->enq != null) {
                     Session::put('convert_sale_enquiry_id', $req->enq);
                 } else {
@@ -1347,14 +1349,27 @@ class SaleController extends Controller
                     'delivery_address' => Session::get('convert_delivery_address')
                 ]);
             } elseif ($req->has('delivery_address')) {
-                $step = 7;
+                // Step 7 -> Step 8: Delivery Address Selection -> Sale Enquiry Selection
+                $step = 8;
 
                 Session::put('convert_delivery_address', $req->delivery_address);
-                
+
                 $sale_enquiries = SaleEnquiry::latest()->get();
 
                 $loop = false;
+            } elseif ($req->has('accessories')) {
+                // Step 6 -> Step 7: Accessory Selection -> Delivery Address Selection
+                $step = 7;
+
+                $accessories_input = json_decode($req->accessories, true);
+                Session::put('convert_accessories', $accessories_input);
+
+                $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
+                $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
+
+                $loop = false;
             } elseif ($req->has('pc')) {
+                // Step 5 -> Step 6: Product Selection -> Accessory Selection
                 $errors = [];
                 $pc_inputs = json_decode($req->pc, true);
 
@@ -1374,8 +1389,11 @@ class SaleController extends Controller
 
                 Session::put('convert_product_children', $pc_inputs);
 
-                $cus = Customer::where('id', Session::get('convert_customer_id'))->first();
-                $delivery_addresses = $cus->locations()->whereIn('type', [CustomerLocation::TYPE_DELIVERY, CustomerLocation::TYPE_BILLING_ADN_DELIVERY])->get();
+                // Prepare accessories data for the new step
+                $sp_ids = array_keys($pc_inputs);
+                $sale_products_with_accessories = SaleProduct::whereIn('id', $sp_ids)
+                    ->with(['accessories.product', 'product'])
+                    ->get();
 
                 $loop = false;
             } elseif ($req->has('term')) {
@@ -1514,6 +1532,10 @@ class SaleController extends Controller
                     if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
+                    // Check bypass for unpaid
+                    if ($sales[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sales[$i]->payment_method, $by_pass_payment_method_ids)) {
+                        continue;
+                    }
                     $sale_orders[] = $sales[$i];
                 }
 
@@ -1555,6 +1577,10 @@ class SaleController extends Controller
                     if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
                         continue;
                     }
+                    // Check bypass for unpaid
+                    if ($sales[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sales[$i]->payment_method, $by_pass_payment_method_ids)) {
+                        continue;
+                    }
                     $salesperson_ids[] = $sales[$i]->sale_id;
                 }
 
@@ -1591,6 +1617,10 @@ class SaleController extends Controller
                 for ($i = 0; $i < count($sales); $i++) {
                     // Check payment due date is required
                     if (! in_array($sales[$i]->payment_term, $credit_term_payment_method_ids) && $sales[$i]->payment_due_date == null && $sales[$i]->remainingAmountToPay() > 0) {
+                        continue;
+                    }
+                    // Check bypass for unpaid
+                    if ($sales[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sales[$i]->payment_method, $by_pass_payment_method_ids)) {
                         continue;
                     }
 
@@ -1633,6 +1663,7 @@ class SaleController extends Controller
             'allowed_spc_ids' => $allowed_spc_ids ?? [],
             'delivery_addresses' => $delivery_addresses ?? [],
             'sale_enquiries' => $sale_enquiries ?? [],
+            'sale_products_with_accessories' => $sale_products_with_accessories ?? collect(),
             'selected_customer' => $selected_customer ?? null,
             'selected_salesperson' => $selected_salesperson ?? null,
             'selected_term' => $selected_term ?? null,
@@ -1725,18 +1756,53 @@ class SaleController extends Controller
                     $soc_alter_qty[$sp->id] = count($pc_inputs[$sp->id]);
                 }
 
+                // Create DO product accessories
+                $accessories_input = Session::get('convert_accessories', []);
+                if (isset($accessories_input[$sp->id]) && is_array($accessories_input[$sp->id])) {
+                    $dopa_data = [];
+                    foreach ($accessories_input[$sp->id] as $acc_data) {
+                        if (isset($acc_data['selected']) && $acc_data['selected'] && isset($acc_data['qty']) && $acc_data['qty'] > 0) {
+                            $dopa_data[] = [
+                                'delivery_order_product_id' => $dop->id,
+                                'sale_product_accessory_id' => $acc_data['sale_product_accessory_id'],
+                                'accessory_id' => $acc_data['accessory_id'],
+                                'qty' => $acc_data['qty'],
+                                'is_foc' => $acc_data['is_foc'] ?? false,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                    }
+                    if (count($dopa_data) > 0) {
+                        DeliveryOrderProductAccessory::insert($dopa_data);
+                    }
+                }
+
                 $sale_orders->push($sp->sale);
             }
 
             // Create PDF
             $pdf_products = [];
             for ($i = 0; $i < count($do->products); $i++) {
+                // Get accessories for this product
+                $pdf_accessories = [];
+                $dop_accessories = $do->products[$i]->accessories()->with('product')->get();
+                foreach ($dop_accessories as $acc) {
+                    $pdf_accessories[] = [
+                        'sku' => $acc->product->sku ?? '',
+                        'name' => $acc->product->model_name ?? 'N/A',
+                        'qty' => $acc->qty,
+                        'is_foc' => $acc->is_foc,
+                    ];
+                }
+
                 if ($do->products[$i]->saleProduct->product->isRawMaterial()) {
                     $pdf_products[] = [
                         'stock_code' => $do->products[$i]->saleProduct->product->sku,
                         'desc' => $do->products[$i]->saleProduct->product->model_desc,
                         'qty' => $do->products[$i]->qty,
                         'uom' => $do->products[$i]->saleProduct->uom,
+                        'accessories' => $pdf_accessories,
                     ];
                 } else {
                     $dopcs = $do->products[$i]->children;
@@ -1760,6 +1826,7 @@ class SaleController extends Controller
                         'uom' => $sp->uom,
                         'warranty_periods' => $sp->warrantyPeriods,
                         'serial_no' => $serial_no,
+                        'accessories' => $pdf_accessories,
                     ];
                 }
             }
@@ -3425,6 +3492,18 @@ class SaleController extends Controller
 
             for ($k = 0; $k < count($dos); $k++) {
                 for ($i = 0; $i < count($dos[$k]->products); $i++) {
+                    // Get accessories for this product
+                    $pdf_accessories = [];
+                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with('product')->get();
+                    foreach ($dop_accessories as $acc) {
+                        $pdf_accessories[] = [
+                            'sku' => $acc->product->sku ?? '',
+                            'name' => $acc->product->model_name ?? 'N/A',
+                            'qty' => $acc->qty,
+                            'is_foc' => $acc->is_foc,
+                        ];
+                    }
+
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
                         $subtotal = ($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount();
                         $pdf_products[] = [
@@ -3437,6 +3516,7 @@ class SaleController extends Controller
                             'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
                             'total_discount' => $dos[$k]->products[$i]->saleProduct->discountAmount(),
                             'total' => number_format($subtotal, 2),
+                            'accessories' => $pdf_accessories,
                         ];
                         $overall_total += $subtotal;
                     } else {
@@ -3465,6 +3545,7 @@ class SaleController extends Controller
                                     'total' => number_format($total, 2),
                                     'warranty_periods' => $dopcs[$j]->doProduct->saleProduct->warrantyPeriods,
                                     'serial_no' => $serial_no,
+                                    'accessories' => $pdf_accessories,
                                 ];
                                 $overall_total += $total;
                             }
@@ -4332,7 +4413,7 @@ class SaleController extends Controller
 
             $sales = Sale::where('type', Sale::TYPE_SO)->whereIn('sku', $so_skus)->get();
 
-            $do_ids = DeliveryOrder::whereIn('sku', $do_skus)->pluck('id')->toArray();
+            $do_ids = DeliveryOrder::withoutGlobalScopes()->whereIn('sku', $do_skus)->pluck('id')->toArray();
 
             for ($i = 0; $i < count($sales); $i++) {
                 // Update QUO status to active, if SO is transferred from another branch
@@ -4375,24 +4456,24 @@ class SaleController extends Controller
                 $sales[$i]->status = Sale::STATUS_ACTIVE;
                 $sales[$i]->save();
             }
-            $dop_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('id');
-            DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->delete();
-            DeliveryOrderProduct::whereIn('id', $dop_ids)->delete();
+            $dop_ids = DeliveryOrderProduct::withoutGlobalScopes()->whereIn('delivery_order_id', $do_ids)->pluck('id');
+            DeliveryOrderProductChild::withoutGlobalScopes()->whereIn('delivery_order_product_id', $dop_ids)->delete();
+            DeliveryOrderProduct::withoutGlobalScopes()->whereIn('id', $dop_ids)->delete();
 
             if ($type == 'void') {
-                DeliveryOrder::whereIn('sku', $do_skus)->update([
+                DeliveryOrder::withoutGlobalScopes()->whereIn('sku', $do_skus)->update([
                     'status' => DeliveryOrder::STATUS_VOIDED,
                 ]);
-                Invoice::whereIn('sku', $inv_skus)->update([
+                Invoice::withoutGlobalScopes()->whereIn('sku', $inv_skus)->update([
                     'status' => Invoice::STATUS_VOIDED,
                 ]);
             } elseif ($type == 'transfer-back') {
-                DeliveryOrder::whereIn('sku', $do_skus)->delete();
-                Invoice::whereIn('sku', $inv_skus)->delete();
+                DeliveryOrder::withoutGlobalScopes()->whereIn('sku', $do_skus)->delete();
+                Invoice::withoutGlobalScopes()->whereIn('sku', $inv_skus)->delete();
 
                 // Delete service reminder
                 InventoryServiceReminder::where('attached_type', Invoice::class)
-                    ->whereIn('attached_id', Invoice::whereIn('sku', $inv_skus)->pluck('id')->toArray())
+                    ->whereIn('attached_id', Invoice::withoutGlobalScopes()->whereIn('sku', $inv_skus)->pluck('id')->toArray())
                     ->delete();
             }
 

@@ -29,6 +29,11 @@
     #invalid {
         color: red;
     }
+
+    p {
+        margin: 0;
+        padding: 0;
+    }
 </style>
 
 <body>
@@ -104,7 +109,7 @@
             </tr>
         </table>
         <table
-            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
+            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0;">
             <tr>
                 <td colspan="2"
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
@@ -170,19 +175,19 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 10%;">
                     Stock Code</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 45%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 45%;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: right; width: 5%;">
                     UOM</td>
             </tr>
             @php
@@ -202,22 +207,22 @@
                     <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['uom'] }}</td>
                 </tr>
-                <!-- Serial No -->
-                @if (count($prod['serial_no']) > 0)
+                <!-- Product Remark -->
+                @if (isset($prod['remark']) && $prod['remark'] != null && $prod['remark'] !== '<p><br></p>')
                     <tr>
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:</td>
                         <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                            Remark:
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
                     </tr>
-                    @foreach ($prod['serial_no'] as $key => $serial_no)
-                        <tr>
-                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left;">-
-                                {{ $serial_no['sku'] }}{{ $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] }}
-                            </td>
-                            <td colspan="2"></td>
-                        </tr>
-                    @endforeach
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
+                            {!! nl2br($prod['remark']) !!}
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                    </tr>
                 @endif
                 <!-- Warranty -->
                 @if ($prod['warranty_periods'] != null)
@@ -228,20 +233,57 @@
                         }
                     @endphp
                     <tr>
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Warranty:
                         </td>
                         <td colspan="2"></td>
                     </tr>
                     @foreach ($warranty as $key => $w)
                         <tr>
-                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left;">
+                            <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
                                 @if (count($warranty) == $key + 1)
                                     {{ $w }}
                                 @else
                                     {{ $w }}<br>
+                                @endif
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    @endforeach
+                @endif
+                <!-- Serial No -->
+                @if (isset($prod['serial_no']) && count($prod['serial_no']) > 0)
+                    @php
+                        $serial_nos = [];
+                        foreach ($prod['serial_no'] as $sn) {
+                            $serial_nos[] = $sn['sku'] . ($sn['remark'] ? ', ' . $sn['remark'] : '');
+                        }
+                    @endphp
+                    <tr>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;"><b>Serial No:</b><br>
+                            {{ join(', ', $serial_nos) }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                @endif
+                <!-- Accessories -->
+                @if (isset($prod['accessories']) && count($prod['accessories']) > 0)
+                    <tr>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                            Accessories:
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                    @foreach ($prod['accessories'] as $acc)
+                        <tr>
+                            <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
+                                - {{ $acc['sku'] }} - {{ $acc['name'] }} (Qty: {{ $acc['qty'] }})
+                                @if ($acc['is_foc'])
+                                    <span style="font-weight: bold;"> - FOC</span>
                                 @endif
                             </td>
                             <td colspan="2"></td>

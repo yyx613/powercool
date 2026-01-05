@@ -16,11 +16,16 @@ class SaleEnquiry extends Model
 
     // Enquiry Source
     const SOURCE_WEBSITE = 1;
-    const SOURCE_WHATSAPP = 2;
-    const SOURCE_PHONE = 3;
-    const SOURCE_WALK_IN = 4;
-    const SOURCE_SOCIAL_MEDIA = 5;
+    const SOURCE_FACEBOOK = 2;
+    const SOURCE_SHOPEE = 3;
+    const SOURCE_LAZADA = 4;
+    const SOURCE_WALK_IN = 5;
     const SOURCE_REFERRAL = 6;
+    const SOURCE_INSTAGRAM = 7;
+    const SOURCE_TIKTOK = 8;
+    const SOURCE_XHS = 9;
+    const SOURCE_PHONE = 10;
+    const SOURCE_WHATSAPP = 11;
 
     // Status
     const STATUS_NEW = 1;

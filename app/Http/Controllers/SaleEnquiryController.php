@@ -187,7 +187,7 @@ class SaleEnquiryController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'enquiry_date' => 'required|date',
-            'enquiry_source' => 'required|in:1,2,3,4,5,6',
+            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11',
             'name' => 'required|max:250',
             'phone_number' => 'required|max:50',
             'email' => 'nullable|email|max:250',
@@ -253,7 +253,7 @@ class SaleEnquiryController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'enquiry_date' => 'required|date',
-            'enquiry_source' => 'required|in:1,2,3,4,5,6',
+            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11',
             'name' => 'required|max:250',
             'phone_number' => 'required|max:50',
             'email' => 'nullable|email|max:250',

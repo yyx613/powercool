@@ -8,18 +8,23 @@
 </head>
 <style>
     @page {
-        margin: 390px 25px 50px 25px;
+        margin: 410px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -365px;
+        top: -385px;
         left: 0px;
         right: 0px;
     }
 
     #invalid {
         color: red;
+    }
+
+    p {
+        margin: 0;
+        padding: 0;
     }
 </style>
 
@@ -69,6 +74,11 @@
                                 @endphp
                                 {{ join(', ', $skus) }}
                             </td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 12px;">Your D/O No.</td>
+                            <td style="font-size: 12px;">:</td>
+                            <td style="font-size: 12px;">{{ $do_sku }}</td>
                         </tr>
                         <tr>
                             <td style="font-size: 12px;">Terms</td>
@@ -219,22 +229,22 @@
                         style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['total'] }}</td>
                 </tr>
-                <!-- Serial No -->
-                @if (count($prod['serial_no']) > 0)
+                <!-- Product Remark -->
+                @if (isset($prod['remark']) && $prod['remark'] != null && $prod['remark'] !== '<p><br></p>')
                     <tr>
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">Serial No:</td>
-                        <td colspan="6"></td>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                            Remark:
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
                     </tr>
-                    @foreach ($prod['serial_no'] as $key => $serial_no)
-                        <tr>
-                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left;">-
-                                {{ $serial_no['sku'] }}{!! $serial_no['remark'] == null ? '' : ', ' . $serial_no['remark'] !!}
-                            </td>
-                            <td colspan="6"></td>
-                        </tr>
-                    @endforeach
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
+                            {!! nl2br($prod['remark']) !!}
+                        </td>
+                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                    </tr>
                 @endif
                 <!-- Warranty -->
                 @if ($prod['warranty_periods'] != null)
@@ -245,20 +255,57 @@
                         }
                     @endphp
                     <tr>
-                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
                             Warranty:
                         </td>
                         <td colspan="6"></td>
                     </tr>
                     @foreach ($warranty as $key => $w)
                         <tr>
-                            <td style="font-size: 12px; text-align: left;" colspan="2"></td>
-                            <td style="font-size: 12px; text-align: left;">
+                            <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
                                 @if (count($warranty) == $key + 1)
                                     {{ $w }}
                                 @else
                                     {{ $w }}<br>
+                                @endif
+                            </td>
+                            <td colspan="6"></td>
+                        </tr>
+                    @endforeach
+                @endif
+                <!-- Serial No -->
+                @if (isset($prod['serial_no']) && count($prod['serial_no']) > 0)
+                    @php
+                        $serial_nos = [];
+                        foreach ($prod['serial_no'] as $sn) {
+                            $serial_nos[] = $sn['sku'] . ($sn['remark'] ? ', ' . $sn['remark'] : '');
+                        }
+                    @endphp
+                    <tr>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;"><b>Serial No:</b><br>
+                            {{ join(', ', $serial_nos) }}</td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endif
+                <!-- Accessories -->
+                @if (isset($prod['accessories']) && count($prod['accessories']) > 0)
+                    <tr>
+                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                            Accessories:
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                    @foreach ($prod['accessories'] as $acc)
+                        <tr>
+                            <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                            <td style="font-size: 10px; text-align: left;">
+                                - {{ $acc['sku'] }} - {{ $acc['name'] }} (Qty: {{ $acc['qty'] }})
+                                @if ($acc['is_foc'])
+                                    <span style="font-weight: bold;"> - FOC</span>
                                 @endif
                             </td>
                             <td colspan="6"></td>

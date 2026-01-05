@@ -139,7 +139,7 @@
                             d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm0-12c-.639,0-1.235,.164-1.771,.432,.478-1.629,1.721-2.432,3.771-2.432,.552,0,1-.447,1-1s-.448-1-1-1c-3.813,0-6,2.26-6,6.2v1.8c0,2.206,1.794,4,4,4s4-1.794,4-4-1.794-4-4-4Zm0,6c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Delivery Address Selection</h6>
+                <h6 class="font-semibold mx-4">Accessory Selection</h6>
             </div>
             <!-- Step 7 -->
             <div
@@ -149,6 +149,18 @@
                         viewBox="0 0 24 24" width="512" height="512">
                         <path
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm-1.132,15.497l4.921-8.603c.312-.625,.279-1.352-.088-1.946-.367-.594-1.003-.948-1.701-.948h-5c-.552,0-1,.447-1,1s.448,1,1,1l5.026-.05-4.895,8.553c-.274,.479-.108,1.091,.372,1.365,.157,.09,.327,.132,.496,.132,.347,0,.684-.181,.869-.503Z" />
+                    </svg>
+                </div>
+                <h6 class="font-semibold mx-4">Delivery Address Selection</h6>
+            </div>
+            <!-- Step 8 -->
+            <div
+                class="min-w-[250px] flex-1 lg:flex-0 flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 8 ? 'opacity-25' : '' }}">
+                <div class="bg-yellow-300 p-2 flex items-center justify-center h-full">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-7c0,2.206-1.794,4-4,4s-4-1.794-4-4v-1.8c0-3.94,2.187-6.2,6-6.2,.552,0,1,.447,1,1s-.448,1-1,1c-2.05,0-3.293,.803-3.771,2.432,.536-.268,1.132-.432,1.771-.432,2.206,0,4,1.794,4,4Zm-4,2c1.103,0,2-.897,2-2s-.897-2-2-2-2,.897-2,2,.897,2,2,2Z" />
                     </svg>
                 </div>
                 <h6 class="font-semibold mx-4">Sale Enquiry Selection (Optional)</h6>
@@ -384,8 +396,92 @@
                     @endif
                 </div>
             @endif
-            <!-- Step 6 -->
+            <!-- Step 6 (Accessory Selection) -->
             @if ($step == 6)
+                <div class="flex flex-col h-full">
+                    <div class="mb-4">
+                        <h5 class="text-md font-semibold">Select accessories to include in Delivery Order</h5>
+                        <p class="text-xs text-gray-600 mt-1">You can adjust quantities up to the original SO quantity</p>
+                    </div>
+
+                    @php
+                        $hasAccessories = false;
+                        foreach ($sale_products_with_accessories as $sp) {
+                            if (count($sp->accessories) > 0) {
+                                $hasAccessories = true;
+                                break;
+                            }
+                        }
+                    @endphp
+
+                    @if ($hasAccessories)
+                        <div class="flex flex-col gap-4 flex-1 overflow-y-auto">
+                            @foreach ($sale_products_with_accessories as $sp)
+                                @if (count($sp->accessories) > 0)
+                                    <div class="p-3 rounded-md border border-slate-200" data-sp-id="{{ $sp->id }}">
+                                        <div class="mb-3">
+                                            <h6 class="font-semibold">{{ $sp->product->model_name }}</h6>
+                                            <p class="text-xs text-slate-500">SKU: {{ $sp->product->sku }}</p>
+                                        </div>
+                                        <div class="border-t pt-3">
+                                            <p class="text-sm font-medium mb-2">Accessories:</p>
+                                            @foreach ($sp->accessories as $acc)
+                                                <div class="flex items-center gap-4 mb-2 accessory-item"
+                                                    data-spa-id="{{ $acc->id }}"
+                                                    data-accessory-id="{{ $acc->accessory_id }}"
+                                                    data-max-qty="{{ $acc->qty }}"
+                                                    data-is-foc="{{ $acc->is_foc ? '1' : '0' }}">
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox"
+                                                            class="rounded border-gray-300 accessory-checkbox"
+                                                            checked>
+                                                        <span class="text-sm">{{ $acc->product->sku ?? '' }} - {{ $acc->product->model_name ?? 'N/A' }}</span>
+                                                    </label>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs text-slate-500">Qty:</span>
+                                                        <input type="number"
+                                                            class="w-16 text-sm border rounded px-2 py-1 accessory-qty"
+                                                            min="0"
+                                                            max="{{ $acc->qty }}"
+                                                            value="{{ $acc->qty }}">
+                                                        <span class="text-xs text-slate-500">/ {{ $acc->qty }}</span>
+                                                    </div>
+                                                    @if ($acc->is_foc)
+                                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">FOC</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        <div class="flex justify-end mt-8">
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
+                                class="bg-green-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
+                                id="step-6-confirm-btn">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
+                                    data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
+                                    <path
+                                        d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
+                                </svg>
+                                <span class="text-sm font-semibold">Confirm</span>
+                            </a>
+                        </div>
+                    @else
+                        <div class="flex flex-col items-center justify-center flex-1">
+                            <p class="text-sm text-gray-600 mb-4">No accessories found for selected products</p>
+                            <a href="{{ route('sale_order.to_delivery_order') }}"
+                                class="bg-gray-200 rounded-md py-2 px-4"
+                                id="step-6-skip-btn">
+                                <span class="text-sm font-semibold">Skip & Continue</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @endif
+            <!-- Step 7 (Delivery Address Selection) -->
+            @if ($step == 7)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">Select a delivery adddress to convert</h5>
@@ -402,7 +498,7 @@
                         <div class="flex justify-end mt-8">
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
-                                id="step-6-confirm-btn">
+                                id="step-7-confirm-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
                                     data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
                                     <path
@@ -416,8 +512,8 @@
                     @endif
                 </div>
             @endif
-            <!-- Step 7 -->
-            @if ($step == 7)
+            <!-- Step 8 (Sale Enquiry Selection) -->
+            @if ($step == 8)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">Select a sale enquiry to link (Optional)</h5>
@@ -451,12 +547,12 @@
                         <div class="flex justify-between mt-8">
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
-                                id="step-7-skip-btn">
+                                id="step-8-skip-btn">
                                 <span class="text-sm font-semibold">Skip</span>
                             </a>
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
-                                id="step-7-confirm-btn">
+                                id="step-8-confirm-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                     viewBox="0 0 24 24" width="512" height="512">
                                     <g>
@@ -474,7 +570,7 @@
                             <p class="text-sm text-gray-600 mb-4">No matching sale enquiries found</p>
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
-                                id="step-7-skip-btn-no-data">
+                                id="step-8-skip-btn-no-data">
                                 <span class="text-sm font-semibold">Skip & Continue</span>
                             </a>
                         </div>
@@ -592,6 +688,73 @@
 
             window.location.href = url
         })
+        // Step 6: Accessory Selection
+        SELECTED_ACCESSORIES = {};
+
+        $('.accessory-checkbox').on('change', function() {
+            updateAccessoriesSelection();
+        });
+
+        $('.accessory-qty').on('change keyup', function() {
+            let max = parseInt($(this).attr('max'));
+            let val = parseInt($(this).val()) || 0;
+            if (val > max) $(this).val(max);
+            if (val < 0) $(this).val(0);
+            updateAccessoriesSelection();
+        });
+
+        $('#step-6-confirm-btn').on('click', function(e) {
+            e.preventDefault();
+
+            updateAccessoriesSelection();
+
+            let url = $(this).attr('href');
+            url = `${url}?accessories=${JSON.stringify(SELECTED_ACCESSORIES)}`;
+
+            window.location.href = url;
+        });
+
+        $('#step-6-skip-btn').on('click', function(e) {
+            e.preventDefault();
+
+            let url = $(this).attr('href');
+            url = `${url}?accessories={}`;
+
+            window.location.href = url;
+        });
+
+        function updateAccessoriesSelection() {
+            SELECTED_ACCESSORIES = {};
+
+            $('.accessory-item').each(function() {
+                let spId = $(this).closest('[data-sp-id]').data('sp-id');
+                let spaId = $(this).data('spa-id');
+                let accessoryId = $(this).data('accessory-id');
+                let maxQty = $(this).data('max-qty');
+                let isFoc = $(this).data('is-foc') == '1';
+                let isSelected = $(this).find('.accessory-checkbox').is(':checked');
+                let qty = parseInt($(this).find('.accessory-qty').val()) || 0;
+
+                if (!SELECTED_ACCESSORIES[spId]) {
+                    SELECTED_ACCESSORIES[spId] = [];
+                }
+
+                SELECTED_ACCESSORIES[spId].push({
+                    sale_product_accessory_id: spaId,
+                    accessory_id: accessoryId,
+                    selected: isSelected,
+                    qty: qty,
+                    is_foc: isFoc
+                });
+            });
+        }
+
+        // Initialize on page load if on step 6
+        if ($('.accessory-item').length > 0) {
+            updateAccessoriesSelection();
+        }
+
+        // Step 7: Delivery Address Selection
         $('.delivery-address').on('click', function() {
             $('.delivery-address').removeAttr('data-selected')
             $('.delivery-address').removeClass('!border-black')
@@ -599,10 +762,10 @@
             $(this).attr('data-selected', true)
             $(this).addClass('!border-black')
 
-            $('#step-6-confirm-btn').addClass('bg-green-200')
-            $('#step-6-confirm-btn').removeClass('bg-slate-100')
+            $('#step-7-confirm-btn').addClass('bg-green-200')
+            $('#step-7-confirm-btn').removeClass('bg-slate-100')
         })
-        $('#step-6-confirm-btn').on('click', function(e) {
+        $('#step-7-confirm-btn').on('click', function(e) {
             e.preventDefault()
 
             let selectedDeliveryAddressId = $('.delivery-address[data-selected="true"]').data('id')
@@ -615,7 +778,7 @@
             window.location.href = url
         })
 
-        // Step 7: Sale Enquiry Selection
+        // Step 8: Sale Enquiry Selection
         $('.sale-enquiry').on('click', function() {
             $('.sale-enquiry').removeAttr('data-selected')
             $('.sale-enquiry').removeClass('!border-black')
@@ -623,10 +786,10 @@
             $(this).attr('data-selected', true)
             $(this).addClass('!border-black')
 
-            $('#step-7-confirm-btn').addClass('bg-green-200')
-            $('#step-7-confirm-btn').removeClass('bg-slate-100')
+            $('#step-8-confirm-btn').addClass('bg-green-200')
+            $('#step-8-confirm-btn').removeClass('bg-slate-100')
         })
-        $('#step-7-confirm-btn').on('click', function(e) {
+        $('#step-8-confirm-btn').on('click', function(e) {
             e.preventDefault()
 
             let selectedEnquiryId = $('.sale-enquiry[data-selected="true"]').data('id')
@@ -638,7 +801,7 @@
 
             window.location.href = url
         })
-        $('#step-7-skip-btn, #step-7-skip-btn-no-data').on('click', function(e) {
+        $('#step-8-skip-btn, #step-8-skip-btn-no-data').on('click', function(e) {
             e.preventDefault()
 
             let url = $(this).attr('href')
