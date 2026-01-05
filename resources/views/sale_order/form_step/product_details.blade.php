@@ -647,6 +647,18 @@
             $('#to-production-modal #yes-btn').removeClass('hidden')
             $('#to-production-modal').addClass('show-modal')
         })
+        // Prevent selection if it would exceed product quantity
+        $('body').on('select2:selecting', 'select[name="product_serial_no[]"]', function(e) {
+            let $select = $(this)
+            let itemId = $select.closest('.items').attr('data-id')
+            let productQty = parseInt($(`.items[data-id="${itemId}"] input[name="qty"]`).val()) || 0
+            let currentCount = ($select.val() || []).length
+
+            if (currentCount >= productQty) {
+                e.preventDefault()
+                alert(`{{ __('You have selected') }} ${currentCount} {{ __('serial number(s), which equals the quantity') }} ${productQty}. {{ __('Cannot select more.') }}`)
+            }
+        })
         $('body').on('change', 'select[name="product_serial_no[]"]', function() {
             let itemId = $(this).closest('.items').attr('data-id')
             let productId = $(`.items[data-id=${itemId}] select[name="product_id[]"]`).val()
@@ -669,7 +681,7 @@
                 alert(`{{ __('You have selected') }} ${selectedQty} {{ __('serial number(s), but the quantity is only') }} ${productQty}. {{ __('Please reduce your selection.') }}`)
             }
 
-            $(`.items[data-id="${itemId}"] #available-qty`).text(`Available Qty: ${totalQty - selectedQty}`)
+            $(`.items[data-id="${itemId}"] #available-qty`).text(`(${selectedQty}/${productQty}) {{ __('Available Qty') }}: ${totalQty - selectedQty}`)
         })
         $('select[name="promotion_id"]').on('change', function() {
             let val = $(this).val()
@@ -907,8 +919,8 @@
                         opt.value = child.id
                         $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                     }
-                    $(`.items[data-id="${item_id}"] #available-qty`).text(
-                        `Available Qty: ${prod.children.length - selectedQty}`)
+                    let productQty = parseInt($(`.items[data-id="${item_id}"] input[name="qty"]`).val()) || 0
+                    $(`.items[data-id="${item_id}"] #available-qty`).text(`(${selectedQty}/${productQty}) {{ __('Available Qty') }}: ${prod.children.length - selectedQty}`)
 
                     // Initialize Select2
                     $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).select2({

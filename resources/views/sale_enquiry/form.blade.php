@@ -29,11 +29,16 @@
                     <x-app.input.select name="enquiry_source" id="enquiry_source" :hasError="$errors->has('enquiry_source')">
                         <option value="">{{ __('Select source') }}</option>
                         <option value="1" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 1)>{{ __('Website') }}</option>
-                        <option value="2" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 2)>{{ __('WhatsApp') }}</option>
-                        <option value="3" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 3)>{{ __('Phone Call') }}</option>
-                        <option value="4" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 4)>{{ __('Walk-In') }}</option>
-                        <option value="5" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 5)>{{ __('Social Media') }}</option>
+                        <option value="2" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 2)>{{ __('Facebook') }}</option>
+                        <option value="3" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 3)>{{ __('Shopee') }}</option>
+                        <option value="4" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 4)>{{ __('Lazada') }}</option>
+                        <option value="5" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 5)>{{ __('Walk In') }}</option>
                         <option value="6" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 6)>{{ __('Referral') }}</option>
+                        <option value="7" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 7)>{{ __('Instagram') }}</option>
+                        <option value="8" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 8)>{{ __('Tiktok') }}</option>
+                        <option value="9" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 9)>{{ __('XHS') }}</option>
+                        <option value="10" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 10)>{{ __('Phone Call') }}</option>
+                        <option value="11" @selected(old('enquiry_source', isset($enquiry) ? $enquiry->enquiry_source : null) == 11)>{{ __('WhatsApp (Not from Platform)') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('enquiry_source')" class="mt-1" />
                 </div>

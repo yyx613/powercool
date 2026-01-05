@@ -147,15 +147,25 @@
                             case 1:
                                 return "{!! __('Website') !!}"
                             case 2:
-                                return "{!! __('WhatsApp') !!}"
+                                return "{!! __('Facebook') !!}"
                             case 3:
-                                return "{!! __('Phone Call') !!}"
+                                return "{!! __('Shopee') !!}"
                             case 4:
-                                return "{!! __('Walk-In') !!}"
+                                return "{!! __('Lazada') !!}"
                             case 5:
-                                return "{!! __('Social Media') !!}"
+                                return "{!! __('Walk In') !!}"
                             case 6:
                                 return "{!! __('Referral') !!}"
+                            case 7:
+                                return "{!! __('Instagram') !!}"
+                            case 8:
+                                return "{!! __('Tiktok') !!}"
+                            case 9:
+                                return "{!! __('XHS') !!}"
+                            case 10:
+                                return "{!! __('Phone Call') !!}"
+                            case 11:
+                                return "{!! __('WhatsApp (Not from Platform)') !!}"
                             default:
                                 return '-'
                         }

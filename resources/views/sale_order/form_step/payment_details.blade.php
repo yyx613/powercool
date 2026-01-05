@@ -9,7 +9,7 @@
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
         <div class="flex flex-col">
-            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} </x-app.input.label>
+            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <svg class="inline-block w-4 h-4 ml-1 text-gray-400 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><title>{{ __('For PDF') }}</title><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></x-app.input.label>
             <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
                 placeholder="{{ __('Select a method') }}">
                 <option value=""></option>
@@ -20,7 +20,7 @@
                 <x-app.message.error id="payment_method_err" />
         </div>
         <div class="flex flex-col hidden" id="payment-term-container">
-            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span
+            <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <svg class="inline-block w-4 h-4 ml-1 text-gray-400 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><title>{{ __('For the record only') }}</title><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select2 name="payment_term" id="payment_term" :hasError="$errors->has('payment_term')"
                 placeholder="{{ __('Select a term') }}">
@@ -69,7 +69,7 @@
                     </svg>
                 </button>
                 <div class="flex flex-col">
-                    <x-app.input.label id="account_payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
+                    <x-app.input.label id="account_payment_method" class="mb-1">{{ __('Payment Method') }} <svg class="inline-block w-4 h-4 ml-1 text-gray-400 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><title>{{ __('For payment record only') }}</title><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></x-app.input.label>
                     <x-app.input.select name="account_payment_method" id="account_payment_method" :hasError="$errors->has('account_payment_method')" class="account-payment-method-select">
                         <option value="">{{ __('Select a method') }}</option>
                         @foreach ($payment_methods as $method)
@@ -79,7 +79,7 @@
                     <x-app.message.error id="account_payment_method_err" />
                 </div>
                 <div class="flex flex-col account-payment-term-container hidden">
-                    <x-app.input.label id="account_payment_term" class="mb-1">{{ __('Payment Term') }}</x-app.input.label>
+                    <x-app.input.label id="account_payment_term" class="mb-1">{{ __('Payment Term') }} <svg class="inline-block w-4 h-4 ml-1 text-gray-400 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><title>{{ __('For payment record only') }}</title><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></x-app.input.label>
                     <x-app.input.select name="account_payment_term" id="account_payment_term" :hasError="$errors->has('account_payment_term')" class="account-payment-term-select">
                         <option value="">{{ __('Select a term') }}</option>
                         @foreach ($credit_terms as $term)

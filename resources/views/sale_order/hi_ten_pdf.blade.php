@@ -248,7 +248,12 @@
                                 @if($accessory->is_foc)
                                     - FOC
                                 @else
-                                    - RM {{ number_format($accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0), 2) }}
+                                    @php
+                                        $unit_price = $accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0);
+                                        $acc_qty = $accessory->qty ?? 1;
+                                        $total_price = $unit_price * $acc_qty;
+                                    @endphp
+                                    - RM {{ number_format($unit_price, 2) }}/unit = RM {{ number_format($total_price, 2) }}
                                 @endif
                             </td>
                             <td style="font-size: 10px; text-align: left;" colspan="7"></td>
@@ -290,7 +295,7 @@
                 @if ($prod->serial_no != null)
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;">Serial No:<br>
+                        <td style="font-size: 10px; text-align: left;"><b>Serial No:</b><br>
                             {{ join(', ', $prod->serial_no) }}</td>
                         <td style="font-size: 10px; text-align: left;" colspan="7"></td>
                     </tr>
