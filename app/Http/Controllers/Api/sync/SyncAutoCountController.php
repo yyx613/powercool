@@ -448,6 +448,37 @@ class SyncAutoCountController extends Controller
                         }
                     }
                 }
+
+                // Check if DebtorType is 3, then sync to dealers table
+                if ($record['DebtorType'] == 3) {
+                    $dealer = DB::table('dealers')
+                        ->where('sku', $record['AccNo'])
+                        ->where('company_group', $companyGroup)
+                        ->first();
+
+                    if ($dealer) {
+                        // Update existing dealer
+                        DB::table('dealers')
+                            ->where('id', $dealer->id)
+                            ->update([
+                                'name' => $record['Name'],
+                                'company_name' => $record['CompanyName'],
+                                'company_group' => $companyGroup,
+                                'sku' => $record['AccNo'],
+                                'updated_at' => now()
+                            ]);
+                    } else {
+                        // Insert new dealer
+                        DB::table('dealers')->insert([
+                            'name' => $record['Name'],
+                            'company_name' => $record['CompanyName'],
+                            'company_group' => $companyGroup,
+                            'sku' => $record['AccNo'],
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+                }
             }
             return response()->json(['message' => 'Batch processed successfully.'], 200);
         } catch (\Exception $e) {
