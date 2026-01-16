@@ -120,7 +120,21 @@ class SaleController extends Controller
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
-                DB::raw('SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
+                DB::raw('(
+                    SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0))
+                    + COALESCE((
+                        SELECT SUM(
+                            spa.qty * COALESCE(spa.override_selling_price, psp.price)
+                        )
+                        FROM sale_product_accessories spa
+                        LEFT JOIN product_selling_prices psp ON spa.selling_price_id = psp.id
+                        WHERE spa.sale_product_id IN (
+                            SELECT sp2.id FROM sale_products sp2 WHERE sp2.sale_id = sales.id AND sp2.deleted_at IS NULL
+                        )
+                        AND (spa.is_foc IS NULL OR spa.is_foc = 0)
+                        AND spa.deleted_at IS NULL
+                    ), 0)
+                ) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', Sale::class)
@@ -1689,6 +1703,7 @@ class SaleController extends Controller
             // Approval
             $approval_required = false;
             $by_pass_payment_method_ids = PaymentMethod::where('by_pass_conversion', true)->pluck('id')->toArray();
+            $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
             $delivery_address = CustomerLocation::where('id', $req->delivery_address)->first()->formatAddress();
 
@@ -1874,8 +1889,22 @@ class SaleController extends Controller
                 $sale_orders[$i]->save();
 
                 if ($approval_required == false && $sale_orders[$i]->payment_status == Sale::PAYMENT_STATUS_UNPAID && ! in_array($sale_orders[$i]->payment_method, $by_pass_payment_method_ids)) {
-                    $approval_required = true;
-                    $so_for_desc = $sale_orders[$i]->sku;
+                    // Check if payment method is credit term and matches customer's credit term
+                    $is_credit_term_match = false;
+                    if (in_array($sale_orders[$i]->payment_method, $credit_term_payment_method_ids) && $sale_orders[$i]->payment_term != null) {
+                        $customer_credit_term_ids = ObjectCreditTerm::where('object_type', Customer::class)
+                            ->where('object_id', $sale_orders[$i]->customer_id)
+                            ->pluck('credit_term_id')
+                            ->toArray();
+                        if (in_array($sale_orders[$i]->payment_term, $customer_credit_term_ids)) {
+                            $is_credit_term_match = true;
+                        }
+                    }
+
+                    if (!$is_credit_term_match) {
+                        $approval_required = true;
+                        $so_for_desc = $sale_orders[$i]->sku;
+                    }
                 }
 
                 SaleOrderCancellation::calCancellation($sale_orders[$i], 2, $soc_alter_qty);
