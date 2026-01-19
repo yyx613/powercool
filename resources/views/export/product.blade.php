@@ -5,8 +5,7 @@
         <td>Company Group</td>
         <td>Initial for Production</td>
         <td>Model Code / Supplier Barcode Info</td>
-        <td>Model Name</td>
-        <td>ModeL Description</td>
+        <td>Model Description</td>
         <td>UOM</td>
         <td>Category</td>
         <td>Item Type</td>
@@ -56,8 +55,7 @@
             <td>{{ $p->company_group == 1 ? 'Power Cool' : ($p->company_group == 2 ? 'Hi-Ten' : '') }}</td>
             <td>{{ $p->initial_for_production }}</td>
             <td>{{ $p->sku }}</td>
-            <td>{{ $p->mode_name }}</td>
-            <td>{{ $p->mode_desc }}</td>
+            <td>{{ $p->model_desc }}</td>
             <td>{{ $p->uom }}</td>
             <td>{{ $p->category->name ?? null }}</td>
             <td>{{ $p->itemType->name ?? null}}</td>

@@ -52,7 +52,7 @@
                 </div>
                 <div>
                     <label class="text-sm font-semibold text-gray-600">{{ __('Product') }}</label>
-                    <p class="text-base font-medium">{{ ($product->sku . ' - ' . $product->model_name) ?? 'N/A' }}</p>
+                    <p class="text-base font-medium">{{ ($product->sku . ' - ' . $product->model_desc) ?? 'N/A' }}</p>
                 </div>
                 <div>
                     <label class="text-sm font-semibold text-gray-600">{{ __('Available Qty') }}</label>

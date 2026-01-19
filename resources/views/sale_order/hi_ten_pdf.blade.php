@@ -243,7 +243,7 @@
                         <tr>
                             <td colspan="2"></td>
                             <td style="font-size: 10px; text-align: left;">
-                                - {{ $accessory->product->model_name ?? 'N/A' }}
+                                - {{ $accessory->product->model_desc ?? 'N/A' }}
                                 (Qty: {{ $accessory->qty ?? 1 }})
                                 @if($accessory->is_foc)
                                     - FOC
@@ -301,8 +301,16 @@
                     </tr>
                 @endif
                 @php
+                    // Calculate accessory total for this product
+                    $accessory_total = 0;
+                    foreach ($prod->accessories as $acc) {
+                        if (!$acc->is_foc) {
+                            $acc_price = $acc->override_selling_price ?? ($acc->sellingPrice->price ?? 0);
+                            $accessory_total += $acc_price * ($acc->qty ?? 1);
+                        }
+                    }
                     $total +=
-                        $prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount();
+                        $prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount() + $accessory_total;
                     $total_tax += $prod->sst_amount ?? 0;
                 @endphp
             @endforeach
@@ -324,6 +332,40 @@
                             REMARK:</span><br>{{ $sale->payment_remark }}</td>
                     <td colspan="7"></td>
                 </tr>
+            @endif
+            <!-- Ad-hoc Services -->
+            @if(isset($adhocServices) && count($adhocServices) > 0)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 10px; text-align: left; font-weight: 700; padding-top: 15px;">
+                        Ad-hoc Services:
+                    </td>
+                    <td colspan="7"></td>
+                </tr>
+                @foreach($adhocServices as $service)
+                    @php
+                        $service_amount = $service->getEffectiveAmount();
+                        $service_sst = $service->is_sst ? ($service_amount * $sst_value / 100) : 0;
+                    @endphp
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
+                            - {{ $service->adhocService->name ?? 'N/A' }}
+                            @if($service->is_sst)
+                                (incl. {{ $sst_value }}% SST)
+                            @endif
+                            - RM {{ number_format($service_amount, 2) }}
+                            @if($service->is_sst)
+                                + RM {{ number_format($service_sst, 2) }} SST
+                            @endif
+                        </td>
+                        <td colspan="7"></td>
+                    </tr>
+                    @php
+                        $total += $service_amount;
+                        $total_tax += $service_sst;
+                    @endphp
+                @endforeach
             @endif
         </table>
         <!-- Item Summary -->

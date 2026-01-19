@@ -285,7 +285,7 @@ class ProductionRequestController extends Controller
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
-                'product_name' => $record->material->model_name ?? null,
+                'product_name' => $record->material->model_desc ?? null,
                 'production_sku' => $record->production->sku ?? null,
                 'total_request_qty' => 1,
                 'balance_qty' => $record->status == ProductionRequestMaterial::STATUS_COMPLETED ? 0 : 1,

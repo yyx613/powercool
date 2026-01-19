@@ -79,6 +79,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.view_action' => [],
                 'inventory.summary' => [],
                 'inventory.category' => [],
+                'adhoc_service' => [],
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
                 'inventory.customize' => [],
@@ -129,6 +130,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.view_action'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.category')) {
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'adhoc_service')) {
+                    array_push($permissions_group['adhoc_service'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.product')) {
                     array_push($permissions_group['inventory.product'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.raw_material_request')) {
@@ -496,9 +499,12 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::PRODUCTION_WORKER);
             })->orderBy('id', 'desc')->get();
 
+            $factories = Factory::orderBy('id', 'desc')->get();
+
             $view->with('users', $users);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
+            $view->with('factories', $factories);
         });
         View::composer(['sale_enquiry.form'], function (ViewView $view) {
             // Get users for assigned staff dropdown (sales role)
@@ -784,9 +790,9 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['production_request.form', 'raw_material_request.form'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), 'raw_material_request.')) {
-                $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_name', 'asc')->get();
+                $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_desc', 'asc')->get();
             } else {
-                $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('model_name', 'asc')->get();
+                $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('model_desc', 'asc')->get();
             }
 
             $view->with([

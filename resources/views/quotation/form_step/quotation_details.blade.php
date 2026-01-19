@@ -326,8 +326,14 @@
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
             // Show the first mobile number or '-' if not available
-            if (element.mobile_number.length > 0) {
-                $('input[name="mobile"]').val(element.mobile_number[0])
+            if (element.mobile_number) {
+                if (Array.isArray(element.mobile_number)) {
+                    // It's an array - use first element or '-'
+                    $('input[name="mobile"]').val(element.mobile_number.length > 0 ? element.mobile_number[0] : '-')
+                } else {
+                    // It's a string - use directly
+                    $('input[name="mobile"]').val(element.mobile_number)
+                }
             } else {
                 $('input[name="mobile"]').val('-')
             }

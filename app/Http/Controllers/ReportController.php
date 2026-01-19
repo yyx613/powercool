@@ -81,7 +81,7 @@ class ReportController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
-                'product_name' => $record->product->model_name,
+                'product_name' => $record->product->model_desc,
                 'product_code' => $record->product->sku,
             ];
         }
@@ -128,7 +128,7 @@ class ReportController extends Controller
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->orWhereHas('product', function ($q) use ($keyword) {
-                    return $q->where('model_name', 'like', '%' . $keyword . '%')->orWhere('sku', 'like', '%' . $keyword . '%');
+                    return $q->where('model_desc', 'like', '%' . $keyword . '%')->orWhere('sku', 'like', '%' . $keyword . '%');
                 });
             });
         }
@@ -302,7 +302,7 @@ class ReportController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
-                'product_name' => $record->model_name,
+                'product_name' => $record->model_desc,
                 'product_code' => $record->sku,
                 'warehouse_available_stock' => $record->warehouseAvailableStock(),
                 'warehouse_reserved_stock' => $record->warehouseReservedStock(),
@@ -352,7 +352,7 @@ class ReportController extends Controller
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_name', 'like', '%' . $keyword . '%');
+                    ->orWhere('model_desc', 'like', '%' . $keyword . '%');
             });
         }
         $records = $records->orderBy('id', 'desc');
@@ -389,7 +389,7 @@ class ReportController extends Controller
         ];
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
-                'product_name' => $record->model_name,
+                'product_name' => $record->model_desc,
                 'product_code' => $record->sku,
                 'sales' => number_format($record->sum_amount - $record->sum_promo_amount, 2),
                 'cost' => number_format($record->sum_cost, 2),
@@ -431,7 +431,7 @@ class ReportController extends Controller
             ->select(
                 'sale_products.sale_id',
                 'sale_products.product_id AS product_id',
-                'products.model_name AS model_name',
+                'products.model_desc AS model_desc',
                 'products.sku AS sku',
                 DB::raw('SUM(sale_products.cost) as sum_cost'),
                 DB::raw('SUM(promo.amount) as sum_promo_amount'),
@@ -458,7 +458,7 @@ class ReportController extends Controller
         // Search
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
-                return $q->where('products.model_name', 'like', '%' . $keyword . '%')
+                return $q->where('products.model_desc', 'like', '%' . $keyword . '%')
                     ->orWhere('products.sku', 'like', '%' . $keyword . '%');
             });
         }
@@ -536,7 +536,7 @@ class ReportController extends Controller
         $records = DB::table('tasks')
             ->select(
                 'tasks.id AS id',
-                'products.model_name AS product',
+                'products.model_desc AS product',
                 DB::raw('SUM(tasks.amount_to_collect) as income_generated'),
                 DB::raw('COUNT(*) as service_count'),
             )
@@ -560,7 +560,7 @@ class ReportController extends Controller
         // Search
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
-                return $q->Where('products.model_name', 'like', '%' . $keyword . '%');
+                return $q->Where('products.model_desc', 'like', '%' . $keyword . '%');
             });
         }
         $records = $records;
@@ -640,7 +640,7 @@ class ReportController extends Controller
                 'tasks.id AS id',
                 'tasks.sku AS sku',
                 'users.name AS technician',
-                'products.model_name AS product_for_replacement',
+                'products.model_desc AS product_for_replacement',
                 DB::raw('SUM(task_milestone_inventories.qty) as material_used_qty'),
             )
             ->where('tasks.type', Task::TYPE_TECHNICIAN)
@@ -667,7 +667,7 @@ class ReportController extends Controller
             $records = $records->where(function ($q) use ($keyword) {
                 return $q->where('users.name', 'like', '%' . $keyword . '%')
                     ->orWhere('tasks.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('products.model_name', 'like', '%' . $keyword . '%');
+                    ->orWhere('products.model_desc', 'like', '%' . $keyword . '%');
             });
         }
         $records = $records;

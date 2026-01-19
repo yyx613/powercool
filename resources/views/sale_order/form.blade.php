@@ -87,6 +87,14 @@
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container input[name="qty"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="discount"], #product-details-container input[name="product_desc"], #product-details-container textarea[name="remark"], #additional-remark-container input').attr('disabled', true)
                 $('#product-details-container select[name="promotion[]"]').attr('disabled', true)
 
+                // Disable ad-hoc services
+                $('#services-container input, #services-container .select2, #services-container .service-sst-btn').css('backgroundColor', '#eee')
+                $('#services-container input:not([type="hidden"])').parent().css('backgroundColor', '#eee')
+                $('#services-container input').attr('disabled', true)
+                $('#services-container select').prop('disabled', true)
+                $('#services-container .service-sst-btn').attr('disabled', true)
+                $('#services-container .delete-service-btn').addClass('!hidden')
+
                 $('#quotation-details-container input[name="custom_date"]').attr('disabled', false)
                 $('#quotation-details-container input[name="custom_date"]').css('backgroundColor', '#fff')
                 $('#quotation-details-container input[name="custom_date"]').parent().css('backgroundColor', '#fff')
@@ -162,6 +170,20 @@
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
                 accessory.push($(this).find('select[name="accessory_id[]"]').val())
             })
+
+            // Collect ad-hoc services data
+            let adhocServiceId = []
+            let adhocServiceOverrideAmount = []
+            let adhocServiceIsSst = []
+            $('#services-container .service-item').each(function() {
+                const serviceId = $(this).find('select[name="adhoc_service_id[]"]').val();
+                if (serviceId) {
+                    adhocServiceId.push(serviceId);
+                    adhocServiceOverrideAmount.push($(this).find('input[name="adhoc_service_override_amount[]"]').val());
+                    adhocServiceIsSst.push($(this).find('input[name="adhoc_service_is_sst[]"]').val());
+                }
+            });
+
             let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
@@ -210,6 +232,10 @@
                     'discount': discount,
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
+
+                    'adhoc_service_id': adhocServiceId,
+                    'adhoc_service_override_amount': adhocServiceOverrideAmount,
+                    'adhoc_service_is_sst': adhocServiceIsSst,
 
                     'remark': additionalRemark,
                 },

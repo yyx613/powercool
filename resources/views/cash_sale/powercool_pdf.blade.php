@@ -178,7 +178,7 @@
                         {{ $prod->product->sku }}</td>
                     <td
                         style="vertical-align: start; font-size: 10px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ $prod->product->model_name }}</td>
+                        {{ $prod->product->model_desc }}</td>
                     <td
                         style="vertical-align: start; font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->qty }}</td>

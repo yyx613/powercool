@@ -31,7 +31,7 @@
                 <div class="bg-white p-2 rounded-md mb-4 border">
                     <div class="mb-2 flex items-center justify-between">
                         <div>
-                            <h6 class="text-lg font-semibold">{{ $formatted_products[$product_id]->model_name }}</h6>
+                            <h6 class="text-lg font-semibold">{{ $formatted_products[$product_id]->model_desc }}</h6>
                             <span class="text-xs font-semibold text-slate-500">{{ __('SKU') }}: {{ $formatted_products[$product_id]->sku }}</span>
                         </div>
                         <div>

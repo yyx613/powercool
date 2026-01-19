@@ -130,7 +130,7 @@ if (! function_exists('isFinance')) {
 if (! function_exists('getCustomizeProductIds')) {
     function getCustomizeProductIds()
     {
-        return Product::where('model_name', 'like', '%customise%')->withoutGlobalScope(BranchScope::class)->pluck('id');
+        return Product::where('model_desc', 'like', '%customise%')->withoutGlobalScope(BranchScope::class)->pluck('id');
     }
 }
 

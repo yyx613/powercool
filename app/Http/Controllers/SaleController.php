@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdhocService;
 use App\Models\AgentDebtor;
 use App\Models\Approval;
 use App\Models\Billing;
@@ -31,6 +32,7 @@ use App\Models\ProductChild;
 use App\Models\ProjectType;
 use App\Models\Role;
 use App\Models\Sale;
+use App\Models\SaleAdhocService;
 use App\Models\SaleEnquiry;
 use App\Models\SaleOrderCancellation;
 use App\Models\SalePaymentAmount;
@@ -121,7 +123,7 @@ class SaleController extends Controller
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
                 DB::raw('(
-                    SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0))
+                    COALESCE(SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)), 0)
                     + COALESCE((
                         SELECT SUM(
                             spa.qty * COALESCE(spa.override_selling_price, psp.price)
@@ -133,6 +135,15 @@ class SaleController extends Controller
                         )
                         AND (spa.is_foc IS NULL OR spa.is_foc = 0)
                         AND spa.deleted_at IS NULL
+                    ), 0)
+                    + COALESCE((
+                        SELECT SUM(
+                            COALESCE(sas.override_amount, sas.amount) +
+                            CASE WHEN sas.is_sst = 1 THEN COALESCE(sas.override_amount, sas.amount) * COALESCE(sas.sst_value, 0) / 100 ELSE 0 END
+                        )
+                        FROM sale_adhoc_services sas
+                        WHERE sas.sale_id = sales.id
+                        AND sas.deleted_at IS NULL
                     ), 0)
                 ) AS total_amount'),
             )
@@ -341,7 +352,7 @@ class SaleController extends Controller
         $products = $products->keyBy('id')->all();
 
         return view('quotation.form', [
-            'sale' => $sale->load('products.product.children', 'products.product.sellingPrices', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'products.accessories.product.sellingPrices', 'products.accessories.sellingPrice', 'thirdPartyAddresses'),
+            'sale' => $sale->load('products.product.children', 'products.product.sellingPrices', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'products.accessories.product.sellingPrices', 'products.accessories.sellingPrice', 'thirdPartyAddresses', 'adhocServices.adhocService'),
             'products' => $products,
             'customers' => $customers,
             'is_view' => $is_view,
@@ -457,7 +468,8 @@ class SaleController extends Controller
         $pdf = Pdf::loadView('quotation.'.(isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
-            'products' => $sale->products->load('accessories.product'),
+            'products' => $sale->products->load(['accessories.product', 'accessories.sellingPrice']),
+            'adhocServices' => $sale->adhocServices()->with('adhocService')->get(),
             'customer' => $sale->customer,
             'billing_address' => CustomerLocation::where('id', $sale->billing_address_id)->first(),
             'delivery_address' => CustomerLocation::where('id', $sale->delivery_address_id)->first(),
@@ -496,9 +508,10 @@ class SaleController extends Controller
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
                 ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
+                    $q->whereDoesntHave('approval', function ($q) {
+                        $q->where('data', 'like', '%is_quo%')
+                            ->where('status', Approval::STATUS_PENDING_APPROVAL);
+                    });
                 })
                 ->get();
         } elseif ($req->has('cus')) {
@@ -514,9 +527,10 @@ class SaleController extends Controller
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', $req->cus)
                 ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
+                    $q->whereDoesntHave('approval', function ($q) {
+                        $q->where('data', 'like', '%is_quo%')
+                            ->where('status', Approval::STATUS_PENDING_APPROVAL);
+                    });
                 })
                 ->distinct()
                 ->pluck('sale_id');
@@ -530,9 +544,10 @@ class SaleController extends Controller
                 ->whereHas('products')
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where(function ($q) {
-                    $q->whereHas('approval', function ($q) {
-                        $q->where('status', Approval::STATUS_APPROVED);
-                    })->orDoesntHave('approval');
+                    $q->whereDoesntHave('approval', function ($q) {
+                        $q->where('data', 'like', '%is_quo%')
+                            ->where('status', Approval::STATUS_PENDING_APPROVAL);
+                    });
                 })
                 ->distinct()
                 ->pluck('customer_id');
@@ -561,12 +576,13 @@ class SaleController extends Controller
     public function converToSaleOrder(Request $req)
     {
         $quo_ids = explode(',', $req->quo);
-        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with('products.accessories')->get();
+        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with(['products.accessories', 'adhocServices'])->get();
 
         try {
             $references = collect();
             $remarks = collect();
             $products = collect();
+            $adhocServices = collect();
             $third_party_address_address = [];
             $third_party_address_mobile = [];
             $third_party_address_name = [];
@@ -577,6 +593,7 @@ class SaleController extends Controller
                 $references = $references->merge($quos[$i]->reference);
                 $remarks = $remarks->merge($quos[$i]->remark);
                 $products = $products->merge($quos[$i]->products);
+                $adhocServices = $adhocServices->merge($quos[$i]->adhocServices);
                 $third_party_addresses = $quos[$i]->thirdPartyAddresses;
                 for ($j = 0; $j < count($third_party_addresses); $j++) {
                     $third_party_address_address[] = $third_party_addresses[$j]->address;
@@ -697,6 +714,25 @@ class SaleController extends Controller
             if ($res->result != true) {
                 throw new Exception('Failed to create remark');
             }
+
+            // Copy ad-hoc services
+            if ($adhocServices->isNotEmpty()) {
+                $now = now();
+                $adhocServicesData = $adhocServices->map(function ($svc) use ($sale_id, $now) {
+                    return [
+                        'sale_id' => $sale_id,
+                        'adhoc_service_id' => $svc->adhoc_service_id,
+                        'amount' => $svc->amount,
+                        'override_amount' => $svc->override_amount,
+                        'is_sst' => $svc->is_sst,
+                        'sst_value' => $svc->sst_value,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                })->toArray();
+                SaleAdhocService::insert($adhocServicesData);
+            }
+
             // Change QUO's status to converted
             Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->update([
                 'status' => Sale::STATUS_CONVERTED,
@@ -820,11 +856,34 @@ class SaleController extends Controller
                 'sales.created_by',
                 'createdBy.name as created_by_name',
                 'updatedBy.name as updated_by_name',
-                'serial_no_qty_query.serial_no_qty',
-                'paid_amount_query.paid_amount',
+                DB::raw('COALESCE(serial_no_qty_query.serial_no_qty, 0) AS serial_no_qty'),
+                DB::raw('COALESCE(paid_amount_query.paid_amount, 0) AS paid_amount'),
                 'pav.has_payment_after_void AS has_payment_after_void',
                 DB::raw('SUM(sale_products.qty) AS qty'),
-                DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
+                DB::raw('(
+                    COALESCE(SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)), 0)
+                    + COALESCE((
+                        SELECT SUM(
+                            spa.qty * COALESCE(spa.override_selling_price, psp.price)
+                        )
+                        FROM sale_product_accessories spa
+                        LEFT JOIN product_selling_prices psp ON spa.selling_price_id = psp.id
+                        WHERE spa.sale_product_id IN (
+                            SELECT sp2.id FROM sale_products sp2 WHERE sp2.sale_id = sales.id AND sp2.deleted_at IS NULL
+                        )
+                        AND (spa.is_foc IS NULL OR spa.is_foc = 0)
+                        AND spa.deleted_at IS NULL
+                    ), 0)
+                    + COALESCE((
+                        SELECT SUM(
+                            COALESCE(sas.override_amount, sas.amount) +
+                            CASE WHEN sas.is_sst = 1 THEN COALESCE(sas.override_amount, sas.amount) * COALESCE(sas.sst_value, 0) / 100 ELSE 0 END
+                        )
+                        FROM sale_adhoc_services sas
+                        WHERE sas.sale_id = sales.id
+                        AND sas.deleted_at IS NULL
+                    ), 0)
+                ) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('sales.deleted_at')
@@ -845,10 +904,10 @@ class SaleController extends Controller
             ->leftJoin('users as createdBy', 'createdBy.id', '=', 'sales.created_by')
             ->leftJoin('users as updatedBy', 'updatedBy.id', '=', 'sales.updated_by')
             ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
-            ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
+            ->leftJoinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
             })
-            ->joinSub($paid_amount_query, 'paid_amount_query', function ($join) {
+            ->leftJoinSub($paid_amount_query, 'paid_amount_query', function ($join) {
                 $join->on('paid_amount_query.sale_id', '=', 'sales.id');
             })
             ->leftJoinSub($payment_after_void_query, 'pav', function ($join) {
@@ -1066,9 +1125,10 @@ class SaleController extends Controller
                 'products.accessories.product',
                 'paymentAmounts.approval',
                 'thirdPartyAddresses',
+                'adhocServices.adhocService',
             ]);
         } else {
-            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'paymentAmounts.approval', 'thirdPartyAddresses');
+            $sale->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'paymentAmounts.approval', 'thirdPartyAddresses', 'adhocServices.adhocService');
         }
 
         $sale->products->each(function ($q) {
@@ -1333,6 +1393,7 @@ class SaleController extends Controller
             'terms' => $sale->paymentTerm ?? null,
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
+            'adhocServices' => $sale->adhocServices,
             'quo_skus' => implode(', ', $quo_skus),
             'is_paid' => $sale->payment_status == Sale::PAYMENT_STATUS_PAID,
             'is_proforma_invoice' => $is_proforma_invoice,
@@ -1641,7 +1702,7 @@ class SaleController extends Controller
                     for ($j = 0; $j < count($sales[$i]->products); $j++) {
                         $is_rm = $sales[$i]->products[$j]->product->isRawMaterial();
 
-                        if ($is_rm && $sales[$i]->products[$j]->remainingQty() > 0) {
+                        if ($is_rm && $sales[$i]->products[$j]->remainingQtyForRM() > 0) {
                             $customer_ids[] = $sales[$i]->customer_id;
                         } elseif (! $is_rm) {
                             $customer_ids[] = $sales[$i]->customer_id;
@@ -1805,7 +1866,7 @@ class SaleController extends Controller
                 foreach ($dop_accessories as $acc) {
                     $pdf_accessories[] = [
                         'sku' => $acc->product->sku ?? '',
-                        'name' => $acc->product->model_name ?? 'N/A',
+                        'name' => $acc->product->model_desc ?? 'N/A',
                         'qty' => $acc->qty,
                         'is_foc' => $acc->is_foc,
                     ];
@@ -1817,6 +1878,7 @@ class SaleController extends Controller
                         'desc' => $do->products[$i]->saleProduct->product->model_desc,
                         'qty' => $do->products[$i]->qty,
                         'uom' => $do->products[$i]->saleProduct->uom,
+                        'warranty_periods' => $do->products[$i]->saleProduct->warrantyPeriods,
                         'accessories' => $pdf_accessories,
                     ];
                 } else {
@@ -2222,6 +2284,7 @@ class SaleController extends Controller
 
     public function saveAsDraft(Request $req)
     {
+        Log::info($req->all());
         try {
             DB::beginTransaction();
 
@@ -2728,7 +2791,6 @@ class SaleController extends Controller
                             'inventory_category_id' => isset($category) ? $category->id : null,
                             'type' => Product::TYPE_PRODUCT,
                             'sku' => $req->customize_product[$i],
-                            'model_name' => $req->customize_product[$i],
                             'model_desc' => $req->customize_product[$i],
                             'is_active' => true,
                         ]);
@@ -2825,11 +2887,11 @@ class SaleController extends Controller
                                     'data' => $req->type == 'quo' ? json_encode([
                                         'is_quo' => true,
                                         'sale_product_id' => $sp->id,
-                                        'description' => 'The override selling price for '.$prod->model_name.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
+                                        'description' => 'The override selling price for '.$prod->model_desc.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
                                     ]) : json_encode([
                                         'is_quo' => false,
                                         'sale_product_id' => $sp->id,
-                                        'description' => 'The override selling price for '.$prod->model_name.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
+                                        'description' => 'The override selling price for '.$prod->model_desc.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
                                     ]),
                                 ]);
                                 (new Branch)->assign(Approval::class, $approval->id);
@@ -2983,6 +3045,42 @@ class SaleController extends Controller
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
                 ->pluck('id')
                 ->toArray();
+
+            // Handle Ad-hoc Services
+            if ($req->has('adhoc_service_id') && is_array($req->adhoc_service_id)) {
+                // Delete removed services
+                SaleAdhocService::where('sale_id', $req->sale_id)->delete();
+
+                $now = now();
+                $adhoc_services_data = [];
+
+                for ($i = 0; $i < count($req->adhoc_service_id); $i++) {
+                    $serviceId = $req->adhoc_service_id[$i];
+                    if ($serviceId == null) {
+                        continue;
+                    }
+
+                    $service = AdhocService::find($serviceId);
+                    if ($service == null) {
+                        continue;
+                    }
+
+                    $adhoc_services_data[] = [
+                        'sale_id' => $req->sale_id,
+                        'adhoc_service_id' => $serviceId,
+                        'amount' => $service->amount,
+                        'override_amount' => isset($req->adhoc_service_override_amount[$i]) && $req->adhoc_service_override_amount[$i] != '' ? $req->adhoc_service_override_amount[$i] : null,
+                        'is_sst' => isset($req->adhoc_service_is_sst[$i]) ? (bool) $req->adhoc_service_is_sst[$i] : false,
+                        'sst_value' => isset($req->adhoc_service_is_sst[$i]) && $req->adhoc_service_is_sst[$i] ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+
+                if (count($adhoc_services_data) > 0) {
+                    SaleAdhocService::insert($adhoc_services_data);
+                }
+            }
 
             DB::commit();
 
@@ -3146,9 +3244,12 @@ class SaleController extends Controller
                         }
                     }
 
-                    // Insert new records
+                    // Insert new records and add their IDs to submitted_ids
                     if (count($data) > 0) {
-                        SalePaymentAmount::insert($data);
+                        foreach ($data as $record) {
+                            $new_payment = SalePaymentAmount::create($record);
+                            $submitted_ids[] = $new_payment->id;
+                        }
                     }
 
                     // Records not in submitted list = to be deleted (need approval)
@@ -3399,9 +3500,6 @@ class SaleController extends Controller
         }
 
         foreach ($records_paginator as $record) {
-            if (! $req->has('sku') && $record->approval_status === 0) {
-                continue;
-            }
             $sos = Sale::where('type', Sale::TYPE_SO)->whereRaw("find_in_set('".$record->id."', convert_to)")->get();
             $so_skus = [];
 
@@ -3523,31 +3621,46 @@ class SaleController extends Controller
                 for ($i = 0; $i < count($dos[$k]->products); $i++) {
                     // Get accessories for this product
                     $pdf_accessories = [];
-                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with('product')->get();
+                    $accessory_total = 0;
+                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product', 'saleProductAccessory.sellingPrice'])->get();
                     foreach ($dop_accessories as $acc) {
+                        $spa = $acc->saleProductAccessory;
+                        $acc_unit_price = $spa->override_selling_price ?? ($spa->sellingPrice->price ?? 0);
+                        $acc_qty = $acc->qty ?? 1;
+
                         $pdf_accessories[] = [
                             'sku' => $acc->product->sku ?? '',
-                            'name' => $acc->product->model_name ?? 'N/A',
-                            'qty' => $acc->qty,
+                            'name' => $acc->product->model_desc ?? 'N/A',
+                            'qty' => $acc_qty,
                             'is_foc' => $acc->is_foc,
+                            'unit_price' => $acc_unit_price,
+                            'total' => $acc->is_foc ? 0 : ($acc_unit_price * $acc_qty),
                         ];
+
+                        if (!$acc->is_foc) {
+                            $accessory_total += $acc_unit_price * $acc_qty;
+                        }
                     }
 
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
-                        $subtotal = ($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount();
+                        $do_qty = $dos[$k]->products[$i]->qty;
+                        $unit_price = $dos[$k]->products[$i]->saleProduct->override_selling_price ?? $dos[$k]->products[$i]->saleProduct->unit_price;
+                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->discount / $dos[$k]->products[$i]->saleProduct->qty);
+                        $subtotal = ($do_qty * $unit_price) - $discount;
                         $pdf_products[] = [
                             'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
-                            'model_name' => $dos[$k]->products[$i]->saleProduct->product->model_name,
-                            'qty' => $dos[$k]->products[$i]->qty,
+                            'model_desc' => $dos[$k]->products[$i]->saleProduct->product->model_desc,
+                            'qty' => $do_qty,
                             'uom' => UOM::where('id', $dos[$k]->products[$i]->saleProduct->product->uom)->value('name'),
-                            'unit_price' => number_format($dos[$k]->products[$i]->saleProduct->unit_price, 2),
-                            'discount' => number_format($dos[$k]->products[$i]->saleProduct->discount, 2),
+                            'unit_price' => number_format($unit_price, 2),
+                            'discount' => number_format($discount, 2),
                             'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
-                            'total_discount' => $dos[$k]->products[$i]->saleProduct->discountAmount(),
+                            'total_discount' => $discount,
                             'total' => number_format($subtotal, 2),
+                            'warranty_periods' => $dos[$k]->products[$i]->saleProduct->warrantyPeriods,
                             'accessories' => $pdf_accessories,
                         ];
-                        $overall_total += $subtotal;
+                        $overall_total += $subtotal + $accessory_total;
                     } else {
                         $dopcs = $dos[$k]->products[$i]->children;
 
@@ -3564,7 +3677,7 @@ class SaleController extends Controller
                                 $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
-                                    'model_name' => $dopcs[$j]->productChild->parent->model_name,
+                                    'model_desc' => $dopcs[$j]->productChild->parent->model_desc,
                                     'qty' => count($serial_no),
                                     'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
                                     'unit_price' => number_format($unit_price, 2),
@@ -3576,7 +3689,7 @@ class SaleController extends Controller
                                     'serial_no' => $serial_no,
                                     'accessories' => $pdf_accessories,
                                 ];
-                                $overall_total += $total;
+                                $overall_total += $total + $accessory_total;
                             }
                         }
 
@@ -4854,7 +4967,7 @@ class SaleController extends Controller
             ->select(
                 'sale_order_cancellation.id', 'sale_order_cancellation.product_id', 'sale_order_cancellation.saleperson_id',
                 'sale_order_cancellation.created_at AS cancel_date',
-                'products.sku AS product_sku', 'products.model_name AS product_name', 'sales_agents.name AS saleperson',
+                'products.sku AS product_sku', 'products.model_desc AS product_name', 'sales_agents.name AS saleperson',
                 'sales.sku AS so_inv', 'customers.sku AS customer_code', 'customers.company_name AS customer_name',
                 DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0)) AS qty')
             )
@@ -4879,7 +4992,7 @@ class SaleController extends Controller
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sales_agents.name', 'like', '%'.$keyword.'%')
                     ->orWhere('products.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('products.model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('sales.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.company_name', 'like', '%'.$keyword.'%');
@@ -5885,20 +5998,48 @@ class SaleController extends Controller
             $dos = [$do];
             for ($k = 0; $k < count($dos); $k++) {
                 for ($i = 0; $i < count($dos[$k]->products); $i++) {
+                    // Get accessories for this product
+                    $pdf_accessories = [];
+                    $accessory_total = 0;
+                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product', 'saleProductAccessory.sellingPrice'])->get();
+                    foreach ($dop_accessories as $acc) {
+                        $spa = $acc->saleProductAccessory;
+                        $acc_unit_price = $spa->override_selling_price ?? ($spa->sellingPrice->price ?? 0);
+                        $acc_qty = $acc->qty ?? 1;
+
+                        $pdf_accessories[] = [
+                            'sku' => $acc->product->sku ?? '',
+                            'name' => $acc->product->model_desc ?? 'N/A',
+                            'qty' => $acc_qty,
+                            'is_foc' => $acc->is_foc,
+                            'unit_price' => $acc_unit_price,
+                            'total' => $acc->is_foc ? 0 : ($acc_unit_price * $acc_qty),
+                        ];
+
+                        if (!$acc->is_foc) {
+                            $accessory_total += $acc_unit_price * $acc_qty;
+                        }
+                    }
+
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
-                        $subtotal = ($dos[$k]->products[$i]->saleProduct->override_selling_price ?? ($dos[$k]->products[$i]->saleProduct->qty * $dos[$k]->products[$i]->saleProduct->unit_price)) - $dos[$k]->products[$i]->saleProduct->discountAmount();
+                        $do_qty = $dos[$k]->products[$i]->qty;
+                        $unit_price = $dos[$k]->products[$i]->saleProduct->override_selling_price ?? $dos[$k]->products[$i]->saleProduct->unit_price;
+                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->discount / $dos[$k]->products[$i]->saleProduct->qty);
+                        $subtotal = ($do_qty * $unit_price) - $discount;
                         $pdf_products[] = [
                             'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
-                            'model_name' => $dos[$k]->products[$i]->saleProduct->product->model_name,
-                            'qty' => $dos[$k]->products[$i]->qty,
+                            'model_desc' => $dos[$k]->products[$i]->saleProduct->product->model_desc,
+                            'qty' => $do_qty,
                             'uom' => UOM::where('id', $dos[$k]->products[$i]->saleProduct->product->uom)->value('name'),
-                            'unit_price' => number_format($dos[$k]->products[$i]->saleProduct->unit_price, 2),
-                            'discount' => number_format($dos[$k]->products[$i]->saleProduct->discount, 2),
+                            'unit_price' => number_format($unit_price, 2),
+                            'discount' => number_format($discount, 2),
                             'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
-                            'total_discount' => $dos[$k]->products[$i]->saleProduct->discountAmount(),
+                            'total_discount' => $discount,
                             'total' => number_format($subtotal, 2),
+                            'warranty_periods' => $dos[$k]->products[$i]->saleProduct->warrantyPeriods,
+                            'accessories' => $pdf_accessories,
                         ];
-                        $overall_total += $subtotal;
+                        $overall_total += $subtotal + $accessory_total;
                     } else {
                         $dopcs = $dos[$k]->products[$i]->children;
 
@@ -5915,7 +6056,7 @@ class SaleController extends Controller
                                 $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
-                                    'model_name' => $dopcs[$j]->productChild->parent->model_name,
+                                    'model_desc' => $dopcs[$j]->productChild->parent->model_desc,
                                     'qty' => count($serial_no),
                                     'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
                                     'unit_price' => number_format($unit_price, 2),
@@ -5925,8 +6066,9 @@ class SaleController extends Controller
                                     'total' => number_format($total, 2),
                                     'warranty_periods' => $dopcs[$j]->doProduct->saleProduct->warrantyPeriods,
                                     'serial_no' => $serial_no,
+                                    'accessories' => $pdf_accessories,
                                 ];
-                                $overall_total += $total;
+                                $overall_total += $total + $accessory_total;
                             }
                         }
 

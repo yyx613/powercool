@@ -100,6 +100,16 @@
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('priority')" class="mt-2" />
                 </div>
+                <div class="flex flex-col" id="factory-select-container">
+                    <x-app.input.label class="mb-1">{{ __('Factory') }}</x-app.input.label>
+                    <x-app.input.select name="factory" id="factory" :hasError="$errors->has('factory')">
+                        <option value="">{{ __('Select a factory') }}</option>
+                        @foreach ($factories as $factory)
+                            <option value="{{ $factory->id }}" @selected(old('factory', isset($production) ? $production->factory_id : null) == $factory->id)>{{ $factory->name }}</option>
+                        @endforeach
+                    </x-app.input.select>
+                    <x-input-error :messages="$errors->get('factory')" class="mt-2" />
+                </div>
                 <div class="flex flex-col col-span-2 md:col-span-3">
                     <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                     <textarea name="remark" id="remark" class="hidden">{!! old('remark', isset($production) ? $production->remark : null) !!}</textarea>
@@ -108,11 +118,28 @@
                 <div class="flex flex-col col-span-2 md:col-span-3">
                     <x-app.input.label id="assign" class="mb-1">{{ __('Assigned Staff') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
+
+                    <!-- Select/Deselect All Button -->
+                    <div class="mb-2">
+                        <button type="button" id="toggle-all-staff" class="text-sm text-blue-500 hover:text-blue-700">
+                            {{ __('Select All') }}
+                        </button>
+                    </div>
+
+                    <!-- Staff Checkboxes -->
+                    <div class="grid grid-cols-4 gap-2 p-3 border border-gray-300 rounded-md max-h-64 overflow-y-auto @error('assign') border-red-500 @enderror">
                         @foreach ($users as $user)
-                            <option value="{{ $user->id }}" @selected(in_array($user->id, old('assign', isset($production) ? $production->users()->pluck('user_id')->toArray() : [])))>{{ $user->name }}</option>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox"
+                                       name="assign[]"
+                                       value="{{ $user->id }}"
+                                       class="staff-checkbox rounded"
+                                       @checked(in_array($user->id, old('assign', isset($production) ? $production->users()->pluck('user_id')->toArray() : [])))>
+                                <span class="text-sm">{{ $user->name }}</span>
+                            </label>
                         @endforeach
-                    </x-app.input.select>
+                    </div>
+
                     <x-input-error :messages="$errors->get('assign')" class="mt-2" />
                 </div>
                 {{-- Milestones --}}
@@ -203,7 +230,7 @@
                         results: $.map(data.products, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }
@@ -224,7 +251,7 @@
                 INIT_EDIT = true
 
                 if (PRODUCTION.type != 2 && SELECTED_PRODUCT != null) {
-                    let opt = new Option(SELECTED_PRODUCT.model_name, SELECTED_PRODUCT.id, true, true)
+                    let opt = new Option(SELECTED_PRODUCT.model_desc, SELECTED_PRODUCT.id, true, true)
                     $('select[name="product"]').append(opt)
                 }
 
@@ -272,7 +299,7 @@
                 INIT_EDIT = false
             }
             if (DEFAULT_PRODUCT != null) {
-                let opt = new Option(DEFAULT_PRODUCT.model_name, DEFAULT_PRODUCT.id, true, true)
+                let opt = new Option(DEFAULT_PRODUCT.model_desc, DEFAULT_PRODUCT.id, true, true)
                 $('select[name="product"]').append(opt)
             }
             if (PRODUCTION != null || DEFAULT_PRODUCT != true) {
@@ -291,6 +318,29 @@
         $('input[name="due_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
         });
+
+        // Toggle all staff checkboxes
+        $('#toggle-all-staff').on('click', function() {
+            let checkboxes = $('.staff-checkbox');
+            let allChecked = checkboxes.length === checkboxes.filter(':checked').length;
+
+            checkboxes.prop('checked', !allChecked);
+            $(this).text(allChecked ? '{{ __("Select All") }}' : '{{ __("Deselect All") }}');
+        });
+
+        // Update button text when individual checkboxes change
+        $('body').on('change', '.staff-checkbox', function() {
+            let checkboxes = $('.staff-checkbox');
+            let allChecked = checkboxes.length === checkboxes.filter(':checked').length;
+            $('#toggle-all-staff').text(allChecked ? '{{ __("Deselect All") }}' : '{{ __("Select All") }}');
+        });
+
+        // Initialize button text based on current checkbox state
+        (function() {
+            let checkboxes = $('.staff-checkbox');
+            let allChecked = checkboxes.length > 0 && checkboxes.length === checkboxes.filter(':checked').length;
+            $('#toggle-all-staff').text(allChecked ? '{{ __("Deselect All") }}' : '{{ __("Select All") }}');
+        })();
 
         // Prevent user to enter ',' since every desc is joined with ','
         $('input[name="custom_milestone"]').on('keydown', function(e) {
@@ -385,13 +435,16 @@
         $('select[name="type"]').on('change', function() {
             let typeValue = $(this).val()
             let productContainer = $('#product-select-container')
+            let factoryContainer = $('#factory-select-container')
             let milestoneAsterisk = $('#milestone-container label span.text-red-500')
 
             if (typeValue == '2') { // R&D type
                 productContainer.addClass('hidden')
+                factoryContainer.addClass('hidden')
                 milestoneAsterisk.addClass('hidden')
             } else { // Normal type
                 productContainer.removeClass('hidden')
+                factoryContainer.removeClass('hidden')
                 milestoneAsterisk.removeClass('hidden')
             }
         })
@@ -413,7 +466,7 @@
 
                         $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                         $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                         $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                         $(clone).removeAttr('id')
                         $(clone).removeClass('hidden')
@@ -453,7 +506,7 @@
                     $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                     $(clone).find('input').attr('checked', true)
                     $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                     $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                     $(clone).removeAttr('id')
                     $(clone).removeClass('hidden')
@@ -518,7 +571,7 @@
                     for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
                         included = false
                         if (
-                            MATERIAL_USE[i].materials[j].material.model_name.includes(val) ||
+                            MATERIAL_USE[i].materials[j].material.model_desc.includes(val) ||
                             MATERIAL_USE[i].materials[j].material.sku.includes(val)
                         ) {
                             included = true
@@ -544,6 +597,11 @@
                 type: 'GET',
                 success: function(res) {
                     MATERIAL_USE = res.product_material_use
+
+                    // Auto-populate factory from product's category (only for new productions, not edits)
+                    if (res.factory_id != null && !INIT_EDIT) {
+                        $('select[name="factory"]').val(res.factory_id)
+                    }
 
                     if (get_material_use_only) return
 

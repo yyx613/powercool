@@ -120,7 +120,7 @@
                             placeholder="{{ __('Select a product') }}">
                             <option value="">{{ __('Select a product') }}</option>
                             @foreach ($products as $pro)
-                                <option value="{{ $pro->id }}">{{ $pro->sku }} ({{ $pro->model_name }})
+                                <option value="{{ $pro->id }}">{{ $pro->sku }} ({{ $pro->model_desc }})
                                 </option>
                             @endforeach
                         </x-app.input.select>
@@ -160,7 +160,7 @@
                                     <x-app.input.select2 name="product[]" :hasError="$errors->has('product')" placeholder="{{ __('Select a product') }}">
                                         <option value="">{{ __('Select a product') }}</option>
                                         @foreach ($products as $pro)
-                                            <option value="{{ $pro->id }}" @selected(old('product.' . $key) == $pro->id)>{{ $pro->sku }} ({{ $pro->model_name }})</option>
+                                            <option value="{{ $pro->id }}" @selected(old('product.' . $key) == $pro->id)>{{ $pro->sku }} ({{ $pro->model_desc }})</option>
                                         @endforeach
                                     </x-app.input.select2>
                                     <x-input-error :messages="$errors->first('product.' . $key)" class="mt-1" />

@@ -430,7 +430,7 @@
         //             for (let i = 0; i < res.products.length; i++) {
         //                 const elem = res.products[i];
 
-        //                 let opt = new Option(elem.model_name, elem.id)
+        //                 let opt = new Option(elem.model_desc, elem.id)
         //                 $('#to-production-modal select').append(opt)
         //             }
 

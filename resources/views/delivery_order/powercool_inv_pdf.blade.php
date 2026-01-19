@@ -209,7 +209,7 @@
                         {{ $prod['stock_code'] }}</td>
                     <td
                         style="font-size: 12px; text-align: left; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ $prod['model_name'] }}</td>
+                        {{ $prod['model_desc'] }}</td>
                     <td
                         style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['qty'] }}</td>
@@ -247,7 +247,7 @@
                     </tr>
                 @endif
                 <!-- Warranty -->
-                @if ($prod['warranty_periods'] != null)
+                @if ($prod['warranty_periods'] != null && count($prod['warranty_periods']) > 0)
                     @php
                         $warranty = [];
                         foreach ($prod['warranty_periods'] as $wp) {
@@ -306,6 +306,8 @@
                                 - {{ $acc['sku'] }} - {{ $acc['name'] }} (Qty: {{ $acc['qty'] }})
                                 @if ($acc['is_foc'])
                                     <span style="font-weight: bold;"> - FOC</span>
+                                @else
+                                    - RM {{ number_format($acc['unit_price'], 2) }}/unit = RM {{ number_format($acc['total'], 2) }}
                                 @endif
                             </td>
                             <td colspan="6"></td>

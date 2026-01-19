@@ -92,7 +92,7 @@
             @foreach ($prod->images as $img)
                 <div class="h-12 w-12 rounded overflow-hidden">
                     <a href="{{ $img->url }}" target="_blank">
-                        <img src="{{ $img->url }}" alt="{{ $prod->model_name }}" class="w-full h-full object-contain">
+                        <img src="{{ $img->url }}" alt="{{ $prod->model_desc }}" class="w-full h-full object-contain">
                     </a>
                 </div>
             @endforeach
@@ -101,7 +101,7 @@
     <div class="mb-6 flex gap-x-4">
         <div class="flex flex-col flex-1">
             <div class="flex items-center mb-2 gap-x-4">
-                <h1 class="text-lg font-semibold leading-none">{{ $prod->model_name }}</h1>
+                <h1 class="text-lg font-semibold leading-none">{{ $prod->model_desc }}</h1>
                 <span
                     class="text-xs font-semibold py-1 px-3 rounded-full {{ $prod->is_active ? 'bg-green-300' : 'bg-red-300' }}">{{ $prod->is_active ? 'Active' : 'Inactive' }}</span>
             </div>
@@ -886,7 +886,7 @@
             $(`#${modal} #date`).text(moment().format('D MMM YYYY HH:mm'))
             $(`#${modal} #serial-no`).text(serialNo)
             if (PRODUCT.company_group == 1) {
-                $(`#${modal} #stock-out-to`).text(PRODUCT.model_name)
+                $(`#${modal} #stock-out-to`).text(PRODUCT.model_desc)
                 $(`#${modal} #yes-btn`).attr('href',
                     `{{ config('app.url') }}/inventory-category/stock-out/${productChildId}`)
             }

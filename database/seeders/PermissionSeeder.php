@@ -50,6 +50,11 @@ class PermissionSeeder extends Seeder
 
             'inventory.raw_material_request.view',
 
+            'adhoc_service.view',
+            'adhoc_service.create',
+            'adhoc_service.edit',
+            'adhoc_service.delete',
+
             'grn.view',
             'grn.create',
             'grn.edit',

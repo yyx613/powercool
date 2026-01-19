@@ -66,6 +66,11 @@ class DeliveryOrder extends Model
         return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
     }
 
+    public function adhocServices()
+    {
+        return $this->hasMany(DeliveryOrderAdhocService::class);
+    }
+
     public function generateSku(): string
     {
         $sku = null;

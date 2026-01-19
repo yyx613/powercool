@@ -372,7 +372,7 @@
                     </li>
                 @endcan
                 <!-- Inventory -->
-                @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view'])
+                @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view', 'adhoc_service.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="4">
@@ -442,6 +442,15 @@
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material Request') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('adhoc_service.view')
+                                        <li>
+                                            <a href="{{ route('adhoc_service.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'adhoc_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Ad-hoc Services') }}</span>
                                             </a>
                                         </li>
                                     @endcan
@@ -1307,7 +1316,7 @@
         @endcan
 
         <!-- Inventory -->
-        @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view'])
+        @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view', 'adhoc_service.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="inventory">
                 <div class="mb-4 p-2 border-b">
@@ -1365,6 +1374,15 @@
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                 <span
                                     class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material Request') }}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('adhoc_service.view')
+                        <li>
+                            <a href="{{ route('adhoc_service.index') }}"
+                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'adhoc_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                <span
+                                    class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Ad-hoc Services') }}</span>
                             </a>
                         </li>
                     @endcan
@@ -2283,7 +2301,7 @@
                     </li>
                 @endcan
                 <!-- Inventory -->
-                @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view'])
+                @canany(['inventory.summary.view', 'grn.view', 'inventory.product.view', 'inventory.raw_material.view', 'adhoc_service.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="4">
@@ -2353,6 +2371,15 @@
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'raw_material_request.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                                 <span
                                                     class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Raw Material Request') }}</span>
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('adhoc_service.view')
+                                        <li>
+                                            <a href="{{ route('adhoc_service.index') }}"
+                                                class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'adhoc_service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                                <span
+                                                    class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Ad-hoc Services') }}</span>
                                             </a>
                                         </li>
                                     @endcan

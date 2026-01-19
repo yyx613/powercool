@@ -57,7 +57,7 @@ class WarrantyController extends Controller
         Session::put('warranty-page', $req->page);
 
         $cus = DB::table('customers')->select('id', 'name');
-        $prods = DB::table('products')->select('id', 'model_name');
+        $prods = DB::table('products')->select('id', 'model_desc');
 
         $sps = DB::table('sale_products')
             ->select('sale_products.id', 'warranty_periods.name', 'warranty_periods.period')
@@ -114,7 +114,7 @@ class WarrantyController extends Controller
                 'dopcs.inv_id AS inv_id', 'dopcs.inv_sku AS inv_sku', 'dopcs.inv_status AS inv_status',
                 'dopcs.so_id', 'dopcs.customer_name AS customer_name',
                 'dopcs.warranty', 'dopcs.warranty_period', 'dopcs.inv_created_at',
-                'prods.model_name AS product_name',
+                'prods.model_desc AS product_name',
             )
             ->joinSub($dopcs, 'dopcs', function ($join) {
                 $join->on('product_children.id', '=', 'dopcs.product_child_id');
@@ -132,7 +132,7 @@ class WarrantyController extends Controller
                     ->orWhere('dopcs.inv_sku', 'like', '%'.$keyword.'%')
                     ->orWhere('dopcs.customer_name', 'like', '%'.$keyword.'%')
                     ->orWhere('dopcs.warranty', 'like', '%'.$keyword.'%')
-                    ->orWhere('prods.model_name', 'like', '%'.$keyword.'%');
+                    ->orWhere('prods.model_desc', 'like', '%'.$keyword.'%');
             });
         }
         // Order
@@ -140,7 +140,7 @@ class WarrantyController extends Controller
             $map = [
                 0 => 'dopcs.inv_sku',
                 1 => 'dopcs.customer_name',
-                2 => 'prods.model_name',
+                2 => 'prods.model_desc',
                 3 => 'product_children.sku',
                 4 => 'dopcs.warranty',
             ];
