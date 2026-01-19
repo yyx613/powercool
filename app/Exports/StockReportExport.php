@@ -41,7 +41,7 @@ class StockReportExport implements FromCollection, WithMapping, WithHeadings, Wi
 
     public function map($data): array {
         return [
-            $data->model_name,
+            $data->model_desc,
             $data->sku,
             $data->warehouseAvailableStock(),
             $data->warehouseReservedStock(),

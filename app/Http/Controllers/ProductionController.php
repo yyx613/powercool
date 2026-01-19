@@ -266,7 +266,9 @@ class ProductionController extends Controller
             'selected_product' => $production->product,
             'production_milestone_material_previews' => $production_milestone_material_previews,
             'customize_product' => $production->customizeProduct,
-            'customize_product_material_use' => MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first(),
+            'customize_product_material_use' => $production->customizeProduct
+                ? MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first()
+                : null,
         ]);
     }
 
@@ -377,6 +379,7 @@ class ProductionController extends Controller
             'assign' => 'required',
             'assign.*' => 'exists:users,id',
             'material_use_product' => 'required_unless:type,2',
+            'factory' => 'nullable|exists:factories,id',
         ];
         // Validate request
         $req->validate($rules, [
@@ -410,8 +413,9 @@ class ProductionController extends Controller
             }
             
             if ($production->id == null) {
-                $factory_id = null;
-                if ($req->product != null) {
+                // Use factory from request if provided, otherwise auto-detect from product's category
+                $factory_id = $req->factory;
+                if ($factory_id == null && $req->product != null) {
                     $product = Product::find($req->product);
                     if ($product != null) {
                         $factory_id = $product->category?->fromFactory?->id;
@@ -451,6 +455,7 @@ class ProductionController extends Controller
                     'status' => $req->status,
                     'type' => $req->type,
                     'priority_id' => $req->priority,
+                    'factory_id' => $req->factory,
                 ];
                 if ($production->type == Production::TYPE_RND) {
                     unset($req_data['product_id']);
@@ -976,7 +981,7 @@ class ProductionController extends Controller
 
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_brand'][] = $prod->brand;
-            $data['product_name'][] = $prod->model_name;
+            $data['product_name'][] = $prod->model_desc;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $product_children[$i]->sku;
             $data['dimension'][] = ($prod->length ?? 0).' x '.($prod->width ?? 0).' x '.($prod->height ?? 0).'MM';
@@ -1148,7 +1153,7 @@ class ProductionController extends Controller
         })
             ->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_name', 'like', '%'.$keyword.'%');
+                    ->orWhere('model_desc', 'like', '%'.$keyword.'%');
             })
             ->get();
 

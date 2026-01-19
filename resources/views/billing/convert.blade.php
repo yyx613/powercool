@@ -110,7 +110,7 @@
                                     @foreach ($products as $key => $pro)
                                         <div class="w-full p-3 rounded-md border border-slate-200">
                                             <div class="flex justify-between">
-                                                <h6 class="leading-none">{{ $pro->product->model_name }}</h6>
+                                                <h6 class="leading-none">{{ $pro->product->model_desc }}</h6>
                                                 <p class="text-sm">SKU: {{ $pro->product->sku }}</p>
                                             </div>
                                             <p class="text-sm text-slate-400">{{ $pro->product->model_desc }}</p>
@@ -166,7 +166,7 @@
                     <tbody>
                         @foreach ($costs as $co)
                             <tr>
-                                <td class="px-2 py-0.5 text-sm">{{ $co->product()->withTrashed()->first()->model_name }}</td>
+                                <td class="px-2 py-0.5 text-sm">{{ $co->product()->withTrashed()->first()->model_desc }}</td>
                                 <td class="px-2 py-0.5 text-sm">{{ $co->qty ?? $co->sku }}</td>
                                 <td class="px-2 py-0.5 text-sm">{{ number_format($co->unit_price, 2) }}</td>
                                 <td class="px-2 py-0.5 text-sm">{{ number_format($co->total_price, 2) }}</td>

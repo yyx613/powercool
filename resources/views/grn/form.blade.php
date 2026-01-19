@@ -177,7 +177,7 @@
             for (let i = 0; i < PRODUCTS.length; i++) {
                 const element = PRODUCTS[i];
 
-                let opt = new Option(element.model_name, element.id)
+                let opt = new Option(element.model_desc, element.id)
                 $(`.items[data-id="${ITEMS_COUNT}"] select[name="product_id[]"]`).append(opt)
             }
             // Build UOM select2

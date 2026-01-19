@@ -227,7 +227,7 @@
                     </tr>
                 @endif
                 <!-- Warranty -->
-                @if ($prod['warranty_periods'] != null)
+                @if ($prod['warranty_periods'] != null && count($prod['warranty_periods']) > 0)
                     @php
                         $warranty = [];
                         foreach ($prod['warranty_periods'] as $wp) {

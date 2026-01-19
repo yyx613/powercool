@@ -78,13 +78,6 @@
                     <x-input-error :messages="$errors->get('model_code')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_name" class="mb-1">{{ __('Model Name') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="model_name" id="model_name"
-                        value="{{ old('model_name', isset($prod) ? $prod->model_name : ($dup_prod != null ? $dup_prod->model_name : null)) }}" />
-                    <x-input-error :messages="$errors->get('model_name')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
                     <x-app.input.label id="model_desc" class="mb-1">{{ __('Model Description') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_desc" id="model_desc"
@@ -211,7 +204,7 @@
                             <option value="">{{ __('Select a Power Cool stock code') }}</option>
                             @foreach ($hi_ten_products as $hi_ten_prod)
                                 <option value="{{ $hi_ten_prod->id }}" @selected(old('hi_ten_stock_code', isset($prod) ? $prod->hi_ten_stock_code : null) == $hi_ten_prod->id)>
-                                    {{ $hi_ten_prod->model_name }}</option>
+                                    {{ $hi_ten_prod->model_desc }}</option>
                             @endforeach
                             </x-app.input.select>
                             <x-input-error :messages="$errors->get('hi_ten_stock_code')" class="mt-1" />
@@ -702,7 +695,7 @@
 
                         $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                         $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                         $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                         $(clone).removeAttr('id')
                         $(clone).removeClass('hidden')
@@ -742,7 +735,7 @@
                     $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                     $(clone).find('input').attr('checked', true)
                     $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                     $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                     $(clone).removeAttr('id')
                     $(clone).removeClass('hidden')
@@ -806,7 +799,7 @@
                     for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
                         included = false
                         if (
-                            MATERIAL_USE[i].materials[j].material.model_name.includes(val) ||
+                            MATERIAL_USE[i].materials[j].material.model_desc.includes(val) ||
                             MATERIAL_USE[i].materials[j].material.sku.includes(val)
                         ) {
                             included = true

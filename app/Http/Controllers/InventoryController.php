@@ -120,7 +120,7 @@ class InventoryController extends Controller
             $keyword = $req->keyword;
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->orWhere('model_name', 'like', '%'.$keyword.'%')
+                $q->orWhere('model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('sku', 'like', '%'.$keyword.'%');
             });
         }
@@ -137,7 +137,7 @@ class InventoryController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'model_name',
+                0 => 'model_desc',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -158,7 +158,7 @@ class InventoryController extends Controller
         ];
         foreach ($records_paginator as $record) {
             $data['data'][] = [
-                'name' => $record->model_name,
+                'name' => $record->model_desc,
                 'sku' => $record->sku,
                 'category' => $record->type == Product::TYPE_PRODUCT ? 'Product' : ($record->is_sparepart == true ? 'Sparepart' : 'Raw Material'),
                 'image' => $record->images()->first() ?? null,
@@ -644,7 +644,7 @@ class InventoryController extends Controller
                 'object_id' => $product_child->id,
                 'status' => Approval::STATUS_PENDING_APPROVAL,
                 'data' => json_encode([
-                    'description' => Auth::user()->name.' has requested the product '.$product_child->parent->model_name.' with serial number ('.$product_child->sku.') back to warehouse',
+                    'description' => Auth::user()->name.' has requested the product '.$product_child->parent->model_desc.' with serial number ('.$product_child->sku.') back to warehouse',
                     'user_id' => Auth::user()->id,
                 ]),
             ]);

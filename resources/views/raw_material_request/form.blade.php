@@ -44,7 +44,7 @@
                                 <x-app.input.select name="material[]" placeholder="{{ __('Select a material') }}">
                                     <option value="">{{ __('Select a material') }}</option>
                                     @foreach ($products as $prod)
-                                        <option value="{{ $prod->id }}">{{ $prod->sku }} - {{ $prod->model_name }}</option> 
+                                        <option value="{{ $prod->id }}">{{ $prod->sku }} - {{ $prod->model_desc }}</option> 
                                     @endforeach
                                 </x-app.input.select>
                             </div>

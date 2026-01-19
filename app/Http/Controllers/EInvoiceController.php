@@ -1062,7 +1062,7 @@ class EInvoiceController extends Controller
                 if ($saleProduct) {
                     $productDetails[] = [
                         'index' => $key + 1,
-                        'model_name' => ($fromBilling ? $saleProduct->model_name : $saleProduct->product->model_name) ?? '',
+                        'model_desc' => ($fromBilling ? $saleProduct->model_desc : $saleProduct->product->model_desc) ?? '',
                         'qty' => $item['diff'],
                         'uom' => ($fromBilling ? $saleProduct->uom : $saleProduct->product->uom) ?? '',
                         'unit_price' => $item['price'],
@@ -1190,7 +1190,7 @@ class EInvoiceController extends Controller
                                 $saleProduct = $product->saleProduct;
                                 $invoiceItems[] = [
                                     'product_id' => $product->saleProduct->id,
-                                    'name' => $saleProduct->product->model_name,
+                                    'name' => $saleProduct->product->model_desc,
                                     'qty' => $saleProduct->qty,
                                     'price' => $saleProduct->unit_price,
                                 ];
@@ -1216,7 +1216,7 @@ class EInvoiceController extends Controller
 
                             $invoiceItems[] = [
                                 'product_id' => $billingProduct->product_id,
-                                'name' => $product->model_name,
+                                'name' => $product->model_desc,
                                 'qty' => $billingProduct->qty,
                                 'price' => $billingProduct->price,
                             ];
@@ -1248,7 +1248,7 @@ class EInvoiceController extends Controller
                                     $saleProduct = $product->saleProduct;
                                     $invoiceItems[] = [
                                         'product_id' => $product->saleProduct->id,
-                                        'name' => $saleProduct->product->model_name,
+                                        'name' => $saleProduct->product->model_desc,
                                         'qty' => $saleProduct->qty,
                                         'price' => $saleProduct->unit_price,
                                     ];

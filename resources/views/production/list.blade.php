@@ -101,9 +101,9 @@
                     <th>
                         <input type="checkbox" id="parent-row-checkbox" />
                     </th>
-                    <th>{{ __('ID') }}</th>
+                    <th>{{ __('No') }}</th>
                     <th>{{ __('Type') }}</th>
-                    <th>{{ __('From ID') }}</th>
+                    <th>{{ __('Old Production ID') }}</th>
                     <th>{{ __('Factory') }}</th>
                     <th>{{ __('Product Serial No') }}</th>
                     <th>{{ __('Start Date') }}</th>

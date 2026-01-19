@@ -309,7 +309,7 @@
                                     data-sp-id="{{ $pro->id }}">
                                     <div class="flex-1 flex justify-between items-start">
                                         <div>
-                                            <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}
+                                            <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_desc }}
                                             </h6>
                                             <p class="text-xs text-slate-500">{{ __('SKU') }}:
                                                 {{ $pro->product->sku }}
@@ -420,7 +420,7 @@
                                 @if (count($sp->accessories) > 0)
                                     <div class="p-3 rounded-md border border-slate-200" data-sp-id="{{ $sp->id }}">
                                         <div class="mb-3">
-                                            <h6 class="font-semibold">{{ $sp->product->model_name }}</h6>
+                                            <h6 class="font-semibold">{{ $sp->product->model_desc }}</h6>
                                             <p class="text-xs text-slate-500">SKU: {{ $sp->product->sku }}</p>
                                         </div>
                                         <div class="border-t pt-3">
@@ -435,7 +435,7 @@
                                                         <input type="checkbox"
                                                             class="rounded border-gray-300 accessory-checkbox"
                                                             checked>
-                                                        <span class="text-sm">{{ $acc->product->sku ?? '' }} - {{ $acc->product->model_name ?? 'N/A' }}</span>
+                                                        <span class="text-sm">{{ $acc->product->sku ?? '' }} - {{ $acc->product->model_desc ?? 'N/A' }}</span>
                                                     </label>
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs text-slate-500">Qty:</span>
@@ -535,7 +535,7 @@
                                             @endif
                                             @if ($enq->product)
                                                 <p class="text-xs text-gray-600 mt-1">Product: {{ $enq->product->sku }} -
-                                                    {{ $enq->product->model_name }}</p>
+                                                    {{ $enq->product->model_desc }}</p>
                                             @endif
                                             <p class="text-xs text-gray-500 mt-1">Enquiry Date:
                                                 {{ $enq->enquiry_date->format('d/m/Y H:i') }}</p>

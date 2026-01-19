@@ -109,7 +109,7 @@
                     <x-app.input.label class="mb-1">{{ __('Product / Service Interested In') }}</x-app.input.label>
                     <select name="product_id" id="product_id" class="@error('product_id') border-red-500 @enderror">
                         @if(isset($enquiry) && $enquiry->product)
-                            <option value="{{ $enquiry->product->id }}" selected>{{ $enquiry->product->sku }} - {{ $enquiry->product->model_name }}</option>
+                            <option value="{{ $enquiry->product->id }}" selected>{{ $enquiry->product->sku }} - {{ $enquiry->product->model_desc }}</option>
                         @endif
                     </select>
                     <x-input-error :messages="$errors->get('product_id')" class="mt-1" />
@@ -186,7 +186,7 @@
                 results: $.map(data.products, function(item) {
                     return {
                         id: item.id,
-                        text: `${item.sku} - ${item.model_name}`
+                        text: `${item.sku} - ${item.model_desc}`
                     };
                 })
             }

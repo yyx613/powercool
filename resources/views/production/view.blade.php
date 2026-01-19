@@ -194,7 +194,7 @@
             </div>
             <div class="border-t pt-4 mt-4">
                 <h6 class="text-md font-semibold">{{ __('Product') }}</h6>
-                <p class="text-sm text-slate-500">{{ $production->product->model_name }}</p>
+                <p class="text-sm text-slate-500">{{ $production->product->model_desc }}</p>
                 @if ($production->productChild != null)
                     <div class="flex items-center mt-2">
                         <span class="text-sm font-semibold mr-1">Serial No: </span>
@@ -208,7 +208,7 @@
                     <ul>
                         @foreach ($material_use->materials as $material)
                             <li class="flex justify-between mt-0.5 hover:bg-slate-50">
-                                <p class="text-sm text-slate-500">{{ $material->material->model_name }}</p>
+                                <p class="text-sm text-slate-500">{{ $material->material->model_desc }}</p>
                                 <p class="text-sm text-slate-500 ml-2">x{{ $material->qty }}</p>
                             </li>
                         @endforeach
@@ -330,7 +330,7 @@
                             $(clone).removeAttr('id')
                             $(clone).removeClass('hidden')
                             $(clone).addClass('selection')
-                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product.model_name)
+                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product.model_desc)
                             $(clone).find('.filter-search').attr('name', productId)
                             $(clone).find('.filter-search').attr('id', productId)
                             $(clone).find('.filter-search').val(SPAREPART_KEYWORD[productId])
@@ -403,7 +403,7 @@
                             $(clone).removeAttr('id')
                             $(clone).removeClass('hidden')
                             $(clone).addClass('selection')
-                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product.model_name)
+                            $(clone).find('#product-name').text(PRODUCTION.milestones[i].preview[j].product.model_desc)
                             $(clone).find('#qty-needed').text(
                                 `Quantity needed: x${PRODUCTION.milestones[i].preview[j].qty}`)
                             $('#serial-no-selection-container').append(clone)
@@ -475,7 +475,7 @@
                                 if (k == 0) {
                                     var spTemplate = $(clone).find('#sp-template')[0].cloneNode(true)
                                     $(spTemplate).find('#product').text(PRODUCTION.milestones[i].pivot.rejects[j]
-                                        .milestone_materials[k].product_child.parent.model_name)
+                                        .milestone_materials[k].product_child.parent.model_desc)
                                     $(spTemplate).removeClass('hidden')
                                     $(clone).find('#material-container').append(spTemplate)
                                 }
@@ -483,7 +483,7 @@
                                 var rmTemplate = $(clone).find('#rm-template')[0].cloneNode(true)
 
                                 $(rmTemplate).find('#product').text(PRODUCTION.milestones[i].pivot.rejects[j]
-                                    .milestone_materials[k].product.model_name)
+                                    .milestone_materials[k].product.model_desc)
                                 $(rmTemplate).find('#qty').text(
                                     `x${PRODUCTION.milestones[i].pivot.rejects[j].milestone_materials[k].qty}`)
 

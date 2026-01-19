@@ -84,7 +84,7 @@
             <x-app.input.select name="product_id[]">
                 <option value=""></option>
                 {{-- @foreach ($products as $p)
-                    <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_name }}</option>
+                    <option value="{{ $p->id }}">({{ $p->sku }}) {{ $p->model_desc }}</option>
                 @endforeach --}}
             </x-app.input.select>
             <x-app.message.error id="product_id_err" />
@@ -258,6 +258,76 @@
             <span class="text-sm">{{ __('Add Item') }}</span>
         </button>
     </div>
+
+    <!-- Ad-hoc Services Section -->
+    <div class="mt-6 pt-6 border-t px-4">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center border-l-8 border-green-700 px-3 py-1 bg-green-100 w-fit">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
+                </svg>
+                <span class="text-lg ml-3 font-bold">{{ __('Ad-hoc Services') }}</span>
+            </div>
+            <button type="button"
+                class="bg-green-700 text-white rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-green-600 hover:shadow {{ isset($sale) && ($sale->status == 2 || $sale->status == 3) ? 'hidden' : '' }} {{ isset($convert_from_quo) && $convert_from_quo ? 'hidden' : '' }}"
+                id="add-service-btn">
+                <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+                </svg>
+                <span class="text-sm">{{ __('Add Service') }}</span>
+            </button>
+        </div>
+
+        <!-- Service Row Template (Hidden) -->
+        <div class="hidden" id="service-template">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
+                <button type="button"
+                    class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden {{ !isset($sale) ? 'group-hover:block' : '' }} delete-service-btn"
+                    title="{{ __('Delete Service') }}">
+                    <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>
+                    </svg>
+                </button>
+                <div class="flex flex-col col-span-2">
+                    <x-app.input.label class="mb-1">{{ __('Service') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select name="adhoc_service_id[]" class="adhoc-service-select">
+                        <option value=""></option>
+                    </x-app.input.select>
+                    <x-app.message.error id="adhoc_service_id_err" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Amount (RM)') }}</x-app.input.label>
+                    <x-app.input.input name="adhoc_service_amount[]" class="service-amount" readonly />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Override Amount (RM)') }}</x-app.input.label>
+                    <x-app.input.input name="adhoc_service_override_amount[]" class="decimal-input service-override-amount" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('SST') }} ({{ $sst }}%)</x-app.input.label>
+                    <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                        <x-app.input.input name="adhoc_service_sst_amount[]" class="service-sst-amount border-none flex-1" disabled />
+                        <button type="button"
+                            class="service-sst-btn font-semibold text-sm px-1.5 border-l border-gray-300 data-[with-sst=false]:bg-slate-100 data-[with-sst=true]:bg-emerald-100"
+                            data-with-sst="false">SST</button>
+                    </div>
+                    <input type="hidden" name="adhoc_service_is_sst[]" value="0" class="service-is-sst-input" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Container -->
+        <div id="services-container"></div>
+
+        <!-- Empty State for Services -->
+        <div id="services-empty-state" class="text-center py-8 bg-slate-50 border border-dashed border-slate-300 rounded mb-4">
+            <svg class="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="mt-2 text-sm text-slate-500">{{ __('No ad-hoc services added') }}</p>
+        </div>
+    </div>
+
     <!-- Total -->
     <div class="flex justify-end mt-6 pt-6 border-t px-4 pb-4">
         <table>
@@ -266,6 +336,11 @@
                     <td>{{ __('Subtotal') }}</td>
                     <td class="w-4 text-center">:</td>
                     <td id="subtotal">0.00</td>
+                </tr>
+                <tr>
+                    <td>{{ __('Ad-hoc Services') }}</td>
+                    <td class="w-4 text-center">:</td>
+                    <td id="services-amount">0.00</td>
                 </tr>
                 <tr>
                     <td>{{ __('Promo') }}</td>
@@ -313,7 +388,7 @@
                     $('#add-item-btn').click()
 
                     $(`.items[data-id="${i+1}"]`).attr('data-product-id', sp.id)
-                    var opt = new Option(`${sp.product.sku} - ${sp.product.model_name}`, sp.product_id, true, true);
+                    var opt = new Option(`${sp.product.sku} - ${sp.product.model_desc}`, sp.product_id, true, true);
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).append(opt)
                     $(`.items[data-id="${i+1}"] select[name="product_id[]"]`).trigger('change')
                     $(`.items[data-id="${i+1}"] input[name="qty"]`).val(sp.qty)
@@ -415,7 +490,7 @@
                         results: $.map(data.products, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }
@@ -447,7 +522,7 @@
                         results: $.map(data.products, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }
@@ -868,11 +943,18 @@
                 overallTaxAmount += (taxAmount * 1)
             })
 
+            // Calculate ad-hoc services
+            let servicesSummary = { total: 0, tax: 0 };
+            if (typeof calServicesSummary === 'function') {
+                servicesSummary = calServicesSummary();
+            }
+
             $('#subtotal').text(priceFormat(overallSubtotal))
+            $('#services-amount').text(priceFormat(servicesSummary.total))
             $('#promo-amount').text(priceFormat(overallPromoAmount))
             $('#discount-amount').text(priceFormat(overallDiscountAmount))
-            $('#tax-amount').text(priceFormat(overallTaxAmount))
-            $('#total').text(priceFormat(overallSubtotal - overallPromoAmount - overallDiscountAmount + overallTaxAmount))
+            $('#tax-amount').text(priceFormat(overallTaxAmount + servicesSummary.tax))
+            $('#total').text(priceFormat(overallSubtotal + servicesSummary.total - overallPromoAmount - overallDiscountAmount + overallTaxAmount + servicesSummary.tax))
         }
 
         function buildWarrantyPeriodSelect2(item_id) {
@@ -1034,7 +1116,7 @@
                         results: $.map(data.products, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }
@@ -1100,7 +1182,7 @@
                     ACCESSORIES[accessory.accessory_id] = {
                         id: accessory.accessory_id,
                         sku: accessory.product.sku,
-                        model_name: accessory.product.model_name,
+                        model_desc: accessory.product.model_desc,
                         sellingPrices: accessory.product.selling_prices || []
                     };
                 }
@@ -1126,7 +1208,7 @@
                 // Populate accessory select
                 const $accessorySelect = $newRow.find('.accessory-select');
                 $accessorySelect.empty();
-                $accessorySelect.append(`<option value="${accessory.accessory_id}" selected>${accessory.product.sku} - ${accessory.product.model_name}</option>`);
+                $accessorySelect.append(`<option value="${accessory.accessory_id}" selected>${accessory.product.sku} - ${accessory.product.model_desc}</option>`);
 
                 // Populate quantity
                 $newRow.find('input[name="accessory_qty[]"]').val(accessory.qty || 1);
@@ -1190,7 +1272,7 @@
                             results: $.map(data.products, function(item) {
                                 return {
                                     id: item.id,
-                                    text: `${item.sku} - ${item.model_name}`
+                                    text: `${item.sku} - ${item.model_desc}`
                                 };
                             })
                         };
@@ -1311,5 +1393,220 @@
                 }
             }
         }
+
+        // =============================================
+        // Ad-hoc Services Management
+        // =============================================
+        ADHOC_SERVICES = {};
+        SERVICES_COUNT = 0;
+
+        // Add service button click handler
+        $('#add-service-btn').on('click', function() {
+            SERVICES_COUNT++;
+            let clone = $('#service-template .service-item')[0].cloneNode(true);
+
+            $(clone).attr('data-service-id', SERVICES_COUNT);
+            $(clone).find('.delete-service-btn').attr('data-service-id', SERVICES_COUNT);
+            $(clone).find('.service-sst-btn').attr('data-service-id', SERVICES_COUNT);
+
+            $('#services-container').append(clone);
+            $('#services-empty-state').addClass('hidden');
+
+            // Initialize Select2 for service search
+            bulidSelect2Ajax({
+                selector: `.service-item[data-service-id="${SERVICES_COUNT}"] .adhoc-service-select`,
+                placeholder: '{{ __('Search a service') }}',
+                url: '{{ route('adhoc_service.search') }}',
+                processResults: function(data) {
+                    for (let i = 0; i < data.services.length; i++) {
+                        const svc = data.services[i];
+                        ADHOC_SERVICES[svc.id] = svc;
+                    }
+                    return {
+                        results: $.map(data.services, function(item) {
+                            return {
+                                id: item.id,
+                                text: `${item.sku} - ${item.name}`
+                            };
+                        })
+                    }
+                }
+            });
+
+            $(`.service-item[data-service-id="${SERVICES_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden');
+        });
+
+        // Delete service button click handler
+        $('body').on('click', '.delete-service-btn', function() {
+            let serviceId = $(this).data('service-id');
+            $(`.service-item[data-service-id="${serviceId}"]`).remove();
+
+            // Show empty state if no services left
+            if ($('.service-item').length === 0) {
+                $('#services-empty-state').removeClass('hidden');
+            }
+
+            calSummary();
+        });
+
+        // Service selection change handler
+        $('body').on('change', '.adhoc-service-select', function() {
+            let serviceId = $(this).closest('.service-item').data('service-id');
+            let selectedId = $(this).val();
+            let service = ADHOC_SERVICES[selectedId];
+
+            if (service) {
+                $(`.service-item[data-service-id="${serviceId}"] .service-amount input`).val(priceFormat(service.amount));
+                $(`.service-item[data-service-id="${serviceId}"] .service-override-amount input`).val('');
+            }
+
+            calServiceSst(serviceId);
+            calSummary();
+        });
+
+        // Service override amount change handler
+        $('body').on('keyup', '.service-override-amount', function() {
+            let serviceId = $(this).closest('.service-item').data('service-id');
+            calServiceSst(serviceId);
+            calSummary();
+        });
+
+        // Service SST button click handler
+        $('body').on('click', '.service-sst-btn', function() {
+            let withSst = $(this).attr('data-with-sst');
+            let serviceId = $(this).data('service-id');
+
+            if (withSst === 'true') {
+                $(this).attr('data-with-sst', false);
+                $(`.service-item[data-service-id="${serviceId}"] .service-is-sst-input`).val(0);
+            } else {
+                $(this).attr('data-with-sst', true);
+                $(`.service-item[data-service-id="${serviceId}"] .service-is-sst-input`).val(1);
+            }
+
+            calServiceSst(serviceId);
+            calSummary();
+        });
+
+        function calServiceSst(serviceId) {
+            let enabledSst = $(`.service-item[data-service-id="${serviceId}"] .service-sst-btn`).attr('data-with-sst');
+            let overrideAmount = $(`.service-item[data-service-id="${serviceId}"] .service-override-amount input`).val();
+            let baseAmount = $(`.service-item[data-service-id="${serviceId}"] .service-amount input`).val();
+
+            let amount = overrideAmount != '' ? parseFloat(overrideAmount) : parseFloat(baseAmount.replace(/,/g, '')) || 0;
+
+            if (enabledSst === 'true' && amount > 0) {
+                let sstAmount = amount * SST / 100;
+                $(`.service-item[data-service-id="${serviceId}"] .service-sst-amount input`).val(priceFormat(sstAmount));
+            } else {
+                $(`.service-item[data-service-id="${serviceId}"] .service-sst-amount input`).val('');
+            }
+        }
+
+        function calServicesSummary() {
+            let servicesTotal = 0;
+            let servicesTax = 0;
+
+            $('.service-item').each(function() {
+                let overrideAmount = $(this).find('.service-override-amount input').val();
+                let baseAmount = $(this).find('.service-amount input').val();
+                let enabledSst = $(this).find('.service-sst-btn').attr('data-with-sst');
+
+                let amount = overrideAmount != '' ? parseFloat(overrideAmount) : parseFloat(baseAmount.replace(/,/g, '')) || 0;
+                servicesTotal += amount;
+
+                if (enabledSst === 'true' && amount > 0) {
+                    servicesTax += amount * SST / 100;
+                }
+            });
+
+            return { total: servicesTotal, tax: servicesTax };
+        }
+
+        // Load existing ad-hoc services when editing
+        function loadExistingAdhocServices() {
+            if (SALE != null && SALE.adhoc_services && SALE.adhoc_services.length > 0) {
+                $('#services-empty-state').addClass('hidden');
+
+                for (let i = 0; i < SALE.adhoc_services.length; i++) {
+                    const sas = SALE.adhoc_services[i];
+                    SERVICES_COUNT++;
+
+                    // Store service data
+                    if (sas.adhoc_service) {
+                        ADHOC_SERVICES[sas.adhoc_service_id] = sas.adhoc_service;
+                    }
+
+                    let clone = $('#service-template .service-item')[0].cloneNode(true);
+
+                    $(clone).attr('data-service-id', SERVICES_COUNT);
+                    $(clone).attr('data-sale-adhoc-service-id', sas.id);
+                    $(clone).find('.delete-service-btn').attr('data-service-id', SERVICES_COUNT);
+                    $(clone).find('.service-sst-btn').attr('data-service-id', SERVICES_COUNT);
+
+                    // Populate data
+                    let $select = $(clone).find('.adhoc-service-select');
+                    $select.append(`<option value="${sas.adhoc_service_id}" selected>${sas.adhoc_service.sku} - ${sas.adhoc_service.name}</option>`);
+
+                    $(clone).find('.service-amount input').val(priceFormat(sas.amount));
+
+                    if (sas.override_amount) {
+                        $(clone).find('.service-override-amount input').val(sas.override_amount);
+                    }
+
+                    if (sas.is_sst == 1) {
+                        $(clone).find('.service-sst-btn').attr('data-with-sst', true);
+                        $(clone).find('.service-is-sst-input').val(1);
+                    }
+
+                    $('#services-container').append(clone);
+
+                    // Initialize Select2
+                    bulidSelect2Ajax({
+                        selector: `.service-item[data-service-id="${SERVICES_COUNT}"] .adhoc-service-select`,
+                        placeholder: '{{ __('Search a service') }}',
+                        url: '{{ route('adhoc_service.search') }}',
+                        processResults: function(data) {
+                            for (let j = 0; j < data.services.length; j++) {
+                                const svc = data.services[j];
+                                ADHOC_SERVICES[svc.id] = svc;
+                            }
+                            return {
+                                results: $.map(data.services, function(item) {
+                                    return {
+                                        id: item.id,
+                                        text: `${item.sku} - ${item.name}`
+                                    };
+                                })
+                            }
+                        }
+                    });
+
+                    $(`.service-item[data-service-id="${SERVICES_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden');
+
+                    // Calculate SST
+                    calServiceSst(SERVICES_COUNT);
+                }
+
+                // Disable services when editing
+                if (SALE != null) {
+                    $('#services-container input').attr('disabled', true).css('backgroundColor', '#eee');
+                    $('#services-container input:not([type="hidden"])').parent().css('backgroundColor', '#eee');
+                    $('#services-container select').prop('disabled', true);
+                    $('#services-container .select2').css('backgroundColor', '#eee');
+                    $('#services-container .service-sst-btn').attr('disabled', true).css('backgroundColor', '#eee');
+                    $('#services-container .delete-service-btn').addClass('!hidden');
+                }
+
+                calSummary();
+            }
+        }
+
+        // Call on page load
+        $(document).ready(function() {
+            setTimeout(function() {
+                loadExistingAdhocServices();
+            }, 500);
+        });
     </script>
 @endpush

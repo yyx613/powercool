@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 
 #[ScopedBy([BranchScope::class])]
 class Sale extends Model
@@ -96,6 +95,11 @@ class Sale extends Model
         return $this->hasMany(SaleThirdPartyAddress::class);
     }
 
+    public function adhocServices()
+    {
+        return $this->hasMany(SaleAdhocService::class);
+    }
+
     public function getReferenceAttribute($val)
     {
         if ($this->type == self::TYPE_QUO) {
@@ -137,8 +141,23 @@ class Sale extends Model
         $prods = $this->products()->withTrashed()->get();
 
         $total = 0;
+
+        // Products
         for ($i = 0; $i < count($prods); $i++) {
             $total += (($prods[$i]->qty * $prods[$i]->unit_price) - ($prods[$i]->discount ?? 0) + ($prods[$i]->sst_amount ?? 0));
+
+            // Accessories (non-FOC only)
+            foreach ($prods[$i]->accessories as $acc) {
+                if (!$acc->is_foc) {
+                    $acc_price = $acc->override_selling_price ?? ($acc->sellingPrice->price ?? 0);
+                    $total += $acc_price * ($acc->qty ?? 1);
+                }
+            }
+        }
+
+        // Ad-hoc services
+        foreach ($this->adhocServices as $service) {
+            $total += $service->getTotalAmount(); // includes SST
         }
 
         return $total;
@@ -200,25 +219,7 @@ class Sale extends Model
 
     public function remainingAmountToPay()
     {
-        $total_amount = DB::table('sales')
-            ->select(DB::raw('SUM(sale_products.qty * sale_products.unit_price - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),)
-            ->whereNull('sales.deleted_at')
-            ->whereNull('sale_products.deleted_at')
-            ->where('sales.type', Sale::TYPE_SO)
-            ->where('sales.id', $this->id)
-            ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
-            ->groupBy('sales.id')
-            ->value('total_amount');
-
-        $paid_amount = DB::table('sales')
-            ->select(DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'))
-            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
-            ->where('sales.id', $this->id)
-            ->whereNull('sale_payment_amounts.deleted_at')
-            ->groupBy('sales.id')
-            ->value('paid_amount');
-
-        return ($total_amount ?? 0) - ($paid_amount ?? 0);
+        return $this->getTotalAmount() - $this->getPaidAmount();
     }
 
     public static function labelToKey(string $label): ?int {

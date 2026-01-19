@@ -98,7 +98,7 @@ class SaleEnquiryController extends Controller
                 'phone_number' => $record->phone_number,
                 'email' => $record->email,
                 'enquiry_source' => $record->enquiry_source,
-                'product' => $record->product ? $record->product->model_name : null,
+                'product' => $record->product ? $record->product->model_desc : null,
                 'assigned_user' => $record->assignedUser ? $record->assignedUser->name : null,
                 'priority' => $priorityLabel,
                 'status' => $record->status,
@@ -311,10 +311,10 @@ class SaleEnquiryController extends Controller
             $products = Product::where('type', Product::TYPE_PRODUCT)
                 ->where('is_active', true)
                 ->where(function ($q) use ($keyword) {
-                    $q->where('model_name', 'like', '%' . $keyword . '%')
+                    $q->where('model_desc', 'like', '%' . $keyword . '%')
                         ->orWhere('sku', 'like', '%' . $keyword . '%');
                 })
-                ->orderBy('model_name', 'asc')
+                ->orderBy('model_desc', 'asc')
                 ->get();
 
             return response()->json([

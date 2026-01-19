@@ -450,7 +450,7 @@
                     if (SALE_PRODUCTS[i].sale_id == val) {
 
                         let opt = new Option(
-                            `${SALE_PRODUCTS[i].product.model_name} (${SALE_PRODUCTS[i].product.sku})`,
+                            `${SALE_PRODUCTS[i].product.model_desc} (${SALE_PRODUCTS[i].product.sku})`,
                             SALE_PRODUCTS[i].product_id)
                         $(`select[name="product_id"]`).append(opt)
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdhocServiceController;
 use App\Http\Controllers\AgentDebtorController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
@@ -296,6 +297,16 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{type}', 'editType')->name('edit')->middleware('branch.selected');
         Route::post('/upsert', 'upsertType')->name('upsert');
         Route::get('/delete/{type}', 'deleteType')->name('delete');
+    });
+    // Ad-hoc Services
+    Route::controller(AdhocServiceController::class)->prefix('adhoc-service')->name('adhoc_service.')->middleware(['can:adhoc_service.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:adhoc_service.create', 'branch.selected']);
+        Route::get('/edit/{service}', 'edit')->name('edit')->middleware(['can:adhoc_service.edit', 'branch.selected']);
+        Route::post('/upsert', 'upsert')->name('upsert');
+        Route::get('/delete/{service}', 'delete')->name('delete')->middleware(['can:adhoc_service.delete']);
+        Route::get('/search', 'search')->name('search')->withoutMiddleware(['can:adhoc_service.view']);
     });
     // Warranty
     Route::controller(WarrantyController::class)->prefix('warranty')->name('warranty.')->middleware(['can:warranty.view'])->group(function () {
