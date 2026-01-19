@@ -379,7 +379,9 @@ class ProductionController extends Controller
             'material_use_product' => 'required_unless:type,2',
         ];
         // Validate request
-        $req->validate($rules, [], [
+        $req->validate($rules, [
+            'material_use_product.required_unless' => 'Please add at least one milestone for production.',
+        ], [
             'desc' => 'description',
             'material_use_product' => 'milestone',
         ]);
@@ -390,7 +392,7 @@ class ProductionController extends Controller
             $now = now();
 
             // If type is R&D, then auto create new customize product
-            if ($req->type == Production::TYPE_RND && $production == null) {
+            if ($req->type == Production::TYPE_RND && ($production == null || $production->id == null)) {
                 $cp = CustomizeProduct::create([
                     'sku' => generateSku(CustomizeProduct::SKU_PREFIX),
                 ]);
@@ -410,9 +412,9 @@ class ProductionController extends Controller
             if ($production->id == null) {
                 $factory_id = null;
                 if ($req->product != null) {
-                    $product = Product::find($req->product)->first();
+                    $product = Product::find($req->product);
                     if ($product != null) {
-                        $factory_id = $product->category->fromFactory->id;
+                        $factory_id = $product->category?->fromFactory?->id;
                     }
                 }
 
