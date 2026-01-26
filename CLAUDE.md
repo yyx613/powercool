@@ -108,10 +108,20 @@ The application includes several scheduled commands that should be run via cron:
 
 The application uses a **BranchScope** (app/Models/Scopes/BranchScope.php) for multi-tenancy, automatically filtering queries based on the user's branch assignment. Most models are scoped by branch using the `#[ScopedBy([BranchScope::class])]` attribute.
 
+**Branch location constants (App\Models\Branch):**
+- `LOCATION_EVERY = 0` (All branches - super admin only)
+- `LOCATION_KL = 1` (Kuala Lumpur/HQ)
+- `LOCATION_PENANG = 2` (Penang)
+
 **Important patterns:**
 - Super admins can switch branches via `Session::get('as_branch')`
 - Use `withoutGlobalScope(BranchScope::class)` when you need to query across all branches
-- New models requiring branch isolation should include the BranchScope attribute
+- New models requiring branch isolation must:
+  1. Add `#[ScopedBy([BranchScope::class])]` attribute
+  2. Define `branch()` morphOne relationship: `return $this->morphOne(Branch::class, 'object');`
+  3. Call `Branch::assign(ModelClass::class, $id)` after creating the record
+- Use `getCurrentUserBranch()` to get current user's branch location constant
+- Use `getCurrentUserWarehouse()` to get warehouse name ('HQ' or 'Penang')
 
 ### Role-Based Access Control
 
@@ -120,6 +130,15 @@ Uses Spatie Laravel Permission package for roles and permissions:
 - User roles retrieved with `getUserRole()` and `getUserRoleId()` helpers
 - Check for super admin with `isSuperAdmin()` helper
 - Models: `App\Models\Role`, `App\Models\User`
+
+**Role ID Constants (App\Models\Role):**
+- `SUPERADMIN = 1`, `SALE = 2`, `TECHNICIAN = 3`, `DRIVER = 4`
+- `PRODUCTION_WORKER = 5`, `PRODUCTION_SUPERVISOR = 6`, `PRODUCTION_ASSISTANT = 7`
+- `WAREHOUSE = 8`, `FINANCE = 9`, `SALE_COORDINATOR = 13`, `PURCHASING = 14`
+- `STORE_WORKER = 15`, `SERVICE_HOD = 16`, `LOGISTIC = 17`
+
+**Role-checking helpers:**
+- `isProductionWorker()`, `isSalesOnly()`, `isSalesCoordinatorOnly()`, `isFinance()`, `isFinanceOnly()`
 
 ### Sales Flow & Document Chain
 
@@ -138,10 +157,16 @@ The sales process follows a specific document flow:
 - Invoices can be linked to sales or billings
 - E-invoices are generated from invoices and submitted to MyInvois system
 
-**Status constants to be aware of:**
-- `Sale::STATUS_ACTIVE`, `STATUS_INACTIVE`, `STATUS_CONVERTED`, `STATUS_CANCELLED`
-- `Sale::STATUS_APPROVAL_PENDING`, `STATUS_APPROVAL_APPROVED`, `STATUS_APPROVAL_REJECTED`
-- `Sale::PAYMENT_STATUS_UNPAID`, `PAYMENT_STATUS_PARTIALLY_PAID`, `PAYMENT_STATUS_PAID`
+**Type constants:**
+- `Sale::TYPE_QUO = 1` (Quotation), `TYPE_SO = 2` (Sale Order)
+- `Sale::TYPE_PENDING = 3` (Pending assign salesperson), `TYPE_CASH_SALE = 4`
+
+**Status constants:**
+- `Sale::STATUS_INACTIVE = 0`, `STATUS_ACTIVE = 1`, `STATUS_CONVERTED = 2`, `STATUS_CANCELLED = 3`
+- `Sale::STATUS_APPROVAL_PENDING = 4`, `STATUS_APPROVAL_APPROVED = 5`, `STATUS_TRANSFERRED_BACK = 6`
+- `Sale::STATUS_APPROVAL_REJECTED = 7`, `STATUS_PARTIALLY_CONVERTED = 8`
+- `Sale::PAYMENT_STATUS_UNPAID = 1`, `PAYMENT_STATUS_PARTIALLY_PAID = 2`, `PAYMENT_STATUS_PAID = 3`
+- `Sale::TRANSFER_TYPE_NORMAL = 1`, `TRANSFER_TYPE_TRANSFER_TO = 2`, `TRANSFER_TYPE_TRANSFER_FROM = 3`
 
 ### Production & Manufacturing
 
@@ -193,8 +218,15 @@ Excel exports use Maatwebsite Excel package (app/Exports/):
 Located in `app/helpers.php` (autoloaded via composer.json). Key helpers include:
 - `hasPermission(string $permission): bool` - Permission checking
 - `getUserRole(User $user): array` - Get user role names
+- `getUserRoleId(User $user): array` - Get user role IDs
 - `isSuperAdmin(): bool` - Check if current user is super admin
-- `generateRandomAlphabet($length)` - Generate SKU codes
+- `isProductionWorker(): bool`, `isSalesOnly(): bool`, `isFinance(): bool` - Role checks
+- `getCurrentUserBranch(): ?int` - Get branch location constant
+- `getCurrentUserWarehouse(): ?string` - Get warehouse name ('HQ' or 'Penang')
+- `isHiTen(int $company_group): bool` - Check if company group is HiTen (company_group == 2)
+- `generateSku(string $prefix, array $existing_skus, ?bool $is_hi_ten): string` - Generate SKU with branch prefix
+- `getInvolvedProductChild(?int $production_id): array` - Get product children IDs involved in production/DO/sales
+- `priceToWord($num, $currency): string` - Convert price to words (MYR/USD)
 
 ## Key Models & Relationships
 
@@ -233,14 +265,18 @@ Located in `app/helpers.php` (autoloaded via composer.json). Key helpers include
 ## Important Conventions
 
 ### SKU Generation
-Most entities have auto-generated SKU codes following patterns:
-- Quotations: `QUO-YY-XXXXX` (e.g., `QUO-25-00001`)
-- Sale Orders: `SO-YY-XXXXX` or `WSO-YY-XXXXX` (branch prefixed)
-- Invoices: `I-YY-XXXXX` or `WI-YY-XXXXX`
-- Delivery Orders: `DO-YY-XXXXX` or `WDO-YY-XXXXX`
-- Production: `PRD-YY-XXXXX` or `WPRD-YY-XXXXX`
+Most entities have auto-generated SKU codes via `generateSku()` helper. Format: `PREFIX-YY/XXXXXX`
+- Quotations: `QUO-25/000001`
+- Sale Orders: `SO-25/000001` (KL), `PSO-25/000001` (Penang Powercool), `PHSO-25/000001` (Penang HiTen)
+- Invoices: `I-25/000001`, `PI-25/000001`, `PHI-25/000001`
+- Delivery Orders: `DO-25/000001`, `PDO-25/000001`, `PHDO-25/000001`
+- Production: `PRD-25/000001`, `PPRD-25/000001`, `PHPRD-25/000001`
 
-Branch prefixes: None = Powercool, `W` = HiTen (Wholesale)
+**Branch prefixes:**
+- No prefix = KL (HQ)
+- `P` = Penang (Powercool)
+- `PH` = Penang (HiTen)
+- `W` = Legacy/Wholesale prefix (deprecated)
 
 ### File Storage
 Public files stored in `storage/app/public/`:

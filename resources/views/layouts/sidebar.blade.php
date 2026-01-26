@@ -808,6 +808,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('country.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -870,6 +877,13 @@
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('state.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -1001,7 +1015,7 @@
                                 </div>
                                 <!-- Tooltip -->
                                 <div
-                                    class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    class="collapsed-tooltip fixed transition-all duration-500 opacity-0 invisible group-hover:visible group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow flex items-center border z-[9999]">
                                     <span
                                         class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Notification') }}</span>
                                 </div>
@@ -1028,7 +1042,7 @@
                                 </div>
                                 <!-- Tooltip -->
                                 <div
-                                    class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    class="collapsed-tooltip fixed transition-all duration-500 opacity-0 invisible group-hover:visible group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow flex items-center border z-[9999]">
                                     <span
                                         class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Approval') }}</span>
                                 </div>
@@ -1047,7 +1061,7 @@
                                 </svg>
                                 <!-- Tooltip -->
                                 <div
-                                    class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    class="collapsed-tooltip fixed transition-all duration-500 opacity-0 invisible group-hover:visible group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow flex items-center border z-[9999]">
                                     <span
                                         class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Dashboard') }}</span>
                                 </div>
@@ -1088,7 +1102,7 @@
                                 </svg>
                                 <!-- Tooltip -->
                                 <div
-                                    class="absolute top-0 transition-all duration-500 left-0 opacity-0 invisible group-hover:visible group-hover:left-12 group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow h-full flex items-center border">
+                                    class="collapsed-tooltip fixed transition-all duration-500 opacity-0 invisible group-hover:visible group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow flex items-center border z-[9999]">
                                     <span
                                         class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Sale Enquiry') }}</span>
                                 </div>
@@ -1788,6 +1802,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('country.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('credit_term.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
@@ -1850,6 +1871,13 @@
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('state.index') }}"
+                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        <span
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                     </a>
                 </li>
                 <li>
@@ -2739,6 +2767,13 @@
                                         </a>
                                     </li>
                                     <li>
+                                        <a href="{{ route('country.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
@@ -2801,6 +2836,13 @@
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('state.index') }}"
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            <span
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -2946,7 +2988,7 @@
                             'role_management.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes(
-                            'credit_term.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME
+                            'credit_term.') || CURRENT_ROUTE_NAME.includes('country.') || CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME
                         .includes(
                             'debtor_type.') || CURRENT_ROUTE_NAME.includes('factory.') || CURRENT_ROUTE_NAME
                         .includes('material_use.') || CURRENT_ROUTE_NAME
@@ -2956,7 +2998,7 @@
                         CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') ||
                         CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') ||
                         CURRENT_ROUTE_NAME.includes('sales_agent.') || CURRENT_ROUTE_NAME.includes('setting.') ||
-                        CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('sync.') ||
+                        CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('state.') || CURRENT_ROUTE_NAME.includes('sync.') ||
                         CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
@@ -3017,7 +3059,7 @@
                 } else if (CURRENT_ROUTE_NAME.includes('user_management.') || CURRENT_ROUTE_NAME.includes(
                         'role_management.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="9"]').click()
-                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('credit_term.') ||
+                } else if (CURRENT_ROUTE_NAME.includes('area.') || CURRENT_ROUTE_NAME.includes('country.') || CURRENT_ROUTE_NAME.includes('credit_term.') ||
                     CURRENT_ROUTE_NAME.includes('currency.') || CURRENT_ROUTE_NAME.includes('debtor_type.') ||
                     CURRENT_ROUTE_NAME.includes('factory.') ||
                     CURRENT_ROUTE_NAME.includes('material_use.') || CURRENT_ROUTE_NAME.includes(
@@ -3029,7 +3071,7 @@
                     .includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME
                     .includes('sales_agent.') || CURRENT_ROUTE_NAME
                     .includes('service.') || CURRENT_ROUTE_NAME
-                    .includes('setting.') || CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes(
+                    .includes('setting.') || CURRENT_ROUTE_NAME.includes('state.') || CURRENT_ROUTE_NAME.includes(
                         'uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
@@ -3097,6 +3139,18 @@
         $('.tooltip-triggers').on('mouseenter', function() {
             $(`.sub-menu-content`).removeClass('max-w-[250px]')
             $(`.sub-menu-content`).addClass('opacity-0 -z-50 invisible')
+
+            // Position fixed tooltip dynamically
+            const $trigger = $(this);
+            const $tooltip = $trigger.find('.collapsed-tooltip');
+            if ($tooltip.length) {
+                const rect = $trigger[0].getBoundingClientRect();
+                $tooltip.css({
+                    'top': rect.top + 'px',
+                    'left': (rect.right + 8) + 'px',
+                    'height': rect.height + 'px'
+                });
+            }
         })
 
         function refreshPendingOrdersCount() {

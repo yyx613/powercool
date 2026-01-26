@@ -68,7 +68,7 @@ class EInvoiceController extends Controller
         $this->powerCoolSecret = config('e-invoices.powercool_client_secret');
         $this->hitenId = config('e-invoices.hiten_client_id');
         $this->hitenSecret = config('e-invoices.hiten_client_secret');
-        $this->endpoint = 'https://preprod-api.myinvois.hasil.gov.my';
+        $this->endpoint = config('e-invoices.endpoint');
         $this->xmlGenerator = new EInvoiceXmlGenerator;
         $this->accessTokenPowerCool = $this->getAccessToken('powercool');
         $this->accessTokenHiten = $this->accessTokenPowerCool;
@@ -148,13 +148,13 @@ class EInvoiceController extends Controller
     public function validateTIN($tin, $idType, $idValue, $company)
     {
         try {
-            $url = "https://preprod-api.myinvois.hasil.gov.my/api/v1.0/taxpayer/validate/{$tin}?idType={$idType}&idValue={$idValue}";
+            $url = "{$this->endpoint}/api/v1.0/taxpayer/validate/{$tin}?idType={$idType}&idValue={$idValue}";
 
             $headers = [
                 'Accept' => 'application/json',
                 'Accept-Language' => 'en',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten,
+                'Authorization' => 'Bearer ' . ($company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten),
             ];
 
             $response = Http::withHeaders($headers)->get($url);
