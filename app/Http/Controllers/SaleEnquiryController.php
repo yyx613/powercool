@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SaleEnquiryExport;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\SaleEnquiry;
 use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SaleEnquiryController extends Controller
 {
@@ -62,7 +65,7 @@ class SaleEnquiryController extends Controller
             $records->orderBy('id', 'desc');
         }
 
-        $records->with(['product', 'assignedUser']);
+        $records = $records->with(['product', 'assignedUser', 'promotion', 'createdByUser']);
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -101,6 +104,9 @@ class SaleEnquiryController extends Controller
                 'product' => $record->product ? $record->product->model_desc : null,
                 'assigned_user' => $record->assignedUser ? $record->assignedUser->name : null,
                 'priority' => $priorityLabel,
+                'quality' => $record->quality,
+                'promotion' => $record->promotion ? $record->promotion->desc : null,
+                'created_by_user' => $record->createdByUser ? $record->createdByUser->name : null,
                 'status' => $record->status,
                 'can_view' => hasPermission('sale_enquiry.view'),
                 'can_edit' => hasPermission('sale_enquiry.edit'),
@@ -187,19 +193,23 @@ class SaleEnquiryController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'enquiry_date' => 'required|date',
-            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11',
+            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11,12',
             'name' => 'required|max:250',
             'phone_number' => 'required|max:50',
             'email' => 'nullable|email|max:250',
-            'preferred_contact_method' => 'nullable|in:1,2,3',
-            'country' => 'nullable|max:250',
-            'state' => 'nullable|max:250',
-            'category' => 'nullable|max:250',
+            'preferred_contact_method' => 'required|in:1,2,3',
+            'country_id' => 'nullable|exists:countries,id',
+            'state_id' => 'nullable|exists:states,id',
+            'category' => 'required|in:1,2,3,4,5',
             'description' => 'nullable',
-            'product_id' => 'nullable|exists:products,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
-            'priority' => 'nullable|in:1,2,3',
+            'product_id' => 'required|exists:products,id',
+            'assigned_user_id' => 'required|exists:users,id',
+            'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
+            'quality' => 'required|in:1,2,3',
+            'promotion_id' => 'required|exists:promotions,id',
+        ], [], [
+            'name' => 'Customer Name',
         ]);
 
         if ($validator->fails()) {
@@ -219,14 +229,17 @@ class SaleEnquiryController extends Controller
                 'phone_number' => $req->phone_number,
                 'email' => $req->email,
                 'preferred_contact_method' => $req->preferred_contact_method,
-                'country' => $req->country,
-                'state' => $req->state,
+                'country_id' => $req->country_id,
+                'state_id' => $req->state_id,
                 'category' => $req->category,
                 'description' => $req->description,
                 'product_id' => $req->product_id,
                 'assigned_user_id' => $req->assigned_user_id,
                 'priority' => $req->priority,
                 'status' => $req->status,
+                'quality' => $req->quality,
+                'promotion_id' => $req->promotion_id,
+                'created_by' => Auth::id(),
             ]);
 
             (new Branch)->assign(SaleEnquiry::class, $enquiry->id);
@@ -253,19 +266,23 @@ class SaleEnquiryController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'enquiry_date' => 'required|date',
-            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11',
+            'enquiry_source' => 'required|in:1,2,3,4,5,6,7,8,9,10,11,12',
             'name' => 'required|max:250',
             'phone_number' => 'required|max:50',
             'email' => 'nullable|email|max:250',
-            'preferred_contact_method' => 'nullable|in:1,2,3',
-            'country' => 'nullable|max:250',
-            'state' => 'nullable|max:250',
-            'category' => 'nullable|max:250',
+            'preferred_contact_method' => 'required|in:1,2,3',
+            'country_id' => 'nullable|exists:countries,id',
+            'state_id' => 'nullable|exists:states,id',
+            'category' => 'required|in:1,2,3,4,5',
             'description' => 'nullable',
-            'product_id' => 'nullable|exists:products,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
-            'priority' => 'nullable|in:1,2,3',
+            'product_id' => 'required|exists:products,id',
+            'assigned_user_id' => 'required|exists:users,id',
+            'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
+            'quality' => 'required|in:1,2,3',
+            'promotion_id' => 'required|exists:promotions,id',
+        ], [], [
+            'name' => 'Customer Name',
         ]);
 
         if ($validator->fails()) {
@@ -282,14 +299,16 @@ class SaleEnquiryController extends Controller
                 'phone_number' => $req->phone_number,
                 'email' => $req->email,
                 'preferred_contact_method' => $req->preferred_contact_method,
-                'country' => $req->country,
-                'state' => $req->state,
+                'country_id' => $req->country_id,
+                'state_id' => $req->state_id,
                 'category' => $req->category,
                 'description' => $req->description,
                 'product_id' => $req->product_id,
                 'assigned_user_id' => $req->assigned_user_id,
                 'priority' => $req->priority,
                 'status' => $req->status,
+                'quality' => $req->quality,
+                'promotion_id' => $req->promotion_id,
             ]);
 
             DB::commit();
@@ -337,5 +356,10 @@ class SaleEnquiryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new SaleEnquiryExport, 'sale_enquiry.xlsx');
     }
 }

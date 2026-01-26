@@ -6,6 +6,8 @@ use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\BranchSelectionController;
 use App\Http\Controllers\CashSaleController;
+use App\Http\Controllers\CountryController;
+use App\Http\Controllers\StateController;
 use App\Http\Controllers\CreditTermController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomizeProductController;
@@ -411,6 +413,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{enquiry}', 'edit')->name('edit')->middleware(['can:sale_enquiry.edit']);
         Route::post('/update/{enquiry}', 'update')->name('update')->middleware(['can:sale_enquiry.edit']);
         Route::get('/delete/{enquiry}', 'delete')->name('delete')->middleware(['can:sale_enquiry.delete']);
+        Route::get('/export', 'export')->name('export')->middleware(['can:sale_enquiry.view']);
     });
     // Sale - Quotation/Sale Order
     Route::controller(SaleController::class)->group(function () {
@@ -872,6 +875,27 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{area}', 'edit')->name('edit')->middleware('branch.selected');
             Route::post('/update/{area}', 'update')->name('update');
             Route::get('/delete/{area}', 'delete')->name('delete');
+        });
+        // Country
+        Route::controller(CountryController::class)->prefix('country')->name('country.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{country}', 'edit')->name('edit');
+            Route::post('/update/{country}', 'update')->name('update');
+            Route::get('/delete/{country}', 'delete')->name('delete');
+            Route::get('/{country}/states', 'getStates')->name('get_states');
+        });
+        // State
+        Route::controller(StateController::class)->prefix('state')->name('state.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/get-data', 'getData')->name('get_data');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/edit/{state}', 'edit')->name('edit');
+            Route::post('/update/{state}', 'update')->name('update');
+            Route::get('/delete/{state}', 'delete')->name('delete');
         });
         // Debtor Type
         Route::controller(DebtorTypeController::class)->prefix('debtor-type')->name('debtor_type.')->group(function () {

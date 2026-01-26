@@ -26,6 +26,7 @@ class SaleEnquiry extends Model
     const SOURCE_XHS = 9;
     const SOURCE_PHONE = 10;
     const SOURCE_WHATSAPP = 11;
+    const SOURCE_GOOGLE = 12;
 
     // Status
     const STATUS_NEW = 1;
@@ -42,6 +43,18 @@ class SaleEnquiry extends Model
     const PRIORITY_LOW = 1;
     const PRIORITY_MEDIUM = 2;
     const PRIORITY_HIGH = 3;
+
+    // Quality - Response Tracking
+    const QUALITY_SEEN_AND_REPLY = 1;
+    const QUALITY_SEEN_NO_REPLY = 2;
+    const QUALITY_NO_SEEN_NO_REPLY = 3;
+
+    // Type of Enquiry
+    const TYPE_PRODUCT_PRICING = 1;
+    const TYPE_SERVICE = 2;
+    const TYPE_RELOCATION_FRIDGE = 3;
+    const TYPE_TRADE_IN = 4;
+    const TYPE_RENTAL = 5;
 
     protected $guarded = [];
 
@@ -75,5 +88,25 @@ class SaleEnquiry extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class, 'sale_enquiry_id');
+    }
+
+    public function promotion()
+    {
+        return $this->belongsTo(Promotion::class, 'promotion_id');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
+    }
+
+    public function countryModel()
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    public function stateModel()
+    {
+        return $this->belongsTo(State::class, 'state_id');
     }
 }

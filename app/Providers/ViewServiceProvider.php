@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\ClassificationCode;
+use App\Models\Country;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
@@ -512,8 +513,22 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::SALE);
             })->orderBy('name', 'asc')->get();
 
+            // Get active promotions for dropdown
+            $promotions = Promotion::orderBy('id', 'desc')
+                ->where('status', 1)
+                ->where(function ($q) {
+                    $q->whereNull('valid_till')
+                        ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
+                })
+                ->get();
+
+            // Get active countries for dropdown
+            $countries = Country::where('is_active', true)->orderBy('name')->get();
+
             $view->with([
                 'users' => $users,
+                'promotions' => $promotions,
+                'countries' => $countries,
             ]);
         });
         View::composer(['components.app.language-selector'], function (ViewView $view) {
