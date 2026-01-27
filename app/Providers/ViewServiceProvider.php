@@ -369,8 +369,12 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'cash_sale.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
             $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
+            $priorities = Priority::orderBy('order', 'asc')->get();
 
-            $view->with('sales_agents', $sales_agents);
+            $view->with([
+                'sales_agents' => $sales_agents,
+                'priorities' => $priorities,
+            ]);
         });
 
         View::composer(['sale_order.form_step.delivery_schedule', 'cash_sale.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {

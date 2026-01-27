@@ -2043,6 +2043,7 @@ class SaleController extends Controller
             'cc' => 'nullable|max:250',
             'status' => 'required',
             'report_type' => 'required',
+            'priority' => 'nullable|exists:priorities,id',
             'payment_term' => 'nullable',
             // upsertRemark
             'remark' => 'nullable',
@@ -2511,6 +2512,7 @@ class SaleController extends Controller
                     'status' => $req->status,
                     'is_draft' => $is_draft,
                     'report_type' => $req->report_type,
+                    'priority_id' => $req->priority,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,
@@ -2550,6 +2552,7 @@ class SaleController extends Controller
                     'status' => $sale->status == Sale::STATUS_APPROVAL_PENDING ? $sale->status : $req->status,
                     'is_draft' => $is_draft,
                     'report_type' => $req->report_type,
+                    'priority_id' => $req->priority,
                     'billing_address_id' => $req->billing_address ?? null,
                     'billing_address' => isset($bill_add) ? $bill_add->formatAddress() : null,
                     'delivery_address_id' => $req->delivery_address ?? null,

@@ -89,12 +89,15 @@
                     <x-input-error :messages="$errors->get('order')" class="mt-2" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">{{ __('Priority') }}</x-app.input.label>
+                    <div class="flex items-center mb-1">
+                        <x-app.input.label>{{ __('Priority') }}</x-app.input.label>
+                        <x-app.priority-tooltip :priorities="$priorities" selectName="priority" />
+                    </div>
                     <x-app.input.select2 name="priority" id="priority" placeholder="{{ __('Select a priority') }}"
                         :hasError="$errors->has('priority')">
                         <option value="">{{ __('Select a priority') }}</option>
                         @foreach ($priorities as $priority)
-                            <option value="{{ $priority->id }}" @selected(old('priority', isset($production) ? $production->priority_id : null) == $priority->id)>{{ $priority->name }}
+                            <option value="{{ $priority->id }}" @selected(old('priority', isset($production) ? $production->priority_id : (isset($default_sale) ? $default_sale->priority_id : null)) == $priority->id)>{{ $priority->priority }} - {{ $priority->name }}
                             </option>
                         @endforeach
                     </x-app.input.select2>

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             WarrantyPeriodSeeder::class,
             DebtorTypeSeeder::class,
             CurrencySeeder::class,
+            PrioritySeeder::class,
         ]);
     }
 }
