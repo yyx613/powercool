@@ -45,6 +45,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleEnquiryController;
 use App\Http\Controllers\SalesAgentController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceFormController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SyncController;
@@ -335,6 +336,22 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/export', 'export')->name('export');
         Route::get('/create', 'create')->name('create');
         Route::post('/store', 'store')->name('store');
+    });
+    // Service Form
+    Route::controller(ServiceFormController::class)->prefix('service-form')->name('service_form.')->middleware(['can:service_form.view'])->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
+        Route::get('/create', 'create')->name('create')->middleware(['can:service_form.create']);
+        Route::get('/edit/{service_form}', 'edit')->name('edit')->middleware(['can:service_form.edit']);
+        Route::post('/upsert/{service_form?}', 'upsert')->name('upsert');
+        Route::get('/delete/{id}', 'delete')->name('delete')->middleware(['can:service_form.delete']);
+        Route::get('/pdf/{id}', 'pdf')->name('pdf');
+        Route::get('/quotation-pdf/{id}', 'quotationPdf')->name('quotation_pdf');
+        Route::get('/cash-sale-pdf/{id}', 'cashSalePdf')->name('cash_sale_pdf');
+        Route::get('/invoice-pdf/{id}', 'invoicePdf')->name('invoice_pdf');
+        Route::get('/get-invoice-by-keyword', 'getInvoiceByKeyword')->name('get_invoice_by_keyword');
+        Route::get('/get-dealer-by-keyword', 'getDealerByKeyword')->name('get_dealer_by_keyword');
+        Route::get('/get-product-children', 'getProductChildrenByProduct')->name('get_product_children');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {

@@ -68,6 +68,11 @@ class PermissionSeeder extends Seeder
 
             'warranty.view',
 
+            'service_form.view',
+            'service_form.create',
+            'service_form.edit',
+            'service_form.delete',
+
             'sale_enquiry.view',
             'sale_enquiry.create',
             'sale_enquiry.edit',
