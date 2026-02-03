@@ -89,6 +89,7 @@ class ViewServiceProvider extends ServiceProvider
                 'service_reminder' => [],
                 'service_history' => [],
                 'warranty' => [],
+                'service_form' => [],
                 'sale_enquiry' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
@@ -149,6 +150,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['service_history'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'warranty')) {
                     array_push($permissions_group['warranty'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'service_form')) {
+                    array_push($permissions_group['service_form'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale_enquiry')) {
                     array_push($permissions_group['sale_enquiry'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.quotation')) {
@@ -369,8 +372,12 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'cash_sale.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
             $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
+            $priorities = Priority::orderBy('order', 'asc')->get();
 
-            $view->with('sales_agents', $sales_agents);
+            $view->with([
+                'sales_agents' => $sales_agents,
+                'priorities' => $priorities,
+            ]);
         });
 
         View::composer(['sale_order.form_step.delivery_schedule', 'cash_sale.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {

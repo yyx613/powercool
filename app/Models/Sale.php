@@ -190,6 +190,11 @@ class Sale extends Model
         return $this->belongsTo(PaymentMethod::class, 'payment_method');
     }
 
+    public function priority()
+    {
+        return $this->belongsTo(Priority::class);
+    }
+
     public function convertFromQuo(): bool
     {
         return self::where('convert_to', $this->id)->exists();

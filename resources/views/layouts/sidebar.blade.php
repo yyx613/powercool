@@ -306,6 +306,18 @@
                         </div>
                     </li>
                 @endcan
+                <!-- Service Form -->
+                @can('service_form.view')
+                    <li>
+                        <a href="{{ route('service_form.index') }}"
+                            class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'service_form.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H5A5.006,5.006,0,0,0,0,9V19a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V9A5.006,5.006,0,0,0,19,4ZM11,2h2a3,3,0,0,1,2.816,2H8.184A3,3,0,0,1,11,2ZM22,19a3,3,0,0,1-3,3H5a3,3,0,0,1-3-3V9A3,3,0,0,1,5,6H19a3,3,0,0,1,3,3ZM7,12h4v4a1,1,0,0,0,2,0V12h4a1,1,0,0,0,0-2H13V6a1,1,0,0,0-2,0v4H7a1,1,0,0,0,0,2Z"/>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Service Form') }}</span>
+                        </a>
+                    </li>
+                @endcan
                 <!-- E - Invoice -->
                 @canany(['sale.e_invoice.view'])
                     <li>
@@ -1124,6 +1136,20 @@
                                     <path d="M11,20a1,1,0,0,0,1-1V7a1,1,0,0,0-2,0V19A1,1,0,0,0,11,20Z" />
                                 </svg>
                             </button>
+                        </li>
+                    @endcan
+                    <!-- Service Form -->
+                    @can('service_form.view')
+                        <li>
+                            <a href="{{ route('service_form.index') }}"
+                                class="relative group tooltip-triggers rounded-full p-2.5 flex items-center justify-center hover:bg-blue-600">
+                                <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H5A5.006,5.006,0,0,0,0,9V19a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V9A5.006,5.006,0,0,0,19,4ZM11,2h2a3,3,0,0,1,2.816,2H8.184A3,3,0,0,1,11,2ZM22,19a3,3,0,0,1-3,3H5a3,3,0,0,1-3-3V9A3,3,0,0,1,5,6H19a3,3,0,0,1,3,3ZM7,12h4v4a1,1,0,0,0,2,0V12h4a1,1,0,0,0,0-2H13V6a1,1,0,0,0-2,0v4H7a1,1,0,0,0,0,2Z"/>
+                                </svg>
+                                <div class="collapsed-tooltip fixed transition-all duration-500 opacity-0 invisible group-hover:visible group-hover:opacity-100 rounded py-1.5 px-3 bg-blue-900 shadow flex items-center border z-[9999]">
+                                    <span class="text-sm leading-tight font-semibold text-white whitespace-nowrap">{{ __('Service Form') }}</span>
+                                </div>
+                            </a>
                         </li>
                     @endcan
                     <!-- E - Invoice -->
@@ -2261,6 +2287,18 @@
                                 </ul>
                             </div>
                         </div>
+                    </li>
+                @endcan
+                <!-- Service Form -->
+                @can('service_form.view')
+                    <li>
+                        <a href="{{ route('service_form.index') }}"
+                            class="p-2 flex items-center rounded-md {{ str_contains(Route::currentRouteName(), 'service_form.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                            <svg class="h-5 w-5 flex-none fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19,4H17.9A5.009,5.009,0,0,0,13,0H11A5.009,5.009,0,0,0,6.1,4H5A5.006,5.006,0,0,0,0,9V19a5.006,5.006,0,0,0,5,5H19a5.006,5.006,0,0,0,5-5V9A5.006,5.006,0,0,0,19,4ZM11,2h2a3,3,0,0,1,2.816,2H8.184A3,3,0,0,1,11,2ZM22,19a3,3,0,0,1-3,3H5a3,3,0,0,1-3-3V9A3,3,0,0,1,5,6H19a3,3,0,0,1,3,3ZM7,12h4v4a1,1,0,0,0,2,0V12h4a1,1,0,0,0,0-2H13V6a1,1,0,0,0-2,0v4H7a1,1,0,0,0,0,2Z"/>
+                            </svg>
+                            <span class="block text-base ml-4 flex-1 whitespace-nowrap text-left leading-tight text-white">{{ __('Service Form') }}</span>
+                        </a>
                     </li>
                 @endcan
                 <!-- E - Invoice -->

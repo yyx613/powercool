@@ -45,7 +45,11 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
+                    <th>{{ __('Priority') }}</th>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Description') }}</th>
+                    <th>{{ __('Response Time') }}</th>
+                    <th>{{ __('Order') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -71,20 +75,52 @@
             order: [],
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
+                { data: 'priority' },
                 { data: 'name' },
+                { data: 'description' },
+                { data: 'response_time' },
+                { data: 'order' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
-                    "width": "10%",
+                {
+                    "width": "8%",
                     "targets": 0,
                     render: function(data, type, row) {
-                        return data
+                        return data ?? '-'
                     }
                 },
-                { 
-                    "width": "5%",
+                {
+                    "width": "12%",
                     "targets": 1,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "35%",
+                    "targets": 2,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "15%",
+                    "targets": 3,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 4,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "7%",
+                    "targets": 5,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

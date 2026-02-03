@@ -99,6 +99,9 @@
                 $('#quotation-details-container input[name="custom_date"]').css('backgroundColor', '#fff')
                 $('#quotation-details-container input[name="custom_date"]').parent().css('backgroundColor', '#fff')
 
+                $('#quotation-details-container select[name="priority"]').prop('disabled', false)
+                $('#quotation-details-container select[name="priority"]').parent().find('.select2-container').css('backgroundColor', '#fff')
+
                 @if (in_array(\App\Models\Role::SALE, getUserRoleId(Auth::user())))
                     $('#product-details-container select[name="product_serial_no[]"]').attr('disabled', false)
                     $('#product-details-container select[name="product_serial_no[]"]').css('backgroundColor', '#eee')
@@ -212,6 +215,7 @@
                     'warehouse': $('input[name="warehouse"]').val(),
                     'status': $('select[name="status"]').val(),
                     'report_type': $('select[name="report_type"]').val(),
+                    'priority': $('select[name="priority"]').val(),
 
                     'product_order_id': prodOrderId,
                     'product_id': prodId,
