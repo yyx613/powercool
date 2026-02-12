@@ -108,6 +108,7 @@
             <x-app.input.input name="override_selling_price" id="override_selling_price" :hasError="$errors->has('override_selling_price')"
                 class="decimal-input" />
             <x-app.message.error id="override_selling_price_err" />
+            <x-app.message.error id="unit_price_err" />
         </div>
         <input type="hidden" name="unit_price[]" value="">
         <div class="flex flex-col">
