@@ -2216,6 +2216,23 @@ class SaleController extends Controller
         //     }
         // }
 
+        // Validate selling price or override selling price is provided for non-FOC products
+        if ($req->type == 'quo' || (isset($convert_from_quo) && !$convert_from_quo)) {
+            for ($i = 0; $i < count($req->product_id); $i++) {
+                if ($req->foc[$i] !== 'true') {
+                    $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
+                    $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
+                    if (!$has_selling_price && !$has_override_price) {
+                        return Response::json([
+                            'errors' => [
+                                'unit_price.' . $i => 'Please select a selling price or enter an override price for product row ' . ($i + 1),
+                            ],
+                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                    }
+                }
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -2286,6 +2303,27 @@ class SaleController extends Controller
     public function saveAsDraft(Request $req)
     {
         Log::info($req->all());
+
+        // Validate selling price or override selling price is provided for non-FOC products
+        if ($req->product_id != null) {
+            for ($i = 0; $i < count($req->product_id); $i++) {
+                if ($req->product_id[$i] == null) {
+                    continue; // draft allows empty rows
+                }
+                if ($req->foc[$i] !== 'true') {
+                    $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
+                    $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
+                    if (!$has_selling_price && !$has_override_price) {
+                        return Response::json([
+                            'errors' => [
+                                'unit_price.' . $i => 'Please select a selling price or enter an override price for product row ' . ($i + 1),
+                            ],
+                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                    }
+                }
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -2757,6 +2795,21 @@ class SaleController extends Controller
             //         }
             //     }
             // }
+
+            // Validate selling price or override selling price is provided for non-FOC products
+            for ($i = 0; $i < count($req->product_id); $i++) {
+                if ($req->foc[$i] !== 'true') {
+                    $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
+                    $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
+                    if (!$has_selling_price && !$has_override_price) {
+                        return Response::json([
+                            'errors' => [
+                                'unit_price.' . $i => 'Please select a selling price or enter an override price for product row ' . ($i + 1),
+                            ],
+                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                    }
+                }
+            }
         }
 
         try {
