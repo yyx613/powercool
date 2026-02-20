@@ -177,16 +177,16 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Total (RM)</td>
             </tr>
             @php
@@ -212,17 +212,17 @@
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
                         {{ $prod->qty }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ $prod->uom }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ number_format($prod->discountAmount(), 2) }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
                 <!-- Product Remark -->

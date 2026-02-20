@@ -190,16 +190,16 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     U/Price<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Discount<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Promotion<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Total<br>(RM)</td>
             </tr>
             @foreach ($products as $key => $prod)
@@ -217,16 +217,16 @@
                         style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['qty'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['unit_price'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['discount'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['promotion'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['total'] }}</td>
                 </tr>
                 <!-- Product Remark -->
