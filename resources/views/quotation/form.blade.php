@@ -265,9 +265,6 @@
                     // If save and preview, open PDF in new tab
                     if (isSaveAndPreview == 'true' && res.data != undefined && res.data.sale) {
                         let pdfUrl = `{{ config('app.url') }}/quotation/pdf/${res.data.sale.id}`
-                        if (res.data.sale.status == {{ App\Models\Sale::STATUS_APPROVAL_PENDING }} || res.data.sale.status == {{ App\Models\Sale::STATUS_APPROVAL_REJECTED }}) {
-                            pdfUrl += '#toolbar=0&navpanes=0'
-                        }
                         window.open(pdfUrl, '_blank')
                     }
 
