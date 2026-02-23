@@ -27,9 +27,28 @@
         margin: 0;
         padding: 0;
     }
+
+    .watermark {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 100px;
+        font-weight: bold;
+        color: rgba(150, 150, 150, 0.3);
+        font-family: sans-serif;
+        z-index: 1000;
+        white-space: nowrap;
+        pointer-events: none;
+    }
 </style>
 
 <body>
+    @if ($sale->status == 4)
+        <div class="watermark">PENDING APPROVAL</div>
+    @elseif ($sale->status == 7)
+        <div class="watermark">REJECTED</div>
+    @endif
     <!-- Header -->
     <header>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
