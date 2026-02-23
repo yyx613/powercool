@@ -2942,22 +2942,24 @@ class SaleController extends Controller
                                     ->where('object_id', $req->sale_id)
                                     ->where('status', Approval::STATUS_PENDING_APPROVAL)
                                     ->where('data', 'like', '%"sale_product_id":' . $sp->id . '%')
-                                    ->exists();
+                                    ->first();
 
-                                if (!$existingApproval) {
+                                $descriptionData = [
+                                    'is_quo' => $req->type == 'quo',
+                                    'sale_product_id' => $sp->id,
+                                    'description' => 'The override selling price for '.$prod->model_desc.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
+                                ];
+
+                                if ($existingApproval) {
+                                    $existingApproval->update([
+                                        'data' => json_encode($descriptionData),
+                                    ]);
+                                } else {
                                     $approval = Approval::create([
                                         'object_type' => Sale::class,
                                         'object_id' => $req->sale_id,
                                         'status' => Approval::STATUS_PENDING_APPROVAL,
-                                        'data' => $req->type == 'quo' ? json_encode([
-                                            'is_quo' => true,
-                                            'sale_product_id' => $sp->id,
-                                            'description' => 'The override selling price for '.$prod->model_desc.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
-                                        ]) : json_encode([
-                                            'is_quo' => false,
-                                            'sale_product_id' => $sp->id,
-                                            'description' => 'The override selling price for '.$prod->model_desc.'('.$prod->sku.') is out of range, which '.$req->override_selling_price[$i].' is '.($is_greater ? 'greater' : 'lower').' '.($is_greater ? $prod->max_price : $prod->min_price),
-                                        ]),
+                                        'data' => json_encode($descriptionData),
                                     ]);
                                     (new Branch)->assign(Approval::class, $approval->id);
                                 }
