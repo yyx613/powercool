@@ -49,7 +49,8 @@
                 <tr>
                     <th>{{ __('SKU') }}</th>
                     <th>{{ __('Name') }}</th>
-                    <th>{{ __('Amount (RM)') }}</th>
+                    <th>{{ __('Min Amount (RM)') }}</th>
+                    <th>{{ __('Max Amount (RM)') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -78,35 +79,43 @@
             columns: [
                 { data: 'sku' },
                 { data: 'name' },
-                { data: 'amount' },
+                { data: 'min_amount' },
+                { data: 'max_amount' },
                 { data: 'status' },
                 { data: 'action' },
             ],
             columnDefs: [
                 {
-                    "width": "15%",
+                    "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "35%",
+                    "width": "30%",
                     "targets": 1,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "15%",
+                    "width": "12%",
                     "targets": 2,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "12%",
                     "targets": 3,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 4,
                     render: function(data, type, row) {
                         switch (data) {
                             case false:
@@ -120,7 +129,7 @@
                 },
                 {
                     "width": "10%",
-                    "targets": 4,
+                    "targets": 5,
                     "orderable": false,
                     render: function (data, type, row) {
                         let editBtn = ''

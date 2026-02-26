@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sale_product_accessories', function (Blueprint $table) {
-            $table->dropColumn('selling_price');
-            $table->unsignedInteger('selling_price_id')->nullable()->after('qty');
-        });
+        // No-op: selling_price_id was already added in 2025_11_06_161526 migration
+        // This migration originally changed selling_price to selling_price_id,
+        // but the prior migration was updated to add selling_price_id directly.
     }
 
     /**
@@ -22,9 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('sale_product_accessories', function (Blueprint $table) {
-            $table->dropColumn('selling_price_id');
-            $table->decimal('selling_price', 10, 2)->nullable()->after('qty');
-        });
+        // No-op
     }
 };

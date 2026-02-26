@@ -3136,7 +3136,7 @@ class SaleController extends Controller
                     $adhoc_services_data[] = [
                         'sale_id' => $req->sale_id,
                         'adhoc_service_id' => $serviceId,
-                        'amount' => $service->amount,
+                        'amount' => $service->min_amount,
                         'override_amount' => isset($req->adhoc_service_override_amount[$i]) && $req->adhoc_service_override_amount[$i] != '' ? $req->adhoc_service_override_amount[$i] : null,
                         'is_sst' => isset($req->adhoc_service_is_sst[$i]) ? (bool) $req->adhoc_service_is_sst[$i] : false,
                         'sst_value' => isset($req->adhoc_service_is_sst[$i]) && $req->adhoc_service_is_sst[$i] ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
