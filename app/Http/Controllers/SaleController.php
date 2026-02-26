@@ -2953,6 +2953,7 @@ class SaleController extends Controller
                                 if ($existingApproval) {
                                     $existingApproval->update([
                                         'data' => json_encode($descriptionData),
+                                        'created_at' => now(),
                                     ]);
                                 } else {
                                     $approval = Approval::create([
