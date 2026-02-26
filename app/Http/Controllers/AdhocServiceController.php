@@ -49,8 +49,9 @@ class AdhocServiceController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'name',
-                2 => 'amount',
-                3 => 'is_active',
+                2 => 'min_amount',
+                3 => 'max_amount',
+                4 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -74,7 +75,8 @@ class AdhocServiceController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'name' => $record->name,
-                'amount' => number_format($record->amount, 2),
+                'min_amount' => number_format($record->min_amount, 2),
+                'max_amount' => $record->max_amount ? number_format($record->max_amount, 2) : '-',
                 'status' => $record->is_active,
             ];
         }
@@ -104,7 +106,8 @@ class AdhocServiceController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
-            'amount' => 'required|numeric|min:0',
+            'min_amount' => 'required|numeric|min:0',
+            'max_amount' => 'nullable|numeric|min:0',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -119,7 +122,8 @@ class AdhocServiceController extends Controller
                 $service = AdhocService::find($req->service_id);
                 $service->update([
                     'name' => $req->name,
-                    'amount' => $req->amount,
+                    'min_amount' => $req->min_amount,
+                    'max_amount' => $req->max_amount,
                     'is_active' => $req->status,
                 ]);
 
@@ -132,7 +136,8 @@ class AdhocServiceController extends Controller
                 $service = $this->service::create([
                     'sku' => $this->service->generateSku($is_hi_ten),
                     'name' => $req->name,
-                    'amount' => $req->amount,
+                    'min_amount' => $req->min_amount,
+                    'max_amount' => $req->max_amount,
                     'is_active' => $req->status,
                 ]);
                 (new Branch)->assign(AdhocService::class, $service->id);

@@ -256,7 +256,7 @@
 
         <!-- Service Row Template (Hidden) -->
         <div class="hidden" id="service-template">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-service-btn"
                     title="{{ __('Delete Service') }}">
@@ -264,7 +264,7 @@
                         <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>
                     </svg>
                 </button>
-                <div class="flex flex-col col-span-2">
+                <div class="flex flex-col">
                     <x-app.input.label class="mb-1">{{ __('Service') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="adhoc_service_id[]" class="adhoc-service-select">
                         <option value=""></option>
@@ -272,8 +272,8 @@
                     <x-app.message.error id="adhoc_service_id_err" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label class="mb-1">{{ __('Amount (RM)') }}</x-app.input.label>
-                    <x-app.input.input name="adhoc_service_amount[]" class="service-amount" readonly />
+                    <x-app.input.label class="mb-1">{{ __('Amount (RM)') }} <span class="text-xs text-gray-500 font-normal service-price-range"></span></x-app.input.label>
+                    <x-app.input.input name="adhoc_service_amount[]" class="service-amount" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">{{ __('Override Amount (RM)') }}</x-app.input.label>
@@ -1372,7 +1372,9 @@
             let service = ADHOC_SERVICES[selectedId];
 
             if (service) {
-                $(`.service-item[data-service-id="${serviceId}"] .service-amount input`).val(priceFormat(service.amount));
+                $(`.service-item[data-service-id="${serviceId}"] .service-amount input`).val(priceFormat(service.min_amount));
+                let rangeText = service.max_amount ? `Min: ${priceFormat(service.min_amount)} ~ Max: ${priceFormat(service.max_amount)}` : '';
+                $(`.service-item[data-service-id="${serviceId}"] .service-price-range`).text(rangeText);
                 $(`.service-item[data-service-id="${serviceId}"] .service-override-amount input`).val('');
             }
 
@@ -1380,9 +1382,29 @@
             calSummary();
         });
 
+        // Service amount change handler
+        $('body').on('keyup', '.service-amount', function() {
+            let serviceId = $(this).closest('.service-item').data('service-id');
+            calServiceSst(serviceId);
+            calSummary();
+        });
+
         // Service override amount change handler
         $('body').on('keyup', '.service-override-amount', function() {
             let serviceId = $(this).closest('.service-item').data('service-id');
+            let overrideVal = $(this).find('input').val();
+            let $amountInput = $(`.service-item[data-service-id="${serviceId}"] .service-amount input`);
+
+            if (overrideVal) {
+                $amountInput.val('');
+            } else {
+                let selectedId = $(`.service-item[data-service-id="${serviceId}"] .adhoc-service-select`).val();
+                let service = ADHOC_SERVICES[selectedId];
+                if (service) {
+                    $amountInput.val(priceFormat(service.min_amount));
+                }
+            }
+
             calServiceSst(serviceId);
             calSummary();
         });
@@ -1465,9 +1487,12 @@
                     $select.append(`<option value="${sas.adhoc_service_id}" selected>${sas.adhoc_service.sku} - ${sas.adhoc_service.name}</option>`);
 
                     $(clone).find('.service-amount input').val(priceFormat(sas.amount));
+                    let rangeText = sas.adhoc_service.max_amount ? `Min: ${priceFormat(sas.adhoc_service.min_amount)} ~ Max: ${priceFormat(sas.adhoc_service.max_amount)}` : '';
+                    $(clone).find('.service-price-range').text(rangeText);
 
                     if (sas.override_amount) {
                         $(clone).find('.service-override-amount input').val(sas.override_amount);
+                        $(clone).find('.service-amount input').val('');
                     }
 
                     if (sas.is_sst == 1) {

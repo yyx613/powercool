@@ -21,9 +21,14 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="amount" class="mb-1">{{ __('Amount (RM)') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="amount" id="amount" class="decimal-input" value="{{ old('amount') ?? (isset($service) ? $service->amount : null) }}" />
-                    <x-input-error :messages="$errors->get('amount')" class="mt-1" />
+                    <x-app.input.label id="min_amount" class="mb-1">{{ __('Min Amount (RM)') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="min_amount" id="min_amount" class="decimal-input" value="{{ old('min_amount') ?? (isset($service) ? $service->min_amount : null) }}" />
+                    <x-input-error :messages="$errors->get('min_amount')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="max_amount" class="mb-1">{{ __('Max Amount (RM)') }}</x-app.input.label>
+                    <x-app.input.input name="max_amount" id="max_amount" class="decimal-input" value="{{ old('max_amount') ?? (isset($service) ? $service->max_amount : null) }}" />
+                    <x-input-error :messages="$errors->get('max_amount')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>

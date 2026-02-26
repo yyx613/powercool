@@ -930,7 +930,7 @@
                                         <a href="{{ route('service.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -1938,7 +1938,7 @@
                     <a href="{{ route('service.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
-                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                     </a>
                 </li>
                 <li>
@@ -2915,7 +2915,7 @@
                                         <a href="{{ route('service.index') }}"
                                             class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
                                     </li>
                                     <li>
