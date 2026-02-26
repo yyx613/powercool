@@ -13,7 +13,7 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
-            url="{{ route('quotation.index') }}">{{ isset($sale) ? __('Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
+            url="{{ route('quotation.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Quotation - ' : 'Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="mb-2">
