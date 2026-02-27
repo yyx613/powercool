@@ -310,6 +310,8 @@ class CustomerController extends Controller
             'address' => 'nullable|max:250',
             'city' => 'nullable|max:250',
             'zip_code' => 'nullable|max:250',
+            'country' => 'nullable',
+            'state' => 'nullable',
         ];
         if ($req->boolean('for_einvoice') == true) {
             $rules['local_oversea'] = 'required';
@@ -389,6 +391,8 @@ class CustomerController extends Controller
                     'address' => $req->address,
                     'city' => $req->city,
                     'zipcode' => $req->zip_code,
+                    'country_id' => $req->country,
+                    'state_id' => $req->state,
                     'for_einvoice' => $req->boolean('for_einvoice'),
                 ]);
 
@@ -431,6 +435,8 @@ class CustomerController extends Controller
                     'address' => $req->address,
                     'city' => $req->city,
                     'zipcode' => $req->zip_code,
+                    'country_id' => $req->country,
+                    'state_id' => $req->state,
                     'for_einvoice' => $req->boolean('for_einvoice'),
                 ]);
             }
