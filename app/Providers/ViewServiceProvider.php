@@ -655,6 +655,9 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('company_group', $company_group);
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
+            $countries = Country::where('is_active', true)->orderBy('name')->get();
+            $view->with('countries', $countries);
+
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
 
             if (isSalesOnly()) {

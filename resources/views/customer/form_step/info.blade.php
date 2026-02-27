@@ -158,6 +158,32 @@
                     value="{{ old('zip_code', isset($duplicate) ? $duplicate->zipcode : (isset($customer) ? $customer->zipcode : null)) }}" class="int-input" />
                 <x-app.message.error id="zip_code_err" />
             </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="country" class="mb-1">{{ __('Country') }}</x-app.input.label>
+                <x-app.input.select2 name="country" id="country" :hasError="$errors->has('country')"
+                    placeholder="{{ __('Select a country') }}">
+                    <option value="">{{ __('Select a country') }}</option>
+                    @foreach ($countries as $ctry)
+                        <option value="{{ $ctry->id }}" @selected(old('country', isset($duplicate) ? $duplicate->country_id : (isset($customer) ? $customer->country_id : null)) == $ctry->id)>
+                            {{ $ctry->name }}
+                        </option>
+                    @endforeach
+                </x-app.input.select2>
+                <x-app.message.error id="country_err" />
+            </div>
+            <div class="flex flex-col">
+                <x-app.input.label id="state" class="mb-1">{{ __('State') }}</x-app.input.label>
+                <x-app.input.select2 name="state" id="state" :hasError="$errors->has('state')"
+                    placeholder="{{ __('Select a state') }}">
+                    <option value="">{{ __('Select a state') }}</option>
+                    @if (isset($customer) && $customer->state)
+                        <option value="{{ $customer->state->id }}" selected>{{ $customer->state->name }}</option>
+                    @elseif (isset($duplicate) && $duplicate->state)
+                        <option value="{{ $duplicate->state->id }}" selected>{{ $duplicate->state->name }}</option>
+                    @endif
+                </x-app.input.select2>
+                <x-app.message.error id="state_err" />
+            </div>
         </div>
     </div>
     <!-- 2nd Panel -->
@@ -450,6 +476,60 @@
                 $('.uploaded-file-preview-container[data-id="picture"]').removeClass('hidden')
             }
         })
+        // Country/State cascading dropdown
+        $('select[name="country"]').on('change', function() {
+            var countryId = $(this).val();
+            var $stateSelect = $('select[name="state"]');
+
+            $stateSelect.empty().append('<option value="">{{ __('Select a state') }}</option>');
+
+            if (countryId) {
+                $.ajax({
+                    url: '{{ route("country.get_states", ":country") }}'.replace(':country', countryId),
+                    type: 'GET',
+                    success: function(data) {
+                        $.each(data, function(index, state) {
+                            $stateSelect.append(
+                                $('<option></option>').val(state.id).text(state.name)
+                            );
+                        });
+                        $stateSelect.trigger('change.select2');
+                    }
+                });
+            }
+        });
+
+        // On page load (edit mode), pre-load states for existing country
+        @php
+            $loadCountryId = old('country', isset($duplicate) ? $duplicate->country_id : (isset($customer) ? $customer->country_id : null));
+            $loadStateId = old('state', isset($duplicate) ? $duplicate->state_id : (isset($customer) ? $customer->state_id : null));
+        @endphp
+        @if($loadCountryId)
+            $(document).ready(function() {
+                var countryId = '{{ $loadCountryId }}';
+                var selectedStateId = '{{ $loadStateId }}';
+                var $stateSelect = $('select[name="state"]');
+
+                if (countryId) {
+                    $.ajax({
+                        url: '{{ route("country.get_states", ":country") }}'.replace(':country', countryId),
+                        type: 'GET',
+                        success: function(data) {
+                            $stateSelect.empty().append('<option value="">{{ __('Select a state') }}</option>');
+                            $.each(data, function(index, state) {
+                                var $option = $('<option></option>').val(state.id).text(state.name);
+                                if (state.id == selectedStateId) {
+                                    $option.attr('selected', 'selected');
+                                }
+                                $stateSelect.append($option);
+                            });
+                            $stateSelect.trigger('change.select2');
+                        }
+                    });
+                }
+            });
+        @endif
+
         $('select[name="local_oversea"]').on('change', function() {
             let val = $(this).val()
 
