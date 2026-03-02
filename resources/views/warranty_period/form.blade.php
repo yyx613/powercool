@@ -16,6 +16,11 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="warranty_code" class="mb-1">{{ __('Warranty Code') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="warranty_code" id="warranty_code" :hasError="$errors->has('warranty_code')" value="{{ old('warranty_code', isset($warranty) ? $warranty->warranty_code : null) }}" />
+                    <x-input-error :messages="$errors->get('warranty_code')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="period" class="mb-1">{{ __('Period (In Month)') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="period" id="period" :hasError="$errors->has('period')" value="{{ old('period', isset($warranty) ? $warranty->period : null) }}" />
                     <x-input-error :messages="$errors->get('period')" class="mt-1" />

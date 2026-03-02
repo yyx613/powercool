@@ -318,9 +318,9 @@
             @endif
             @if (!isCreateLink())
                 <div class="flex flex-col">
-                    <x-app.input.label id="area" class="mb-1">{{ __('Area') }}</x-app.input.label>
+                    <x-app.input.label id="area" class="mb-1">{{ __('City') }}</x-app.input.label>
                     <x-app.input.select name="area" id="area" :hasError="$errors->has('area')">
-                        <option value="">{{ __('Select a area') }}</option>
+                        <option value="">{{ __('Select a city') }}</option>
                         @foreach ($areas as $area)
                             <option value="{{ $area->id }}" @selected(old('area', isset($duplicate) ? $duplicate->area : (isset($customer) ? $customer->area_id : null)) == $area->id)>{{ $area->name }}
                             </option>

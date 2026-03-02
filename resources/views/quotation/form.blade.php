@@ -206,6 +206,7 @@
                     'report_type': $('select[name="report_type"]').val(),
                     'payment_method': $('select[name="payment_method"]').val(),
                     'payment_term': $('select[name="payment_term"]').val(),
+                    'self_collect': $('select[name="self_collect"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
                     'new_billing_address1': $('#new-billing-address input[name="address1"]').val(),

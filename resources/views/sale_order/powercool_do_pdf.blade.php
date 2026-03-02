@@ -34,6 +34,10 @@
         margin: 0;
         padding: 0;
     }
+
+    .remark-content p, .remark-content h1, .remark-content h2, .remark-content span {
+        font-size: 12px !important;
+    }
 </style>
 
 <body>
@@ -211,17 +215,17 @@
                 @if (isset($prod['remark']) && $prod['remark'] != null && $prod['remark'] !== '<p><br></p>')
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
                     </tr>
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left;">
+                        <td class="remark-content" style="font-size: 12px; text-align: left;">
                             {!! nl2br($prod['remark']) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="2"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="2"></td>
                     </tr>
                 @endif
                 <!-- Warranty -->
@@ -304,7 +308,7 @@
                 @if ($so->remark != null)
                     <tr>
                         <td colspan="2"></td>
-                        <td colspan="2" style="font-size: 12px; padding: 15px 0;"><span
+                        <td class="remark-content" colspan="2" style="font-size: 12px; padding: 15px 0;"><span
                                 style="font-weight: 700;">REMARK:</span><br>{!! $so->remark !!}</td>
                         <td></td>
                     </tr>

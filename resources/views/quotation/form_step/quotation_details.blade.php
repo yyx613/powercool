@@ -70,6 +70,14 @@
             <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="self_collect" class="mb-1">{{ __('Self Collect') }}</x-app.input.label>
+            <x-app.input.select name="self_collect" id="self_collect" :hasError="$errors->has('self_collect')">
+                <option value="0" @selected(old('self_collect', isset($replicate) ? $replicate->self_collect : (isset($sale) ? $sale->self_collect : 0)) == 0)>{{ __('No') }}</option>
+                <option value="1" @selected(old('self_collect', isset($replicate) ? $replicate->self_collect : (isset($sale) ? $sale->self_collect : 0)) == 1)>{{ __('Yes') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="self_collect_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="sale" id="sale" :hasError="$errors->has('sale')"
@@ -109,7 +117,7 @@
             </p>
             <x-app.message.error id="billing_address_err" />
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col" id="delivery-address-container">
             <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
             <x-app.input.select id="delivery_address" name="delivery_address">
                 <option value="">{{ __('Select a delivery address') }}</option>
@@ -178,14 +186,14 @@
                 'title' => 'Billing Address',
             ])
         </div>
-        <div id="new-delivery-address">
+        <div id="new-delivery-address" class="delivery-third-party-section">
             @include('components.app.address-field', [
                 'title' => 'Delivery Address',
             ])
         </div>
     </div>
     {{-- Third Party Address --}}
-    <div class="pt-4 border-t border-slate-200">
+    <div class="pt-4 border-t border-slate-200 delivery-third-party-section" id="third-party-address-section">
         <div class="mb-4">
             <span class="text-md font-semibold">{{ __('Third Party Address') }}</span>
             <p class="text-sm text-slate-500 leading-none">{{ __('Delivery address is not required if presented') }}
@@ -284,6 +292,32 @@
             }
             QUOTATION_DETAILS_INIT_EDIT = false
         })
+
+        // Self Collect toggle: hide/show delivery address and third party address
+        function toggleSelfCollect() {
+            let isSelfCollect = $('select[name="self_collect"]').val() == '1'
+
+            if (isSelfCollect) {
+                $('#delivery-address-container').hide()
+                $('.delivery-third-party-section').hide()
+                // Clear delivery address values
+                $('select[name="delivery_address"]').val('').trigger('change')
+                $('#new-delivery-address input').val(null)
+                // Clear third party address values
+                $('#third-party-address-list').empty()
+            } else {
+                $('#delivery-address-container').show()
+                $('.delivery-third-party-section').show()
+                // Add default third party address row if empty
+                if ($('#third-party-address-list .child').length === 0) {
+                    $('#add-third-party-address-btn').click()
+                }
+            }
+        }
+
+        $('select[name="self_collect"]').on('change', toggleSelfCollect)
+        // Run on page load after init
+        setTimeout(toggleSelfCollect, 0)
 
         $('input[name="open_until"]').daterangepicker(datepickerParam)
         $('input[name="open_until"]').on('apply.daterangepicker', function(ev, picker) {

@@ -134,7 +134,7 @@
                                     title="{{ __('View Rejections') }}"
                                     data-production-milestone-id="{{ $ms->pivot->id }}"
                                     data-milestone-title="{{ $ms->name }}">
-                                    <svg class="h-4 w-4" id="Layer_1" height="512" viewBox="0 0 24 24" width="512"
+                                    <svg class="h-4 w-4 fill-red-500" id="Layer_1" height="512" viewBox="0 0 24 24" width="512"
                                         xmlns="http://www.w3.org/2000/svg" data-name="Layer 1">
                                         <path d="m9 24h-8a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2z" />
                                         <path d="m7 20h-6a1 1 0 0 1 0-2h6a1 1 0 0 1 0 2z" />
@@ -154,7 +154,7 @@
         <div class="flex-1 pl-4 ml-4 border-l">
             <div class="rounded-lg">
                 <h1 class="font-black text-xl text-blue-900">{{ __('Production ID') }}: {{ $production->sku }}</h1>
-                @if (in_array(strtolower($production->status), ['doing']))
+                @if (in_array(strtolower($production->status), ['in progress']))
                     <x-app.button.button
                         class="font-semibold w-full justify-center mt-2 bg-transparent text-emerald-500 border border-emerald-500 transition duration-250 hover:bg-emerald-500 hover:text-white"
                         id="complete-task-btn">
@@ -224,6 +224,7 @@
     <x-app.modal.qr-scanner-modal />
     <x-app.modal.confirmation-modal />
     <x-app.modal.milestone-rejections-modal />
+    <x-app.modal.force-complete-modal :production="$production" />
     {{-- <x-app.modal.add-milestone-modal :production="$production" :materialUse="$material_use" /> --}}
 @endsection
 
@@ -235,7 +236,7 @@
         SPAREPART_KEYWORD = {} // productId: keyword
 
         $(document).ready(function() {
-            if (PRODUCTION.status.toLowerCase() != 'doing') {
+            if (PRODUCTION.status.toLowerCase() != 'in progress') {
                 $('#production-milestone-modal #yes-btn').attr('disabled', true)
                 $('#production-milestone-modal #yes-btn').addClass(
                     'bg-slate-200 text-black hover:bg-slate-200 hover:text-black')
@@ -428,15 +429,7 @@
         })
         // Confirm Task
         $('#complete-task-btn').on('click', function() {
-            $('#confirmation-modal #msg').text(
-                '{{ __('Are you sure to complete the production without completing all the milestones?') }}')
-            $('#confirmation-modal').addClass('show-modal')
-        })
-        $('#confirmation-modal #yes-btn').on('click', function() {
-            let url = '{{ config('app.url') }}'
-            url = `${url}/production/force-complete-task/${PRODUCTION.id}`
-
-            window.location.href = url
+            $('#force-complete-modal').addClass('show-modal')
         })
         // View rejections
         $('.view-rejections-btns').on('click', function() {

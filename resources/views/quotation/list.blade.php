@@ -89,6 +89,7 @@
                     <th>{{ __('Debtor Name') }}</th>
                     <th>{{ __('Agent') }}</th>
                     <th>{{ __('Store') }}</th>
+                    <th>{{ __('Self Collect') }}</th>
                     <th>{{ __('Curr. Code') }}</th>
                     <th>{{ __('Total') }}</th>
                     <th>{{ __('Status') }}</th>
@@ -136,6 +137,9 @@
             },
             {
                 data: 'store'
+            },
+            {
+                data: 'self_collect'
             },
             {
                 data: 'curr_code'
@@ -269,19 +273,27 @@
                 "targets": 8,
                 orderable: false,
                 render: function(data, type, row) {
-                    return data
+                    return data == 1 || data == true ? "{!! __('Yes') !!}" : "{!! __('No') !!}"
                 }
             },
             {
                 "width": "10%",
                 "targets": 9,
+                orderable: false,
+                render: function(data, type, row) {
+                    return data
+                }
+            },
+            {
+                "width": "10%",
+                "targets": 10,
                 render: function(data, type, row) {
                     return `RM ${data}`
                 }
             },
             {
                 "width": '10%',
-                "targets": 10,
+                "targets": 11,
                 render: function(data, type, row) {
                     if (row.expired_at != null) {
                         return "{!! __('Expired') !!}"
@@ -314,7 +326,7 @@
             },
             {
                 "width": "5%",
-                "targets": 11,
+                "targets": 12,
                 orderable: false,
                 render: function(data, type, row) {
                     return `<div class="flex flex-wrap w-32 items-center justify-end gap-2 px-2">
@@ -365,18 +377,18 @@
             },
         ]
         if (DEFAULT_TRANSFER_TYPE == {{ \App\Models\Sale::TRANSFER_TYPE_TRANSFER_TO }}) {
-            columns.splice(11, 0, {
+            columns.splice(12, 0, {
                 data: 'transfer_to_branch'
             })
-            columnDefs.splice(11, 0, {
+            columnDefs.splice(12, 0, {
                 "width": "10%",
-                "targets": 11,
+                "targets": 12,
                 orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
             })
-            columnDefs[columnDefs.length - 1].targets = 12
+            columnDefs[columnDefs.length - 1].targets = 13
         }
         var dt = new DataTable('#data-table', {
             dom: 'rtip',

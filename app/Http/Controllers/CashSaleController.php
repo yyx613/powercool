@@ -227,6 +227,7 @@ class CashSaleController extends Controller
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
             'is_paid' => $sale->payment_status == Sale::PAYMENT_STATUS_PAID,
+            'third_party_addresses' => $sale->thirdPartyAddresses,
         ]);
         $pdf->setPaper('A4', 'letter');
 

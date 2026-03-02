@@ -809,7 +809,7 @@
                                         <a href="{{ route('area.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -937,7 +937,7 @@
                                         <a href="{{ route('setting.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -1817,7 +1817,7 @@
                     <a href="{{ route('area.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
-                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                     </a>
                 </li>
                 <li>
@@ -1945,7 +1945,7 @@
                     <a href="{{ route('setting.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
-                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
+                            class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                     </a>
                 </li>
                 <li>
@@ -2794,7 +2794,7 @@
                                         <a href="{{ route('area.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Area') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                                         </a>
                                     </li>
                                     <li>
@@ -2922,7 +2922,7 @@
                                         <a href="{{ route('setting.index') }}"
                                             class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'setting.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Settings') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                                         </a>
                                     </li>
                                     <li>

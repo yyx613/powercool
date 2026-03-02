@@ -46,6 +46,7 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Warranty Code') }}</th>
                     <th>{{ __('Period') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
@@ -73,28 +74,36 @@
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'name' },
+                { data: 'warranty_code' },
                 { data: 'period' },
                 { data: 'status' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
                         return data
                     }
                 },
-                { 
+                {
                     "width": "10%",
                     "targets": 1,
                     render: function(data, type, row) {
-                        return data == null ? null : `${data} Months` 
+                        return data
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 2,
+                    render: function(data, type, row) {
+                        return data == null ? null : `${data} Months`
                     }
                 },
                 {
                     "width": '10%',
-                    "targets": 2,
+                    "targets": 3,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
@@ -104,9 +113,9 @@
                         }
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 4,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

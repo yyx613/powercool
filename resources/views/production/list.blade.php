@@ -106,6 +106,7 @@
                     <th>{{ __('Old Production ID') }}</th>
                     <th>{{ __('Factory') }}</th>
                     <th>{{ __('Product Serial No') }}</th>
+                    <th>{{ __('Created At') }}</th>
                     <th>{{ __('Start Date') }}</th>
                     <th>{{ __('Due Date') }}</th>
                     <th>{{ __('Days Left') }}</th>
@@ -156,6 +157,9 @@
                 },
                 {
                     data: 'product_serial_no'
+                },
+                {
+                    data: 'created_at'
                 },
                 {
                     data: 'start_date'
@@ -282,7 +286,6 @@
                 },
                 {
                     "targets": 8,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -291,11 +294,18 @@
                     "targets": 9,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data == null ? '-' : data.name
+                        return data
                     }
                 },
                 {
                     "targets": 10,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data == null ? '-' : data.name
+                    }
+                },
+                {
+                    "targets": 11,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -309,14 +319,14 @@
                     }
                 },
                 {
-                    "targets": 11,
+                    "targets": 12,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
                                 return "{!! __('New') !!}"
                             case 2:
-                                return "{!! __('Doing') !!}"
+                                return "{!! __('In Progress') !!}"
                             case 3:
                                 return "{!! __('Completed') !!}"
                             case 4:
@@ -331,14 +341,14 @@
                     }
                 },
                 {
-                    "targets": 12,
+                    "targets": 13,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
                     }
                 },
                 {
-                    "targets": 13,
+                    "targets": 14,
                     "orderable": false,
                     render: function(data, type, row) {
                         if (IS_SALES_ONLY == true) return '';
