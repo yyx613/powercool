@@ -24,6 +24,10 @@
         padding: 0;
     }
 
+    .remark-content p, .remark-content h1, .remark-content h2, .remark-content span {
+        font-size: 12px !important;
+    }
+
     #invalid {
         color: red;
     }
@@ -233,17 +237,17 @@
                 @if ($prod->remark != null && $prod->remark !== '<p><br></p>')
                     <tr>
                         <td colspan="3"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                     <tr>
                         <td colspan="3"></td>
-                        <td style="font-size: 10px; text-align: left;">
+                        <td class="remark-content" style="font-size: 12px; text-align: left;">
                             {!! nl2br($prod->remark) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                 @endif
                 <!-- Accessories -->
@@ -333,10 +337,27 @@
             @if ($sale->remark != null)
                 <tr>
                     <td colspan="3"></td>
-                    <td style="font-size: 10px; padding: 15px 0;"><span
+                    <td class="remark-content" style="font-size: 12px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="6"></td>
                 </tr>
+            @endif
+            <!-- Third Party Address -->
+            @if (isset($third_party_addresses) && count($third_party_addresses) > 0)
+                <tr>
+                    <td colspan="3"></td>
+                    <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">THIRD PARTY ADDRESS:</td>
+                    <td colspan="6"></td>
+                </tr>
+                @foreach ($third_party_addresses as $tpa)
+                    <tr>
+                        <td colspan="3"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">
+                            {{ $tpa->name }} - {{ $tpa->address }} ({{ $tpa->mobile }})
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endforeach
             @endif
             <!-- Ad-hoc Services -->
             @if(isset($adhocServices) && count($adhocServices) > 0)

@@ -54,9 +54,9 @@
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a status') }}</option>
-                        <option value="1" @selected(old('status', isset($production) ? $production->status : (isset($customer_name) ? 1 : null)) == 1)>{{ __('New') }}</option>
-                        <option value="2" @selected(old('status', isset($production) ? $production->status : null) == 2)>{{ __('Doing') }}</option>
-                        <option value="3" @selected(old('status', isset($production) ? $production->status : null) == 3)>{{ __('Completed') }}</option>
+                        <option value="1" @selected(old('status', isset($is_duplicate) ? 1 : (isset($production) ? $production->status : (isset($customer_name) ? 1 : null))) == 1)>{{ __('New') }}</option>
+                        <option value="2" @selected(old('status', isset($is_duplicate) ? 1 : (isset($production) ? $production->status : null)) == 2)>{{ __('In Progress') }}</option>
+                        <option value="3" @selected(old('status', isset($is_duplicate) ? 1 : (isset($production) ? $production->status : null)) == 3)>{{ __('Completed') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-2" />
                 </div>
@@ -158,6 +158,18 @@
                         <div class="flex justify-between mb-2 hidden cursor-grab hover:bg-slate-50"
                             id="milestone-template">
                             <div class="flex items-center gap-2 first-half">
+                                <label
+                                    class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7 mr-3">
+                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
+                                    <div class="flex items-center w-full">
+                                        <span
+                                            class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
+                                        <span
+                                            class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
+                                    </div>
+                                    <span
+                                        class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
+                                </label>
                                 <input type="checkbox" class="rounded-sm">
                                 <label class="text-sm ms-name"></label>
                             </div>
@@ -171,18 +183,6 @@
                                             d="M23.707,22.293l-5.969-5.969c1.412-1.725,2.262-3.927,2.262-6.324C20,4.486,15.514,0,10,0S0,4.486,0,10s4.486,10,10,10c2.397,0,4.599-.85,6.324-2.262l5.969,5.969c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414ZM2,10C2,5.589,5.589,2,10,2s8,3.589,8,8-3.589,8-8,8S2,14.411,2,10Zm13.933-1.261c-.825-1.21-2.691-3.239-5.933-3.239s-5.108,2.03-5.933,3.239c-.522,.766-.522,1.755,0,2.521,.825,1.21,2.692,3.24,5.933,3.24s5.108-2.03,5.933-3.239c.522-.766,.522-1.755,0-2.521Zm-1.652,1.395c-.735,1.08-2.075,2.366-4.28,2.366s-3.544-1.287-4.28-2.367c-.056-.081-.056-.185,0-.267,.735-1.08,2.075-2.366,4.28-2.366s3.545,1.287,4.28,2.366h0c.056,.082,.056,.186,0,.268Zm-2.78-.134c0,.829-.671,1.5-1.5,1.5s-1.5-.671-1.5-1.5,.671-1.5,1.5-1.5,1.5,.671,1.5,1.5Z" />
                                     </svg>
                                 </button>
-                                <label
-                                    class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
-                                    <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
-                                    <div class="flex items-center w-full">
-                                        <span
-                                            class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
-                                        <span
-                                            class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
-                                    </div>
-                                    <span
-                                        class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -254,7 +254,7 @@
                 INIT_EDIT = true
 
                 if (PRODUCTION.type != 2 && SELECTED_PRODUCT != null) {
-                    let opt = new Option(SELECTED_PRODUCT.model_desc, SELECTED_PRODUCT.id, true, true)
+                    let opt = new Option(`${SELECTED_PRODUCT.sku} - ${SELECTED_PRODUCT.model_desc}`, SELECTED_PRODUCT.id, true, true)
                     $('select[name="product"]').append(opt)
                 }
 
@@ -290,19 +290,19 @@
                             $(`.milestones[data-milestone-id="ms-${element.id}"] .view-material-use-selection-btns`)
                                 .removeClass('hidden')
                         }
+                    }
 
-                        MILESTONES[`ms-${element.id}`] = {
-                            material_use_product_ids: material_use_product_ids,
-                            sequence: i + 1,
-                            is_checked: true,
-                            title: element.name,
-                        }
+                    MILESTONES[`ms-${element.id}`] = {
+                        material_use_product_ids: material_use_product_ids,
+                        sequence: i + 1,
+                        is_checked: true,
+                        title: element.name,
                     }
                 }
                 INIT_EDIT = false
             }
             if (DEFAULT_PRODUCT != null) {
-                let opt = new Option(DEFAULT_PRODUCT.model_desc, DEFAULT_PRODUCT.id, true, true)
+                let opt = new Option(`${DEFAULT_PRODUCT.sku} - ${DEFAULT_PRODUCT.model_desc}`, DEFAULT_PRODUCT.id, true, true)
                 $('select[name="product"]').append(opt)
             }
             if (PRODUCTION != null || DEFAULT_PRODUCT != true) {
@@ -385,6 +385,8 @@
         $('body').on('change', '.first-half input', function() {
             let isChecked = $(this).is(':checked')
             let milestoneId = $(this).parent().parent().data('milestone-id')
+
+            if (!MILESTONES[milestoneId]) return;
 
             if (isChecked) {
                 MILESTONES[milestoneId].is_checked = true
@@ -655,7 +657,9 @@
 
             $('.milestones').each(function(i, obj) {
                 sequence++
-                MILESTONES[$(this).attr('data-milestone-id')].sequence = sequence
+                let msId = $(this).attr('data-milestone-id')
+                if (!MILESTONES[msId]) return;
+                MILESTONES[msId].sequence = sequence
             })
         }
 

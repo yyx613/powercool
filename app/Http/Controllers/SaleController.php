@@ -122,6 +122,7 @@ class SaleController extends Controller
                 'sales.is_draft AS is_draft',
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
+                'sales.self_collect AS self_collect',
                 DB::raw('(
                     COALESCE(SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)), 0)
                     + COALESCE((
@@ -288,7 +289,8 @@ class SaleController extends Controller
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
                     'filled_for_e_invoice' => Customer::forEinvoiceFilled($record->customer_id),
                 ],
-                'rejected_reason' => $rejected_reason
+                'rejected_reason' => $rejected_reason,
+                'self_collect' => $record->self_collect,
             ];
         }
 
@@ -478,6 +480,7 @@ class SaleController extends Controller
             'payment_term' => $payment_term ?? null,
             'tax_code' => Setting::where('key', Setting::TAX_CODE_KEY)->value('value'),
             'sst_value' => Setting::where('key', Setting::SST_KEY)->value('value'),
+            'third_party_addresses' => $sale->thirdPartyAddresses,
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -1398,6 +1401,7 @@ class SaleController extends Controller
             'quo_skus' => implode(', ', $quo_skus),
             'is_paid' => $sale->payment_status == Sale::PAYMENT_STATUS_PAID,
             'is_proforma_invoice' => $is_proforma_invoice,
+            'third_party_addresses' => $sale->thirdPartyAddresses,
         ]);
         $pdf->setPaper('A4', 'letter');
 
@@ -2065,7 +2069,7 @@ class SaleController extends Controller
             $rules['new_billing_address3'] = 'nullable|max:250';
             $rules['new_billing_address4'] = 'nullable|max:250';
             $rules['delivery_address'] = 'nullable';
-            if ($has_third_party_address) {
+            if ($has_third_party_address || $req->self_collect == 1) {
                 $rules['new_delivery_address1'] = 'nullable|max:250';
             } else {
                 $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
@@ -2416,7 +2420,7 @@ class SaleController extends Controller
                 $rules['new_billing_address4'] = 'nullable|max:250';
 
                 $rules['delivery_address'] = 'nullable';
-                if ($has_third_party_address) {
+                if ($has_third_party_address || $req->self_collect == 1) {
                     $rules['new_delivery_address1'] = 'nullable|max:250';
                 } else {
                     $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
@@ -2497,8 +2501,10 @@ class SaleController extends Controller
                         $req->merge(['billing_address' => $bill_add->id]);
                     }
                 }
-                // Delivery
-                if ($req->delivery_address != null || $req->new_delivery_address1 != null) {
+                // Delivery (skip when self collect)
+                if ($req->self_collect == 1) {
+                    $req->merge(['delivery_address' => null]);
+                } elseif ($req->delivery_address != null || $req->new_delivery_address1 != null) {
                     if ($req->delivery_address != null) {
                         $del_add = CustomerLocation::where('id', $req->delivery_address)->first();
                     } else {
@@ -2557,6 +2563,7 @@ class SaleController extends Controller
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'created_by' => $created_by,
+                    'self_collect' => $req->self_collect ?? false,
                 ]);
                 (new Branch)->assign(Sale::class, $sale->id);
             } else {
@@ -2597,6 +2604,7 @@ class SaleController extends Controller
                     'delivery_address_id' => $req->delivery_address ?? null,
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'updated_by' => Auth::user()->id,
+                    'self_collect' => $req->self_collect ?? false,
                 ]);
                 // Delete current third party address
                 if ($req->type == 'quo') {
@@ -2609,8 +2617,12 @@ class SaleController extends Controller
                 $del_add->cash_sale_id = $sale->id;
                 $del_add->save();
             }
+            // Delete third party addresses when self collect
+            if ($req->self_collect == 1 && $req->sale_id != null) {
+                SaleThirdPartyAddress::where('sale_id', $sale->id)->delete();
+            }
             // Third party address
-            if ($req->third_party_address_address != null) {
+            if ($req->self_collect != 1 && $req->third_party_address_address != null) {
                 $addr = [];
                 for ($i = 0; $i < count($req->third_party_address_address); $i++) {
                     if ($req->third_party_address_address[$i] == null) {
@@ -2870,29 +2882,27 @@ class SaleController extends Controller
                                 $skip_approved = false;
                             }
                         }
-                        if ($skip_approved) {
-                            if ($sp->status == SaleProduct::STATUS_APPROVAL_APPROVED) {
-                                continue;
-                            }
-                        }
+                        $skip_product_update = $skip_approved && $sp->status == SaleProduct::STATUS_APPROVAL_APPROVED;
 
-                        $sp->update([
-                            'product_id' => $product_id,
-                            'desc' => $req->product_desc[$i],
-                            'qty' => $req->qty[$i],
-                            'is_foc' => $req->foc[$i] === 'true',
-                            'with_sst' => $req->with_sst[$i] === 'true',
-                            'sst_amount' => $req->sst_amount[$i],
-                            'sst_value' => $req->with_sst[$i] === 'true' ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
-                            'uom' => $req->uom[$i],
-                            'unit_price' => $req->foc[$i] === 'true' ? 0 : $req->unit_price[$i],
-                            'selling_price_id' => $req->foc[$i] === 'true' ? null : $req->selling_price[$i],
-                            'override_selling_price' => $req->foc[$i] === 'true' || $req->override_selling_price == null ? null : $req->override_selling_price[$i],
-                            'promotion_id' => $req->promotion_id[$i],
-                            'discount' => $req->discount[$i],
-                            'remark' => $req->product_remark[$i],
-                        ]);
-                        SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
+                        if (!$skip_product_update) {
+                            $sp->update([
+                                'product_id' => $product_id,
+                                'desc' => $req->product_desc[$i],
+                                'qty' => $req->qty[$i],
+                                'is_foc' => $req->foc[$i] === 'true',
+                                'with_sst' => $req->with_sst[$i] === 'true',
+                                'sst_amount' => $req->sst_amount[$i],
+                                'sst_value' => $req->with_sst[$i] === 'true' ? Setting::where('key', Setting::SST_KEY)->value('value') : null,
+                                'uom' => $req->uom[$i],
+                                'unit_price' => $req->foc[$i] === 'true' ? 0 : $req->unit_price[$i],
+                                'selling_price_id' => $req->foc[$i] === 'true' ? null : $req->selling_price[$i],
+                                'override_selling_price' => $req->foc[$i] === 'true' || $req->override_selling_price == null ? null : $req->override_selling_price[$i],
+                                'promotion_id' => $req->promotion_id[$i],
+                                'discount' => $req->discount[$i],
+                                'remark' => $req->product_remark[$i],
+                            ]);
+                            SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
+                        }
                     } else {
                         $sp = SaleProduct::create([
                             'sale_id' => $req->sale_id,
@@ -5581,6 +5591,7 @@ class SaleController extends Controller
             'saleperson' => $sale->saleperson,
             'customer' => $sale->customer,
             'billing_address' => (new CustomerLocation)->defaultBillingAddress($sale->customer->id),
+            'third_party_addresses' => $sale->thirdPartyAddresses,
         ]);
         $pdf->setPaper('A4', 'letter');
 

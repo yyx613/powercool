@@ -98,9 +98,9 @@ class AreaController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('area.create'))->with('success', 'Area created');
+                return redirect(route('area.create'))->with('success', 'City created');
             }
-            return redirect(route('area.index'))->with('success', 'Area created');
+            return redirect(route('area.index'))->with('success', 'City created');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -135,7 +135,7 @@ class AreaController extends Controller
 
             DB::commit();
 
-            return redirect(route('area.index'))->with('success', 'Area updated');
+            return redirect(route('area.index'))->with('success', 'City updated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

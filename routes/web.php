@@ -640,7 +640,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/to-in-progress', 'toInProgress')->name('to_in_progress');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::post('/extend-due-date/{production}', 'extendDueDate')->name('extend_due_date');
-        Route::get('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
+        Route::post('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
         Route::post('/add-milestone/{production}', 'addMilestone')->name('add_milestone');
         Route::get('/search-product', 'searchProduct')->name('search_product');
         Route::post('/update-factory/{production}', 'updateFactory')->name('update_factory');
@@ -883,7 +883,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{method}', 'update')->name('update');
             Route::get('/delete/{method}', 'delete')->name('delete');
         });
-        // Area
+        // City
         Route::controller(AreaController::class)->prefix('area')->name('area.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');

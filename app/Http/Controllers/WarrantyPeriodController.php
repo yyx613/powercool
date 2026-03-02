@@ -13,6 +13,7 @@ class WarrantyPeriodController extends Controller
 {
     const FORM_RULES = [
         'name' => 'required|max:250',
+        'warranty_code' => 'required|max:250',
         'period' => 'required',
         'status' => 'required',
     ];
@@ -41,15 +42,17 @@ class WarrantyPeriodController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('warranty_code', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
-                1 => 'period',
-                2 => 'is_active',
+                1 => 'warranty_code',
+                2 => 'period',
+                3 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -72,6 +75,7 @@ class WarrantyPeriodController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'warranty_code' => $record->warranty_code,
                 'period' => $record->period,
                 'status' => $record->is_active,
             ];
@@ -96,6 +100,7 @@ class WarrantyPeriodController extends Controller
 
             $wp = $this->wp::create([
                 'name' => $req->name,
+                'warranty_code' => $req->warranty_code,
                 'period' => $req->period,
                 'is_active' => $req->boolean('status'),
             ]);
@@ -134,6 +139,7 @@ class WarrantyPeriodController extends Controller
 
             $warranty->update([
                 'name' => $req->name,
+                'warranty_code' => $req->warranty_code,
                 'period' => $req->period,
                 'is_active' => $req->boolean('status'),
             ]);

@@ -163,8 +163,9 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
-                6 => 'start_date',
-                7 => 'due_date',
+                6 => 'created_at',
+                7 => 'start_date',
+                8 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -192,6 +193,7 @@ class ProductionController extends Controller
                 'factory' => $record->factory,
                 'product_serial_no' => $record->type == Production::TYPE_RND ? $record->customizeProduct->sku : $record->productChild->sku ?? null,
                 'name' => $record->name,
+                'created_at' => $record->created_at->format('d M Y H:i'),
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,
                 'days_left' => Carbon::parse($record->due_date)->addDay()->diffInDays(now()),
@@ -205,7 +207,7 @@ class ProductionController extends Controller
                 'can_view' => ! $is_production_worker || $record->status == Production::STATUS_DOING,
                 'can_edit_customize_product' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit'),
                 'customize_product_id' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit') ? $record->customizeProduct->id : null,
-                'rejected_reason' => $record->status == Production::STATUS_REJECTED ? $record->getLatestApprovalRejectedReason() : null,
+                'rejected_reason' => $record->getLatestApprovalRejectedReason(),
             ];
         }
 
@@ -383,6 +385,7 @@ class ProductionController extends Controller
         ];
         // Validate request
         $req->validate($rules, [
+            'product.required_unless' => 'The product field is required.',
             'material_use_product.required_unless' => 'Please add at least one milestone for production.',
         ], [
             'desc' => 'description',
@@ -610,10 +613,10 @@ class ProductionController extends Controller
 
     public function checkInMilestone(Request $req)
     {
-        // Check in is allowed only when production status is 'doing'
+        // Check in is allowed only when production status is 'in progress'
         $pm = $this->prodMs::where('id', $req->production_milestone_id)->first();
         $prod = $this->prod::where('id', $pm->production_id)->first();
-        if (strtolower($this->prod->statusToHumanRead($prod->status)) != 'doing') {
+        if (strtolower($this->prod->statusToHumanRead($prod->status)) != 'in progress') {
             return Response::json([
                 'errors' => [
                     'general' => 'Milestone is not allow to check in',
@@ -1071,6 +1074,10 @@ class ProductionController extends Controller
 
     public function forceCompleteTask(Request $req, Production $production)
     {
+        $req->validate([
+            'reason' => 'required|string',
+        ]);
+
         try {
             DB::beginTransaction();
 
@@ -1081,6 +1088,7 @@ class ProductionController extends Controller
                 'data' => json_encode([
                     'description' => Auth::user()->name.' has requested to complete the production ('.$production->sku.')',
                     'user_id' => Auth::user()->id,
+                    'reason' => $req->reason,
                 ]),
             ]);
             (new Branch)->assign(Approval::class, $approval->id);

@@ -18,6 +18,10 @@
         left: 0px;
         right: 0px;
     }
+
+    .remark-content p, .remark-content h1, .remark-content h2, .remark-content span {
+        font-size: 12px !important;
+    }
 </style>
 
 <body>
@@ -205,10 +209,10 @@
                         <td colspan="10" style="padding: 15px 0 0 0;"></td>
                     </tr>
                     <tr>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;" colspan="3">
+                        <td style="font-size: 12px; padding: 5px 0; text-align: left;"></td>
+                        <td class="remark-content" style="font-size: 12px; text-align: left; font-weight: 700;" colspan="3">
                             {!! nl2br($prod->remark) !!}</td>
-                        <td style="font-size: 10px; padding: 5px 0; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; padding: 5px 0; text-align: left;" colspan="6"></td>
                     </tr>
                 @endif
                 <!-- Warranty -->
@@ -258,10 +262,27 @@
             @if ($sale->remark != null)
                 <tr>
                     <td></td>
-                    <td colspan="3" style="font-size: 10px; padding: 15px 0;"><span
+                    <td class="remark-content" colspan="3" style="font-size: 12px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="6"></td>
                 </tr>
+            @endif
+            <!-- Third Party Address -->
+            @if (isset($third_party_addresses) && count($third_party_addresses) > 0)
+                <tr>
+                    <td></td>
+                    <td colspan="3" style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">THIRD PARTY ADDRESS:</td>
+                    <td colspan="6"></td>
+                </tr>
+                @foreach ($third_party_addresses as $tpa)
+                    <tr>
+                        <td></td>
+                        <td colspan="3" style="font-size: 12px; padding: 2px 0;">
+                            {{ $tpa->name }} - {{ $tpa->address }} ({{ $tpa->mobile }})
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endforeach
             @endif
         </table>
         <!-- Item Summary -->

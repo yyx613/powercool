@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Settings')
+@section('title', 'Tax Rate')
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('setting.index') }}">{{ isset($setting) ? __('Edit Setting') : __('Create Setting') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('setting.index') }}">{{ isset($setting) ? __('Edit Tax Rate') : __('Create Tax Rate') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($setting) ? route('setting.update', ['setting' => $setting]) : route('setting.store') }}" method="POST" enctype="multipart/form-data" id="form">
