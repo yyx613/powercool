@@ -330,8 +330,14 @@
                     <td colspan="6"></td>
                 </tr>
             @endif
-            <!-- Third Party Address -->
-            @if (isset($third_party_addresses) && count($third_party_addresses) > 0)
+            <!-- Self Collect / Third Party Address -->
+            @if ($sale->self_collect)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">SELF COLLECT</td>
+                    <td colspan="6"></td>
+                </tr>
+            @elseif (isset($third_party_addresses) && count($third_party_addresses) > 0)
                 <tr>
                     <td colspan="2"></td>
                     <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">THIRD PARTY ADDRESS:</td>
