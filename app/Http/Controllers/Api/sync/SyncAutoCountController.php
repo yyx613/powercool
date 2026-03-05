@@ -83,6 +83,11 @@ class SyncAutoCountController extends Controller
                 $area = DB::table('areas')->where('name', $record['AreaCode'])->first();
                 $areaId = $area ? $area->id : 18;
 
+                // Get state and country based on State code
+                $state = DB::table('states')->where('code', $record['State'])->first();
+                $stateId = $state ? $state->id : null;
+                $countryId = $state ? $state->country_id : null;
+
                 if ($supplier) {
                     // Since $supplier is now an Eloquent model, we can use update()
                     $supplier->update([
@@ -96,6 +101,8 @@ class SyncAutoCountController extends Controller
                         'currency_id' => $currencyId,
                         'updated_at' => now(),
                         'area_id' => $areaId,
+                        'state_id' => $stateId,
+                        'country_id' => $countryId,
 
                         'type' => '1',
                         'registered_name' => $record['CompanyName'],
@@ -141,6 +148,8 @@ class SyncAutoCountController extends Controller
                         'created_at' => now(),
                         'updated_at' => now(),
                         'area_id' => $areaId,
+                        'state_id' => $stateId,
+                        'country_id' => $countryId,
 
                         'registered_name' => $record['CompanyName'],
                         'tin_number' => $record['TIN'],
