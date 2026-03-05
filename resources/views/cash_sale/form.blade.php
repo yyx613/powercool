@@ -120,6 +120,20 @@
                 }
                 warrantyPeriod.push($(this).find('select[name="warranty_period[]"]').val())
             })
+
+            // Collect ad-hoc services data
+            let adhocServiceId = []
+            let adhocServiceOverrideAmount = []
+            let adhocServiceIsSst = []
+            $('#services-container .service-item').each(function() {
+                const serviceId = $(this).find('select[name="adhoc_service_id[]"]').val();
+                if (serviceId) {
+                    adhocServiceId.push(serviceId);
+                    adhocServiceOverrideAmount.push($(this).find('input[name="adhoc_service_override_amount[]"]').val());
+                    adhocServiceIsSst.push($(this).find('input[name="adhoc_service_is_sst[]"]').val());
+                }
+            });
+
             // Prepare payment amounts 
             let accountAmount = []
             let accountDate = []
@@ -180,6 +194,10 @@
                     'discount': discount,
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
+
+                    'adhoc_service_id': adhocServiceId,
+                    'adhoc_service_override_amount': adhocServiceOverrideAmount,
+                    'adhoc_service_is_sst': adhocServiceIsSst,
 
                     'payment_term': $('select[name="payment_term"]').val(),
                     'payment_method': $('select[name="payment_method"]').val(),

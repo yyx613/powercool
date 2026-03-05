@@ -98,7 +98,7 @@
             <tr>
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;">{{ $bp['product']->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->model_name }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->model_desc }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $bp['qty'] }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $bp['product']->uomUnit->name }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($bp['price'], 2) }}</td>

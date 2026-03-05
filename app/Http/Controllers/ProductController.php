@@ -207,7 +207,6 @@ class ProductController extends Controller
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_name', 'like', '%'.$keyword.'%')
                     ->orWhere('model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('min_price', 'like', '%'.$keyword.'%')
                     ->orWhere('max_price', 'like', '%'.$keyword.'%')
@@ -220,7 +219,7 @@ class ProductController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
-                1 => 'model_name',
+                1 => 'model_desc',
                 2 => 'category',
                 3 => 'qty',
             ];
@@ -281,7 +280,7 @@ class ProductController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'image' => $record->image ?? null,
-                'model_name' => $record->model_name,
+                'model_desc' => $record->model_desc,
                 'category' => $record->category->name,
                 'qty' => $qty,
                 'has_factory_child' => $record->orWhereHas('children', function ($qq) {
@@ -318,7 +317,7 @@ class ProductController extends Controller
     private function getFactoryRawMaterial($keyword = null, $orders = null, $product_ids_only = null, $show_usage = false)
     {
         $records = DB::table('factory_raw_materials as frm')
-            ->select('frm.*', 'products.sku', 'products.model_name', 'products.model_desc', 'products.min_price', 'products.max_price', 'products.is_sparepart', 'products.created_by', 'inventory_categories.name as category_name', 'factories.name as factory')
+            ->select('frm.*', 'products.sku', 'products.model_desc', 'products.min_price', 'products.max_price', 'products.is_sparepart', 'products.created_by', 'inventory_categories.name as category_name', 'factories.name as factory')
             ->join('products', 'frm.product_id', '=', 'products.id')
             ->join('inventory_categories', 'products.inventory_category_id', '=', 'inventory_categories.id')
             ->join('factories', 'frm.factory_id', '=', 'factories.id')
@@ -331,7 +330,6 @@ class ProductController extends Controller
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('products.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('products.model_name', 'like', '%'.$keyword.'%')
                     ->orWhere('products.model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('products.min_price', 'like', '%'.$keyword.'%')
                     ->orWhere('products.max_price', 'like', '%'.$keyword.'%')
@@ -342,7 +340,7 @@ class ProductController extends Controller
         if ($orders != null) {
             $map = [
                 0 => 'products.sku',
-                1 => 'products.model_name',
+                1 => 'products.model_desc',
                 2 => 'inventory_categories.name',
             ];
             foreach ($orders as $order) {
@@ -369,7 +367,7 @@ class ProductController extends Controller
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'image' => $record->product->image ?? null,
-                'model_name' => $record->model_name,
+                'model_desc' => $record->model_desc,
                 'category' => $record->category_name,
                 'qty' => $qty,
                 'min_price' => number_format($record->min_price, 2),
@@ -719,7 +717,7 @@ class ProductController extends Controller
 
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_brand'][] = $prod->brand;
-            $data['product_name'][] = $prod->model_name;
+            $data['product_name'][] = $prod->model_desc;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $products[$i]->sku;
             $data['dimension'][] = $length.' x '.$width.' x '.$height.'MM';
@@ -755,7 +753,6 @@ class ProductController extends Controller
             'product_id' => 'nullable',
             'initial_for_production' => 'required|max:250',
             'model_code' => 'required|max:250',
-            'model_name' => 'required|max:250',
             'model_desc' => 'required|max:250',
             'uom' => 'required|max:250',
             'category_id' => 'required',
@@ -863,7 +860,6 @@ class ProductController extends Controller
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
                     'type' => $req->boolean('is_product') == true ? Product::TYPE_PRODUCT : Product::TYPE_RAW_MATERIAL,
-                    'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
@@ -904,7 +900,6 @@ class ProductController extends Controller
                     'company_group' => $req->company_group,
                     'sku' => $req->model_code,
                     'initial_for_production' => $req->initial_for_production,
-                    'model_name' => $req->model_name,
                     'model_desc' => $req->model_desc,
                     'uom' => $req->uom,
                     'inventory_category_id' => $req->category_id,
@@ -1085,9 +1080,13 @@ class ProductController extends Controller
             $q->withTrashed();
         }])->where('product_id', $product->id)->get();
 
+        // Get factory from product's category
+        $factory_id = $product->category?->fromFactory?->id;
+
         return Response::json([
             'product_milestones' => $milestones,
             'product_material_use' => $material_use,
+            'factory_id' => $factory_id,
         ]);
     }
 
@@ -1147,7 +1146,7 @@ class ProductController extends Controller
                 'status' => Approval::STATUS_PENDING_APPROVAL,
                 'data' => json_encode([
                     'qty' => $req->qty,
-                    'description' => Auth::user()->name.' has requested to transfer '.$req->qty.' '.$product->model_name.' ('.$product->sku.')',
+                    'description' => Auth::user()->name.' has requested to transfer '.$req->qty.' '.$product->model_desc.' ('.$product->sku.')',
                     'user_id' => Auth::user()->id,
                 ]),
             ]);
@@ -1282,7 +1281,7 @@ class ProductController extends Controller
                 ->with('sellingPrices')
                 ->where('is_active', true)
                 ->where(function ($q) use ($keyword) {
-                    $q->where('model_name', 'like', '%'.$keyword.'%')
+                    $q->where('model_desc', 'like', '%'.$keyword.'%')
                         ->orWhere('sku', 'like', '%'.$keyword.'%');
                 })
                 ->orderBy('id', 'desc');

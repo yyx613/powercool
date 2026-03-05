@@ -182,7 +182,7 @@
                 data: 'sku'
             },
             {
-                data: 'model_name'
+                data: 'model_desc'
             },
             {
                 data: 'category'

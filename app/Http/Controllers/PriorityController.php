@@ -35,19 +35,26 @@ class PriorityController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('priority', 'like', '%' . $keyword . '%')
+                    ->orWhere('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('response_time', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
-                0 => 'name',
+                0 => 'priority',
+                1 => 'name',
+                2 => 'description',
+                3 => 'response_time',
+                4 => 'order',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {
-            $records = $records->orderBy('id', 'desc');
+            $records = $records->orderBy('order', 'asc')->orderBy('id', 'desc');
         }
 
         $records_count = $records->count();
@@ -63,7 +70,11 @@ class PriorityController extends Controller
         foreach ($records_paginator as $key => $record) {
             $data['data'][] = [
                 'id' => $record->id,
+                'priority' => $record->priority,
                 'name' => $record->name,
+                'description' => $record->description,
+                'response_time' => $record->response_time,
+                'order' => $record->order,
             ];
         }
                 
@@ -77,7 +88,11 @@ class PriorityController extends Controller
     public function store(Request $req) {
         // Validate request
         $validator = Validator::make($req->all(), [
+            'priority' => 'required|max:10',
             'name' => 'required|max:250',
+            'description' => 'required|max:1000',
+            'response_time' => 'required|max:100',
+            'order' => 'required|integer|min:1',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -87,7 +102,11 @@ class PriorityController extends Controller
             DB::beginTransaction();
 
             $dt = $this->priority::create([
+                'priority' => $req->priority,
                 'name' => $req->name,
+                'description' => $req->description,
+                'response_time' => $req->response_time,
+                'order' => $req->order ?? 0,
             ]);
             (new Branch)->assign(Priority::class, $dt->id);
 
@@ -114,7 +133,11 @@ class PriorityController extends Controller
     public function update(Request $req, Priority $priority) {
         // Validate request
         $validator = Validator::make($req->all(), [
+            'priority' => 'required|max:10',
             'name' => 'required|max:250',
+            'description' => 'required|max:1000',
+            'response_time' => 'required|max:100',
+            'order' => 'required|integer|min:1',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -124,7 +147,11 @@ class PriorityController extends Controller
             DB::beginTransaction();
 
             $priority->update([
+                'priority' => $req->priority,
                 'name' => $req->name,
+                'description' => $req->description,
+                'response_time' => $req->response_time,
+                'order' => $req->order ?? 0,
             ]);
 
             DB::commit();

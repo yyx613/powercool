@@ -8,7 +8,7 @@
         <td>Mobile Number</td>
         <td>Website</td>
         <td>Currency</td>
-        <td>Area</td>
+        <td>City</td>
         <td>Debtor Type</td>
         <td>Sale Agent</td>
         <td>Credit Term</td>

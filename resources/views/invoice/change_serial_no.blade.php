@@ -17,7 +17,7 @@
         <form method="POST" action="{{ route('invoice.swap_serial_no_post', ['inv' => $invoice->id]) }}">
             @csrf
             @foreach ($products as $product)
-                <h6 class="text-lg font-medium mb-3">{{ $product->model_name }} ({{ $product->sku }})</h6>
+                <h6 class="text-lg font-medium mb-3">{{ $product->model_desc }} ({{ $product->sku }})</h6>
                 @foreach ($inv_products as $inv_product)
                     @if ($inv_product->saleProduct->product_id == $product->id)
                         @foreach ($inv_product->children as $dopc)

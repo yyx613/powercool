@@ -39,7 +39,7 @@ class MaterialUseController extends Controller
     public function getData(Request $req)
     {
         $records = $this->mu::with('approval')
-            ->select('material_uses.*', 'products.model_name AS productName', 'products.sku AS productSku', 'customize_products.sku AS customizeProductSku')
+            ->select('material_uses.*', 'products.model_desc AS productName', 'products.sku AS productSku', 'customize_products.sku AS customizeProductSku')
             ->leftJoin('products', 'products.id', '=', 'material_uses.product_id')
             ->leftJoin('customize_products', 'customize_products.id', '=', 'material_uses.customize_product_id');
 
@@ -50,7 +50,7 @@ class MaterialUseController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('products.model_name', 'like', '%' . $keyword . '%')
+                $q->where('products.model_desc', 'like', '%' . $keyword . '%')
                     ->orWhere('products.sku', 'like', '%' . $keyword . '%');
             });
         }
@@ -58,7 +58,7 @@ class MaterialUseController extends Controller
         if ($req->has('order')) {
             foreach ($req->order as $order) {
                 if ($order['column'] == 0) {
-                    $records = $records->orderBy('products.model_name', $order['dir']);
+                    $records = $records->orderBy('products.model_desc', $order['dir']);
                 }
             }
         } else {
@@ -220,7 +220,7 @@ class MaterialUseController extends Controller
                         'object_id' => $mu->id,
                         'status' => Approval::STATUS_PENDING_APPROVAL,
                         'data' => json_encode([
-                            'description' => Auth::user()->name . ' has requested to create B.O.M for (' . $spr->product->sku . ') ' . $spr->product->model_name,
+                            'description' => Auth::user()->name . ' has requested to create B.O.M for (' . $spr->product->sku . ') ' . $spr->product->model_desc,
                             'user_id' => Auth::user()->id,
                             'sale_production_request_id' => $spr->id,
                         ])
@@ -259,14 +259,14 @@ class MaterialUseController extends Controller
         if ($type == 'product') {
             $products = Product::where('type', Product::TYPE_PRODUCT)
                 ->where(function ($q) use ($keyword) {
-                    $q->where('model_name', 'like', '%' . $keyword . '%')
+                    $q->where('model_desc', 'like', '%' . $keyword . '%')
                         ->orWhere('sku', 'like', '%' . $keyword . '%');
                 })
                 ->orderBy('id', 'desc')->get();
         } else if ($type == 'raw_material') {
             $materials = Product::where('type', Product::TYPE_RAW_MATERIAL)
                 ->where(function ($q) use ($keyword) {
-                    $q->where('model_name', 'like', '%' . $keyword . '%')
+                    $q->where('model_desc', 'like', '%' . $keyword . '%')
                         ->orWhere('sku', 'like', '%' . $keyword . '%');
                 })
                 ->orderBy('id', 'desc')->get();

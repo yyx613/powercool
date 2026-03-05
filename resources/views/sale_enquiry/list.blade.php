@@ -21,14 +21,26 @@
 @section('content')
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Enquiry') }}</x-app.page-title>
-        @if(hasPermission('sale_enquiry.create'))
-            <a href="{{ route('sale_enquiry.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
-                    <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
-                </svg>
-                {{ __('New') }}
-            </a>
-        @endif
+        <div class="flex gap-x-4">
+            @can('sale_enquiry.view')
+                <x-app.button.button class="shadow gap-x-2 bg-emerald-300" id="export-btn">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
+                        width="512" height="512">
+                        <path
+                            d="M18.66,20.9c-.41-.37-1.05-.33-1.41,.09-.57,.65-1.39,1.02-2.25,1.02H5c-1.65,0-3-1.35-3-3V5c0-1.65,1.35-3,3-3h4.51c.16,0,.33,0,.49,.02V7c0,1.65,1.35,3,3,3h5.81c.31,0,.6-.14,.79-.39s.25-.56,.18-.86c-.31-1.22-.94-2.33-1.83-3.22l-3.48-3.48c-1.32-1.32-3.08-2.05-4.95-2.05H5C2.24,0,0,2.24,0,5v14c0,2.76,2.24,5,5,5H15c1.43,0,2.8-.62,3.75-1.69,.37-.41,.33-1.05-.09-1.41ZM12,2.66c.38,.22,.73,.49,1.05,.81l3.48,3.48c.31,.31,.58,.67,.8,1.05h-4.34c-.55,0-1-.45-1-1V2.66Zm11.13,15.43l-1.61,1.61c-.2,.2-.45,.29-.71,.29s-.51-.1-.71-.29c-.39-.39-.39-1.02,0-1.41l1.29-1.29h-7.4c-.55,0-1-.45-1-1s.45-1,1-1h7.4l-1.29-1.29c-.39-.39-.39-1.02,0-1.41s1.02-.39,1.41,0l1.61,1.61c1.15,1.15,1.15,3.03,0,4.19Z" />
+                    </svg>
+                    {{ __('Export Excel') }}
+                </x-app.button.button>
+            @endcan
+            @if(hasPermission('sale_enquiry.create'))
+                <a href="{{ route('sale_enquiry.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
+                        <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+                    </svg>
+                    {{ __('New') }}
+                </a>
+            @endif
+        </div>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -49,13 +61,16 @@
                 <tr>
                     <th>{{ __('Enquiry ID') }}</th>
                     <th>{{ __('Enquiry Date') }}</th>
-                    <th>{{ __('Name') }}</th>
+                    <th>{{ __('Customer Name') }}</th>
                     <th>{{ __('Phone Number') }}</th>
                     <th>{{ __('Email') }}</th>
                     <th>{{ __('Source') }}</th>
                     <th>{{ __('Product') }}</th>
                     <th>{{ __('Assigned Staff') }}</th>
                     <th>{{ __('Priority') }}</th>
+                    <th>{{ __('Quality') }}</th>
+                    <th>{{ __('Promotion') }}</th>
+                    <th>{{ __('Created By') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -95,6 +110,9 @@
                 { data: 'product' },
                 { data: 'assigned_user' },
                 { data: 'priority' },
+                { data: 'quality' },
+                { data: 'promotion' },
+                { data: 'created_by_user' },
                 { data: 'status' },
                 { data: 'action' },
             ],
@@ -166,6 +184,8 @@
                                 return "{!! __('Phone Call') !!}"
                             case 11:
                                 return "{!! __('WhatsApp (Not from Platform)') !!}"
+                            case 12:
+                                return "{!! __('Google') !!}"
                             default:
                                 return '-'
                         }
@@ -196,8 +216,41 @@
                     }
                 },
                 {
-                    "width": "10%",
+                    "width": "8%",
                     "targets": 9,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        switch (data) {
+                            case 1:
+                                return `<span class="text-green-500 font-semibold">{!! __('Seen and Reply') !!}</span>`
+                            case 2:
+                                return `<span class="text-yellow-500 font-semibold">{!! __('Seen No Reply') !!}</span>`
+                            case 3:
+                                return `<span class="text-red-500 font-semibold">{!! __('No Seen No Reply') !!}</span>`
+                            default:
+                                return '-'
+                        }
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 10,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 11,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 12,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -206,9 +259,9 @@
                             case 2:
                                 return `<span class="text-yellow-500 font-semibold">{!! __('In Progress') !!}</span>`
                             case 3:
-                                return `<span class="text-green-500 font-semibold">{!! __('Closed (Converted)') !!}</span>`
+                                return `<span class="text-green-500 font-semibold">{!! __('Closed Deal (Converted)') !!}</span>`
                             case 4:
-                                return `<span class="text-gray-500 font-semibold">{!! __('Closed (Dropped)') !!}</span>`
+                                return `<span class="text-gray-500 font-semibold">{!! __('No Deal') !!}</span>`
                             default:
                                 return '-'
                         }
@@ -216,7 +269,7 @@
                 },
                 {
                     "width": "5%",
-                    "targets": 10,
+                    "targets": 13,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
@@ -268,6 +321,10 @@
 
             $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/sale-enquiry/delete/${id}`)
             $('#delete-modal').addClass('show-modal')
+        })
+
+        $('#export-btn').on('click', function() {
+            window.location.href = '{{ route('sale_enquiry.export') }}'
         })
     </script>
 @endpush

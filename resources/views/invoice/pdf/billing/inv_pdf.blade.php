@@ -133,7 +133,7 @@
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
                 <td style="font-size: 14px; text-align: left;">{{ $product->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $product->model_name }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $product->model_desc }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $product->uom }}</td>
                 <td style="font-size: 14px; text-align: right;">

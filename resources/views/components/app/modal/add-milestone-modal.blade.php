@@ -28,7 +28,7 @@
                                     <input id="material-use-{{ $mat->id }}" name="material-use-{{ $mat->id }}" type="checkbox"
                                         class="rounded-full border-slate-400">
                                     <label for="material-use-{{ $mat->id }}" class="text-sm ml-2 flex flex-col flex-1">
-                                        <span>{{ $mat->material->model_name }}</span>
+                                        <span>{{ $mat->material->model_desc }}</span>
                                         <span class="text-slate-400 text-sm">Quantity needed: x{{ $mat->qty }}</span>
                                     </label>
                                 </div>

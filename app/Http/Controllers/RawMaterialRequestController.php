@@ -229,7 +229,7 @@ class RawMaterialRequestController extends Controller
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
-                'product_name' => $record->material->model_name ?? null,
+                'product_name' => $record->material->model_desc ?? null,
                 'total_request_qty' => $record->qty,
                 'balance_qty' => $record->qty - $qty_collected,
                 'fulfilled_qty' => $qty_collected,

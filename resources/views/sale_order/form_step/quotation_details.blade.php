@@ -19,6 +19,21 @@
             </div>
         @endif
         <div class="flex flex-col">
+            <div class="flex items-center mb-1">
+                <x-app.input.label>{{ __('Priority') }}</x-app.input.label>
+                <x-app.priority-tooltip :priorities="$priorities" selectName="priority" />
+            </div>
+            <x-app.input.select2 name="priority" id="priority" :hasError="$errors->has('priority')" placeholder="{{ __('Select a priority') }}">
+                <option value="">{{ __('Select a priority') }}</option>
+                @foreach ($priorities as $priority)
+                    <option value="{{ $priority->id }}" @selected(old('priority', isset($sale) ? $sale->priority_id : null) == $priority->id)>
+                        {{ $priority->priority }} - {{ $priority->name }}
+                    </option>
+                @endforeach
+            </x-app.input.select2>
+            <x-app.message.error id="priority_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <div class="relative">
@@ -231,8 +246,14 @@
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
             // Show the first mobile number or '-' if not available
-            if (element.mobile_number.length > 0) {
-                $('input[name="mobile"]').val(element.mobile_number[0])
+            if (element.mobile_number) {
+                if (Array.isArray(element.mobile_number)) {
+                    // It's an array - use first element or '-'
+                    $('input[name="mobile"]').val(element.mobile_number.length > 0 ? element.mobile_number[0] : '-')
+                } else {
+                    // It's a string - use directly
+                    $('input[name="mobile"]').val(element.mobile_number)
+                }
             } else {
                 $('input[name="mobile"]').val('-')
             }

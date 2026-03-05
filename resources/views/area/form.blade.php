@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Area')
+@section('title', 'City')
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('area.index') }}">{{ isset($area) ? __('Edit Area') : __('Create Area') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('area.index') }}">{{ isset($area) ? __('Edit City') : __('Create City') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <form action="{{ isset($area) ? route('area.update', ['area' => $area]) : route('area.store') }}" method="POST" enctype="multipart/form-data" id="form">

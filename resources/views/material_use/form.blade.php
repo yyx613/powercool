@@ -108,7 +108,7 @@
                         results: $.map(data.products, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }
@@ -124,7 +124,7 @@
                     var opt = new Option(CUSTOMIZE_PRODUCT.sku, CUSTOMIZE_PRODUCT.id, true, true);
                 } else {
                     var opt = new Option(
-                        `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                        `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_desc}`, FOR_PID ?? MATERIAL.product_id, true, true);
                 }
                 $('select[name="product"]').append(opt)
 
@@ -135,7 +135,7 @@
 
                     $(`.items[data-id="${i+1}"]`).attr('data-order-idx', m.id)
                     let opt = new Option(
-                    `${PRODUCT_AND_MATERIALS[m.product_id].sku} - ${PRODUCT_AND_MATERIALS[m.product_id].model_name}`, m.product_id, true, true);
+                    `${PRODUCT_AND_MATERIALS[m.product_id].sku} - ${PRODUCT_AND_MATERIALS[m.product_id].model_desc}`, m.product_id, true, true);
                     $(`.items[data-id="${i+1}"] select[name="material[]"]`).append(opt)
                     $(`.items[data-id="${i+1}"] input[name="qty[]"]`).val(m.qty)
                     $(`.items[data-id="${i+1}"] .toggle-status-btns`).attr('data-active', m.status == 1 ? false :
@@ -144,7 +144,7 @@
                 if (MATERIAL.materials.length <= 0) $('#add-item-btn').click()
             } if (SPR_ID != null && FOR_PID != null){ 
                 let opt = new Option(
-                    `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_name}`, FOR_PID ?? MATERIAL.product_id, true, true);
+                    `${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].sku} - ${PRODUCT_AND_MATERIALS[FOR_PID ?? MATERIAL.product_id].model_desc}`, FOR_PID ?? MATERIAL.product_id, true, true);
                 $('select[name="product"]').append(opt)
 
                 $('#add-material-btn').click()
@@ -179,7 +179,7 @@
                         results: $.map(data.materials, function(item) {
                             return {
                                 id: item.id,
-                                text: `${item.sku} - ${item.model_name}`
+                                text: `${item.sku} - ${item.model_desc}`
                             };
                         })
                     }

@@ -26,6 +26,10 @@
         margin: 0;
         padding: 0;
     }
+
+    .remark-content p, .remark-content h1, .remark-content h2, .remark-content span {
+        font-size: 12px !important;
+    }
 </style>
 
 <body>
@@ -184,19 +188,19 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     U/Price<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Discount<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Promotion<br>(RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Total<br>(RM)</td>
             </tr>
             @foreach ($products as $key => $prod)
@@ -209,45 +213,45 @@
                         {{ $prod['stock_code'] }}</td>
                     <td
                         style="font-size: 12px; text-align: left; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ $prod['model_name'] }}</td>
+                        {{ $prod['model_desc'] }}</td>
                     <td
                         style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod['qty'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['uom'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['unit_price'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['discount'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['promotion'] }}</td>
                     <td
-                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="font-size: 12px; text-align: right; vertical-align: start; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod['total'] }}</td>
                 </tr>
                 <!-- Product Remark -->
                 @if (isset($prod['remark']) && $prod['remark'] != null && $prod['remark'] !== '<p><br></p>')
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left;">
+                        <td class="remark-content" style="font-size: 12px; text-align: left;">
                             {!! nl2br($prod['remark']) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                 @endif
                 <!-- Warranty -->
-                @if ($prod['warranty_periods'] != null)
+                @if ($prod['warranty_periods'] != null && count($prod['warranty_periods']) > 0)
                     @php
                         $warranty = [];
                         foreach ($prod['warranty_periods'] as $wp) {
@@ -306,6 +310,8 @@
                                 - {{ $acc['sku'] }} - {{ $acc['name'] }} (Qty: {{ $acc['qty'] }})
                                 @if ($acc['is_foc'])
                                     <span style="font-weight: bold;"> - FOC</span>
+                                @else
+                                    - RM {{ number_format($acc['unit_price'], 2) }}/unit = RM {{ number_format($acc['total'], 2) }}
                                 @endif
                             </td>
                             <td colspan="6"></td>
@@ -323,7 +329,7 @@
                 @if ($so->remark != null)
                     <tr>
                         <td colspan="2"></td>
-                        <td colspan="6" style="font-size: 12px; padding: 15px 0;"><span
+                        <td class="remark-content" colspan="6" style="font-size: 12px; padding: 15px 0;"><span
                                 style="font-weight: 700;">REMARK:</span><br>{!! $so->remark !!}</td>
                         <td></td>
                     </tr>

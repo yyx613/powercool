@@ -88,6 +88,16 @@ class Customer extends Model
         return $this->belongsTo(Area::class);
     }
 
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class);
+    }
+
     public function debtorType()
     {
         return $this->belongsTo(DebtorType::class, 'debtor_type_id');

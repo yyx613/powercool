@@ -151,13 +151,15 @@ class Production extends Model
             case self::STATUS_TO_DO:
                 return 'To Do';
             case self::STATUS_DOING:
-                return 'Doing';
+                return 'In Progress';
             case self::STATUS_COMPLETED:
                 return 'Completed';
             case self::STATUS_TRANSFERRED:
                 return 'Transferred';
             case self::STATUS_PENDING_APPROVAL:
                 return 'Pending Approval';
+            case self::STATUS_REJECTED:
+                return 'Rejected';
         }
 
         return null;

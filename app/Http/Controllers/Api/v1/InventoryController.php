@@ -75,7 +75,7 @@ class InventoryController extends Controller
 
         // Filter keyword
         if ($req->keyword != null && $req->keyword != '') {
-            $cancellation = $cancellation->where('products.model_name', 'like', '%'.$req->keyword.'%')
+            $cancellation = $cancellation->where('products.model_desc', 'like', '%'.$req->keyword.'%')
                 ->orWhere('products.sku', 'like', '%'.$req->keyword.'%');
         }
 

@@ -11,7 +11,7 @@
                 <div class="p-2 rounded-md border border-slate-200 products" data-is-raw-material="{{ $pro->is_raw_material }}" data-product-id="{{ $pro->product->id }}">
                     <div class="flex-1 flex justify-between items-start">
                         <div>
-                            <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_name }}</h6>
+                            <h6 class="font-semibold leading-none mb-2">{{ $pro->product->model_desc }}</h6>
                             <p class="text-xs text-slate-500">{{ __('SKU') }}: {{ $pro->product->sku }}</p>
                             <p class="text-xs text-slate-500">{{ __('Description') }}: {{ $pro->product->model_desc }}</p>
                         </div>

@@ -40,7 +40,7 @@
                     <x-app.input.select name="product" id="product" :hasError="$errors->has('product')">
                         <option value="">{{ __('Select a product') }}</option>
                         @foreach ($products as $prod)
-                            <option value="{{ $prod->id }}" @selected(old('product', isset($promo) ? $promo->product_id : null) == $prod->id)>{{ $prod->model_name }}</option>
+                            <option value="{{ $prod->id }}" @selected(old('product', isset($promo) ? $promo->product_id : null) == $prod->id)>{{ $prod->model_desc }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('product')" class="mt-1" />

@@ -27,9 +27,32 @@
         margin: 0;
         padding: 0;
     }
+
+    .remark-content p, .remark-content h1, .remark-content h2, .remark-content span {
+        font-size: 12px !important;
+    }
+
+    .watermark {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 100px;
+        font-weight: bold;
+        color: rgba(150, 150, 150, 0.3);
+        font-family: sans-serif;
+        z-index: 1000;
+        white-space: nowrap;
+        pointer-events: none;
+    }
 </style>
 
 <body>
+    @if ($sale->status == \App\Models\Sale::STATUS_APPROVAL_PENDING && !$sale->expired_at)
+        <div class="watermark">PENDING APPROVAL</div>
+    @elseif ($sale->status == \App\Models\Sale::STATUS_APPROVAL_REJECTED)
+        <div class="watermark">REJECTED</div>
+    @endif
     <!-- Header -->
     <header>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
@@ -157,19 +180,19 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Promotion (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 12.5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Total (RM)</td>
             </tr>
             @php
@@ -186,42 +209,42 @@
                         {{ $prod->product->sku }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ $prod->product->model_name }}</td>
+                        {{ $prod->product->model_desc }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
                         {{ $prod->qty }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: center; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ $prod->uom }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ number_format($prod->discount ?? 0, 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
                         {{ number_format($prod->promotionAmount() ?? 0, 2) }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
                         {{ number_format($prod->qty * $prod->unit_price - $prod->discountAmount(), 2) }}</td>
                 </tr>
                 <!-- Product Remark -->
                 @if ($prod->remark != null && $prod->remark !== '<p><br></p>')
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left; font-weight: 700;">
+                        <td style="font-size: 12px; text-align: left; font-weight: 700;">
                             Remark:
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                     <tr>
                         <td colspan="2"></td>
-                        <td style="font-size: 10px; text-align: left;">
+                        <td class="remark-content" style="font-size: 12px; text-align: left;">
                             {!! nl2br($prod->remark) !!}
                         </td>
-                        <td style="font-size: 10px; text-align: left;" colspan="6"></td>
+                        <td style="font-size: 12px; text-align: left;" colspan="6"></td>
                     </tr>
                 @endif
                 <!-- Accessories -->
@@ -237,7 +260,7 @@
                         <tr>
                             <td colspan="2"></td>
                             <td style="font-size: 10px; text-align: left;">
-                                - {{ $accessory->product->model_name ?? 'N/A' }}
+                                - {{ $accessory->product->model_desc ?? 'N/A' }}
                                 (Qty: {{ $accessory->qty ?? 1 }})
                                 @if($accessory->is_foc)
                                     - FOC
@@ -286,7 +309,15 @@
                     @endif
                 @endif
                 @php
-                    $total += $prod->qty * $prod->unit_price - $prod->discountAmount();
+                    // Calculate accessory total for this product
+                    $accessory_total = 0;
+                    foreach ($prod->accessories as $acc) {
+                        if (!$acc->is_foc) {
+                            $acc_price = $acc->override_selling_price ?? ($acc->sellingPrice->price ?? 0);
+                            $accessory_total += $acc_price * ($acc->qty ?? 1);
+                        }
+                    }
+                    $total += $prod->qty * $prod->unit_price - $prod->discountAmount() + $accessory_total;
                     $total_tax += $prod->sst_amount ?? 0;
                 @endphp
             @endforeach
@@ -294,10 +325,67 @@
             @if ($sale->remark != null)
                 <tr>
                     <td colspan="2"></td>
-                    <td style="font-size: 12px; padding: 15px 0;"><span
+                    <td class="remark-content" style="font-size: 12px; padding: 15px 0;"><span
                             style="font-weight: 700;">REMARK:</span><br>{!! nl2br($sale->remark) !!}</td>
                     <td colspan="6"></td>
                 </tr>
+            @endif
+            <!-- Self Collect / Third Party Address -->
+            @if ($sale->self_collect)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">SELF COLLECT</td>
+                    <td colspan="6"></td>
+                </tr>
+            @elseif (isset($third_party_addresses) && count($third_party_addresses) > 0)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">THIRD PARTY ADDRESS:</td>
+                    <td colspan="6"></td>
+                </tr>
+                @foreach ($third_party_addresses as $tpa)
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">
+                            {{ $tpa->name }} - {{ $tpa->address }} ({{ $tpa->mobile }})
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endforeach
+            @endif
+            <!-- Ad-hoc Services -->
+            @if(isset($adhocServices) && count($adhocServices) > 0)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 10px; text-align: left; font-weight: 700; padding-top: 15px;">
+                        Ad-hoc Services:
+                    </td>
+                    <td colspan="6"></td>
+                </tr>
+                @foreach($adhocServices as $service)
+                    @php
+                        $service_amount = $service->getEffectiveAmount();
+                        $service_sst = $service->is_sst ? ($service_amount * $sst_value / 100) : 0;
+                    @endphp
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
+                            - {{ $service->adhocService->name ?? 'N/A' }}
+                            @if($service->is_sst)
+                                (incl. {{ $sst_value }}% SST)
+                            @endif
+                            - RM {{ number_format($service_amount, 2) }}
+                            @if($service->is_sst)
+                                + RM {{ number_format($service_sst, 2) }} SST
+                            @endif
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                    @php
+                        $total += $service_amount;
+                        $total_tax += $service_sst;
+                    @endphp
+                @endforeach
             @endif
         </table>
         <!-- Item Summary -->

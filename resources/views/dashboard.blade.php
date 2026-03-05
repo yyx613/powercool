@@ -209,7 +209,7 @@
                             @endif
                         </div>
                         <div class="flex flex-col flex-1">
-                            <span class="text-md font-medium">{{ $row['product']->model_name }}</span>
+                            <span class="text-md font-medium">{{ $row['product']->model_desc }}</span>
                             <span class="text-xs font-medium text-slate-400">{{ $row['product']->sku }}</span>
                         </div>
                         <span class="flex-1 text-md font-medium text-center">{{ $row['count'] }} SO Involved</span>

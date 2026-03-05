@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Area;
 use App\Models\Branch;
 use App\Models\ClassificationCode;
+use App\Models\Country;
 use App\Models\CreditTerm;
 use App\Models\Currency;
 use App\Models\Customer;
@@ -79,6 +80,7 @@ class ViewServiceProvider extends ServiceProvider
                 'inventory.view_action' => [],
                 'inventory.summary' => [],
                 'inventory.category' => [],
+                'adhoc_service' => [],
                 'inventory.product' => [],
                 'inventory.raw_material' => [],
                 'inventory.customize' => [],
@@ -87,6 +89,7 @@ class ViewServiceProvider extends ServiceProvider
                 'service_reminder' => [],
                 'service_history' => [],
                 'warranty' => [],
+                'service_form' => [],
                 'sale_enquiry' => [],
                 'sale.quotation' => [],
                 'sale.sale_order' => [],
@@ -129,6 +132,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['inventory.view_action'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.category')) {
                     array_push($permissions_group['inventory.category'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'adhoc_service')) {
+                    array_push($permissions_group['adhoc_service'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.product')) {
                     array_push($permissions_group['inventory.product'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'inventory.raw_material_request')) {
@@ -145,6 +150,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['service_history'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'warranty')) {
                     array_push($permissions_group['warranty'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'service_form')) {
+                    array_push($permissions_group['service_form'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale_enquiry')) {
                     array_push($permissions_group['sale_enquiry'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'sale.quotation')) {
@@ -365,8 +372,12 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['quotation.form_step.quotation_details', 'sale_order.form_step.quotation_details', 'cash_sale.form_step.quotation_details', 'supplier.form'], function (ViewView $view) {
             $sales_agents = SalesAgent::orderBy('name', 'desc')->get();
+            $priorities = Priority::orderBy('order', 'asc')->get();
 
-            $view->with('sales_agents', $sales_agents);
+            $view->with([
+                'sales_agents' => $sales_agents,
+                'priorities' => $priorities,
+            ]);
         });
 
         View::composer(['sale_order.form_step.delivery_schedule', 'cash_sale.form_step.delivery_schedule', 'components.app.modal.transfer-modal'], function (ViewView $view) {
@@ -496,9 +507,12 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::PRODUCTION_WORKER);
             })->orderBy('id', 'desc')->get();
 
+            $factories = Factory::orderBy('id', 'desc')->get();
+
             $view->with('users', $users);
             $view->with('sales', $sales);
             $view->with('priorities', $priorities);
+            $view->with('factories', $factories);
         });
         View::composer(['sale_enquiry.form'], function (ViewView $view) {
             // Get users for assigned staff dropdown (sales role)
@@ -506,8 +520,22 @@ class ViewServiceProvider extends ServiceProvider
                 $q->where('id', Role::SALE);
             })->orderBy('name', 'asc')->get();
 
+            // Get active promotions for dropdown
+            $promotions = Promotion::orderBy('id', 'desc')
+                ->where('status', 1)
+                ->where(function ($q) {
+                    $q->whereNull('valid_till')
+                        ->orWhere('valid_till', '>=', now()->format('Y-m-d'));
+                })
+                ->get();
+
+            // Get active countries for dropdown
+            $countries = Country::where('is_active', true)->orderBy('name')->get();
+
             $view->with([
                 'users' => $users,
+                'promotions' => $promotions,
+                'countries' => $countries,
             ]);
         });
         View::composer(['components.app.language-selector'], function (ViewView $view) {
@@ -627,6 +655,9 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('company_group', $company_group);
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
+            $countries = Country::where('is_active', true)->orderBy('name')->get();
+            $view->with('countries', $countries);
+
             $platforms = Platform::where('is_active', true)->orderBy('id', 'desc')->get();
 
             if (isSalesOnly()) {
@@ -784,9 +815,9 @@ class ViewServiceProvider extends ServiceProvider
         });
         View::composer(['production_request.form', 'raw_material_request.form'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), 'raw_material_request.')) {
-                $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_name', 'asc')->get();
+                $products = Product::where('type', Product::TYPE_RAW_MATERIAL)->orderBy('model_desc', 'asc')->get();
             } else {
-                $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('model_name', 'asc')->get();
+                $products = Product::where('type', Product::TYPE_PRODUCT)->orderBy('model_desc', 'asc')->get();
             }
 
             $view->with([

@@ -107,7 +107,7 @@
                                         <x-app.no-image-icon class="p-1" />
                                     @endif
                                 </div>
-                                <span class="flex-1 text-lg font-medium">{{ $pro->model_name }}</span>
+                                <span class="flex-1 text-lg font-medium">{{ $pro->model_desc }}</span>
                                 <span
                                     class="flex-1 text-slate-500 text-center flex justify-center items-center">{{ __('Remaining Qty:') }}
                                     <span class="text-2xl ml-1">{{ $pro->warehouseAvailableStock() }}</span></span>

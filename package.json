@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "http-status-codes": "^2.3.0",
-        "quill": "^2.0.3"
+        "quill": "^2.0.3",
+        "quill-resize-image": "^1.0.11"
     }
 }

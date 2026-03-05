@@ -163,8 +163,9 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
-                6 => 'start_date',
-                7 => 'due_date',
+                6 => 'created_at',
+                7 => 'start_date',
+                8 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -192,6 +193,7 @@ class ProductionController extends Controller
                 'factory' => $record->factory,
                 'product_serial_no' => $record->type == Production::TYPE_RND ? $record->customizeProduct->sku : $record->productChild->sku ?? null,
                 'name' => $record->name,
+                'created_at' => $record->created_at->format('d M Y H:i'),
                 'start_date' => $record->start_date,
                 'due_date' => $record->due_date,
                 'days_left' => Carbon::parse($record->due_date)->addDay()->diffInDays(now()),
@@ -205,7 +207,7 @@ class ProductionController extends Controller
                 'can_view' => ! $is_production_worker || $record->status == Production::STATUS_DOING,
                 'can_edit_customize_product' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit'),
                 'customize_product_id' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit') ? $record->customizeProduct->id : null,
-                'rejected_reason' => $record->status == Production::STATUS_REJECTED ? $record->getLatestApprovalRejectedReason() : null,
+                'rejected_reason' => $record->getLatestApprovalRejectedReason(),
             ];
         }
 
@@ -266,7 +268,9 @@ class ProductionController extends Controller
             'selected_product' => $production->product,
             'production_milestone_material_previews' => $production_milestone_material_previews,
             'customize_product' => $production->customizeProduct,
-            'customize_product_material_use' => MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first(),
+            'customize_product_material_use' => $production->customizeProduct
+                ? MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first()
+                : null,
         ]);
     }
 
@@ -377,9 +381,13 @@ class ProductionController extends Controller
             'assign' => 'required',
             'assign.*' => 'exists:users,id',
             'material_use_product' => 'required_unless:type,2',
+            'factory' => 'nullable|exists:factories,id',
         ];
         // Validate request
-        $req->validate($rules, [], [
+        $req->validate($rules, [
+            'product.required_unless' => 'The product field is required.',
+            'material_use_product.required_unless' => 'Please add at least one milestone for production.',
+        ], [
             'desc' => 'description',
             'material_use_product' => 'milestone',
         ]);
@@ -390,7 +398,7 @@ class ProductionController extends Controller
             $now = now();
 
             // If type is R&D, then auto create new customize product
-            if ($req->type == Production::TYPE_RND && $production == null) {
+            if ($req->type == Production::TYPE_RND && ($production == null || $production->id == null)) {
                 $cp = CustomizeProduct::create([
                     'sku' => generateSku(CustomizeProduct::SKU_PREFIX),
                 ]);
@@ -408,11 +416,12 @@ class ProductionController extends Controller
             }
             
             if ($production->id == null) {
-                $factory_id = null;
-                if ($req->product != null) {
-                    $product = Product::find($req->product)->first();
+                // Use factory from request if provided, otherwise auto-detect from product's category
+                $factory_id = $req->factory;
+                if ($factory_id == null && $req->product != null) {
+                    $product = Product::find($req->product);
                     if ($product != null) {
-                        $factory_id = $product->category->fromFactory->id;
+                        $factory_id = $product->category?->fromFactory?->id;
                     }
                 }
 
@@ -449,6 +458,7 @@ class ProductionController extends Controller
                     'status' => $req->status,
                     'type' => $req->type,
                     'priority_id' => $req->priority,
+                    'factory_id' => $req->factory,
                 ];
                 if ($production->type == Production::TYPE_RND) {
                     unset($req_data['product_id']);
@@ -603,10 +613,10 @@ class ProductionController extends Controller
 
     public function checkInMilestone(Request $req)
     {
-        // Check in is allowed only when production status is 'doing'
+        // Check in is allowed only when production status is 'in progress'
         $pm = $this->prodMs::where('id', $req->production_milestone_id)->first();
         $prod = $this->prod::where('id', $pm->production_id)->first();
-        if (strtolower($this->prod->statusToHumanRead($prod->status)) != 'doing') {
+        if (strtolower($this->prod->statusToHumanRead($prod->status)) != 'in progress') {
             return Response::json([
                 'errors' => [
                     'general' => 'Milestone is not allow to check in',
@@ -974,7 +984,7 @@ class ProductionController extends Controller
 
             $data['renderer'][] = $renderer->render($barcode);
             $data['product_brand'][] = $prod->brand;
-            $data['product_name'][] = $prod->model_name;
+            $data['product_name'][] = $prod->model_desc;
             $data['product_code'][] = $prod->sku;
             $data['barcode'][] = $product_children[$i]->sku;
             $data['dimension'][] = ($prod->length ?? 0).' x '.($prod->width ?? 0).' x '.($prod->height ?? 0).'MM';
@@ -1064,6 +1074,10 @@ class ProductionController extends Controller
 
     public function forceCompleteTask(Request $req, Production $production)
     {
+        $req->validate([
+            'reason' => 'required|string',
+        ]);
+
         try {
             DB::beginTransaction();
 
@@ -1074,6 +1088,7 @@ class ProductionController extends Controller
                 'data' => json_encode([
                     'description' => Auth::user()->name.' has requested to complete the production ('.$production->sku.')',
                     'user_id' => Auth::user()->id,
+                    'reason' => $req->reason,
                 ]),
             ]);
             (new Branch)->assign(Approval::class, $approval->id);
@@ -1146,7 +1161,7 @@ class ProductionController extends Controller
         })
             ->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_name', 'like', '%'.$keyword.'%');
+                    ->orWhere('model_desc', 'like', '%'.$keyword.'%');
             })
             ->get();
 

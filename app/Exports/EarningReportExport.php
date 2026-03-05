@@ -35,7 +35,7 @@ class EarningReportExport implements FromCollection, WithMapping, WithHeadings, 
     public function map($data): array
     {
         return [
-            $data->model_name,
+            $data->model_desc,
             $data->sku,
             number_format($data->sum_amount - $data->sum_promo_amount, 2),
             number_format($data->sum_cost, 2),

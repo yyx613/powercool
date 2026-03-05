@@ -92,7 +92,7 @@ class SettingController extends Controller
 
             DB::commit();
 
-            return redirect(route('setting.index'))->with('success', 'Setting updated');
+            return redirect(route('setting.index'))->with('success', 'Tax Rate updated');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

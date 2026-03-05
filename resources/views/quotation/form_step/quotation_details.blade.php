@@ -70,6 +70,14 @@
             <x-app.message.error id="store_err" />
         </div>
         <div class="flex flex-col">
+            <x-app.input.label id="self_collect" class="mb-1">{{ __('Self Collect') }}</x-app.input.label>
+            <x-app.input.select name="self_collect" id="self_collect" :hasError="$errors->has('self_collect')">
+                <option value="0" @selected(old('self_collect', isset($replicate) ? $replicate->self_collect : (isset($sale) ? $sale->self_collect : 0)) == 0)>{{ __('No') }}</option>
+                <option value="1" @selected(old('self_collect', isset($replicate) ? $replicate->self_collect : (isset($sale) ? $sale->self_collect : 0)) == 1)>{{ __('Yes') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="self_collect_err" />
+        </div>
+        <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="sale" id="sale" :hasError="$errors->has('sale')"
@@ -109,7 +117,7 @@
             </p>
             <x-app.message.error id="billing_address_err" />
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col" id="delivery-address-container">
             <x-app.input.label id="delivery_address" class="mb-1">{{ __('Delivery Address') }}</x-app.input.label>
             <x-app.input.select id="delivery_address" name="delivery_address">
                 <option value="">{{ __('Select a delivery address') }}</option>
@@ -178,21 +186,30 @@
                 'title' => 'Billing Address',
             ])
         </div>
-        <div id="new-delivery-address">
+        <div id="new-delivery-address" class="delivery-third-party-section">
             @include('components.app.address-field', [
                 'title' => 'Delivery Address',
             ])
         </div>
     </div>
     {{-- Third Party Address --}}
-    <div class="pt-4 border-t border-slate-200">
+    <div class="pt-4 border-t border-slate-200 delivery-third-party-section" id="third-party-address-section">
         <div class="mb-4">
             <span class="text-md font-semibold">{{ __('Third Party Address') }}</span>
             <p class="text-sm text-slate-500 leading-none">{{ __('Delivery address is not required if presented') }}
             </p>
         </div>
         <div id="third-party-address-list" class="grid gap-4"></div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden" id="third-party-address-template">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
+            <button type="button"
+                class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-third-party-address-btn"
+                title="Delete Address">
+                <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                    viewBox="0 0 24 24" width="512" height="512">
+                    <path
+                        d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
+                </svg>
+            </button>
             <div class="flex flex-col">
                 <x-app.input.label id="address" class="mb-1">{{ __('Address') }}</x-app.input.label>
                 <x-app.input.input name="address" id="address1" :hasError="$errors->has('address')" />
@@ -276,6 +293,32 @@
             QUOTATION_DETAILS_INIT_EDIT = false
         })
 
+        // Self Collect toggle: hide/show delivery address and third party address
+        function toggleSelfCollect() {
+            let isSelfCollect = $('select[name="self_collect"]').val() == '1'
+
+            if (isSelfCollect) {
+                $('#delivery-address-container').hide()
+                $('.delivery-third-party-section').hide()
+                // Clear delivery address values
+                $('select[name="delivery_address"]').val('').trigger('change')
+                $('#new-delivery-address input').val(null)
+                // Clear third party address values
+                $('#third-party-address-list').empty()
+            } else {
+                $('#delivery-address-container').show()
+                $('.delivery-third-party-section').show()
+                // Add default third party address row if empty
+                if ($('#third-party-address-list .child').length === 0) {
+                    $('#add-third-party-address-btn').click()
+                }
+            }
+        }
+
+        $('select[name="self_collect"]').on('change', toggleSelfCollect)
+        // Run on page load after init
+        setTimeout(toggleSelfCollect, 0)
+
         $('input[name="open_until"]').daterangepicker(datepickerParam)
         $('input[name="open_until"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
@@ -326,8 +369,14 @@
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
             // Show the first mobile number or '-' if not available
-            if (element.mobile_number.length > 0) {
-                $('input[name="mobile"]').val(element.mobile_number[0])
+            if (element.mobile_number) {
+                if (Array.isArray(element.mobile_number)) {
+                    // It's an array - use first element or '-'
+                    $('input[name="mobile"]').val(element.mobile_number.length > 0 ? element.mobile_number[0] : '-')
+                } else {
+                    // It's a string - use directly
+                    $('input[name="mobile"]').val(element.mobile_number)
+                }
             } else {
                 $('input[name="mobile"]').val('-')
             }
@@ -436,6 +485,13 @@
             $(clone).addClass('child')
             $(clone).find('input').val(null)
             $('#third-party-address-list').append(clone)
+
+            $('#third-party-address-list .child').each(function(i, obj) {
+                $(this).attr('data-id', i + 1)
+            })
+        })
+        $('body').on('click', '.delete-third-party-address-btn', function() {
+            $(this).closest('.child').remove()
 
             $('#third-party-address-list .child').each(function(i, obj) {
                 $(this).attr('data-id', i + 1)

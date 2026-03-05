@@ -13,7 +13,7 @@
                     @foreach($grns as $grn) 
                         <div class="mb-4">
                             <div class="mb-0.5 flex items-start justify-between">
-                                <h6 class="text-sm">{{ $grn->product->model_name }}</h6>
+                                <h6 class="text-sm">{{ $grn->product->model_desc }}</h6>
                                 <span class="text-xs">{{ __('Stock In UOM') }}: {{ $grn->product->uomUnit->name ?? '-' }}</span>
                             </div>
                             <div>

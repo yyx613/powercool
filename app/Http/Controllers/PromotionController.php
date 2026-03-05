@@ -28,7 +28,7 @@ class PromotionController extends Controller
 
     public function getData(Request $req) {
         $records = $this->promo
-            ->select('promotions.*', 'products.model_name AS productName')
+            ->select('promotions.*', 'products.model_desc AS productName')
             ->join('products', 'promotions.product_id', '=', 'products.id');
 
         Session::put('promotion-page', $req->page);
@@ -40,7 +40,7 @@ class PromotionController extends Controller
             $records = $records->where(function($q) use ($keyword) {
                 $q->where('promotions.sku', 'like', '%' . $keyword . '%')
                     ->orWhere('promotions.amount', 'like', '%' . $keyword . '%')
-                    ->orWhere('products.model_name', 'like', '%' . $keyword . '%');
+                    ->orWhere('products.model_desc', 'like', '%' . $keyword . '%');
             });
         }
         // Order
@@ -53,7 +53,7 @@ class PromotionController extends Controller
             ];
             foreach ($req->order as $order) {
                 if ($order['column'] == 1) {
-                    $records = $records->orderBy('products.model_name', $order['dir']);
+                    $records = $records->orderBy('products.model_desc', $order['dir']);
                 } else {
                     $records = $records->orderBy($map[$order['column']], $order['dir']);
                 }

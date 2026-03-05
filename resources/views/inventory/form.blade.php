@@ -78,13 +78,6 @@
                     <x-input-error :messages="$errors->get('model_code')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
-                    <x-app.input.label id="model_name" class="mb-1">{{ __('Model Name') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="model_name" id="model_name"
-                        value="{{ old('model_name', isset($prod) ? $prod->model_name : ($dup_prod != null ? $dup_prod->model_name : null)) }}" />
-                    <x-input-error :messages="$errors->get('model_name')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
                     <x-app.input.label id="model_desc" class="mb-1">{{ __('Model Description') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="model_desc" id="model_desc"
@@ -211,7 +204,7 @@
                             <option value="">{{ __('Select a Power Cool stock code') }}</option>
                             @foreach ($hi_ten_products as $hi_ten_prod)
                                 <option value="{{ $hi_ten_prod->id }}" @selected(old('hi_ten_stock_code', isset($prod) ? $prod->hi_ten_stock_code : null) == $hi_ten_prod->id)>
-                                    {{ $hi_ten_prod->model_name }}</option>
+                                    {{ $hi_ten_prod->model_desc }}</option>
                             @endforeach
                             </x-app.input.select>
                             <x-input-error :messages="$errors->get('hi_ten_stock_code')" class="mt-1" />
@@ -451,6 +444,18 @@
                     {{-- Template --}}
                     <div class="flex justify-between mb-2 hidden cursor-grab hover:bg-slate-50" id="milestone-template">
                         <div class="flex items-center first-half">
+                            <label
+                                class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7 mr-3">
+                                <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
+                                <div class="flex items-center w-full">
+                                    <span
+                                        class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
+                                    <span
+                                        class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
+                                </div>
+                                <span
+                                    class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
+                            </label>
                             <span title="{{ __('Current milestone') }}">
                                 <svg class="h-4 w-4 fill-blue-400 hidden" xmlns="http://www.w3.org/2000/svg"
                                     id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512"
@@ -470,18 +475,6 @@
                                         d="M23.707,22.293l-5.969-5.969c1.412-1.725,2.262-3.927,2.262-6.324C20,4.486,15.514,0,10,0S0,4.486,0,10s4.486,10,10,10c2.397,0,4.599-.85,6.324-2.262l5.969,5.969c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414ZM2,10C2,5.589,5.589,2,10,2s8,3.589,8,8-3.589,8-8,8S2,14.411,2,10Zm13.933-1.261c-.825-1.21-2.691-3.239-5.933-3.239s-5.108,2.03-5.933,3.239c-.522,.766-.522,1.755,0,2.521,.825,1.21,2.692,3.24,5.933,3.24s5.108-2.03,5.933-3.239c.522-.766,.522-1.755,0-2.521Zm-1.652,1.395c-.735,1.08-2.075,2.366-4.28,2.366s-3.544-1.287-4.28-2.367c-.056-.081-.056-.185,0-.267,.735-1.08,2.075-2.366,4.28-2.366s3.545,1.287,4.28,2.366h0c.056,.082,.056,.186,0,.268Zm-2.78-.134c0,.829-.671,1.5-1.5,1.5s-1.5-.671-1.5-1.5,.671-1.5,1.5-1.5,1.5,.671,1.5,1.5Z" />
                                 </svg>
                             </button>
-                            <label
-                                class="flex items-center rounded-full overflow-hidden relative cursor-pointer select-none border border-grey-200 w-24 h-7">
-                                <input type="checkbox" class="hidden peer" name="required_serial_no[]" />
-                                <div class="flex items-center w-full">
-                                    <span
-                                        class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('No') }}</span>
-                                    <span
-                                        class="flex-1 font-medium uppercase z-20 text-center text-xs">{{ __('Yes') }}</span>
-                                </div>
-                                <span
-                                    class="w-1/2 h-6 peer-checked:translate-x-full absolute rounded-full transition-all bg-blue-200 border border-black" />
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -702,7 +695,7 @@
 
                         $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                         $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                        $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                         $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                         $(clone).removeAttr('id')
                         $(clone).removeClass('hidden')
@@ -742,7 +735,7 @@
                     $(clone).find('input').attr('id', `material-use-${MATERIAL_USE[i].materials[j].id}`)
                     $(clone).find('input').attr('checked', true)
                     $(clone).find('label').attr('for', `material-use-${MATERIAL_USE[i].materials[j].id}`)
-                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_name)
+                    $(clone).find('#name').text(MATERIAL_USE[i].materials[j].material.model_desc)
                     $(clone).find('label #qty').text(`Quantity needed: x${MATERIAL_USE[i].materials[j].qty}`)
                     $(clone).removeAttr('id')
                     $(clone).removeClass('hidden')
@@ -806,7 +799,7 @@
                     for (let j = 0; j < MATERIAL_USE[i].materials.length; j++) {
                         included = false
                         if (
-                            MATERIAL_USE[i].materials[j].material.model_name.includes(val) ||
+                            MATERIAL_USE[i].materials[j].material.model_desc.includes(val) ||
                             MATERIAL_USE[i].materials[j].material.sku.includes(val)
                         ) {
                             included = true

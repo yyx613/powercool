@@ -220,6 +220,9 @@ class ApprovalController extends Controller
                 if (isset($payload->charge)) {
                     $cancellation_charge = $payload->charge;
                 }
+                if (isset($payload->reason)) {
+                    $remark = $payload->reason;
+                }
             }
             // Sale agent name
             $sale_agents = [];
@@ -473,14 +476,9 @@ class ApprovalController extends Controller
                 $obj->status = ProductChild::STATUS_TRANSFER_REJECTED;
                 $obj->save();
             }
-            // Complete Production 
+            // Complete Production
             if (get_class($obj) == Production::class) {
-                $data = json_decode($approval->data);
-                if (isset($data->type) && $data->type == 'r&d') {
-                    $obj->status = Production::STATUS_REJECTED;
-                } else {
-                    $obj->status = Production::STATUS_DOING;
-                }
+                $obj->status = Production::STATUS_REJECTED;
                 $obj->save();
             }
             // Sale Production Request 

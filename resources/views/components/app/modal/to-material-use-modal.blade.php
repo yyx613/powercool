@@ -9,7 +9,7 @@
                 <x-app.input.select name="product" id="product" class="w-full">
                     <option value="">{{ __('Select a product') }}</option>
                     @foreach ($products as $product)
-                        <option value="{{ $product->id }}">({{ $product->sku }}) {{ $product->model_name }}</option>
+                        <option value="{{ $product->id }}">({{ $product->sku }}) {{ $product->model_desc }}</option>
                     @endforeach
                 </x-app.input.select>
             </div>

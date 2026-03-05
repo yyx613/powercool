@@ -97,7 +97,7 @@
                 <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
                 <td style="font-size: 14px; text-align: left;"></td>
                 <td style="font-size: 14px; text-align: left;">{{  $grn->product->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $grn->product->model_name }}</td>
+                <td style="font-size: 14px; text-align: left;">{{ $grn->product->model_desc }}</td>
                 <td style="font-size: 14px; text-align: center;">{{ $grn->qty }}</td>
                 <td style="font-size: 14px; text-align: center;"></td>
                 <td style="font-size: 14px; text-align: center;">{{ $grn->uom }}</td>

@@ -36,7 +36,7 @@ class ProductionReportExport implements FromCollection, WithMapping, WithHeading
     public function map($data): array
     {
         return [
-            $data->product->model_name,
+            $data->product->model_desc,
             $data->product->sku,
         ];
     }

@@ -13,7 +13,7 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
-            url="{{ route('quotation.index') }}">{{ isset($sale) ? __('Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
+            url="{{ route('quotation.index') }}">{{ isset($sale) ? __(isset($is_view) && $is_view == true ? 'View Quotation - ' : 'Edit Quotation - ') . $sale->sku : __('Create Quotation') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="mb-2">
@@ -155,6 +155,20 @@
                 });
                 accessory.push(accessories);
             })
+
+            // Collect ad-hoc services data
+            let adhocServiceId = []
+            let adhocServiceOverrideAmount = []
+            let adhocServiceIsSst = []
+            $('#services-container .service-item').each(function() {
+                const serviceId = $(this).find('select[name="adhoc_service_id[]"]').val();
+                if (serviceId) {
+                    adhocServiceId.push(serviceId);
+                    adhocServiceOverrideAmount.push($(this).find('input[name="adhoc_service_override_amount[]"]').val());
+                    adhocServiceIsSst.push($(this).find('input[name="adhoc_service_is_sst[]"]').val());
+                }
+            });
+
             let thirdPartyAddressAddress = []
             let thirdPartyAddressMobile = []
             let thirdPartyAddressName = []
@@ -192,6 +206,7 @@
                     'report_type': $('select[name="report_type"]').val(),
                     'payment_method': $('select[name="payment_method"]').val(),
                     'payment_term': $('select[name="payment_term"]').val(),
+                    'self_collect': $('select[name="self_collect"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
                     'new_billing_address1': $('#new-billing-address input[name="address1"]').val(),
@@ -228,6 +243,10 @@
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
 
+                    'adhoc_service_id': adhocServiceId,
+                    'adhoc_service_override_amount': adhocServiceOverrideAmount,
+                    'adhoc_service_is_sst': adhocServiceIsSst,
+
                     'remark': additionalRemark,
                 },
                 success: function(res) {
@@ -246,7 +265,8 @@
 
                     // If save and preview, open PDF in new tab
                     if (isSaveAndPreview == 'true' && res.data != undefined && res.data.sale) {
-                        window.open(`{{ config('app.url') }}/quotation/pdf/${res.data.sale.id}`, '_blank')
+                        let pdfUrl = `{{ config('app.url') }}/quotation/pdf/${res.data.sale.id}`
+                        window.open(pdfUrl, '_blank')
                     }
 
                     setTimeout(() => {

@@ -36,7 +36,7 @@
         </tr>
         @foreach($records as $record)
             <tr>
-                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->model_name }}</td>
+                <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->model_desc }}</td>
                 <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->sku }}</td>
                 <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->warehouseAvailableStock() }}</td>
                 <td style="font-size: 14px; border: solid 1px grey; padding: 5px;">{{ $record->$product->warehouseReservedStock() }}</td>

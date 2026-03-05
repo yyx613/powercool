@@ -27,7 +27,7 @@
             <td>{{ $p->start_date }}</td>
             <td>{{ $p->due_date }}</td>
             <td>{{ $p->product->sku ?? null }}</td>
-            <td>{{ $p->status == $production::STATUS_TO_DO ? 'To Do' : ($p->status == $production::STATUS_DOING ? 'Doing' : ($p->status == $production::STATUS_COMPLETED ? 'Completed' : ($p->status == $production::STATUS_TRANSFERRED ? 'Transferred' : '')))  }}</td>
+            <td>{{ $p->status == $production::STATUS_TO_DO ? 'To Do' : ($p->status == $production::STATUS_DOING ? 'In Progress' : ($p->status == $production::STATUS_COMPLETED ? 'Completed' : ($p->status == $production::STATUS_TRANSFERRED ? 'Transferred' : '')))  }}</td>
             <td>{{ $p->sale->sku ?? null }}</td>
             <td>{{ $p->priority->sku ?? null }}</td>
             <td>{{ join(', ', $staff) }}</td>
