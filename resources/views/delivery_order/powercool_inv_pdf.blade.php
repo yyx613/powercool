@@ -335,6 +335,36 @@
                     </tr>
                 @endif
             @endforeach
+            <!-- Self Collect -->
+            @php $first_so = $sale_orders[0] ?? null; @endphp
+            @if ($first_so && $first_so->self_collect)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">SELF COLLECT</td>
+                    <td colspan="6"></td>
+                </tr>
+                @if ($first_so->self_collect_branch && $first_so->self_collect_branch != 'kl')
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">
+                            @if ($first_so->self_collect_branch == 'johor')
+                                22, Jalan Kempas 2/3, Kawasan Perindustrian Tanah Tampoi, 81200 Johor Bahru, Johor Darul Ta'zim
+                            @elseif ($first_so->self_collect_branch == 'kuantan')
+                                A15 TINGKAT BAWAH, Lorong Seri Fajar 1/1, 25150 Kuantan, Pahang
+                            @elseif ($first_so->self_collect_branch == 'penang')
+                                465, JALAN LIMA KONGSI, 14200 SUNGAI BAKAP, SEBERANG PERAI SELATAN, PULAU PINANG.
+                            @endif
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                @elseif ($first_so->self_collect_branch == 'kl' && $first_so->delivery_address)
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">{{ $first_so->delivery_address }}</td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endif
+            @endif
         </table>
         <!-- Item Summary -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
