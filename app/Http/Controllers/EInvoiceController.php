@@ -602,6 +602,7 @@ class EInvoiceController extends Controller
                 'terms' => '',
                 'validationLink' => $validationLink,
                 'delivery_address' => CustomerLocation::find($sale->delivery_address_id),
+                'sale' => $sale,
             ]);
 
             $pdf->setPaper('A4', 'letter');

@@ -349,6 +349,27 @@
                     <td style="font-size: 12px; padding: 15px 0 0 0; font-weight: 700;">SELF COLLECT</td>
                     <td colspan="6"></td>
                 </tr>
+                @if ($sale->self_collect_branch && $sale->self_collect_branch != 'kl')
+                    <tr>
+                        <td colspan="3"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">
+                            @if ($sale->self_collect_branch == 'johor')
+                                22, Jalan Kempas 2/3, Kawasan Perindustrian Tanah Tampoi, 81200 Johor Bahru, Johor Darul Ta'zim
+                            @elseif ($sale->self_collect_branch == 'kuantan')
+                                A15 TINGKAT BAWAH, Lorong Seri Fajar 1/1, 25150 Kuantan, Pahang
+                            @elseif ($sale->self_collect_branch == 'penang')
+                                465, JALAN LIMA KONGSI, 14200 SUNGAI BAKAP, SEBERANG PERAI SELATAN, PULAU PINANG.
+                            @endif
+                        </td>
+                        <td colspan="6"></td>
+                    </tr>
+                @elseif ($sale->self_collect_branch == 'kl' && $sale->delivery_address)
+                    <tr>
+                        <td colspan="3"></td>
+                        <td style="font-size: 12px; padding: 2px 0;">{{ $sale->delivery_address }}</td>
+                        <td colspan="6"></td>
+                    </tr>
+                @endif
             @elseif (isset($third_party_addresses) && count($third_party_addresses) > 0)
                 <tr>
                     <td colspan="3"></td>

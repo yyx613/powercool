@@ -77,6 +77,17 @@
             </x-app.input.select>
             <x-app.message.error id="self_collect_err" />
         </div>
+        <div class="flex flex-col" id="self-collect-branch-container" style="display: none;">
+            <x-app.input.label id="self_collect_branch" class="mb-1">{{ __('Self Collect Branch') }}</x-app.input.label>
+            <x-app.input.select name="self_collect_branch" id="self_collect_branch" :hasError="$errors->has('self_collect_branch')">
+                <option value="">{{ __('Select a branch') }}</option>
+                <option value="kl" @selected(old('self_collect_branch', isset($replicate) ? $replicate->self_collect_branch : (isset($sale) ? $sale->self_collect_branch : null)) == 'kl')>{{ __('KL') }}</option>
+                <option value="johor" @selected(old('self_collect_branch', isset($replicate) ? $replicate->self_collect_branch : (isset($sale) ? $sale->self_collect_branch : null)) == 'johor')>{{ __('Johor') }}</option>
+                <option value="kuantan" @selected(old('self_collect_branch', isset($replicate) ? $replicate->self_collect_branch : (isset($sale) ? $sale->self_collect_branch : null)) == 'kuantan')>{{ __('Kuantan') }}</option>
+                <option value="penang" @selected(old('self_collect_branch', isset($replicate) ? $replicate->self_collect_branch : (isset($sale) ? $sale->self_collect_branch : null)) == 'penang')>{{ __('Penang') }}</option>
+            </x-app.input.select>
+            <x-app.message.error id="self_collect_branch_err" />
+        </div>
         <div class="flex flex-col">
             <x-app.input.label id="sale" class="mb-1">{{ __('Sales Agent') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -298,14 +309,14 @@
             let isSelfCollect = $('select[name="self_collect"]').val() == '1'
 
             if (isSelfCollect) {
-                $('#delivery-address-container').hide()
+                $('#self-collect-branch-container').show()
+                toggleSelfCollectBranch()
                 $('.delivery-third-party-section').hide()
-                // Clear delivery address values
-                $('select[name="delivery_address"]').val('').trigger('change')
-                $('#new-delivery-address input').val(null)
                 // Clear third party address values
                 $('#third-party-address-list').empty()
             } else {
+                $('#self-collect-branch-container').hide()
+                $('select[name="self_collect_branch"]').val('')
                 $('#delivery-address-container').show()
                 $('.delivery-third-party-section').show()
                 // Add default third party address row if empty
@@ -315,7 +326,20 @@
             }
         }
 
+        function toggleSelfCollectBranch() {
+            let branch = $('select[name="self_collect_branch"]').val()
+
+            if (branch === 'kl') {
+                $('#delivery-address-container').show()
+            } else {
+                $('#delivery-address-container').hide()
+                $('select[name="delivery_address"]').val('').trigger('change')
+                $('#new-delivery-address input').val(null)
+            }
+        }
+
         $('select[name="self_collect"]').on('change', toggleSelfCollect)
+        $('select[name="self_collect_branch"]').on('change', toggleSelfCollectBranch)
         // Run on page load after init
         setTimeout(toggleSelfCollect, 0)
 

@@ -123,6 +123,7 @@ class SaleController extends Controller
                 'sales.created_by AS created_by',
                 'sales.expired_at AS expired_at',
                 'sales.self_collect AS self_collect',
+                'sales.self_collect_branch AS self_collect_branch',
                 DB::raw('(
                     COALESCE(SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)), 0)
                     + COALESCE((
@@ -291,6 +292,7 @@ class SaleController extends Controller
                 ],
                 'rejected_reason' => $rejected_reason,
                 'self_collect' => $record->self_collect,
+                'self_collect_branch' => $record->self_collect_branch,
             ];
         }
 
@@ -2069,7 +2071,7 @@ class SaleController extends Controller
             $rules['new_billing_address3'] = 'nullable|max:250';
             $rules['new_billing_address4'] = 'nullable|max:250';
             $rules['delivery_address'] = 'nullable';
-            if ($has_third_party_address || $req->self_collect == 1) {
+            if ($has_third_party_address || ($req->self_collect == 1 && $req->self_collect_branch != 'kl')) {
                 $rules['new_delivery_address1'] = 'nullable|max:250';
             } else {
                 $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
@@ -2420,7 +2422,7 @@ class SaleController extends Controller
                 $rules['new_billing_address4'] = 'nullable|max:250';
 
                 $rules['delivery_address'] = 'nullable';
-                if ($has_third_party_address || $req->self_collect == 1) {
+                if ($has_third_party_address || ($req->self_collect == 1 && $req->self_collect_branch != 'kl')) {
                     $rules['new_delivery_address1'] = 'nullable|max:250';
                 } else {
                     $rules['new_delivery_address1'] = 'required_if:delivery_address,null|max:250';
@@ -2501,8 +2503,8 @@ class SaleController extends Controller
                         $req->merge(['billing_address' => $bill_add->id]);
                     }
                 }
-                // Delivery (skip when self collect)
-                if ($req->self_collect == 1) {
+                // Delivery (skip when self collect and branch is not KL)
+                if ($req->self_collect == 1 && $req->self_collect_branch != 'kl') {
                     $req->merge(['delivery_address' => null]);
                 } elseif ($req->delivery_address != null || $req->new_delivery_address1 != null) {
                     if ($req->delivery_address != null) {
@@ -2564,6 +2566,7 @@ class SaleController extends Controller
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'created_by' => $created_by,
                     'self_collect' => $req->self_collect ?? false,
+                    'self_collect_branch' => $req->self_collect == 1 ? $req->self_collect_branch : null,
                 ]);
                 (new Branch)->assign(Sale::class, $sale->id);
             } else {
@@ -2605,6 +2608,7 @@ class SaleController extends Controller
                     'delivery_address' => isset($del_add) ? $del_add->formatAddress() : null,
                     'updated_by' => Auth::user()->id,
                     'self_collect' => $req->self_collect ?? false,
+                    'self_collect_branch' => $req->self_collect == 1 ? $req->self_collect_branch : null,
                 ]);
                 // Delete current third party address
                 if ($req->type == 'quo') {
