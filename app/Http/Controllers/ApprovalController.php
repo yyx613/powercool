@@ -336,7 +336,7 @@ class ApprovalController extends Controller
             }
             // Complete Production 
             if (get_class($obj) == Production::class) {
-                $obj->status = Production::STATUS_COMPLETED;
+                $obj->status = Production::STATUS_APPROVED;
                 $obj->save();
             }
             // Customer (credit term) 

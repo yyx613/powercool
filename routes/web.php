@@ -633,6 +633,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{production}', 'edit')->name('edit')->middleware(['can:production.edit', 'branch.selected']);
         Route::get('/view/{production}', 'view')->name('view')->middleware('productionWorkerCanAccess');
         Route::get('/delete/{production}', 'delete')->name('delete')->middleware(['can:production.delete']);
+        Route::get('/quick-duplicate/{production}', 'quickDuplicate')->name('quick_duplicate')->middleware(['can:production.create']);
         Route::post('/upsert/{production?}', 'upsert')->name('upsert');
         Route::post('/check-in-milestone', 'checkInMilestone')->name('check_in_milestone');
         Route::post('/reject-milestone', 'rejectMilestone')->name('reject_milestone');

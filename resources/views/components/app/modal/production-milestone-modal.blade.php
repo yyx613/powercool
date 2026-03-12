@@ -67,6 +67,10 @@
                     </div>
                 </div>
             </div>
+            <div id="attachment-container" class="hidden">
+                <span class="font-medium text-sm mb-1 block">{{ __('Attachments') }}</span>
+                <input type="file" name="attachments[]" id="reject-attachments" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            </div>
             <x-app.message.error id="general_err" class="mt-2" />
             <div class="flex gap-x-6 mt-6">
                 <button type="button"
@@ -90,6 +94,7 @@
         $('#production-milestone-modal #no-btn').on('click', function() {
             $('#production-milestone-modal').removeClass('show-modal')
             $('#production-milestone-modal .err_msg').addClass('hidden') // Remove error messages
+            $('#production-milestone-modal #reject-attachments').val('') // Clear file input
         })
         $('#production-milestone-modal #yes-btn').on('click', function(e) {
             e.preventDefault()
@@ -188,15 +193,19 @@
             $('.err_msg').addClass('hidden') // Remove error messages
 
             // Prepare data
-            var data = {
-                'remark': $('#production-milestone-modal textarea[name="remark"]').val()
-            }
+            var formData = new FormData()
+            formData.append('remark', $('#production-milestone-modal textarea[name="remark"]').val())
             $('#production-milestone-modal .second-half').each(function(i, obj) {
                 if ($(this).data('product-child-id') != undefined) {
-                    data[`product-child-${$(this).data('product-child-id')}`] = $(this).find(
-                        'input:checked').val() == undefined ? null : $(this).find('input:checked').val()
+                    let val = $(this).find('input:checked').val()
+                    formData.append(`product-child-${$(this).data('product-child-id')}`, val == undefined ? '' : val)
                 }
             })
+            // Append file attachments
+            let files = $('#production-milestone-modal #reject-attachments')[0].files
+            for (let i = 0; i < files.length; i++) {
+                formData.append('attachments[]', files[i])
+            }
 
             let url = '{{ route('production.reject_milestone') }}'
             url = `${url}?production_milestone_id=${ $(this).data('id') }`
@@ -208,7 +217,9 @@
                 },
                 url: url,
                 type: 'POST',
-                data: data,
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(res) {
                     location.reload()
                 },

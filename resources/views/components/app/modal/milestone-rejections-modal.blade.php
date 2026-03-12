@@ -38,6 +38,10 @@
                         <span class="text-xs text-slate-500">Remark: </span>
                         <p class="text-sm" id="remark"></p>
                     </div>
+                    <div class="border-t border-slate-200 mt-1.5 pt-1.5 hidden" id="attachment-container">
+                        <span class="text-xs text-slate-500">Attachments: </span>
+                        <div class="flex flex-wrap gap-2 mt-1" id="attachment-list"></div>
+                    </div>
                     <div class="border-t border-slate-200 mt-1.5 pt-1.5" id="material-container">
                         <span class="text-xs text-slate-500">Materials: </span>
                         <div class="hidden mb-2 flex items-center justify-between hover:bg-slate-100 transition duration-200"

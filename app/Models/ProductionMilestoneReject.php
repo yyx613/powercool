@@ -39,6 +39,11 @@ class ProductionMilestoneReject extends Model
         return $this->hasMany(ProductionMilestoneMaterial::class)->withTrashed();
     }
 
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'object');
+    }
+
     public function getSubmittedAtAttribute($val)
     {
         return Carbon::parse($val)->format('d M Y, H:i');
