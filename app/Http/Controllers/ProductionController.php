@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ProductionExport;
+use App\Models\Attachment;
 use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\CustomizeProduct;
@@ -37,6 +38,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Picqer\Barcode\Renderers\DynamicHtmlRenderer;
 use Picqer\Barcode\Types\TypeCode128;
@@ -203,8 +205,9 @@ class ProductionController extends Controller
                 'priority' => $record->priority,
                 'can_edit' => hasPermission('production.edit') && $record->status == Production::STATUS_TO_DO,
                 'can_delete' => hasPermission('production.delete'),
-                'can_duplicate' => ! $is_production_worker,
+                'can_duplicate' => !$is_production_worker && hasPermission('production.create'),
                 'can_view' => ! $is_production_worker || $record->status == Production::STATUS_DOING,
+                'can_modify' => hasPermission('production.create'),
                 'can_edit_customize_product' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit'),
                 'customize_product_id' => $record->type == Production::TYPE_RND && hasPermission('inventory.customize.edit') ? $record->customizeProduct->id : null,
                 'rejected_reason' => $record->getLatestApprovalRejectedReason(),
@@ -312,7 +315,7 @@ class ProductionController extends Controller
             $q->preview = $preview;
             $q->pivot->submittedBy = $q->pivot->submitted_by == null ? null : User::withoutGlobalScope(BranchScope::class)->where('id', $q->pivot->submitted_by)->value('name');
             $q->pivot->submitted_at = $q->pivot->submitted_at == null ? null : Carbon::parse($q->pivot->submitted_at)->format('d M Y H:i');
-            $q->pivot->rejects = $this->prodMsReject::with('rejectedBy', 'submittedBy', 'milestoneMaterials.product', 'milestoneMaterials.productChild.parent')->where('production_milestone_id', $q->pivot->id)->orderBy('id', 'desc')->get();
+            $q->pivot->rejects = $this->prodMsReject::with('rejectedBy', 'submittedBy', 'milestoneMaterials.product', 'milestoneMaterials.productChild.parent', 'attachments')->where('production_milestone_id', $q->pivot->id)->orderBy('id', 'desc')->get();
         });
 
         // Production Milestone Materials
@@ -611,6 +614,107 @@ class ProductionController extends Controller
         }
     }
 
+    public function quickDuplicate(Production $production)
+    {
+        try {
+            DB::beginTransaction();
+
+            $production->load(['users', 'milestones']);
+
+            // Create new production
+            $newProduction = Production::create([
+                'sku' => $this->prod->generateSku(),
+                'product_id' => $production->product_id,
+                'sale_id' => $production->sale_id,
+                'name' => $production->name,
+                'desc' => $production->desc,
+                'remark' => $production->remark,
+                'start_date' => now()->format('Y-m-d'),
+                'due_date' => $production->due_date != null && $production->start_date != null
+                    ? now()->addDays(Carbon::parse($production->start_date)->diffInDays(Carbon::parse($production->due_date)))->format('Y-m-d')
+                    : null,
+                'status' => Production::STATUS_TO_DO,
+                'type' => $production->type,
+                'priority_id' => $production->priority_id,
+                'factory_id' => $production->factory_id,
+            ]);
+            (new Branch)->assign(Production::class, $newProduction->id);
+
+            // Copy user assignments
+            foreach ($production->users as $user) {
+                UserProduction::create([
+                    'user_id' => $user->id,
+                    'production_id' => $newProduction->id,
+                ]);
+            }
+
+            // Copy milestones and material previews
+            foreach ($production->milestones as $milestone) {
+                $newProdMs = ProductionMilestone::create([
+                    'production_id' => $newProduction->id,
+                    'milestone_id' => $milestone->id,
+                    'sequence' => $milestone->pivot->sequence ?? 1,
+                ]);
+
+                // Copy material preview records
+                $oldProdMsId = ProductionMilestone::where('production_id', $production->id)
+                    ->where('milestone_id', $milestone->id)
+                    ->value('id');
+
+                if ($oldProdMsId) {
+                    $previews = ProductionMilestoneMaterialPreview::where('production_milestone_id', $oldProdMsId)->get();
+                    foreach ($previews as $preview) {
+                        ProductionMilestoneMaterialPreview::create([
+                            'production_milestone_id' => $newProdMs->id,
+                            'product_id' => $preview->product_id,
+                            'qty' => $preview->qty,
+                        ]);
+                    }
+                }
+            }
+
+            // Create Raw Material Request
+            if ($production->type != Production::TYPE_RND) {
+                $materialUse = MaterialUse::with('materials')->where('product_id', $production->product_id)->first();
+                if ($materialUse != null) {
+                    $rmq = RawMaterialRequest::create([
+                        'production_id' => $newProduction->id,
+                        'material_use_id' => $materialUse->id,
+                        'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+                        'requested_by' => Auth::user()->id,
+                    ]);
+                    (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
+
+                    $data = [];
+                    foreach ($materialUse->materials as $material) {
+                        $data[] = [
+                            'raw_material_request_id' => $rmq->id,
+                            'product_id' => $material->product_id,
+                            'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                            'qty' => $material->material->is_sparepart ? 1 : $material->qty,
+                            'created_at' => now(),
+                        ];
+                    }
+                    RawMaterialRequestMaterial::insert($data);
+                }
+
+                // Set product in_production flag
+                Product::where('id', $production->product_id)->update([
+                    'in_production' => true,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect(route('production.index'))->with('success', 'Production duplicated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
     public function checkInMilestone(Request $req)
     {
         // Check in is allowed only when production status is 'in progress'
@@ -854,6 +958,17 @@ class ProductionController extends Controller
 
     public function rejectMilestone(Request $req)
     {
+        // Only allow rejection when production is in progress
+        $pms = $this->prodMs::where('id', $req->production_milestone_id)->first();
+        $production = Production::where('id', $pms->production_id)->first();
+        if (strtolower($production->status) != 'in progress') {
+            return Response::json([
+                'errors' => [
+                    'general' => 'Rejection is not allowed when production is not in progress',
+                ],
+            ], HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         // Check if reject reason is ticked, when it is spare part
         $pc_ids = $this->prodMsMaterial::where('production_milestone_id', $req->production_milestone_id)->whereNotNull('product_child_id')->pluck('product_child_id')->toArray();
         for ($i = 0; $i < count($pc_ids); $i++) {
@@ -894,6 +1009,18 @@ class ProductionController extends Controller
                 'production_milestone_reject_id' => $pms_reject->id,
                 'deleted_at' => now(),
             ]);
+
+            // Handle file attachments
+            if ($req->hasFile('attachments')) {
+                foreach ($req->file('attachments') as $file) {
+                    $path = Storage::putFile(Attachment::PRODUCTION_MILESTONE_REJECT_PATH, $file);
+                    Attachment::create([
+                        'object_type' => ProductionMilestoneReject::class,
+                        'object_id' => $pms_reject->id,
+                        'src' => basename($path),
+                    ]);
+                }
+            }
 
             $pms->submitted_by = null;
             $pms->submitted_at = null;

@@ -28,6 +28,8 @@ class Production extends Model
 
     const STATUS_REJECTED = 7;
 
+    const STATUS_APPROVED = 8;
+
     const TYPE_NORMAL = 1;
 
     const TYPE_RND = 2;
@@ -97,7 +99,7 @@ class Production extends Model
     public function milestones()
     {
         return $this->belongsToMany(Milestone::class, 'production_milestone', 'production_id', 'milestone_id')
-            ->withPivot('id', 'submitted_at', 'submitted_by')
+            ->withPivot('id', 'submitted_at', 'submitted_by', 'sequence')
             ->using(ProductionMilestone::class)
             ->orderBy('production_milestone.sequence', 'asc');
     }
@@ -160,6 +162,8 @@ class Production extends Model
                 return 'Pending Approval';
             case self::STATUS_REJECTED:
                 return 'Rejected';
+            case self::STATUS_APPROVED:
+                return 'Approved';
         }
 
         return null;

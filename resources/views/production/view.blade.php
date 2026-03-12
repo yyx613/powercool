@@ -283,14 +283,19 @@
                 }
             }
             // Completed
+            let isInProgress = PRODUCTION.status.toLowerCase() == 'in progress'
             $('#production-milestone-modal #reject-btn').addClass('hidden')
+            $('#production-milestone-modal #attachment-container').addClass('hidden')
             if (completed) {
                 if (requiredSerialNo && milestoneCount > 0) {
                     $('#production-milestone-modal #yes-btn').text('Update')
                     $('#production-milestone-modal #yes-btn').removeClass('hidden')
                 } else {
-                    $('#production-milestone-modal #remark-container').removeClass('hidden')
-                    $('#production-milestone-modal #reject-btn').removeClass('hidden')
+                    if (isInProgress) {
+                        $('#production-milestone-modal #remark-container').removeClass('hidden')
+                        $('#production-milestone-modal #reject-btn').removeClass('hidden')
+                        $('#production-milestone-modal #attachment-container').removeClass('hidden')
+                    }
                     $('#production-milestone-modal #yes-btn').addClass('hidden')
                 }
                 $('#production-milestone-modal #no-btn').text('Close')
@@ -482,6 +487,23 @@
 
                                 $(rmTemplate).removeClass('hidden')
                                 $(clone).find('#material-container').append(rmTemplate)
+                            }
+                        }
+
+                        // Attachments
+                        let attachments = PRODUCTION.milestones[i].pivot.rejects[j].attachments
+                        if (attachments && attachments.length > 0) {
+                            $(clone).find('#attachment-container').removeClass('hidden')
+                            for (let a = 0; a < attachments.length; a++) {
+                                let ext = attachments[a].src.split('.').pop().toLowerCase()
+                                let isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
+                                if (isImage) {
+                                    let img = $(`<a href="${attachments[a].url}" target="_blank"><img src="${attachments[a].url}" class="h-16 w-16 object-cover rounded border" /></a>`)
+                                    $(clone).find('#attachment-list').append(img)
+                                } else {
+                                    let link = $(`<a href="${attachments[a].url}" target="_blank" class="text-xs text-blue-600 underline">${attachments[a].src}</a>`)
+                                    $(clone).find('#attachment-list').append(link)
+                                }
                             }
                         }
 

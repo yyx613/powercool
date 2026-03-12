@@ -122,6 +122,28 @@
     </div>
 
     <x-app.modal.delete-modal />
+
+    {{-- Duplicate Modal --}}
+    <x-app.modal.base-modal id="duplicate-modal">
+        <div class="aspect-[2/1] flex flex-col">
+            <div class="py-2 px-4 bg-gray-100">
+                <h6 class="text-lg font-black">{{ __('Duplicate Production') }}</h6>
+            </div>
+            <div class="flex-1 flex flex-col p-4">
+                <div class="flex-1">
+                    <p class="text-slate-500 leading-snug">{{ __('Would you like to edit the duplicated production before creating, or confirm to duplicate immediately?') }}</p>
+                </div>
+                <div class="flex gap-x-6">
+                    <div class="flex-1">
+                        <a href="" class="block w-full p-2 rounded-md bg-white border border-gray-300 text-gray-700 text-sm font-medium transition-all duration-300 text-center hover:bg-gray-50" id="duplicate-edit-btn">{{ __('Edit') }}</a>
+                    </div>
+                    <div class="flex-1">
+                        <a href="" class="block w-full p-2 rounded-md bg-blue-600 text-white text-sm font-medium transition-all duration-300 text-center hover:bg-blue-700" id="duplicate-confirm-btn">{{ __('Confirm') }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </x-app.modal.base-modal>
 @endsection
 
 @push('scripts')
@@ -337,6 +359,8 @@
                                 return "{!! __('Pending Approval') !!}"
                             case 7:
                                 return "{!! __('Rejected') !!}"
+                            case 8:
+                                return "{!! __('Approved') !!}"
                         }
                     }
                 },
@@ -367,9 +391,9 @@
                                 `
                                     ${
                                         row.can_duplicate ? `
-                                            <a href="{{ config('app.url') }}/production/create?id=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">
+                                            <button type="button" class="rounded-full p-2 bg-yellow-200 inline-block duplicate-btns" data-id="${row.id}" title="{!! __('Duplicate') !!}">
                                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m19,0h-6c-2.757,0-5,2.243-5,5v6c0,2.757,2.243,5,5,5h6c2.757,0,5-2.243,5-5v-6c0-2.757-2.243-5-5-5Zm3,11c0,1.654-1.346,3-3,3h-6c-1.654,0-3-1.346-3-3v-6c0-1.654,1.346-3,3-3h6c1.654,0,3,1.346,3,3v6Zm-6,8c0,2.757-2.243,5-5,5h-6c-2.757,0-5-2.243-5-5v-6c0-2.757,2.243-5,5-5,.553,0,1,.448,1,1s-.447,1-1,1c-1.654,0-3,1.346-3,3v6c0,1.654,1.346,3,3,3h6c1.654,0,3-1.346,3-3,0-.552.447-1,1-1s1,.448,1,1Z"/></svg>
-                                            </a>`: '' 
+                                            </button>`: ''
                                     }
                                     ${
                                         row.can_view ? `
@@ -386,7 +410,7 @@
                                             </a>` : ''
                                     }
                                     ${
-                                        row.progress < 100 ? `` : `
+                                        (row.progress < 100 || !row.can_modify) ? `` : `
                                         <a href="{{ config('app.url') }}/production/create?id=${row.id}&is_modify=true" class="rounded-full p-2 bg-purple-200 inline-block" title="{!! __('Modify Product Code') !!}">
                                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                                 <path d="m3.688,24c-.032,0-.063,0-.095,0-1.022-.027-1.963-.462-2.649-1.224-1.269-1.409-1.157-3.784.244-5.185l5.868-5.867c.253-.254.344-.631.241-1.009-.358-1.318-.393-2.676-.102-4.036C7.903,3.364,10.626.735,13.972.137c1.006-.18,2.015-.184,3.002-.007.731.129,1.299.625,1.52,1.325.251.799-.003,1.681-.682,2.359l-2.247,2.217c-.658.658-.758,1.69-.222,2.345.308.378.742.598,1.222.622.472.02.936-.155,1.271-.489l2.58-2.55c.539-.539,1.332-.735,2.07-.501.723.227,1.254.828,1.385,1.567h0c.175.987.172,1.998-.007,3.003-.6,3.347-3.229,6.07-6.544,6.777-1.363.291-2.721.256-4.036-.103-.377-.104-.754-.012-1.008.241l-5.976,5.975c-.69.69-1.637,1.081-2.612,1.081ZM15.61,1.993c-.422,0-.854.035-1.286.112-2.554.457-4.634,2.463-5.174,4.991-.224,1.045-.198,2.086.076,3.093.29,1.062,0,2.191-.756,2.948l-5.868,5.867c-.65.65-.732,1.81-.171,2.433.315.35.747.55,1.215.562.461.019.909-.163,1.241-.494l5.975-5.975c.755-.755,1.885-1.047,2.948-.757,1.004.274,2.045.3,3.093.076,2.528-.539,4.534-2.618,4.992-5.174.138-.772.14-1.547.006-2.301v-.007s-2.655,2.559-2.655,2.559c-.729.729-1.744,1.136-2.781,1.068-1.036-.052-2.009-.545-2.669-1.353-1.179-1.439-1.021-3.649.361-5.03l2.247-2.217c.179-.18.191-.314.184-.341-.315-.039-.643-.062-.976-.062Z"/>
@@ -395,9 +419,9 @@
                                     }
                                     ${
                                         row.can_duplicate ? `
-                                            <a href="{{ config('app.url') }}/production/create?id=${row.id}" class="rounded-full p-2 bg-yellow-200 inline-block" title="{!! __('Duplicate') !!}">
+                                            <button type="button" class="rounded-full p-2 bg-yellow-200 inline-block duplicate-btns" data-id="${row.id}" title="{!! __('Duplicate') !!}">
                                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="m19,0h-6c-2.757,0-5,2.243-5,5v6c0,2.757,2.243,5,5,5h6c2.757,0,5-2.243,5-5v-6c0-2.757-2.243-5-5-5Zm3,11c0,1.654-1.346,3-3,3h-6c-1.654,0-3-1.346-3-3v-6c0-1.654,1.346-3,3-3h6c1.654,0,3,1.346,3,3v6Zm-6,8c0,2.757-2.243,5-5,5h-6c-2.757,0-5-2.243-5-5v-6c0-2.757,2.243-5,5-5,.553,0,1,.448,1,1s-.447,1-1,1c-1.654,0-3,1.346-3,3v6c0,1.654,1.346,3,3,3h6c1.654,0,3-1.346,3-3,0-.552.447-1,1-1s1,.448,1,1Z"/></svg>
-                                            </a>`:'' 
+                                            </button>`:''
                                     }
                                     ${
                                         row.can_view ? `
@@ -437,6 +461,19 @@
         });
         $('#filter_search').on('keyup', function() {
             dt.search($(this).val()).draw()
+        })
+
+        $('#data-table').on('click', '.duplicate-btns', function() {
+            let id = $(this).data('id')
+
+            $('#duplicate-modal #duplicate-edit-btn').attr('href', `{{ config('app.url') }}/production/create?id=${id}`)
+            $('#duplicate-modal #duplicate-confirm-btn').attr('href', `{{ config('app.url') }}/production/quick-duplicate/${id}`)
+            $('#duplicate-modal').addClass('show-modal')
+        })
+        $('#duplicate-modal').on('click', function(e) {
+            if ($(e.target).is('#duplicate-modal')) {
+                $('#duplicate-modal').removeClass('show-modal')
+            }
         })
 
         $('#data-table').on('click', '.delete-btns', function() {
