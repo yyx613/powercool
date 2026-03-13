@@ -414,7 +414,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/view-logs-get-data', 'viewLogsGetData')->name('view_logs_get_data');
         Route::get('/view/{rmq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
-        Route::get('/complete/{rmq}', 'complete')->name('complete');
+        Route::get('/complete/{rmq}', 'complete')->name('complete')->middleware('can:inventory.raw_material_request.complete');
+        Route::post('/cancel/{rmq}', 'cancel')->name('cancel');
         Route::get('/material/complete/{rmqm}', 'materialComplete')->name('material_complete');
         Route::get('/material/incomplete/{rmqm}', 'materialIncomplete')->name('material_incomplete');
     });
@@ -451,7 +452,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         });
 
         // Pending
-        Route::prefix('pending-order')->name('pending_order.')->group(function () {
+        Route::prefix('pending-order')->name('pending_order.')->middleware(['can:e_order.view'])->group(function () {
             Route::get('/', 'indexPendingOrder')->name('index');
             Route::get('/get-data', 'getDataPendingOrder')->name('get_data');
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit');

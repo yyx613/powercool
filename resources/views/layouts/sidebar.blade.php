@@ -193,7 +193,7 @@
                 <!-- Sale & Invoice -->
                 @canany(['sale.quotation.view', 'sale.sale_order.view', 'sale.cash_sale.view',
                     'sale.delivery_order.view', 'sale.transport_acknowledgement.view', 'sale.invoice.view',
-                    'sale.invoice_return.view', 'sale.billing.view'])
+                    'sale.invoice_return.view', 'sale.billing.view', 'e_order.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="3">
@@ -223,7 +223,7 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('sale.sale_order.view')
+                                    @can('e_order.view')
                                         <li>
                                             <a href="{{ route('pending_order.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1124,7 +1124,7 @@
                     <!-- Sale & Invoice -->
                     @canany(['sale.quotation.view', 'sale.sale_order.view', 'sale.delivery_order.view',
                         'sale.transport_acknowledgement.view', 'sale.invoice.view', 'sale.invoice_return.view',
-                        'sale.billing.view'])
+                        'sale.billing.view', 'e_order.view'])
                         <li class="expand-sub-menu-triggers" data-type="sale">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"
@@ -1476,7 +1476,8 @@
         @endcan
         <!-- Sale & Invoice -->
         @canany(['sale.quotation.view', 'sale.sale_order.view', 'sale.cash_sale.view', 'sale.delivery_order.view',
-            'sale.transport_acknowledgement.view', 'sale.invoice.view', 'sale.invoice_return.view', 'sale.billing.view'])
+            'sale.transport_acknowledgement.view', 'sale.invoice.view', 'sale.invoice_return.view', 'sale.billing.view',
+            'e_order.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="sale">
                 <div class="mb-4 p-2 border-b">
@@ -1492,7 +1493,7 @@
                             </a>
                         </li>
                     @endcan
-                    @can('sale.sale_order.view')
+                    @can('e_order.view')
                         <li>
                             <a href="{{ route('pending_order.index') }}"
                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2176,7 +2177,7 @@
                 <!-- Sale & Invoice -->
                 @canany(['sale.quotation.view', 'sale.sale_order.view', 'sale.delivery_order.view',
                     'sale.transport_acknowledgement.view', 'sale.invoice.view', 'sale.invoice_return.view',
-                    'sale.billing.view'])
+                    'sale.billing.view', 'e_order.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="3">
@@ -2206,7 +2207,7 @@
                                             </a>
                                         </li>
                                     @endcan
-                                    @can('sale.sale_order.view')
+                                    @can('e_order.view')
                                         <li>
                                             <a href="{{ route('pending_order.index') }}"
                                                 class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'pending_order.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">

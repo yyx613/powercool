@@ -23,6 +23,7 @@ class PermissionSeeder extends Seeder
             'approval.type_delivery_order',
             'approval.type_customer',
             'approval.type_payment_record',
+            'approval.type_raw_material_request',
 
             'dashboard.view',
 
@@ -49,6 +50,7 @@ class PermissionSeeder extends Seeder
             'inventory.customize.edit',
 
             'inventory.raw_material_request.view',
+            'inventory.raw_material_request.complete',
 
             'adhoc_service.view',
             'adhoc_service.create',
@@ -169,6 +171,8 @@ class PermissionSeeder extends Seeder
 
             'vehicle.view',
             'vehicle_service.reminder',
+
+            'e_order.view',
 
             'report.view',
 

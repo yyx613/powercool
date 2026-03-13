@@ -131,6 +131,10 @@
                                 return "{{ __('In Progress') }}"
                             case 2:
                                 return "{{ __('Completed') }}"
+                            case 3:
+                                return "{{ __('Pending Approval') }}"
+                            case 4:
+                                return "{{ __('Cancelled') }}"
                         }
                     }
                 },
@@ -139,7 +143,7 @@
                     "targets": 6,
                     orderable: false,
                     render: function(data, type, row) {
-                        if (row.parent_completed == true) {
+                        if (row.parent_status != 1) {
                             return ''
                         }
 

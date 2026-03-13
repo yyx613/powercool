@@ -5501,13 +5501,15 @@ class SaleController extends Controller
     {
         Session::put('pending-order-page', $req->page);
 
-        $records = Sale::where('type', Sale::TYPE_PENDING);
+        $records = Sale::where('sales.type', Sale::TYPE_PENDING);
 
         $records = $records
             ->select('sales.*', 'platforms.name AS platformName', DB::raw('SUM("sale_payment_amounts.amount") AS paymentAmounts'))
             ->leftJoin('platforms', 'platforms.id', '=', 'sales.platform_id')
-            ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
-            ->whereNull('sale_payment_amounts.deleted_at');
+            ->leftJoin('sale_payment_amounts', function ($join) {
+                $join->on('sale_payment_amounts.sale_id', '=', 'sales.id')
+                     ->whereNull('sale_payment_amounts.deleted_at');
+            });
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -5548,11 +5550,12 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'total_amount' => $record->paymentAmount,
+                'total_amount' => $record->paymentAmounts,
                 'status' => $record->status,
                 'platform' => $record->platformName ?? '-',
                 'can_edit' => hasPermission('sale.sale_order.edit'),
                 'can_delete' => hasPermission('sale.sale_order.delete'),
+                'action' => '',
             ];
         }
 

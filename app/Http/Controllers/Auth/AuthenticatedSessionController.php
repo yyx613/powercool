@@ -39,6 +39,29 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended('/quotation');
         }
 
+        // Redirect to first accessible page (sidebar menu order)
+        $user = $request->user();
+        $redirectMap = [
+            'notification.view' => '/notification',
+            'approval.view' => '/approval',
+            'dashboard.view' => '/dashboard',
+            'customer.view' => '/customer',
+            'sale.quotation.view' => '/quotation',
+            'sale.sale_order.view' => '/sale-order',
+            'sale.delivery_order.view' => '/delivery-order',
+            'sale.invoice.view' => '/invoice',
+            'inventory.product.view' => '/inventory/product',
+            'production.view' => '/production',
+            'ticket.view' => '/ticket',
+            'report.view' => '/report',
+        ];
+
+        foreach ($redirectMap as $permission => $route) {
+            if ($user->can($permission)) {
+                return redirect()->intended($route);
+            }
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
