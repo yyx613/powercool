@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Production;
@@ -11,6 +12,7 @@ use App\Models\RawMaterialRequestMaterialCollected;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
@@ -236,7 +238,8 @@ class RawMaterialRequestController extends Controller
                 'requested_by' => $record->requestedBy->name ?? null,
                 'status' => $record->status,
                 'is_sparepart' => $record->material->is_sparepart,
-                'parent_completed' => $record->materialRequest->status == RawMaterialRequest::STATUS_COMPLETED
+                'parent_completed' => $record->materialRequest->status == RawMaterialRequest::STATUS_COMPLETED,
+                'parent_status' => $record->materialRequest->status
             ];
         }
 
@@ -245,14 +248,64 @@ class RawMaterialRequestController extends Controller
 
     public function complete(RawMaterialRequest $rmq)
     {
+        if ($rmq->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
+            return back()->with('warning', 'Only in-progress requests can be completed');
+        }
+
         $rmq->status = RawMaterialRequest::STATUS_COMPLETED;
         $rmq->save();
 
         return back()->with('success', 'Request completed');
     }
 
+    public function cancel(Request $req, RawMaterialRequest $rmq)
+    {
+        if (!hasPermission('production.create')) {
+            return back()->with('error', 'You do not have permission to cancel this request');
+        }
+
+        if ($rmq->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
+            return back()->with('warning', 'Only in-progress requests can be cancelled');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => RawMaterialRequest::class,
+                'object_id' => $rmq->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_cancellation' => true,
+                    'description' => 'Cancel Raw Material Request ' . $rmq->sku . ' (Production: ' . ($rmq->production?->sku ?? 'N/A') . ')',
+                    'cancellation_remark' => $req->cancellation_remark ?? null,
+                ]),
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $rmq->status = RawMaterialRequest::STATUS_PENDING_CANCELLATION;
+            $rmq->save();
+
+            $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
+            Cache::put('unread_approval_count', $pending_approval_count);
+
+            DB::commit();
+
+            return back()->with('success', 'Cancellation request submitted for approval');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator');
+        }
+    }
+
     public function materialComplete(Request $req, RawMaterialRequestMaterial $rmqm)
     {
+        if ($rmqm->materialRequest->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
+            return back()->with('warning', 'Only in-progress requests can be modified');
+        }
+
         if ($req->has('qty')) {
             $collected_qty = RawMaterialRequestMaterialCollected::where('raw_material_request_material_id', $rmqm->id)->sum('qty');
             $remaining_qty = ($rmqm->qty - $collected_qty ?? 0);
@@ -290,6 +343,10 @@ class RawMaterialRequestController extends Controller
 
     public function materialIncomplete(RawMaterialRequestMaterial $rmqm)
     {
+        if ($rmqm->materialRequest->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
+            return back()->with('warning', 'Only in-progress requests can be modified');
+        }
+
         $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS;
         $rmqm->save();
 

@@ -114,6 +114,7 @@ class ViewServiceProvider extends ServiceProvider
                 'dealer' => [],
                 'agent_debtor' => [],
                 'vehicle' => [],
+                'e_order' => [],
                 'report' => [],
                 'user_role_management' => [],
                 'setting' => [],
@@ -200,6 +201,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['agent_debtor'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'vehicle')) {
                     array_push($permissions_group['vehicle'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'e_order')) {
+                    array_push($permissions_group['e_order'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'report')) {
                     array_push($permissions_group['report'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'user_role_management')) {

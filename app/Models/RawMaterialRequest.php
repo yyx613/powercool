@@ -15,6 +15,8 @@ class RawMaterialRequest extends Model
 
     const STATUS_IN_PROGRESS = 1;
     const STATUS_COMPLETED = 2;
+    const STATUS_PENDING_CANCELLATION = 3;
+    const STATUS_CANCELLED = 4;
 
     protected $guarded = [];
     protected $casts = [

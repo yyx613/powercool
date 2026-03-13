@@ -15,6 +15,7 @@ use App\Models\ObjectCreditTerm;
 use App\Models\Product;
 use App\Models\ProductChild;
 use App\Models\Production;
+use App\Models\RawMaterialRequest;
 use App\Models\Sale;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
@@ -40,6 +41,7 @@ class ApprovalController extends Controller
         2 => 'Delivery Order',
         3 => 'Customer',
         4 => 'Payment Record',
+        5 => 'Raw Material Request',
     ];
 
     public function index()
@@ -67,6 +69,9 @@ class ApprovalController extends Controller
         }
         if (!hasPermission('approval.type_payment_record')) {
             unset($types[4]);
+        }
+        if (!hasPermission('approval.type_raw_material_request')) {
+            unset($types[5]);
         }
 
         return view('approval.list', [
@@ -144,6 +149,11 @@ class ApprovalController extends Controller
                     $q->whereNot('object_type', SalePaymentAmount::class);
                 });
             }
+            if (!hasPermission('approval.type_raw_material_request')) {
+                $q->orWhere(function ($q) {
+                    $q->whereNot('object_type', RawMaterialRequest::class);
+                });
+            }
         });
         if ($request->has('type')) {
             if ($request->type == null) {
@@ -163,6 +173,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 4) {
                 $records = $records->where('object_type', SalePaymentAmount::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 5) {
+                $records = $records->where('object_type', RawMaterialRequest::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -175,6 +188,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', Customer::class);
             } elseif (Session::get('approval-type') == 4) {
                 $records = $records->where('object_type', SalePaymentAmount::class);
+            } elseif (Session::get('approval-type') == 5) {
+                $records = $records->where('object_type', RawMaterialRequest::class);
             }
         }
 
@@ -208,6 +223,8 @@ class ApprovalController extends Controller
                     }
                 } elseif (get_class($obj) == SalePaymentAmount::class) {
                     $view_url = route('sale_order.edit_payment', ['sale' => $obj->sale_id]);
+                } elseif (get_class($obj) == RawMaterialRequest::class) {
+                    $view_url = route('raw_material_request.view', ['rmq' => $obj->id]);
                 }
             }
 
@@ -258,7 +275,7 @@ class ApprovalController extends Controller
                 'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
                 'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->company_name : null,
                 'sales_agent_name' => count($sale_agents) > 0 ? join(', ', $sale_agents) : null,
-                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class, RawMaterialRequest::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -334,9 +351,14 @@ class ApprovalController extends Controller
                 $obj->status = ProductChild::STATUS_WAREHOUSE_STOCK_OUT;
                 $obj->save();
             }
-            // Complete Production 
+            // Complete Production
             if (get_class($obj) == Production::class) {
                 $obj->status = Production::STATUS_APPROVED;
+                $obj->save();
+            }
+            // Raw Material Request Cancellation
+            if (get_class($obj) == RawMaterialRequest::class) {
+                $obj->status = RawMaterialRequest::STATUS_CANCELLED;
                 $obj->save();
             }
             // Customer (credit term) 
@@ -479,6 +501,11 @@ class ApprovalController extends Controller
             // Complete Production
             if (get_class($obj) == Production::class) {
                 $obj->status = Production::STATUS_REJECTED;
+                $obj->save();
+            }
+            // Raw Material Request Cancellation Rejected
+            if (get_class($obj) == RawMaterialRequest::class) {
+                $obj->status = RawMaterialRequest::STATUS_IN_PROGRESS;
                 $obj->save();
             }
             // Sale Production Request 

@@ -162,6 +162,8 @@
                                 return 'Payment Record';
                             } else if (data.includes('DeliveryOrder')) {
                                 return 'Delivery Order';
+                            } else if (data.includes('RawMaterialRequest')) {
+                                return 'Raw Material Request';
                             } else if (row.data != null && row.data.is_quo == true) {
                                 return 'Quotation';
                             } else {
