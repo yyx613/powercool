@@ -28,12 +28,34 @@ class NotificationController extends Controller
         ]);
     }
 
+    public static function getAllowedNotificationTypes(): array
+    {
+        $map = [
+            'notification.view_mobile_app' => 'mobile-app',
+            'notification.view_service_reminder' => 'service-reminder',
+            'notification.view_vehicle_service_reminder' => 'vehicle-service-reminder',
+            'notification.view_production_completed' => 'production-completed',
+        ];
+
+        $allowedTypes = [];
+        foreach ($map as $permission => $type) {
+            if (hasPermission($permission)) {
+                $allowedTypes[] = $type;
+            }
+        }
+
+        return $allowedTypes;
+    }
+
     public function getData(Request $request)
     {
         Session::put('notification-page', $request->page);
 
         $user = $request->user();
         $records = $user->notifications()->orderBy('created_at', 'desc');
+
+        $allowedTypes = self::getAllowedNotificationTypes();
+        $records = $records->whereIn('type', $allowedTypes);
 
         if ($request->has('status')) {
             if ($request->status == null) {

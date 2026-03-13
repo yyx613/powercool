@@ -18,8 +18,11 @@ class NotificationMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         try {
-            $unread_notis = $request->user()->unreadNotifications;
-            Session::put('unread_noti_count', count($unread_notis));
+            $allowedTypes = \App\Http\Controllers\NotificationController::getAllowedNotificationTypes();
+            $unread_count = $request->user()->unreadNotifications()
+                ->whereIn('type', $allowedTypes)
+                ->count();
+            Session::put('unread_noti_count', $unread_count);
         } catch (\Throwable $th) {
             Session::put('unread_noti_count', 0);
         }

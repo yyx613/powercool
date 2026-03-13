@@ -21,7 +21,8 @@ class NotificationController extends Controller
     public function getAll(Request $req) {
         $user = $req->user();
 
-        $notifications = $user->notifications()->simplePaginate();
+        $allowedTypes = \App\Http\Controllers\NotificationController::getAllowedNotificationTypes();
+        $notifications = $user->notifications()->whereIn('type', $allowedTypes)->simplePaginate();
 
         $notifications->each(function($q) {
             if ($q->data) {
