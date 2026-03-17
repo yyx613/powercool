@@ -317,8 +317,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/view/{sale}/{pc}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
+        Route::get('/create', 'create')->name('create')->middleware(['can:warranty.create']);
+        Route::post('/store', 'store')->name('store')->middleware(['can:warranty.create']);
     });
     // Service Reminder
     Route::controller(InventoryServiceReminderController::class)->prefix('service-reminder')->name('service_reminder.')->middleware(['can:service_reminder.view'])->group(function () {
@@ -334,8 +334,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/export', 'export')->name('export');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
+        Route::get('/create', 'create')->name('create')->middleware(['can:service_history.create']);
+        Route::post('/store', 'store')->name('store')->middleware(['can:service_history.create']);
     });
     // Service Form
     Route::controller(ServiceFormController::class)->prefix('service-form')->name('service_form.')->middleware(['can:service_form.view'])->group(function () {
@@ -667,8 +667,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/get-data-sale-production-request', 'getDataSaleProductionRequest')->name('get_data_sale_production_request');
-        Route::get('/create', 'create')->name('create')->middleware('branch.selected');
-        Route::post('/store', 'store')->name('store');
+        Route::get('/create', 'create')->name('create')->middleware(['branch.selected', 'can:production_request.create']);
+        Route::post('/store', 'store')->name('store')->middleware(['can:production_request.create']);
         Route::get('/view/{pq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/complete/{pq}', 'complete')->name('complete');
@@ -798,8 +798,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(VehicleController::class)->prefix('vehicle')->name('vehicle.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create')->middleware('branch.selected');
-            Route::get('/edit/{vehicle}', 'edit')->name('edit')->middleware('branch.selected');
+            Route::get('/create', 'create')->name('create')->middleware(['branch.selected', 'can:vehicle.create']);
+            Route::get('/edit/{vehicle}', 'edit')->name('edit')->middleware(['branch.selected', 'can:vehicle.edit']);
             Route::post('/upsert/{vehicle?}', 'upsert')->name('upsert');
             Route::get('/view/{vehicle}', 'view')->name('view');
         });
@@ -987,8 +987,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(SettingController::class)->prefix('settings')->name('setting.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/edit/{setting}', 'edit')->name('edit');
-            Route::post('/update/{setting}', 'update')->name('update');
+            Route::get('/edit/{setting}', 'edit')->name('edit')->middleware(['can:setting.edit']);
+            Route::post('/update/{setting}', 'update')->name('update')->middleware(['can:setting.edit']);
         });
     });
     Route::middleware(['can:user_role_management.view'])->group(function () {
@@ -996,11 +996,11 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(UserController::class)->prefix('user-management')->name('user_management.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
-            Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{user}', 'edit')->name('edit');
-            Route::post('/update/{user}', 'update')->name('update');
-            Route::get('/delete/{user}', 'delete')->name('delete');
+            Route::get('/create', 'create')->name('create')->middleware(['can:user_role_management.create']);
+            Route::post('/store', 'store')->name('store')->middleware(['can:user_role_management.create']);
+            Route::get('/edit/{user}', 'edit')->name('edit')->middleware(['can:user_role_management.edit']);
+            Route::post('/update/{user}', 'update')->name('update')->middleware(['can:user_role_management.edit']);
+            Route::get('/delete/{user}', 'delete')->name('delete')->middleware(['can:user_role_management.delete']);
 
             Route::get('as-branch', 'asBranch')->name('as_branch');
             Route::post('/get/{user_id}', 'get')->name('get_user');
@@ -1009,10 +1009,10 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::controller(RoleController::class)->prefix('role-management')->name('role_management.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
-            Route::get('/create', 'create')->name('create');
-            Route::post('/store', 'store')->name('store');
-            Route::get('/edit/{role}', 'edit')->name('edit');
-            Route::post('/update/{role}', 'update')->name('update');
+            Route::get('/create', 'create')->name('create')->middleware(['can:user_role_management.create']);
+            Route::post('/store', 'store')->name('store')->middleware(['can:user_role_management.create']);
+            Route::get('/edit/{role}', 'edit')->name('edit')->middleware(['can:user_role_management.edit']);
+            Route::post('/update/{role}', 'update')->name('update')->middleware(['can:user_role_management.edit']);
         });
     });
 });

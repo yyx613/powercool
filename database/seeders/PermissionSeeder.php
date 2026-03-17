@@ -71,8 +71,10 @@ class PermissionSeeder extends Seeder
             'service_reminder.receive_reminder',
 
             'service_history.view',
+            'service_history.create',
 
             'warranty.view',
+            'warranty.create',
 
             'service_form.view',
             'service_form.create',
@@ -150,6 +152,7 @@ class PermissionSeeder extends Seeder
             'production_material.view',
 
             'production_request.view',
+            'production_request.create',
 
             'ticket.view',
             'ticket.create',
@@ -172,8 +175,13 @@ class PermissionSeeder extends Seeder
             'dealer.delete',
 
             'agent_debtor.view',
+            'agent_debtor.create',
+            'agent_debtor.edit',
+            'agent_debtor.delete',
 
             'vehicle.view',
+            'vehicle.create',
+            'vehicle.edit',
             'vehicle_service.reminder',
 
             'e_order.view',
@@ -181,8 +189,12 @@ class PermissionSeeder extends Seeder
             'report.view',
 
             'user_role_management.view',
+            'user_role_management.create',
+            'user_role_management.edit',
+            'user_role_management.delete',
 
             'setting.view',
+            'setting.edit',
         ];
         $now = now();
 

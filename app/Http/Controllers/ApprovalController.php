@@ -361,12 +361,30 @@ class ApprovalController extends Controller
                 $obj->status = RawMaterialRequest::STATUS_CANCELLED;
                 $obj->save();
             }
-            // Customer (credit term) 
+            // Customer (credit term / new debtor / delete)
             if (get_class($obj) == Customer::class) {
                 $data = json_decode($approval->data);
 
                 if (isset($data->is_delete) && isset($data->customer_id)) {
                     Customer::where('id', $data->customer_id)->delete();
+                } elseif (isset($data->is_new_debtor)) {
+                    // New debtor approval - activate and assign credit terms
+                    if ($data->to_credit_term_ids != null) {
+                        $terms = [];
+                        for ($i = 0; $i < count($data->to_credit_term_ids); $i++) {
+                            $terms[] = [
+                                'object_type' => Customer::class,
+                                'object_id' => $obj->id,
+                                'credit_term_id' => $data->to_credit_term_ids[$i],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                        ObjectCreditTerm::insert($terms);
+                    }
+
+                    $obj->status = Customer::STATUS_ACTIVE;
+                    $obj->save();
                 } else {
                     ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $obj->id)->delete();
 

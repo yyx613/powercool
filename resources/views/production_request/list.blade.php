@@ -29,6 +29,7 @@
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Production Request') }}</x-app.page-title>
         <div class="flex gap-4">
+            @can('production_request.create')
             <a href="{{ route('production_request.create') }}"
                 class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -39,6 +40,7 @@
                 </svg>
                 {{ __('New') }}
             </a>
+            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')

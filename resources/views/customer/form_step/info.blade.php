@@ -259,7 +259,7 @@
                     @if(isset($customer) && $customer->mobile_number && is_array($customer->mobile_number) && count($customer->mobile_number) > 0)
                         @foreach($customer->mobile_number as $index => $mobile)
                             <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" placeholder="e.g. 0121234567" />
                                 @if($index > 0)
                                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
@@ -277,7 +277,7 @@
                         @endphp
                         @foreach($duplicateMobiles as $index => $mobile)
                             <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" placeholder="e.g. 0121234567" />
                                 @if($index > 0)
                                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
@@ -291,7 +291,7 @@
                         @endforeach
                     @else
                         <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                            <x-app.input.input name="mobile_number[]" class="flex-1" value="" />
+                            <x-app.input.input name="mobile_number[]" class="flex-1" value="" placeholder="e.g. 0121234567" />
                         </div>
                     @endif
                 </div>
@@ -344,12 +344,12 @@
             @endif
             @if (!isCreateLink())
                 <div class="flex flex-col">
-                    <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }}</x-app.input.label>
+                    <x-app.input.label id="sale_agent" class="mb-1">{{ __('Sale Agent') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="sale_agent[]" id="sale_agent" :hasError="$errors->has('sale_agent')"
                         placeholder="{{ __('Select a sale agent') }}" multiple>
                         <option value="">{{ __('Select a sale agent') }}</option>
                         @foreach ($sales_agents as $sa)
-                            <option value="{{ $sa->id }}" @selected(isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }}
+                            <option value="{{ $sa->id }}" @selected(isset($sales_agent_ids) ? in_array($sa->id, $sales_agent_ids) : null)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})
                             </option>
                         @endforeach
                     </x-app.input.select2>
@@ -683,7 +683,7 @@
         $('#add-mobile-number-btn').on('click', function() {
             const newRow = `
                 <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                    <input type="text" name="mobile_number[]" class="flex-1 border border-gray-300 rounded px-3 py-2" value="" />
+                    <input type="text" name="mobile_number[]" class="flex-1 border border-gray-300 rounded px-3 py-2" value="" placeholder="e.g. 0121234567" />
                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                             viewBox="0 0 24 24" width="512" height="512">

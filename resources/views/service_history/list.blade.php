@@ -32,6 +32,7 @@
                 </svg>
                 {{ __('Export Excel') }}
             </x-app.button.button>
+            @can('service_history.create')
             <a href="{{ route('service_history.create') }}"
                 class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -42,6 +43,7 @@
                 </svg>
                 {{ __('New') }}
             </a>
+            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')
