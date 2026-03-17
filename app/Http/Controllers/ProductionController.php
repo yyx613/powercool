@@ -158,6 +158,9 @@ class ProductionController extends Controller
                     })
                     ->orWhereHas('productChild', function ($q) use ($keyword) {
                         $q->where('sku', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('sale', function ($q) use ($keyword) {
+                        $q->where('sku', 'like', '%'.$keyword.'%');
                     });
             });
         }
@@ -165,9 +168,9 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
-                6 => 'created_at',
-                7 => 'start_date',
-                8 => 'due_date',
+                7 => 'created_at',
+                8 => 'start_date',
+                9 => 'due_date',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -190,6 +193,8 @@ class ProductionController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'sale_sku' => $record->sale->sku ?? null,
+                'sale_id' => $record->sale_id,
                 'type' => $record->typeToHumanRead($record->type),
                 'old_production_sku' => $record->oldProduction->sku ?? null,
                 'factory' => $record->factory,
@@ -336,6 +341,7 @@ class ProductionController extends Controller
             'material_use' => $material_use,
             'can_extend_due_date' => $can_extend_due_date,
             'is_production_worker' => isProductionWorker(),
+            'is_sales_only' => isSalesOnly(),
         ]);
     }
 

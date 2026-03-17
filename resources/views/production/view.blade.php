@@ -21,7 +21,7 @@
                     <div class="flex items-center justify-between">
                         <span class="text-md">{{ __('Due Date') }}</span>
                         <div class="flex gap-x-3">
-                            @if ($can_extend_due_date)
+                            @if ($can_extend_due_date && !($is_sales_only ?? false))
                                 <x-app.button.button class="bg-transparent !p-0" title="{{ __('Extend Due Date') }}"
                                     id="extend-due-date-btn">
                                     <svg class="h-4 w-4" id="Layer_1" height="512" viewBox="0 0 24 24" width="512"
@@ -154,7 +154,7 @@
         <div class="flex-1 pl-4 ml-4 border-l">
             <div class="rounded-lg">
                 <h1 class="font-black text-xl text-blue-900">{{ __('Production ID') }}: {{ $production->sku }}</h1>
-                @if (in_array(strtolower($production->status), ['in progress']))
+                @if (in_array(strtolower($production->status), ['in progress']) && !($is_sales_only ?? false))
                     <x-app.button.button
                         class="font-semibold w-full justify-center mt-2 bg-transparent text-emerald-500 border border-emerald-500 transition duration-250 hover:bg-emerald-500 hover:text-white"
                         id="complete-task-btn">
@@ -234,6 +234,7 @@
         PRODUCTION_MILESTONE_MATERIALS = @json($production_milestone_materials);
         SELECTED_PRODUCTION_MILESTONE_ID = null
         SPAREPART_KEYWORD = {} // productId: keyword
+        IS_SALES_ONLY = @json($is_sales_only ?? false);
 
         $(document).ready(function() {
             if (PRODUCTION.status.toLowerCase() != 'in progress') {
@@ -245,6 +246,8 @@
 
         $('.ms-row').on('click', function(e) {
             e.preventDefault()
+
+            if (IS_SALES_ONLY) return;
 
             let id = $(this).data('id')
             SELECTED_PRODUCTION_MILESTONE_ID = id

@@ -62,7 +62,7 @@
     </div>
     <div>
         <!-- Filters -->
-        <div class="flex gap-x-4 max-w-screen-sm w-full mb-4">
+        <div class="flex gap-x-4 w-full mb-4 {{ ($is_sales_only ?? false) ? 'max-w-md' : 'max-w-screen-sm' }}">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">
@@ -84,14 +84,16 @@
                     {{ __('Start Task') }}
                 </x-app.button.button>
             @endif
-            <x-app.button.button class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
-                    viewBox="0 0 24 24" width="512" height="512">
-                    <path
-                        d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z" />
-                </svg>
-                <span class="font-medium">{{ __('Generate Barcode') }}</span>
-            </x-app.button.button>
+            @if (!($is_sales_only ?? false))
+                <x-app.button.button class="flex items-center gap-x-4 bg-sky-200 p-2 rounded w-fit" id="generate-barcode-btn">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
+                        viewBox="0 0 24 24" width="512" height="512">
+                        <path
+                            d="M5,18c-.553,0-1-.448-1-1V7c0-.552,.447-1,1-1s1,.448,1,1v10c0,.552-.447,1-1,1Zm5-1V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm10,0V7c0-.552-.447-1-1-1s-1,.448-1,1v10c0,.552,.447,1,1,1s1-.448,1-1Zm-6-.5V7.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5v9c0,.829,.672,1.5,1.5,1.5s1.5-.671,1.5-1.5Zm-7,4.5c0-.552-.447-1-1-1h-2c-1.103,0-2-.897-2-2v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,2.206,1.794,4,4,4h2c.553,0,1-.448,1-1Zm17-3v-2c0-.552-.447-1-1-1s-1,.448-1,1v2c0,1.103-.897,2-2,2h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c2.206,0,4-1.794,4-4Zm0-10v-2c0-2.206-1.794-4-4-4h-2c-.553,0-1,.448-1,1s.447,1,1,1h2c1.103,0,2,.897,2,2v2c0,.552,.447,1,1,1s1-.448,1-1Zm-22,0v-2c0-1.103,.897-2,2-2h2c.553,0,1-.448,1-1s-.447-1-1-1h-2C1.794,2,0,3.794,0,6v2c0,.552,.447,1,1,1s1-.448,1-1Zm13.5,10h0c-.276,0-.5-.224-.5-.5V6.5c0-.276,.224-.5,.5-.5h0c.276,0,.5,.224,.5,.5v11c0,.276-.224,.5-.5,.5Z" />
+                    </svg>
+                    <span class="font-medium">{{ __('Generate Barcode') }}</span>
+                </x-app.button.button>
+            @endif
         </div>
 
         <!-- Table -->
@@ -102,6 +104,7 @@
                         <input type="checkbox" id="parent-row-checkbox" />
                     </th>
                     <th>{{ __('No') }}</th>
+                    <th>{{ __('SO') }}</th>
                     <th>{{ __('Type') }}</th>
                     <th>{{ __('Old Production ID') }}</th>
                     <th>{{ __('Factory') }}</th>
@@ -167,6 +170,9 @@
                 },
                 {
                     data: 'sku'
+                },
+                {
+                    data: 'sale_sku'
                 },
                 {
                     data: 'type'
@@ -246,7 +252,8 @@
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data
+                        if (!data) return '-'
+                        return `<a href="{{ config('app.url') }}/sale/sale-order/view/${row.sale_id}" class="text-blue-500 underline">${data}</a>`
                     }
                 },
                 {
@@ -260,8 +267,15 @@
                     "targets": 4,
                     orderable: false,
                     render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "targets": 5,
+                    orderable: false,
+                    render: function(data, type, row) {
                         if (data == null) return null
-                        
+
                         let factoryOpts = ''
                         for (let i = 0; i < FACTORIES.length; i++) {
                             factoryOpts += `<option value="${FACTORIES[i].id}" ${FACTORIES[i].id == data.id ? 'selected' : ''}>${FACTORIES[i].name}</option>`
@@ -288,14 +302,8 @@
                     }
                 },
                 {
-                    "targets": 5,
-                    orderable: false,
-                    render: function(data, type, row) {
-                        return data
-                    }
-                },
-                {
                     "targets": 6,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -314,7 +322,6 @@
                 },
                 {
                     "targets": 9,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -323,11 +330,18 @@
                     "targets": 10,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data == null ? '-' : data.name
+                        return data
                     }
                 },
                 {
                     "targets": 11,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data == null ? '-' : data.name
+                    }
+                },
+                {
+                    "targets": 12,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -341,7 +355,7 @@
                     }
                 },
                 {
-                    "targets": 12,
+                    "targets": 13,
                     orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
@@ -365,17 +379,23 @@
                     }
                 },
                 {
-                    "targets": 13,
+                    "targets": 14,
                     orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
                     }
                 },
                 {
-                    "targets": 14,
+                    "targets": 15,
                     "orderable": false,
                     render: function(data, type, row) {
-                        if (IS_SALES_ONLY == true) return '';
+                        if (IS_SALES_ONLY == true) {
+                            return `<div class="flex items-center justify-end gap-x-2 px-2">
+                                <a href="{{ config('app.url') }}/production/view/${row.id}" class="rounded-full p-2 bg-green-200 inline-block" title="{!! __('View') !!}">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M23.271,9.419C21.72,6.893,18.192,2.655,12,2.655S2.28,6.893.729,9.419a4.908,4.908,0,0,0,0,5.162C2.28,17.107,5.808,21.345,12,21.345s9.72-4.238,11.271-6.764A4.908,4.908,0,0,0,23.271,9.419Zm-1.705,4.115C20.234,15.7,17.219,19.345,12,19.345S3.766,15.7,2.434,13.534a2.918,2.918,0,0,1,0-3.068C3.766,8.3,6.781,4.655,12,4.655s8.234,3.641,9.566,5.811A2.918,2.918,0,0,1,21.566,13.534Z"/><path d="M12,7a5,5,0,1,0,5,5A5.006,5.006,0,0,0,12,7Zm0,8a3,3,0,1,1,3-3A3,3,0,0,1,12,15Z"/></svg>
+                                </a>
+                            </div>`;
+                        }
 
                         if (row.status == 5) {
                             return `<div class="flex items-center justify-end gap-x-2 px-2">

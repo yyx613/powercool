@@ -650,15 +650,17 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     // Production Finish Good
     Route::controller(ProductController::class)->prefix('production-finish-good')->name('production_finish_good.')->middleware(['can:production_material.view'])->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/view/{product}', 'view')->name('view');
     });
     // Production Material
     Route::controller(ProductController::class)->prefix('production-material')->name('production_material.')->middleware(['can:production_material.view'])->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/record-usage/{frm}', 'recordUsage')->name('record_usage');
         Route::post('/record-usage/{frm}', 'recordUsageSubmit')->name('record_usage_submit');
-        Route::get('/get-data', 'recordUsageGetData')->name('record_usage_get_data');
+        Route::get('/record-usage-data', 'recordUsageGetData')->name('record_usage_get_data');
     });
     // Production Request
     Route::controller(ProductionRequestController::class)->prefix('production-request')->name('production_request.')->middleware(['can:production_request.view'])->group(function () {
