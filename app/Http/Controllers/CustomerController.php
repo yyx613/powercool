@@ -197,6 +197,20 @@ class CustomerController extends Controller
             'records_ids' => $records_ids,
         ];
 
+        // Get rejection remarks for rejected customers
+        $rejectedCustomerIds = $records_paginator->where('status', Customer::STATUS_APPROVAL_REJECTED)->pluck('id')->toArray();
+        $rejectRemarks = [];
+        if (!empty($rejectedCustomerIds)) {
+            $rejectRemarks = Approval::where('object_type', Customer::class)
+                ->whereIn('object_id', $rejectedCustomerIds)
+                ->where('status', Approval::STATUS_REJECTED)
+                ->whereNotNull('reject_remark')
+                ->get()
+                ->groupBy('object_id')
+                ->map(fn($approvals) => $approvals->sortByDesc('updated_at')->first()->reject_remark)
+                ->toArray();
+        }
+
         foreach ($records_paginator as $key => $record) {
             $sales_agents = SalesAgent::whereIn('id', $record->salesAgents->pluck('sales_agent_id')->toArray())->pluck('name')->toArray();
 
@@ -212,9 +226,15 @@ class CustomerController extends Controller
                 'platform' => $record->platform->name ?? '-',
                 'sales_agents' => join(', ', $sales_agents),
                 'status' => $record->statusToLabel($record->status),
-                'can_edit' => hasPermission('customer.edit') && $record->status != Customer::STATUS_APPROVAL_PENDING,
-                'can_delete' => hasPermission('customer.delete'),
-                'can_duplicate' => hasPermission('customer.create'),
+                'reject_remark' => $rejectRemarks[$record->id] ?? null,
+                'can_edit' => hasPermission('customer.edit')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING
+                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
+                'can_delete' => hasPermission('customer.delete')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING,
+                'can_duplicate' => hasPermission('customer.create')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING
+                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
             ];
         }
 
@@ -291,7 +311,7 @@ class CustomerController extends Controller
             'picture' => 'nullable',
             'picture.*' => 'file|extensions:jpg,png,jpeg',
             'credit_term' => 'nullable',
-            'sale_agent' => 'nullable',
+            'sale_agent' => 'required|array|min:1',
             'area' => 'nullable',
             'debtor_type' => 'nullable',
             'platform' => 'nullable',
@@ -313,17 +333,6 @@ class CustomerController extends Controller
             'country' => 'nullable',
             'state' => 'nullable',
         ];
-        if ($req->boolean('for_einvoice') == true) {
-            $rules['local_oversea'] = 'required';
-            $rules['tin_number'] = 'required';
-            $rules['company_registration_number'] = 'required';
-            $rules['msic_code'] = 'required';
-            $rules['registered_name'] = 'required|max:250';
-            $rules['phone_number'] = 'required|max:250';
-            $rules['email'] = 'required|email|max:250';
-            $rules['identity_type'] = 'required_if:category,==,2|max:250';
-            $rules['identity_no'] = 'required_if:category,==,2|max:250';
-        }
         // Validate request
         $req->validate($rules, [
             'required_if' => 'The :attribute is required',
@@ -336,19 +345,6 @@ class CustomerController extends Controller
             'msic_code' => 'MSIC code',
             'local_oversea' => 'type',
         ]);
-
-        // Validate tin with hasil
-        if ($req->boolean('for_einvoice') == true && $req->boolean('neglect_tin_validation') == false) {
-            $res = (new EInvoiceController)->validateTIN($req->tin_number, 'BRN', $req->company_registration_number, $req->company_group == 1 ? 'powercool' : 'hi-ten');
-            if ($res->status() != 200) {
-                $err = json_decode($res->getData()->message);
-
-                throw ValidationException::withMessages([
-                    'tin_number' => is_string($err) ? $err : ($err->title ?? $err->message),
-                    'tin_number_hasil' => true,
-                ]);
-            }
-        }
 
         try {
             DB::beginTransaction();
@@ -397,6 +393,25 @@ class CustomerController extends Controller
                 ]);
 
                 (new Branch)->assign(Customer::class, $customer->id, $req->branch ?? null);
+
+                // New debtor requires approval
+                $is_new_debtor = true;
+                $customer->status = Customer::STATUS_APPROVAL_PENDING;
+                $customer->save();
+
+                $sale_agent_ids = $req->sale_agent == null ? null : join(',', $req->sale_agent);
+                $approval = Approval::create([
+                    'object_type' => Customer::class,
+                    'object_id' => $customer->id,
+                    'status' => Approval::STATUS_PENDING_APPROVAL,
+                    'data' => json_encode([
+                        'is_new_debtor' => true,
+                        'to_credit_term_ids' => $req->credit_term,
+                        'sale_agent_ids' => $sale_agent_ids,
+                        'description' => 'New debtor registration: ' . ($customer->company_name ?? $customer->name) . ' (' . $customer->sku . ')',
+                    ]),
+                ]);
+                (new Branch)->assign(Approval::class, $approval->id);
             } else {
                 // Filter out empty mobile numbers
                 $mobileNumbers = $req->mobile_number ? array_values(array_filter($req->mobile_number, function($value) {
@@ -489,19 +504,21 @@ class CustomerController extends Controller
                 }
             }
 
-            // Credit Terms
+            // Credit Terms (skip for new debtors - handled in new debtor approval)
             $approval_required = false;
-            $current_terms = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->pluck('credit_term_id')->toArray();
-            $req_terms = $req->credit_term == null ? [] : $req->credit_term;
+            if (!isset($is_new_debtor)) {
+                $current_terms = ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->pluck('credit_term_id')->toArray();
+                $req_terms = $req->credit_term == null ? [] : $req->credit_term;
 
-            // check for approval
-            if (count($current_terms) != count($req_terms)) {
-                $approval_required = true;
-            } else {
-                for ($i = 0; $i < count($current_terms); $i++) {
-                    if (!in_array($current_terms[$i], $req_terms)) {
-                        $approval_required = true;
-                        break;
+                // check for approval
+                if (count($current_terms) != count($req_terms)) {
+                    $approval_required = true;
+                } else {
+                    for ($i = 0; $i < count($current_terms); $i++) {
+                        if (!in_array($current_terms[$i], $req_terms)) {
+                            $approval_required = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -533,7 +550,7 @@ class CustomerController extends Controller
                 $customer->save();
             }
 
-            if (!$approval_required && $req->credit_term != null) {
+            if (!isset($is_new_debtor) && !$approval_required && $req->credit_term != null) {
                 ObjectCreditTerm::where('object_type', Customer::class)->where('object_id', $customer->id)->delete();
 
                 $terms = [];

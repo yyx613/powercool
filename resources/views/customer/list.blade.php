@@ -128,7 +128,7 @@
         </div>
 
         <!-- Table -->
-        <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+        <table id="data-table" class="text-sm rounded-lg overflow-visible" style="width: 100%;">
             <thead>
                 <tr>
                     <th>
@@ -307,6 +307,25 @@
                     "width": "10%",
                     "targets": 10,
                     render: function(data, type, row) {
+                        if (row.reject_remark) {
+                            return `<div class="flex items-center gap-1">
+                                ${data}
+                                <div class="group relative">
+                                    <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                    <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-3.5 opacity-0 z-[-10] w-56">
+                                        <div class="rounded shadow border bg-white">
+                                            <div class="flex items-center gap-2 border-b px-3 py-2">
+                                                <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                                <p class="font-medium">Rejected Reason</p>
+                                            </div>
+                                            <div class="px-3 py-2">
+                                                ${row.reject_remark}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
                         return data
                     }
                 },
