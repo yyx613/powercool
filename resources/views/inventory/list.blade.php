@@ -450,7 +450,11 @@
             ajax: {
                 data: function() {
                     var info = $('#data-table').DataTable().page.info();
-                    var url = "{{ route('product.get_data') }}"
+                    @if ($is_production)
+                        var url = "{{ route($is_product ? 'production_finish_good.get_data' : 'production_material.get_data') }}"
+                    @else
+                        var url = "{{ route($is_product ? 'product.get_data' : 'raw_material.get_data') }}"
+                    @endif
 
                     url =
                         `${url}?page=${ INIT_LOAD == true && DEFAULT_PAGE != null ? DEFAULT_PAGE : info.page + 1 }&is_product=${IS_PRODUCT}&is_production=${IS_PRODUCTION}`
