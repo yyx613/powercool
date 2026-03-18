@@ -172,11 +172,11 @@
                         <option value="">{{ __('Select a sales agent') }}</option>
                         @if (isset($user) && $user->salesAgents)
                             @foreach ($user->salesAgents as $sa)
-                                <option value="{{ $sa->id }}" selected>{{ $sa->name }}</option>
+                                <option value="{{ $sa->id }}" selected>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                             @endforeach
                         @endif
                         @foreach ($sales_agents as $sa)
-                            <option value="{{ $sa->id }}">{{ $sa->name }}</option>
+                            <option value="{{ $sa->id }}">{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('sales_agent')" class="mt-1" />

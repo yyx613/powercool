@@ -20,8 +20,7 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-8">
             <div class="flex flex-col">
-                <x-app.input.label id="category" class="mb-1">{{ __('Category') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                <x-app.input.label id="category" class="mb-1">{{ __('Category') }}</x-app.input.label>
                 <x-app.input.select2 name="category" id="category" :hasError="$errors->has('category')"
                     placeholder="{{ __('Select a category') }}">
                     <option value="">{{ __('Select a category') }}</option>
@@ -124,11 +123,10 @@
                 <x-app.message.error id="trade_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
-                <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span
+                <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span class="text-sm text-slate-500">(012-1234 1111 / 012-1234 111)</span> <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')"
                     value="{{ old('phone_number', isset($duplicate) ? $duplicate->phone : (isset($customer) ? $customer->phone : null)) }}" />
-                <span class="text-sm text-slate-500">{{ __('"+6" is not required') }}</span>
                 <x-app.message.error id="phone_number_err" />
             </div>
             <div class="flex flex-col hidden for-all">
@@ -147,19 +145,19 @@
                 <x-app.message.error id="address_err" />
             </div>
             <div class="flex flex-col">
-                <x-app.input.label id="city" class="mb-1">{{ __('City') }}</x-app.input.label>
+                <x-app.input.label id="city" class="mb-1">{{ __('City') }} <span class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="city" id="city" :hasError="$errors->has('city')"
                     value="{{ old('city', isset($duplicate) ? $duplicate->city : (isset($customer) ? $customer->city : null)) }}" />
                 <x-app.message.error id="city_err" />
             </div>
             <div class="flex flex-col">
-                <x-app.input.label id="zip_code" class="mb-1">{{ __('Zip Code') }}</x-app.input.label>
+                <x-app.input.label id="zip_code" class="mb-1">{{ __('Zip Code') }} <span class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.input name="zip_code" id="zip_code" :hasError="$errors->has('zip_code')"
                     value="{{ old('zip_code', isset($duplicate) ? $duplicate->zipcode : (isset($customer) ? $customer->zipcode : null)) }}" class="int-input" />
                 <x-app.message.error id="zip_code_err" />
             </div>
             <div class="flex flex-col">
-                <x-app.input.label id="country" class="mb-1">{{ __('Country') }}</x-app.input.label>
+                <x-app.input.label id="country" class="mb-1">{{ __('Country') }} <span class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.select2 name="country" id="country" :hasError="$errors->has('country')"
                     placeholder="{{ __('Select a country') }}">
                     <option value="">{{ __('Select a country') }}</option>
@@ -172,7 +170,7 @@
                 <x-app.message.error id="country_err" />
             </div>
             <div class="flex flex-col">
-                <x-app.input.label id="state" class="mb-1">{{ __('State') }}</x-app.input.label>
+                <x-app.input.label id="state" class="mb-1">{{ __('State') }} <span class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
                 <x-app.input.select2 name="state" id="state" :hasError="$errors->has('state')"
                     placeholder="{{ __('Select a state') }}">
                     <option value="">{{ __('Select a state') }}</option>
@@ -215,8 +213,7 @@
                 </div>
             @endif
             <div class="flex flex-col">
-                <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                <x-app.input.label id="company_group" class="mb-1">{{ __('Company Group') }}</x-app.input.label>
                 <x-app.input.select2 name="company_group" id="company_group" :hasError="$errors->has('company_group')"
                     placeholder="{{ __('Select a company group') }}">
                     <option value="">{{ __('Select a company group') }}</option>
@@ -238,8 +235,7 @@
                 <x-app.message.error id="prefix_err" />
             </div> --}}
             <div class="flex flex-col">
-                <x-app.input.label id="customer_name" class="mb-1">{{ __('Customer Name') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                <x-app.input.label id="customer_name" class="mb-1">{{ __('Customer Name') }}</x-app.input.label>
                 <x-app.input.input name="customer_name" id="customer_name" :hasError="$errors->has('customer_name')"
                     value="{{ old('customer_name', isset($duplicate) ? $duplicate->name : (isset($customer) ? $customer->name : null)) }}" />
                 <x-app.message.error id="customer_name_err" />
@@ -252,14 +248,14 @@
             </div>
             <div class="flex flex-col">
                 <div class="flex justify-between items-center mb-1">
-                    <x-app.input.label id="mobile_number">{{ __('Mobile Number') }}</x-app.input.label>
+                    <x-app.input.label id="mobile_number">{{ __('Mobile Number') }} <span class="text-sm text-slate-500">(012-1234 1111 / 012-1234 111)</span></x-app.input.label>
                     <button type="button" id="add-mobile-number-btn" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">+ {{ __('Add') }}</button>
                 </div>
                 <div id="mobile-numbers-container">
                     @if(isset($customer) && $customer->mobile_number && is_array($customer->mobile_number) && count($customer->mobile_number) > 0)
                         @foreach($customer->mobile_number as $index => $mobile)
                             <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" placeholder="e.g. 0121234567" />
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
                                 @if($index > 0)
                                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
@@ -277,7 +273,7 @@
                         @endphp
                         @foreach($duplicateMobiles as $index => $mobile)
                             <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" placeholder="e.g. 0121234567" />
+                                <x-app.input.input name="mobile_number[]" class="flex-1" value="{{ $mobile }}" />
                                 @if($index > 0)
                                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
@@ -291,7 +287,7 @@
                         @endforeach
                     @else
                         <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                            <x-app.input.input name="mobile_number[]" class="flex-1" value="" placeholder="e.g. 0121234567" />
+                            <x-app.input.input name="mobile_number[]" class="flex-1" value="" />
                         </div>
                     @endif
                 </div>
@@ -400,8 +396,7 @@
                 </div>
             @endif
             <div class="flex flex-col">
-                <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
-                        class="text-sm text-red-500">*</span></x-app.input.label>
+                <x-app.input.label id="status" class="mb-1">{{ __('Status') }}</x-app.input.label>
                 <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                     @if (isCreateLink())
                         <option value="2" selected>{{ __('Pending Fill Up Info') }}</option>
@@ -683,7 +678,7 @@
         $('#add-mobile-number-btn').on('click', function() {
             const newRow = `
                 <div class="flex items-center gap-2 mb-2 mobile-number-row">
-                    <input type="text" name="mobile_number[]" class="flex-1 border border-gray-300 rounded px-3 py-2" value="" placeholder="e.g. 0121234567" />
+                    <input type="text" name="mobile_number[]" class="flex-1 border border-gray-300 rounded px-3 py-2" value="" />
                     <button type="button" class="remove-mobile-number-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                             viewBox="0 0 24 24" width="512" height="512">
@@ -700,5 +695,47 @@
         $('body').on('click', '.remove-mobile-number-btn', function() {
             $(this).closest('.mobile-number-row').remove();
         })
+
+        // Mobile number formatting
+        function formatMobileNumber(value) {
+            let digits = value.replace(/\D/g, '').substring(0, 11);
+            if (digits.length > 7) {
+                return digits.substring(0, 3) + '-' + digits.substring(3, 7) + ' ' + digits.substring(7);
+            } else if (digits.length > 3) {
+                return digits.substring(0, 3) + '-' + digits.substring(3);
+            }
+            return digits;
+        }
+
+        // Apply formatting on input for phone_number and mobile_number[] fields
+        $('body').on('input', 'input[name="phone_number"], input[name="mobile_number[]"]', function() {
+            let cursorPos = this.selectionStart;
+            let oldVal = $(this).val();
+            let formatted = formatMobileNumber(oldVal);
+            $(this).val(formatted);
+
+            // Adjust cursor position based on formatting characters added
+            let digitsBeforeCursor = oldVal.substring(0, cursorPos).replace(/\D/g, '').length;
+            let newCursorPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < formatted.length && digitCount < digitsBeforeCursor; i++) {
+                newCursorPos = i + 1;
+                if (/\d/.test(formatted[i])) digitCount++;
+            }
+            this.setSelectionRange(newCursorPos, newCursorPos);
+        });
+
+        // Format existing values on page load
+        $('input[name="phone_number"], input[name="mobile_number[]"]').each(function() {
+            let val = $(this).val();
+            if (val) $(this).val(formatMobileNumber(val));
+        });
+
+        // Strip formatting before form submit to send raw digits
+        $('#info-form').on('submit', function() {
+            $('input[name="phone_number"], input[name="mobile_number[]"]').each(function() {
+                $(this).val($(this).val().replace(/\D/g, ''));
+            });
+        });
     </script>
 @endpush

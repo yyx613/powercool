@@ -24,7 +24,7 @@
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Order') }}</x-app.page-title>
         <div class="flex gap-x-4">
-            @can('sale.sale_order.convert')
+            @can('sale.sale_order.convert_from')
                 <a href="{{ route('quotation.to_sale_order') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
@@ -38,6 +38,8 @@
                     </svg>
                     <span>{{ __('Convert From Quotation') }}</span>
                 </a>
+            @endcan
+            @can('sale.sale_order.convert_to')
                 <a href="{{ route('sale_order.to_delivery_order') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"

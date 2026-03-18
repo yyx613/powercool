@@ -121,7 +121,7 @@
                     <option value="">Select a sales agent</option>
                     <option value="without_agent" @selected(isset($default_sales_agent) && $default_sales_agent == 'without_agent')>{{ __('Without Agent') }}</option>
                     @foreach ($sales_agents as $sa)
-                        <option value="{{ $sa->id }}" @selected(isset($default_sales_agent) && $default_sales_agent == $sa->id)>{{ $sa->name }}</option>
+                        <option value="{{ $sa->id }}" @selected(isset($default_sales_agent) && $default_sales_agent == $sa->id)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                     @endforeach
                 </x-app.input.select>
             </div>

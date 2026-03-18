@@ -260,7 +260,7 @@ class RawMaterialRequestController extends Controller
 
     public function cancel(Request $req, RawMaterialRequest $rmq)
     {
-        if (!hasPermission('production.create')) {
+        if (!hasPermission('inventory.raw_material_request.complete')) {
             return back()->with('error', 'You do not have permission to cancel this request');
         }
 

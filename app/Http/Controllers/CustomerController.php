@@ -821,36 +821,16 @@ class CustomerController extends Controller
             $keyword = $req->keyword;
             $is_edit = $req->boolean('is_edit');
 
-            if (isSalesOnly()) {
-                $sales_agents_ids = DB::table('sales_sales_agents')->where('sales_id', Auth::user()->id)->pluck('sales_agent_id')->toArray();
-                $customer_ids = CustomerSaleAgent::whereIn('sales_agent_id', $sales_agents_ids)->pluck('customer_id')->toArray();
-            }
             if ($is_edit) {
-                if (isset($customer_ids)) {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
-                        ->whereIn('id', $customer_ids)
-                        ->where('company_name', 'like', '%' . $keyword . '%')
-                        ->orderBy('id', 'desc')->get();
-                } else {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
-                        ->where('company_name', 'like', '%' . $keyword . '%')
-                        ->orderBy('id', 'desc')->get();
-                }
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                    ->where('company_name', 'like', '%' . $keyword . '%')
+                    ->orderBy('id', 'desc')->get();
             } else {
-                if (isset($customer_ids)) {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
-                        ->where('company_name', 'like', '%' . $keyword . '%')
-                        ->whereIn('id', $customer_ids)
-                        ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
-                        ->orderBy('id', 'desc')
-                        ->get();
-                } else {
-                    $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
-                        ->where('company_name', 'like', '%' . $keyword . '%')
-                        ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
-                        ->orderBy('id', 'desc')
-                        ->get();
-                }
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                    ->where('company_name', 'like', '%' . $keyword . '%')
+                    ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
+                    ->orderBy('id', 'desc')
+                    ->get();
             }
             $customers = $customers->keyBy('id')->all();
 

@@ -28,7 +28,7 @@ class CustomizeProductController extends Controller
 
     public function getData(Request $req)
     {
-        $records = CustomizeProduct::with('production')
+        $records = CustomizeProduct::with('production.sale')
             ->whereHas('production', function ($q) {
                 $q->where('status', Production::STATUS_COMPLETED);
             });
@@ -62,7 +62,7 @@ class CustomizeProductController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
-                4 => 'weight',
+                6 => 'weight',
             ];
             foreach ($req->order as $order) {
                 if (isset($map[$order['column']])) {
@@ -98,6 +98,9 @@ class CustomizeProductController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'name' => $record->name,
+                'sale_sku' => $record->production->sale->sku ?? null,
+                'sale_id' => $record->production->sale_id ?? null,
                 'production_sku' => $record->production->sku ?? null,
                 'dimensions' => $dimensions,
                 'weight' => $record->weight ? number_format($record->weight, 2) . ' kg' : null,
@@ -127,6 +130,7 @@ class CustomizeProductController extends Controller
         $customizeProduct = CustomizeProduct::findOrFail($id);
 
         $validated = $req->validate([
+            'name' => 'nullable|string|max:255',
             'weight' => 'nullable|numeric|min:0',
             'length' => 'nullable|numeric|min:0',
             'width' => 'nullable|numeric|min:0',

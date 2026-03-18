@@ -213,6 +213,7 @@ class ViewServiceProvider extends ServiceProvider
             }
 
             $view->with('permissions_group', $permissions_group);
+            $view->with('permission_descriptions', config('permissions'));
         });
         View::composer(['task.form', 'task.view'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {

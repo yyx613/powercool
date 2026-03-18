@@ -24,6 +24,7 @@
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title class="mb-4 md:mb-0">{{ __('Raw Material Request') }}</x-app.page-title>
         <div class="flex gap-4">
+            @can('inventory.raw_material_request.create')
             <a href="{{ route('raw_material_request.create') }}"
                 class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -34,6 +35,7 @@
                 </svg>
                 {{ __('New') }}
             </a>
+            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -203,7 +205,6 @@
                 orderable: false,
                 render: function(data, type, row) {
                     const CAN_COMPLETE = @json(hasPermission('inventory.raw_material_request.complete'));
-                    const CAN_CANCEL = @json(hasPermission('production.create'));
 
                     return `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
@@ -216,7 +217,7 @@
                                                                         ` : ''
                             }
                             ${
-                                row.status == 1 && CAN_CANCEL ? `
+                                row.status == 1 && CAN_COMPLETE ? `
                                                                         <button type="button" onclick="openCancelModal(${row.id})" class="rounded-full p-2 bg-red-200 inline-block" title="{!! __('Cancel') !!}">
                                                                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512.021 512.021" style="enable-background:new 0 0 512.021 512.021;" xml:space="preserve" width="512" height="512">
                                                                                <path d="M301.258,256.01L502.645,54.645c12.501-12.501,12.501-32.769,0-45.269c-12.501-12.501-32.769-12.501-45.269,0l0,0   L256.01,210.762L54.645,9.376c-12.501-12.501-32.769-12.501-45.269,0s-12.501,32.769,0,45.269L210.762,256.01L9.376,457.376   c-12.501,12.501-12.501,32.769,0,45.269s32.769,12.501,45.269,0L256.01,301.258l201.365,201.387   c12.501,12.501,32.769,12.501,45.269,0c12.501-12.501,12.501-32.769,0-45.269L301.258,256.01z"/>

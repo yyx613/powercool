@@ -155,11 +155,20 @@
             <div class="rounded-lg">
                 <h1 class="font-black text-xl text-blue-900">{{ __('Production ID') }}: {{ $production->sku }}</h1>
                 @if (in_array(strtolower($production->status), ['in progress']) && !($is_sales_only ?? false))
+                    @can('production.complete')
                     <x-app.button.button
                         class="font-semibold w-full justify-center mt-2 bg-transparent text-emerald-500 border border-emerald-500 transition duration-250 hover:bg-emerald-500 hover:text-white"
                         id="complete-task-btn">
                         {{ __('Complete Task') }}
                     </x-app.button.button>
+                    @endcan
+                    @can('production.cancel')
+                    <x-app.button.button
+                        class="font-semibold w-full justify-center mt-2 bg-transparent text-red-500 border border-red-500 transition duration-250 hover:bg-red-500 hover:text-white"
+                        id="cancel-production-btn">
+                        {{ __('Cancel Production') }}
+                    </x-app.button.button>
+                    @endcan
                 @endif
             </div>
             <div class="border-t pt-4 mt-4">
@@ -225,6 +234,7 @@
     <x-app.modal.confirmation-modal />
     <x-app.modal.milestone-rejections-modal />
     <x-app.modal.force-complete-modal :production="$production" />
+    <x-app.modal.cancel-production-modal :production="$production" />
     {{-- <x-app.modal.add-milestone-modal :production="$production" :materialUse="$material_use" /> --}}
 @endsection
 
@@ -438,6 +448,10 @@
         // Confirm Task
         $('#complete-task-btn').on('click', function() {
             $('#force-complete-modal').addClass('show-modal')
+        })
+        // Cancel Production
+        $('#cancel-production-btn').on('click', function() {
+            $('#cancel-production-modal').addClass('show-modal')
         })
         // View rejections
         $('.view-rejections-btns').on('click', function() {

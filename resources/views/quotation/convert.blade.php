@@ -136,7 +136,7 @@
                                     data-id="{{ $sp->id }}">
                                     <a href="{{ route('quotation.to_sale_order') }}?sp={{ $sp->id }}"
                                         class="text-sm flex items-center justify-between p-2 font-semibold">
-                                        {{ $sp->name }}
+                                        {{ $sp->name }} ({{ $sp->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                             viewBox="0 0 24 24" width="512" height="512">
                                             <path
