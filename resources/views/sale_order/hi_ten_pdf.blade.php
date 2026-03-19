@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 440px 25px 50px 25px;
+        margin: 465px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -415px;
+        top: -440px;
         left: 0px;
         right: 0px;
     }
@@ -141,10 +141,6 @@
                 </td>
             </tr>
         </table>
-    </header>
-
-    <main>
-        <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
@@ -177,6 +173,12 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Total (RM)</td>
             </tr>
+        </table>
+    </header>
+
+    <main>
+        <!-- Item -->
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; margin-top: 5px;">
             @php
                 $total = 0;
                 $total_tax = 0;

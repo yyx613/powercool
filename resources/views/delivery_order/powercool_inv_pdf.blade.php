@@ -8,12 +8,12 @@
 </head>
 <style>
     @page {
-        margin: 410px 25px 50px 25px;
+        margin: 435px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -385px;
+        top: -410px;
         left: 0px;
         right: 0px;
     }
@@ -169,10 +169,6 @@
                 </td>
             </tr>
         </table>
-    </header>
-
-    <main>
-        <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
@@ -203,6 +199,12 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 10%;">
                     Total<br>(RM)</td>
             </tr>
+        </table>
+    </header>
+
+    <main>
+        <!-- Item -->
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             @foreach ($products as $key => $prod)
                 <tr>
                     <td
