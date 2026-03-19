@@ -14,7 +14,6 @@ class PermissionSeeder extends Seeder
     {
         $permissions = [
             'notification.view',
-            'notification.production_complete_notification',
             'notification.view_mobile_app',
             'notification.view_service_reminder',
             'notification.view_vehicle_service_reminder',

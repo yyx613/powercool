@@ -3,11 +3,10 @@
 return [
     // Notification
     'notification.view' => 'Show the notification bell icon in the sidebar and access the notification listing page to view all system alerts',
-    'notification.production_complete_notification' => 'Receive a notification when a production order is completed (adds user to the recipient list when production finishes)',
     'notification.view_mobile_app' => 'Show mobile app task reminder notifications in the notification listing page and include them in the unread count badge',
     'notification.view_service_reminder' => 'Show service reminder notifications in the notification listing page and include them in the unread count badge',
     'notification.view_vehicle_service_reminder' => 'Show vehicle service reminder notifications in the notification listing page and include them in the unread count badge',
-    'notification.view_production_completed' => 'Show production completed notifications in the notification listing page and include them in the unread count badge',
+    'notification.view_production_completed' => 'Receive production completion notifications and show them in the notification listing page with unread count badge',
 
     // Approval
     'approval.view' => 'Show the Approval menu in the sidebar with the pending red dot badge, and access the approval listing page to approve or reject requests',

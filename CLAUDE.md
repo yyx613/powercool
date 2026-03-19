@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Important
 - Always update business-logic.txt for every changes
 - Don't use font size that is too small
+- Don't use font color that is too faint
 
 ### Testing
 

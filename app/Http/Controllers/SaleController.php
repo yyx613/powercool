@@ -246,15 +246,16 @@ class SaleController extends Controller
             }
 
             // Rejected reason
-            $rejected_reason = null;
-            if ($record->status == Sale::STATUS_APPROVAL_REJECTED) {
-                $rejected_reason = Approval::where('object_type', Sale::class)
-                    ->where('object_id', $record->id)
-                    ->where('status', Approval::STATUS_REJECTED)
-                    ->where('data', 'like', '%is_quo%')
-                    ->orderBy('id', 'desc')
-                    ->value('reject_remark');
-            }
+            $rejected_remarks = Approval::withoutGlobalScope(BranchScope::class)->where('object_type', Sale::class)
+                ->where('object_id', $record->id)
+                ->where('status', Approval::STATUS_REJECTED)
+                ->where('data', 'like', '%is_quo%')
+                ->orderBy('id', 'desc')
+                ->get(['reject_remark', 'updated_at'])
+                ->filter(fn($a) => $a->reject_remark);
+            $rejected_reason = $rejected_remarks->isNotEmpty()
+                ? $rejected_remarks->values()->map(fn($a, $i) => ($rejected_remarks->count() > 1 ? ($i + 1) . '. ' : '') . '<span class="text-gray-500 text-xs">[' . Carbon::parse($a->updated_at)->format('d M Y H:i') . ']</span> ' . $a->reject_remark)->implode('<br>')
+                : null;
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -1021,15 +1022,16 @@ class SaleController extends Controller
             }
 
             // Rejected reason
-            $rejected_reason = null;
-            if ($record->status == Sale::STATUS_APPROVAL_REJECTED) {
-                $rejected_reason = Approval::where('object_type', Sale::class)
-                    ->where('object_id', $record->id)
-                    ->where('status', Approval::STATUS_REJECTED)
-                    ->where('data', 'like', '%"is_quo":false%')
-                    ->orderBy('id', 'desc')
-                    ->value('reject_remark');
-            }
+            $rejected_remarks = Approval::withoutGlobalScope(BranchScope::class)->where('object_type', Sale::class)
+                ->where('object_id', $record->id)
+                ->where('status', Approval::STATUS_REJECTED)
+                ->where('data', 'like', '%"is_quo":false%')
+                ->orderBy('id', 'desc')
+                ->get(['reject_remark', 'updated_at'])
+                ->filter(fn($a) => $a->reject_remark);
+            $rejected_reason = $rejected_remarks->isNotEmpty()
+                ? $rejected_remarks->values()->map(fn($a, $i) => ($rejected_remarks->count() > 1 ? ($i + 1) . '. ' : '') . '<span class="text-gray-500 text-xs">[' . Carbon::parse($a->updated_at)->format('d M Y H:i') . ']</span> ' . $a->reject_remark)->implode('<br>')
+                : null;
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -2873,6 +2875,7 @@ class SaleController extends Controller
                     }
 
                     $prod = Product::where('id', $req->product_id[$i])->first();
+                    $skip_product_update = false;
                     if ($req->product_order_id != null && $req->product_order_id[$i] != null) {
                         $sp = SaleProduct::where('id', $req->product_order_id[$i])->first();
                         if ($req->sequence[$i] != $sp->sequence) {
@@ -2946,7 +2949,7 @@ class SaleController extends Controller
                         }
                     }
 
-                    if (! $is_draft && ! $skip_approval && $req->type != 'cash-sale') {
+                    if (! $is_draft && ! $skip_approval && ! $skip_product_update && $req->type != 'cash-sale') {
                         if ($req->selling_price[$i] == null) {
                             if ($req->override_selling_price != null && $req->override_selling_price[$i] != null & $req->override_selling_price[$i] != '' && ($req->override_selling_price[$i] < $prod->min_price || $req->override_selling_price[$i] > $prod->max_price)) {
                                 $is_greater = $req->override_selling_price[$i] < $prod->min_price ? false : ($req->override_selling_price[$i] > $prod->max_price ? true : false);

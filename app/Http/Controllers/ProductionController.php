@@ -857,7 +857,7 @@ class ProductionController extends Controller
                     $prod->save();
 
                     $receivers = User::withoutGlobalScope(BranchScope::class)->whereHas('roles.permissions', function ($q) {
-                        $q->whereIn('name', ['notification.production_complete_notification']);
+                        $q->whereIn('name', ['notification.view_production_completed']);
                     })->get();
     
                     Notification::send($receivers, new ProductionCompleteNotification([
