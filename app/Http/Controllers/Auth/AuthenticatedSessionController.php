@@ -36,7 +36,7 @@ class AuthenticatedSessionController extends Controller
             Session::put('as_branch', Branch::LOCATION_KL);
         }
         if (isSalesOnly()) {
-            return redirect()->intended('/quotation');
+            return redirect('/quotation');
         }
 
         // Redirect to first accessible page (sidebar menu order)
@@ -56,13 +56,25 @@ class AuthenticatedSessionController extends Controller
             'report.view' => '/report',
         ];
 
-        foreach ($redirectMap as $permission => $route) {
-            if ($user->can($permission)) {
-                return redirect()->intended($route);
+        // Check if the intended URL is one the user has permission to access
+        $intendedUrl = session()->pull('url.intended');
+        if ($intendedUrl) {
+            $intendedPath = parse_url($intendedUrl, PHP_URL_PATH);
+            foreach ($redirectMap as $permission => $route) {
+                if (str_starts_with($intendedPath, $route) && $user->can($permission)) {
+                    return redirect($intendedUrl);
+                }
             }
         }
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Redirect to first permitted page
+        foreach ($redirectMap as $permission => $route) {
+            if ($user->can($permission)) {
+                return redirect($route);
+            }
+        }
+
+        return redirect(RouteServiceProvider::HOME);
     }
 
     /**
