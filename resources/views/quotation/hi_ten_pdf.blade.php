@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 460px 25px 50px 25px;
+        margin: 435px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -435px;
+        top: -410px;
         left: 0px;
         right: 0px;
     }
@@ -162,41 +162,42 @@
                     to submit our quote as follows:</td>
             </tr>
         </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-            <tr>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
-                    Item</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
-                    Item Code</td>
-                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
-                    Description</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
-                    Qty</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 5%;">
-                    UOM</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
-                    U/Price (RM)</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
-                    Discount (RM)</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
-                    Promotion (RM)</td>
-                <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
-                    Total (RM)</td>
-            </tr>
-        </table>
     </header>
 
     <main>
         <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
+                        Item</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
+                        Item Code</td>
+                    <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                        Description</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
+                        Qty</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 5%;">
+                        UOM</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        U/Price (RM)</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        Discount (RM)</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        Promotion (RM)</td>
+                    <td
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        Total (RM)</td>
+                </tr>
+            </thead>
+            <tbody>
             @php
                 $total = 0;
                 $total_tax = 0;
@@ -410,6 +411,7 @@
                     @endphp
                 @endforeach
             @endif
+            </tbody>
         </table>
         <!-- Item Summary -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
