@@ -408,14 +408,14 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(RawMaterialRequestController::class)->prefix('raw-material-request')->name('raw_material_request.')->middleware(['can:inventory.raw_material_request.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/create', 'create')->name('create')->middleware('branch.selected');
-        Route::post('/store', 'store')->name('store');
+        Route::get('/create', 'create')->name('create')->middleware(['branch.selected', 'can:inventory.raw_material_request.create']);
+        Route::post('/store', 'store')->name('store')->middleware(['can:inventory.raw_material_request.create']);
         Route::get('/view/{rmqm}/logs', 'viewLogs')->name('view_logs');
         Route::get('/view-logs-get-data', 'viewLogsGetData')->name('view_logs_get_data');
         Route::get('/view/{rmq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/complete/{rmq}', 'complete')->name('complete')->middleware('can:inventory.raw_material_request.complete');
-        Route::post('/cancel/{rmq}', 'cancel')->name('cancel');
+        Route::post('/cancel/{rmq}', 'cancel')->name('cancel')->middleware('can:inventory.raw_material_request.complete');
         Route::get('/material/complete/{rmqm}', 'materialComplete')->name('material_complete');
         Route::get('/material/incomplete/{rmqm}', 'materialIncomplete')->name('material_incomplete');
     });
@@ -475,7 +475,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/delete/{sale}', 'delete')->name('delete')->middleware(['can:sale.sale_order.delete']);
             Route::get('/pdf/{sale}', 'pdfSaleOrder')->name('pdf');
             Route::get('/proforma-invoice/pdf/{sale}', 'pdfSaleOrder')->name('proforma_invoice_pdf');
-            Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert']);
+            Route::match(['get', 'post'], '/to-delivery-order', 'toDeliveryOrder')->name('to_delivery_order')->middleware(['can:sale.sale_order.convert_to']);
             Route::get('/convert-to-delivery-order', 'converToDeliveryOrder')->name('convert_to_delivery_order');
             Route::get('/get-next-sku', 'getNextSku')->name('get_next_sku');
             Route::post('/transfer/{sale}', 'transferSaleOrder')->name('transfer');
@@ -642,7 +642,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/to-in-progress', 'toInProgress')->name('to_in_progress');
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::post('/extend-due-date/{production}', 'extendDueDate')->name('extend_due_date');
-        Route::post('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task');
+        Route::post('/force-complete-task/{production}', 'forceCompleteTask')->name('force_complete_task')->middleware('can:production.complete');
+        Route::post('/cancel/{production}', 'cancelProduction')->name('cancel')->middleware('can:production.cancel');
         Route::post('/add-milestone/{production}', 'addMilestone')->name('add_milestone');
         Route::get('/search-product', 'searchProduct')->name('search_product');
         Route::post('/update-factory/{production}', 'updateFactory')->name('update_factory');
@@ -671,7 +672,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::post('/store', 'store')->name('store')->middleware(['can:production_request.create']);
         Route::get('/view/{pq}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
-        Route::get('/complete/{pq}', 'complete')->name('complete');
+        Route::get('/complete/{pq}', 'complete')->name('complete')->middleware('can:production_request.complete');
         Route::get('/material/complete/{pqm}', 'materialComplete')->name('material_complete');
         Route::get('/material/incomplete/{pqm}', 'materialIncomplete')->name('material_incomplete');
         Route::get('/to-production/{sale}/{product}', 'toProduction')->name('to_production');

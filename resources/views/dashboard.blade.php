@@ -41,6 +41,7 @@
                                     <td class="px-1 py-2 text-sm text-center">{{ $task->due_date }}</td>
                                     <td class="px-1 py-2 text-center">
                                         @php
+                                            $color = 'bg-gray-400';
                                             if ($task->status == 1) {
                                                 $color = 'bg-red-400';
                                             } elseif ($task->status == 2) {
@@ -103,6 +104,7 @@
                                     <td class="px-1 py-2 text-sm text-center">{{ $ps->due_date }}</td>
                                     <td class="px-1 py-2 text-center">
                                         @php
+                                            $color = 'bg-gray-400';
                                             if ($ps->status == 1) {
                                                 $color = 'bg-red-400';
                                             } elseif ($ps->status == 2) {

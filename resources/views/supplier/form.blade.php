@@ -207,7 +207,7 @@
                     <x-app.input.select2 name="sale_agent" id="sale_agent" :hasError="$errors->has('sale_agent')" placeholder="{{ __('Select a sale agent') }}">
                         <option value="">{{ __('Select a sale agent') }}</option>
                         @foreach ($sales_agents as $sa)
-                            <option value="{{ $sa->id }}" @selected(old('sale', isset($supplier) ? $supplier->sale_agent : null) == $sa->id)>{{ $sa->name }}</option>
+                            <option value="{{ $sa->id }}" @selected(old('sale', isset($supplier) ? $supplier->sale_agent : null) == $sa->id)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                         @endforeach
                     </x-app.input.select2>
                     <x-input-error :messages="$errors->get('sale_agent')" class="mt-2" />

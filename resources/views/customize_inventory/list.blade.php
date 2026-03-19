@@ -47,7 +47,9 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('SKU') }}</th>
+                    <th>{{ __('Serial No') }}</th>
+                    <th>{{ __('Name') }}</th>
+                    <th>{{ __('SO') }}</th>
                     <th>{{ __('Production SKU') }}</th>
                     <th>{{ __('Dimensions') }}</th>
                     <th>{{ __('Weight') }}</th>
@@ -82,6 +84,12 @@
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [{
                     data: 'sku'
+                },
+                {
+                    data: 'name'
+                },
+                {
+                    data: 'sale_sku'
                 },
                 {
                     data: 'production_sku'
@@ -131,11 +139,13 @@
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
-                        return data ?? '-'
+                        if (!data) return '-'
+                        return `<a href="{{ config('app.url') }}/sale/sale-order/view/${row.sale_id}" class="text-blue-500 underline">${data}</a>`
                     }
                 },
                 {
                     "targets": 3,
+                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -149,7 +159,6 @@
                 },
                 {
                     "targets": 5,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -184,6 +193,20 @@
                 },
                 {
                     "targets": 10,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "targets": 11,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "targets": 12,
                     "orderable": false,
                     render: function(data, type, row) {
                         return `<div class="flex items-center justify-end gap-x-2 px-2"> 

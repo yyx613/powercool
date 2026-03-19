@@ -54,6 +54,7 @@ class PermissionSeeder extends Seeder
             'inventory.customize.edit',
 
             'inventory.raw_material_request.view',
+            'inventory.raw_material_request.create',
             'inventory.raw_material_request.complete',
 
             'adhoc_service.view',
@@ -99,7 +100,8 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.view_record',
             'sale.sale_order.cancel',
             'sale.sale_order.delete',
-            'sale.sale_order.convert',
+            'sale.sale_order.convert_from',
+            'sale.sale_order.convert_to',
 
             'sale.cash_sale.view',
             'sale.cash_sale.create',
@@ -153,6 +155,9 @@ class PermissionSeeder extends Seeder
 
             'production_request.view',
             'production_request.create',
+            'production_request.complete',
+            'production.cancel',
+            'production.complete',
 
             'ticket.view',
             'ticket.create',

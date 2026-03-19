@@ -13,6 +13,18 @@
     <form action="{{ route('customize.update', ['customizeProduct' => $customizeProduct->id]) }}" method="POST" id="form">
         @csrf
 
+        <!-- Name -->
+        <div class="bg-white p-4 border rounded-md mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                <div class="flex flex-col">
+                    <x-app.input.label id="name" class="mb-1">{{ __('Name') }}</x-app.input.label>
+                    <x-app.input.input name="name" id="name"
+                        value="{{ old('name', $customizeProduct->name) }}" />
+                    <x-input-error :messages="$errors->get('name')" class="mt-1" />
+                </div>
+            </div>
+        </div>
+
         <!-- Physical Dimensions -->
         <div class="bg-white p-4 border rounded-md">
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">

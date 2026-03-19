@@ -218,14 +218,18 @@
                     "targets": 5,
                     'orderable': false,
                     render: function(data, type, row) {
+                        let label = data
                         if (data == 0) {
-                            return 'Pending Approval'
+                            label = 'Pending Approval'
                         } else if (data == 1 || data == 3) {
-                            return 'Approved'
+                            label = 'Approved'
                         } else if (data == 2) {
-                            return 'Rejected'
+                            label = 'Rejected'
                         }
-                        return data
+                        if (row.actioned_by_name) {
+                            label += `<br><span class="text-xs text-gray-500">by: ${row.actioned_by_name}</span>`
+                        }
+                        return label
                     }
                 },
                 {
@@ -303,7 +307,7 @@
                     $(`.reject-btns[data-id="${id}"]`).remove()
                     $(`.approve-btns[data-id="${id}"]`).remove()
                     $(`tr[data-noti-id="${id}"]`).attr('data-unread', false)
-                    $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).text('Approved')
+                    $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).html('Approved<br><span class="text-xs text-gray-500">by: {{ auth()->user()->name }}</span>')
                 },
             });
         })
@@ -336,7 +340,7 @@
                     $(`.reject-btns[data-id="${id}"]`).remove()
                     $(`.approve-btns[data-id="${id}"]`).remove()
                     $(`tr[data-noti-id="${id}"]`).attr('data-unread', false)
-                    $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).text('Rejected')
+                    $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).html('Rejected<br><span class="text-xs text-gray-500">by: {{ auth()->user()->name }}</span>')
                 },
             });
         })

@@ -276,6 +276,7 @@ class ProductionController extends Controller
             'selected_product' => $production->product,
             'production_milestone_material_previews' => $production_milestone_material_previews,
             'customize_product' => $production->customizeProduct,
+            'customize_product_name' => $production->customizeProduct->name ?? null,
             'customize_product_material_use' => $production->customizeProduct
                 ? MaterialUse::with('materials.material')->where('customize_product_id', $production->customizeProduct->id)->first()
                 : null,
@@ -410,6 +411,7 @@ class ProductionController extends Controller
             if ($req->type == Production::TYPE_RND && ($production == null || $production->id == null)) {
                 $cp = CustomizeProduct::create([
                     'sku' => generateSku(CustomizeProduct::SKU_PREFIX),
+                    'name' => $req->customize_product_name,
                 ]);
                 (new Branch)->assign(CustomizeProduct::class, $cp->id);
 
@@ -478,9 +480,33 @@ class ProductionController extends Controller
                 $this->product::where('id', $req->product)->update([
                     'in_production' => true,
                 ]);
+
+                // For Normal productions with "customize" product, create CustomizeProduct if needed
+                if ($req->customize_product_name) {
+                    $existingCp = $production->customizeProduct;
+                    if ($existingCp) {
+                        $existingCp->update(['name' => $req->customize_product_name]);
+                    } else {
+                        $cp = CustomizeProduct::create([
+                            'sku' => generateSku(CustomizeProduct::SKU_PREFIX),
+                            'name' => $req->customize_product_name,
+                            'production_id' => $production->id,
+                        ]);
+                        (new Branch)->assign(CustomizeProduct::class, $cp->id);
+
+                        // Create B.O.M Material Use for customize product
+                        $mu = MaterialUse::create([
+                            'customize_product_id' => $cp->id,
+                        ]);
+                        (new Branch)->assign(MaterialUse::class, $mu->id);
+                    }
+                }
             } else if (isset($cp)) {
                 $cp->production_id = $production->id;
                 $cp->save();
+            } else if ($production->customizeProduct && $req->customize_product_name) {
+                // Update existing R&D customize product name on edit
+                $production->customizeProduct->update(['name' => $req->customize_product_name]);
             }
 
             // Assign
@@ -1232,6 +1258,42 @@ class ProductionController extends Controller
             DB::commit();
 
             return redirect(route('production.view', ['production' => $production->id]))->with('success', 'Complete Task request is created');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+        }
+    }
+
+    public function cancelProduction(Request $req, Production $production)
+    {
+        $req->validate([
+            'cancel_reason' => 'required|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $approval = Approval::create([
+                'object_type' => Production::class,
+                'object_id' => $production->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'description' => Auth::user()->name.' has requested to cancel the production ('.$production->sku.')',
+                    'user_id' => Auth::user()->id,
+                    'reason' => $req->cancel_reason,
+                    'type' => 'cancel',
+                ]),
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $production->status = Production::STATUS_PENDING_APPROVAL;
+            $production->save();
+
+            DB::commit();
+
+            return redirect(route('production.view', ['production' => $production->id]))->with('success', 'Cancel Production request is created');
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);

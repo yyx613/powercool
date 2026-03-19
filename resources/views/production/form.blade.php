@@ -69,6 +69,12 @@
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('type')" class="mt-2" />
                 </div>
+                <div class="flex flex-col hidden" id="customize-product-name-container">
+                    <x-app.input.label id="customize_product_name" class="mb-1">{{ __('Customize Product Name') }}</x-app.input.label>
+                    <x-app.input.input name="customize_product_name" id="customize_product_name" :hasError="$errors->has('customize_product_name')"
+                        value="{{ old('customize_product_name', $customize_product_name ?? null) }}" />
+                    <x-input-error :messages="$errors->get('customize_product_name')" class="mt-2" />
+                </div>
                 <div class="flex flex-col" id="product-select-container">
                     <x-app.input.label class="mb-1">{{ __('Product') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -447,15 +453,41 @@
                 productContainer.addClass('hidden')
                 factoryContainer.addClass('hidden')
                 milestoneAsterisk.addClass('hidden')
+                $('#customize-product-name-container').removeClass('hidden')
             } else { // Normal type
                 productContainer.removeClass('hidden')
                 factoryContainer.removeClass('hidden')
                 milestoneAsterisk.removeClass('hidden')
+                toggleCustomizeProductName()
             }
         })
 
+        // Toggle customize product name based on selected product
+        $('select[name="product"]').on('change.customizeName', function() {
+            toggleCustomizeProductName()
+        })
+
+        function toggleCustomizeProductName() {
+            let typeValue = $('select[name="type"]').val()
+            if (typeValue == '2') {
+                $('#customize-product-name-container').removeClass('hidden')
+                return
+            }
+
+            let productId = $('select[name="product"]').val()
+            if (productId) {
+                let product = PRODUCTS.find(p => p.id == productId)
+                if (product && product.model_desc && (product.model_desc.toLowerCase().includes('customize') || product.model_desc.toLowerCase().includes('customise'))) {
+                    $('#customize-product-name-container').removeClass('hidden')
+                    return
+                }
+            }
+            $('#customize-product-name-container').addClass('hidden')
+        }
+
         // Set initial state on page load
         $('select[name="type"]').trigger('change')
+        toggleCustomizeProductName()
 
         // Toggle view material use selection
         $('body').on('change', 'input[name="required_serial_no[]"]', function() {

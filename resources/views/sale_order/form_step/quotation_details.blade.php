@@ -62,7 +62,7 @@
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales_agents as $sa)
-                    <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }}</option>
+                    <option value="{{ $sa->id }}" @selected(old('sale', isset($sale) ? $sale->sale_id : null) == $sa->id)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                 @endforeach
             </x-app.input.select>
             <x-app.message.error id="sale_err" />

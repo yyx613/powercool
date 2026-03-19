@@ -95,7 +95,7 @@
                 placeholder="{{ __('Select a sales agent') }}">
                 <option value="">{{ __('Select a sales agent') }}</option>
                 @foreach ($sales_agents as $sa)
-                    <option value="{{ $sa->id }}" @selected(old('sale', isset($replicate) ? $replicate->sale_id : (isset($sale) ? $sale->sale_id : null)) == $sa->id)>{{ $sa->name }}</option>
+                    <option value="{{ $sa->id }}" @selected(old('sale', isset($replicate) ? $replicate->sale_id : (isset($sale) ? $sale->sale_id : null)) == $sa->id)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>
                 @endforeach
             </x-app.input.select>
             <x-app.message.error id="sale_err" />
@@ -403,17 +403,6 @@
                 }
             } else {
                 $('input[name="mobile"]').val('-')
-            }
-            // Filter sales agents by customer's assigned agents only
-            $('select[name="sale"]').find('option').not(':first').remove();
-            for (let i = 0; i < element.sales_agents.length; i++) {
-                const assignedAgent = element.sales_agents[i];
-                // Find the agent details from SALES_AGENTS
-                const sa = SALES_AGENTS.find(agent => agent.id == assignedAgent.sales_agent_id);
-                if (sa) {
-                    let opt = new Option(sa.name, sa.id)
-                    $('select[name="sale"]').append(opt)
-                }
             }
             // Update payment term
             $(`select[name="payment_term"]`).find('option').not(':first').remove();

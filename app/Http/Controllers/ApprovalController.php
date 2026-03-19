@@ -87,7 +87,7 @@ class ApprovalController extends Controller
     {
         Session::put('approval-page', $request->page);
 
-        $records = Approval::latest();
+        $records = Approval::with('actionedBy')->latest();
 
         // Search
         if ($request->has('search') && $request->search['value'] != null) {
@@ -225,6 +225,8 @@ class ApprovalController extends Controller
                     $view_url = route('sale_order.edit_payment', ['sale' => $obj->sale_id]);
                 } elseif (get_class($obj) == RawMaterialRequest::class) {
                     $view_url = route('raw_material_request.view', ['rmq' => $obj->id]);
+                } elseif (get_class($obj) == Production::class) {
+                    $view_url = route('production.view', ['production' => $obj->id]);
                 }
             }
 
@@ -275,7 +277,8 @@ class ApprovalController extends Controller
                 'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
                 'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->company_name : null,
                 'sales_agent_name' => count($sale_agents) > 0 ? join(', ', $sale_agents) : null,
-                'can_view' => in_array(get_class($obj), [Production::class, FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class, RawMaterialRequest::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'actioned_by_name' => $record->actionedBy ? $record->actionedBy->name : null,
+                'can_view' => in_array(get_class($obj), [FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -290,6 +293,7 @@ class ApprovalController extends Controller
             $obj = $approval->object()->withoutGlobalScope(ApprovedScope::class)->first();
 
             $approval->status = Approval::STATUS_APPROVED;
+            $approval->actioned_by = auth()->id();
             $approval->save();
             // Check approval count
             $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();
@@ -353,7 +357,11 @@ class ApprovalController extends Controller
             }
             // Complete Production
             if (get_class($obj) == Production::class) {
-                $obj->status = Production::STATUS_APPROVED;
+                if ($obj->type == Production::TYPE_RND) {
+                    $obj->status = Production::STATUS_COMPLETED;
+                } else {
+                    $obj->status = Production::STATUS_APPROVED;
+                }
                 $obj->save();
             }
             // Raw Material Request Cancellation
@@ -453,6 +461,7 @@ class ApprovalController extends Controller
 
             $approval->status = Approval::STATUS_REJECTED;
             $approval->reject_remark = $req->remark;
+            $approval->actioned_by = auth()->id();
             $approval->save();
 
             // QUO/SO/DO
