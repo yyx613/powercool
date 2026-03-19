@@ -123,8 +123,9 @@
                 <x-app.message.error id="trade_name_err" />
             </div>
             <div class="flex flex-col hidden for-all">
-                <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span class="text-sm text-slate-500">(012-1234 1111 / 012-1234 111)</span> <span
+                <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
+                <span class="text-sm text-slate-500 mb-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')"
                     value="{{ old('phone_number', isset($duplicate) ? $duplicate->phone : (isset($customer) ? $customer->phone : null)) }}" />
                 <x-app.message.error id="phone_number_err" />
@@ -248,9 +249,10 @@
             </div>
             <div class="flex flex-col">
                 <div class="flex justify-between items-center mb-1">
-                    <x-app.input.label id="mobile_number">{{ __('Mobile Number') }} <span class="text-sm text-slate-500">(012-1234 1111 / 012-1234 111)</span></x-app.input.label>
+                    <x-app.input.label id="mobile_number">{{ __('Mobile Number') }}</x-app.input.label>
                     <button type="button" id="add-mobile-number-btn" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">+ {{ __('Add') }}</button>
                 </div>
+                <span class="text-sm text-slate-500 mb-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <div id="mobile-numbers-container">
                     @if(isset($customer) && $customer->mobile_number && is_array($customer->mobile_number) && count($customer->mobile_number) > 0)
                         @foreach($customer->mobile_number as $index => $mobile)
@@ -698,7 +700,21 @@
 
         // Mobile number formatting
         function formatMobileNumber(value) {
-            let digits = value.replace(/\D/g, '').substring(0, 11);
+            let digits = value.replace(/\D/g, '');
+
+            // 2-digit area code format: 0X-XXXX-XXXX (landline, e.g. 03, 04, 07, 09)
+            if (digits.length >= 2 && digits[0] === '0' && digits[1] !== '1') {
+                digits = digits.substring(0, 10);
+                if (digits.length > 6) {
+                    return digits.substring(0, 2) + '-' + digits.substring(2, 6) + '-' + digits.substring(6);
+                } else if (digits.length > 2) {
+                    return digits.substring(0, 2) + '-' + digits.substring(2);
+                }
+                return digits;
+            }
+
+            // 3-digit mobile prefix format: 01X-XXXX XXXX
+            digits = digits.substring(0, 11);
             if (digits.length > 7) {
                 return digits.substring(0, 3) + '-' + digits.substring(3, 7) + ' ' + digits.substring(7);
             } else if (digits.length > 3) {
