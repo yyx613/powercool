@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 390px 25px 50px 25px;
+        margin: 415px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -365px;
+        top: -390px;
         left: 0px;
         right: 0px;
     }
@@ -174,10 +174,6 @@
                 </td>
             </tr>
         </table>
-    </header>
-
-    <main>
-        <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
@@ -196,6 +192,12 @@
                     style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: right; width: 5%;">
                     UOM</td>
             </tr>
+        </table>
+    </header>
+
+    <main>
+        <!-- Item -->
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             @php
                 $total = 0;
             @endphp

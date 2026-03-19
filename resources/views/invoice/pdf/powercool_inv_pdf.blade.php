@@ -4,8 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice | {{ $sku }}</title>
+    <style>
+        @page {
+            margin: 55px 25px 50px 25px;
+        }
+        .table-header-fixed {
+            position: fixed;
+            top: -25px;
+            left: 0;
+            right: 0;
+        }
+    </style>
 </head>
 <body>
+    <div class="table-header-fixed">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+            <tr>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Tax Code</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">Description</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%; padding-left: 5px;">UOM</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">U/Price<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Discount<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Total<br>(RM)</td>
+            </tr>
+        </table>
+    </div>
     @php
         $svgQrCode = QrCode::size(100)->generate($validationLink);
         $base64QrCode = base64_encode($svgQrCode);
@@ -115,16 +140,6 @@
 
     <!-- Item -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-        <tr>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Tax Code</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">Description</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%; padding-left: 5px;">UOM</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">U/Price<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Discount<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Total<br>(RM)</td>
-        </tr>
         @php
             $total = 0;
         @endphp

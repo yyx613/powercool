@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 435px 25px 50px 25px;
+        margin: 460px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -410px;
+        top: -435px;
         left: 0px;
         right: 0px;
     }
@@ -162,10 +162,6 @@
                     to submit our quote as follows:</td>
             </tr>
         </table>
-    </header>
-
-    <main>
-        <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
@@ -195,6 +191,12 @@
                     style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
                     Total (RM)</td>
             </tr>
+        </table>
+    </header>
+
+    <main>
+        <!-- Item -->
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             @php
                 $total = 0;
                 $total_tax = 0;
