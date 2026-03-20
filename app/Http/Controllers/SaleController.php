@@ -474,7 +474,7 @@ class SaleController extends Controller
         $pdf = Pdf::loadView('quotation.'.(isHiTen($sale->customer->company_group) ? 'hi_ten' : 'powercool').'_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
-            'products' => $sale->products->load(['accessories.product', 'accessories.sellingPrice']),
+            'products' => $sale->products->load(['accessories.product.uomUnit', 'accessories.sellingPrice']),
             'adhocServices' => $sale->adhocServices()->with('adhocService')->get(),
             'customer' => $sale->customer,
             'billing_address' => CustomerLocation::where('id', $sale->billing_address_id)->first(),
@@ -1206,7 +1206,7 @@ class SaleController extends Controller
             $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sale->transfer_from)->first();
             if ($transfer_from_so != null) {
                 $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
-                $quo->status = Sale::STATUS_ACTIVE;
+                $quo->status = $quo->status == Sale::STATUS_APPROVAL_APPROVED ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                 $quo->save();
 
                 $transfer_from_so->status = Sale::STATUS_CANCELLED;
@@ -1281,7 +1281,7 @@ class SaleController extends Controller
             $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sale->transfer_from)->first();
             if ($transfer_from_so != null) {
                 $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
-                $quo->status = Sale::STATUS_ACTIVE;
+                $quo->status = $quo->status == Sale::STATUS_APPROVAL_APPROVED ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                 $quo->save();
 
                 $transfer_from_so->status = Sale::STATUS_TRANSFERRED_BACK;
@@ -1329,7 +1329,7 @@ class SaleController extends Controller
                     } else {
                         $quos[$i]->expired_at = now()->format('Y-m-d');
                     }
-                    $quos[$i]->status = $quos[$i]->hasApprovalAndAllApproved() ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
+                    $quos[$i]->status = $quos[$i]->status == Sale::STATUS_APPROVAL_APPROVED ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                     $quos[$i]->save();
                 }
 
@@ -1871,13 +1871,14 @@ class SaleController extends Controller
             for ($i = 0; $i < count($do->products); $i++) {
                 // Get accessories for this product
                 $pdf_accessories = [];
-                $dop_accessories = $do->products[$i]->accessories()->with('product')->get();
+                $dop_accessories = $do->products[$i]->accessories()->with('product.uomUnit')->get();
                 foreach ($dop_accessories as $acc) {
                     $pdf_accessories[] = [
                         'sku' => $acc->product->sku ?? '',
                         'name' => $acc->product->model_desc ?? 'N/A',
                         'qty' => $acc->qty,
                         'is_foc' => $acc->is_foc,
+                        'uom' => $acc->product->uomUnit->name ?? '',
                     ];
                 }
 
@@ -3708,7 +3709,7 @@ class SaleController extends Controller
                     // Get accessories for this product
                     $pdf_accessories = [];
                     $accessory_total = 0;
-                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product', 'saleProductAccessory.sellingPrice'])->get();
+                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product.uomUnit', 'saleProductAccessory.sellingPrice'])->get();
                     foreach ($dop_accessories as $acc) {
                         $spa = $acc->saleProductAccessory;
                         $acc_unit_price = $spa->override_selling_price ?? ($spa->sellingPrice->price ?? 0);
@@ -3721,6 +3722,7 @@ class SaleController extends Controller
                             'is_foc' => $acc->is_foc,
                             'unit_price' => $acc_unit_price,
                             'total' => $acc->is_foc ? 0 : ($acc_unit_price * $acc_qty),
+                            'uom' => $acc->product->uomUnit->name ?? '',
                         ];
 
                         if (!$acc->is_foc) {
@@ -4648,7 +4650,7 @@ class SaleController extends Controller
                 $transfer_from_so = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_SO)->where('id', $sales[$i]->transfer_from)->first();
                 if ($transfer_from_so != null) {
                     $quo = Sale::withoutGlobalScope(BranchScope::class)->where('type', Sale::TYPE_QUO)->where('id', $transfer_from_so->transfer_from)->first();
-                    $quo->status = Sale::STATUS_ACTIVE;
+                    $quo->status = $quo->status == Sale::STATUS_APPROVAL_APPROVED ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                     $quo->save();
 
                     if ($type == 'transfer-back') {
@@ -4681,7 +4683,7 @@ class SaleController extends Controller
                 if ($type == 'transfer-back') {
                     $sales[$i]->convert_to = count($new_convert_to) == 0 ? null : implode(',', $new_convert_to);
                 }
-                $sales[$i]->status = Sale::STATUS_ACTIVE;
+                $sales[$i]->status = $sales[$i]->status == Sale::STATUS_APPROVAL_APPROVED ? Sale::STATUS_APPROVAL_APPROVED : Sale::STATUS_ACTIVE;
                 $sales[$i]->save();
             }
             $dop_ids = DeliveryOrderProduct::withoutGlobalScopes()->whereIn('delivery_order_id', $do_ids)->pluck('id');
@@ -6091,7 +6093,7 @@ class SaleController extends Controller
                     // Get accessories for this product
                     $pdf_accessories = [];
                     $accessory_total = 0;
-                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product', 'saleProductAccessory.sellingPrice'])->get();
+                    $dop_accessories = $dos[$k]->products[$i]->accessories()->with(['product.uomUnit', 'saleProductAccessory.sellingPrice'])->get();
                     foreach ($dop_accessories as $acc) {
                         $spa = $acc->saleProductAccessory;
                         $acc_unit_price = $spa->override_selling_price ?? ($spa->sellingPrice->price ?? 0);
@@ -6104,6 +6106,7 @@ class SaleController extends Controller
                             'is_foc' => $acc->is_foc,
                             'unit_price' => $acc_unit_price,
                             'total' => $acc->is_foc ? 0 : ($acc_unit_price * $acc_qty),
+                            'uom' => $acc->product->uomUnit->name ?? '',
                         ];
 
                         if (!$acc->is_foc) {
