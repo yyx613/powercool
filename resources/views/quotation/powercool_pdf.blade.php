@@ -278,23 +278,19 @@
                         <td style="font-size: 10px; text-align: left;" colspan="5"></td>
                     </tr>
                     @foreach ($prod->accessories as $accessory)
+                        @php
+                            $unit_price = $accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0);
+                            $acc_qty = $accessory->qty ?? 1;
+                            $total_price = $unit_price * $acc_qty;
+                        @endphp
                         <tr>
                             <td colspan="3"></td>
-                            <td style="font-size: 10px; text-align: left;">
-                                - {{ $accessory->product->model_desc ?? 'N/A' }}
-                                (Qty: {{ $accessory->qty ?? 1 }})
-                                @if($accessory->is_foc)
-                                    - FOC
-                                @else
-                                    @php
-                                        $unit_price = $accessory->override_selling_price ?? ($accessory->sellingPrice->price ?? 0);
-                                        $acc_qty = $accessory->qty ?? 1;
-                                        $total_price = $unit_price * $acc_qty;
-                                    @endphp
-                                    - RM {{ number_format($unit_price, 2) }}/unit = RM {{ number_format($total_price, 2) }}
-                                @endif
-                            </td>
-                            <td style="font-size: 10px; text-align: left;" colspan="5"></td>
+                            <td style="font-size: 10px; text-align: left;">- {{ $accessory->product->model_desc ?? 'N/A' }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $acc_qty }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? 'FOC' : ($accessory->product->uomUnit->name ?? '') }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? '' : number_format($unit_price, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;"></td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? '' : number_format($total_price, 2) }}</td>
                         </tr>
                     @endforeach
                 @endif
