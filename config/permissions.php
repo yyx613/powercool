@@ -111,6 +111,7 @@ return [
 
     // Sales - Invoice
     'sale.invoice.view' => 'Show the Invoice menu under Sale & Invoice and access the invoice listing page, including draft e-invoices, e-invoices, credit notes, and debit notes',
+    'sale.invoice.convert_from_so' => 'Show the Convert From Sale Order button on the invoice listing page to generate invoices from approved sale orders',
     'sale.invoice.sync_to_autocount' => 'Show the Sync to Autocount button on the invoice listing page to push selected invoice data to AutoCount accounting system',
     'sale.invoice.convert_to_billing' => 'Show the Convert to Billing button on the invoice listing page to generate billing documents from selected invoices',
     'sale.invoice.submit_draft_e_invoice' => 'Show the Submit to Approval button on the invoice listing page to send selected invoices as draft e-invoices to MyInvois',
@@ -199,12 +200,12 @@ return [
     'e_order.view' => 'Show the E-Order Assign menu under Sale and access the pending platform orders page for Lazada, Shopee, TikTok, and WooCommerce order assignment',
 
     // Report
-    'report.production.view' => 'Show the Production Report sub-menu under Report in the sidebar and access the production report page',
-    'report.sales.view' => 'Show the Sales Report sub-menu under Report in the sidebar and access the sales report page',
-    'report.stock.view' => 'Show the Stock Report sub-menu under Report in the sidebar and access the stock report page',
-    'report.earning.view' => 'Show the Earning Report sub-menu under Report in the sidebar and access the earning report page',
-    'report.service.view' => 'Show the Service Report sub-menu under Report in the sidebar and access the service report page',
-    'report.technician_stock.view' => 'Show the Technician Stock Report sub-menu under Report in the sidebar and access the technician stock report page',
+    'report.production' => 'Show the Production Report sub-menu under Report in the sidebar and access the production report page',
+    'report.sales' => 'Show the Sales Report sub-menu under Report in the sidebar and access the sales report page',
+    'report.stock' => 'Show the Stock Report sub-menu under Report in the sidebar and access the stock report page',
+    'report.earning' => 'Show the Earning Report sub-menu under Report in the sidebar and access the earning report page',
+    'report.service' => 'Show the Service Report sub-menu under Report in the sidebar and access the service report page',
+    'report.technician_stock' => 'Show the Technician Stock Report sub-menu under Report in the sidebar and access the technician stock report page',
 
     // User & Role Management
     'user_role_management.view' => 'Show the User Management and Role Management menus in the sidebar and access user account and role listing pages',
