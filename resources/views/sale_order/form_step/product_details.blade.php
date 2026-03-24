@@ -164,7 +164,12 @@
             <x-app.input.label id="discount" class="mb-1">{{ __('Discount') }} <span
                     class="text-xs text-red-400 font-semibold mt-1 hidden"
                     id="discount-hint"></span></x-app.input.label>
-            <x-app.input.input name="discount" id="discount" :hasError="$errors->has('discount')" class="decimal-input" />
+            <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                <x-app.input.input name="discount" id="discount" :hasError="$errors->has('discount')" class="decimal-input border-none flex-1" />
+                <button type="button"
+                    class="discount-type-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[discount-type=fixed]:bg-slate-100 data-[discount-type=percentage]:bg-emerald-100"
+                    data-discount-type="fixed">RM</button>
+            </div>
             <x-app.message.error id="discount_err" />
         </div>
         <div class="flex flex-col" id="warranty-period-container">
@@ -434,6 +439,8 @@
                         $(`.items[data-id="${i+1}"] .accessory-empty-state`).removeClass('hidden')
                     }
                     $(`.items[data-id="${i+1}"] input[name="discount"]`).val(sp.discount)
+                    let dt = sp.discount_type || 'fixed'
+                    $(`.items[data-id="${i+1}"] .discount-type-btns`).attr('data-discount-type', dt).text(dt === 'percentage' ? '%' : 'RM')
                     setRemarkQuillContent(i+1, sp.remark)
                     if (sp.override_selling_price != null) {
                         $(`.items[data-id="${i+1}"] input[name="override_selling_price"]`).val(sp
@@ -585,10 +592,17 @@
         })
         $('body').on('keyup', 'input[name="qty"], input[name="discount"], input[name="override_selling_price"]',
             function() {
-                let idx = $(this).parent().parent().parent().data('id')
+                let idx = $(this).closest('.items').data('id')
 
                 calItemTotal(idx)
             })
+        $('body').on('click', '.discount-type-btns', function() {
+            let current = $(this).attr('data-discount-type')
+            let next = current === 'fixed' ? 'percentage' : 'fixed'
+            $(this).attr('data-discount-type', next).text(next === 'percentage' ? '%' : 'RM')
+            let idx = $(this).closest('.items').data('id')
+            calItemTotal(idx)
+        })
         $('body').on('change', 'select[name="promotion[]"], select[name="selling_price[]"]', function() {
             let idx = $(this).parent().parent().data('id')
 
@@ -788,6 +802,7 @@
             let sellingPrice = $(`.items[data-id="${idx}"] select[name="selling_price[]"]`).val()
             let promo = $(`.items[data-id="${idx}"] select[name="promotion[]"]`).val()
             let discount = $(`.items[data-id="${idx}"] input[name="discount"]`).val()
+            let discountType = $(`.items[data-id="${idx}"] .discount-type-btns`).attr('data-discount-type') || 'fixed'
             let overrideSellingPrice = $(`.items[data-id="${idx}"] input[name="override_selling_price"]`).val()
 
             let unitPrice = 0
@@ -831,7 +846,11 @@
             // Apply Discount
             let discountAmount = 0
             if (discount != '' && discount != null) {
-                discountAmount = discount
+                if (discountType === 'percentage') {
+                    discountAmount = subtotal * discount / 100
+                } else {
+                    discountAmount = discount
+                }
                 $(`.items[data-id="${idx}"] #discount-hint`).text(`( -${priceFormat(discountAmount)} )`)
                 $(`.items[data-id="${idx}"] #discount-hint`).removeClass('hidden')
             } else {
@@ -868,6 +887,7 @@
                 let qty = $(this).find('input[name="qty"]').val()
                 let promo = $(this).find('select[name="promotion[]"]').val()
                 let discount = $(this).find('input[name="discount"]').val()
+                let discountType = $(this).find('.discount-type-btns').attr('data-discount-type') || 'fixed'
                 let sellingPrice = $(this).find(`select[name="selling_price[]"]`).val()
                 let overrideSellingPrice = $(this).find(`input[name="override_selling_price"]`).val()
 
@@ -932,7 +952,11 @@
                 // Apply Discount
                 let discountAmount = 0
                 if (discount != '' && discount != null) {
-                    discountAmount = discount
+                    if (discountType === 'percentage') {
+                        discountAmount = subtotal * discount / 100
+                    } else {
+                        discountAmount = discount
+                    }
                 }
                 // Tax
                 let enabledSST = $(this).find('.sst-btns').attr('data-with-sst')

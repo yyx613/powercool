@@ -124,8 +124,8 @@ class SaleController extends Controller
                 'sales.expired_at AS expired_at',
                 'sales.self_collect AS self_collect',
                 'sales.self_collect_branch AS self_collect_branch',
-                DB::raw('(
-                    COALESCE(SUM(sale_products.unit_price * sale_products.qty - COALESCE(sale_products.discount, 0) + COALESCE(sale_products.sst_amount, 0)), 0)
+                DB::raw("(
+                    COALESCE(SUM(sale_products.unit_price * sale_products.qty - CASE WHEN sale_products.discount_type = 'percentage' THEN sale_products.unit_price * sale_products.qty * COALESCE(sale_products.discount, 0) / 100 ELSE COALESCE(sale_products.discount, 0) END + COALESCE(sale_products.sst_amount, 0)), 0)
                     + COALESCE((
                         SELECT SUM(
                             spa.qty * COALESCE(spa.override_selling_price, psp.price)
@@ -147,7 +147,7 @@ class SaleController extends Controller
                         WHERE sas.sale_id = sales.id
                         AND sas.deleted_at IS NULL
                     ), 0)
-                ) AS total_amount'),
+                ) AS total_amount"),
             )
             ->where('sales.type', Sale::TYPE_QUO)
             ->where('branches.object_type', Sale::class)
@@ -696,6 +696,9 @@ class SaleController extends Controller
                 })->toArray(),
                 'discount' => $products->map(function ($q) {
                     return $q->discount;
+                })->toArray(),
+                'discount_type' => $products->map(function ($q) {
+                    return $q->discount_type ?? 'fixed';
                 })->toArray(),
                 'product_remark' => $products->map(function ($q) {
                     return $q->remark;
@@ -2124,6 +2127,8 @@ class SaleController extends Controller
             $rules['accessory.*.*'] = 'nullable';
             $rules['discount'] = 'required';
             $rules['discount.*'] = 'nullable';
+            $rules['discount_type'] = 'nullable';
+            $rules['discount_type.*'] = 'nullable|in:fixed,percentage';
             $rules['product_remark'] = 'required';
             $rules['product_remark.*'] = 'nullable';
             $rules['override_selling_price'] = 'nullable';
@@ -2759,6 +2764,8 @@ class SaleController extends Controller
                 'accessory.*.*.override_price' => 'nullable|numeric|min:0',
                 'discount' => 'required',
                 'discount.*' => 'nullable',
+                'discount_type' => 'nullable',
+                'discount_type.*' => 'nullable|in:fixed,percentage',
                 'product_remark' => 'required',
                 'product_remark.*' => 'nullable',
                 'override_selling_price' => 'nullable',
@@ -2907,6 +2914,7 @@ class SaleController extends Controller
                                 'override_selling_price' => $req->foc[$i] === 'true' || $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                                 'promotion_id' => $req->promotion_id[$i],
                                 'discount' => $req->discount[$i],
+                                'discount_type' => $req->discount_type[$i] ?? 'fixed',
                                 'remark' => $req->product_remark[$i],
                             ]);
                             SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
@@ -2927,6 +2935,7 @@ class SaleController extends Controller
                             'override_selling_price' => $req->foc[$i] === 'true' || $req->override_selling_price == null ? null : $req->override_selling_price[$i],
                             'promotion_id' => $req->promotion_id[$i],
                             'discount' => $req->discount[$i],
+                            'discount_type' => $req->discount_type[$i] ?? 'fixed',
                             'remark' => $req->product_remark[$i],
                             'sequence' => $req->sequence[$i] ?? null,
                         ]);
@@ -3603,7 +3612,7 @@ class SaleController extends Controller
             for ($i = 0; $i < count($dopcs); $i++) {
                 $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
                 $unit_price = $sp->override_selling_price ?? $sp->unit_price;
-                $discount = ($sp->discount / $sp->qty);
+                $discount = ($sp->manualDiscountAmount() / $sp->qty);
                 $total_amount += $unit_price - $discount;
             }
 
@@ -3733,7 +3742,7 @@ class SaleController extends Controller
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
                         $do_qty = $dos[$k]->products[$i]->qty;
                         $unit_price = $dos[$k]->products[$i]->saleProduct->override_selling_price ?? $dos[$k]->products[$i]->saleProduct->unit_price;
-                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->discount / $dos[$k]->products[$i]->saleProduct->qty);
+                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->manualDiscountAmount() / $dos[$k]->products[$i]->saleProduct->qty);
                         $subtotal = ($do_qty * $unit_price) - $discount;
                         $pdf_products[] = [
                             'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
@@ -3741,8 +3750,8 @@ class SaleController extends Controller
                             'qty' => $do_qty,
                             'uom' => UOM::where('id', $dos[$k]->products[$i]->saleProduct->product->uom)->value('name'),
                             'unit_price' => number_format($unit_price, 2),
-                            'discount' => number_format($discount, 2),
-                            'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
+                            'discount' => $discount == 0 ? '' : number_format($discount, 2),
+                            'promotion' => $dos[$k]->products[$i]->saleProduct->promotionAmount() == 0 ? '' : number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
                             'total_discount' => $discount,
                             'total' => number_format($subtotal, 2),
                             'warranty_periods' => $dos[$k]->products[$i]->saleProduct->warrantyPeriods,
@@ -3761,7 +3770,7 @@ class SaleController extends Controller
 
                             if ($j + 1 == count($dopcs)) {
                                 $unit_price = $dopcs[$j]->doProduct->saleProduct->override_selling_price ?? $dopcs[$j]->doProduct->saleProduct->unit_price;
-                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->discount / $dopcs[$j]->doProduct->saleProduct->qty);
+                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->manualDiscountAmount() / $dopcs[$j]->doProduct->saleProduct->qty);
                                 $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
@@ -3769,8 +3778,8 @@ class SaleController extends Controller
                                     'qty' => count($serial_no),
                                     'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
                                     'unit_price' => number_format($unit_price, 2),
-                                    'discount' => number_format($discount, 2),
-                                    'promotion' => number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
+                                    'discount' => $discount == 0 ? '' : number_format($discount, 2),
+                                    'promotion' => $dopcs[$j]->doProduct->saleProduct->promotionAmount() == 0 ? '' : number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
                                     'total_discount' => $dopcs[$j]->doProduct->saleProduct->discountAmount(),
                                     'total' => number_format($total, 2),
                                     'warranty_periods' => $dopcs[$j]->doProduct->saleProduct->warrantyPeriods,
@@ -4092,7 +4101,7 @@ class SaleController extends Controller
                 for ($i = 0; $i < count($dopcs); $i++) {
                     $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
                     $unit_price = $sp->override_selling_price ?? $sp->unit_price;
-                    $discount = ($sp->discount / $sp->qty);
+                    $discount = ($sp->manualDiscountAmount() / $sp->qty);
                     $total_amount += $unit_price - $discount;
                 }
             }
@@ -4984,6 +4993,8 @@ class SaleController extends Controller
             ->select(
                 'invoices.id AS id',
                 'invoices.sku AS doc_no',
+                'invoices.created_at AS invoice_date',
+                'customers.name AS customer_name',
             )
             ->where('sales.type', Sale::TYPE_SO)
             ->whereNull('invoices.deleted_at')
@@ -5019,6 +5030,8 @@ class SaleController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'doc_no' => $record->doc_no,
+                'invoice_date' => Carbon::parse($record->invoice_date)->format('d/m/Y'),
+                'customer_name' => $record->customer_name,
                 'total' => number_format(Invoice::getTotal($record->id), 2),
             ];
         }
@@ -6117,7 +6130,7 @@ class SaleController extends Controller
                     if ($dos[$k]->products[$i]->saleProduct->product->isRawMaterial()) {
                         $do_qty = $dos[$k]->products[$i]->qty;
                         $unit_price = $dos[$k]->products[$i]->saleProduct->override_selling_price ?? $dos[$k]->products[$i]->saleProduct->unit_price;
-                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->discount / $dos[$k]->products[$i]->saleProduct->qty);
+                        $discount = $do_qty * ($dos[$k]->products[$i]->saleProduct->manualDiscountAmount() / $dos[$k]->products[$i]->saleProduct->qty);
                         $subtotal = ($do_qty * $unit_price) - $discount;
                         $pdf_products[] = [
                             'stock_code' => $dos[$k]->products[$i]->saleProduct->product->sku,
@@ -6125,8 +6138,8 @@ class SaleController extends Controller
                             'qty' => $do_qty,
                             'uom' => UOM::where('id', $dos[$k]->products[$i]->saleProduct->product->uom)->value('name'),
                             'unit_price' => number_format($unit_price, 2),
-                            'discount' => number_format($discount, 2),
-                            'promotion' => number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
+                            'discount' => $discount == 0 ? '' : number_format($discount, 2),
+                            'promotion' => $dos[$k]->products[$i]->saleProduct->promotionAmount() == 0 ? '' : number_format($dos[$k]->products[$i]->saleProduct->promotionAmount(), 2),
                             'total_discount' => $discount,
                             'total' => number_format($subtotal, 2),
                             'warranty_periods' => $dos[$k]->products[$i]->saleProduct->warrantyPeriods,
@@ -6145,7 +6158,7 @@ class SaleController extends Controller
 
                             if ($j + 1 == count($dopcs)) {
                                 $unit_price = $dopcs[$j]->doProduct->saleProduct->override_selling_price ?? $dopcs[$j]->doProduct->saleProduct->unit_price;
-                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->discount / $dopcs[$j]->doProduct->saleProduct->qty);
+                                $discount = count($serial_no) * ($dopcs[$j]->doProduct->saleProduct->manualDiscountAmount() / $dopcs[$j]->doProduct->saleProduct->qty);
                                 $total = (count($serial_no) * $unit_price) - $discount;
                                 $pdf_products[] = [
                                     'stock_code' => $dopcs[$j]->productChild->parent->sku,
@@ -6153,8 +6166,8 @@ class SaleController extends Controller
                                     'qty' => count($serial_no),
                                     'uom' => UOM::where('id', $dopcs[$j]->productChild->parent->uom)->value('name'),
                                     'unit_price' => number_format($unit_price, 2),
-                                    'discount' => number_format($discount, 2),
-                                    'promotion' => number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
+                                    'discount' => $discount == 0 ? '' : number_format($discount, 2),
+                                    'promotion' => $dopcs[$j]->doProduct->saleProduct->promotionAmount() == 0 ? '' : number_format($dopcs[$j]->doProduct->saleProduct->promotionAmount(), 2),
                                     'total_discount' => $dopcs[$j]->doProduct->saleProduct->discountAmount(),
                                     'total' => number_format($total, 2),
                                     'warranty_periods' => $dopcs[$j]->doProduct->saleProduct->warrantyPeriods,

@@ -78,7 +78,7 @@ class Invoice extends Model
             for ($i = 0; $i < count($dopcs); $i++) {
                 $sp = SaleProduct::where('id', $dopcs[$i]->doProduct()->withTrashed()->value('sale_product_id'))->first();
                 $unit_price = $sp->override_selling_price ?? $sp->unit_price;
-                $discount = ($sp->discount / $sp->qty);
+                $discount = ($sp->manualDiscountAmount() / $sp->qty);
                 $total_amount += $unit_price - $discount;
             }
         }

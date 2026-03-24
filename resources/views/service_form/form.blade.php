@@ -339,7 +339,12 @@
                 {{-- Discount --}}
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">{{ __('Discount') }} <span class="text-xs text-red-400 font-semibold mt-1 hidden line-discount-hint"></span></x-app.input.label>
-                    <x-app.input.input name="line_discount[]" class="decimal-input" value="0" />
+                    <div class="flex border border-gray-300 rounded-md overflow-hidden">
+                        <x-app.input.input name="line_discount[]" class="decimal-input border-none flex-1" value="0" />
+                        <button type="button"
+                            class="discount-type-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[discount-type=fixed]:bg-slate-100 data-[discount-type=percentage]:bg-emerald-100"
+                            data-discount-type="fixed">RM</button>
+                    </div>
                 </div>
 
                 {{-- Warranty Period --}}
@@ -851,7 +856,14 @@
 
     // Quantity and discount keyup handlers
     $('body').on('keyup', 'input[name="line_qty[]"], input[name="line_discount[]"]', function() {
-        let idx = $(this).parent().parent().parent().data('id');
+        let idx = $(this).closest('.line-items').data('id');
+        calLineItemTotal(idx);
+    });
+    $('body').on('click', '.discount-type-btns', function() {
+        let current = $(this).attr('data-discount-type');
+        let next = current === 'fixed' ? 'percentage' : 'fixed';
+        $(this).attr('data-discount-type', next).text(next === 'percentage' ? '%' : 'RM');
+        let idx = $(this).closest('.line-items').data('id');
         calLineItemTotal(idx);
     });
 
@@ -920,6 +932,7 @@
         let qty = $(`.line-items[data-id="${idx}"] input[name="line_qty[]"]`).val() || 0;
         let sellingPrice = $(`.line-items[data-id="${idx}"] select[name="line_selling_price[]"]`).val();
         let discount = $(`.line-items[data-id="${idx}"] input[name="line_discount[]"]`).val() || 0;
+        let discountType = $(`.line-items[data-id="${idx}"] .discount-type-btns`).attr('data-discount-type') || 'fixed';
         let overrideSellingPrice = $(`.line-items[data-id="${idx}"] input[name="line_override_selling_price[]"]`).val();
         let isFoc = $(`.line-items[data-id="${idx}"] .foc-btns`).attr('data-is-foc') === 'true';
         let product = LINE_PRODUCTS[productId];
@@ -938,9 +951,15 @@
             }
         }
 
-        // Show/hide discount hint
+        let subtotal = qty * unitPrice;
+        let discountAmount = 0;
         if (discount != '' && discount != null && parseFloat(discount) > 0) {
-            $(`.line-items[data-id="${idx}"] .line-discount-hint`).text(`( -${priceFormat(discount)} )`);
+            if (discountType === 'percentage') {
+                discountAmount = subtotal * discount / 100;
+            } else {
+                discountAmount = parseFloat(discount);
+            }
+            $(`.line-items[data-id="${idx}"] .line-discount-hint`).text(`( -${priceFormat(discountAmount)} )`);
             $(`.line-items[data-id="${idx}"] .line-discount-hint`).removeClass('hidden');
         } else {
             $(`.line-items[data-id="${idx}"] .line-discount-hint`).addClass('hidden');
@@ -948,7 +967,7 @@
 
         let amount = 0;
         if (!isFoc) {
-            amount = (qty * unitPrice) - discount;
+            amount = subtotal - discountAmount;
             amount = Math.max(0, amount);
         }
 
@@ -981,6 +1000,7 @@
             let productId = $(this).find('select[name="line_product_id[]"]').val();
             let qty = $(this).find('input[name="line_qty[]"]').val() || 0;
             let discount = parseFloat($(this).find('input[name="line_discount[]"]').val()) || 0;
+            let discountType = $(this).find('.discount-type-btns').attr('data-discount-type') || 'fixed';
             let sellingPrice = $(this).find('select[name="line_selling_price[]"]').val();
             let overrideSellingPrice = $(this).find('input[name="line_override_selling_price[]"]').val();
             let isFoc = $(this).find('.foc-btns').attr('data-is-foc') === 'true';
@@ -1006,7 +1026,11 @@
             let lineAfterDiscount = 0;
             if (!isFoc) {
                 lineSubtotal = qty * unitPrice;
-                lineDiscount = discount;
+                if (discountType === 'percentage') {
+                    lineDiscount = lineSubtotal * discount / 100;
+                } else {
+                    lineDiscount = discount;
+                }
                 lineAfterDiscount = lineSubtotal - lineDiscount;
                 lineAfterDiscount = Math.max(0, lineAfterDiscount);
             }
@@ -1146,6 +1170,8 @@
 
                 // Set discount
                 $(`.line-items[data-id="${i+1}"] input[name="line_discount[]"]`).val(lineProduct.discount || 0);
+                let dt = lineProduct.discount_type || 'fixed';
+                $(`.line-items[data-id="${i+1}"] .discount-type-btns`).attr('data-discount-type', dt).text(dt === 'percentage' ? '%' : 'RM');
 
                 // Set remark (load into QuillJS editor)
                 if (lineProduct.remark && LINE_REMARK_QUILLS[i+1]) {
