@@ -115,7 +115,12 @@ class ViewServiceProvider extends ServiceProvider
                 'agent_debtor' => [],
                 'vehicle' => [],
                 'e_order' => [],
-                'report' => [],
+                'report.production' => [],
+                'report.sales' => [],
+                'report.stock' => [],
+                'report.earning' => [],
+                'report.service' => [],
+                'report.technician_stock' => [],
                 'user_role_management' => [],
                 'setting' => [],
             ];
@@ -203,8 +208,18 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['vehicle'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'e_order')) {
                     array_push($permissions_group['e_order'], $permissions[$i]);
-                } elseif (str_contains($permissions[$i], 'report')) {
-                    array_push($permissions_group['report'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.production')) {
+                    array_push($permissions_group['report.production'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.sales')) {
+                    array_push($permissions_group['report.sales'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.stock')) {
+                    array_push($permissions_group['report.stock'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.earning')) {
+                    array_push($permissions_group['report.earning'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.service')) {
+                    array_push($permissions_group['report.service'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report.technician_stock')) {
+                    array_push($permissions_group['report.technician_stock'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'user_role_management')) {
                     array_push($permissions_group['user_role_management'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'setting')) {

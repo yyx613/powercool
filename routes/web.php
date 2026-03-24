@@ -692,41 +692,41 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/export', 'export')->name('export');
     });
     // Report
-    Route::controller(ReportController::class)->prefix('report')->name('report.')->middleware(['can:report.view'])->group(function () {
-        Route::prefix('production-report')->name('production_report.')->group(function () {
+    Route::controller(ReportController::class)->prefix('report')->name('report.')->group(function () {
+        Route::prefix('production-report')->name('production_report.')->middleware(['can:report.production.view'])->group(function () {
             Route::get('/', 'indexProduction')->name('index');
             Route::get('/get-data', 'getDataProduction')->name('get_data');
             Route::get('/export-in-excel', 'exportInExcelProduction')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfProduction')->name('export_in_pdf');
         });
-        Route::prefix('sales-report')->name('sales_report.')->group(function () {
+        Route::prefix('sales-report')->name('sales_report.')->middleware(['can:report.sales.view'])->group(function () {
             Route::get('/', 'indexSales')->name('index');
             Route::get('/get-data', 'getDataSales')->name('get_data');
             Route::get('/export-in-excel', 'exportInExcelSales')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfSales')->name('export_in_pdf');
         });
-        Route::prefix('stock-report')->name('stock_report.')->group(function () {
+        Route::prefix('stock-report')->name('stock_report.')->middleware(['can:report.stock.view'])->group(function () {
             Route::get('/', 'indexStock')->name('index');
             Route::get('/get-data', 'getDataStock')->name('get_data');
             Route::get('/export', 'exportStock')->name('export');
             Route::get('/export-in-excel', 'exportInExcelStock')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfStock')->name('export_in_pdf');
         });
-        Route::prefix('earning-report')->name('earning_report.')->group(function () {
+        Route::prefix('earning-report')->name('earning_report.')->middleware(['can:report.earning.view'])->group(function () {
             Route::get('/', 'indexEarning')->name('index');
             Route::get('/get-data', 'getDataEarning')->name('get_data');
             Route::get('/export', 'exportEarning')->name('export');
             Route::get('/export-in-excel', 'exportInExcelEarning')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfEarning')->name('export_in_pdf');
         });
-        Route::prefix('service-report')->name('service_report.')->group(function () {
+        Route::prefix('service-report')->name('service_report.')->middleware(['can:report.service.view'])->group(function () {
             Route::get('/', 'indexService')->name('index');
             Route::get('/get-data', 'getDataService')->name('get_data');
             Route::get('/export', 'exportService')->name('export');
             Route::get('/export-in-excel', 'exportInExcelService')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfService')->name('export_in_pdf');
         });
-        Route::prefix('technician-stock-report')->name('technician_stock_report.')->group(function () {
+        Route::prefix('technician-stock-report')->name('technician_stock_report.')->middleware(['can:report.technician_stock.view'])->group(function () {
             Route::get('/', 'indexTechnicianStock')->name('index');
             Route::get('/get-data', 'getDataTechnicianStock')->name('get_data');
             Route::get('/export', 'exportTechnicianStock')->name('export');

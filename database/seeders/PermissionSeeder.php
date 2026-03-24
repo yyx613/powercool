@@ -190,7 +190,12 @@ class PermissionSeeder extends Seeder
 
             'e_order.view',
 
-            'report.view',
+            'report.production.view',
+            'report.sales.view',
+            'report.stock.view',
+            'report.earning.view',
+            'report.service.view',
+            'report.technician_stock.view',
 
             'user_role_management.view',
             'user_role_management.create',

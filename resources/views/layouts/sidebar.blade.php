@@ -681,7 +681,7 @@
                     </li>
                 @endcan
                 <!-- Report -->
-                @can('report.view')
+                @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="5">
@@ -699,6 +699,7 @@
                             data-accordionid="5">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('report.production.view')
                                     <li>
                                         <a href="{{ route('report.production_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -706,6 +707,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.sales.view')
                                     <li>
                                         <a href="{{ route('report.sales_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -713,6 +716,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.stock.view')
                                     <li>
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -720,6 +725,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.earning.view')
                                     <li>
                                         <a href="{{ route('report.earning_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -727,6 +734,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Earning Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.service.view')
                                     <li>
                                         <a href="{{ route('report.service_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -734,6 +743,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.technician_stock.view')
                                     <li>
                                         <a href="{{ route('report.technician_stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -741,11 +752,12 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </div>
                     </li>
-                @endcan
+                @endcanany
                 <!-- User Role Management -->
                 @can('user_role_management.view')
                     <li>
@@ -1229,7 +1241,7 @@
                         </li>
                     @endcan
                     <!-- Report -->
-                    @can('report.view')
+                    @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
                         <li class="expand-sub-menu-triggers" data-type="report">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
@@ -1239,7 +1251,7 @@
                                 </svg>
                             </button>
                         </li>
-                    @endcan
+                    @endcanany
                     <!-- User Role Management -->
                     @can('user_role_management.view')
                         <li class="expand-sub-menu-triggers" data-type="user-role-management">
@@ -1730,13 +1742,14 @@
             </div>
         @endcan
         <!-- Report -->
-        @can('report.view')
+        @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="report">
                 <div class="mb-4 p-2 border-b">
                     <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Report') }}</h6>
                 </div>
                 <ul>
+                    @can('report.production.view')
                     <li>
                         <a href="{{ route('report.production_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1744,6 +1757,8 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Report') }}</span>
                         </a>
                     </li>
+                    @endcan
+                    @can('report.sales.view')
                     <li>
                         <a href="{{ route('report.sales_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1751,6 +1766,8 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Report') }}</span>
                         </a>
                     </li>
+                    @endcan
+                    @can('report.stock.view')
                     <li>
                         <a href="{{ route('report.stock_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1758,6 +1775,8 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Report') }}</span>
                         </a>
                     </li>
+                    @endcan
+                    @can('report.earning.view')
                     <li>
                         <a href="{{ route('report.earning_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1765,6 +1784,8 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Earning Report') }}</span>
                         </a>
                     </li>
+                    @endcan
+                    @can('report.service.view')
                     <li>
                         <a href="{{ route('report.service_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1772,6 +1793,8 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Report') }}</span>
                         </a>
                     </li>
+                    @endcan
+                    @can('report.technician_stock.view')
                     <li>
                         <a href="{{ route('report.technician_stock_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1779,9 +1802,10 @@
                                 class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                         </a>
                     </li>
+                    @endcan
                 </ul>
             </div>
-        @endcan
+        @endcanany
         <!-- User Role Management -->
         @can('user_role_management.view')
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
@@ -2667,7 +2691,7 @@
                     </li>
                 @endcan
                 <!-- Report -->
-                @can('report.view')
+                @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="5">
@@ -2685,6 +2709,7 @@
                             data-accordionid="5">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('report.production.view')
                                     <li>
                                         <a href="{{ route('report.production_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2692,6 +2717,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Production Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.sales.view')
                                     <li>
                                         <a href="{{ route('report.sales_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2699,6 +2726,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.stock.view')
                                     <li>
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2706,6 +2735,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.earning.view')
                                     <li>
                                         <a href="{{ route('report.earning_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2713,6 +2744,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Earning Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.service.view')
                                     <li>
                                         <a href="{{ route('report.service_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2720,6 +2753,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Service Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('report.technician_stock.view')
                                     <li>
                                         <a href="{{ route('report.technician_stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2727,11 +2762,12 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Technician Stock Report') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </div>
                     </li>
-                @endcan
+                @endcanany
                 <!-- User Role Management -->
                 @can('user_role_management.view')
                     <li>
