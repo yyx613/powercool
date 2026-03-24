@@ -681,7 +681,7 @@
                     </li>
                 @endcan
                 <!-- Report -->
-                @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
+                @canany(['report.production', 'report.sales', 'report.stock', 'report.earning', 'report.service', 'report.technician_stock'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="5">
@@ -699,7 +699,7 @@
                             data-accordionid="5">
                             <div class="overflow-hidden">
                                 <ul>
-                                    @can('report.production.view')
+                                    @can('report.production')
                                     <li>
                                         <a href="{{ route('report.production_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -708,7 +708,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.sales.view')
+                                    @can('report.sales')
                                     <li>
                                         <a href="{{ route('report.sales_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -717,7 +717,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.stock.view')
+                                    @can('report.stock')
                                     <li>
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -726,7 +726,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.earning.view')
+                                    @can('report.earning')
                                     <li>
                                         <a href="{{ route('report.earning_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -735,7 +735,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.service.view')
+                                    @can('report.service')
                                     <li>
                                         <a href="{{ route('report.service_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -744,7 +744,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.technician_stock.view')
+                                    @can('report.technician_stock')
                                     <li>
                                         <a href="{{ route('report.technician_stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1241,7 +1241,7 @@
                         </li>
                     @endcan
                     <!-- Report -->
-                    @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
+                    @canany(['report.production', 'report.sales', 'report.stock', 'report.earning', 'report.service', 'report.technician_stock'])
                         <li class="expand-sub-menu-triggers" data-type="report">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
@@ -1742,14 +1742,14 @@
             </div>
         @endcan
         <!-- Report -->
-        @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
+        @canany(['report.production', 'report.sales', 'report.stock', 'report.earning', 'report.service', 'report.technician_stock'])
             <div class="absolute top-0 left-14 shadow-[10px_0px_15px_#00000010] bg-blue-900 h-full py-4 px-2 border-l opacity-0 -z-50 invisible transition-all duration-300 max-w-0 min-w-[200px] sub-menu-content"
                 data-type="report">
                 <div class="mb-4 p-2 border-b">
                     <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Report') }}</h6>
                 </div>
                 <ul>
-                    @can('report.production.view')
+                    @can('report.production')
                     <li>
                         <a href="{{ route('report.production_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1758,7 +1758,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('report.sales.view')
+                    @can('report.sales')
                     <li>
                         <a href="{{ route('report.sales_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1767,7 +1767,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('report.stock.view')
+                    @can('report.stock')
                     <li>
                         <a href="{{ route('report.stock_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1776,7 +1776,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('report.earning.view')
+                    @can('report.earning')
                     <li>
                         <a href="{{ route('report.earning_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1785,7 +1785,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('report.service.view')
+                    @can('report.service')
                     <li>
                         <a href="{{ route('report.service_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1794,7 +1794,7 @@
                         </a>
                     </li>
                     @endcan
-                    @can('report.technician_stock.view')
+                    @can('report.technician_stock')
                     <li>
                         <a href="{{ route('report.technician_stock_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2691,7 +2691,7 @@
                     </li>
                 @endcan
                 <!-- Report -->
-                @canany(['report.production.view', 'report.sales.view', 'report.stock.view', 'report.earning.view', 'report.service.view', 'report.technician_stock.view'])
+                @canany(['report.production', 'report.sales', 'report.stock', 'report.earning', 'report.service', 'report.technician_stock'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="5">
@@ -2709,7 +2709,7 @@
                             data-accordionid="5">
                             <div class="overflow-hidden">
                                 <ul>
-                                    @can('report.production.view')
+                                    @can('report.production')
                                     <li>
                                         <a href="{{ route('report.production_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.production_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2718,7 +2718,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.sales.view')
+                                    @can('report.sales')
                                     <li>
                                         <a href="{{ route('report.sales_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.sales_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2727,7 +2727,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.stock.view')
+                                    @can('report.stock')
                                     <li>
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2736,7 +2736,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.earning.view')
+                                    @can('report.earning')
                                     <li>
                                         <a href="{{ route('report.earning_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.earning_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2745,7 +2745,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.service.view')
+                                    @can('report.service')
                                     <li>
                                         <a href="{{ route('report.service_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.service_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2754,7 +2754,7 @@
                                         </a>
                                     </li>
                                     @endcan
-                                    @can('report.technician_stock.view')
+                                    @can('report.technician_stock')
                                     <li>
                                         <a href="{{ route('report.technician_stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.technician_stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">

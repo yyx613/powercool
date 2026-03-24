@@ -112,6 +112,7 @@ class PermissionSeeder extends Seeder
             'sale.transport_acknowledgement.create',
 
             'sale.invoice.view',
+            'sale.invoice.convert_from_so',
             'sale.invoice.sync_to_autocount',
             'sale.invoice.convert_to_billing',
             'sale.invoice.submit_draft_e_invoice',
@@ -190,12 +191,12 @@ class PermissionSeeder extends Seeder
 
             'e_order.view',
 
-            'report.production.view',
-            'report.sales.view',
-            'report.stock.view',
-            'report.earning.view',
-            'report.service.view',
-            'report.technician_stock.view',
+            'report.production',
+            'report.sales',
+            'report.stock',
+            'report.earning',
+            'report.service',
+            'report.technician_stock',
 
             'user_role_management.view',
             'user_role_management.create',
