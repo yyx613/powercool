@@ -199,7 +199,12 @@ return [
     'e_order.view' => 'Show the E-Order Assign menu under Sale and access the pending platform orders page for Lazada, Shopee, TikTok, and WooCommerce order assignment',
 
     // Report
-    'report.view' => 'Show the Report accordion in the sidebar and access all report pages including production, sales, stock, earning, and service reports',
+    'report.production.view' => 'Show the Production Report sub-menu under Report in the sidebar and access the production report page',
+    'report.sales.view' => 'Show the Sales Report sub-menu under Report in the sidebar and access the sales report page',
+    'report.stock.view' => 'Show the Stock Report sub-menu under Report in the sidebar and access the stock report page',
+    'report.earning.view' => 'Show the Earning Report sub-menu under Report in the sidebar and access the earning report page',
+    'report.service.view' => 'Show the Service Report sub-menu under Report in the sidebar and access the service report page',
+    'report.technician_stock.view' => 'Show the Technician Stock Report sub-menu under Report in the sidebar and access the technician stock report page',
 
     // User & Role Management
     'user_role_management.view' => 'Show the User Management and Role Management menus in the sidebar and access user account and role listing pages',
