@@ -148,7 +148,7 @@
             @endphp
             @foreach ($products as $key => $prod)
                 @php
-                    $lineTotal = $prod->is_foc ? 0 : ($prod->qty * $prod->unit_price - ($prod->discount ?? 0));
+                    $lineTotal = $prod->is_foc ? 0 : ($prod->qty * $prod->unit_price - $prod->manualDiscountAmount());
                     $lineTotal = max(0, $lineTotal);
                     $sstAmount = ($prod->with_sst && !$prod->is_foc) ? ($lineTotal * $sst_value / 100) : 0;
                     $subtotal += $lineTotal;
@@ -179,7 +179,7 @@
                         {{ $prod->is_foc ? '-' : number_format($prod->unit_price, 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
-                        {{ number_format($prod->discount ?? 0, 2) }}</td>
+                        {{ number_format($prod->manualDiscountAmount(), 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">
                         {{ number_format($lineTotal, 2) }}</td>

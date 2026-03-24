@@ -144,7 +144,7 @@ class Sale extends Model
 
         // Products
         for ($i = 0; $i < count($prods); $i++) {
-            $total += (($prods[$i]->qty * $prods[$i]->unit_price) - ($prods[$i]->discount ?? 0) + ($prods[$i]->sst_amount ?? 0));
+            $total += (($prods[$i]->qty * $prods[$i]->unit_price) - $prods[$i]->manualDiscountAmount() + ($prods[$i]->sst_amount ?? 0));
 
             // Accessories (non-FOC only)
             foreach ($prods[$i]->accessories as $acc) {

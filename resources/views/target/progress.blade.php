@@ -28,8 +28,10 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>{{ __('Invoice') }}</th>
-                    <th>{{ __('Amount') }}</th>
+                    <th>{{ __('Invoice No.') }}</th>
+                    <th>{{ __('Invoice Date') }}</th>
+                    <th>{{ __('Customer Name') }}</th>
+                    <th>{{ __('Amount (RM)') }}</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -53,11 +55,12 @@
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'doc_no' },
+                { data: 'invoice_date' },
+                { data: 'customer_name' },
                 { data: 'total' },
             ],
             columnDefs: [
                 {
-                    "width": "20%",
                     "targets": 0,
                     orderable: false,
                     render: function(data, type, row) {
@@ -65,8 +68,21 @@
                     }
                 },
                 {
-                    "width": "20%",
                     "targets": 1,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "targets": 2,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return data
+                    }
+                },
+                {
+                    "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
                         return data

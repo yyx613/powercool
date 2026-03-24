@@ -11,9 +11,9 @@
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
                 <div class="flex flex-col">
-                    <x-app.input.label id="customer" class="mb-1">{{ __('Customer') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="{{ __('Select a customer') }}">
-                        <option value="">{{ __('Select a customer') }}</option>
+                    <x-app.input.label id="customer" class="mb-1">{{ __('Company') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.select2 name="customer" id="customer" :hasError="$errors->has('customer')" placeholder="{{ __('Select a company') }}">
+                        <option value="">{{ __('Select a company') }}</option>
                         @foreach ($customers as $cu)
                             <option value="{{ $cu->id }}" @selected(old('customer', isset($ticket) ? $ticket->customer_id : null) == $cu->id)>{{ $cu->name }}</option>
                         @endforeach

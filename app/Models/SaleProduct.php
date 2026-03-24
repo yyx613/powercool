@@ -69,9 +69,24 @@ class SaleProduct extends Model
             }
         }
 
-        $amount += ($this->discount ?? 0);
+        $amount += $this->manualDiscountAmount();
 
         return $amount;
+    }
+
+    public function manualDiscountAmount()
+    {
+        if ($this->discount === null || $this->discount == 0) {
+            return 0;
+        }
+
+        $price = $this->qty * ($this->override_selling_price ?? $this->unit_price);
+
+        if ($this->discount_type === 'percentage') {
+            return $price * $this->discount / 100;
+        }
+
+        return $this->discount;
     }
 
     public function promotionAmount()

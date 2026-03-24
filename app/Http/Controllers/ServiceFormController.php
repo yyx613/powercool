@@ -181,6 +181,8 @@ class ServiceFormController extends Controller
             'line_unit_price.*' => 'nullable|numeric|min:0',
             'line_discount' => 'nullable|array',
             'line_discount.*' => 'nullable|numeric|min:0',
+            'line_discount_type' => 'nullable|array',
+            'line_discount_type.*' => 'nullable|in:fixed,percentage',
             'line_uom' => 'nullable|array',
             'line_uom.*' => 'nullable|string|max:50',
             'line_remark' => 'nullable|array',
@@ -271,6 +273,7 @@ class ServiceFormController extends Controller
             $lineQtys = $req->input('line_qty', []);
             $lineUnitPrices = $req->input('line_unit_price', []);
             $lineDiscounts = $req->input('line_discount', []);
+            $lineDiscountTypes = $req->input('line_discount_type', []);
             $lineUoms = $req->input('line_uom', []);
             $lineRemarks = $req->input('line_remark', []);
             $lineFocs = $req->input('line_is_foc', []);
@@ -292,13 +295,15 @@ class ServiceFormController extends Controller
                     $qty = $lineQtys[$index] ?? 1;
                     $unitPrice = $lineUnitPrices[$index] ?? 0;
                     $discount = $lineDiscounts[$index] ?? 0;
+                    $discountType = $lineDiscountTypes[$index] ?? 'fixed';
                     $uom = $lineUoms[$index] ?? null;
                     $remark = $lineRemarks[$index] ?? null;
                     $isFoc = isset($lineFocs[$index]) && $lineFocs[$index] == '1';
                     $withSst = isset($lineSsts[$index]) && $lineSsts[$index] == '1';
 
                     // Calculate line total
-                    $lineTotal = $isFoc ? 0 : ($qty * $unitPrice - $discount);
+                    $discountAmount = $discountType === 'percentage' ? ($qty * $unitPrice * $discount / 100) : $discount;
+                    $lineTotal = $isFoc ? 0 : ($qty * $unitPrice - $discountAmount);
                     $lineTotal = max(0, $lineTotal);
 
                     // Calculate SST
@@ -311,6 +316,7 @@ class ServiceFormController extends Controller
                         'qty' => $qty,
                         'unit_price' => $unitPrice,
                         'discount' => $discount,
+                        'discount_type' => $discountType,
                         'uom' => $uom,
                         'is_foc' => $isFoc,
                         'with_sst' => $withSst,

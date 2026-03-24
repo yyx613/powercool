@@ -108,6 +108,7 @@
             let unitPrice = []
             let promo = []
             let discount = []
+            let discountType = []
             let prodSerialNo = []
             let warrantyPeriod = []
             let remark = []
@@ -129,6 +130,7 @@
                 unitPrice.push($(this).find('input[name="unit_price[]"]').val())
                 promo.push($(this).find('select[name="promotion[]"]').val())
                 discount.push($(this).find('input[name="discount"]').val())
+                discountType.push($(this).find('.discount-type-btns').attr('data-discount-type') || 'fixed')
                 remark.push($(this).find('.ql-editor').html())
                 overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
                 if ($(this).find('select[name="product_serial_no[]"]').val() == null || $(this).find(
@@ -241,6 +243,7 @@
                     'warranty_period': warrantyPeriod,
                     'accessory': accessory,
                     'discount': discount,
+                    'discount_type': discountType,
                     'product_remark': remark,
                     'override_selling_price': overrideSellingPrice,
 

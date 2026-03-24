@@ -41,11 +41,11 @@
                 <div class="flex flex-col">
                     <x-app.input.label id="role" class="mb-1">{{ __('Role') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="role[]" id="role" :hasError="$errors->has('role')" multiple>
+                    <x-app.input.select2 name="role[]" id="role" :hasError="$errors->has('role')" placeholder="{{ __('Select a role') }}" multiple>
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}" @selected(old('role', isset($user) ? in_array($role->id, $user_role_ids) : null))>{{ $role->name }}</option>
                         @endforeach
-                    </x-app.input.select>
+                    </x-app.input.select2>
                     <x-input-error :messages="$errors->get('role')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">

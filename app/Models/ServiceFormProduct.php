@@ -49,9 +49,24 @@ class ServiceFormProduct extends Model
         }
 
         $total = $this->qty * $this->unit_price;
-        $total -= $this->discount ?? 0;
+        $total -= $this->manualDiscountAmount();
 
         return max(0, $total);
+    }
+
+    public function manualDiscountAmount(): float
+    {
+        if ($this->discount === null || $this->discount == 0) {
+            return 0;
+        }
+
+        $price = $this->qty * $this->unit_price;
+
+        if ($this->discount_type === 'percentage') {
+            return $price * $this->discount / 100;
+        }
+
+        return (float) $this->discount;
     }
 
     /**

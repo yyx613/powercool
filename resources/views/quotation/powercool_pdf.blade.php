@@ -245,7 +245,7 @@
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
-                        {{ number_format($prod->discountAmount(), 2) }}
+                        {{ $prod->discountAmount() == 0 ? '' : number_format($prod->discountAmount(), 2) }}
                     </td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
