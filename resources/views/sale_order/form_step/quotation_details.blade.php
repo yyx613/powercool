@@ -82,7 +82,7 @@
         <div class="flex flex-col">
             <x-app.input.label id="reference" class="mb-1">{{ __('Your P/O No') }}</x-app.input.label>
             <x-app.input.multi-input name="reference" id="reference" class="uppercase-input" :hasError="$errors->has('reference')"
-                value="{{ isset($sale) ? $sale->reference : null }}" />
+                value="{{ isset($sale) ? $sale->reference : null }}" :removable="false" />
             <x-app.message.error id="reference_err" />
         </div>
         <div class="flex flex-col">

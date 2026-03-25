@@ -9,18 +9,28 @@
 
 <style>
     @page {
-        margin: 450px 25px 50px 25px;
+        margin: 430px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -440px;
+        top: -420px;
         left: 0px;
         right: 0px;
     }
 
-    #invalid {
-        color: red;
+    .watermark {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 100px;
+        font-weight: bold;
+        color: rgba(150, 150, 150, 0.3);
+        font-family: sans-serif;
+        z-index: 1000;
+        white-space: nowrap;
+        pointer-events: none;
     }
 
     p {
@@ -48,7 +58,9 @@
 </style>
 
 <body>
-    @if ($sale->status == \App\Models\Sale::STATUS_APPROVAL_PENDING && !$sale->expired_at)
+    @if ($sale->status == 3)
+        <div class="watermark">CANCELLED</div>
+    @elseif ($sale->status == \App\Models\Sale::STATUS_APPROVAL_PENDING && !$sale->expired_at)
         <div class="watermark">PENDING APPROVAL</div>
     @elseif ($sale->status == \App\Models\Sale::STATUS_APPROVAL_REJECTED)
         <div class="watermark">REJECTED</div>
@@ -122,20 +134,6 @@
                     style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 15px 0 10px 0; text-align: center;">
                 </td>
             </tr>
-            @if ($sale->status == 3)
-                <tr>
-                    <td
-                        style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 0 10px 0; text-align: center;">
-                    </td>
-                    <td style="font-size: 14px; font-weight: 700; width: 33.33%; padding: 0px 35px 10px 0; text-align: center;"
-                        id="invalid">
-                        CANCELLED
-                    </td>
-                    <td
-                        style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 0px 0 10px 0; text-align: center;">
-                    </td>
-                </tr>
-            @endif
             <tr>
                 <td style="padding: 0 35px 0 0; vertical-align: top;" colspan="3">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -245,7 +243,7 @@
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0px 0 5px;">
-                        {{ $prod->discountAmount() == 0 ? '' : number_format($prod->discountAmount(), 2) }}
+                        {{ number_format($prod->discountAmount(), 2) }}
                     </td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
@@ -288,9 +286,9 @@
                             <td style="font-size: 10px; text-align: left;">- {{ $accessory->product->model_desc ?? 'N/A' }}</td>
                             <td style="font-size: 10px; text-align: right;">{{ $acc_qty }}</td>
                             <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? 'FOC' : ($accessory->product->uomUnit->name ?? '') }}</td>
-                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? '' : number_format($unit_price, 2) }}</td>
-                            <td style="font-size: 10px; text-align: right;"></td>
-                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? '' : number_format($total_price, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ number_format($unit_price, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ number_format(0, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ number_format($total_price, 2) }}</td>
                         </tr>
                     @endforeach
                 @endif

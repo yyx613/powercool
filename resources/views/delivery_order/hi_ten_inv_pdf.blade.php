@@ -18,8 +18,18 @@
         right: 0px;
     }
 
-    #invalid {
-        color: red;
+    .watermark {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 100px;
+        font-weight: bold;
+        color: rgba(150, 150, 150, 0.3);
+        font-family: sans-serif;
+        z-index: 1000;
+        white-space: nowrap;
+        pointer-events: none;
     }
 
     p {
@@ -33,6 +43,9 @@
 </style>
 
 <body>
+    @if (isset($inv_status) && $inv_status == 1)
+        <div class="watermark">VOIDED</div>
+    @endif
     <!-- Header -->
     <header>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
@@ -145,14 +158,6 @@
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
                     INVOICE</td>
             </tr>
-            @if (isset($inv_status) && $inv_status == 1)
-                <tr>
-                    <td style="font-size: 14px; font-weight: 700; padding: 0px 35px 10px 0; text-align: center;"
-                        colspan="2" id="invalid">
-                        VOIDED
-                    </td>
-                </tr>
-            @endif
             <tr>
                 <td style="padding: 0 35px 15px 0; vertical-align: top;">
                     <table style="width: 100%; border-collapse: collapse;">

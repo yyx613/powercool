@@ -175,10 +175,10 @@
                         {{ number_format($prod->override_selling_price ?? $prod->unit_price, 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ $prod->manualDiscountAmount() == 0 ? '' : number_format($prod->manualDiscountAmount(), 2) }}</td>
+                        {{ number_format($prod->is_foc ? 0 : $prod->manualDiscountAmount(), 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
-                        {{ ($prod->promotionAmount() ?? 0) == 0 ? '' : number_format($prod->promotionAmount(), 2) }}
+                        {{ number_format($prod->is_foc ? 0 : ($prod->promotionAmount() ?? 0), 2) }}
                     </td>
                     <td
                         style="vertical-align: start; font-size: 10px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
