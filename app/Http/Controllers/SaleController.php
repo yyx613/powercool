@@ -1028,12 +1028,17 @@ class SaleController extends Controller
             $rejected_remarks = Approval::withoutGlobalScope(BranchScope::class)->where('object_type', Sale::class)
                 ->where('object_id', $record->id)
                 ->where('status', Approval::STATUS_REJECTED)
-                ->where('data', 'like', '%"is_quo":false%')
+                ->where('data', 'not like', '%"is_quo":true%')
                 ->orderBy('id', 'desc')
-                ->get(['reject_remark', 'updated_at'])
-                ->filter(fn($a) => $a->reject_remark);
+                ->get(['reject_remark', 'data', 'updated_at']);
             $rejected_reason = $rejected_remarks->isNotEmpty()
-                ? $rejected_remarks->values()->map(fn($a, $i) => ($rejected_remarks->count() > 1 ? ($i + 1) . '. ' : '') . '<span class="text-gray-500 text-xs">[' . Carbon::parse($a->updated_at)->format('d M Y H:i') . ']</span> ' . $a->reject_remark)->implode('<br>')
+                ? $rejected_remarks->values()->map(function ($a, $i) use ($rejected_remarks) {
+                    $remark = $a->reject_remark ?? (json_decode($a->data)->description ?? null);
+                    if (! $remark) return null;
+                    return ($rejected_remarks->count() > 1 ? ($i + 1) . '. ' : '')
+                        . '<span class="text-gray-500 text-xs">[' . Carbon::parse($a->updated_at)->format('d M Y H:i') . ']</span> '
+                        . $remark;
+                })->filter()->implode('<br>') ?: null
                 : null;
 
             $data['data'][] = [
@@ -1174,6 +1179,7 @@ class SaleController extends Controller
                 'customers' => $customers,
                 'transfer_from' => $transfer_from,
                 'transfer_to' => $transfer_to,
+                'from' => request()->query('from'),
             ]);
         }
 
@@ -3229,12 +3235,14 @@ class SaleController extends Controller
 
     public function upsertPayDetails(Request $req, bool $validated = false)
     {
+        $is_voided = Sale::where('id', $req->sale_id)->where('status', Sale::STATUS_CANCELLED)->exists();
+
         if (! $validated) {
             // Validate form
             $rules = [
                 'sale_id' => 'required',
-                'payment_method' => 'required',
-                'payment_due_date' => 'required',
+                'payment_method' => $is_voided ? 'nullable' : 'required',
+                'payment_due_date' => $is_voided ? 'nullable' : 'required',
                 'payment_remark' => 'nullable|max:250',
             ];
             if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
@@ -3272,7 +3280,7 @@ class SaleController extends Controller
                 // Check amount is greater than 50% if payment method is deposit required
                 $deposit_required = PaymentMethod::where('id', $req->payment_method)->value('deposit_required');
 
-                if ($deposit_required == true && $req->account_amount != null) {
+                if (!$is_voided && $deposit_required == true && $req->account_amount != null) {
                     $amount_to_pay = $sale->getTotalAmount();
                     $total_amount = 0;
                     for ($i = 0; $i < count($req->account_amount); $i++) {

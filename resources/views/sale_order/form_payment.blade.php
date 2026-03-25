@@ -4,7 +4,7 @@
 @section('content')
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
-            url="{{ route('sale_order.index') }}">{{ isset($sale) ? __('Edit Sale Order Payment - ') . $sale->sku : __('Create Sale Order Payment') }}</x-app.page-title>
+            url="{{ ($from ?? null) === 'listing' ? route('sale_order.index') : route('sale_order.edit', ['sale' => $sale->id]) }}">{{ isset($sale) ? __('Edit Sale Order Payment - ') . $sale->sku : __('Create Sale Order Payment') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="mb-2">

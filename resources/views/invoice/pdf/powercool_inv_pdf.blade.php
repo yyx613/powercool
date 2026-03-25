@@ -152,7 +152,7 @@
                 <td style="font-size: 14px; text-align: right;">1</td>
                 <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ $prod->saleProduct->product->uom }}</td>
                 <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ $prod->saleProduct->discountAmount() == 0 ? '' : number_format($prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
                 <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->unit_price - $prod->saleProduct->discountAmount(), 2) }}</td>
             </tr>
             @php

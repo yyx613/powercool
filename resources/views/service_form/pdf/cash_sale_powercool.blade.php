@@ -187,10 +187,10 @@
                         {{ $prod->uom ?? '-' }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
-                        {{ $prod->is_foc ? '-' : number_format($prod->unit_price, 2) }}</td>
+                        {{ number_format($prod->unit_price, 2) }}</td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
-                        {{ number_format($prod->manualDiscountAmount(), 2) }}
+                        {{ number_format($prod->is_foc ? 0 : $prod->manualDiscountAmount(), 2) }}
                     </td>
                     <td
                         style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">

@@ -116,7 +116,7 @@
                 <td style="font-size: 14px; text-align: left;">{{ $prod->saleProduct->product->model_desc }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ $prod->qty }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ $prod->saleProduct->discountAmount() == 0 ? '' : number_format($prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
                 <td style="font-size: 14px; text-align: right;">{{ number_format(($prod->qty * $prod->saleProduct->unit_price) - $prod->saleProduct->discountAmount(), 2) }}</td>
             </tr>
             @php
