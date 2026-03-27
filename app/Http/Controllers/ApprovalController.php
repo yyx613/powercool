@@ -42,6 +42,7 @@ class ApprovalController extends Controller
         3 => 'Customer',
         4 => 'Payment Record',
         5 => 'Raw Material Request',
+        6 => 'Complete Production Request',
     ];
 
     public function index()
@@ -72,6 +73,9 @@ class ApprovalController extends Controller
         }
         if (!hasPermission('approval.type_raw_material_request')) {
             unset($types[5]);
+        }
+        if (!hasPermission('approval.type_complete_production_request')) {
+            unset($types[6]);
         }
 
         return view('approval.list', [
@@ -122,39 +126,38 @@ class ApprovalController extends Controller
                 $records = $records->where('status', Approval::STATUS_REJECTED);
             }
         }
-        // Filter type
-        $records = $records->where(function ($q) {
-            if (!hasPermission('approval.type_quotation')) {
-                $q->orWhere(function ($q) {
-                    $q->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
-                });
-            }
-            if (!hasPermission('approval.type_sale_order')) {
-                $q->orWhere(function ($q) {
-                    $q->where('object_type', Sale::class)->where('data', 'like', '%is_quo%');
-                });
-            }
-            if (!hasPermission('approval.type_delivery_order')) {
-                $q->orWhere(function ($q) {
-                    $q->whereNot('object_type', DeliveryOrder::class);
-                });
-            }
-            if (!hasPermission('approval.type_customer')) {
-                $q->orWhere(function ($q) {
-                    $q->whereNot('object_type', Customer::class);
-                });
-            }
-            if (!hasPermission('approval.type_payment_record')) {
-                $q->orWhere(function ($q) {
-                    $q->whereNot('object_type', SalePaymentAmount::class);
-                });
-            }
-            if (!hasPermission('approval.type_raw_material_request')) {
-                $q->orWhere(function ($q) {
-                    $q->whereNot('object_type', RawMaterialRequest::class);
-                });
-            }
-        });
+        // Exclude types user doesn't have permission for
+        if (!hasPermission('approval.type_quotation')) {
+            $records = $records->where(function ($q) {
+                $q->whereNot('object_type', Sale::class)
+                  ->orWhere(function ($q) {
+                      $q->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%');
+                  });
+            });
+        }
+        if (!hasPermission('approval.type_sale_order')) {
+            $records = $records->where(function ($q) {
+                $q->whereNot('object_type', Sale::class)
+                  ->orWhere(function ($q) {
+                      $q->where('object_type', Sale::class)->where('data', 'like', '%is_quo%');
+                  });
+            });
+        }
+        if (!hasPermission('approval.type_delivery_order')) {
+            $records = $records->whereNot('object_type', DeliveryOrder::class);
+        }
+        if (!hasPermission('approval.type_customer')) {
+            $records = $records->whereNot('object_type', Customer::class);
+        }
+        if (!hasPermission('approval.type_payment_record')) {
+            $records = $records->whereNot('object_type', SalePaymentAmount::class);
+        }
+        if (!hasPermission('approval.type_raw_material_request')) {
+            $records = $records->whereNot('object_type', RawMaterialRequest::class);
+        }
+        if (!hasPermission('approval.type_complete_production_request')) {
+            $records = $records->whereNot('object_type', Production::class);
+        }
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');
@@ -176,6 +179,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 5) {
                 $records = $records->where('object_type', RawMaterialRequest::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 6) {
+                $records = $records->where('object_type', Production::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -190,6 +196,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', SalePaymentAmount::class);
             } elseif (Session::get('approval-type') == 5) {
                 $records = $records->where('object_type', RawMaterialRequest::class);
+            } elseif (Session::get('approval-type') == 6) {
+                $records = $records->where('object_type', Production::class);
             }
         }
 

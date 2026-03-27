@@ -17,6 +17,7 @@ return [
     'approval.type_customer' => 'Show debtor registration, credit term change, and deletion requests in the approval listing page and the Customer option in the type filter dropdown',
     'approval.type_payment_record' => 'Show payment edit and deletion requests in the approval listing page and the Payment Record option in the type filter dropdown',
     'approval.type_raw_material_request' => 'Show raw material request cancellation requests in the approval listing page and the Raw Material Request option in the type filter dropdown',
+    'approval.type_complete_production_request' => 'Show complete production requests in the approval listing page and the Complete Production Request option in the type filter dropdown',
 
     // Dashboard
     'dashboard.view' => 'Show the Dashboard menu in the sidebar and access the dashboard page with sales, production, and task overview charts',
