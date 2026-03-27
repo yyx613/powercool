@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 500px 25px 50px 25px;
+        margin: 470px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -475px;
+        top: -445px;
         left: 0px;
         right: 0px;
     }
@@ -90,7 +90,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 5px 5px 0 0; vertical-align: start;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 14px; padding: 5px 5px 0 0; vertical-align: start;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}</td>
                             <td style="font-size: 14px; padding: 5px 0 0 0; vertical-align: start;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
@@ -145,33 +145,33 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 3%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 3%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 12%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 12%;">
                     Item Code</td>
-                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 4%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: center; width: 4%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 4%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: center; width: 4%;">
                     FOC Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 4%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: center; width: 4%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Promotion (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Total (RM)</td>
             </tr>
         </table>
@@ -187,36 +187,36 @@
             @foreach ($products as $key => $prod)
                 <tr>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; width: 3%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; width: 3%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $key + 1 }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; width: 12%; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; width: 12%; padding: {{ $key == 0 ? '0' : '20px' }} 10px 0 4px;">
                         {{ $prod->product->sku }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod->desc }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: center; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: center; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod->is_foc == true ? '' : $prod->qty }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: center; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: center; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ $prod->is_foc == false ? '' : $prod->qty }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; width: 4%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ $prod->uom }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ number_format($prod->override_selling_price ?? $prod->unit_price, 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ number_format($prod->is_foc ? 0 : $prod->manualDiscountAmount(), 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ number_format($prod->is_foc ? 0 : ($prod->promotionAmount() ?? 0), 2) }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 5px;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; width: 9%; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 5px;">
                         {{ number_format($prod->qty * ($prod->override_selling_price ?? $prod->unit_price) - $prod->discountAmount(), 2) }}
                     </td>
                 </tr>

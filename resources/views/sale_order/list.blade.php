@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -208,8 +204,7 @@
                     let convertable = row.conditions_to_convert.is_draft == false && row
                         .conditions_to_convert.payment_method_filled == true && row
                         .conditions_to_convert.payment_due_date_filled == true && row
-                        .conditions_to_convert.has_product == true && row.conditions_to_convert
-                        .has_serial_no == true && row.conditions_to_convert.is_active_or_approved ==
+                        .conditions_to_convert.is_active_or_approved ==
                         true && row.conditions_to_convert.no_pending_approval == true &&
                         row.conditions_to_convert.not_in_production == true && row.conditions_to_convert
                         .filled_for_e_invoice == true && row.conditions_to_convert.by_pass_for_unpaid ==
@@ -235,8 +230,6 @@
                                                 <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
                                                 <li class="text-sm ${row.conditions_to_convert.payment_method_filled == true ? 'line-through text-slate-400' : ''}">Payment method filled</li>
                                                 <li class="text-sm ${row.conditions_to_convert.payment_due_date_filled == true ? 'line-through text-slate-400' : ''}">Payment due date filled</li>
-                                                <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
-                                                <li class="text-sm ${row.conditions_to_convert.has_serial_no == true ? 'line-through text-slate-400' : ''}">Has serial no</li>
                                                 <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true || row.status == 2 ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
                                                 <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
                                                 <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
@@ -535,6 +528,7 @@
         }
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

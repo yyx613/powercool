@@ -75,11 +75,6 @@ class SaleEnquiry extends Model
         return $this->morphOne(Branch::class, 'object');
     }
     
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
     public function assignedUser()
     {
         return $this->belongsTo(User::class, 'assigned_user_id');

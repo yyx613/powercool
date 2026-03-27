@@ -145,7 +145,17 @@
                 accountDate.push($(this).find('input[name="account_date"]').val())
                 accountRefNo.push($(this).find('input[name="account_ref_no"]').val())
             })
-            let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
+            let additionalRemark = sanitizeQuillHtml($('#additional-remark-container .quill-wrapper .ql-editor').html())
+
+            // Validate at least one product or one adhoc service
+            let hasProducts = prodId.filter(id => id != null && id != '').length > 0
+            let hasServices = adhocServiceId.length > 0
+            if (!hasProducts && !hasServices && isSaveAsDraft != 'true') {
+                alert('Please add at least one product or one service.')
+                $('#submit-btn, #save-draft-btn').attr('disabled', false)
+                return
+            }
+
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -218,10 +228,12 @@
                         SALE = res.data.sale
                     }
 
-                    if (res.data != undefined) {
+                    if (res.data != undefined && res.data.product_ids) {
                         let product_ids = res.data.product_ids
                         $('#product-details-container .items').each(function(i, obj) {
-                            $(this).attr('data-product-id', product_ids[i])
+                            if (product_ids[i] != undefined) {
+                                $(this).attr('data-product-id', product_ids[i])
+                            }
                         })
                     }
 

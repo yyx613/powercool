@@ -112,7 +112,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 0 0 0 0;" colspan="3">
-                                TEL: {{ $customer->phone ?? '' }} &nbsp;&nbsp;&nbsp;&nbsp; FAX:
+                                TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : ($customer->phone ?? '') }} &nbsp;&nbsp;&nbsp;&nbsp; FAX:
                             </td>
                         </tr>
                     </table>
@@ -137,7 +137,7 @@
                         </tr>
                         <tr>
                             <td style="font-size: 14px; padding: 0 0 0 0;" colspan="3">
-                                TEL: {{ $customer->phone ?? '' }} &nbsp;&nbsp;&nbsp;&nbsp; FAX: &nbsp;&nbsp;&nbsp;&nbsp; Warehouse: HQ
+                                TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : ($customer->phone ?? '') }} &nbsp;&nbsp;&nbsp;&nbsp; FAX: &nbsp;&nbsp;&nbsp;&nbsp; Warehouse: HQ
                             </td>
                         </tr>
                     </table>
@@ -151,33 +151,33 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; border-top: solid 1px black;">
             <tr>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 5%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 8%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 8%;">
                     Tax Code</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 10%;">
                     Stock Code</td>
-                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 6%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 6%;">
                     FOC Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 5%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 5%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 10%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 8%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 8%;">
                     Disc. (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 10%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 10%;">
                     Total (RM)</td>
             </tr>
             @php
@@ -197,37 +197,37 @@
                 @endphp
                 <tr>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $key + 1 }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $taxCode }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 5px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 5px 0 4px;">
                         {{ $prod->getItemCode() }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: left; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $prod->getDescription() }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $focQty }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $displayQty }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ $prod->uom ?? '-' }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ number_format($prod->unit_price, 2) }}</td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0px 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ number_format($prod->is_foc ? 0 : $prod->manualDiscountAmount(), 2) }}
                     </td>
                     <td
-                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 0 0 0;">
+                        style="vertical-align: start; font-size: 12px; text-align: right; padding: {{ $key == 0 ? '5px' : '15px' }} 4px 0 4px;">
                         {{ number_format($lineTotal, 2) }}</td>
                 </tr>
                 <!-- Product Remark -->

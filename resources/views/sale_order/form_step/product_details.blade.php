@@ -4,7 +4,7 @@
             display: none;
         }
         .ql-snow.ql-disabled {
-            background-color: #f3f4f6;
+            background-color: #eee;
             pointer-events: none;
         }
     </style>
@@ -101,7 +101,7 @@
                 <x-app.input.input name="qty" id="qty" :hasError="$errors->has('qty')"
                     class="int-input border-none flex-1" />
                 <button type="button"
-                    class="foc-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[is-foc=false]:bg-slate-100 data-[is-foc=true]:bg-emerald-100"
+                    class="foc-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[is-foc=false]:bg-slate-100 data-[is-foc=true]:bg-emerald-100 disabled:cursor-not-allowed"
                     data-is-foc="false">FOC</button>
             </div>
             <x-app.message.error id="qty_err" />
@@ -136,7 +136,7 @@
                 <x-app.input.input name="sst" id="sst" :hasError="$errors->has('sst')" disabled="true"
                     class="border-none flex-1" />
                 <button type="button"
-                    class="sst-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[with-sst=false]:bg-slate-100 data-[with-sst=true]:bg-emerald-100"
+                    class="sst-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[with-sst=false]:bg-slate-100 data-[with-sst=true]:bg-emerald-100 disabled:cursor-not-allowed"
                     data-with-sst="false">SST</button>
             </div>
             <x-app.message.error id="sst_err" />
@@ -167,7 +167,7 @@
             <div class="flex border border-gray-300 rounded-md overflow-hidden">
                 <x-app.input.input name="discount" id="discount" :hasError="$errors->has('discount')" class="decimal-input border-none flex-1" />
                 <button type="button"
-                    class="discount-type-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[discount-type=fixed]:bg-slate-100 data-[discount-type=percentage]:bg-emerald-100"
+                    class="discount-type-btns font-semibold text-sm px-1.5 border-l border-gray-300 data-[discount-type=fixed]:bg-slate-100 data-[discount-type=percentage]:bg-emerald-100 disabled:cursor-not-allowed"
                     data-discount-type="fixed">RM</button>
             </div>
             <x-app.message.error id="discount_err" />
@@ -597,6 +597,7 @@
                 calItemTotal(idx)
             })
         $('body').on('click', '.discount-type-btns', function() {
+            if ($(this).is(':disabled')) return
             let current = $(this).attr('data-discount-type')
             let next = current === 'fixed' ? 'percentage' : 'fixed'
             $(this).attr('data-discount-type', next).text(next === 'percentage' ? '%' : 'RM')
@@ -1270,11 +1271,11 @@
 
                 // Disable inputs
                 $newRow.find('input[name="accessory_qty[]"]').attr('disabled', true)
-                $newRow.find('input[name="accessory_qty[]"]').addClass('!bg-gray-100')
-                $newRow.find('input[name="accessory_qty[]"]').parent().addClass('!bg-gray-100')
+                $newRow.find('input[name="accessory_qty[]"]').css('backgroundColor', '#eee')
+                $newRow.find('input[name="accessory_qty[]"]').parent().css('backgroundColor', '#eee')
                 $newRow.find('input[name="accessory_override_price[]"]').attr('disabled', true)
-                $newRow.find('input[name="accessory_override_price[]"]').addClass('!bg-gray-100')
-                $newRow.find('input[name="accessory_override_price[]"]').parent().addClass('!bg-gray-100')
+                $newRow.find('input[name="accessory_override_price[]"]').css('backgroundColor', '#eee')
+                $newRow.find('input[name="accessory_override_price[]"]').parent().css('backgroundColor', '#eee')
                 $accessorySelect.attr('disabled', true)
 
                 $container.append($newRow);

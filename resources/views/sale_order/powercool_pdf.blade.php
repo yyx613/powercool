@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 515px 25px 50px 25px;
+        margin: 485px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -510px;
+        top: -480px;
         left: 0px;
         right: 0px;
     }
@@ -148,7 +148,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ $customer->phone }}
+                            <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}
                             </td>
                             <td style="font-size: 14px; padding: 10px 0 0 0; width: 15%;">ATT:
                                 {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
@@ -166,33 +166,33 @@
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 3%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 3%;">
                     Item</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 5%;">
                     Tax Code</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 12%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 12%;">
                     Item Code</td>
-                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left;">
                     Description</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: right; width: 4%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: right; width: 4%;">
                     Qty</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 4%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 4%;">
                     UOM</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     U/Price (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Discount (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Promotion (RM)</td>
                 <td
-                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 9%;">
+                    style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 9%;">
                     Total (RM)</td>
             </tr>
         </table>

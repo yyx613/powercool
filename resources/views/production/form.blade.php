@@ -430,7 +430,7 @@
             } else {
                 $('input[name="material_use_product"]').val(JSON.stringify(materialUseProduct))
             }
-            $('textarea[name="remark"]').val($(`#remark-quill .ql-editor`).html())
+            $('textarea[name="remark"]').val(sanitizeQuillHtml($(`#remark-quill .ql-editor`).html()))
             $('form').submit()
         })
         // Filter milestones based on selected product

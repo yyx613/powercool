@@ -332,7 +332,7 @@
 
             $('.items').each((i, obj) => {
                 let item_id = $(obj).attr('data-id')
-                let content = $(obj).find('.ql-editor').html()
+                let content = sanitizeQuillHtml($(obj).find('.ql-editor').html())
 
                 $(`.items[data-id="${item_id}"] textarea[name="remark[]"]`).val(content)
             });

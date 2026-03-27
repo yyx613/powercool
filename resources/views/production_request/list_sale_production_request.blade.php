@@ -154,6 +154,7 @@
         // Datatable
         var dtSale = new DataTable('#data-table-sale', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

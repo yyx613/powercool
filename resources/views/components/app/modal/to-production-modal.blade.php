@@ -68,7 +68,7 @@
             let url = "{{ config('app.url') }}"
             url = `${url}/sale/to-sale-production-request/${saleProductId}`
 
-            $('#to-production-modal textarea[name="remark"]').val($('#remark-quill .ql-editor').html())
+            $('#to-production-modal textarea[name="remark"]').val(sanitizeQuillHtml($('#remark-quill .ql-editor').html()))
             $('#to-production-modal input[name="product_id"]').val(productId)
             $('#to-production-modal form').attr('action', url)
             $('#to-production-modal form').submit()

@@ -116,7 +116,8 @@
 }
 
 .dataTables_wrapper {
-    min-width: 800px;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .show-modal {

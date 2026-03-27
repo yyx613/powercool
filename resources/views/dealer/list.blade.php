@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -32,18 +28,6 @@
                 </svg>
                 {{ __('Export Excel') }}
             </x-app.button.button>
-            @can('dealer.create')
-                <a href="{{ route('dealer.create') }}"
-                    class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
-                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                        version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512"
-                        style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512" height="512">
-                        <path
-                            d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192   c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z" />
-                    </svg>
-                    {{ __('New') }}
-                </a>
-            @endcan
         </div>
     </div>
     @include('components.app.alert.parent')
@@ -101,6 +85,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

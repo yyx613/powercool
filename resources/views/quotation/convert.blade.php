@@ -74,7 +74,8 @@
             </div>
             <!-- Step 3 -->
             <div
-                class="min-w-[250px] flex-1 lg:flex-none flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 3 ? 'opacity-25' : '' }}">
+                class="min-w-[250px] flex-1 lg:flex-none flex items-center bg-yellow-100 rounded overflow-hidden {{ $step != 3 ? 'opacity-25' : '' }} step-indicator" data-step="3"
+                id="step-3-indicator">
                 <div class="bg-yellow-300 p-2">
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                         viewBox="0 0 24 24" width="512" height="512">
@@ -83,6 +84,15 @@
                     </svg>
                 </div>
                 <h6 class="font-semibold mx-4">Quotation Selection</h6>
+            </div>
+            <!-- Step 4 -->
+            <div
+                class="min-w-[250px] flex-1 lg:flex-none flex items-center bg-yellow-100 rounded overflow-hidden opacity-25 step-indicator" data-step="4"
+                id="step-4-indicator">
+                <div class="bg-yellow-300 p-2 flex items-center justify-center">
+                    <span class="h-5 w-5 flex items-center justify-center font-bold text-sm border-2 border-black rounded-full">4</span>
+                </div>
+                <h6 class="font-semibold mx-4">Payment Details</h6>
             </div>
         </div>
         <!-- Steps Content -->
@@ -153,9 +163,9 @@
                     @endif
                 </div>
             @endif
-            <!-- Step 3 -->
+            <!-- Step 3: Quotation Selection -->
             @if ($step == 3)
-                <div>
+                <div id="step-3-content">
                     <div class="mb-4">
                         <h5 class="text-md font-semibold">{{ __('Select quotation to convert') }}</h5>
                     </div>
@@ -178,10 +188,65 @@
                                     data-id="{{ $quo->id }}">{{ $quo->sku }}</li>
                             @endforeach
                         </ul>
-                        <!-- Convert  -->
+                        <!-- Next Step -->
                         <div class="flex justify-end">
-                            <a href="{{ route('quotation.convert_to_sale_order') }}"
+                            <button type="button"
                                 class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
+                                id="next-step-btn">
+                                <span class="text-sm font-semibold">{{ __('Next') }}</span>
+                            </button>
+                        </div>
+                    @else
+                        @include('components.app.no-data')
+                    @endif
+                </div>
+                <!-- Step 4: Payment Details -->
+                <div id="step-4-content" class="hidden">
+                    <div class="mb-4">
+                        <h5 class="text-md font-semibold">{{ __('Payment Details') }}</h5>
+                    </div>
+                    <form action="{{ route('quotation.convert_to_sale_order') }}" method="POST" id="convert-form">
+                        @csrf
+                        <input type="hidden" name="quo" id="convert-quo-ids">
+                        <input type="hidden" name="report_type" id="convert-report-type">
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="flex flex-col">
+                                <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                <x-app.input.select2 name="payment_method" id="payment_method" :hasError="false"
+                                    placeholder="{{ __('Select a method') }}">
+                                    <option value=""></option>
+                                    @foreach ($payment_methods as $method)
+                                        <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                    @endforeach
+                                </x-app.input.select2>
+                                <x-app.message.error id="payment_method_err" />
+                            </div>
+                            <div class="flex flex-col hidden" id="convert-payment-term-container">
+                                <x-app.input.label id="payment_term" class="mb-1">{{ __('Payment Term') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                <x-app.input.select2 name="payment_term" id="payment_term" :hasError="false"
+                                    placeholder="{{ __('Select a term') }}">
+                                    <option value=""></option>
+                                    @foreach ($credit_terms as $term)
+                                        <option value="{{ $term->id }}">{{ $term->name }}</option>
+                                    @endforeach
+                                </x-app.input.select2>
+                                <x-app.message.error id="payment_term_err" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                <x-app.input.input name="payment_due_date" id="payment_due_date" :hasError="false" />
+                                <x-app.message.error id="payment_due_date_err" />
+                            </div>
+                            <div class="flex flex-col">
+                                <x-app.input.label id="payment_remark" class="mb-1">{{ __('Payment Remark') }}</x-app.input.label>
+                                <x-app.input.input name="payment_remark" id="payment_remark" :hasError="false" />
+                                <x-app.message.error id="payment_remark_err" />
+                            </div>
+                        </div>
+                        <!-- Convert -->
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-green-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
                                 id="convert-btn">
                                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down"
                                     viewBox="0 0 24 24" width="512" height="512">
@@ -192,12 +257,10 @@
                                             d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
                                     </g>
                                 </svg>
-                                <span class="text-sm font-semibold">Convert</span>
-                            </a>
+                                <span class="text-sm font-semibold">{{ __('Convert') }}</span>
+                            </button>
                         </div>
-                    @else
-                        @include('components.app.no-data')
-                    @endif
+                    </form>
                 </div>
             @endif
         </div>
@@ -209,7 +272,53 @@
         CUSTOMERS = @json($customers ?? null);
         SALESPERSONS = @json($salespersons ?? null);
         QUOTATIONS = @json($quotations ?? null);
-        SELECTED_QUOS = []
+        CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
+        SELECTED_QUOS = [];
+        CURRENT_SUBSTEP = 3;
+
+        // Restore step 4 state from URL query params on page refresh
+        @if ($step == 3)
+        (function() {
+            let params = new URLSearchParams(window.location.search)
+            if (params.get('substep') == '4' && params.get('quos') && params.get('report_type')) {
+                SELECTED_QUOS = params.get('quos').split(',').map(Number)
+                CURRENT_SUBSTEP = 4
+
+                // Restore report type and quotation selections
+                $('select[name="report_type"]').val(params.get('report_type')).trigger('change')
+                setTimeout(function() {
+                    // Re-select quotations after report_type change shows them
+                    for (let i = 0; i < SELECTED_QUOS.length; i++) {
+                        $(`.quotation-selections[data-id="${SELECTED_QUOS[i]}"]`).addClass('!border-black')
+                    }
+
+                    // Toggle to step 4 view
+                    $('#step-3-content').addClass('hidden')
+                    $('#step-4-content').removeClass('hidden')
+                    $('#step-3-indicator').addClass('opacity-25')
+                    $('#step-4-indicator').removeClass('opacity-25')
+                    $('#convert-quo-ids').val(SELECTED_QUOS.join(','))
+                    $('#convert-report-type').val(params.get('report_type'))
+
+                    // Restore payment fields
+                    if (params.get('payment_method')) {
+                        $('select[name="payment_method"]').val(params.get('payment_method')).trigger('change')
+                    }
+                    if (params.get('payment_term')) {
+                        setTimeout(function() {
+                            $('select[name="payment_term"]').val(params.get('payment_term')).trigger('change')
+                        }, 100)
+                    }
+                    if (params.get('payment_due_date')) {
+                        $('input[name="payment_due_date"]').val(params.get('payment_due_date'))
+                    }
+                    if (params.get('payment_remark')) {
+                        $('input[name="payment_remark"]').val(params.get('payment_remark'))
+                    }
+                }, 100)
+            }
+        })();
+        @endif
 
         $('input[name="search_customer"]').on('keyup', function() {
             let val = $(this).val()
@@ -251,7 +360,7 @@
                 $(`.quotation-selections[data-id="${id}"]`).addClass('!border-black')
             }
 
-            canConvert()
+            canProceed()
         })
         $('select[name="report_type"]').on('change', function() {
             SELECTED_QUOS = []
@@ -266,33 +375,156 @@
                 }
             }
 
-            canConvert()
+            canProceed()
         })
-        $('#convert-btn').on('click', function(e) {
+
+        // Step 3 → Step 4
+        $('#next-step-btn').on('click', function(e) {
             e.preventDefault()
+            if (!canProceed()) return
 
-            if (!canConvert()) return
+            CURRENT_SUBSTEP = 4
 
-            let url = $(this).attr('href')
-            url = `${url}?quo=${SELECTED_QUOS}&report_type=${ $('select[name="report_type"]').val() }`
+            // Hide step 3 content, show step 4 content
+            $('#step-3-content').addClass('hidden')
+            $('#step-4-content').removeClass('hidden')
 
-            window.location.href = url
+            // Update step indicators
+            $('#step-3-indicator').addClass('opacity-25')
+            $('#step-4-indicator').removeClass('opacity-25')
+
+            // Set hidden form fields
+            $('#convert-quo-ids').val(SELECTED_QUOS.join(','))
+            $('#convert-report-type').val($('select[name="report_type"]').val())
+
+            // Pre-fill payment method from first selected QUO
+            if (SELECTED_QUOS.length > 0 && QUOTATIONS != null) {
+                for (let i = 0; i < QUOTATIONS.length; i++) {
+                    if (QUOTATIONS[i].id == SELECTED_QUOS[0] && QUOTATIONS[i].payment_method) {
+                        $('select[name="payment_method"]').val(QUOTATIONS[i].payment_method).trigger('change')
+                        break
+                    }
+                }
+            }
+
+            updateStep4Url()
         })
+
+        // Payment method change → show/hide payment term
+        $('select[name="payment_method"]').on('change', function() {
+            let val = $(this).val()
+            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                $('#convert-payment-term-container').removeClass('hidden')
+            } else {
+                $('#convert-payment-term-container').addClass('hidden')
+                $('select[name="payment_term"]').val('').trigger('change')
+            }
+            if (CURRENT_SUBSTEP == 4) updateStep4Url()
+        })
+        $('select[name="payment_term"]').on('change', function() {
+            if (CURRENT_SUBSTEP == 4) updateStep4Url()
+        })
+        $('input[name="payment_due_date"]').on('change', function() {
+            if (CURRENT_SUBSTEP == 4) updateStep4Url()
+        })
+        $('input[name="payment_remark"]').on('change', function() {
+            if (CURRENT_SUBSTEP == 4) updateStep4Url()
+        })
+
+        // Date picker for payment due date
+        $('input[name="payment_due_date"]').daterangepicker(datepickerParam)
+        $('input[name="payment_due_date"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+            if (CURRENT_SUBSTEP == 4) updateStep4Url()
+        });
+        $('input[name="payment_due_date"]').val('')
+
+        // Validate payment details before convert
+        $('#convert-form').on('submit', function(e) {
+            let errors = []
+            $('.err_msg').addClass('hidden')
+
+            let paymentMethod = $('select[name="payment_method"]').val()
+            if (!paymentMethod || paymentMethod == '') {
+                errors.push('Payment method is required')
+                $('#payment_method_err').find('p').text('Payment method is required')
+                $('#payment_method_err').removeClass('hidden')
+            }
+
+            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(paymentMethod))) {
+                let paymentTerm = $('select[name="payment_term"]').val()
+                if (!paymentTerm || paymentTerm == '') {
+                    errors.push('Payment term is required')
+                    $('#payment_term_err').find('p').text('Payment term is required')
+                    $('#payment_term_err').removeClass('hidden')
+                }
+            }
+
+            let paymentDueDate = $('input[name="payment_due_date"]').val()
+            if (!paymentDueDate || paymentDueDate == '') {
+                errors.push('Payment due date is required')
+                $('#payment_due_date_err').find('p').text('Payment due date is required')
+                $('#payment_due_date_err').removeClass('hidden')
+            }
+
+            if (errors.length > 0) {
+                e.preventDefault()
+            }
+        })
+
         $('#previous-page-btn').on('click', function() {
-            history.back()
+            if (CURRENT_SUBSTEP == 4) {
+                // Go back to step 3
+                CURRENT_SUBSTEP = 3
+                // Remove step 4 params from URL
+                let params = new URLSearchParams(window.location.search)
+                params.delete('substep')
+                params.delete('quos')
+                params.delete('report_type')
+                params.delete('payment_method')
+                params.delete('payment_term')
+                params.delete('payment_due_date')
+                params.delete('payment_remark')
+                history.replaceState(null, '', '?' + params.toString())
+
+                $('#step-4-content').addClass('hidden')
+                $('#step-3-content').removeClass('hidden')
+                $('#step-4-indicator').addClass('opacity-25')
+                $('#step-3-indicator').removeClass('opacity-25')
+            } else {
+                history.back()
+            }
         })
 
-        function canConvert() {
+        function canProceed() {
             if (SELECTED_QUOS.length <= 0 || $('select[name="report_type"]').val() == '') {
-                $('#convert-btn').removeClass('bg-green-200')
-                $('#convert-btn').addClass('bg-slate-100')
+                $('#next-step-btn').removeClass('bg-green-200')
+                $('#next-step-btn').addClass('bg-slate-100')
 
                 return false
             }
-            $('#convert-btn').addClass('bg-green-200')
-            $('#convert-btn').removeClass('bg-slate-100')
+            $('#next-step-btn').addClass('bg-green-200')
+            $('#next-step-btn').removeClass('bg-slate-100')
 
             return true
+        }
+
+        function updateStep4Url() {
+            let params = new URLSearchParams(window.location.search)
+            params.set('substep', '4')
+            params.set('quos', SELECTED_QUOS.join(','))
+            params.set('report_type', $('select[name="report_type"]').val())
+
+            let pm = $('select[name="payment_method"]').val()
+            if (pm) params.set('payment_method', pm); else params.delete('payment_method')
+            let pt = $('select[name="payment_term"]').val()
+            if (pt) params.set('payment_term', pt); else params.delete('payment_term')
+            let pdd = $('input[name="payment_due_date"]').val()
+            if (pdd) params.set('payment_due_date', pdd); else params.delete('payment_due_date')
+            let pr = $('input[name="payment_remark"]').val()
+            if (pr) params.set('payment_remark', pr); else params.delete('payment_remark')
+
+            history.replaceState(null, '', '?' + params.toString())
         }
     </script>
 @endpush

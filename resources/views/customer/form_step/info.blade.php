@@ -125,9 +125,9 @@
             <div class="flex flex-col hidden for-all">
                 <x-app.input.label id="phone_number" class="mb-1">{{ __('Phone Number') }} <span
                         class="text-sm text-red-500 hidden for_einvoice-required">*</span></x-app.input.label>
-                <span class="text-sm text-slate-500 mb-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <x-app.input.input name="phone_number" id="phone_number" :hasError="$errors->has('phone_number')"
                     value="{{ old('phone_number', isset($duplicate) ? $duplicate->phone : (isset($customer) ? $customer->phone : null)) }}" />
+                <span class="text-sm text-slate-500 mt-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <x-app.message.error id="phone_number_err" />
             </div>
             <div class="flex flex-col hidden for-all">
@@ -252,7 +252,6 @@
                     <x-app.input.label id="mobile_number">{{ __('Mobile Number') }}</x-app.input.label>
                     <button type="button" id="add-mobile-number-btn" class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">+ {{ __('Add') }}</button>
                 </div>
-                <span class="text-sm text-slate-500 mb-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <div id="mobile-numbers-container">
                     @if(isset($customer) && $customer->mobile_number && is_array($customer->mobile_number) && count($customer->mobile_number) > 0)
                         @foreach($customer->mobile_number as $index => $mobile)
@@ -293,6 +292,7 @@
                         </div>
                     @endif
                 </div>
+                <span class="text-sm text-slate-500 mt-1">(012-1234 1111 / 012-1234 111 / 03-1234-1234)</span>
                 <x-app.message.error id="mobile_number_err" />
             </div>
             <div class="flex flex-col">
@@ -370,12 +370,12 @@
             @if (!isCreateLink())
                 <div class="flex flex-col col-span">
                     <x-app.input.label id="credit_term" class="mb-1">{{ __('Credit Terms') }}</x-app.input.label>
-                    <x-app.input.select name="credit_term[]" multiple>
+                    <x-app.input.select2 name="credit_term[]" multiple placeholder="Select Credit Terms">
                         @foreach ($credit_terms as $ct)
                             <option value="{{ $ct->id }}" @selected(old('credit_term', isset($duplicate) ? in_array($ct->id, $duplicate->creditTerms()->pluck('credit_term_id')->toArray()) : (isset($customer) ? in_array($ct->id, $customer->creditTerms()->pluck('credit_term_id')->toArray()) : null)))>{{ $ct->name }}
                             </option>
                         @endforeach
-                    </x-app.input.select>
+                    </x-app.input.select2>
                     <x-app.message.error id="credit_term_err" />
                     @if (isset($customer) && $customer->status != null)
                         <div class="col-span-4 mt-1.5">

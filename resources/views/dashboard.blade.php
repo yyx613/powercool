@@ -2,18 +2,14 @@
 @section('title', 'Dashboard')
 
 @section('content')
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold">{{ __('Dashboard') }}</h1>
-        <div class="flex flex-col">
-            <span class="text-2xl font-semibold">{{ __(now()->format('l')) }}</span>
-            <span
-                class="text-lg leading-none">{{ now()->format('d ') . __(now()->format('F')) . now()->format(' Y, H:i A') }}</span>
-        </div>
+    <div class="mb-6">
+        <h1 class="text-2xl font-medium">{{ __('Dashboard') }}</h1>
     </div>
     <!-- Content -->
     <div class="flex flex-col lg:flex-row gap-4">
         <div class="flex-[2] flex flex-col gap-4">
             <!-- Today Task -->
+            @if($today_tasks->count() > 0)
             <div class="bg-white rounded-lg p-3 border">
                 <div class="mb-4 flex items-center justify-between">
                     <h6 class="text-lg font-semibold">{{ __('Today Task') }}</h6>
@@ -64,7 +60,9 @@
                     </table>
                 </div>
             </div>
+            @endif
             <!-- Production Summary -->
+            @if($production_summary->count() > 0)
             <div class="bg-white rounded-lg p-3 border">
                 <div class="mb-4 flex items-center justify-between">
                     <h6 class="text-lg font-semibold">{{ __('Production Summary') }}</h6>
@@ -127,12 +125,19 @@
                     </table>
                 </div>
             </div>
+            @endif
             <!-- Stock Alert (Product) -->
+            @php $low_stock_products = $products->filter(fn($p) => $p->isLowStock()); @endphp
+            @if($low_stock_products->count() > 0)
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">{{ __('Stock Alert (Products)') }}</h6>
-                @foreach ($products as $pro)
-                    @if ($pro->isLowStock())
+                <div class="mb-4 flex items-center justify-between">
+                    <h6 class="text-lg font-semibold">{{ __('Stock Alert (Products)') }}</h6>
+                    <span class="text-sm text-red-500 font-medium">{{ $low_stock_products->count() }} {{ __('Products') }}</span>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    @foreach ($low_stock_products as $index => $pro)
                         <div class="mb-2 flex items-center gap-4">
+                            <span class="text-sm font-medium w-8 text-center">{{ $index + 1 }}</span>
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
@@ -144,15 +149,22 @@
                             <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }}
                                 {{ __('Left') }}</span>
                         </div>
-                    @endif
-                @endforeach
+                    @endforeach
+                </div>
             </div>
+            @endif
             <!-- Stock Alert (Raw Material) -->
+            @php $low_stock_raw_materials = $raw_materials->filter(fn($p) => $p->isLowStock()); @endphp
+            @if($low_stock_raw_materials->count() > 0)
             <div class="bg-white rounded-lg p-3 border">
-                <h6 class="text-lg font-semibold mb-4">{{ __('Stock Alert (Raw Materials)') }}</h6>
-                @foreach ($raw_materials as $pro)
-                    @if ($pro->isLowStock())
+                <div class="mb-4 flex items-center justify-between">
+                    <h6 class="text-lg font-semibold">{{ __('Stock Alert (Raw Materials)') }}</h6>
+                    <span class="text-sm text-red-500 font-medium">{{ $low_stock_raw_materials->count() }} {{ __('Products') }}</span>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    @foreach ($low_stock_raw_materials as $index => $pro)
                         <div class="mb-2 flex items-center gap-4">
+                            <span class="text-sm font-medium w-8 text-center">{{ $index + 1 }}</span>
                             <div class="h-8 w-8">
                                 @if ($pro->image != null)
                                     <img src="{{ $pro->image->url }}" alt="" class="h-full w-full object-contain">
@@ -164,9 +176,10 @@
                             <span class="flex-1 text-red-500 text-center">{{ $pro->warehouseAvailableStock() }}
                                 {{ __('Left') }}</span>
                         </div>
-                    @endif
-                @endforeach
+                    @endforeach
+                </div>
             </div>
+            @endif
         </div>
         <div class="flex-1 flex flex-col gap-4">
             <!-- Suppliers & Customers -->
@@ -198,6 +211,7 @@
                 </div>
             </div>
             <!-- Best Selling Products -->
+            @if(count($best_selling_products) > 0)
             <div class="bg-white rounded-lg p-3 border">
                 <h6 class="text-lg font-semibold mb-4">{{ __('Best Selling Products') }}</h6>
                 @foreach ($best_selling_products as $row)
@@ -218,6 +232,7 @@
                     </div>
                 @endforeach
             </div>
+            @endif
         </div>
     </div>
 @endsection

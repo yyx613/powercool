@@ -82,28 +82,28 @@
     <!-- Item -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 30%;">Description</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">UOM</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">U/Price<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Discount<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%;">Total<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 5%;">Item</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Stock Code</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 30%;">Description</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">Qty</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">UOM</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">U/Price<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Discount<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Total<br>(RM)</td>
         </tr>
         @php
             $total = 0;
         @endphp
         @foreach ($bill_products as $key => $bp)
             <tr>
-                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $bp['product']->model_desc }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ $bp['qty'] }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ $bp['product']->uomUnit->name }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($bp['price'], 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format(0, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($bp['qty'] * $bp['price'], 2) }}</td>
+                <td style="font-size: 14px; padding: 5px 4px; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;">{{ $bp['product']->sku }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;">{{ $bp['product']->model_desc }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ $bp['qty'] }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ $bp['product']->uomUnit->name }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format($bp['price'], 2) }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format(0, 2) }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format($bp['qty'] * $bp['price'], 2) }}</td>
             </tr>
             @php
                 $total += ($bp['qty'] * $bp['price']);

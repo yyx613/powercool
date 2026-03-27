@@ -124,15 +124,12 @@
                     <x-input-error :messages="$errors->get('category')" class="mt-1" />
                 </div>
 
-                <!-- Product Interested In -->
-                <div class="flex flex-col" id="product-select-container">
-                    <x-app.input.label class="mb-1">{{ __('Product / Service Interested In') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <select name="product_id" id="product_id" class="@error('product_id') border-red-500 @enderror">
-                        @if(isset($enquiry) && $enquiry->product)
-                            <option value="{{ $enquiry->product->id }}" selected>{{ $enquiry->product->sku }} - {{ $enquiry->product->model_desc }}</option>
-                        @endif
-                    </select>
-                    <x-input-error :messages="$errors->get('product_id')" class="mt-1" />
+                <!-- Product / Service Interested In -->
+                <div class="flex flex-col">
+                    <x-app.input.label id="product_service_interested" class="mb-1">{{ __('Product / Service Interested In') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.input name="product_service_interested" id="product_service_interested" :hasError="$errors->has('product_service_interested')"
+                        value="{{ old('product_service_interested', isset($enquiry) ? $enquiry->product_service_interested : null) }}" />
+                    <x-input-error :messages="$errors->get('product_service_interested')" class="mt-1" />
                 </div>
 
                 <!-- Assigned Staff -->
@@ -197,7 +194,7 @@
                         <option value="">{{ __('Select promotion') }}</option>
                         @foreach ($promotions as $promotion)
                             <option value="{{ $promotion->id }}" @selected(old('promotion_id', isset($enquiry) ? $enquiry->promotion_id : null) == $promotion->id)>
-                                {{ $promotion->sku }} - {{ $promotion->desc }}
+                                {{ $promotion->sku }} - {{ $promotion->type == 'perc' ? number_format($promotion->amount, 2) . '%' : 'RM' . number_format($promotion->amount, 2) }}
                             </option>
                         @endforeach
                     </x-app.input.select2>
@@ -224,24 +221,6 @@
 
 @push('scripts')
 <script>
-    // Initialize AJAX Select2 for product
-    bulidSelect2Ajax({
-        selector: '#product_id',
-        placeholder: '{{ __('Search a product') }}',
-        url: '{{ route('sale_enquiry.get_products') }}',
-        processResults: function(data) {
-            return {
-                results: $.map(data.products, function(item) {
-                    return {
-                        id: item.id,
-                        text: `${item.sku} - ${item.model_desc}`
-                    };
-                })
-            }
-        }
-    })
-    $(`#product-select-container .select2`).addClass('border border-gray-300 rounded-md overflow-hidden')
-
     // Country/State cascading dropdown (use select2:select event for Select2 dropdowns)
     $('select[name="country_id"]').on('change', function(e) {
         var countryId = $(this).val();

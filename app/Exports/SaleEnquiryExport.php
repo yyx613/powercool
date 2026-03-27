@@ -20,7 +20,7 @@ class SaleEnquiryExport implements FromView, WithStyles
 
     public function view(): View
     {
-        $enquiries = SaleEnquiry::with(['product', 'assignedUser', 'promotion', 'createdByUser'])
+        $enquiries = SaleEnquiry::with(['assignedUser', 'promotion', 'createdByUser'])
             ->orderBy('id', 'desc')
             ->get();
 

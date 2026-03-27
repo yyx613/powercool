@@ -328,7 +328,7 @@
             e.preventDefault()
 
             $('#item-template').remove();
-            $('textarea[name="body"]').val($('.ql-editor').html())  
+            $('textarea[name="body"]').val(sanitizeQuillHtml($('.ql-editor').html()))
 
             $(this).submit()
         })

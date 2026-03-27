@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\SaleEnquiryExport;
 use App\Models\Branch;
-use App\Models\Product;
+
 use App\Models\SaleEnquiry;
 use App\Models\Scopes\BranchScope;
 use Illuminate\Http\Request;
@@ -65,7 +65,7 @@ class SaleEnquiryController extends Controller
             $records->orderBy('id', 'desc');
         }
 
-        $records = $records->with(['product', 'assignedUser', 'promotion', 'createdByUser']);
+        $records = $records->with(['assignedUser', 'promotion', 'createdByUser']);
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -101,11 +101,11 @@ class SaleEnquiryController extends Controller
                 'phone_number' => $record->phone_number,
                 'email' => $record->email,
                 'enquiry_source' => $record->enquiry_source,
-                'product' => $record->product ? $record->product->model_desc : null,
+                'product' => $record->product_service_interested,
                 'assigned_user' => $record->assignedUser ? $record->assignedUser->name : null,
                 'priority' => $priorityLabel,
                 'quality' => $record->quality,
-                'promotion' => $record->promotion ? $record->promotion->desc : null,
+                'promotion' => $record->promotion ? $record->promotion->sku . ' - ' . ($record->promotion->type == 'perc' ? number_format($record->promotion->amount, 2) . '%' : 'RM' . number_format($record->promotion->amount, 2)) : null,
                 'created_by_user' => $record->createdByUser ? $record->createdByUser->name : null,
                 'status' => $record->status,
                 'can_view' => hasPermission('sale_enquiry.view'),
@@ -202,7 +202,7 @@ class SaleEnquiryController extends Controller
             'state_id' => 'nullable|exists:states,id',
             'category' => 'required|in:1,2,3,4,5',
             'description' => 'nullable',
-            'product_id' => 'required|exists:products,id',
+            'product_service_interested' => 'required|max:500',
             'assigned_user_id' => 'required|exists:users,id',
             'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
@@ -233,7 +233,7 @@ class SaleEnquiryController extends Controller
                 'state_id' => $req->state_id,
                 'category' => $req->category,
                 'description' => $req->description,
-                'product_id' => $req->product_id,
+                'product_service_interested' => $req->product_service_interested,
                 'assigned_user_id' => $req->assigned_user_id,
                 'priority' => $req->priority,
                 'status' => $req->status,
@@ -275,7 +275,7 @@ class SaleEnquiryController extends Controller
             'state_id' => 'nullable|exists:states,id',
             'category' => 'required|in:1,2,3,4,5',
             'description' => 'nullable',
-            'product_id' => 'required|exists:products,id',
+            'product_service_interested' => 'required|max:500',
             'assigned_user_id' => 'required|exists:users,id',
             'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
@@ -303,7 +303,7 @@ class SaleEnquiryController extends Controller
                 'state_id' => $req->state_id,
                 'category' => $req->category,
                 'description' => $req->description,
-                'product_id' => $req->product_id,
+                'product_service_interested' => $req->product_service_interested,
                 'assigned_user_id' => $req->assigned_user_id,
                 'priority' => $req->priority,
                 'status' => $req->status,
@@ -319,29 +319,6 @@ class SaleEnquiryController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', $e->getMessage())->withInput();
-        }
-    }
-
-    public function getProducts(Request $req)
-    {
-        try {
-            $keyword = $req->keyword;
-
-            $products = Product::where('type', Product::TYPE_PRODUCT)
-                ->where('is_active', true)
-                ->where(function ($q) use ($keyword) {
-                    $q->where('model_desc', 'like', '%' . $keyword . '%')
-                        ->orWhere('sku', 'like', '%' . $keyword . '%');
-                })
-                ->orderBy('model_desc', 'asc')
-                ->get();
-
-            return response()->json([
-                'products' => $products
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

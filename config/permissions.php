@@ -181,13 +181,11 @@ return [
 
     // Dealer
     'dealer.view' => 'Show the Dealer menu under Contacts and access the dealer directory listing page',
-    'dealer.create' => 'Show the New button on the dealer listing page to register new dealers',
     'dealer.edit' => 'Show the Edit button on each row in the dealer listing page',
     'dealer.delete' => 'Show the Delete button on each row in the dealer listing page',
 
     // Agent Debtor
     'agent_debtor.view' => 'Show the Agent Debtor menu under Contacts and access the agent-debtor assignment listing page',
-    'agent_debtor.create' => 'Access the agent-debtor assignment creation form to assign agents to debtors',
     'agent_debtor.edit' => 'Access the agent-debtor assignment edit form to update agent-debtor relationships',
     'agent_debtor.delete' => 'Remove agent-debtor assignment records',
 
@@ -215,6 +213,25 @@ return [
     'user_role_management.delete' => 'Show the Delete button on each row in user and role listing pages',
 
     // Setting
-    'setting.view' => 'Show the Setting menu in the sidebar and access system configuration pages including areas, milestones, currencies, and other settings',
-    'setting.edit' => 'Show edit controls on system configuration pages to modify areas, milestones, currencies, and other settings',
+    'setting.area.view' => 'Show the City menu under Setting and access the city/area listing page',
+    'setting.material_use.view' => 'Show the B.O.M Material Use menu under Setting and access the material use listing page',
+    'setting.country.view' => 'Show the Country menu under Setting and access the country listing page',
+    'setting.credit_term.view' => 'Show the Credit Term menu under Setting and access the credit term listing page',
+    'setting.currency.view' => 'Show the Currency menu under Setting and access the currency listing page',
+    'setting.debtor_type.view' => 'Show the Debtor Type menu under Setting and access the debtor type listing page',
+    'setting.factory.view' => 'Show the Factory menu under Setting and access the factory listing page',
+    'setting.milestone.view' => 'Show the Milestone menu under Setting and access the milestone listing page',
+    'setting.payment_method.view' => 'Show the Payment Method menu under Setting and access the payment method listing page',
+    'setting.inventory_type.view' => 'Show the Product Type menu under Setting and access the product type listing page',
+    'setting.promotion.view' => 'Show the Promotion menu under Setting and access the promotion listing page',
+    'setting.state.view' => 'Show the State menu under Setting and access the state listing page',
+    'setting.project_type.view' => 'Show the Project Type menu under Setting and access the project type listing page',
+    'setting.platform.view' => 'Show the Platform menu under Setting and access the platform listing page',
+    'setting.priority.view' => 'Show the Priority menu under Setting and access the priority listing page',
+    'setting.sales_agent.view' => 'Show the Sales Agent menu under Setting and access the sales agent listing page',
+    'setting.service.view' => 'Show the Vehicle Service menu under Setting and access the vehicle service listing page',
+    'setting.tax_rate.view' => 'Show the Tax Rate menu under Setting and access the tax rate page to view and edit SST and tax code values',
+    'setting.sync.view' => 'Show the Sync menu under Setting and access the sync page',
+    'setting.uom.view' => 'Show the UOM menu under Setting and access the unit of measure listing page',
+    'setting.warranty_period.view' => 'Show the Warranty Period menu under Setting and access the warranty period listing page',
 ];
