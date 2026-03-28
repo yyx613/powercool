@@ -15,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Service Form') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('View technician service records and generate quotations or invoices') }}">{{ __('Service Form') }}</x-app.page-title>
         <div class="flex gap-x-2">
             @can('service_form.create')
             <a href="{{ route('service_form.create') }}" class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">

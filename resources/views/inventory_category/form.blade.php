@@ -15,7 +15,7 @@
                     <x-app.input.input name="category_id" id="category_id" value="{{ isset($cat) ? $cat->id : null }}"
                         class="hidden" />
                 @endif
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
                     <div class="flex flex-col">
                         <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>

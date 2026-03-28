@@ -18,14 +18,14 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title>{{ __('Customize Products') }}</x-app.page-title>
+        <x-app.page-title description="{{ __('Configure custom product specifications and dimensions') }}">{{ __('Customize Products') }}</x-app.page-title>
     </div>
 
     @include('components.app.alert.parent')
 
     <div>
         <!-- Search -->
-        <div class="flex gap-x-4 max-w-xs w-full mb-4">
+        <div class="flex flex-wrap gap-x-4 max-w-xs w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

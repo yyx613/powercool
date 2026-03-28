@@ -10,7 +10,7 @@
     @if ($can_payment_amount)
         {{-- Payment Amounts --}}
         <div id="payment-amounts-container">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full p-4 hover:bg-slate-50 relative group hidden"
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full p-4 hover:bg-slate-50 relative group hidden"
                 id="payment-amount-template">
                 <input type="hidden" name="existing_payment_id" class="existing-payment-id" value="">
                 <div class="hidden col-span-full" id="approval-status-container">

@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Supplier') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Manage supplier profiles, view GRN history, and sync with Autocount') }}">{{ __('Supplier') }}</x-app.page-title>
         @can('supplier.create')
             <div class="flex gap-x-2">
                 <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="sync-btn">
@@ -57,7 +57,7 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex gap-2 max-w-2xl w-full mb-4">
+        <div class="flex flex-wrap gap-2 max-w-2xl w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Payment Method') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Define payment options with deposit and conversion rules') }}">{{ __('Payment Method') }}</x-app.page-title>
         <a href="{{ route('payment_method.create') }}"
             class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"

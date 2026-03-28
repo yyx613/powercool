@@ -17,7 +17,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title url="{{ route('production_material.index') }}">
+        <x-app.page-title url="{{ route('production_material.index') }}" description="{{ __('Log material consumption for production with audit trail') }}">
             @if (isset($filter_usage) && $filter_usage == 'usage')
                 {{ __('Usage History') }}
             @else
@@ -32,7 +32,7 @@
             enctype="multipart/form-data" id="form">
             @csrf
             <div class="bg-white p-4 border rounded-md">
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full items-start">
                     <div class="flex flex-col">
                         <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
                                 class="text-sm text-red-500">*</span></x-app.input.label>
@@ -71,7 +71,7 @@
                         <x-app.input.input name="by" id="by" value="{{ $by }}" disabled />
                         <x-input-error :messages="$errors->get('by')" class="mt-1" />
                     </div>
-                    <div class="flex flex-col col-span-3">
+                    <div class="flex flex-col col-span-2 md:col-span-3">
                         <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                         <x-app.input.textarea name="remark" id="remark" />
                         <x-input-error :messages="$errors->get('remark')" class="mt-1" />

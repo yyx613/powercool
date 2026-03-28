@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Cancellation') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Review cancelled sale orders and invoices with product details') }}">{{ __('Sale Cancellation') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

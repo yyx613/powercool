@@ -7,7 +7,7 @@
         <span class="text-md font-semibold">New {{ $title }}</span>
         <p class="text-sm text-slate-500 leading-none">{{ __('Enter these field to create a new ' . $title . '.') }}</p>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full">
         <div class="flex flex-col">
             <x-app.input.label id="address1" class="mb-1">{{ __('Address 1') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>

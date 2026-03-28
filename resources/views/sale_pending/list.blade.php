@@ -15,9 +15,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('E-Order Assign') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('Assign pending e-orders to salespersons for processing') }}">{{ __('E-Order Assign') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             <a href="#" class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="assign-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-add" viewBox="0 0 16 16">
                     <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>

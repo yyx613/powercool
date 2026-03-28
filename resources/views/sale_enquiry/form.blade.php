@@ -12,7 +12,7 @@
     <form action="{{ isset($enquiry) ? route('sale_enquiry.update', ['enquiry' => $enquiry]) : route('sale_enquiry.store') }}" method="POST">
         @csrf
         <div class="bg-white p-4 rounded-md shadow">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
 
                 <!-- Enquiry Date & Time -->
                 <div class="flex flex-col">

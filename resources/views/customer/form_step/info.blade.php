@@ -18,7 +18,7 @@
                 <x-app.input.label id="for_einvoice">{{ __('For E-Invoice') }}</x-app.input.label>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
             <div class="flex flex-col">
                 <x-app.input.label id="category" class="mb-1">{{ __('Category') }}</x-app.input.label>
                 <x-app.input.select2 name="category" id="category" :hasError="$errors->has('category')"
@@ -138,7 +138,7 @@
                 <x-app.message.error id="email_err" />
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4 border-t border-slate-200 pt-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4 border-t border-slate-200 pt-8">
             <div class="flex flex-col">
                 <x-app.input.label id="address" class="mb-1">{{ __('Address') }} </x-app.input.label>
                 <x-app.input.input name="address" id="address" :hasError="$errors->has('address')"
@@ -187,7 +187,7 @@
     </div>
     <!-- 2nd Panel -->
     <div class="bg-white p-4 border rounded-md">
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
             {{-- <div class="flex flex-col">
                 <x-app.input.label class="mb-1">Picture</x-app.input.label>
                 <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>
@@ -378,7 +378,7 @@
                     </x-app.input.select2>
                     <x-app.message.error id="credit_term_err" />
                     @if (isset($customer) && $customer->status != null)
-                        <div class="col-span-4 mt-1.5">
+                        <div class="col-span-2 md:col-span-3 mt-1.5">
                             @if ($customer->revised == 1)
                                 <span
                                     class="border rounded border-blue-500 text-blue-500 text-xs font-medium px-1 py-0.5">{{ __('Revised') }}</span>

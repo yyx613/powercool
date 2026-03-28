@@ -15,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Credit Note') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('Track issued credit notes and send documents to customers') }}">{{ __('Credit Note') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

@@ -15,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('GRN') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Record goods received from suppliers and sync with Autocount') }}">{{ __('GRN') }}</x-app.page-title>
         @can('grn.create')
         <div class="flex gap-x-2">
         <a href="#" class="bg-purple-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="sync-btn">

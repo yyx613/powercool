@@ -15,7 +15,7 @@
 
         <!-- Name -->
         <div class="bg-white p-4 border rounded-md mb-4">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }}</x-app.input.label>
                     <x-app.input.input name="name" id="name"
@@ -27,7 +27,7 @@
 
         <!-- Physical Dimensions -->
         <div class="bg-white p-4 border rounded-md">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
                 <div class="flex flex-col col-span-2 lg:col-span-1">
                     <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In MM)') }}</x-app.input.label>
                     <div class="flex gap-x-2">

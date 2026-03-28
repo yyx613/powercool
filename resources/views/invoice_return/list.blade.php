@@ -15,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice Return') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start lg:items-center flex-col lg:flex-row">
+        <x-app.page-title class="mb-4 lg:mb-0" description="{{ __('Process product returns against invoices and track return status') }}">{{ __('Invoice Return') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

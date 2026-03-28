@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Production') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track production tasks, status progress, and assigned personnel') }}">{{ __('Production') }}</x-app.page-title>
         <div class="flex gap-4">
             @can('production.export_excel')
                 <x-app.button.button class="shadow gap-x-2 bg-emerald-300" id="export-btn">
@@ -58,7 +58,7 @@
     </div>
     <div>
         <!-- Filters -->
-        <div class="flex gap-x-4 w-full mb-4 {{ ($is_sales_only ?? false) ? 'max-w-md' : 'max-w-screen-sm' }}">
+        <div class="flex flex-wrap gap-x-4 w-full mb-4 {{ ($is_sales_only ?? false) ? 'max-w-md' : 'max-w-screen-sm' }}">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

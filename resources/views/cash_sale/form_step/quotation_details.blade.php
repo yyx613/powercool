@@ -9,7 +9,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Cash Sale Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         @if (isSuperAdmin())
             <div class="flex flex-col">
                 <x-app.input.label id="custom_date" class="mb-1">{{ __('Date') }}</x-app.input.label>

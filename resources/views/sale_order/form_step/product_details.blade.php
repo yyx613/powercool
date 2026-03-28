@@ -21,7 +21,7 @@
         <span class="text-lg ml-3 font-bold">{{ __('Product Details') }}</span>
     </div>
     {{-- Template --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
         id="item-template">
         <button type="button"
             class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns"
@@ -32,11 +32,11 @@
                     d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
             </svg>
         </button>
-        <div class="flex col-span-4 justify-end hidden attached-do-msg">
+        <div class="flex col-span-2 md:col-span-4 justify-end hidden attached-do-msg">
             <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                 {{ __('Product is attached to DO') }}</p>
         </div>
-        <div class="col-span-4 flex items-center gap-4">
+        <div class="col-span-2 md:col-span-4 flex items-center gap-4">
             <div class="flex gap-2">
                 <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn"
                     title="{{ __('Move Down') }}">
@@ -190,14 +190,14 @@
 
             <!-- Hidden accessory row template -->
             <div id="accessory-row-template" class="hidden">
-                <div class="accessory-row flex gap-4 lg:gap-8 py-2 px-3 border rounded bg-white">
-                    <div class="flex flex-col" style="flex: 1;">
+                <div class="accessory-row grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 py-2 px-3 border rounded bg-white relative">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Accessory') }}</x-app.input.label>
                         <x-app.input.select name="accessory_id[]" class="accessory-select">
                             <option value="">{{ __('Select accessory') }}</option>
                         </x-app.input.select>
                     </div>
-                    <div class="flex flex-col" style="flex: 1;">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Quantity') }}</x-app.input.label>
                         <div class="flex border border-gray-300 rounded-md overflow-hidden">
                             <x-app.input.input name="accessory_qty[]" type="number" class="int-input border-none flex-1" min="1" value="1" />
@@ -206,13 +206,13 @@
                                 data-is-foc="false">FOC</button>
                         </div>
                     </div>
-                    <div class="flex flex-col selling-price-container" style="flex: 1;">
+                    <div class="flex flex-col selling-price-container">
                         <x-app.input.label class="mb-1">{{ __('Selling Price') }} <span class="text-xs hidden accessory-price-hint">(<span class="accessory-min-price"></span> - <span class="accessory-max-price"></span>)</span></x-app.input.label>
                         <x-app.input.select name="accessory_selling_price[]" class="accessory-price-select">
                             <option value="">{{ __('Select price') }}</option>
                         </x-app.input.select>
                     </div>
-                    <div class="flex flex-col" style="flex: 1;">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Override Selling Price') }}</x-app.input.label>
                         <x-app.input.input name="accessory_override_price[]" type="number" step="0.01" class="decimal-input" />
                     </div>
@@ -228,7 +228,7 @@
                 <p class="mt-2 text-sm text-slate-500">{{ __('No accessories') }}</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 col-span-2 md:col-span-4">
             <div class="flex flex-col flex-1 col-span-2">
                 <div class="flex justify-between">
                     <x-app.input.label id="product_serial_no"
@@ -286,7 +286,7 @@
 
         <!-- Service Row Template (Hidden) -->
         <div class="hidden" id="service-template">
-            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden {{ !isset($sale) ? 'group-hover:block' : '' }} delete-service-btn"
                     title="{{ __('Delete Service') }}">
@@ -742,16 +742,25 @@
             $('#to-production-modal #yes-btn').removeClass('hidden')
             $('#to-production-modal').addClass('show-modal')
         })
-        // Prevent selection if it would exceed product quantity
+        // Prevent selection if it would exceed product quantity or duplicate across rows
         $('body').on('select2:selecting', 'select[name="product_serial_no[]"]', function(e) {
             let $select = $(this)
             let itemId = $select.closest('.items').attr('data-id')
+            let productId = $(`.items[data-id=${itemId}] select[name="product_id[]"]`).val()
             let productQty = parseInt($(`.items[data-id="${itemId}"] input[name="qty"]`).val()) || 0
             let currentCount = ($select.val() || []).length
 
             if (currentCount >= productQty) {
                 e.preventDefault()
                 alert(`{{ __('You have selected') }} ${currentCount} {{ __('serial number(s), which equals the quantity') }} ${productQty}. {{ __('Cannot select more.') }}`)
+                return
+            }
+
+            let selectedId = String(e.params.args.data.id)
+            let usedInOtherRows = getSelectedSerialNosInOtherRows(productId, itemId)
+            if (usedInOtherRows.includes(selectedId)) {
+                e.preventDefault()
+                alert(`{{ __('This serial number is already selected in another row.') }}`)
             }
         })
         $('body').on('change', 'select[name="product_serial_no[]"]', function() {
@@ -777,6 +786,15 @@
             }
 
             $(`.items[data-id="${itemId}"] #available-qty`).text(`(${selectedQty}/${productQty}) {{ __('Available Qty') }}: ${totalQty - selectedQty}`)
+
+            // Rebuild serial number options in other rows with the same product to update disabled states
+            $('#product-details-container .items').each(function() {
+                let otherItemId = $(this).attr('data-id')
+                let otherProductId = $(this).find('select[name="product_id[]"]').val()
+                if (otherItemId != itemId && otherProductId == productId) {
+                    refreshSerialNoDisabledState(otherProductId, otherItemId)
+                }
+            })
         })
         $('select[name="promotion_id"]').on('change', function() {
             let val = $(this).val()
@@ -1022,6 +1040,8 @@
                     }
                     $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).empty()
 
+                    let usedInOtherRows = getSelectedSerialNosInOtherRows(product_id, item_id)
+
                     for (let j = 0; j < prod.children.length; j++) {
                         const child = prod.children[j];
                         let selected = selectedSerialNo(child.id, sale_product_id)
@@ -1029,6 +1049,9 @@
                         let opt = new Option(child.sku, child.id, selected, selected)
                         opt.selected = selected
                         opt.value = child.id
+                        if (usedInOtherRows.includes(String(child.id))) {
+                            opt.disabled = true
+                        }
                         $(`.items[data-id="${item_id}"] select[name="product_serial_no[]"]`).append(opt)
                     }
                     let productQty = parseInt($(`.items[data-id="${item_id}"] input[name="qty"]`).val()) || 0
@@ -1076,6 +1099,28 @@
                 }
             }
             return false
+        }
+
+        function refreshSerialNoDisabledState(productId, itemId) {
+            let usedInOtherRows = getSelectedSerialNosInOtherRows(productId, itemId)
+            $(`.items[data-id="${itemId}"] select[name="product_serial_no[]"] option`).each(function() {
+                let optVal = String($(this).val())
+                if ($(this).is(':selected')) return
+                $(this).prop('disabled', usedInOtherRows.includes(optVal))
+            })
+        }
+
+        function getSelectedSerialNosInOtherRows(productId, excludeItemId) {
+            let usedSerialNos = []
+            $('#product-details-container .items').each(function() {
+                let rowItemId = $(this).attr('data-id')
+                let rowProductId = $(this).find('select[name="product_id[]"]').val()
+                if (rowItemId != excludeItemId && rowProductId == productId) {
+                    let selected = $(this).find('select[name="product_serial_no[]"]').val() || []
+                    usedSerialNos = usedSerialNos.concat(selected.map(String))
+                }
+            })
+            return usedSerialNos
         }
 
         function hideDeleteBtnWhenOnlyOneItem() {

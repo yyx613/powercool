@@ -17,13 +17,13 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Agent Debtor') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('View agent-linked debtor accounts and contact details') }}">{{ __('Agent Debtor') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex gap-2 max-w-sm w-full mb-4">
+        <div class="flex flex-wrap gap-2 max-w-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

@@ -11,7 +11,7 @@
         method="POST" enctype="multipart/form-data">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label class="mb-1">{{ __('Picture') }}</x-app.input.label>
                     <x-app.input.file id="picture[]" :hasError="$errors->has('picture')" />

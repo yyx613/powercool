@@ -13,7 +13,7 @@
             method="POST" enctype="multipart/form-data" id="info-form">
             @csrf
             <div id="content-container">
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 w-full mb-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                     @if (isset($dealer))
                         <div class="flex flex-col">
                             <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>

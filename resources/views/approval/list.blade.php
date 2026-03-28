@@ -30,8 +30,8 @@
 
 @section('content')
     <!-- Records -->
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Approval') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('Review and approve or reject pending documents and requests') }}">{{ __('Approval') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

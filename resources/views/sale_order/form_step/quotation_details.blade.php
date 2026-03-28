@@ -9,7 +9,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Sale Order Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         @if (isSuperAdmin())
             <div class="flex flex-col">
                 <x-app.input.label id="custom_date" class="mb-1">{{ __('Date') }}</x-app.input.label>
@@ -166,7 +166,7 @@
                     {{ __('Delivery address is not required if presented') }}</p>
             </div>
             <div id="third-party-address-list" class="grid gap-4"></div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden"
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full hidden"
                 id="third-party-address-template">
                 <div class="flex flex-col">
                     <x-app.input.label id="address" class="mb-1">{{ __('Address') }}</x-app.input.label>

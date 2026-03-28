@@ -17,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
         <x-app.page-title
-            class="mb-4 md:mb-0">{{ $for_role == 'driver' ? __('Driver Task') : ($for_role == 'technician' ? __('Technician Task') : __('Sale Task')) }}</x-app.page-title>
+            class="mb-2 md:mb-0" description="{{ __('Track task assignments, due dates, and collection amounts') }}">{{ $for_role == 'driver' ? __('Driver Task') : ($for_role == 'technician' ? __('Technician Task') : __('Sale Task')) }}</x-app.page-title>
         @canany(['task_driver.create', 'task_technician.create', 'task_sale.create'])
             <a href="{{ $for_role == 'driver' ? route('task.driver.create') : ($for_role == 'technician' ? route('task.technician.create') : route('task.sale.create')) }}"
                 class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
@@ -44,7 +44,7 @@
     </div>
     <div>
         <!-- Filters -->
-        <div class="flex items-center gap-x-4 max-w-screen-sm w-full mb-4">
+        <div class="flex flex-wrap items-center gap-x-4 max-w-screen-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

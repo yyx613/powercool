@@ -142,3 +142,36 @@
     min-height: 100px;
     border: none!important;
 }
+
+/* Mobile: stack filter items with gap */
+@media (max-width: 639px) {
+    .flex-wrap > .flex-1 {
+        min-width: 100%;
+    }
+    .flex-wrap {
+        gap: 0.5rem;
+    }
+}
+
+/* DataTables mobile */
+@media (max-width: 767px) {
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center;
+        float: none !important;
+        padding-top: 0.5rem;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.25em 0.5em !important;
+    }
+}
+
+/* Select2 mobile touch targets */
+@media (max-width: 767px) {
+    .select2-container .select2-selection--single {
+        min-height: 42px;
+    }
+    .select2-results__option {
+        padding: 8px 12px !important;
+    }
+}

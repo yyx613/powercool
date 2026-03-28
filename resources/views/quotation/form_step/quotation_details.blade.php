@@ -9,7 +9,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         <div class="flex flex-col">
             <x-app.input.label id="open_until" class="mb-1">{{ __('Validity') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -178,7 +178,7 @@
             </p>
         </div>
         <div id="third-party-address-list" class="grid gap-4"></div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
             <button type="button"
                 class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-third-party-address-btn"
                 title="Delete Address">

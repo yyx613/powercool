@@ -17,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Service History') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('Review completed service logs with photos and technician details') }}">{{ __('Service History') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             <x-app.button.button class="shadow gap-x-2 bg-emerald-300" id="export-btn">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
                     width="512" height="512">

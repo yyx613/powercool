@@ -1,7 +1,7 @@
 <div id="list-production-request-container">
     <!-- Filters -->
     <div class="flex justify-end">
-        {{-- <div class="flex items-center gap-x-4 max-w-sm w-full mb-4">
+        {{-- <div class="flex flex-wrap items-center gap-x-4 max-w-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

@@ -30,8 +30,8 @@
 
 @section('content')
     <!-- Records -->
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Notification') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('View system notifications and mark as read') }}">{{ __('Notification') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

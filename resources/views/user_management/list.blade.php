@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('User Management') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Create user accounts and assign roles and branches') }}">{{ __('User Management') }}</x-app.page-title>
         @can('user_role_management.create')
         <a href="{{ route('user_management.create') }}"
             class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
@@ -35,7 +35,7 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex gap-x-4 max-w-screen-sm w-full mb-4">
+        <div class="flex flex-wrap gap-x-4 max-w-screen-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">

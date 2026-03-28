@@ -22,7 +22,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title>{{ __('Inventory Summary') }}</x-app.page-title>
+        <x-app.page-title description="{{ __('Overview of stock across warehouse and factory with low stock alerts') }}">{{ __('Inventory Summary') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->

@@ -17,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Delivery Order') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track deliveries, generate transport documents, and manage transfers') }}">{{ __('Delivery Order') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('sale_order.to_delivery_order') }}"
                 class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
                 <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24"
