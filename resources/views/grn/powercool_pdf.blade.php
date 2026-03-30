@@ -78,32 +78,32 @@
     <!-- Item -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Tax Code</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 40%;">Description</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 10%;">Qty</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 10%;">FOC</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: center; width: 10%;">UOM</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">U/Price<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Disc<br>(RM)</td>
-            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 15%;">Total<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 5%;">Item</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Tax Code</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Stock Code</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 40%;">Description</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: center; width: 10%;">Qty</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: center; width: 10%;">FOC</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: center; width: 10%;">UOM</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 15%;">U/Price<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 15%;">Disc<br>(RM)</td>
+            <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 15%;">Total<br>(RM)</td>
         </tr>
         @php
             $total = 0;
         @endphp
         @foreach ($grns as $key => $grn)
             <tr>
-                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{  $grn->product->sku }}</td>
-                <td style="font-size: 14px; text-align: left;">{{ $grn->product->model_desc }}</td>
-                <td style="font-size: 14px; text-align: center;">{{ $grn->qty }}</td>
-                <td style="font-size: 14px; text-align: center;"></td>
-                <td style="font-size: 14px; text-align: center;">{{ $grn->uom }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($grn->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format(0, 2) }}</td>
-                <td style="font-size: 14px; text-align: right;">{{ number_format($grn->total_price, 2) }}</td>
+                <td style="font-size: 14px; padding: 5px 4px; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;"></td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;">{{  $grn->product->sku }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;">{{ $grn->product->model_desc }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: center;">{{ $grn->qty }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: center;"></td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: center;">{{ $grn->uom }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format($grn->unit_price, 2) }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format(0, 2) }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">{{ number_format($grn->total_price, 2) }}</td>
             </tr>
             @php
                 $total += $grn->total_price;

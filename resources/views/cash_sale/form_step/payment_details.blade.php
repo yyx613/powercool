@@ -7,7 +7,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Payment Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         <div class="flex flex-col">
             <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }} </x-app.input.label>
             <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
@@ -47,7 +47,7 @@
     @if ($can_payment_amount)
         {{-- Payment Amounts --}}
         <div id="payment-amounts-container" class="pt-4 border-t border-slate-200">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full p-4 hover:bg-slate-50 relative group hidden"
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full p-4 hover:bg-slate-50 relative group hidden"
                 id="payment-amount-template">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-payment-amount-btns"

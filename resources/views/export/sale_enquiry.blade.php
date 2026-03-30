@@ -67,11 +67,11 @@
             <td>{{ $enquiry->phone_number }}</td>
             <td>{{ $enquiry->email }}</td>
             <td>{{ $sourceLabel }}</td>
-            <td>{{ $enquiry->product->model_desc ?? '' }}</td>
+            <td>{{ $enquiry->product_service_interested ?? '' }}</td>
             <td>{{ $enquiry->assignedUser->name ?? '' }}</td>
             <td>{{ $priorityLabel }}</td>
             <td>{{ $qualityLabel }}</td>
-            <td>{{ $enquiry->promotion->desc ?? '' }}</td>
+            <td>{{ $enquiry->promotion ? $enquiry->promotion->sku . ' - ' . ($enquiry->promotion->type == 'perc' ? number_format($enquiry->promotion->amount, 2) . '%' : 'RM' . number_format($enquiry->promotion->amount, 2)) : '' }}</td>
             <td>{{ $enquiry->createdByUser->name ?? '' }}</td>
             <td>{{ $statusLabel }}</td>
         </tr>

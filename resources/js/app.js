@@ -18,3 +18,11 @@ import QuillResizeImage from 'quill-resize-image';
 Quill.register('modules/resize', QuillResizeImage);
 
 window.Quill = Quill;
+
+window.sanitizeQuillHtml = function(html) {
+    if (!html) return null;
+    let tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    let text = tmp.textContent || tmp.innerText || '';
+    return text.trim() === '' && !html.includes('<img') ? null : html;
+};

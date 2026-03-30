@@ -8,7 +8,7 @@
         <span class="text-lg ml-3 font-bold">{{ __('Product Details') }}</span>
     </div>
     {{-- Template --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
         id="item-template">
         <button type="button"
             class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns"
@@ -19,11 +19,11 @@
                     d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
             </svg>
         </button>
-        <div class="flex col-span-4 justify-end hidden attached-do-msg">
+        <div class="flex col-span-2 md:col-span-4 justify-end hidden attached-do-msg">
             <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                 {{ __('Product is attached to DO') }}</p>
         </div>
-        <div class="col-span-4 flex items-center gap-4">
+        <div class="col-span-2 md:col-span-4 flex items-center gap-4">
             <div class="flex gap-2">
                 <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn"
                     title="{{ __('Move Down') }}">
@@ -166,7 +166,7 @@
             </x-app.input.select>
             <x-app.message.error id="warranty_period_err" />
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 col-span-2 md:col-span-4">
             <div class="flex flex-col flex-1 col-span-2">
                 <div class="flex justify-between">
                     <x-app.input.label id="product_serial_no"
@@ -180,7 +180,7 @@
                 @endif
                 <x-app.message.error id="product_serial_no_err" />
             </div>
-            <div class="flex flex-col flex-1 col-span-4">
+            <div class="flex flex-col flex-1 col-span-2 md:col-span-4">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                 <textarea name="remark" id="remark" class="hidden"></textarea>
                 <x-app.message.error id="remark_err" />
@@ -225,7 +225,7 @@
 
         <!-- Service Row Template (Hidden) -->
         <div class="hidden" id="service-template">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-service-btn"
                     title="{{ __('Delete Service') }}">

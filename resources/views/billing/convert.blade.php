@@ -68,7 +68,7 @@
                             <form action="{{ route('billing.to_billing') }}">
                                 @csrf
                                 <input type="text" name="info" class="hidden">
-                                <div class="grid grid-cols-3 gap-8 w-full mb-8">
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                                     <div class="flex flex-col">
                                         <x-app.input.label id="term" class="mb-1">{{ __('Term') }}</x-app.input.label>
                                         <x-app.input.select name="term" id="term">

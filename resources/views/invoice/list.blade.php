@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -21,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-start lg:items-center flex-col lg:flex-row">
+        <x-app.page-title class="mb-4 lg:mb-0" description="{{ __('Convert from sale orders, sync with Autocount, and submit for approval') }}">{{ __('Invoice') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             @can('sale.invoice.convert_from_so')
                 <a href="{{ route('sale_order.to_delivery_order') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
@@ -153,6 +149,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

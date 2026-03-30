@@ -4,11 +4,7 @@
 @vite(['resources/css/jquery.dataTables.min.css'])
 
 @push('styles')
-    <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-        #data-table thead th,
+    <style>        #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
@@ -19,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title>{{ __('Debit Note') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-center">
+        <x-app.page-title description="{{ __('Track issued debit notes and send documents to customers') }}">{{ __('Debit Note') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -60,6 +56,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

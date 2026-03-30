@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 415px 25px 50px 25px;
+        margin: 385px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -390px;
+        top: -360px;
         left: 0px;
         right: 0px;
     }
@@ -149,7 +149,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}</td>
                             <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
@@ -170,30 +170,11 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 12px; padding: 10px 0 0 0;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}</td>
                             <td style="font-size: 12px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
                 </td>
-            </tr>
-        </table>
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-            <tr>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">
-                    Item</td>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 10%;">
-                    Stock Code</td>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 45%;">
-                    Description</td>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: right; width: 5%;">
-                    Qty</td>
-                <td
-                    style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: right; width: 5%;">
-                    UOM</td>
             </tr>
         </table>
     </header>
@@ -201,21 +182,40 @@
     <main>
         <!-- Item -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <td
+                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left;">
+                        Item</td>
+                    <td
+                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left;">
+                        Stock Code</td>
+                    <td
+                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 100%;">
+                        Description</td>
+                    <td
+                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: right; white-space: nowrap;">
+                        Qty</td>
+                    <td
+                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: right; white-space: nowrap;">
+                        UOM</td>
+                </tr>
+            </thead>
             @php
                 $total = 0;
             @endphp
             <!-- Product List -->
             @foreach ($products as $key => $prod)
                 <tr>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 12px; text-align: left; white-space: nowrap; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $key + 1 }}</td>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 12px; text-align: left; white-space: nowrap; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod['stock_code'] }}</td>
-                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 12px; text-align: left; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod['desc'] }}</td>
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 12px; text-align: right; white-space: nowrap; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod['qty'] }}</td>
-                    <td style="font-size: 12px; text-align: right; padding: {{ $key == 0 ? '0' : '20px' }} 0 0 0;">
+                    <td style="font-size: 12px; text-align: right; white-space: nowrap; padding: {{ $key == 0 ? '0' : '20px' }} 4px 0 4px;">
                         {{ $prod['uom'] }}</td>
                 </tr>
                 <!-- Product Remark -->
@@ -310,6 +310,25 @@
                     $total += $prod['qty'];
                 @endphp
             @endforeach
+            <!-- Ad-hoc Services -->
+            @if(isset($adhocServices) && count($adhocServices) > 0)
+                <tr>
+                    <td colspan="2"></td>
+                    <td style="font-size: 10px; text-align: left; font-weight: 700; padding-top: 15px;">
+                        Ad-hoc Services:
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+                @foreach($adhocServices as $service)
+                    <tr>
+                        <td colspan="2"></td>
+                        <td style="font-size: 10px; text-align: left;">
+                            - {{ $service->adhocService->name ?? 'N/A' }}
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                @endforeach
+            @endif
             <!-- Remark -->
             @foreach ($sale_orders as $key => $so)
                 @if ($so->remark != null)

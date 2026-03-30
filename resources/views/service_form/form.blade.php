@@ -13,7 +13,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Basic Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="sku" class="mb-1">{{ __('Ref No') }}</x-app.input.label>
                     <x-app.input.input name="sku" id="sku" value="{{ isset($service_form) ? $service_form->sku : $sku }}" :disabled="true" />
@@ -29,7 +29,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Customer Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="customer_id" class="mb-1">{{ __('Customer') }}</x-app.input.label>
                     <div class="relative">
@@ -65,7 +65,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Invoice Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="invoice_id" class="mb-1">{{ __('Invoice') }}</x-app.input.label>
                     <div class="relative">
@@ -114,7 +114,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Product Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="product_id" class="mb-1">{{ __('Product') }}</x-app.input.label>
                     <div class="relative">
@@ -148,7 +148,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Dealer Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="dealer_id" class="mb-1">{{ __('Dealer') }}</x-app.input.label>
                     <div class="relative">
@@ -177,7 +177,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Service Details') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label id="nature_of_problem" class="mb-1">{{ __('Nature of Problem') }}</x-app.input.label>
                     <textarea name="nature_of_problem" id="nature_of_problem" rows="4" class="border border-gray-300 rounded-md p-2 focus:outline-none">{{ old('nature_of_problem', isset($service_form) ? $service_form->nature_of_problem : null) }}</textarea>
@@ -249,7 +249,7 @@
             </div>
 
             {{-- Hidden Item Template --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition duration-300 hover:bg-slate-50" id="item-template">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-8 p-4 rounded-md relative group hidden transition duration-300 hover:bg-slate-50" id="item-template">
                 {{-- Delete Button --}}
                 <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns" title="{{ __('Delete Item') }}">
                     <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
@@ -258,7 +258,7 @@
                 </button>
 
                 {{-- Move Buttons Row --}}
-                <div class="col-span-4 flex items-center gap-4">
+                <div class="col-span-2 md:col-span-4 flex items-center gap-4">
                     <div class="flex gap-2">
                         <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn" title="{{ __('Move Down') }}">
                             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
@@ -410,7 +410,7 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Quotation Details') }}</span>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
                 <div class="flex flex-col">
                     <x-app.input.label id="validity" class="mb-1">{{ __('Validity') }}</x-app.input.label>
                     <x-app.input.input name="validity" id="validity" placeholder="{{ __('e.g., 2 weeks') }}" value="{{ old('validity', isset($service_form) ? $service_form->validity : null) }}" />

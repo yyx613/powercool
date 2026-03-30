@@ -5,7 +5,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Delivery Schedule') }}</span>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         <div class="flex flex-col">
             <x-app.input.label id="delivery_date" class="mb-1">{{ __('Delivery Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.input name="delivery_date" id="delivery_date" :hasError="$errors->has('delivery_date')" value="{{ isset($sale) ? $sale->delivery_date : null }}" />

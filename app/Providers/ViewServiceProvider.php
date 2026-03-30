@@ -212,8 +212,33 @@ class ViewServiceProvider extends ServiceProvider
                 }
             }
 
+            $permission_labels = [
+                'setting.area.view' => 'City',
+                'setting.material_use.view' => 'B.O.M Material Use',
+                'setting.country.view' => 'Country',
+                'setting.credit_term.view' => 'Credit Term',
+                'setting.currency.view' => 'Currency',
+                'setting.debtor_type.view' => 'Debtor Type',
+                'setting.factory.view' => 'Factory',
+                'setting.milestone.view' => 'Milestone',
+                'setting.payment_method.view' => 'Payment Method',
+                'setting.inventory_type.view' => 'Product Type',
+                'setting.promotion.view' => 'Promotion',
+                'setting.state.view' => 'State',
+                'setting.project_type.view' => 'Project Type',
+                'setting.platform.view' => 'Platform',
+                'setting.priority.view' => 'Priority',
+                'setting.sales_agent.view' => 'Sales Agent',
+                'setting.service.view' => 'Vehicle Service',
+                'setting.tax_rate.view' => 'Tax Rate',
+                'setting.sync.view' => 'Sync',
+                'setting.uom.view' => 'UOM',
+                'setting.warranty_period.view' => 'Warranty Period',
+            ];
+
             $view->with('permissions_group', $permissions_group);
             $view->with('permission_descriptions', config('permissions'));
+            $view->with('permission_labels', $permission_labels);
         });
         View::composer(['task.form', 'task.view'], function (ViewView $view) {
             if (str_contains(Route::currentRouteName(), '.technician.')) {
@@ -698,7 +723,7 @@ class ViewServiceProvider extends ServiceProvider
                 'sale_orders' => $sale_orders,
             ]);
         });
-        View::composer(['sale_order.form_step.payment_details', 'cash_sale.form_step.payment_details', 'quotation.form_step.quotation_details'], function (ViewView $view) {
+        View::composer(['sale_order.form_step.payment_details', 'sale_order.form_step.parent_payment_details', 'cash_sale.form_step.payment_details', 'quotation.form_step.quotation_details', 'quotation.convert'], function (ViewView $view) {
             $payment_statuses = [
                 Sale::PAYMENT_STATUS_UNPAID => 'Unpaid',
                 Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',

@@ -26,7 +26,7 @@
         @endif
         <!-- Info -->
         <div class="bg-white p-4 border rounded-md">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full items-start">
                 <div class="flex flex-col">
                     <x-app.input.label id="brand" class="mb-1">{{ __('Brand') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -225,7 +225,7 @@
             <div class="mb-2 flex items-center justify-between">
                 <h6 class="font-medium text-lg">{{ __('Selling Prices') }}</h6>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-2 gap-8 w-full mb-4 hidden" id="selling-price-template">
+            <div class="grid grid-cols-2 lg:grid-cols-2 gap-3 md:gap-4 w-full mb-4 hidden" id="selling-price-template">
                 <div class="flex flex-col col-span-2 lg:col-span-1">
                     <x-app.input.label id="selling_price_name" class="mb-1">{{ __('Name') }}</x-app.input.label>
                     <x-app.input.input name="selling_price_name[]" id="selling_price_name" />
@@ -247,7 +247,7 @@
             <div id="selling-price-container">
                 @if (old('selling_price_name') != null)
                     @foreach (old('selling_price_name') as $key => $val)
-                        <div class="grid grid-cols-2 gap-8 w-full mb-4 selling-prices">
+                        <div class="grid grid-cols-2 gap-3 md:gap-4 w-full mb-4 selling-prices">
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price_name"
                                     class="mb-1">{{ __('Name') }}</x-app.input.label>
@@ -273,7 +273,7 @@
                     @endforeach
                 @elseif (isset($prod))
                     @foreach ($prod->sellingPrices as $sp)
-                        <div class="grid grid-cols-2 gap-8 w-full mb-4 selling-prices">
+                        <div class="grid grid-cols-2 gap-3 md:gap-4 w-full mb-4 selling-prices">
                             <div class="flex flex-col">
                                 <x-app.input.label id="selling_price_name"
                                     class="mb-1">{{ __('Name') }}</x-app.input.label>
@@ -316,7 +316,7 @@
         </div>
         <!-- Barcode Details -->
         <div class="bg-white p-4 border rounded-md mt-4">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
                 <div class="flex flex-col col-span-2 lg:col-span-1">
                     <x-app.input.label class="mb-1">{{ __('Dimension (LxWxH) (In MM)') }}</x-app.input.label>
                     <div class="flex gap-x-2">
@@ -388,8 +388,8 @@
         </div>
         <!-- Classification Code  -->
         <div class="bg-white p-4 border rounded-md mt-4">
-            <div class="grid grid-cols-3 gap-8 w-full">
-                <div class="flex flex-col col-span-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
+                <div class="flex flex-col col-span-2 md:col-span-3">
                     <x-app.input.label id="classification_code" class="mb-1">{{ __('Classification Code') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="classification_code[]" multiple>
@@ -404,7 +404,7 @@
         </div>
         <!-- Platform -->
         <div class="bg-white p-4 border rounded-md mt-4">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full">
                 <div class="flex flex-col">
                     <x-app.input.label id="lazada_sku" class="mb-1">{{ __('Lazada Sku') }}</x-app.input.label>
                     <x-app.input.input name="lazada_sku" id="lazada_sku" class="uppercase-input"

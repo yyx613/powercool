@@ -1,7 +1,7 @@
 <div id="list-sale-production-request-container" class="hidden">
     <!-- Filters -->
     <div class="flex justify-between">
-        <div class="flex items-center gap-x-4 max-w-sm w-full mb-4">
+        <div class="flex flex-wrap items-center gap-x-4 max-w-sm w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="sale-filter_search" id="sale-filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">
@@ -154,6 +154,7 @@
         // Datatable
         var dtSale = new DataTable('#data-table-sale', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

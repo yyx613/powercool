@@ -176,12 +176,10 @@ class PermissionSeeder extends Seeder
             'supplier.delete',
 
             'dealer.view',
-            'dealer.create',
             'dealer.edit',
             'dealer.delete',
 
             'agent_debtor.view',
-            'agent_debtor.create',
             'agent_debtor.edit',
             'agent_debtor.delete',
 
@@ -204,8 +202,27 @@ class PermissionSeeder extends Seeder
             'user_role_management.edit',
             'user_role_management.delete',
 
-            'setting.view',
-            'setting.edit',
+            'setting.area.view',
+            'setting.material_use.view',
+            'setting.country.view',
+            'setting.credit_term.view',
+            'setting.currency.view',
+            'setting.debtor_type.view',
+            'setting.factory.view',
+            'setting.milestone.view',
+            'setting.payment_method.view',
+            'setting.inventory_type.view',
+            'setting.promotion.view',
+            'setting.state.view',
+            'setting.project_type.view',
+            'setting.platform.view',
+            'setting.priority.view',
+            'setting.sales_agent.view',
+            'setting.service.view',
+            'setting.tax_rate.view',
+            'setting.sync.view',
+            'setting.uom.view',
+            'setting.warranty_period.view',
         ];
         $now = now();
 

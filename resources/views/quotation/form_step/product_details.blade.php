@@ -8,7 +8,7 @@
         <span class="text-lg ml-3 font-bold">{{ __('Product Details') }}</span>
     </div>
     <!-- Template -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-8 p-4 rounded-md relative group hidden transition durtion-300 hover:bg-slate-50"
         id="item-template">
         <button type="button"
             class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns"
@@ -19,7 +19,7 @@
                     d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
             </svg>
         </button>
-        <div class="col-span-4 flex items-center gap-4">
+        <div class="col-span-2 md:col-span-4 flex items-center gap-4">
             <div class="flex gap-2">
                 <button type="button" class="text-sm p-1 rounded-full bg-slate-200 move-down-btn"
                     title="{{ __('Move Down') }}">
@@ -163,14 +163,14 @@
 
             <!-- Hidden accessory row template -->
             <div id="accessory-row-template" class="hidden">
-                <div class="accessory-row flex gap-4 lg:gap-8 py-2 px-3 border rounded bg-white">
-                    <div class="flex flex-col" style="flex: 1;">
+                <div class="accessory-row grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 py-2 px-3 border rounded bg-white relative">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Accessory') }}</x-app.input.label>
                         <x-app.input.select name="accessory_id[]" class="accessory-select">
                             <option value="">{{ __('Select accessory') }}</option>
                         </x-app.input.select>
                     </div>
-                    <div class="flex flex-col" style="flex: 1;">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Quantity') }}</x-app.input.label>
                         <div class="flex border border-gray-300 rounded-md overflow-hidden">
                             <x-app.input.input name="accessory_qty[]" type="number" class="int-input border-none flex-1" min="1" value="1" />
@@ -179,19 +179,19 @@
                                 data-is-foc="false">FOC</button>
                         </div>
                     </div>
-                    <div class="flex flex-col selling-price-container" style="flex: 1;">
+                    <div class="flex flex-col selling-price-container">
                         <x-app.input.label class="mb-1">{{ __('Selling Price') }} <span class="text-xs hidden accessory-price-hint">(<span class="accessory-min-price"></span> - <span class="accessory-max-price"></span>)</span></x-app.input.label>
                         <x-app.input.select name="accessory_selling_price[]" class="accessory-price-select">
                             <option value="">{{ __('Select price') }}</option>
                         </x-app.input.select>
                     </div>
-                    <div class="flex flex-col" style="flex: 1;">
+                    <div class="flex flex-col">
                         <x-app.input.label class="mb-1">{{ __('Override Selling Price') }}</x-app.input.label>
                         <x-app.input.input name="accessory_override_price[]" type="number" step="0.01" class="decimal-input" />
                     </div>
                     <input type="hidden" name="accessory_is_foc[]" value="0" class="accessory-is-foc-input" />
-                    <div class="flex items-end justify-center" style="min-width: 40px;">
-                        <button type="button" class="remove-accessory-btn bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600">
+                    <div class="absolute top-1 right-1">
+                        <button type="button" class="remove-accessory-btn bg-rose-500 text-white p-1.5 rounded-full hover:bg-rose-600">
                             <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>
                             </svg>
@@ -209,7 +209,7 @@
                 <p class="text-xs text-slate-400">{{ __('Click "Add Accessory" button to add accessories') }}</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 col-span-2 md:col-span-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 col-span-2 md:col-span-4">
             {{-- <div class="flex flex-col flex-1 col-span-2">
                 <x-app.input.label id="product_serial_no"
                     class="mb-1">{{ __('Product Serial No') }}</x-app.input.label>
@@ -217,7 +217,7 @@
                 </x-app.input.select>
                 <x-app.message.error id="product_serial_no_err" />
             </div> --}}
-            <div class="flex flex-col flex-1 col-span-4">
+            <div class="flex flex-col flex-1 col-span-2 md:col-span-4">
                 <x-app.input.label id="remark" class="mb-1">{{ __('Remark') }}</x-app.input.label>
                 <textarea name="remark" id="remark" class="hidden"></textarea>
                 <x-app.message.error id="remark_err" />
@@ -261,7 +261,7 @@
 
         <!-- Service Row Template (Hidden) -->
         <div class="hidden" id="service-template">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-4 p-4 rounded-md relative group transition duration-300 hover:bg-slate-50 service-item">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-service-btn"
                     title="{{ __('Delete Service') }}">

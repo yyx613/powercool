@@ -13,7 +13,7 @@
         @endif
         <!-- 1st Panel -->
         <div class="bg-white p-4 rounded-md shadow">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="category" class="mb-1">{{ __('Category') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="category" id="category" :hasError="$errors->has('category')" placeholder="{{ __('Select a category') }}">
@@ -107,7 +107,7 @@
         </div>
         <!-- 2nd Panel -->
         <div class="bg-white p-4 rounded-md shadow">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                 <!-- <div class="flex flex-col">
                     <x-app.input.label class="mb-1">Picture</x-app.input.label>
                     <x-app.input.file id="picture[]" :hasError="$errors->has('picture')"/>

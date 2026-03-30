@@ -17,6 +17,7 @@ use App\Models\CustomerLocation;
 use App\Models\Dealer;
 use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
+use App\Models\DeliveryOrderAdhocService;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductAccessory;
 use App\Models\DeliveryOrderProductChild;
@@ -285,7 +286,6 @@ class SaleController extends Controller
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'is_expired' => $record->expired_at != null,
-                    'has_product' => SaleProduct::where('sale_id', $record->id)->exists(),
                     'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE,
                     'no_pending_approval' => ! Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
@@ -510,7 +510,9 @@ class SaleController extends Controller
                 ->where('is_draft', false)
                 ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereHas('products')
+                ->where(function ($q) {
+                    $q->whereHas('products')->orWhereHas('adhocServices');
+                })
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', Session::get('convert_customer_id'))
                 ->where('sale_id', Session::get('convert_salesperson_id'))
@@ -530,7 +532,9 @@ class SaleController extends Controller
                 ->where('is_draft', false)
                 ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereHas('products')
+                ->where(function ($q) {
+                    $q->whereHas('products')->orWhereHas('adhocServices');
+                })
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where('customer_id', $req->cus)
                 ->where(function ($q) {
@@ -548,7 +552,9 @@ class SaleController extends Controller
                 ->where('is_draft', false)
                 ->whereNull('expired_at')
                 ->whereNotIn('id', $this->getSaleInProduction())
-                ->whereHas('products')
+                ->where(function ($q) {
+                    $q->whereHas('products')->orWhereHas('adhocServices');
+                })
                 ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED])
                 ->where(function ($q) {
                     $q->whereDoesntHave('approval', function ($q) {
@@ -582,6 +588,15 @@ class SaleController extends Controller
 
     public function converToSaleOrder(Request $req)
     {
+        $rules = [
+            'payment_method' => 'required',
+            'payment_due_date' => 'required',
+        ];
+        if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
+            $rules['payment_term'] = 'required';
+        }
+        $req->validate($rules);
+
         $quo_ids = explode(',', $req->quo);
         $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with(['products.accessories', 'adhocServices'])->get();
 
@@ -627,7 +642,8 @@ class SaleController extends Controller
                 'third_party_address_address' => $third_party_address_address,
                 'third_party_address_mobile' => $third_party_address_mobile,
                 'third_party_address_name' => $third_party_address_name,
-                'payment_method' => $quos[0]->payment_method,
+                'payment_method' => $req->payment_method,
+                'payment_term' => $req->payment_term,
             ]);
             // Check to use back transferred SO sku
             if ($quos[0]->convert_to != null) {
@@ -644,6 +660,12 @@ class SaleController extends Controller
             }
 
             $sale_id = $res->sale->id;
+
+            // Save payment details from conversion step
+            Sale::where('id', $sale_id)->update([
+                'payment_due_date' => $req->payment_due_date,
+                'payment_remark' => $req->payment_remark,
+            ]);
 
             // Create product details
             $request = new Request([
@@ -710,7 +732,7 @@ class SaleController extends Controller
                     return $q->is_foc;
                 })->toArray(),
             ]);
-            $res = $this->upsertProDetails($request, false, false, false, true)->getData();
+            $res = $this->upsertProDetails($request, true, false, false, true)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create product');
             }
@@ -1082,8 +1104,6 @@ class SaleController extends Controller
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
                     'payment_due_date_filled' => in_array($record->payment_method_id, $credit_term_payment_method_ids) ? true : $record->paid_amount >= $record->total_amount || $record->payment_due_date != null,
-                    'has_product' => count($sp_ids) > 0,
-                    'has_serial_no' => $this->hasSerialNoForNonRawMaterials($sp_ids),
                     'is_active_or_approved' => $record->status == Sale::STATUS_APPROVAL_APPROVED || $record->status == Sale::STATUS_ACTIVE || $record->status == Sale::STATUS_PARTIALLY_CONVERTED,
                     'no_pending_approval' => ! Approval::where('object_type', Sale::class)->where('object_id', $record->id)->where('data', 'like', '%is_quo%')->where('status', Approval::STATUS_PENDING_APPROVAL)->exists(),
                     'not_in_production' => ! in_array($record->id, $this->getSaleInProduction()),
@@ -1516,16 +1536,7 @@ class SaleController extends Controller
                     ->whereIn('status', [Sale::STATUS_ACTIVE, Sale::STATUS_APPROVAL_APPROVED, Sale::STATUS_PARTIALLY_CONVERTED])
                     ->whereIn('id', $selected_so)
                     ->where(function ($q) {
-                        $q->where(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                    ->orWhere('type', Product::TYPE_PRODUCT);
-                            })->has('products.children');
-                        })->orWhere(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                            });
-                        });
+                        $q->whereHas('products')->orWhereHas('adhocServices');
                     })
                     ->get();
 
@@ -1537,7 +1548,32 @@ class SaleController extends Controller
                     $products = $products->merge($sales[$i]->products);
                 }
 
-                $loop = false;
+                // Filter out products with nothing selectable
+                $products = $products->filter(function ($pro) use ($allowed_spc_ids) {
+                    if ($pro->product->isRawMaterial()) {
+                        return $pro->remainingQtyForRM() > 0;
+                    }
+                    // Non-raw-material: must have remaining qty and at least one allowed child
+                    if ($pro->remainingQty() <= 0) {
+                        return false;
+                    }
+                    foreach ($pro->children as $pc) {
+                        if (in_array($pc->product_children_id, $allowed_spc_ids) && $pc->productChild != null) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })->values();
+
+                // Skip product/accessory steps if no selectable products
+                if (count($products) == 0) {
+                    Session::put('convert_product_children', []);
+                    Session::put('convert_accessories', []);
+                    $loop = true;
+                    $req->merge(['accessories' => json_encode([])]);
+                } else {
+                    $loop = false;
+                }
             } elseif ($req->has('so')) {
                 $step = 4;
 
@@ -1551,23 +1587,13 @@ class SaleController extends Controller
                     ->whereIn('id', explode(',', $req->so))
                     ->where('customer_id', Session::get('convert_customer_id'))
                     ->where('sale_id', Session::get('convert_salesperson_id'))
-                    ->whereNotNull('payment_term')
                     ->where(function ($q) {
                         $q->wherehas('approval', function ($q) {
                             $q->where('status', Approval::STATUS_APPROVED);
                         })->ordoesnthave('approval');
                     })
                     ->where(function ($q) {
-                        $q->where(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                    ->orWhere('type', Product::TYPE_PRODUCT);
-                            })->has('products.children');
-                        })->orWhere(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                            });
-                        });
+                        $q->whereHas('products')->orWhereHas('adhocServices');
                     })
                     ->distinct()
                     ->get();
@@ -1606,16 +1632,7 @@ class SaleController extends Controller
                         })->orDoesntHave('approval');
                     })
                     ->where(function ($q) {
-                        $q->where(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                    ->orWhere('type', Product::TYPE_PRODUCT);
-                            })->has('products.children');
-                        })->orWhere(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                            });
-                        });
+                        $q->whereHas('products')->orWhereHas('adhocServices');
                     })
                     ->get();
 
@@ -1650,16 +1667,7 @@ class SaleController extends Controller
                         })->orDoesntHave('approval');
                     })
                     ->where(function ($q) {
-                        $q->where(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                    ->orWhere('type', Product::TYPE_PRODUCT);
-                            })->has('products.children');
-                        })->orWhere(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                            });
-                        });
+                        $q->whereHas('products')->orWhereHas('adhocServices');
                     })
                     ->distinct()
                     ->get();
@@ -1691,16 +1699,7 @@ class SaleController extends Controller
                         })->orDoesntHave('approval');
                     })
                     ->where(function ($q) {
-                        $q->where(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', true)
-                                    ->orWhere('type', Product::TYPE_PRODUCT);
-                            })->has('products.children');
-                        })->orWhere(function ($q) {
-                            $q->whereHas('products.product', function ($q) {
-                                $q->where('type', Product::TYPE_RAW_MATERIAL)->where('is_sparepart', false);
-                            });
-                        });
+                        $q->whereHas('products')->orWhereHas('adhocServices');
                     })
                     ->orderBy('id', 'desc')
                     ->distinct()
@@ -1717,6 +1716,9 @@ class SaleController extends Controller
                         continue;
                     }
 
+                    if (count($sales[$i]->products) == 0 && $sales[$i]->adhocServices->count() > 0) {
+                        $customer_ids[] = $sales[$i]->customer_id;
+                    }
                     for ($j = 0; $j < count($sales[$i]->products); $j++) {
                         $is_rm = $sales[$i]->products[$j]->product->isRawMaterial();
 
@@ -1794,6 +1796,7 @@ class SaleController extends Controller
             // Prepare data
             $so_ids = explode(',', Session::get('convert_sale_order_id'));
             $sales = Sale::whereIn('id', $so_ids)->get();
+            $sale_orders = collect($sales);
 
             $is_hi_ten = false;
             for ($i = 0; $i < count($sales); $i++) {
@@ -1806,7 +1809,6 @@ class SaleController extends Controller
             $sku = generateSku('DO', $existing_skus, $is_hi_ten);
             $filename = str_replace('/', '-', $sku).'.pdf';
             $soc_alter_qty = [];
-            $sale_orders = collect();
 
             // Create DO
             $do = DeliveryOrder::create([
@@ -1871,8 +1873,25 @@ class SaleController extends Controller
                         DeliveryOrderProductAccessory::insert($dopa_data);
                     }
                 }
+            }
 
-                $sale_orders->push($sp->sale);
+            // Copy ad-hoc services from SO to DO
+            $adhocServicesData = [];
+            $now = now();
+            foreach ($sale_orders as $sale) {
+                foreach ($sale->adhocServices as $svc) {
+                    $adhocServicesData[] = [
+                        'delivery_order_id' => $do->id,
+                        'sale_adhoc_service_id' => $svc->id,
+                        'adhoc_service_id' => $svc->adhoc_service_id,
+                        'amount' => $svc->getEffectiveAmount(),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+            if (count($adhocServicesData) > 0) {
+                DeliveryOrderAdhocService::insert($adhocServicesData);
             }
 
             // Create PDF
@@ -1926,6 +1945,12 @@ class SaleController extends Controller
                     ];
                 }
             }
+            // Collect adhoc services from sale orders for PDF
+            $pdfAdhocServices = collect();
+            foreach ($sale_orders as $so) {
+                $pdfAdhocServices = $pdfAdhocServices->merge($so->adhocServices()->with('adhocService')->get());
+            }
+
             $pdf = Pdf::loadView('sale_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_do_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
@@ -1933,6 +1958,7 @@ class SaleController extends Controller
                 'salesperson' => SalesAgent::where('id', Session::get('convert_salesperson_id'))->first(),
                 'sale_orders' => $sale_orders,
                 'products' => $pdf_products,
+                'adhocServices' => $pdfAdhocServices,
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress(Session::get('convert_customer_id')),
                 'delivery_address' => CustomerLocation::where('id', $req->delivery_address)->first(),
                 'terms' => Session::get('convert_terms'),
@@ -2064,6 +2090,7 @@ class SaleController extends Controller
             'report_type' => 'required',
             'priority' => 'nullable|exists:priorities,id',
             'payment_term' => 'nullable',
+            'payment_remark' => 'nullable|max:250',
             // upsertRemark
             'remark' => 'nullable',
         ];
@@ -2102,26 +2129,34 @@ class SaleController extends Controller
             $rules['open_until'] = 'required';
         }
         if ($req->type == 'quo' || (isset($convert_from_quo) && ! $convert_from_quo)) {
-            // upsertProDetails
+            // upsertProDetails - products are optional when adhoc services are present
+            $has_products = $req->product_id && is_array($req->product_id) && count(array_filter($req->product_id)) > 0;
+            $has_services = $req->adhoc_service_id && is_array($req->adhoc_service_id) && count(array_filter($req->adhoc_service_id)) > 0;
+
+            if (! $has_products && ! $has_services) {
+                $rules['product_id'] = 'required';
+            } else {
+                $rules['product_id'] = 'nullable';
+            }
+
             $rules['product_order_id'] = 'nullable';
             $rules['product_order_id.*'] = 'nullable';
-            $rules['product_id'] = 'required';
-            $rules['product_id.*'] = 'required';
-            $rules['customize_product'] = 'required';
+            $rules['product_id.*'] = 'nullable';
+            $rules['customize_product'] = 'nullable';
             $rules['customize_product.*'] = 'nullable|max:250';
-            $rules['product_desc'] = 'required';
+            $rules['product_desc'] = 'nullable';
             $rules['product_desc.*'] = 'nullable|max:250';
-            $rules['qty'] = 'required';
-            $rules['qty.*'] = 'required';
-            $rules['foc'] = 'required';
-            $rules['foc.*'] = 'required';
-            $rules['uom'] = 'required';
-            $rules['uom.*'] = 'required';
+            $rules['qty'] = 'nullable';
+            $rules['qty.*'] = 'nullable';
+            $rules['foc'] = 'nullable';
+            $rules['foc.*'] = 'nullable';
+            $rules['uom'] = 'nullable';
+            $rules['uom.*'] = 'nullable';
             $rules['selling_price'] = 'nullable';
             $rules['selling_price.*'] = 'nullable';
-            $rules['unit_price'] = 'required';
+            $rules['unit_price'] = 'nullable';
             $rules['unit_price.*'] = 'nullable';
-            $rules['promotion_id'] = 'required';
+            $rules['promotion_id'] = 'nullable';
             $rules['promotion_id.*'] = 'nullable';
             $rules['product_serial_no'] = 'nullable';
             $rules['product_serial_no.*'] = 'nullable';
@@ -2131,11 +2166,11 @@ class SaleController extends Controller
             $rules['accessory'] = 'nullable';
             $rules['accessory.*'] = 'nullable';
             $rules['accessory.*.*'] = 'nullable';
-            $rules['discount'] = 'required';
+            $rules['discount'] = 'nullable';
             $rules['discount.*'] = 'nullable';
             $rules['discount_type'] = 'nullable';
             $rules['discount_type.*'] = 'nullable|in:fixed,percentage';
-            $rules['product_remark'] = 'required';
+            $rules['product_remark'] = 'nullable';
             $rules['product_remark.*'] = 'nullable';
             $rules['override_selling_price'] = 'nullable';
             $rules['override_selling_price.*'] = 'nullable';
@@ -2238,8 +2273,11 @@ class SaleController extends Controller
         // }
 
         // Validate selling price or override selling price is provided for non-FOC products
-        if ($req->type == 'quo' || (isset($convert_from_quo) && !$convert_from_quo)) {
+        if (($req->type == 'quo' || (isset($convert_from_quo) && !$convert_from_quo)) && $req->product_id && is_array($req->product_id)) {
             for ($i = 0; $i < count($req->product_id); $i++) {
+                if ($req->product_id[$i] == null) {
+                    continue;
+                }
                 if ($req->foc[$i] !== 'true') {
                     $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
                     $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
@@ -2303,6 +2341,11 @@ class SaleController extends Controller
             $res = $this->upsertRemark($req, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertRemark failed');
+            }
+
+            // Save payment_remark for SO
+            if ($req->type == 'so' && $req->has('payment_remark')) {
+                Sale::where('id', $req->sale_id)->update(['payment_remark' => $req->payment_remark]);
             }
 
             DB::commit();
@@ -2386,6 +2429,11 @@ class SaleController extends Controller
             $res = $this->upsertRemark($req, true)->getData();
             if ($res->result == false) {
                 throw new \Exception('upsertRemark failed');
+            }
+
+            // Save payment_remark for SO draft
+            if ($req->type == 'so' && $req->has('payment_remark')) {
+                Sale::where('id', $req->sale_id)->update(['payment_remark' => $req->payment_remark]);
             }
 
             DB::commit();
@@ -2581,6 +2629,8 @@ class SaleController extends Controller
                     'created_by' => $created_by,
                     'self_collect' => $req->self_collect ?? false,
                     'self_collect_branch' => $req->self_collect == 1 ? $req->self_collect_branch : null,
+                    'payment_method' => $req->payment_method,
+                    'payment_term' => $req->payment_term,
                 ]);
                 (new Branch)->assign(Sale::class, $sale->id);
             } else {
@@ -2623,7 +2673,7 @@ class SaleController extends Controller
                     'updated_by' => Auth::user()->id,
                     'self_collect' => $req->self_collect ?? false,
                     'self_collect_branch' => $req->self_collect == 1 ? $req->self_collect_branch : null,
-                ]);
+                ] + ($req->type == 'quo' ? ['payment_method' => $req->payment_method, 'payment_term' => $req->payment_term] : []));
                 // Delete current third party address
                 if ($req->type == 'quo') {
                     SaleThirdPartyAddress::where('sale_id', $sale->id)->delete();
@@ -2679,9 +2729,15 @@ class SaleController extends Controller
                     if ($approval_required) {
                         $customer = Customer::where('id', $sale->customer_id)->first();
 
-                        $terms = [];
+                        $customer_terms = [];
                         for ($i = 0; $i < count($customer->creditTerms); $i++) {
-                            $terms[] = $customer->creditTerms[$i]->creditTerm->name;
+                            $customer_terms[] = $customer->creditTerms[$i]->creditTerm->name;
+                        }
+
+                        $selected_term_name = CreditTerm::where('id', $req->payment_term)->value('name');
+                        $description = 'The payment method for '.$sale->sku.' is selected as Credit Term. (Selected: '.$selected_term_name.')';
+                        if (count($customer_terms) > 0) {
+                            $description .= ' Customer allowed terms: '.implode(', ', $customer_terms);
                         }
 
                         $approval = Approval::create([
@@ -2691,10 +2747,10 @@ class SaleController extends Controller
                             'data' => $req->type == 'quo' ? json_encode([
                                 'is_quo' => true,
                                 'is_payment_method' => true,
-                                'description' => 'The payment method for '.$sale->sku.' is selected as Credit Term. ('.implode(',', $terms).')',
+                                'description' => $description,
                             ]) : json_encode([
                                 'is_payment_method' => true,
-                                'description' => 'The payment method for '.$sale->sku.' is selected as Credit Term. ('.implode(',', $terms).')',
+                                'description' => $description,
                             ]),
                         ]);
                         (new Branch)->assign(Approval::class, $approval->id);
@@ -2733,28 +2789,32 @@ class SaleController extends Controller
     public function upsertProDetails(Request $req, bool $validated = false, bool $convert_from_quo = false, bool $is_draft = false, bool $skip_approval = false)
     {
         if (! $validated) {
+            // Products are optional when adhoc services are present
+            $has_products = $req->product_id && is_array($req->product_id) && count(array_filter($req->product_id)) > 0;
+            $has_services = $req->adhoc_service_id && is_array($req->adhoc_service_id) && count(array_filter($req->adhoc_service_id)) > 0;
+
             // Validate form
             $rules = [
                 'sale_id' => 'required',
                 'product_order_id' => 'nullable',
                 'product_order_id.*' => 'nullable',
-                'product_id' => 'required',
-                'product_id.*' => 'required',
+                'product_id' => (! $has_products && ! $has_services) ? 'required' : 'nullable',
+                'product_id.*' => 'nullable',
                 'customize_product' => 'nullable',
                 'customize_product.*' => 'nullable|max:250',
-                'product_desc' => 'required',
+                'product_desc' => 'nullable',
                 'product_desc.*' => 'nullable|max:250',
-                'qty' => 'required',
-                'qty.*' => 'required',
-                'foc' => 'required',
-                'foc.*' => 'required',
-                'uom' => 'required',
-                'uom.*' => 'required',
+                'qty' => 'nullable',
+                'qty.*' => 'nullable',
+                'foc' => 'nullable',
+                'foc.*' => 'nullable',
+                'uom' => 'nullable',
+                'uom.*' => 'nullable',
                 'selling_price' => 'nullable',
                 'selling_price.*' => 'nullable',
-                'unit_price' => 'required',
+                'unit_price' => 'nullable',
                 'unit_price.*' => 'nullable',
-                'promotion_id' => 'required',
+                'promotion_id' => 'nullable',
                 'promotion_id.*' => 'nullable',
                 'product_serial_no' => 'nullable',
                 'product_serial_no.*' => 'nullable',
@@ -2768,11 +2828,11 @@ class SaleController extends Controller
                 'accessory.*.*.qty' => 'required_with:accessory.*.*|integer|min:1',
                 'accessory.*.*.selling_price' => 'nullable|exists:selling_prices,id',
                 'accessory.*.*.override_price' => 'nullable|numeric|min:0',
-                'discount' => 'required',
+                'discount' => 'nullable',
                 'discount.*' => 'nullable',
                 'discount_type' => 'nullable',
                 'discount_type.*' => 'nullable|in:fixed,percentage',
-                'product_remark' => 'required',
+                'product_remark' => 'nullable',
                 'product_remark.*' => 'nullable',
                 'override_selling_price' => 'nullable',
                 'override_selling_price.*' => 'nullable',
@@ -2830,16 +2890,21 @@ class SaleController extends Controller
             // }
 
             // Validate selling price or override selling price is provided for non-FOC products
-            for ($i = 0; $i < count($req->product_id); $i++) {
-                if ($req->foc[$i] !== 'true') {
-                    $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
-                    $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
-                    if (!$has_selling_price && !$has_override_price) {
-                        return Response::json([
-                            'errors' => [
-                                'unit_price.' . $i => 'Please select a selling price or enter an override price for product row ' . ($i + 1),
-                            ],
-                        ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+            if ($req->product_id && is_array($req->product_id)) {
+                for ($i = 0; $i < count($req->product_id); $i++) {
+                    if ($req->product_id[$i] == null) {
+                        continue;
+                    }
+                    if ($req->foc[$i] !== 'true') {
+                        $has_selling_price = isset($req->selling_price[$i]) && $req->selling_price[$i] != null;
+                        $has_override_price = $req->override_selling_price != null && isset($req->override_selling_price[$i]) && $req->override_selling_price[$i] != null && $req->override_selling_price[$i] != '';
+                        if (!$has_selling_price && !$has_override_price) {
+                            return Response::json([
+                                'errors' => [
+                                    'unit_price.' . $i => 'Please select a selling price or enter an override price for product row ' . ($i + 1),
+                                ],
+                            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+                        }
                     }
                 }
             }
@@ -2849,6 +2914,20 @@ class SaleController extends Controller
             DB::beginTransaction();
 
             if (! $convert_from_quo) {
+                $has_product_ids = $req->product_id && is_array($req->product_id) && count(array_filter($req->product_id)) > 0;
+
+                if (! $has_product_ids) {
+                    // No products submitted — clean up all existing sale products
+                    $existing_sps = SaleProduct::where('sale_id', $req->sale_id)->get();
+                    foreach ($existing_sps as $sp) {
+                        SaleProductChild::where('sale_product_id', $sp->id)->delete();
+                        SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
+                        SaleProductAccessory::where('sale_product_id', $sp->id)->delete();
+                        $sp->delete();
+                    }
+                }
+
+                if ($has_product_ids) {
                 if ($req->product_order_id != null) {
                     $order_idx = array_filter($req->product_order_id, function ($val) {
                         return $val != null;
@@ -3075,7 +3154,10 @@ class SaleController extends Controller
                     }
                     SaleProductAccessory::insert($data);
                 }
+                } // end if ($has_product_ids)
             } else {
+                // convert_from_quo branch — only process if products exist
+                if ($req->product_id && is_array($req->product_id) && count($req->product_id) > 0) {
                 $now = now();
 
                 for ($i = 0; $i < count($req->product_id); $i++) {
@@ -3142,6 +3224,7 @@ class SaleController extends Controller
                         SaleProductAccessory::insert($data);
                     }
                 }
+                } // end if product_id exists (convert_from_quo)
             }
 
             $new_prod_ids = SaleProduct::where('sale_id', $req->sale_id)
@@ -3149,9 +3232,9 @@ class SaleController extends Controller
                 ->toArray();
 
             // Handle Ad-hoc Services
+            // Always clean up existing services, then re-insert if provided
+            SaleAdhocService::where('sale_id', $req->sale_id)->delete();
             if ($req->has('adhoc_service_id') && is_array($req->adhoc_service_id)) {
-                // Delete removed services
-                SaleAdhocService::where('sale_id', $req->sale_id)->delete();
 
                 $now = now();
                 $adhoc_services_data = [];
@@ -3241,16 +3324,11 @@ class SaleController extends Controller
             // Validate form
             $rules = [
                 'sale_id' => 'required',
-                'payment_method' => $is_voided ? 'nullable' : 'required',
-                'payment_due_date' => $is_voided ? 'nullable' : 'required',
+                'payment_method' => 'nullable',
+                'payment_due_date' => 'nullable',
                 'payment_remark' => 'nullable|max:250',
+                'payment_term' => 'nullable',
             ];
-            if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
-                $rules['payment_term'] = 'required';
-                $rules['payment_due_date'] = 'nullable';
-            } else {
-                $rules['payment_term'] = 'nullable';
-            }
             if (in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user()))) {
                 $rules['account_payment_method'] = 'nullable';
                 $rules['account_payment_method.*'] = 'nullable';
@@ -3377,11 +3455,19 @@ class SaleController extends Controller
                     $status = Sale::PAYMENT_STATUS_PARTIALLY_PAID;
                 }
 
-                $sale->payment_term = $req->payment_term;
-                $sale->payment_method = $req->payment_method;
-                $sale->payment_due_date = $req->payment_due_date;
+                if ($req->has('payment_term')) {
+                    $sale->payment_term = $req->payment_term;
+                }
+                if ($req->has('payment_method')) {
+                    $sale->payment_method = $req->payment_method;
+                }
+                if ($req->has('payment_due_date')) {
+                    $sale->payment_due_date = $req->payment_due_date;
+                }
+                if ($req->has('payment_remark')) {
+                    $sale->payment_remark = $req->payment_remark;
+                }
                 $sale->payment_status = $status;
-                $sale->payment_remark = $req->payment_remark;
                 $sale->save();
             }
 
@@ -3611,8 +3697,8 @@ class SaleController extends Controller
                 $so_skus[] = $sos[$i]->sku;
             }
 
-            $filename = config('app.url').str_replace('public', $path, self::DELIVERY_ORDER_PATH).$record->filename;
-            $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url').str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).$record->transport_ack_filename;
+            $filename = config('app.url').str_replace('/public', $path, self::DELIVERY_ORDER_PATH).$record->filename;
+            $transport_ack_filename = $record->transport_ack_filename == null ? null : config('app.url').str_replace('/public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).$record->transport_ack_filename;
 
             $total_amount = 0;
             $dop_ids = DeliveryOrderProduct::withTrashed()->where('delivery_order_id', $record->id)->pluck('id')->toArray();
@@ -3802,21 +3888,40 @@ class SaleController extends Controller
                 }
             }
 
-            $pc_inputs = Session::get('convert_product_children');
+            $pc_inputs = Session::get('convert_product_children') ?? [];
             $sp_ids = [];
             $sale_orders = collect();
             foreach ($pc_inputs as $sp_id => $ipt) {
                 $sp_ids[] = $sp_id;
             }
-            foreach (SaleProduct::whereIn('id', $sp_ids)->cursor() as $sp) {
-                $sale_orders->push($sp->sale);
+            if (count($sp_ids) > 0) {
+                foreach (SaleProduct::whereIn('id', $sp_ids)->cursor() as $sp) {
+                    $sale_orders->push($sp->sale);
+                }
             }
+            // Fallback: get sale orders from DO products or SO IDs
+            if ($sale_orders->isEmpty()) {
+                $so_ids = DeliveryOrderProduct::whereIn('delivery_order_id', $do_ids)->pluck('sale_order_id')->unique()->toArray();
+                if (empty($so_ids)) {
+                    $so_ids = explode(',', Session::get('convert_sale_order_id') ?? '');
+                }
+                $sale_orders = Sale::whereIn('id', $so_ids)->get();
+            }
+            // Collect adhoc services from sale orders for PDF
+            $pdfAdhocServices = collect();
+            $sst_value = Setting::where('key', Setting::SST_KEY)->value('value') ?? 0;
+            foreach ($sale_orders as $so) {
+                $pdfAdhocServices = $pdfAdhocServices->merge($so->adhocServices()->with('adhocService')->get());
+            }
+
             $pdf = Pdf::loadView('delivery_order.'.($is_hi_ten ? 'hi_ten' : 'powercool').'_inv_pdf', [
                 'date' => now()->format('d/m/Y'),
                 'sku' => $sku,
                 'do_sku' => implode(', ', $do_sku),
                 'dos' => $dos,
                 'products' => $pdf_products,
+                'adhocServices' => $pdfAdhocServices,
+                'sst_value' => $sst_value,
                 'customer' => Customer::where('id', $customer_id)->first(),
                 'billing_address' => (new CustomerLocation)->defaultBillingAddress($customer_id),
                 'terms' => $term_id,
@@ -4100,7 +4205,7 @@ class SaleController extends Controller
                 $do_skus[] = $dos[$i]->sku;
             }
             // Prepare pdf url
-            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('public', $path, self::INVOICE_PATH).$record->filename;
+            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
             // Total amount
             $total_amount = 0;
             if (count($dos) > 0) {
@@ -4233,7 +4338,7 @@ class SaleController extends Controller
                     $total_amount += $sos[$j]->getTotalAmount();
                 }
             }
-            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('public', $path, self::INVOICE_PATH).$record->filename;
+            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -5823,7 +5928,7 @@ class SaleController extends Controller
             $path = '/storage';
         }
         foreach ($records_paginator as $key => $record) {
-            $transport_ack_filename = $record->filename == null ? null : config('app.url').str_replace('public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).'/'.$record->filename;
+            $transport_ack_filename = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).'/'.$record->filename;
 
             $data['data'][] = [
                 'no' => $key + 1,

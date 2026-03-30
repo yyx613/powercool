@@ -131,7 +131,7 @@
                 promo.push($(this).find('select[name="promotion[]"]').val())
                 discount.push($(this).find('input[name="discount"]').val())
                 discountType.push($(this).find('.discount-type-btns').attr('data-discount-type') || 'fixed')
-                remark.push($(this).find('.ql-editor').html())
+                remark.push(sanitizeQuillHtml($(this).find('.ql-editor').html()))
                 overrideSellingPrice.push($(this).find('input[name="override_selling_price"]').val())
                 if ($(this).find('select[name="product_serial_no[]"]').val() == null || $(this).find(
                         'select[name="product_serial_no[]"]').val().length <= 0) {
@@ -182,7 +182,17 @@
             if (REPLICATE != null) {
                 prodOrderId = []
             }
-            let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
+            let additionalRemark = sanitizeQuillHtml($('#additional-remark-container .quill-wrapper .ql-editor').html())
+
+            // Validate at least one product or one adhoc service
+            let hasProducts = prodId.filter(id => id != null && id != '').length > 0
+            let hasServices = adhocServiceId.length > 0
+            if (!hasProducts && !hasServices && isSaveAsDraft != 'true') {
+                alert('Please add at least one product or one service.')
+                $('#submit-btn, #save-draft-btn').attr('disabled', false)
+                return
+            }
+
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -206,8 +216,6 @@
                     'cc': $('input[name="cc"]').val(),
                     'status': $('select[name="status"]').val(),
                     'report_type': $('select[name="report_type"]').val(),
-                    'payment_method': $('select[name="payment_method"]').val(),
-                    'payment_term': $('select[name="payment_term"]').val(),
                     'self_collect': $('select[name="self_collect"]').val(),
                     'self_collect_branch': $('select[name="self_collect_branch"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
@@ -258,10 +266,12 @@
                         SALE = res.data.sale
                     }
 
-                    if (res.data != undefined) {
+                    if (res.data != undefined && res.data.product_ids) {
                         let product_ids = res.data.product_ids
                         $('#product-details-container .items').each(function(i, obj) {
-                            $(this).attr('data-product-id', product_ids[i])
+                            if (product_ids[i] != undefined) {
+                                $(this).attr('data-product-id', product_ids[i])
+                            }
                         })
                     }
                     $(`form ${activeBtn}`).text('Updated')

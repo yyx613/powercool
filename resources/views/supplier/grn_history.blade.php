@@ -6,11 +6,7 @@
 @vite(['resources/css/jquery.dataTables.min.css'])
 
 @push('styles')
-    <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-        #data-table thead th,
+    <style>        #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
@@ -22,7 +18,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('supplier.index') }}">{{ $supplier->registered_name }}'s {{ __('GRN History') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('supplier.index') }}" description="{{ __('Review all goods received from a supplier with pricing details') }}">{{ $supplier->registered_name }}'s {{ __('GRN History') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

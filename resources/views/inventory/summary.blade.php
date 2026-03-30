@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -26,7 +22,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title>{{ __('Inventory Summary') }}</x-app.page-title>
+        <x-app.page-title description="{{ __('Overview of stock across warehouse and factory with low stock alerts') }}">{{ __('Inventory Summary') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Summary -->
@@ -234,6 +230,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

@@ -61,7 +61,7 @@
             @if (!isCreateLink())
                 @include('layouts.navbar')
             @endif
-            <div class="p-4 h-full overflow-x-auto">
+            <div class="p-4 h-full overflow-x-hidden">
                 @yield('content')
             </div>
         </main>

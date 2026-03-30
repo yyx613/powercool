@@ -11,7 +11,7 @@
     <form action="" method="POST" enctype="multipart/form-data" id="location-form">
         @csrf
         <div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full mb-8 p-4 rounded-md relative hidden group transition durtion-300 hover:bg-slate-50"
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full mb-8 p-4 rounded-md relative hidden group transition durtion-300 hover:bg-slate-50"
                 id="item-template">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-item-btns"
@@ -22,15 +22,15 @@
                             d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
                     </svg>
                 </button>
-                <div class="flex col-span-4 hidden default-billing-msg">
+                <div class="flex col-span-2 md:col-span-4 hidden default-billing-msg">
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                         {{ __('Default Billing Address') }}</p>
                 </div>
-                <div class="flex col-span-4 hidden default-delivery-msg">
+                <div class="flex col-span-2 md:col-span-4 hidden default-delivery-msg">
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                         {{ __('Default Delivery Address') }}</p>
                 </div>
-                <div class="flex col-span-4 hidden default-billing-and-delivery-msg">
+                <div class="flex col-span-2 md:col-span-4 hidden default-billing-and-delivery-msg">
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                         {{ __('Default Billing & Delivery Address') }}</p>
                 </div>

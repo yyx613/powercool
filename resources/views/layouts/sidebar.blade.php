@@ -798,7 +798,7 @@
                     </li>
                 @endcan
                 <!-- Settings -->
-                @can('setting.view')
+                @canany(['setting.area.view', 'setting.material_use.view', 'setting.country.view', 'setting.credit_term.view', 'setting.currency.view', 'setting.debtor_type.view', 'setting.factory.view', 'setting.milestone.view', 'setting.payment_method.view', 'setting.inventory_type.view', 'setting.promotion.view', 'setting.state.view', 'setting.project_type.view', 'setting.platform.view', 'setting.priority.view', 'setting.sales_agent.view', 'setting.service.view', 'setting.tax_rate.view', 'setting.sync.view', 'setting.uom.view', 'setting.warranty_period.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="2">
@@ -817,6 +817,7 @@
                             data-accordionid="2">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('setting.area.view')
                                     <li>
                                         <a href="{{ route('area.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -824,6 +825,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.material_use.view')
                                     <li>
                                         <a href="{{ route('material_use.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -831,6 +834,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.country.view')
                                     <li>
                                         <a href="{{ route('country.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -838,6 +843,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.credit_term.view')
                                     <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -845,6 +852,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.currency.view')
                                     <li>
                                         <a href="{{ route('currency.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -852,6 +861,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.debtor_type.view')
                                     <li>
                                         <a href="{{ route('debtor_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -859,6 +870,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.factory.view')
                                     <li>
                                         <a href="{{ route('factory.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -866,6 +879,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.milestone.view')
                                     <li>
                                         <a href="{{ route('milestone.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -873,6 +888,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.payment_method.view')
                                     <li>
                                         <a href="{{ route('payment_method.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'payment_method.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -880,6 +897,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Payment Method') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.inventory_type.view')
                                     <li>
                                         <a href="{{ route('inventory_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -887,6 +906,7 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                     @can('inventory.category.view')
                                         <li>
                                             <a href="{{ route('inventory_category.index') }}"
@@ -896,6 +916,7 @@
                                             </a>
                                         </li>
                                     @endcan
+                                    @can('setting.promotion.view')
                                     <li>
                                         <a href="{{ route('promotion.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -903,6 +924,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.state.view')
                                     <li>
                                         <a href="{{ route('state.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -910,6 +933,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.project_type.view')
                                     <li>
                                         <a href="{{ route('project_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -917,6 +942,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.platform.view')
                                     <li>
                                         <a href="{{ route('platform.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -924,6 +951,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.priority.view')
                                     <li>
                                         <a href="{{ route('priority.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -931,6 +960,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.sales_agent.view')
                                     <li>
                                         <a href="{{ route('sales_agent.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -938,6 +969,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.service.view')
                                     <li>
                                         <a href="{{ route('service.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -945,6 +978,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.tax_rate.view')
                                     <li>
                                         <a href="{{ route('setting.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -952,6 +987,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.sync.view')
                                     <li>
                                         <a href="{{ route('sync.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -959,6 +996,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.uom.view')
                                     <li>
                                         <a href="{{ route('uom.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -966,6 +1005,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.warranty_period.view')
                                     <li>
                                         <a href="{{ route('warranty_period.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -973,11 +1014,12 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </div>
                     </li>
-                @endcan
+                @endcanany
             </ul>
         </div>
         <div class="px-4 py-3 border-t border-gray-50 flex items-center justify-between">
@@ -989,7 +1031,7 @@
             </div>
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
-                <button type="submit" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
+                <button type="button" onclick="this.closest('form').submit()" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
                     title="Logout">
                     <svg class="h-4 w-4 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path
@@ -1265,7 +1307,7 @@
                         </li>
                     @endcan
                     <!-- Settings -->
-                    @can('setting.view')
+                    @canany(['setting.area.view', 'setting.material_use.view', 'setting.country.view', 'setting.credit_term.view', 'setting.currency.view', 'setting.debtor_type.view', 'setting.factory.view', 'setting.milestone.view', 'setting.payment_method.view', 'setting.inventory_type.view', 'setting.promotion.view', 'setting.state.view', 'setting.project_type.view', 'setting.platform.view', 'setting.priority.view', 'setting.sales_agent.view', 'setting.service.view', 'setting.tax_rate.view', 'setting.sync.view', 'setting.uom.view', 'setting.warranty_period.view'])
                         <li class="expand-sub-menu-triggers" data-type="setting">
                             <button class="p-2.5 flex items-center justify-center rounded-full hover:bg-blue-600">
                                 <svg class="h-5 w-5 fill-white" xmlns="http://www.w3.org/2000/svg" id="Outline"
@@ -1276,13 +1318,13 @@
                                 </svg>
                             </button>
                         </li>
-                    @endcan
+                    @endcanany
                 </ul>
             </div>
             <div class="flex items-center justify-between">
                 <form method="POST" action="{{ route('logout') }}" class="m-0">
                     @csrf
-                    <button type="submit" class="p-2.5 bg-white rounded-full">
+                    <button type="button" onclick="this.closest('form').submit()" class="p-2.5 bg-white rounded-full">
                         <svg class="h-4 w-4 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path
                                 d="M22.763,10.232l-4.95-4.95L16.4,6.7,20.7,11H6.617v2H20.7l-4.3,4.3,1.414,1.414,4.95-4.95a2.5,2.5,0,0,0,0-3.536Z" />
@@ -1838,6 +1880,7 @@
                 <h6 class="text-lg font-semibold whitespace-nowrap text-white">{{ __('Setting') }}</h6>
             </div>
             <ul>
+                @can('setting.area.view')
                 <li>
                     <a href="{{ route('area.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1845,6 +1888,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.material_use.view')
                 <li>
                     <a href="{{ route('material_use.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1852,6 +1897,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.country.view')
                 <li>
                     <a href="{{ route('country.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1859,6 +1906,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.credit_term.view')
                 <li>
                     <a href="{{ route('credit_term.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1866,6 +1915,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.currency.view')
                 <li>
                     <a href="{{ route('currency.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1873,6 +1924,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.debtor_type.view')
                 <li>
                     <a href="{{ route('debtor_type.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1880,6 +1933,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.factory.view')
                 <li>
                     <a href="{{ route('factory.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1887,6 +1942,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.milestone.view')
                 <li>
                     <a href="{{ route('milestone.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1894,6 +1951,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.payment_method.view')
                 <li>
                     <a href="{{ route('payment_method.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'payment_method.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1901,6 +1960,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Payment Method') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.inventory_type.view')
                 <li>
                     <a href="{{ route('inventory_type.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1908,6 +1969,7 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
                     </a>
                 </li>
+                @endcan
                 @can('inventory.category.view')
                     <li>
                         <a href="{{ route('inventory_category.index') }}"
@@ -1917,6 +1979,7 @@
                         </a>
                     </li>
                 @endcan
+                @can('setting.promotion.view')
                 <li>
                     <a href="{{ route('promotion.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1924,6 +1987,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.state.view')
                 <li>
                     <a href="{{ route('state.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1931,6 +1996,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.project_type.view')
                 <li>
                     <a href="{{ route('project_type.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1938,6 +2005,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.platform.view')
                 <li>
                     <a href="{{ route('platform.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1945,6 +2014,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.priority.view')
                 <li>
                     <a href="{{ route('priority.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1952,6 +2023,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.sales_agent.view')
                 <li>
                     <a href="{{ route('sales_agent.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1959,6 +2032,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.service.view')
                 <li>
                     <a href="{{ route('service.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1966,6 +2041,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.tax_rate.view')
                 <li>
                     <a href="{{ route('setting.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1973,6 +2050,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.sync.view')
                 <li>
                     <a href="{{ route('sync.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1980,6 +2059,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.uom.view')
                 <li>
                     <a href="{{ route('uom.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1987,6 +2068,8 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
                     </a>
                 </li>
+                @endcan
+                @can('setting.warranty_period.view')
                 <li>
                     <a href="{{ route('warranty_period.index') }}"
                         class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -1994,6 +2077,7 @@
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                     </a>
                 </li>
+                @endcan
             </ul>
         </div>
     </div>
@@ -2808,7 +2892,7 @@
                     </li>
                 @endcan
                 <!-- Settings -->
-                @can('setting.view')
+                @canany(['setting.area.view', 'setting.material_use.view', 'setting.country.view', 'setting.credit_term.view', 'setting.currency.view', 'setting.debtor_type.view', 'setting.factory.view', 'setting.milestone.view', 'setting.payment_method.view', 'setting.inventory_type.view', 'setting.promotion.view', 'setting.state.view', 'setting.project_type.view', 'setting.platform.view', 'setting.priority.view', 'setting.sales_agent.view', 'setting.service.view', 'setting.tax_rate.view', 'setting.sync.view', 'setting.uom.view', 'setting.warranty_period.view'])
                     <li>
                         <div class="transition-all duration-500 delay-75 cursor-pointer flex items-center justify-between sidebar-menu-trigger"
                             data-accordionstriggerid="2">
@@ -2827,6 +2911,7 @@
                             data-accordionid="2">
                             <div class="overflow-hidden">
                                 <ul>
+                                    @can('setting.area.view')
                                     <li>
                                         <a href="{{ route('area.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'area.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2834,6 +2919,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('City') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.material_use.view')
                                     <li>
                                         <a href="{{ route('material_use.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'material_use.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2841,6 +2928,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('B.O.M Material Use') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.country.view')
                                     <li>
                                         <a href="{{ route('country.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'country.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2848,6 +2937,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Country') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.credit_term.view')
                                     <li>
                                         <a href="{{ route('credit_term.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'credit_term.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2855,6 +2946,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Credit Term') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.currency.view')
                                     <li>
                                         <a href="{{ route('currency.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'currency.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2862,6 +2955,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Currency') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.debtor_type.view')
                                     <li>
                                         <a href="{{ route('debtor_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'debtor_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2869,6 +2964,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Debtor Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.factory.view')
                                     <li>
                                         <a href="{{ route('factory.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'factory.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2876,6 +2973,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Factory') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.milestone.view')
                                     <li>
                                         <a href="{{ route('milestone.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'milestone.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2883,6 +2982,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Milestone') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.payment_method.view')
                                     <li>
                                         <a href="{{ route('payment_method.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'payment_method.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2890,6 +2991,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Payment Method') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.inventory_type.view')
                                     <li>
                                         <a href="{{ route('inventory_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'inventory_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2897,6 +3000,7 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Product Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                     @can('inventory.category.view')
                                         <li>
                                             <a href="{{ route('inventory_category.index') }}"
@@ -2906,6 +3010,7 @@
                                             </a>
                                         </li>
                                     @endcan
+                                    @can('setting.promotion.view')
                                     <li>
                                         <a href="{{ route('promotion.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'promotion.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2913,6 +3018,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Promotion') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.state.view')
                                     <li>
                                         <a href="{{ route('state.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'state.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2920,6 +3027,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('State') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.project_type.view')
                                     <li>
                                         <a href="{{ route('project_type.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'project_type.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2927,6 +3036,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Project Type') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.platform.view')
                                     <li>
                                         <a href="{{ route('platform.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'platform.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2934,6 +3045,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Platform') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.priority.view')
                                     <li>
                                         <a href="{{ route('priority.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'priority.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2941,6 +3054,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Priority') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.sales_agent.view')
                                     <li>
                                         <a href="{{ route('sales_agent.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sales_agent.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2948,27 +3063,35 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sales Agent') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.service.view')
                                     <li>
                                         <a href="{{ route('service.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'service.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.tax_rate.view')
                                     <li>
                                         <a href="{{ route('setting.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'setting.') && str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'setting.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Tax Rate') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.sync.view')
                                     <li>
                                         <a href="{{ route('sync.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ !str_contains(Route::currentRouteName(), 'sync.') && str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'sync.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Sync') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.uom.view')
                                     <li>
                                         <a href="{{ route('uom.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'uom.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2976,6 +3099,8 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('UOM') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
+                                    @can('setting.warranty_period.view')
                                     <li>
                                         <a href="{{ route('warranty_period.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'warranty_period.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
@@ -2983,11 +3108,12 @@
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Warranty Period') }}</span>
                                         </a>
                                     </li>
+                                    @endcan
                                 </ul>
                             </div>
                         </div>
                     </li>
-                @endcan
+                @endcanany
             </ul>
         </div>
         <div class="px-4 py-3 border-t border-gray-50 flex items-center justify-between">
@@ -2999,7 +3125,7 @@
             </div>
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
-                <button type="submit" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
+                <button type="button" onclick="this.closest('form').submit()" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
                     title="Logout">
                     <svg class="h-4 w-4 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path

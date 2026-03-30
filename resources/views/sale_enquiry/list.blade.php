@@ -4,11 +4,7 @@
 @vite(['resources/css/jquery.dataTables.min.css'])
 
 @push('styles')
-    <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-        #data-table thead th,
+    <style>        #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
@@ -19,9 +15,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Sale Enquiry') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track customer enquiries, assign staff, and monitor deal progress') }}">{{ __('Sale Enquiry') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             @can('sale_enquiry.view')
                 <x-app.button.button class="shadow gap-x-2 bg-emerald-300" id="export-btn">
                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"
@@ -91,6 +87,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

@@ -9,7 +9,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Quotation Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         <div class="flex flex-col">
             <x-app.input.label id="open_until" class="mb-1">{{ __('Validity') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
@@ -139,39 +139,6 @@
             <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="payment_method" class="mb-1">{{ __('Payment Method') }}</x-app.input.label>
-            <x-app.input.select2 name="payment_method" id="payment_method" :hasError="$errors->has('payment_method')"
-                placeholder="{{ __('Select a method') }}">
-                <option value=""></option>
-                @foreach ($payment_methods as $method)
-                    <option value="{{ $method->id }}" @selected(old('payment_method', isset($replicate) ? $replicate->payment_method : (isset($sale) ? $sale->payment_method : null)) == $method->id)>{{ $method->name }}</option>
-                @endforeach
-                </x-app.input.selec2>
-                @if (isset($sale) && $sale->payment_method_status != null)
-                    <div class="col-span-4 mt-1.5">
-                        @if ($sale->payment_method_revised == 1)
-                            <span
-                                class="border rounded border-blue-500 text-blue-500 text-xs font-medium px-1 py-0.5">{{ __('Revised') }}</span>
-                        @endif
-                        @if ($sale->payment_method_status == 4)
-                            <span
-                                class="border rounded border-slate-500 text-slate-500 text-xs font-medium px-1 py-0.5">{{ __('Pending Approval') }}</span>
-                        @elseif ($sale->payment_method_status == 5)
-                            <span
-                                class="border rounded border-green-600 text-green-600 text-xs font-medium px-1 py-0.5">{{ __('Approved') }}</span>
-                        @elseif ($sale->payment_method_status == 7)
-                            <span
-                                class="border rounded border-red-600 text-red-600 text-xs font-medium px-1 py-0.5">{{ __('Rejected') }}</span>
-                        @endif
-                    </div>
-                @endif
-                <div class="hidden mt-1" id="credit-term-hint-container">
-                    <span class="text-xs font-medium">Credit Terms: </span>
-                    <span class="text-xs text-slate-600" id="value"></span>
-                </div>
-                <x-app.message.error id="payment_method_err" />
-        </div>
-        <div class="flex flex-col">
             <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
                     class="text-sm text-red-500">*</span></x-app.input.label>
             <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
@@ -211,7 +178,7 @@
             </p>
         </div>
         <div id="third-party-address-list" class="grid gap-4"></div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
             <button type="button"
                 class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-third-party-address-btn"
                 title="Delete Address">
@@ -259,7 +226,7 @@
         QUOTATION_DETAILS_INIT_EDIT = true
         CUSTOMERS = @json($customers ?? []);
         SALES_AGENTS = @json($sales_agents ?? []);
-        CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
+
         SEARCH_CUSTOMERS_URL = '{{ route('customer.get_by_keyword') }}'
 
         $(document).ready(function() {
@@ -355,11 +322,15 @@
                 $('#new-billing-address input').attr('disabled', false)
                 $('#new-billing-address input').attr('aria-disabled', false)
                 $('#new-billing-address input').parent().attr('aria-disabled', false)
+                $('#new-billing-address input').css('background-color', '')
+                $('#new-billing-address input').parent().css('background-color', '')
             } else {
                 $('#new-billing-address input').val(null)
                 $('#new-billing-address input').attr('disabled', true)
                 $('#new-billing-address input').attr('aria-disabled', true)
                 $('#new-billing-address input').parent().attr('aria-disabled', true)
+                $('#new-billing-address input').css('background-color', '#eee')
+                $('#new-billing-address input').parent().css('background-color', '#eee')
             }
         })
         $('select[name="delivery_address"]').on('change', function() {
@@ -369,20 +340,15 @@
                 $('#new-delivery-address input').attr('disabled', false)
                 $('#new-delivery-address input').attr('aria-disabled', false)
                 $('#new-delivery-address input').parent().attr('aria-disabled', false)
+                $('#new-delivery-address input').css('background-color', '')
+                $('#new-delivery-address input').parent().css('background-color', '')
             } else {
                 $('#new-delivery-address input').val(null)
                 $('#new-delivery-address input').attr('disabled', true)
                 $('#new-delivery-address input').attr('aria-disabled', true)
                 $('#new-delivery-address input').parent().attr('aria-disabled', true)
-            }
-        })
-        $('select[name="payment_method"]').on('change', function() {
-            let val = $(this).val()
-
-            if (CREDIT_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
-                $('#payment-term-container').removeClass('hidden')
-            } else {
-                $('#payment-term-container').addClass('hidden')
+                $('#new-delivery-address input').css('background-color', '#eee')
+                $('#new-delivery-address input').parent().css('background-color', '#eee')
             }
         })
         $('select[name="customer"]').on('change', function() {
@@ -404,24 +370,8 @@
             } else {
                 $('input[name="mobile"]').val('-')
             }
-            // Update payment term
-            $(`select[name="payment_term"]`).find('option').not(':first').remove();
-
-            let creditTerms = []
-            for (let i = 0; i < element.credit_terms.length; i++) {
-                const term = element.credit_terms[i];
-                creditTerms.push(term.credit_term.name)
-
-                let opt = new Option(term.credit_term.name, term.credit_term.id)
-                $(`select[name="payment_term"]`).append(opt)
-            }
-            if (creditTerms.length > 0) {
-                $('#credit-term-hint-container').removeClass('hidden')
-                $('#credit-term-hint-container #value').text(creditTerms.join(', '))
-            }
             if (QUOTATION_DETAILS_INIT_EDIT) {
                 $('select[name="sale"]').val(SALE.sale_id).trigger('change')
-                $('select[name="payment_term"]').val(SALE.payment_term).trigger('change')
             } else if (QUOTATION_DETAILS_INIT_EDIT == false && element.sales_agents.length === 1) {
                 $('select[name="sale"]').val(element.sales_agents[0].sales_agent_id).trigger('change')
             }

@@ -27,7 +27,7 @@
 @section('content')
     <div class="mb-6">
         <x-app.page-title
-            url="{{ route('raw_material_request.view', ['rmq' => $rmq->id]) }}">{{ __('View Raw Material Request Logs') }}</x-app.page-title>
+            url="{{ route('raw_material_request.view', ['rmq' => $rmq->id]) }}" description="{{ __('Audit log of raw material transfers with timestamps and personnel') }}">{{ __('View Raw Material Request Logs') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <!-- Table -->
@@ -51,6 +51,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

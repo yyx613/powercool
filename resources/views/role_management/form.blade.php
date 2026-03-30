@@ -63,8 +63,7 @@
                                 @php
                                     $cat = $group;
                                     $labels = explode('.', $permission->name);
-                                    $action_label = $labels[count($labels) - 1];
-                                    $action_label = join(' ', explode('_', $action_label));
+                                    $action_label = $permission_labels[$permission->name] ?? join(' ', explode('_', $labels[count($labels) - 1]));
                                 @endphp
                                 <label for="{{ $permission->name }}" data-group="{{ $cat }}" class="permission-selector cursor-pointer border py-2 px-3 rounded flex flex-col w-full max-w-[200px] transition-colors {{ isset($role_permissions) && in_array($permission->name, $role_permissions) ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200' }}">
                                     <span class="text-sm text-slate-700 font-semibold mb-1 leading-tight capitalize">{{ __($action_label) }}</span>

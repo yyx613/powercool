@@ -40,6 +40,7 @@
             @csrf
 
             @include('sale_order.form_step.quotation_details')
+            @include('sale_order.form_step.parent_payment_details')
             @include('sale_order.form_step.product_details')
             @include('sale_order.form_step.remarks')
 
@@ -86,6 +87,7 @@
 
                 $('#quotation-details-container input, #quotation-details-container select, #product-details-container input[name="qty"], #product-details-container input[name="override_selling_price"], #product-details-container input[name="discount"], #product-details-container input[name="product_desc"], #product-details-container textarea[name="remark"], #additional-remark-container input').attr('disabled', true)
                 $('#product-details-container select[name="promotion[]"]').attr('disabled', true)
+                $('#product-details-container .discount-type-btns, #product-details-container .foc-btns, #product-details-container .sst-btns').attr('disabled', true)
 
                 // Disable ad-hoc services
                 $('#services-container input, #services-container .select2, #services-container .service-sst-btn').css('backgroundColor', '#eee')
@@ -189,7 +191,17 @@
                 }
             });
 
-            let additionalRemark = $('#additional-remark-container .quill-wrapper .ql-editor').html()
+            let additionalRemark = sanitizeQuillHtml($('#additional-remark-container .quill-wrapper .ql-editor').html())
+
+            // Validate at least one product or one adhoc service
+            let hasProducts = prodId.filter(id => id != null && id != '').length > 0
+            let hasServices = adhocServiceId.length > 0
+            if (!hasProducts && !hasServices && isSaveAsDraft != 'true') {
+                alert('Please add at least one product or one service.')
+                $('#submit-btn, #save-draft-btn').attr('disabled', false)
+                return
+            }
+
             // Submit
             let url = isSaveAsDraft == 'true' ? '{{ route('sale.save_as_draft') }}' :
                 '{{ route('sale.upsert_details') }}'
@@ -209,8 +221,16 @@
                     'customer': $('select[name="customer"]').val(),
                     'billing_address': $('select[name="billing_address"]').val() == 'null' ? null : $(
                         'select[name="billing_address"]').val(),
+                    'new_billing_address1': $('#new-billing-address input[name="address1"]').val(),
+                    'new_billing_address2': $('#new-billing-address input[name="address2"]').val(),
+                    'new_billing_address3': $('#new-billing-address input[name="address3"]').val(),
+                    'new_billing_address4': $('#new-billing-address input[name="address4"]').val(),
                     'delivery_address': $('select[name="delivery_address"]').val() == 'null' ? null : $(
                         'select[name="delivery_address"]').val(),
+                    'new_delivery_address1': $('#new-delivery-address input[name="address1"]').val(),
+                    'new_delivery_address2': $('#new-delivery-address input[name="address2"]').val(),
+                    'new_delivery_address3': $('#new-delivery-address input[name="address3"]').val(),
+                    'new_delivery_address4': $('#new-delivery-address input[name="address4"]').val(),
 
                     'reference': $('input[name="reference_input"]').val(),
                     'store': $('input[name="store"]').val(),
@@ -251,10 +271,12 @@
                         SALE = res.data.sale
                     }
 
-                    if (res.data != undefined) {
+                    if (res.data != undefined && res.data.product_ids) {
                         let product_ids = res.data.product_ids
                         $('#product-details-container .items').each(function(i, obj) {
-                            $(this).attr('data-product-id', product_ids[i])
+                            if (product_ids[i] != undefined) {
+                                $(this).attr('data-product-id', product_ids[i])
+                            }
                         })
                     }
 

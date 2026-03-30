@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -21,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Cash Sale') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track cash transactions, payment status, and convert to invoices') }}">{{ __('Cash Sale') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             @can('sale.cash_sale.create')
                 <a href="{{ route('cash_sale.create') }}"
                     class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
@@ -91,6 +87,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

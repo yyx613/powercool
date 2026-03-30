@@ -20,13 +20,13 @@
     <div class="table-header-fixed">
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 0; text-align: left; width: 5%;">Item</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 10%;">Stock Code</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: left; width: 35%;">Description</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 5%;">Qty</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">U/Price<br>(RM)</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Discount<br>(RM)</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px;">Total<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 5%;">Item</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Stock Code</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 35%;">Description</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">Qty</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px; padding-right: 4px;">U/Price<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px; padding-right: 4px;">Discount<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; text-align: right; width: 10%; padding-left: 5px; padding-right: 4px;">Total<br>(RM)</td>
             </tr>
         </table>
     </div>
@@ -95,7 +95,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                        <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}</td>
                         <td style="font-size: 14px; padding: 10px 0 0 0; text-align: start;">FAX: </td>
                     </tr>
                 </table>
@@ -110,13 +110,13 @@
         @endphp
         @foreach ($do_products as $key => $prod)
             <tr>
-                <td style="font-size: 14px; padding: 5px 0; text-align: left;">{{ $key + 1 }}</td>
-                <td style="font-size: 14px; text-align: left;"></td>
-                <td style="font-size: 14px; text-align: left;">{{ $prod->saleProduct->product->model_desc }}</td>
-                <td style="font-size: 14px; text-align: right;">1</td>
-                <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
-                <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
-                <td style="font-size: 14px; text-align: right; padding-left: 5px;">{{ number_format($prod->saleProduct->unit_price - $prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; padding: 5px 4px; text-align: left;">{{ $key + 1 }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;"></td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: left;">{{ $prod->saleProduct->product->model_desc }}</td>
+                <td style="font-size: 14px; padding: 0 4px; text-align: right;">1</td>
+                <td style="font-size: 14px; text-align: right; padding-left: 5px; padding-right: 4px;">{{ number_format($prod->saleProduct->unit_price, 2) }}</td>
+                <td style="font-size: 14px; text-align: right; padding-left: 5px; padding-right: 4px;">{{ number_format($prod->saleProduct->discountAmount(), 2) }}</td>
+                <td style="font-size: 14px; text-align: right; padding-left: 5px; padding-right: 4px;">{{ number_format($prod->saleProduct->unit_price - $prod->saleProduct->discountAmount(), 2) }}</td>
             </tr>
             @php
                 $total += ($prod->saleProduct->unit_price - $prod->saleProduct->discountAmount());

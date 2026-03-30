@@ -21,7 +21,7 @@
             <input type="hidden" name="modify_from" value="{{ $production->id }}">
         @endif
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="name" class="mb-1">{{ __('Name') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
@@ -430,7 +430,7 @@
             } else {
                 $('input[name="material_use_product"]').val(JSON.stringify(materialUseProduct))
             }
-            $('textarea[name="remark"]').val($(`#remark-quill .ql-editor`).html())
+            $('textarea[name="remark"]').val(sanitizeQuillHtml($(`#remark-quill .ql-editor`).html()))
             $('form').submit()
         })
         // Filter milestones based on selected product

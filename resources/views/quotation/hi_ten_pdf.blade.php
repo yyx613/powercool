@@ -114,7 +114,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ $customer->phone }}</td>
+                            <td style="font-size: 14px; padding: 10px 0 0 0;">TEL: {{ !empty($customer->mobile_number) ? $customer->mobile_number[0] : $customer->phone }}</td>
                             <td style="font-size: 14px; padding: 10px 0 0 0;">ATT: {{ strtoupper($customer->prefix ?? '') }} {{ $customer->name ?? '' }}</td>
                         </tr>
                     </table>
@@ -168,30 +168,30 @@
             <thead>
                 <tr>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 5%;">
                         Item</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left; width: 10%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left; width: 10%;">
                         Item Code</td>
-                    <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: left;">
+                    <td style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: left;">
                         Description</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 0; text-align: center; width: 5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 4px; text-align: center; width: 5%;">
                         Qty</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: center; width: 5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: center; width: 5%;">
                         UOM</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 12.5%;">
                         U/Price (RM)</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 12.5%;">
                         Discount (RM)</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 12.5%;">
                         Promotion (RM)</td>
                     <td
-                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 0 5px 5px; text-align: right; width: 12.5%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 0 4px 5px 5px; text-align: right; width: 12.5%;">
                         Total (RM)</td>
                 </tr>
             </thead>

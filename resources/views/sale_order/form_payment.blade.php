@@ -32,7 +32,7 @@
     </div>
 
     @if (isset($sale))
-        <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-6">
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <span class="text-sm text-blue-600">{{ __('Total Amount') }}</span>
                 <p class="text-xl font-bold text-blue-800">RM {{ number_format($sale->getTotalAmount(), 2) }}</p>
@@ -121,11 +121,6 @@
                 type: 'POST',
                 data: {
                     'sale_id': SALE != null ? SALE.id : null,
-                    'payment_term': $('select[name="payment_term"]').val(),
-                    'payment_method': $('select[name="payment_method"]').val(),
-                    'payment_due_date': $('input[name="payment_due_date"]').val(),
-                    'payment_remark': $('input[name="payment_remark"]').val(),
-                    'by_pass_conversion': $('input[name="by_pass_conversion"]').val(),
                     'existing_payment_id': existingPaymentId,
                     'account_payment_method': accountPaymentMethod,
                     'account_payment_term': accountPaymentTerm,
@@ -138,10 +133,12 @@
                         SALE = res.data.sale
                     }
 
-                    if (res.data != undefined) {
+                    if (res.data != undefined && res.data.product_ids) {
                         let product_ids = res.data.product_ids
                         $('#product-details-container .items').each(function(i, obj) {
-                            $(this).attr('data-product-id', product_ids[i])
+                            if (product_ids[i] != undefined) {
+                                $(this).attr('data-product-id', product_ids[i])
+                            }
                         })
                     }
 

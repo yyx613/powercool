@@ -4,11 +4,7 @@
 @vite(['resources/css/jquery.dataTables.min.css'])
 
 @push('styles')
-    <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-        #data-table thead th,
+    <style>        #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
@@ -20,7 +16,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title url="{{ route('target.index') }}">{{ __('View Target Progress') }}</x-app.page-title>
+        <x-app.page-title url="{{ route('target.index') }}" description="{{ __('View invoices contributing toward a specific sales target') }}">{{ __('View Target Progress') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -47,6 +43,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

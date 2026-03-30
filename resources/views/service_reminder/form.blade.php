@@ -9,7 +9,7 @@
     <form action="{{ isset($sr) ? route('service_reminder.upsert', ['sr' => $sr]) : route('service_reminder.upsert') }}" method="POST" enctype="multipart/form-data" id="form">
         @csrf
         <div class="bg-white p-4 rounded-md shadow" id="content-container">
-            <div class="grid grid-cols-3 gap-8 w-full mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-4">
                 <div class="flex flex-col">
                     <x-app.input.label id="sale_order" class="mb-1">{{ __('Sale Order') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select2 name="sale_order" id="sale_order" :hasError="$errors->has('sale_order')" placeholder="{{ __('Select a sale order') }}">

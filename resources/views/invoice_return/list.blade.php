@@ -4,11 +4,7 @@
 @vite(['resources/css/jquery.dataTables.min.css'])
 
 @push('styles')
-    <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-        #data-table thead th,
+    <style>        #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
         }
@@ -19,8 +15,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Invoice Return') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start lg:items-center flex-col lg:flex-row">
+        <x-app.page-title class="mb-4 lg:mb-0" description="{{ __('Process product returns against invoices and track return status') }}">{{ __('Invoice Return') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -83,6 +79,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

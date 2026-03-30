@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -21,9 +17,9 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Quotation') }}</x-app.page-title>
-        <div class="flex gap-x-4">
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Create, convert to sale orders, and track quotation status') }}">{{ __('Quotation') }}</x-app.page-title>
+        <div class="flex flex-wrap gap-2">
             @can('sale.quotation.convert')
                 <a href="{{ route('quotation.to_sale_order') }}"
                     class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
@@ -56,7 +52,7 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex max-w-lg gap-x-2 w-full mb-4">
+        <div class="flex flex-wrap max-w-lg gap-x-2 w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center"
                     placeholder="{{ __('Search') }}">
@@ -160,8 +156,7 @@
                 "targets": 0,
                 render: function(data, type, row) {
                     let convertable = row.conditions_to_convert.is_draft == false && row
-                        .conditions_to_convert.is_expired == false && row.conditions_to_convert
-                        .has_product == true && row.conditions_to_convert.is_active_or_approved ==
+                        .conditions_to_convert.is_expired == false && row.conditions_to_convert.is_active_or_approved ==
                         true && row.conditions_to_convert.no_pending_approval == true && row
                         .conditions_to_convert.not_in_production == true && row.conditions_to_convert
                         .filled_for_e_invoice == true
@@ -185,7 +180,6 @@
                                             <ul class="list-disc pl-4">
                                                 <li class="text-sm ${row.conditions_to_convert.is_draft == false ? 'line-through text-slate-400' : ''}">Not draft</li>
                                                 <li class="text-sm ${row.conditions_to_convert.is_expired == false ? 'line-through text-slate-400' : ''}">Not expired</li>
-                                                <li class="text-sm ${row.conditions_to_convert.has_product == true ? 'line-through text-slate-400' : ''}">Has product</li>
                                                 <li class="text-sm ${row.conditions_to_convert.is_active_or_approved == true || row.status == 2 ? 'line-through text-slate-400' : ''}">Status is either Active / Approved</li>
                                                 <li class="text-sm ${row.conditions_to_convert.no_pending_approval == true ? 'line-through text-slate-400' : ''}">No pending approval</li>
                                                 <li class="text-sm ${row.conditions_to_convert.not_in_production == true ? 'line-through text-slate-400' : ''}">Not in production</li>
@@ -392,6 +386,7 @@
         }
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

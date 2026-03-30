@@ -26,8 +26,8 @@
 @endpush
 
 @section('content')
-    <div class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-4 md:mb-0">{{ __('Production Request') }}</x-app.page-title>
+    <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
+        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Submit and track production requests for normal and sale orders') }}">{{ __('Production Request') }}</x-app.page-title>
         <div class="flex gap-4">
             @can('production_request.create')
             <a href="{{ route('production_request.create') }}"

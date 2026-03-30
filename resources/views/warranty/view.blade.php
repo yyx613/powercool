@@ -5,10 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td {
             border-bottom: solid 1px rgb(209 213 219);
@@ -24,6 +20,7 @@
     <div class="mb-6 flex justify-between items-center">
         <x-app.page-title
             url="{{ route('warranty.index') }}">{{ __('Material used for ') }}{{ $sale->sku }}</x-app.page-title>
+        @can('warranty.create')
         <div class="flex gap-x-4">
             <a href="{{ route('warranty.create') }}"
                 class="bg-yellow-400 shadow rounded-md py-2 px-4 flex items-center gap-x-2">
@@ -36,6 +33,7 @@
                 {{ __('New') }}
             </a>
         </div>
+        @endcan
     </div>
     @include('components.app.alert.parent')
     <div>
@@ -74,6 +72,7 @@
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
+            scrollX: true,
             pagingType: 'numbers',
             pageLength: 10,
             processing: true,

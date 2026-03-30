@@ -9,7 +9,7 @@
         </svg>
         <span class="text-lg ml-3 font-bold">{{ __('Sale Order Details') }}</span>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
         @if (isSuperAdmin())
             <div class="flex flex-col">
                 <x-app.input.label id="custom_date" class="mb-1">{{ __('Date') }}</x-app.input.label>
@@ -108,6 +108,9 @@
             <x-app.input.select id="billing_address" name="billing_address">
                 <option value="">{{ __('Select a billing address') }}</option>
             </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
+            </p>
             <x-app.message.error id="billing_address_err" />
         </div>
         <div class="flex flex-col">
@@ -115,6 +118,9 @@
             <x-app.input.select id="delivery_address" name="delivery_address">
                 <option value="">{{ __('Select a delivery address') }}</option>
             </x-app.input.select>
+            <p class="mt-1.5 text-sm text-slate-500 leading-none">
+                {{ __('Please make it empty before entering a new address') }}
+            </p>
             <x-app.message.error id="delivery_address_err" />
         </div>
         <div class="flex flex-col">
@@ -138,6 +144,19 @@
             <x-app.message.error id="status_err" />
         </div>
     </div>
+    {{-- Custom Address --}}
+    <div class="pt-4 border-t border-slate-200 mb-8">
+        <div class="mb-8" id="new-billing-address">
+            @include('components.app.address-field', [
+                'title' => 'Billing Address',
+            ])
+        </div>
+        <div id="new-delivery-address">
+            @include('components.app.address-field', [
+                'title' => 'Delivery Address',
+            ])
+        </div>
+    </div>
     {{-- Third Party Address --}}
     @if (isset($sale) && count($sale->thirdPartyAddresses) > 0)
         <div class="pt-4 border-t border-slate-200">
@@ -147,7 +166,7 @@
                     {{ __('Delivery address is not required if presented') }}</p>
             </div>
             <div id="third-party-address-list" class="grid gap-4"></div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 w-full hidden"
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full hidden"
                 id="third-party-address-template">
                 <div class="flex flex-col">
                     <x-app.input.label id="address" class="mb-1">{{ __('Address') }}</x-app.input.label>
@@ -324,6 +343,42 @@
                     }
                 },
             });
+        })
+        $('select[name="billing_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null || val == '') {
+                $('#new-billing-address input').attr('disabled', false)
+                $('#new-billing-address input').attr('aria-disabled', false)
+                $('#new-billing-address input').parent().attr('aria-disabled', false)
+                $('#new-billing-address input').css('background-color', '')
+                $('#new-billing-address input').parent().css('background-color', '')
+            } else {
+                $('#new-billing-address input').val(null)
+                $('#new-billing-address input').attr('disabled', true)
+                $('#new-billing-address input').attr('aria-disabled', true)
+                $('#new-billing-address input').parent().attr('aria-disabled', true)
+                $('#new-billing-address input').css('background-color', '#eee')
+                $('#new-billing-address input').parent().css('background-color', '#eee')
+            }
+        })
+        $('select[name="delivery_address"]').on('change', function() {
+            let val = $(this).val()
+
+            if (val == 'null' || val == null || val == '') {
+                $('#new-delivery-address input').attr('disabled', false)
+                $('#new-delivery-address input').attr('aria-disabled', false)
+                $('#new-delivery-address input').parent().attr('aria-disabled', false)
+                $('#new-delivery-address input').css('background-color', '')
+                $('#new-delivery-address input').parent().css('background-color', '')
+            } else {
+                $('#new-delivery-address input').val(null)
+                $('#new-delivery-address input').attr('disabled', true)
+                $('#new-delivery-address input').attr('aria-disabled', true)
+                $('#new-delivery-address input').parent().attr('aria-disabled', true)
+                $('#new-delivery-address input').css('background-color', '#eee')
+                $('#new-delivery-address input').parent().css('background-color', '#eee')
+            }
         })
         $('body').on('focus', '[aria-labelledby="select2-customer-container"]', function() {
             $('select[name="customer"]').select2('open')
