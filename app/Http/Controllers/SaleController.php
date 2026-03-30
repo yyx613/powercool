@@ -3563,18 +3563,6 @@ class SaleController extends Controller
                     'remark' => $req->remark ?? null,
                 ]);
                 (new Branch)->assign(SaleProductionRequest::class, $spr->id);
-                // Accessory
-                $accessories = $saleProduct->accessories;
-                for ($j = 0; $j < count($accessories); $j++) {
-                    for ($k=0; $k < $accessories[$j]->qty; $k++) { 
-                        $spr = SaleProductionRequest::create([
-                            'sale_id' => $saleProduct->sale->id,
-                            'product_id' => $accessories[$j]->accessory_id,
-                            'remark' => $req->remark ?? null,
-                        ]);
-                        (new Branch)->assign(SaleProductionRequest::class, $spr->id);
-                    }
-                }
             }
 
             DB::commit();
