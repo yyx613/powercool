@@ -1,0 +1,40 @@
+feat: Convert Service Form product info from single product to multiple service items
+
+## Summary
+Refactored Service Form to support multiple products/service items instead of a single product.
+Previously, a service form could only link to one product with one model_no and one serial_no.
+Now it supports multiple service items, each with its own product, model number, and serial number.
+
+## Changes
+
+### New Files
+- `app/Models/ServiceFormServiceItem.php` — New Eloquent model for service item line items (belongs to ServiceForm and Product)
+- `database/migrations/2026_04_01_000001_create_service_form_service_items_table.php` — Migration to create `service_form_service_items` table with data migration from existing single-product fields
+
+### Modified Files
+- `app/Http/Controllers/ServiceFormController.php`
+  - Updated validation to accept arrays: `service_product_id[]`, `service_model_no[]`, `service_serial_no[]`
+  - Nullifies legacy single product fields (product_id, model_no, serial_no) on save
+  - Handles creating/replacing ServiceFormServiceItem records on upsert
+  - Updated search to query through serviceItems relationship for model_no/serial_no
+  - Eager loads `serviceItems.product` in edit and PDF methods
+
+- `app/Models/ServiceForm.php`
+  - Added `serviceItems()` hasMany relationship ordered by sequence
+
+- `resources/views/service_form/form.blade.php`
+  - Replaced single product/model/serial fields with dynamic multi-row UI
+  - Added hidden template row cloned via JS for adding new service items
+  - Added "Add Product" button and delete button per row
+  - Each row has Select2 AJAX product search, model_no input, serial_no dropdown
+  - Loads existing service items on edit via `loadExistingServiceItems()`
+  - Handles hide/show of delete button when only one row exists
+
+- `resources/views/service_form/pdf/service_form.blade.php`
+  - Loops through `serviceItems` to display multiple Model No. / Serial No. rows in PDF
+
+- `CLAUDE.md` — Minor reordering of instruction items (no functional change)
+
+## Database Migration Details
+- Creates `service_form_service_items` table with: id, service_form_id (FK), product_id (FK nullable), model_no, serial_no, sequence, soft deletes, timestamps
+- Migrates existing data from `service_forms` single-product fields into the new table

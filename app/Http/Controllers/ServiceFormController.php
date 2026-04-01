@@ -10,6 +10,7 @@ use App\Models\ProductChild;
 use App\Models\Role;
 use App\Models\ServiceForm;
 use App\Models\ServiceFormProduct;
+use App\Models\ServiceFormServiceItem;
 use App\Models\ServiceFormProductWarrantyPeriod;
 use App\Models\Setting;
 use App\Models\UOM;
@@ -51,8 +52,10 @@ class ServiceFormController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('model_no', 'like', '%'.$keyword.'%')
-                    ->orWhere('serial_no', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('serviceItems', function ($q) use ($keyword) {
+                        $q->where('model_no', 'like', '%'.$keyword.'%')
+                            ->orWhere('serial_no', 'like', '%'.$keyword.'%');
+                    })
                     ->orWhereHas('customer', function ($q) use ($keyword) {
                         $q->where('name', 'like', '%'.$keyword.'%')
                             ->orWhere('company_name', 'like', '%'.$keyword.'%');
@@ -117,6 +120,7 @@ class ServiceFormController extends Controller
             'customer',
             'customerLocation',
             'product',
+            'serviceItems.product',
             'invoice',
             'dealer',
             'technician',
@@ -153,9 +157,12 @@ class ServiceFormController extends Controller
             'customer_location_id' => 'nullable|exists:customer_locations,id',
             'contact_person' => 'nullable|string|max:255',
             'contact_no' => 'nullable|string|max:255',
-            'product_id' => 'nullable|exists:products,id',
-            'model_no' => 'nullable|string|max:255',
-            'serial_no' => 'nullable|string|max:255',
+            'service_product_id' => 'nullable|array',
+            'service_product_id.*' => 'nullable|exists:products,id',
+            'service_model_no' => 'nullable|array',
+            'service_model_no.*' => 'nullable|string|max:255',
+            'service_serial_no' => 'nullable|array',
+            'service_serial_no.*' => 'nullable|string|max:255',
             'invoice_id' => 'nullable|exists:invoices,id',
             'invoice_no' => 'nullable|string|max:255',
             'invoice_date' => 'nullable|date',
@@ -225,9 +232,9 @@ class ServiceFormController extends Controller
                 'customer_location_id' => $req->customer_location_id,
                 'contact_person' => $req->contact_person,
                 'contact_no' => $req->contact_no,
-                'product_id' => $req->product_id,
-                'model_no' => $req->model_no,
-                'serial_no' => $req->serial_no,
+                'product_id' => null,
+                'model_no' => null,
+                'serial_no' => null,
                 'invoice_id' => $req->invoice_id,
                 'invoice_no' => $req->invoice_no,
                 'invoice_date' => $req->invoice_date,
@@ -262,6 +269,28 @@ class ServiceFormController extends Controller
                 (new Branch)->assign(ServiceForm::class, $sf->id);
 
                 $message = 'Service Form created';
+            }
+
+            // Handle service items (Product Information section)
+            ServiceFormServiceItem::where('service_form_id', $sf->id)->delete();
+
+            $serviceProductIds = $req->input('service_product_id', []);
+            $serviceModelNos = $req->input('service_model_no', []);
+            $serviceSerialNos = $req->input('service_serial_no', []);
+
+            if (! empty($serviceProductIds)) {
+                for ($i = 0; $i < count($serviceProductIds); $i++) {
+                    if (empty($serviceProductIds[$i]) && empty($serviceModelNos[$i] ?? null) && empty($serviceSerialNos[$i] ?? null)) {
+                        continue;
+                    }
+                    ServiceFormServiceItem::create([
+                        'service_form_id' => $sf->id,
+                        'product_id' => $serviceProductIds[$i] ?? null,
+                        'model_no' => $serviceModelNos[$i] ?? null,
+                        'serial_no' => $serviceSerialNos[$i] ?? null,
+                        'sequence' => $i,
+                    ]);
+                }
             }
 
             // Create product line items from individual arrays
@@ -419,7 +448,7 @@ class ServiceFormController extends Controller
     public function pdf($id)
     {
         $id = Crypt::decrypt($id);
-        $serviceForm = $this->serviceForm::with(['customer', 'customerLocation', 'product', 'invoice', 'dealer', 'technician'])->findOrFail($id);
+        $serviceForm = $this->serviceForm::with(['customer', 'customerLocation', 'product', 'serviceItems.product', 'invoice', 'dealer', 'technician'])->findOrFail($id);
 
         // Prepare customer name
         $customerName = '';

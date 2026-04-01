@@ -114,34 +114,50 @@
             <div class="flex items-center mb-6 border-l-8 border-yellow-400 px-3 py-1 bg-yellow-50 w-fit">
                 <span class="text-lg font-bold">{{ __('Product Information') }}</span>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full mb-8">
+
+            {{-- Service Item Template (hidden) --}}
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full p-4 rounded-md relative group hidden transition duration-300 hover:bg-slate-50" id="service-item-template">
+                {{-- Delete Button --}}
+                <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-service-item-btns" title="{{ __('Delete Product') }}">
+                    <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512">
+                        <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z"/>
+                    </svg>
+                </button>
+
+                {{-- Product Select --}}
                 <div class="flex flex-col">
-                    <x-app.input.label id="product_id" class="mb-1">{{ __('Product') }}</x-app.input.label>
-                    <div class="relative">
-                        <x-app.input.select name="product_id" id="product_id" placeholder="{{ __('Search a product') }}">
-                            <option value="">{{ __('Search a product') }}</option>
-                            @if (isset($service_form) && $service_form->product)
-                                <option value="{{ $service_form->product->id }}" selected>{{ $service_form->product->sku }} - {{ $service_form->product->model_desc }}</option>
-                            @endif
-                        </x-app.input.select>
-                    </div>
-                    <x-input-error :messages="$errors->get('product_id')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="model_no" class="mb-1">{{ __('Model No') }}</x-app.input.label>
-                    <x-app.input.input name="model_no" id="model_no" value="{{ old('model_no', isset($service_form) ? $service_form->model_no : null) }}" />
-                    <x-input-error :messages="$errors->get('model_no')" class="mt-1" />
-                </div>
-                <div class="flex flex-col">
-                    <x-app.input.label id="serial_no" class="mb-1">{{ __('Serial No') }}</x-app.input.label>
-                    <x-app.input.select name="serial_no" id="serial_no">
-                        <option value="">{{ __('Select a serial no') }}</option>
-                        @if (isset($service_form) && $service_form->serial_no)
-                            <option value="{{ $service_form->serial_no }}" selected>{{ $service_form->serial_no }}</option>
-                        @endif
+                    <x-app.input.label class="mb-1">{{ __('Product') }}</x-app.input.label>
+                    <x-app.input.select name="service_product_id[]">
+                        <option value=""></option>
                     </x-app.input.select>
-                    <x-input-error :messages="$errors->get('serial_no')" class="mt-1" />
                 </div>
+
+                {{-- Model No --}}
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Model No') }}</x-app.input.label>
+                    <x-app.input.input name="service_model_no[]" />
+                </div>
+
+                {{-- Serial No --}}
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Serial No') }}</x-app.input.label>
+                    <x-app.input.select name="service_serial_no[]">
+                        <option value="">{{ __('Select a serial no') }}</option>
+                    </x-app.input.select>
+                </div>
+            </div>
+
+            {{-- Service Items Container --}}
+            <div id="service-items-container" class="mb-4"></div>
+
+            {{-- Add Product Button --}}
+            <div class="flex justify-end px-4 mb-8">
+                <button type="button" class="bg-yellow-400 rounded-md py-1.5 px-3 flex items-center gap-x-2 transition duration-300 hover:bg-yellow-300 hover:shadow" id="add-service-item-btn">
+                    <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+                        <path d="M480,224H288V32c0-17.673-14.327-32-32-32s-32,14.327-32,32v192H32c-17.673,0-32,14.327-32,32s14.327,32,32,32h192v192c0,17.673,14.327,32,32,32s32-14.327,32-32V288h192c17.673,0,32-14.327,32-32S497.673,224,480,224z"/>
+                    </svg>
+                    <span class="text-sm">{{ __('Add Product') }}</span>
+                </button>
             </div>
 
             {{-- Dealer Information --}}
@@ -493,26 +509,7 @@
         })
         $('select[name="customer_id"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
 
-        // Product Select2 AJAX
-        bulidSelect2Ajax({
-            selector: 'select[name="product_id"]',
-            placeholder: '{{ __("Search a product") }}',
-            url: '{{ route("product.get_by_keyword") }}',
-            processResults: function(data) {
-                for (const key in data.products) {
-                    PRODUCTS[key] = data.products[key];
-                }
-                return {
-                    results: $.map(data.products, function(item) {
-                        return {
-                            id: item.id,
-                            text: `${item.sku} - ${item.model_desc || ''}`
-                        };
-                    })
-                }
-            }
-        })
-        $('select[name="product_id"]').parent().addClass('border border-gray-300 rounded-md overflow-hidden')
+        // Product Select2 AJAX is now handled per service item row
 
         // Invoice Select2 AJAX
         bulidSelect2Ajax({
@@ -581,18 +578,7 @@
             }
         })
 
-        // Product change - populate model_no and fetch serial numbers
-        $('select[name="product_id"]').on('change', function() {
-            var productId = $(this).val()
-            var product = PRODUCTS[productId]
-
-            if (product) {
-                $('input[name="model_no"]').val(product.model_desc || '')
-            }
-
-            // Fetch serial numbers for the selected product
-            fetchProductChildren(productId)
-        })
+        // Product change is now handled per service item row
 
         // Invoice change - populate invoice_no and invoice_date
         $('select[name="invoice_id"]').on('change', function() {
@@ -622,10 +608,7 @@
             fetchCustomerLocations(SERVICE_FORM.customer_id, SERVICE_FORM.customer_location_id)
         }
 
-        // If editing, load serial numbers for the selected product
-        if (SERVICE_FORM && SERVICE_FORM.product_id) {
-            fetchProductChildren(SERVICE_FORM.product_id, SERVICE_FORM.serial_no)
-        }
+        // Service items (product info) are loaded via loadExistingServiceItems()
 
         // Initialize QuillJS for quotation remark
         buildQuotationRemarkQuillEditor();
@@ -664,35 +647,152 @@
         });
     }
 
-    function fetchProductChildren(productId, selectedSerialNo = null) {
-        // Clear serial_no dropdown
-        $('select[name="serial_no"] option').remove()
-        let defaultOpt = new Option("{!! __('Select a serial no') !!}", '')
-        $('select[name="serial_no"]').append(defaultOpt)
+    // === Service Items (Product Information) ===
+    SERVICE_PRODUCTS = {};
+    SERVICE_ITEMS_COUNT = 0;
+    SERVICE_INIT_EDIT = true;
 
-        if (!productId) {
-            return
+    // Add service item button click
+    $('#add-service-item-btn').on('click', function() {
+        let clone = $('#service-item-template')[0].cloneNode(true);
+        SERVICE_ITEMS_COUNT++;
+
+        $(clone).attr('data-id', SERVICE_ITEMS_COUNT);
+        $(clone).find('.delete-service-item-btns').attr('data-id', SERVICE_ITEMS_COUNT);
+        $(clone).addClass('service-items');
+        $(clone).removeClass('hidden');
+        $(clone).removeAttr('id');
+
+        $('#service-items-container').append(clone);
+
+        // Build product select2 with AJAX
+        bulidSelect2Ajax({
+            selector: `.service-items[data-id="${SERVICE_ITEMS_COUNT}"] select[name="service_product_id[]"]`,
+            placeholder: '{{ __("Search a product") }}',
+            url: '{{ route("product.get_by_keyword") }}',
+            processResults: function(data) {
+                for (const key in data.products) {
+                    SERVICE_PRODUCTS[key] = data.products[key];
+                }
+                return {
+                    results: $.map(data.products, function(item) {
+                        return {
+                            id: item.id,
+                            text: `${item.sku} - ${item.model_desc || ''}`
+                        };
+                    })
+                }
+            }
+        });
+
+        $(`.service-items[data-id="${SERVICE_ITEMS_COUNT}"] .select2`).addClass('border border-gray-300 rounded-md overflow-hidden');
+
+        hideServiceItemDeleteBtnWhenOnlyOne();
+
+        if (SERVICE_INIT_EDIT == false) {
+            $(`.service-items[data-id="${SERVICE_ITEMS_COUNT}"] select[name="service_product_id[]"]`).select2('open');
+        }
+    });
+
+    // Delete service item
+    $('body').on('click', '.delete-service-item-btns', function() {
+        let id = $(this).data('id');
+        $(`.service-items[data-id="${id}"]`).remove();
+
+        SERVICE_ITEMS_COUNT = 0;
+        $('.service-items').each(function() {
+            SERVICE_ITEMS_COUNT++;
+            $(this).attr('data-id', SERVICE_ITEMS_COUNT);
+            $(this).find('.delete-service-item-btns').attr('data-id', SERVICE_ITEMS_COUNT);
+        });
+        hideServiceItemDeleteBtnWhenOnlyOne();
+    });
+
+    // Service item product change -> populate model_no and fetch serial numbers
+    $('body').on('change', 'select[name="service_product_id[]"]', function() {
+        let id = $(this).closest('.service-items').data('id');
+        let productId = $(this).val();
+        let product = SERVICE_PRODUCTS[productId];
+
+        if (product) {
+            $(`.service-items[data-id="${id}"] input[name="service_model_no[]"]`).val(product.model_desc || '');
         }
 
-        let url = '{{ route("service_form.get_product_children") }}'
-        url = `${url}?product_id=${productId}`
+        fetchServiceItemChildren(id, productId);
+    });
+
+    function fetchServiceItemChildren(itemId, productId, selectedSerialNo = null) {
+        let $select = $(`.service-items[data-id="${itemId}"] select[name="service_serial_no[]"]`);
+        $select.find('option').remove();
+        $select.append(new Option("{!! __('Select a serial no') !!}", ''));
+
+        if (!productId) return;
+
+        let url = '{{ route("service_form.get_product_children") }}';
+        url = `${url}?product_id=${productId}`;
 
         $.ajax({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             url: url,
             type: 'GET',
             success: function(res) {
                 for (let i = 0; i < res.product_children.length; i++) {
                     const pc = res.product_children[i];
-                    let selected = selectedSerialNo ? pc.sku == selectedSerialNo : false
-                    let opt = new Option(pc.sku, pc.sku, false, selected)
-                    $('select[name="serial_no"]').append(opt)
+                    let selected = selectedSerialNo ? pc.sku == selectedSerialNo : false;
+                    $select.append(new Option(pc.sku, pc.sku, false, selected));
                 }
-            },
+            }
         });
     }
+
+    function hideServiceItemDeleteBtnWhenOnlyOne() {
+        if ($('.service-items').length <= 1) {
+            $('.service-items:first .delete-service-item-btns').removeClass('group-hover:block');
+        } else {
+            $('.service-items .delete-service-item-btns').addClass('group-hover:block');
+        }
+    }
+
+    // Load existing service items on edit
+    function loadExistingServiceItems() {
+        if (SERVICE_FORM && SERVICE_FORM.service_items && SERVICE_FORM.service_items.length > 0) {
+            for (let i = 0; i < SERVICE_FORM.service_items.length; i++) {
+                const item = SERVICE_FORM.service_items[i];
+
+                $('#add-service-item-btn').click();
+
+                if (item.product) {
+                    SERVICE_PRODUCTS[item.product_id] = item.product;
+                    let opt = new Option(
+                        `${item.product.sku} - ${item.product.model_desc || ''}`,
+                        item.product_id, true, true
+                    );
+                    $(`.service-items[data-id="${i+1}"] select[name="service_product_id[]"]`).append(opt).trigger('change');
+                }
+
+                $(`.service-items[data-id="${i+1}"] input[name="service_model_no[]"]`).val(item.model_no || '');
+
+                if (item.product_id) {
+                    fetchServiceItemChildren(i + 1, item.product_id, item.serial_no);
+                } else if (item.serial_no) {
+                    let opt = new Option(item.serial_no, item.serial_no, true, true);
+                    $(`.service-items[data-id="${i+1}"] select[name="service_serial_no[]"]`).append(opt);
+                }
+            }
+        } else {
+            // Add one empty row by default
+            $('#add-service-item-btn').click();
+        }
+
+        SERVICE_INIT_EDIT = false;
+    }
+
+    // Initialize service items on page load
+    $(document).ready(function() {
+        setTimeout(function() {
+            loadExistingServiceItems();
+        }, 50);
+    });
 
     $('#submit-create-btn').on('click', function(e) {
         let url = $('#form').attr('action')
