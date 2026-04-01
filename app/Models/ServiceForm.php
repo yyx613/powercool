@@ -80,6 +80,11 @@ class ServiceForm extends Model
         return $this->belongsTo(User::class, 'technician_id')->withoutGlobalScope(BranchScope::class);
     }
 
+    public function serviceItems()
+    {
+        return $this->hasMany(ServiceFormServiceItem::class)->orderBy('sequence');
+    }
+
     public function products()
     {
         return $this->hasMany(ServiceFormProduct::class)->orderBy('sequence');

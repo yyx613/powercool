@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Important
 - Always update business-logic.txt for business logic changes
-- Don't use color that is too faint
-- Don't use font size that is too small
 - Always consider full-stack works
 - Always use TDD for development cycle
+- Don't use color that is too faint
+- Don't use font size that is too small
 - Don't delete records in database when doing testing
 
 ### Testing

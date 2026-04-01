@@ -183,10 +183,17 @@
                 <td class="form-value">{{ $service_form->contact_person ?? '' }}</td>
             </tr>
             <!-- Model No. / Serial No. -->
+            @forelse($service_form->serviceItems as $serviceItem)
             <tr>
                 <td class="form-label">Model No. / <span style="color: #0066cc;">Serial No.</span></td>
-                <td class="form-value">{{ $service_form->model_no ?? '' }} / {{ $service_form->serial_no ?? '' }}</td>
+                <td class="form-value">{{ $serviceItem->model_no ?? '' }} / {{ $serviceItem->serial_no ?? '' }}</td>
             </tr>
+            @empty
+            <tr>
+                <td class="form-label">Model No. / <span style="color: #0066cc;">Serial No.</span></td>
+                <td class="form-value"></td>
+            </tr>
+            @endforelse
             <!-- Invoice No./Date -->
             <tr>
                 <td class="form-label">Invoice No./Date</td>
