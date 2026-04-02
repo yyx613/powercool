@@ -27,9 +27,24 @@ class Task extends Model
     protected $guarded = [];
     protected $casts = [
         'amount_to_collect' => 'double',
+        'photos_approved_at' => 'datetime:Y-m-d H:i:s',
+        'signed_off_at' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
+
+    public function getSignatureUrlAttribute() {
+        if ($this->customer_signature == null) {
+            return null;
+        }
+
+        $path = '/public/storage';
+        if (config('app.env') == 'local') {
+            $path = '/storage';
+        }
+
+        return config('app.url') . str_replace('public', $path, Attachment::TASK_SIGNATURE_PATH) . '/' . $this->customer_signature;
+    }
 
     protected function serializeDate(DateTimeInterface $date) {
         return $date;

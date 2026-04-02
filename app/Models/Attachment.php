@@ -19,6 +19,7 @@ class Attachment extends Model
     const TASK_MILESTONE_INVENTORY_PATH = 'public/attachments/task_milestone_inventory';
     const PRODUCT_PATH = 'public/attachments/product';
     const PRODUCTION_MILESTONE_REJECT_PATH = 'public/attachments/production_milestone_reject';
+    const TASK_SIGNATURE_PATH = 'public/attachments/task_signature';
 
     protected $guarded = [];
     protected $hidden = ['deleted_at', 'created_at', 'updated_at'];

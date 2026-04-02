@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\v1\AppVersionController;
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\InventoryController;
 use App\Http\Controllers\Api\v1\NotificationController;
@@ -20,10 +21,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
+
 Route::prefix('v1')->group(function() {
     Route::get('/test', function () {
         return response()->json(['message' => 'Hello, API!']);
     });
+    // App Version
+    Route::get('/app-version', [AppVersionController::class, 'check']);
     // Auth
     Route::controller(AuthController::class)->prefix('auth')->group(function() {
         Route::middleware('auth:sanctum')->group(function() {
@@ -44,6 +51,8 @@ Route::prefix('v1')->group(function() {
             Route::get('get-all', 'getAll');
             Route::get('get-detail/{task}', 'getDetail');
             Route::post('update-milestone/{task_ms}', 'updateMilestone');
+            Route::get('get-milestone-photos/{task}', 'getMilestonePhotos');
+            Route::post('customer-signoff/{task}', 'customerSignoff');
         });
         // Notification
         Route::controller(NotificationController::class)->prefix('notification')->group(function() {

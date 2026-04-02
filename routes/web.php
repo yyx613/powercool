@@ -597,7 +597,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function () {
         Route::get('/get-data', 'getData')->name('get_data');
-        Route::get('/delete/{task}', 'delete')->name('delete')->middleware(['can:task.delete']);
+        Route::get('/delete/{task}', 'delete')->name('delete');
 
         Route::prefix('driver')->name('driver.')->middleware(['can:task_driver.view'])->group(function () {
             Route::get('/', 'index')->name('index');

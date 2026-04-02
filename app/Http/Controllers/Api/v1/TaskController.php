@@ -152,6 +152,7 @@ class TaskController extends Controller
     {
         try {
             $task->load('customer', 'attachments', 'milestones');
+            $task->append('signature_url');
 
             $task->milestones->each(function ($q) use ($task) {
                 $task_ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $q->id)->first();
@@ -242,14 +243,29 @@ class TaskController extends Controller
 
             $not_completed = TaskMilestone::where('task_id', $task_ms->task_id)->whereNull('submitted_at')->exists();
             if (!$not_completed) { // If all milestones completed
-                Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new MobileAppNotification([
-                    'type' => 'task_completed',
-                    'done_by' => $req->user()->id,
-                    'task_id' => $task_ms->task_id,
-                ]));
-                Task::where('id', $task_ms->task_id)->where('status', Task::STATUS_DOING)->update([
-                    'status' => Task::STATUS_COMPLETED
-                ]);
+                $task = Task::where('id', $task_ms->task_id)->first();
+
+                if ($task->type == Task::TYPE_TECHNICIAN) {
+                    // Technician tasks go to IN_REVIEW for customer sign-off
+                    Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new MobileAppNotification([
+                        'type' => 'task_in_review',
+                        'done_by' => $req->user()->id,
+                        'task_id' => $task_ms->task_id,
+                    ]));
+                    Task::where('id', $task_ms->task_id)->where('status', Task::STATUS_DOING)->update([
+                        'status' => Task::STATUS_IN_REVIEW
+                    ]);
+                } else {
+                    // Non-technician tasks complete directly
+                    Notification::send(User::whereIn('id', UserTask::where('task_id', $task_ms->task_id)->pluck('user_id'))->get(), new MobileAppNotification([
+                        'type' => 'task_completed',
+                        'done_by' => $req->user()->id,
+                        'task_id' => $task_ms->task_id,
+                    ]));
+                    Task::where('id', $task_ms->task_id)->where('status', Task::STATUS_DOING)->update([
+                        'status' => Task::STATUS_COMPLETED
+                    ]);
+                }
             }
 
             // Inventory
@@ -290,6 +306,126 @@ class TaskController extends Controller
             DB::commit();
 
             return Response::json($data, HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th);
+
+            return Response::json([
+                'msg' => 'something went wrong'
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getMilestonePhotos(Task $task)
+    {
+        try {
+            $task->load('milestones');
+
+            $photos = [];
+            foreach ($task->milestones as $milestone) {
+                $task_ms = TaskMilestone::where('task_id', $task->id)
+                    ->where('milestone_id', $milestone->id)
+                    ->first();
+
+                $attachments = Attachment::where('object_type', TaskMilestone::class)
+                    ->where('object_id', $task_ms->id)
+                    ->get();
+
+                if ($attachments->count() > 0) {
+                    $photos[] = [
+                        'milestone_name' => $milestone->name,
+                        'attachments' => $attachments,
+                    ];
+                }
+            }
+
+            return Response::json([
+                'photos' => $photos,
+            ], HttpFoundationResponse::HTTP_OK);
+        } catch (\Throwable $th) {
+            report($th);
+
+            return Response::json([
+                'msg' => 'something went wrong'
+            ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function customerSignoff(Request $req, Task $task)
+    {
+        // Validate form
+        $rules = [
+            'signature' => 'required|file|mimes:jpg,png,jpeg',
+            'signed_off_by' => 'required|string|max:250',
+            'photos_approved' => 'required|accepted',
+        ];
+        $validator = Validator::make($req->all(), $rules);
+        if ($validator->fails()) {
+            return Response::json($validator->errors(), HttpFoundationResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Guard: task must be technician type
+        if ($task->type != Task::TYPE_TECHNICIAN) {
+            return Response::json([
+                'msg' => 'Customer sign-off is only available for technician tasks.'
+            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Guard: task must be in review
+        if ($task->status != Task::STATUS_IN_REVIEW) {
+            return Response::json([
+                'msg' => 'Task must be in review status for customer sign-off.'
+            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Guard: all milestones must be submitted
+        $not_completed = TaskMilestone::where('task_id', $task->id)->whereNull('submitted_at')->exists();
+        if ($not_completed) {
+            return Response::json([
+                'msg' => 'All milestones must be completed before customer sign-off.'
+            ], HttpFoundationResponse::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Store signature file
+            $path = Storage::putFile(Attachment::TASK_SIGNATURE_PATH, $req->file('signature'));
+
+            $task->update([
+                'customer_signature' => basename($path),
+                'photos_approved_at' => now(),
+                'signed_off_at' => now(),
+                'signed_off_by' => $req->signed_off_by,
+                'status' => Task::STATUS_COMPLETED,
+            ]);
+
+            // Activity log
+            $logTask = Task::where('id', $task->id)->first();
+            $logTask->load('users', 'milestones', 'attachments');
+            $logTask->formatted_created_at = Carbon::parse($logTask->created_at)->format('d M Y');
+            $logTask->start_date = Carbon::parse($logTask->start_date)->format('d M Y');
+            $logTask->due_date = Carbon::parse($logTask->due_date)->format('d M Y');
+            $logTask->status = (new Task)->statusToHumanRead($logTask->status);
+            $logTask->progress = (new Task)->getProgress($logTask);
+
+            (new ActivityLog)->store(Task::class, $task->id, 'Customer signed off by ' . $req->signed_off_by, $logTask);
+
+            // Notify assigned users
+            Notification::send(
+                User::whereIn('id', UserTask::where('task_id', $task->id)->pluck('user_id'))->get(),
+                new MobileAppNotification([
+                    'type' => 'task_completed',
+                    'done_by' => $req->user()->id,
+                    'task_id' => $task->id,
+                ])
+            );
+
+            DB::commit();
+
+            return Response::json([
+                'task' => $task->fresh(),
+            ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
