@@ -358,11 +358,13 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/create', 'create')->name('create')->middleware(['can:grn.create', 'branch.selected']);
-        Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create', 'branch.selected']);
+        Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create', 'branch.selected'])->where('sku', '.*');
         Route::post('/upsert', 'upsert')->name('upsert');
-        Route::get('/pdf/{sku}', 'pdf')->name('pdf');
+        Route::get('/pdf/{sku}', 'pdf')->name('pdf')->where('sku', '.*');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
         Route::post('/sync', 'sync')->name('sync');
+        Route::get('/cancel/{sku}', 'cancel')->name('cancel')->middleware(['can:grn.cancel'])->where('sku', '.*');
+        Route::get('/delete/{sku}', 'delete')->name('delete')->middleware(['can:grn.delete'])->where('sku', '.*');
     });
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product

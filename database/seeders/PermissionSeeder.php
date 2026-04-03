@@ -65,6 +65,8 @@ class PermissionSeeder extends Seeder
             'grn.view',
             'grn.create',
             'grn.edit',
+            'grn.cancel',
+            'grn.delete',
 
             'service_reminder.view',
             'service_reminder.create',

@@ -7,11 +7,15 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ScopedBy([BranchScope::class])]
 class GRN extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    const STATUS_ACTIVE = 1;
+    const STATUS_CANCELLED = 2;
 
     protected $table = 'grn';
     protected $guarded = [];

@@ -53,6 +53,8 @@ return [
     'grn.view' => 'Show the GRN menu under Inventory and access the goods received note listing page',
     'grn.create' => 'Show the New and Sync to Autocount buttons on the GRN listing page, and access the create and edit forms',
     'grn.edit' => 'Update goods received note details',
+    'grn.cancel' => 'Show the Cancel button on GRN rows to void a goods received note',
+    'grn.delete' => 'Show the Delete button on GRN rows to soft-delete a goods received note',
 
     // Service Reminder
     'service_reminder.view' => 'Show the Service Reminder menu under After Service and access the service reminder listing page',
