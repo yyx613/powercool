@@ -28,6 +28,7 @@ class PermissionSeeder extends Seeder
             'approval.type_payment_record',
             'approval.type_raw_material_request',
             'approval.type_complete_production_request',
+            'approval.type_grn',
 
             'dashboard.view',
 

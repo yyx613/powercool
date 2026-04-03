@@ -7,7 +7,10 @@ use App\Models\Customer;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
+use App\Models\Branch;
 use App\Models\FactoryRawMaterial;
+use App\Models\GRN;
+use App\Models\Scopes\BranchScope;
 use App\Models\Invoice;
 use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
@@ -43,6 +46,7 @@ class ApprovalController extends Controller
         4 => 'Payment Record',
         5 => 'Raw Material Request',
         6 => 'Complete Production Request',
+        7 => 'GRN',
     ];
 
     public function index()
@@ -77,6 +81,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_complete_production_request')) {
             unset($types[6]);
         }
+        if (!hasPermission('approval.type_grn')) {
+            unset($types[7]);
+        }
 
         return view('approval.list', [
             'statuses' => self::STATUSES,
@@ -98,7 +105,7 @@ class ApprovalController extends Controller
             $keyword = $request->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class], function ($query) use ($keyword) {
+                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class], function ($query) use ($keyword) {
                     $query->where('sku', 'like', '%' . $keyword . '%');
                 });
             });
@@ -158,6 +165,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_complete_production_request')) {
             $records = $records->whereNot('object_type', Production::class);
         }
+        if (!hasPermission('approval.type_grn')) {
+            $records = $records->whereNot('object_type', GRN::class);
+        }
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');
@@ -182,6 +192,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 6) {
                 $records = $records->where('object_type', Production::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 7) {
+                $records = $records->where('object_type', GRN::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -198,6 +211,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', RawMaterialRequest::class);
             } elseif (Session::get('approval-type') == 6) {
                 $records = $records->where('object_type', Production::class);
+            } elseif (Session::get('approval-type') == 7) {
+                $records = $records->where('object_type', GRN::class);
             }
         }
 
@@ -235,6 +250,8 @@ class ApprovalController extends Controller
                     $view_url = route('raw_material_request.view', ['rmq' => $obj->id]);
                 } elseif (get_class($obj) == Production::class) {
                     $view_url = route('production.view', ['production' => $obj->id]);
+                } elseif (get_class($obj) == GRN::class) {
+                    $view_url = route('grn.index');
                 }
             }
 
@@ -347,6 +364,13 @@ class ApprovalController extends Controller
             } else if (get_class($approval->object) == DeliveryOrder::class) {
                 $approval->object->status = DeliveryOrder::STATUS_APPROVAL_APPROVED;
                 $approval->object->save();
+            } else if (get_class($approval->object) == GRN::class) {
+                $data = json_decode($approval->data);
+                if (isset($data->is_cancellation)) {
+                    GRN::withoutGlobalScope(BranchScope::class)->where('sku', $data->sku)->update(['status' => GRN::STATUS_CANCELLED]);
+                } elseif (isset($data->is_deletion)) {
+                    GRN::withoutGlobalScope(BranchScope::class)->where('sku', $data->sku)->delete();
+                }
             }
 
             // Production Material Transfer Request
@@ -516,6 +540,10 @@ class ApprovalController extends Controller
                         $obj->save();
                     }
                 }
+            } elseif (get_class($obj) == GRN::class) {
+                $data = json_decode($approval->data);
+                $restore_status = isset($data->previous_status) ? $data->previous_status : GRN::STATUS_ACTIVE;
+                GRN::withoutGlobalScope(BranchScope::class)->where('sku', $data->sku)->update(['status' => $restore_status]);
             }
             // Check approval count
             $pending_approval_count = Approval::where('status', Approval::STATUS_PENDING_APPROVAL)->count();

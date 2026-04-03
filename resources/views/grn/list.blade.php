@@ -11,6 +11,14 @@
         #data-table tbody tr:last-of-type td {
             border-bottom: none;
         }
+        #data-table tbody tr td {
+            overflow: visible;
+        }
+        .dataTables_wrapper,
+        .dataTables_scroll,
+        .dataTables_scrollBody {
+            overflow: visible !important;
+        }
     </style>
 @endpush
 
@@ -46,7 +54,7 @@
         </div>
 
         <!-- Table -->
-        <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
+        <table id="data-table" class="text-sm rounded-lg" style="width: 100%;">
             <thead>
                 <tr>
                     <th>
@@ -61,8 +69,8 @@
         </table>
     </div>
 
-    <x-app.modal.delete-modal/>
     <x-app.modal.cancel-grn-modal/>
+    <x-app.modal.delete-grn-modal/>
     <div id="loading-indicator" style="display: none;">
         <span class="loader"></span>
     </div>
@@ -108,14 +116,33 @@
                     }
                 },
                 {
-                    "width": "10%",
+                    "width": "15%",
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
-                        if (row.status == 2) {
-                            return `{!! __('Cancelled') !!}`
+                        let status = ''
+                        switch (row.status) {
+                            case 1: status = `{!! __('Active') !!}`; break;
+                            case 2: status = `{!! __('Cancelled') !!}`; break;
+                            case 3: status = `{!! __('Pending Approval') !!}`; break;
+                            default: status = `{!! __('Active') !!}`; break;
                         }
-                        return `{!! __('Active') !!}`
+                        let rejectedIcon = row.rejected_reason != null ?
+                            `<div class="group relative">
+                                <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                <div class="group-hover:opacity-100 group-hover:z-10 absolute bottom-3.5 opacity-0 z-[-10] w-56">
+                                    <div class="rounded shadow border bg-white">
+                                        <div class="flex items-center gap-2 border-b px-3 py-2">
+                                            <svg class="h-3.5 w-3.5 fill-red-400" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512"><path d="M21,12h-1V5c0-1.65-1.35-3-3-3H7c-1.65,0-3,1.35-3,3v7h-1c-1.65,0-3,1.35-3,3v7H24v-7c0-1.65-1.35-3-3-3ZM6,5c0-.55,.45-1,1-1h10c.55,0,1,.45,1,1v11H6V5Zm16,15H2v-5c0-.55,.45-1,1-1h1v4H20v-4h1c.55,0,1,.45,1,1v5ZM15.71,7.71l-2.29,2.29,2.29,2.29-1.41,1.41-2.29-2.29-2.29,2.29-1.41-1.41,2.29-2.29-2.29-2.29,1.41-1.41,2.29,2.29,2.29-2.29,1.41,1.41Z"/></svg>
+                                            <p class="font-medium">{!! __('Rejected Reason') !!}</p>
+                                        </div>
+                                        <div class="px-3 py-2">
+                                            ${ row.rejected_reason ?? '-' }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>` : ''
+                        return `<div class="flex items-center gap-x-2">${status} ${rejectedIcon}</div>`
                     }
                 },
                 {
@@ -168,14 +195,54 @@
 
         $('#data-table').on('click', '.cancel-btns', function() {
             let sku = $(this).data('id')
-            $('#cancel-grn-modal #yes-btn').attr('href', `{{ config('app.url') }}/grn/cancel/${sku}`)
+            $('#cancel-grn-modal').attr('data-sku', sku)
+            $('#cancel-grn-modal textarea').val('')
             $('#cancel-grn-modal').addClass('show-modal')
+        })
+
+        $('#cancel-grn-modal form').on('submit', function(e) {
+            e.preventDefault()
+            let sku = $('#cancel-grn-modal').attr('data-sku')
+            let url = `{{ config('app.url') }}/grn/cancel/${sku}`
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                url: url,
+                type: 'POST',
+                data: { remark: $('#cancel-grn-modal textarea').val() },
+                success: function(res) {
+                    $('#cancel-grn-modal').removeClass('show-modal')
+                    window.location.reload()
+                },
+                error: function(err) {
+                    alert('Something went wrong. Please contact administrator')
+                }
+            })
         })
 
         $('#data-table').on('click', '.delete-btns', function() {
             let sku = $(this).data('id')
-            $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/grn/delete/${sku}`)
-            $('#delete-modal').addClass('show-modal')
+            $('#delete-grn-modal').attr('data-sku', sku)
+            $('#delete-grn-modal textarea').val('')
+            $('#delete-grn-modal').addClass('show-modal')
+        })
+
+        $('#delete-grn-modal form').on('submit', function(e) {
+            e.preventDefault()
+            let sku = $('#delete-grn-modal').attr('data-sku')
+            let url = `{{ config('app.url') }}/grn/delete/${sku}`
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                url: url,
+                type: 'POST',
+                data: { remark: $('#delete-grn-modal textarea').val() },
+                success: function(res) {
+                    $('#delete-grn-modal').removeClass('show-modal')
+                    window.location.reload()
+                },
+                error: function(err) {
+                    alert('Something went wrong. Please contact administrator')
+                }
+            })
         })
 
         let selectedGrn = [];
