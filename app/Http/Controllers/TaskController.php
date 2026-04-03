@@ -307,6 +307,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -422,14 +423,16 @@ class TaskController extends Controller
                 ]);
             }
             // Milestones
-            foreach ($req->milestone as $ms_id) {
-                TaskMilestone::create([
-                    'task_id' => $task->id,
-                    'milestone_id' => $ms_id,
-                ]);
+            if ($req->milestone != null) {
+                foreach ($req->milestone as $ms_id) {
+                    TaskMilestone::create([
+                        'task_id' => $task->id,
+                        'milestone_id' => $ms_id,
+                    ]);
+                }
             }
             // Force to have Payment Collection milestone whenever amount to collect is greater than 0
-            if ($req->amount_to_collect > 0 && ! array_intersect($req->milestone, getPaymentCollectionIds())) {
+            if ($req->amount_to_collect > 0 && ($req->milestone == null || ! array_intersect($req->milestone, getPaymentCollectionIds()))) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => Milestone::where('type', $req->task)->where('name', 'Payment Collection')->value('id'),
@@ -443,6 +446,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -495,13 +499,14 @@ class TaskController extends Controller
 
             DB::commit();
 
-            $ticket = Ticket::where('id', $req->ticket)->first();
-            $so_inv_count = count(explode(',', $ticket->so_inv)) ?? null;
-            if ($so_inv_count != null && ($req->so_inv_idx + 1) != $so_inv_count) {
-                return redirect(route('task.technician.create', ['tic_id' => $req->ticket, 'so_inv_idx' => $req->so_inv_idx + 1]))->with('success', 'Task created');
-            }
-
             if ($req->ticket != null) {
+                $ticket = Ticket::where('id', $req->ticket)->first();
+                if ($ticket != null && $ticket->so_inv != null) {
+                    $so_inv_count = count(explode(',', $ticket->so_inv));
+                    if (($req->so_inv_idx + 1) != $so_inv_count) {
+                        return redirect(route('task.technician.create', ['tic_id' => $req->ticket, 'so_inv_idx' => $req->so_inv_idx + 1]))->with('success', 'Task created');
+                    }
+                }
                 Ticket::where('id', $req->ticket)->delete();
             }
 
@@ -568,6 +573,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -735,6 +741,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -823,8 +830,9 @@ class TaskController extends Controller
                 ]);
             }
             // Milestone
-            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($req->milestone, getPaymentCollectionIds()) : $req->milestone)->delete();
-            foreach ($req->milestone as $ms_id) {
+            $milestoneIds = $req->milestone ?? [];
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->amount_to_collect > 0 ? array_merge($milestoneIds, getPaymentCollectionIds()) : $milestoneIds)->delete();
+            foreach ($milestoneIds as $ms_id) {
                 $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
                 if ($ms == null) {
                     TaskMilestone::create([
@@ -848,6 +856,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -931,6 +940,7 @@ class TaskController extends Controller
                         'name' => $ms,
                         'is_custom' => true,
                     ]);
+                    (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $custom_ms->id,
@@ -969,6 +979,17 @@ class TaskController extends Controller
 
     public function delete(Task $task)
     {
+        // Check permission based on task type
+        $permissionMap = [
+            Task::TYPE_DRIVER => 'task_driver.delete',
+            Task::TYPE_TECHNICIAN => 'task_technician.delete',
+            Task::TYPE_SALE => 'task_sale.delete',
+        ];
+        $permission = $permissionMap[$task->type] ?? null;
+        if (!isSuperAdmin() && ($permission == null || !hasPermission($permission))) {
+            abort(403);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -1036,6 +1057,22 @@ class TaskController extends Controller
             ];
         }
 
+        // Get signature data from the first task (if signed off)
+        $signature_base64 = null;
+        $signed_off_by = null;
+        $signed_off_at = null;
+
+        if (count($tasks) > 0 && $tasks[0]->customer_signature) {
+            $sigPath = storage_path('app/' . Attachment::TASK_SIGNATURE_PATH . '/' . $tasks[0]->customer_signature);
+            if (file_exists($sigPath)) {
+                $sigData = file_get_contents($sigPath);
+                $sigMime = mime_content_type($sigPath);
+                $signature_base64 = 'data:' . $sigMime . ';base64,' . base64_encode($sigData);
+            }
+            $signed_off_by = $tasks[0]->signed_off_by;
+            $signed_off_at = $tasks[0]->signed_off_at ? Carbon::parse($tasks[0]->signed_off_at)->format('d M Y H:i') : null;
+        }
+
         $pdf = Pdf::loadView('task.report_pdf', [
             'records' => $records,
             'technicians' => implode(', ', $technicians),
@@ -1043,6 +1080,9 @@ class TaskController extends Controller
             'photo_equipment_ms_id' => $photo_equipment_ms_id,
             'before_service_ms_id' => $before_service_ms_id,
             'afer_service_ms_id' => $afer_service_ms_id,
+            'signature_base64' => $signature_base64,
+            'signed_off_by' => $signed_off_by,
+            'signed_off_at' => $signed_off_at,
         ]);
         $pdf->setPaper('A4', 'letter');
 

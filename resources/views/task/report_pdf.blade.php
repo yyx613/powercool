@@ -33,6 +33,21 @@
         </tr>
         @endforeach
     </table>
-    
+
+    @if (isset($signature_base64) && $signature_base64)
+        <div style="margin-top: 30px; border-top: solid 1px grey; padding-top: 15px;">
+            <p style="font-size: 14px; font-weight: bold;">Customer Acknowledgement</p>
+            <div style="margin-top: 10px;">
+                <img src="{{ $signature_base64 }}" alt="Customer Signature" style="max-height: 100px;">
+            </div>
+            @if (isset($signed_off_by) && $signed_off_by)
+                <p style="font-size: 12px; margin-top: 10px;">Name: {{ $signed_off_by }}</p>
+            @endif
+            @if (isset($signed_off_at) && $signed_off_at)
+                <p style="font-size: 12px;">Date: {{ $signed_off_at }}</p>
+            @endif
+        </div>
+    @endif
+
 </body>
 </html>

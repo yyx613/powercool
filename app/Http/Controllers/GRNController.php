@@ -86,6 +86,9 @@ class GRNController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
+                'status' => $record->status,
+                'can_cancel' => hasPermission('grn.cancel') && $record->status == GRN::STATUS_ACTIVE,
+                'can_delete' => hasPermission('grn.delete'),
             ];
         }
 
@@ -265,6 +268,32 @@ class GRNController extends Controller
 
             return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
         }
+    }
+
+    public function cancel($sku)
+    {
+        $grns = $this->grn::where('sku', $sku)->get();
+
+        if ($grns->isEmpty()) {
+            return redirect(route('grn.index'))->with('error', 'GRN not found');
+        }
+
+        $this->grn::where('sku', $sku)->update(['status' => GRN::STATUS_CANCELLED]);
+
+        return redirect(route('grn.index'))->with('success', 'GRN cancelled successfully');
+    }
+
+    public function delete($sku)
+    {
+        $grns = $this->grn::where('sku', $sku)->get();
+
+        if ($grns->isEmpty()) {
+            return redirect(route('grn.index'))->with('error', 'GRN not found');
+        }
+
+        $this->grn::where('sku', $sku)->delete();
+
+        return redirect(route('grn.index'))->with('success', 'GRN deleted successfully');
     }
 
     public function sync(Request $request)
