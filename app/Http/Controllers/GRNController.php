@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
 use App\Models\Branch;
 use App\Models\CreditTerm;
 use App\Models\GRN;
@@ -13,6 +14,7 @@ use App\Models\Supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
@@ -83,12 +85,29 @@ class GRNController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            // Get all GRN ids for this SKU to query approvals
+            $grn_ids = $this->grn::where('sku', $record->sku)->pluck('id');
+
+            // Rejected reasons
+            $rejected_remarks = Approval::withoutGlobalScope(BranchScope::class)
+                ->where('object_type', GRN::class)
+                ->whereIn('object_id', $grn_ids)
+                ->where('status', Approval::STATUS_REJECTED)
+                ->where('data', 'like', '%is_grn%')
+                ->orderBy('id', 'desc')
+                ->get(['reject_remark', 'updated_at'])
+                ->filter(fn ($a) => $a->reject_remark);
+            $rejected_reason = $rejected_remarks->isNotEmpty()
+                ? $rejected_remarks->values()->map(fn ($a, $i) => ($rejected_remarks->count() > 1 ? ($i + 1).'. ' : '').'<span class="text-gray-500 text-xs">['.Carbon::parse($a->updated_at)->format('d M Y H:i').']</span> '.$a->reject_remark)->implode('<br>')
+                : null;
+
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'status' => $record->status,
                 'can_cancel' => hasPermission('grn.cancel') && $record->status == GRN::STATUS_ACTIVE,
-                'can_delete' => hasPermission('grn.delete'),
+                'can_delete' => hasPermission('grn.delete') && $record->status != GRN::STATUS_APPROVAL_PENDING,
+                'rejected_reason' => $rejected_reason,
             ];
         }
 
@@ -270,30 +289,81 @@ class GRNController extends Controller
         }
     }
 
-    public function cancel($sku)
+    public function cancel(Request $req, $sku)
     {
-        $grns = $this->grn::where('sku', $sku)->get();
+        try {
+            DB::beginTransaction();
 
-        if ($grns->isEmpty()) {
-            return redirect(route('grn.index'))->with('error', 'GRN not found');
+            $grn = $this->grn::where('sku', $sku)->first();
+
+            if ($grn == null) {
+                return redirect(route('grn.index'))->with('error', 'GRN not found');
+            }
+
+            $approval = Approval::create([
+                'object_type' => GRN::class,
+                'object_id' => $grn->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_grn' => true,
+                    'is_cancellation' => true,
+                    'sku' => $sku,
+                    'description' => Auth::user()->name.' has requested to cancel the GRN.',
+                    'cancellation_remark' => $req->remark ?? null,
+                ]),
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $this->grn::where('sku', $sku)->update(['status' => GRN::STATUS_APPROVAL_PENDING]);
+
+            DB::commit();
+
+            return redirect(route('grn.index'))->with('success', 'GRN cancel request is submitted');
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+
+            return redirect(route('grn.index'))->with('error', 'Something went wrong. Please contact administrator');
         }
-
-        $this->grn::where('sku', $sku)->update(['status' => GRN::STATUS_CANCELLED]);
-
-        return redirect(route('grn.index'))->with('success', 'GRN cancelled successfully');
     }
 
-    public function delete($sku)
+    public function delete(Request $req, $sku)
     {
-        $grns = $this->grn::where('sku', $sku)->get();
+        try {
+            DB::beginTransaction();
 
-        if ($grns->isEmpty()) {
-            return redirect(route('grn.index'))->with('error', 'GRN not found');
+            $grn = $this->grn::where('sku', $sku)->first();
+
+            if ($grn == null) {
+                return redirect(route('grn.index'))->with('error', 'GRN not found');
+            }
+
+            $approval = Approval::create([
+                'object_type' => GRN::class,
+                'object_id' => $grn->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_grn' => true,
+                    'is_deletion' => true,
+                    'sku' => $sku,
+                    'previous_status' => $grn->status,
+                    'description' => Auth::user()->name.' has requested to delete the GRN.',
+                    'cancellation_remark' => $req->remark ?? null,
+                ]),
+            ]);
+            (new Branch)->assign(Approval::class, $approval->id);
+
+            $this->grn::where('sku', $sku)->update(['status' => GRN::STATUS_APPROVAL_PENDING]);
+
+            DB::commit();
+
+            return redirect(route('grn.index'))->with('success', 'GRN delete request is submitted');
+        } catch (\Throwable $th) {
+            report($th);
+            DB::rollBack();
+
+            return redirect(route('grn.index'))->with('error', 'Something went wrong. Please contact administrator');
         }
-
-        $this->grn::where('sku', $sku)->delete();
-
-        return redirect(route('grn.index'))->with('success', 'GRN deleted successfully');
     }
 
     public function sync(Request $request)

@@ -1,8 +1,8 @@
-<x-app.modal.base-modal id="cancel-grn-modal">
+<x-app.modal.base-modal id="delete-grn-modal">
     <div class="aspect-[2/1] flex flex-col">
         <form class="m-0">
             <div class="py-2 px-4 bg-gray-100">
-                <h6 class="text-lg font-black" id="title">{{ __('Cancel Confirmation') }}</h6>
+                <h6 class="text-lg font-black" id="title">{{ __('Delete Confirmation') }}</h6>
             </div>
             <div class="flex-1 flex flex-col p-4 h-full">
                 <div class="flex flex-col mb-8">
@@ -24,8 +24,8 @@
 
 @push('scripts')
 <script>
-    $('#cancel-grn-modal #no-btn').on('click', function() {
-        $('#cancel-grn-modal').removeClass('show-modal')
+    $('#delete-grn-modal #no-btn').on('click', function() {
+        $('#delete-grn-modal').removeClass('show-modal')
     })
 </script>
 @endpush

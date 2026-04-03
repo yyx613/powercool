@@ -16,6 +16,7 @@ class GRN extends Model
 
     const STATUS_ACTIVE = 1;
     const STATUS_CANCELLED = 2;
+    const STATUS_APPROVAL_PENDING = 3;
 
     protected $table = 'grn';
     protected $guarded = [];

@@ -363,8 +363,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/pdf/{sku}', 'pdf')->name('pdf')->where('sku', '.*');
         Route::post('/stock-in', 'stockIn')->name('stock_in');
         Route::post('/sync', 'sync')->name('sync');
-        Route::get('/cancel/{sku}', 'cancel')->name('cancel')->middleware(['can:grn.cancel'])->where('sku', '.*');
-        Route::get('/delete/{sku}', 'delete')->name('delete')->middleware(['can:grn.delete'])->where('sku', '.*');
+        Route::post('/cancel/{sku}', 'cancel')->name('cancel')->middleware(['can:grn.cancel'])->where('sku', '.*');
+        Route::post('/delete/{sku}', 'delete')->name('delete')->middleware(['can:grn.delete'])->where('sku', '.*');
     });
     // Products
     Route::controller(ProductController::class)->prefix('product')->name('product.')->middleware(['can:inventory.product.view'])->group(function () { // Product
