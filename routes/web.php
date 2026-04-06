@@ -469,7 +469,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/get-data', 'getDataSaleOrder')->name('get_data');
             // Route::get('/create', 'createSaleOrder')->name('create')->middleware(['can:sale.sale_order.create']);
             Route::get('/edit/{sale}', 'editSaleOrder')->name('edit')->middleware(['can:sale.sale_order.edit', 'branch.selected']);
-            Route::get('/edit/payment/{sale}', 'editSaleOrder')->name('edit_payment')->middleware(['can:sale.sale_order.billing']);
+            Route::get('/edit/payment/{sale}', 'editSaleOrder')->name('edit_payment')->middleware(['can:sale.sale_order.payment']);
             Route::get('/view/{sale}', 'editSaleOrder')->name('view')->middleware(['can:sale.sale_order.edit']);
             Route::get('/cancel', 'cancelSaleOrder')->name('cancel')->middleware(['can:sale.sale_order.cancel']);
             Route::get('/transfer-back', 'transferBackSaleOrder')->name('transfer_back')->middleware(['can:sale.sale_order.cancel']);

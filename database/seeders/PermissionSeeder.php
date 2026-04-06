@@ -105,7 +105,7 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.delete',
             'sale.sale_order.convert_from',
             'sale.sale_order.convert_to',
-            'sale.sale_order.billing',
+            'sale.sale_order.payment',
 
             'sale.cash_sale.view',
             'sale.cash_sale.create',
