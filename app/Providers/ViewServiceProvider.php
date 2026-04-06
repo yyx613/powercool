@@ -734,7 +734,7 @@ class ViewServiceProvider extends ServiceProvider
             $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
             $view->with([
-                'can_payment_amount' => hasPermission('sale.sale_order.billing'),
+                'can_payment_amount' => hasPermission('sale.sale_order.payment'),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
                 'credit_payment_method_ids' => $credit_term_payment_method_ids,

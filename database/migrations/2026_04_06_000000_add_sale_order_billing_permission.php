@@ -11,13 +11,13 @@ return new class extends Migration
     public function up(): void
     {
         DB::table('permissions')->insert([
-            'name' => 'sale.sale_order.billing',
+            'name' => 'sale.sale_order.payment',
             'guard_name' => 'web',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $permissionId = DB::table('permissions')->where('name', 'sale.sale_order.billing')->value('id');
+        $permissionId = DB::table('permissions')->where('name', 'sale.sale_order.payment')->value('id');
 
         // Assign to Super Admin and Finance roles (previously hardcoded)
         foreach ([1, 9] as $roleId) {
@@ -42,13 +42,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $permissionId = DB::table('permissions')->where('name', 'sale.sale_order.billing')->value('id');
+        $permissionId = DB::table('permissions')->where('name', 'sale.sale_order.payment')->value('id');
 
         if ($permissionId) {
             DB::table('role_has_permissions')->where('permission_id', $permissionId)->delete();
         }
 
-        DB::table('permissions')->where('name', 'sale.sale_order.billing')->delete();
+        DB::table('permissions')->where('name', 'sale.sale_order.payment')->delete();
 
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }

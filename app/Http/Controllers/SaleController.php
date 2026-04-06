@@ -1092,7 +1092,7 @@ class SaleController extends Controller
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
                 'can_edit' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
-                'can_edit_payment' => hasPermission('sale.sale_order.billing') && (
+                'can_edit_payment' => hasPermission('sale.sale_order.payment') && (
                     in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM])
                     || ($record->status == Sale::STATUS_CANCELLED && $record->cancellation_charge != null)
                 ),
@@ -1216,7 +1216,7 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
-            'can_edit_payment' => hasPermission('sale.sale_order.billing'),
+            'can_edit_payment' => hasPermission('sale.sale_order.payment'),
             'is_view' => $is_view,
             'has_pending_approval' => $has_pending_approval,
             'customers' => $customers,
