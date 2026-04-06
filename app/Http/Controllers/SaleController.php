@@ -1092,8 +1092,10 @@ class SaleController extends Controller
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
                 'can_edit' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
-                'can_edit_payment' => (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && (isSuperAdmin() || isFinance()))
-                    || ($record->status == Sale::STATUS_CANCELLED && $record->cancellation_charge != null && (isSuperAdmin() || isFinance())),
+                'can_edit_payment' => hasPermission('sale.sale_order.billing') && (
+                    in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM])
+                    || ($record->status == Sale::STATUS_CANCELLED && $record->cancellation_charge != null)
+                ),
                 'can_view' => hasPermission('sale.sale_order.view_record'),
                 'can_cancel' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
@@ -1214,7 +1216,7 @@ class SaleController extends Controller
         return view('sale_order.form', [
             'sale' => $sale,
             'convert_from_quo' => $sale->convertFromQuo(),
-            'can_edit_payment' => isSuperAdmin() || isFinance(),
+            'can_edit_payment' => hasPermission('sale.sale_order.billing'),
             'is_view' => $is_view,
             'has_pending_approval' => $has_pending_approval,
             'customers' => $customers,

@@ -734,7 +734,7 @@ class ViewServiceProvider extends ServiceProvider
             $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
 
             $view->with([
-                'can_payment_amount' => in_array(Role::SUPERADMIN, getUserRoleId(Auth::user())) || in_array(Role::FINANCE, getUserRoleId(Auth::user())),
+                'can_payment_amount' => hasPermission('sale.sale_order.billing'),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
                 'credit_payment_method_ids' => $credit_term_payment_method_ids,

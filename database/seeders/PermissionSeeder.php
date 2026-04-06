@@ -105,6 +105,7 @@ class PermissionSeeder extends Seeder
             'sale.sale_order.delete',
             'sale.sale_order.convert_from',
             'sale.sale_order.convert_to',
+            'sale.sale_order.billing',
 
             'sale.cash_sale.view',
             'sale.cash_sale.create',
@@ -162,6 +163,8 @@ class PermissionSeeder extends Seeder
             'production_request.complete',
             'production.cancel',
             'production.complete',
+            'production.force_complete',
+            'production.check_in_milestone',
 
             'ticket.view',
             'ticket.create',

@@ -100,6 +100,7 @@ return [
     'sale.sale_order.delete' => 'Show the Delete button on pending and e-order sale order rows',
     'sale.sale_order.convert_from' => 'Show the Convert From Quotation button on the sale order listing page to generate a sale order from approved quotations',
     'sale.sale_order.convert_to' => 'Show the Convert to Delivery Order button on the sale order listing page',
+    'sale.sale_order.billing' => 'Show the Payment button on sale order rows and access the payment form to manage payment records',
 
     // Sales - Cash Sale
     'sale.cash_sale.view' => 'Show the Cash Sale menu under Sale & Invoice and access the walk-in cash sale listing page',
@@ -163,6 +164,8 @@ return [
     'production_request.complete' => 'Show the Complete and Cancel buttons on each production request row to mark it as completed or submit cancellation',
     'production.cancel' => 'Show the Cancel Production button on the in-progress production view page',
     'production.complete' => 'Show the Complete Task button on the in-progress production view page',
+    'production.force_complete' => 'Show the Force Complete Task button on the in-progress production view page to request approval for early completion',
+    'production.check_in_milestone' => 'Allow checking in milestones on the in-progress production view page to record milestone progress',
 
     // Ticket
     'ticket.view' => 'Show the Ticket menu under Tasks and access the customer support ticket listing page',
