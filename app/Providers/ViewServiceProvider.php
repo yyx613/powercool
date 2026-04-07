@@ -367,14 +367,12 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('customers', $customers);
         });
         View::composer(['ticket.form'], function (ViewView $view) {
-            $sale_orders = Sale::where('type', Sale::TYPE_SO)->orderBy('id', 'desc')->get();
-            $invoices = Invoice::orderBy('id', 'desc')->get();
             $products = Product::get();
             $product_children = ProductChild::get();
 
             $view->with([
-                'sale_orders' => $sale_orders,
-                'invoices' => $invoices,
+                'sale_orders' => collect(),
+                'invoices' => collect(),
                 'products' => $products,
                 'product_children' => $product_children,
             ]);

@@ -13,6 +13,8 @@ use App\Models\EInvoice;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\SaleProduct;
+use App\Models\ServiceForm;
+use App\Models\Setting;
 use DateInterval;
 use DateTime;
 use DateTimeZone;
@@ -221,6 +223,250 @@ class EInvoiceXmlGenerator
         Storage::put('/public/e-invoice/'.$invoice->sku.'.xml', $xmlContent);
 
         return $xmlContent;
+    }
+
+    public function generateServiceFormXml($id, $tin)
+    {
+        $serviceForm = ServiceForm::with([
+            'customer',
+            'customerLocation',
+            'products.product.classificationCodes',
+            'paymentMethod',
+        ])->findOrFail($id);
+
+        $customer = $serviceForm->customer;
+        $isHiTen = $customer && isHiTen($customer->company_group);
+        $company = $isHiTen ? 'hiten' : 'powercool';
+
+        $totalDiscount = 0;
+        foreach ($serviceForm->products as $sfProduct) {
+            $totalDiscount += $sfProduct->manualDiscountAmount();
+        }
+
+        // Map payment method name to payment mode code
+        $paymentMethodName = $serviceForm->paymentMethod ? strtolower($serviceForm->paymentMethod->name) : 'cash';
+        $paymentMode = $this->getPaymentModeCode($paymentMethodName);
+
+        $sellerTIN = $tin;
+        $buyerTIN = $customer && $customer->type == 1 ? $customer->tin_number : 'EI000000000020';
+        $buyerIDValue = $customer ? $customer->company_registration_number : 'NA';
+
+        $xml = new \DOMDocument('1.0', 'UTF-8');
+        $xml->formatOutput = true;
+
+        $invoiceElement = $xml->createElement('Invoice');
+        $invoiceElement->setAttribute('xmlns', 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2');
+        $invoiceElement->setAttribute('xmlns:cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
+        $invoiceElement->setAttribute('xmlns:cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
+        $xml->appendChild($invoiceElement);
+
+        // Invoice number (service form SKU)
+        $cbcId = $xml->createElement('cbc:ID', $serviceForm->sku);
+        $invoiceElement->appendChild($cbcId);
+
+        // Issue date/time
+        $invoiceCreatedAt = new DateTime($serviceForm->date);
+        $invoiceCreatedAt->setTimezone(new DateTimeZone("UTC"));
+        $invoiceCreatedAt->modify('-5 second');
+
+        $currentTime = new DateTime("now", new DateTimeZone("UTC"));
+        $currentTime->modify('-5 second');
+
+        $timeDiff = $currentTime->getTimestamp() - $invoiceCreatedAt->getTimestamp();
+        $hoursDiff = $timeDiff / 3600;
+
+        if ($hoursDiff > 72) {
+            $dateTime = $currentTime;
+        } else {
+            $dateTime = $invoiceCreatedAt;
+        }
+
+        $currentDate = $dateTime->format("Y-m-d");
+        $cbcIssueDate = $xml->createElement('cbc:IssueDate', $currentDate);
+        $invoiceElement->appendChild($cbcIssueDate);
+
+        $currentTimeFormatted = $dateTime->format("H:i:s") . "Z";
+        $cbcIssueTime = $xml->createElement('cbc:IssueTime', $currentTimeFormatted);
+        $invoiceElement->appendChild($cbcIssueTime);
+
+        $invoiceTypeCode = $xml->createElement('cbc:InvoiceTypeCode', '01');
+        $invoiceTypeCode->setAttribute('listVersionID', '1.0');
+        $invoiceElement->appendChild($invoiceTypeCode);
+
+        $currencyCode = $xml->createElement('cbc:DocumentCurrencyCode', 'MYR');
+        $invoiceElement->appendChild($currencyCode);
+
+        $billingReference = $this->createBillingReference($xml, $serviceForm->sku);
+        $invoiceElement->appendChild($billingReference);
+
+        $additionalDocumentReference1 = $this->createAdditionalDocumentReference($xml, 'L1', 'CustomsImportForm');
+        $invoiceElement->appendChild($additionalDocumentReference1);
+
+        $additionalDocumentReference2 = $this->createAdditionalDocumentReference($xml, 'FTA', 'FreeTradeAgreement', 'Sample Description11');
+        $invoiceElement->appendChild($additionalDocumentReference2);
+
+        $additionalDocumentReference3 = $this->createAdditionalDocumentReference($xml, 'L1', 'K2');
+        $invoiceElement->appendChild($additionalDocumentReference3);
+
+        $additionalDocumentReference4 = $this->createAdditionalDocumentReference($xml, 'L1');
+        $invoiceElement->appendChild($additionalDocumentReference4);
+
+        $signatureElement = $this->createSignatureElement(
+            $xml,
+            'urn:oasis:names:specification:ubl:signature:Invoice',
+            'urn:oasis:names:specification:ubl:dsig:enveloped:xades'
+        );
+        $invoiceElement->appendChild($signatureElement);
+
+        $accountingSupplierParty = $this->createAccountingSupplierPartyElement($xml, $sellerTIN, $company);
+        $invoiceElement->appendChild($accountingSupplierParty);
+
+        $accountingCustomerParty = $this->createAccountingCustomerPartyElement($xml, $buyerTIN, $customer, $buyerIDValue);
+        $invoiceElement->appendChild($accountingCustomerParty);
+
+        // Build delivery element using service form's customer info
+        $deliveryElement = $this->createServiceFormDeliveryElement($xml, $serviceForm);
+        $invoiceElement->appendChild($deliveryElement);
+
+        $paymentMeansElement = $this->createPaymentMeansElement($xml, $paymentMode);
+        $invoiceElement->appendChild($paymentMeansElement);
+
+        $allowanceCharge1 = $this->createAllowanceChargeElement($xml, false, 'Total Discount On Products', $totalDiscount);
+        $invoiceElement->appendChild($allowanceCharge1);
+
+        // Calculate totals
+        $sstPercentage = Setting::where('key', Setting::SST_KEY)->value('value') ?? 0;
+        $totals = $serviceForm->calculateTotals((float) $sstPercentage);
+        $paymentAmount = $totals['grand_total'];
+        $taxAmount = $totals['total_tax'];
+        $subtotal = $totals['subtotal'];
+
+        $taxTotal = $this->createTaxTotalElement($xml, $taxAmount, $taxAmount);
+        $invoiceElement->appendChild($taxTotal);
+
+        $legalMonetaryTotal = $this->createLegalMonetaryTotalElement(
+            $xml,
+            $paymentAmount,
+            $paymentAmount,
+            $paymentAmount,
+            $totalDiscount,
+            $subtotal,
+            $paymentAmount,
+        );
+        $invoiceElement->appendChild($legalMonetaryTotal);
+
+        // Invoice lines from service form products
+        foreach ($serviceForm->products as $sfProduct) {
+            if ($sfProduct->is_foc) {
+                continue;
+            }
+
+            $lineExtensionAmount = $sfProduct->qty * $sfProduct->unit_price;
+            $lineTaxPercent = $sfProduct->with_sst ? ((float) $sstPercentage) : 0;
+            $lineTaxAmount = $sfProduct->with_sst ? $sfProduct->calculateSstAmount((float) $sstPercentage) : 0;
+            $description = $sfProduct->getDescription() ?: 'No Description';
+            $itemClassificationCodes = $sfProduct->product ? $sfProduct->product->classificationCodes : collect([ClassificationCode::where('code', '004')->first()]);
+
+            $allowanceCharges = [
+                [
+                    'chargeIndicator' => false,
+                    'reason' => 'Discount on Product',
+                    'amount' => $sfProduct->manualDiscountAmount(),
+                ]
+            ];
+
+            $invoiceLine = $this->createInvoiceLineElement(
+                $xml,
+                (string) $sfProduct->id,
+                $sfProduct->qty,
+                $lineExtensionAmount,
+                $allowanceCharges,
+                $lineTaxAmount,
+                $lineExtensionAmount,
+                $lineTaxPercent,
+                'Exempt New Means of Transport',
+                $description,
+                'MYS',
+                $itemClassificationCodes,
+                $sfProduct->unit_price,
+                $lineExtensionAmount
+            );
+
+            $invoiceElement->appendChild($invoiceLine);
+        }
+
+        $xmlContent = $xml->saveXML();
+        Storage::put('/public/e-invoice/'.$serviceForm->sku.'.xml', $xmlContent);
+
+        return $xmlContent;
+    }
+
+    /**
+     * Create delivery element for service form using customer location data
+     */
+    public function createServiceFormDeliveryElement($xml, $serviceForm)
+    {
+        $customer = $serviceForm->customer;
+        $address = $serviceForm->customerLocation;
+
+        $delivery = $xml->createElement('cac:Delivery');
+        $deliveryParty = $xml->createElement('cac:DeliveryParty');
+
+        $partyIdentifications = [
+            ['schemeID' => 'TIN', 'ID' => $customer->tin_number ?? 'EI00000000010'],
+            ['schemeID' => 'BRN', 'ID' => $customer->company_registration_number ?? 'NA'],
+        ];
+
+        foreach ($partyIdentifications as $identification) {
+            $partyIdentification = $xml->createElement('cac:PartyIdentification');
+            $idElement = $xml->createElement('cbc:ID', $identification['ID']);
+            $idElement->setAttribute('schemeID', $identification['schemeID']);
+            $partyIdentification->appendChild($idElement);
+            $deliveryParty->appendChild($partyIdentification);
+        }
+
+        // Use service form's customer location address
+        $postalAddress = $xml->createElement('cac:PostalAddress');
+        $postalAddress->appendChild($xml->createElement('cbc:CityName', $address->city ?? 'NA'));
+        $postalAddress->appendChild($xml->createElement('cbc:PostalZone', $address->zip_code ?? 'NA'));
+        $postalAddress->appendChild($xml->createElement('cbc:CountrySubentityCode', $address ? ($address->countrySubentityCode() ?? '17') : '17'));
+
+        $addressLines = [];
+        if ($address) {
+            $parts = array_filter([
+                $address->address1 ?? null,
+                $address->address2 ?? null,
+                $address->address3 ?? null,
+                $address->address4 ?? null,
+            ]);
+            $addressLines = ! empty($parts) ? [implode(', ', $parts)] : ['NA'];
+        } else {
+            $addressLines = ['NA'];
+        }
+
+        foreach ($addressLines as $line) {
+            $addressLine = $xml->createElement('cac:AddressLine');
+            $lineElement = $xml->createElement('cbc:Line', $line);
+            $addressLine->appendChild($lineElement);
+            $postalAddress->appendChild($addressLine);
+        }
+
+        $country = $xml->createElement('cac:Country');
+        $identificationCode = $xml->createElement('cbc:IdentificationCode', 'MYS');
+        $identificationCode->setAttribute('listID', 'ISO3166-1');
+        $identificationCode->setAttribute('listAgencyID', '6');
+        $country->appendChild($identificationCode);
+        $postalAddress->appendChild($country);
+
+        $deliveryParty->appendChild($postalAddress);
+
+        $partyLegalEntity = $xml->createElement('cac:PartyLegalEntity');
+        $partyLegalEntity->appendChild($xml->createElement('cbc:RegistrationName', $customer->name ?? 'NA'));
+        $deliveryParty->appendChild($partyLegalEntity);
+
+        $delivery->appendChild($deliveryParty);
+
+        return $delivery;
     }
 
     public function generateConsolidatedXml($id,$consolidated, $tin)

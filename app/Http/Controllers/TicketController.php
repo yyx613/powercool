@@ -279,6 +279,28 @@ class TicketController extends Controller
         ]);
     }
 
+    public function getSaleOrders(Request $req)
+    {
+        $customerId = $req->customer_id;
+
+        $sale_orders = Sale::where('customer_id', $customerId)
+            ->where('type', Sale::TYPE_SO)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $invoices = Invoice::whereIn('id',
+            DeliveryOrder::where('customer_id', $customerId)
+                ->whereNotNull('invoice_id')
+                ->pluck('invoice_id')
+                ->toArray()
+        )->orderBy('id', 'desc')->get();
+
+        return response()->json([
+            'sale_orders' => $sale_orders,
+            'invoices' => $invoices,
+        ]);
+    }
+
     public function export()
     {
         return Excel::download(new TicketExport, 'ticket.xlsx');

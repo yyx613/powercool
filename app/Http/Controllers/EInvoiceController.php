@@ -23,6 +23,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\User;
+use App\Models\ServiceForm;
 use App\Services\EInvoiceXmlGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -354,6 +355,160 @@ class EInvoiceController extends Controller
                 'error' => 'Document submission failed',
                 'message' => $th->getMessage(),
             ]);
+        }
+    }
+
+    public function submitServiceForm(Request $request)
+    {
+        $request->validate([
+            'service_form_id' => 'required|string',
+        ]);
+
+        $serviceFormId = \Illuminate\Support\Facades\Crypt::decrypt($request->input('service_form_id'));
+        $serviceForm = ServiceForm::with(['customer', 'customerLocation', 'products', 'einvoice'])->findOrFail($serviceFormId);
+
+        // Check if already submitted
+        if ($serviceForm->einvoice) {
+            return response()->json([
+                'message' => 'E-Invoice has already been submitted for this service form.',
+            ], 400);
+        }
+
+        // Check invoice PDF was generated
+        if (! $serviceForm->generated_invoice) {
+            return response()->json([
+                'message' => 'Please generate the Invoice PDF first before submitting e-invoice.',
+            ], 400);
+        }
+
+        // Determine company from customer
+        $customer = $serviceForm->customer;
+        if (! $customer) {
+            return response()->json([
+                'message' => 'Service form has no customer assigned.',
+            ], 400);
+        }
+
+        $isHiTen = isHiTen($customer->company_group);
+        $company = $isHiTen ? 'hiten' : 'powercool';
+        $tin = $isHiTen ? $this->hitenTin : $this->powerCoolTin;
+        $accessToken = $company == 'powercool' ? $this->accessTokenPowerCool : $this->accessTokenHiten;
+
+        // 72-hour check
+        $now = now();
+        $sfDate = $serviceForm->date;
+        if ($sfDate && $now->diffInHours($sfDate) > 72) {
+            return response()->json([
+                'message' => 'Service form date is older than 72 hours. Please update the date before submitting.',
+            ], 400);
+        }
+
+        $url = 'https://preprod-api.myinvois.hasil.gov.my/api/v1.0/documentsubmissions';
+
+        $headers = [
+            'Accept' => 'application/json',
+            'Accept-Language' => 'en',
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $accessToken,
+        ];
+
+        try {
+            $document = $this->xmlGenerator->generateServiceFormXml($serviceFormId, $tin);
+
+            $payload = [
+                'documents' => [
+                    [
+                        'format' => 'XML',
+                        'document' => base64_encode($document),
+                        'documentHash' => hash('sha256', $document),
+                        'codeNumber' => $serviceForm->sku,
+                    ],
+                ],
+            ];
+
+            $response = Http::withHeaders($headers)->post($url, $payload);
+            Log::info('e-invoice response for service form ' . $serviceForm->sku, $response->json() ?? []);
+
+            if ($response->successful()) {
+                DB::beginTransaction();
+                try {
+                    $acceptedDocuments = $response->json()['acceptedDocuments'] ?? [];
+                    $rejectedDocuments = $response->json()['rejectedDocuments'] ?? [];
+
+                    if (! empty($rejectedDocuments)) {
+                        $errorDetails = [];
+                        foreach ($rejectedDocuments as $rejectedDoc) {
+                            $errorDetails[] = [
+                                'invoiceCodeNumber' => $rejectedDoc['invoiceCodeNumber'],
+                                'error_code' => $rejectedDoc['error']['code'],
+                                'error_message' => $rejectedDoc['error']['message'],
+                                'error_target' => $rejectedDoc['error']['target'] ?? '',
+                                'details' => array_map(function ($detail) {
+                                    return [
+                                        'code' => $detail['code'],
+                                        'message' => $detail['message'],
+                                        'target' => $detail['target'] ?? '',
+                                        'propertyPath' => $detail['propertyPath'] ?? '',
+                                    ];
+                                }, $rejectedDoc['error']['details'] ?? []),
+                            ];
+                        }
+
+                        DB::rollBack();
+
+                        return response()->json([
+                            'message' => 'E-Invoice submission was rejected.',
+                            'errorDetails' => $errorDetails,
+                        ], 422);
+                    }
+
+                    foreach ($acceptedDocuments as $acceptedDoc) {
+                        $uuid = $acceptedDoc['uuid'];
+                        $documentDetails = $this->getDocumentDetails($uuid, $company);
+
+                        if (isset($documentDetails['error'])) {
+                            DB::rollBack();
+
+                            return response()->json([
+                                'message' => 'Failed to get document details.',
+                                'error' => $documentDetails['error'],
+                            ], 500);
+                        }
+
+                        $serviceForm->einvoice()->create([
+                            'uuid' => $uuid,
+                            'longId' => $documentDetails['longId'],
+                            'status' => 'Valid',
+                            'submission_date' => Carbon::now(),
+                        ]);
+
+                        if (isset($documentDetails['uuid']) && isset($documentDetails['longId'])) {
+                            $this->generateAndSaveEInvoicePdf($documentDetails, $serviceForm->sku);
+                        }
+                    }
+
+                    DB::commit();
+
+                    return response()->json([
+                        'message' => 'E-Invoice submitted successfully for ' . $serviceForm->sku,
+                    ]);
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'message' => 'E-Invoice submission failed: ' . $th->getMessage(),
+                    ], 500);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'E-Invoice submission failed.',
+                    'error' => $response->body(),
+                ], $response->status());
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'E-Invoice submission failed: ' . $th->getMessage(),
+            ], 500);
         }
     }
 
