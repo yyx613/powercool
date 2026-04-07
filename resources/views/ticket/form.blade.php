@@ -218,6 +218,12 @@
             ITEMS_COUNT = $('.items').length
 
             if (ITEMS_COUNT == 0) $('#add-item-btn').click()
+
+            // On edit or old() reload, load sale orders for pre-selected customer
+            let selectedCustomer = $('select[name="customer"]').val()
+            if (selectedCustomer) {
+                loadSaleOrdersForCustomer(selectedCustomer, true)
+            }
         })
 
         $('input[name="attachment[]"]').on('change', function() {
@@ -250,6 +256,13 @@
             $(clone).removeClass('hidden')
             $(clone).removeAttr('id')
 
+            // Copy SO/INV options from the first existing item (if any)
+            let existingSelect = $('.items:first select[name="so_inv[]"]')
+            if (existingSelect.length && existingSelect.find('option').length > 1) {
+                $(clone).find('select[name="so_inv[]"]').html(existingSelect.html())
+                $(clone).find('select[name="so_inv[]"]').val('')
+            }
+
             $('#items-container').append(clone)
         })
         $('body').on('click', '.delete-item-btns', function() {
@@ -265,6 +278,67 @@
             })
         })
 
+
+        // Company changed, get sale orders / invoices
+        $('body').on('change', 'select[name="customer"]', function() {
+            let customerId = $(this).val()
+
+            // Clear all SO/INV, Product, Serial No dropdowns
+            $('select[name="so_inv[]"] option:not(:first)').remove()
+            $('select[name="product[]"] option:not(:first)').remove()
+            $('select[name="serial_no[]"] option:not(:first)').remove()
+            $('input[name="so_inv_type[]"]').val('')
+
+            if (customerId) {
+                loadSaleOrdersForCustomer(customerId, false)
+            }
+        })
+
+        function loadSaleOrdersForCustomer(customerId, preserveSelected) {
+            let url = "{{ config('app.url') }}"
+            url = `${url}/ticket/get-sale-orders?customer_id=${customerId}`
+
+            // Collect currently selected values before loading
+            let selectedValues = {}
+            if (preserveSelected) {
+                $('select[name="so_inv[]"]').each(function(i) {
+                    selectedValues[i] = {
+                        val: $(this).val(),
+                        type: $(this).find('option:checked').data('type')
+                    }
+                })
+            }
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: url,
+                type: 'GET',
+                contentType: 'application/json',
+                success: function(res) {
+                    $('select[name="so_inv[]"]').each(function(i) {
+                        $(this).find('option:not(:first)').remove()
+
+                        for (let j = 0; j < res.sale_orders.length; j++) {
+                            let opt = new Option(res.sale_orders[j].sku, res.sale_orders[j].id)
+                            $(opt).attr('data-type', 'so')
+                            $(this).append(opt)
+                        }
+                        for (let j = 0; j < res.invoices.length; j++) {
+                            let opt = new Option(res.invoices[j].sku, res.invoices[j].id)
+                            $(opt).attr('data-type', 'inv')
+                            $(this).append(opt)
+                        }
+
+                        // Re-select previously selected value on edit/old() reload
+                        if (preserveSelected && selectedValues[i] && selectedValues[i].val) {
+                            $(this).val(selectedValues[i].val)
+                        }
+                    })
+                }
+            });
+        }
 
         // SO / INV changed, get products
         $('body').on('change', 'select[name="so_inv[]"]', function() {

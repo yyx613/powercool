@@ -100,6 +100,11 @@ class ServiceForm extends Model
         return $this->belongsTo(WarrantyPeriod::class)->withoutGlobalScope(BranchScope::class);
     }
 
+    public function einvoice()
+    {
+        return $this->morphOne(EInvoice::class, 'einvoiceable');
+    }
+
     /**
      * Calculate totals from products
      */

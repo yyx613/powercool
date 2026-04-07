@@ -49,6 +49,10 @@
                     <th>{{ __('Date') }}</th>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Technician') }}</th>
+                    <th class="text-center">{{ __('SF') }}</th>
+                    <th class="text-center">{{ __('QT') }}</th>
+                    <th class="text-center">{{ __('CS') }}</th>
+                    <th class="text-center">{{ __('INV') }}</th>
                     <th>{{ __('Created At') }}</th>
                     <th></th>
                 </tr>
@@ -80,12 +84,16 @@
                 { data: 'date' },
                 { data: 'customer_name' },
                 { data: 'technician' },
+                { data: 'generated_service_form' },
+                { data: 'generated_quotation' },
+                { data: 'generated_cash_sale' },
+                { data: 'generated_invoice' },
                 { data: 'created_at' },
                 { data: 'action' },
             ],
             columnDefs: [
                 {
-                    "width": "12%",
+                    "width": "10%",
                     "targets": 0,
                     orderable: false,
                     render: function(data, type, row) {
@@ -93,7 +101,7 @@
                     }
                 },
                 {
-                    "width": "12%",
+                    "width": "10%",
                     "targets": 1,
                     orderable: false,
                     render: function(data, type, row) {
@@ -101,7 +109,7 @@
                     }
                 },
                 {
-                    "width": "25%",
+                    "width": "18%",
                     "targets": 2,
                     orderable: false,
                     render: function(data, type, row) {
@@ -109,27 +117,88 @@
                     }
                 },
                 {
-                    "width": "15%",
+                    "width": "12%",
                     "targets": 3,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
+                // SF column
                 {
-                    "width": "12%",
+                    "width": "4%",
                     "targets": 4,
+                    orderable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return row.generated_service_form
+                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            : `<span class="text-gray-400">-</span>`
+                    }
+                },
+                // QT column
+                {
+                    "width": "4%",
+                    "targets": 5,
+                    orderable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return row.generated_quotation
+                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            : `<span class="text-gray-400">-</span>`
+                    }
+                },
+                // CS column
+                {
+                    "width": "4%",
+                    "targets": 6,
+                    orderable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return row.generated_cash_sale
+                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            : `<span class="text-gray-400">-</span>`
+                    }
+                },
+                // INV column
+                {
+                    "width": "4%",
+                    "targets": 7,
+                    orderable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return row.generated_invoice
+                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            : `<span class="text-gray-400">-</span>`
+                    }
+                },
+                {
+                    "width": "10%",
+                    "targets": 8,
                     orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
-                    "width": "12%",
-                    "targets": 5,
+                    "width": "14%",
+                    "targets": 9,
                     "orderable": false,
                     render: function (data, type, row) {
                         let html = `<div class="flex items-center justify-end gap-x-2 px-2">`
+
+                        // Submit E-Invoice Button (only when invoice generated and no e-invoice submitted yet)
+                        if (row.generated_invoice && !row.einvoice_status) {
+                            html += `<button type="button" class="rounded-full p-2 bg-green-200 submit-einvoice-btns" data-id="${row.id}" title="{!! __('Submit E-Invoice') !!}">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            </button>`
+                        }
+
+                        // E-Invoice status badge
+                        if (row.einvoice_status) {
+                            let badgeClass = row.einvoice_status === 'Valid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            html += `<span class="text-xs px-2 py-1 rounded-full ${badgeClass}">${row.einvoice_status}</span>`
+                        }
 
                         // PDF Button
                         html += `<button type="button" class="rounded-full p-2 bg-yellow-200 pdf-btns" data-id="${row.id}" title="{!! __('PDF') !!}">
@@ -187,6 +256,46 @@
             $('#pdf-type-modal #pdf-cash-sale-link').attr('href', `{{ config('app.url') }}/service-form/cash-sale-pdf/${id}`)
             $('#pdf-type-modal #pdf-invoice-link').attr('href', `{{ config('app.url') }}/service-form/invoice-pdf/${id}`)
             $('#pdf-type-modal').addClass('show-modal')
+        })
+
+        // Submit E-Invoice
+        $('#data-table').on('click', '.submit-einvoice-btns', function() {
+            let id = $(this).data('id')
+            let btn = $(this)
+
+            if (!confirm('{!! __("Submit this service form invoice as e-invoice?") !!}')) {
+                return
+            }
+
+            btn.prop('disabled', true)
+
+            $.ajax({
+                url: '{{ config("app.url") }}/service-form/submit-e-invoice',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    service_form_id: id,
+                },
+                success: function(res) {
+                    alert(res.message || '{!! __("E-Invoice submitted successfully") !!}')
+                    dt.ajax.reload(null, false)
+                },
+                error: function(xhr) {
+                    let msg = '{!! __("Failed to submit e-invoice") !!}'
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message
+                        }
+                        if (xhr.responseJSON.errorDetails) {
+                            xhr.responseJSON.errorDetails.forEach(function(err) {
+                                msg += '\n' + (err.message || JSON.stringify(err))
+                            })
+                        }
+                    }
+                    alert(msg)
+                    btn.prop('disabled', false)
+                }
+            })
         })
     </script>
 @endpush

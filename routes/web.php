@@ -352,6 +352,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/get-invoice-by-keyword', 'getInvoiceByKeyword')->name('get_invoice_by_keyword');
         Route::get('/get-dealer-by-keyword', 'getDealerByKeyword')->name('get_dealer_by_keyword');
         Route::get('/get-product-children', 'getProductChildrenByProduct')->name('get_product_children');
+        Route::post('/submit-e-invoice', [\App\Http\Controllers\EInvoiceController::class, 'submitServiceForm'])->name('submit_e_invoice');
     });
     // GRN
     Route::controller(GRNController::class)->prefix('grn')->name('grn.')->middleware(['can:grn.view'])->group(function () {
@@ -690,6 +691,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/delete/{ticket}', 'delete')->name('delete')->middleware(['can:ticket.delete']);
         Route::get('/get-products', 'getProducts')->name('get_products');
         Route::get('/get-product-children', 'getProductChildren')->name('get_product_children');
+        Route::get('/get-sale-orders', 'getSaleOrders')->name('get_sale_orders');
         Route::get('/export', 'export')->name('export');
     });
     // Report

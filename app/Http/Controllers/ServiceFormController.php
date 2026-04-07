@@ -44,7 +44,7 @@ class ServiceFormController extends Controller
     {
         Session::put('service-form-page', $req->page);
 
-        $records = $this->serviceForm->with(['customer', 'technician']);
+        $records = $this->serviceForm->with(['customer', 'technician', 'einvoice']);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
@@ -84,6 +84,11 @@ class ServiceFormController extends Controller
                 'date' => $record->date ? $record->date->format('d M Y') : '-',
                 'customer_name' => $record->customer ? ($record->customer->company_name ?? $record->customer->name) : '-',
                 'technician' => $record->technician ? $record->technician->name : '-',
+                'generated_service_form' => (bool) $record->generated_service_form,
+                'generated_quotation' => (bool) $record->generated_quotation,
+                'generated_cash_sale' => (bool) $record->generated_cash_sale,
+                'generated_invoice' => (bool) $record->generated_invoice,
+                'einvoice_status' => $record->einvoice ? $record->einvoice->status : null,
                 'created_at' => $record->created_at->format('d M Y'),
             ];
         }
@@ -450,6 +455,11 @@ class ServiceFormController extends Controller
         $id = Crypt::decrypt($id);
         $serviceForm = $this->serviceForm::with(['customer', 'customerLocation', 'product', 'serviceItems.product', 'invoice', 'dealer', 'technician'])->findOrFail($id);
 
+        // Mark as generated
+        if (! $serviceForm->generated_service_form) {
+            $serviceForm->update(['generated_service_form' => true]);
+        }
+
         // Prepare customer name
         $customerName = '';
         if ($serviceForm->customer) {
@@ -508,6 +518,11 @@ class ServiceFormController extends Controller
             'technician',
         ])->findOrFail($id);
 
+        // Mark as generated
+        if (! $serviceForm->generated_quotation) {
+            $serviceForm->update(['generated_quotation' => true]);
+        }
+
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
         $template = $isHiTen
@@ -562,6 +577,11 @@ class ServiceFormController extends Controller
             'technician',
         ])->findOrFail($id);
 
+        // Mark as generated
+        if (! $serviceForm->generated_cash_sale) {
+            $serviceForm->update(['generated_cash_sale' => true]);
+        }
+
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
         $template = $isHiTen
@@ -615,6 +635,11 @@ class ServiceFormController extends Controller
             'paymentMethod',
             'technician',
         ])->findOrFail($id);
+
+        // Mark as generated
+        if (! $serviceForm->generated_invoice) {
+            $serviceForm->update(['generated_invoice' => true]);
+        }
 
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
