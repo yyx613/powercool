@@ -232,7 +232,7 @@
                         <div class="flex items-center gap-x-2">
                             <div>
                                 ${
-                                    row.image != null ? `<img src="${ row.image.url }" class="h-8 w-8 object-contain" />` :
+                                    row.image != null ? `<img src="${ row.image.url }" class="h-20 w-20 object-contain" />` :
                                         `<x-app.no-image-icon class="h-8 w-8"/>`
                                 }
                             </div>

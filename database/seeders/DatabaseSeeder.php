@@ -24,7 +24,11 @@ class DatabaseSeeder extends Seeder
             WarrantyPeriodSeeder::class,
             DebtorTypeSeeder::class,
             CurrencySeeder::class,
+            CreditTermSeeder::class,
+            FactorySeeder::class,
+            PlatformSeeder::class,
             PrioritySeeder::class,
+            StateCitySeeder::class,
         ]);
     }
 }

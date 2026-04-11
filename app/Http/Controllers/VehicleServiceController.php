@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\VehicleService;
 use App\Models\VehicleServiceItem;
@@ -9,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class VehicleServiceController extends Controller
@@ -114,7 +116,7 @@ class VehicleServiceController extends Controller
 
     public function edit(VehicleService $service)
     {
-        $service->load('items');
+        $service->load('items', 'attachments');
 
         // Calculate reminder months from remind_at
         $reminderMonths = null;
@@ -147,6 +149,8 @@ class VehicleServiceController extends Controller
             'warranty_expiry_date.*' => 'nullable|date',
             'warranty_term' => 'nullable',
             'warranty_term.*' => 'nullable|string',
+            'attachment' => 'nullable',
+            'attachment.*' => 'file|mimes:pdf',
         ];
         if ($req->service != null) {
             if ($req->service == 1) {
@@ -240,6 +244,18 @@ class VehicleServiceController extends Controller
             }
 
             $this->vsItem::insert($data);
+
+            // Handle attachments
+            if ($req->hasFile('attachment')) {
+                foreach ($req->file('attachment') as $file) {
+                    $path = Storage::putFile(Attachment::VEHICLE_SERVICE_PATH, $file);
+                    Attachment::create([
+                        'object_type' => VehicleService::class,
+                        'object_id' => $new_service->id ?? $service->id,
+                        'src' => basename($path),
+                    ]);
+                }
+            }
 
             DB::commit();
 

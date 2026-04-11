@@ -54,6 +54,24 @@
                     <x-app.input.input name="service_amount" id="service_amount" :hasError="$errors->has('service_amount')" value="{{ old('service_amount', isset($service) ? $service->amount : null) }}" class="decimal-input" />
                     <x-input-error :messages="$errors->get('service_amount')" class="mt-1" />
                 </div>
+                <div class="flex flex-col">
+                    <x-app.input.label class="mb-1">{{ __('Attachment (PDF)') }}</x-app.input.label>
+                    <x-app.input.file id="attachment[]" :hasError="$errors->has('attachment')" multiple="true"/>
+                    <x-input-error :messages="$errors->get('attachment')" class="mt-1" />
+                    <x-input-error :messages="$errors->get('attachment.*')" class="mt-1" />
+                    <div class="uploaded-file-preview-container" data-id="attachment">
+                        <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 hidden" id="uploaded-file-template">
+                            <a href="" target="_blank" class="text-blue-700 text-xs"></a>
+                        </div>
+                        @if (isset($service))
+                            @foreach ($service->attachments as $att)
+                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
+                                    <a href="{{ $att->url }}" target="_blank" class="text-blue-700 text-xs">{{ $att->src }}</a>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Items -->
@@ -293,6 +311,20 @@
 
             // Toggle warranty fields based on service type
             toggleWarrantyFields()
+        })
+
+        // Show selected file names when files are picked
+        $('input[name="attachment[]"]').on('change', function() {
+            $('.new-file-preview').remove()
+            let files = this.files
+            let container = $('.uploaded-file-preview-container[data-id="attachment"]')
+            for (let i = 0; i < files.length; i++) {
+                let preview = $('<div class="py-0.5 px-1.5 rounded bg-green-50 mt-2 new-file-preview flex items-center gap-2">' +
+                    '<svg class="h-3 w-3 fill-green-700 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.5,0H4.5A4.505,4.505,0,0,0,0,4.5v15A4.505,4.505,0,0,0,4.5,24h15A4.505,4.505,0,0,0,24,19.5V4.5A4.505,4.505,0,0,0,19.5,0ZM4.5,2h15A2.5,2.5,0,0,1,22,4.5v15A2.5,2.5,0,0,1,19.5,22H4.5A2.5,2.5,0,0,1,2,19.5V4.5A2.5,2.5,0,0,1,4.5,2Z"/><path d="M17.5,12A1.5,1.5,0,0,1,16,13.5H8A1.5,1.5,0,0,1,8,10.5h8A1.5,1.5,0,0,1,17.5,12Z"/></svg>' +
+                    '<span class="text-green-700 text-xs">' + files[i].name + '</span>' +
+                    '</div>')
+                container.append(preview)
+            }
         })
     </script>
 @endpush

@@ -26,4 +26,8 @@ class Area extends Model
     public function branch() {
         return $this->morphOne(Branch::class, 'object');
     }
+
+    public function state() {
+        return $this->belongsTo(State::class);
+    }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Form - {{ $service_form->sku }}</title>
+    <title>Service Form - {{ $service_form->sr_sku }}</title>
     <style>
         * {
             margin: 0;
@@ -159,7 +159,7 @@
             <tr>
                 <td class="form-label">Date / Ref. No. / <span style="color: #0066cc;">Ticket No.</span></td>
                 <td class="form-value">
-                    {{ $service_form->date ? $service_form->date->format('d/m/Y') : '' }} / {{ $service_form->sku ?? '' }}
+                    {{ $service_form->date ? $service_form->date->format('d/m/Y') : '' }} / {{ $service_form->sr_sku ?? '' }}
                 </td>
             </tr>
             <!-- Customer Name -->

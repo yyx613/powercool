@@ -5,11 +5,6 @@
 
 @push('styles')
     <style>
-        #data-table,
-        #data-table-sale {
-            border: solid 1px rgb(209 213 219);
-        }
-
         #data-table thead th,
         #data-table tbody tr td,
         #data-table-sale thead th,
@@ -57,10 +52,12 @@
         $('#view-normal-btn').on('click', function() {
             $('#list-sale-production-request-container').addClass('hidden')
             $('#list-production-request-container').removeClass('hidden')
+            dt.columns.adjust()
         })
         $('#view-sale-btn').on('click', function() {
             $('#list-sale-production-request-container').removeClass('hidden')
             $('#list-production-request-container').addClass('hidden')
+            dtSale.columns.adjust()
         })
     </script>
 @endpush

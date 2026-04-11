@@ -55,10 +55,6 @@ class ServiceFormEInvoiceTest extends TestCase
             'sku' => 'SF-TEST-'.uniqid(),
             'date' => now(),
             'customer_id' => $customer->id,
-            'generated_service_form' => false,
-            'generated_quotation' => false,
-            'generated_cash_sale' => false,
-            'generated_invoice' => false,
         ], $overrides));
 
         return $sf;
@@ -66,17 +62,21 @@ class ServiceFormEInvoiceTest extends TestCase
 
     // ========== Part 1: Generated flags tracking ==========
 
-    public function test_service_form_has_generated_flag_columns()
+    public function test_service_form_has_document_sku_columns()
     {
         $sf = $this->createServiceForm();
 
-        $this->assertFalse((bool) $sf->generated_service_form);
-        $this->assertFalse((bool) $sf->generated_quotation);
-        $this->assertFalse((bool) $sf->generated_cash_sale);
-        $this->assertFalse((bool) $sf->generated_invoice);
+        $this->assertNull($sf->sr_sku);
+        $this->assertNull($sf->srq_sku);
+        $this->assertNull($sf->srcs_sku);
+        $this->assertNull($sf->sri_sku);
+        $this->assertFalse($sf->generated_service_form);
+        $this->assertFalse($sf->generated_quotation);
+        $this->assertFalse($sf->generated_cash_sale);
+        $this->assertFalse($sf->generated_invoice);
     }
 
-    public function test_pdf_endpoint_sets_generated_service_form_flag()
+    public function test_pdf_endpoint_assigns_sr_sku()
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm();
@@ -86,13 +86,29 @@ class ServiceFormEInvoiceTest extends TestCase
 
         $response->assertStatus(200);
         $sf->refresh();
-        $this->assertTrue((bool) $sf->generated_service_form);
-        $this->assertFalse((bool) $sf->generated_quotation);
-        $this->assertFalse((bool) $sf->generated_cash_sale);
-        $this->assertFalse((bool) $sf->generated_invoice);
+        $this->assertNotNull($sf->sr_sku);
+        $this->assertStringContainsString('SR', $sf->sr_sku);
+        $this->assertNull($sf->srq_sku);
+        $this->assertNull($sf->srcs_sku);
+        $this->assertNull($sf->sri_sku);
     }
 
-    public function test_quotation_pdf_sets_generated_quotation_flag()
+    public function test_pdf_endpoint_reuses_existing_sr_sku()
+    {
+        $user = $this->getOrCreateUser();
+        $sf = $this->createServiceForm();
+        $encryptedId = Crypt::encrypt($sf->id);
+
+        $this->actingAs($user)->get("/service-form/pdf/{$encryptedId}");
+        $sf->refresh();
+        $firstSku = $sf->sr_sku;
+
+        $this->actingAs($user)->get("/service-form/pdf/{$encryptedId}");
+        $sf->refresh();
+        $this->assertEquals($firstSku, $sf->sr_sku);
+    }
+
+    public function test_quotation_pdf_assigns_srq_sku()
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm();
@@ -102,10 +118,11 @@ class ServiceFormEInvoiceTest extends TestCase
 
         $response->assertStatus(200);
         $sf->refresh();
-        $this->assertTrue((bool) $sf->generated_quotation);
+        $this->assertNotNull($sf->srq_sku);
+        $this->assertStringContainsString('SRQ', $sf->srq_sku);
     }
 
-    public function test_cash_sale_pdf_sets_generated_cash_sale_flag()
+    public function test_cash_sale_pdf_assigns_srcs_sku()
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm();
@@ -115,10 +132,11 @@ class ServiceFormEInvoiceTest extends TestCase
 
         $response->assertStatus(200);
         $sf->refresh();
-        $this->assertTrue((bool) $sf->generated_cash_sale);
+        $this->assertNotNull($sf->srcs_sku);
+        $this->assertStringContainsString('SRCS', $sf->srcs_sku);
     }
 
-    public function test_invoice_pdf_sets_generated_invoice_flag()
+    public function test_invoice_pdf_assigns_sri_sku()
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm();
@@ -128,17 +146,18 @@ class ServiceFormEInvoiceTest extends TestCase
 
         $response->assertStatus(200);
         $sf->refresh();
-        $this->assertTrue((bool) $sf->generated_invoice);
+        $this->assertNotNull($sf->sri_sku);
+        $this->assertStringContainsString('SRI', $sf->sri_sku);
     }
 
     // ========== Part 1: getData returns flags ==========
 
-    public function test_get_data_returns_generated_flags()
+    public function test_get_data_returns_document_skus()
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm([
-            'generated_service_form' => true,
-            'generated_invoice' => true,
+            'sr_sku' => 'PSR-26/000001',
+            'sri_sku' => 'PSRI-26/000001',
         ]);
 
         $response = $this->actingAs($user)->get('/service-form/get-data?page=1');
@@ -152,10 +171,10 @@ class ServiceFormEInvoiceTest extends TestCase
         });
 
         $this->assertNotNull($found, 'Service form not found in getData response');
-        $this->assertTrue($found['generated_service_form']);
-        $this->assertFalse($found['generated_quotation']);
-        $this->assertFalse($found['generated_cash_sale']);
-        $this->assertTrue($found['generated_invoice']);
+        $this->assertEquals('PSR-26/000001', $found['generated_service_form']);
+        $this->assertNull($found['generated_quotation']);
+        $this->assertNull($found['generated_cash_sale']);
+        $this->assertEquals('PSRI-26/000001', $found['generated_invoice']);
     }
 
     // ========== Part 2: E-Invoice submission ==========
@@ -170,7 +189,7 @@ class ServiceFormEInvoiceTest extends TestCase
     public function test_submit_einvoice_requires_generated_invoice()
     {
         $user = $this->getOrCreateUser();
-        $sf = $this->createServiceForm(['generated_invoice' => false]);
+        $sf = $this->createServiceForm();
         $encryptedId = Crypt::encrypt($sf->id);
 
         $response = $this->actingAs($user)->postJson('/service-form/submit-e-invoice', [
@@ -185,7 +204,7 @@ class ServiceFormEInvoiceTest extends TestCase
     {
         $user = $this->getOrCreateUser();
         $sf = $this->createServiceForm([
-            'generated_invoice' => true,
+            'sri_sku' => 'PSRI-26/000099',
             'customer_id' => null,
         ]);
         $encryptedId = Crypt::encrypt($sf->id);
@@ -201,7 +220,7 @@ class ServiceFormEInvoiceTest extends TestCase
     public function test_submit_einvoice_rejects_duplicate_submission()
     {
         $user = $this->getOrCreateUser();
-        $sf = $this->createServiceForm(['generated_invoice' => true]);
+        $sf = $this->createServiceForm(['sri_sku' => 'PSRI-26/000098']);
         $encryptedId = Crypt::encrypt($sf->id);
 
         // Create an existing e-invoice for this service form

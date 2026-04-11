@@ -87,18 +87,33 @@
     @endif
 
     <!-- Product -->
-    <div class="mb-6 flex gap-x-4">
-        @if ($prod->images != null)
-            @foreach ($prod->images as $img)
-                <div class="h-12 w-12 rounded overflow-hidden">
-                    <a href="{{ $img->url }}" target="_blank">
-                        <img src="{{ $img->url }}" alt="{{ $prod->model_desc }}" class="w-full h-full object-contain">
+    <div class="mb-6 flex flex-col md:flex-row gap-6">
+        <!-- Left: Images -->
+        <div class="flex flex-col items-center gap-2 shrink-0">
+            @if ($prod->images != null && count($prod->images) > 0)
+                <div class="w-48 h-48 rounded-lg overflow-hidden border border-slate-200">
+                    <a href="{{ $prod->images[0]->url }}" target="_blank">
+                        <img src="{{ $prod->images[0]->url }}" alt="{{ $prod->model_desc }}" class="w-full h-full object-contain">
                     </a>
                 </div>
-            @endforeach
-        @endif
-    </div>
-    <div class="mb-6 flex gap-x-4">
+                @if (count($prod->images) > 1)
+                    <div class="flex gap-2">
+                        @foreach ($prod->images->slice(1) as $img)
+                            <div class="h-12 w-12 rounded-lg overflow-hidden border border-slate-200">
+                                <a href="{{ $img->url }}" target="_blank">
+                                    <img src="{{ $img->url }}" alt="{{ $prod->model_desc }}" class="w-full h-full object-contain">
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            @else
+                <div class="w-48 h-48 rounded-lg border border-slate-200 flex items-center justify-center bg-slate-50">
+                    <span class="text-slate-400 text-sm">{{ __('No Image') }}</span>
+                </div>
+            @endif
+        </div>
+        <!-- Right: Details -->
         <div class="flex flex-col flex-1">
             <div class="flex items-center mb-2 gap-x-4">
                 <h1 class="text-lg font-semibold leading-none">{{ $prod->model_desc }}</h1>

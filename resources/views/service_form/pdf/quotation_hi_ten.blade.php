@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quotation | {{ $service_form->sku }}</title>
+    <title>Quotation | {{ $service_form->srq_sku }}</title>
 </head>
 
 <style>
@@ -57,7 +57,7 @@
                 <td
                     style="font-size: 14px; font-weight: 700; width: 33%.33; padding: 15px 0 10px 0; text-align: center;">
                     No. :
-                    {{ $service_form->sku }}</td>
+                    {{ $service_form->srq_sku }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding: 0 35px 0 0; vertical-align: top;">
