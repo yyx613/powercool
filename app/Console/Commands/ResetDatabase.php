@@ -27,6 +27,8 @@ class ResetDatabase extends Command
         'factory_raw_materials', 'factory_raw_material_records',
         // Product Type
         'inventory_types',
+        // Milestones
+        'milestones',
         // Suppliers & Sales Agents
         'suppliers', 'sales_agents',
         // Branches
@@ -75,7 +77,7 @@ class ResetDatabase extends Command
         'Phase 5: Config/Reference Tables' => [
             'settings', 'countries', 'states', 'currencies', 'credit_terms',
             'uom', 'msic_codes', 'classification_codes', 'factories',
-            'areas', 'payment_methods', 'milestones', 'warranty_periods', 'services',
+            'areas', 'payment_methods', 'warranty_periods', 'services',
             'priorities', 'promotions', 'adhoc_services', 'cash_sale_locations',
             'platforms', 'platform_tokens', 'project_types', 'targets', 'tickets',
         ],
@@ -216,7 +218,6 @@ class ResetDatabase extends Command
         'App\\Models\\Factory',
         'App\\Models\\Area',
         'App\\Models\\PaymentMethod',
-        'App\\Models\\Milestone',
         'App\\Models\\WarrantyPeriod',
         'App\\Models\\Service',
         'App\\Models\\Priority',
@@ -368,7 +369,6 @@ class ResetDatabase extends Command
      * Seeders to run after reset, in order.
      */
     private const SEEDERS = [
-        \Database\Seeders\MilestoneSeeder::class,
         \Database\Seeders\InventoryCategorySeeder::class,
         \Database\Seeders\WarrantyPeriodSeeder::class,
         \Database\Seeders\DebtorTypeSeeder::class,
