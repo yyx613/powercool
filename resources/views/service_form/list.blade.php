@@ -49,10 +49,10 @@
                     <th>{{ __('Date') }}</th>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Technician') }}</th>
-                    <th class="text-center">{{ __('SF') }}</th>
-                    <th class="text-center">{{ __('QT') }}</th>
-                    <th class="text-center">{{ __('CS') }}</th>
-                    <th class="text-center">{{ __('INV') }}</th>
+                    <th class="text-center">{{ __('SR') }}</th>
+                    <th class="text-center">{{ __('SRQ') }}</th>
+                    <th class="text-center">{{ __('SRCS') }}</th>
+                    <th class="text-center">{{ __('SRI') }}</th>
                     <th>{{ __('Created At') }}</th>
                     <th></th>
                 </tr>
@@ -124,51 +124,51 @@
                         return data
                     }
                 },
-                // SF column
+                // SR column
                 {
-                    "width": "4%",
+                    "width": "8%",
                     "targets": 4,
                     orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_service_form
-                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            ? `<span class="text-xs text-green-700">${row.generated_service_form}</span>`
                             : `<span class="text-gray-400">-</span>`
                     }
                 },
-                // QT column
+                // SRQ column
                 {
-                    "width": "4%",
+                    "width": "8%",
                     "targets": 5,
                     orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_quotation
-                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            ? `<span class="text-xs text-green-700">${row.generated_quotation}</span>`
                             : `<span class="text-gray-400">-</span>`
                     }
                 },
-                // CS column
+                // SRCS column
                 {
-                    "width": "4%",
+                    "width": "8%",
                     "targets": 6,
                     orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_cash_sale
-                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            ? `<span class="text-xs text-green-700">${row.generated_cash_sale}</span>`
                             : `<span class="text-gray-400">-</span>`
                     }
                 },
-                // INV column
+                // SRI column
                 {
-                    "width": "4%",
+                    "width": "8%",
                     "targets": 7,
                     orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_invoice
-                            ? `<svg class="h-4 w-4 inline-block text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                            ? `<span class="text-xs text-green-700">${row.generated_invoice}</span>`
                             : `<span class="text-gray-400">-</span>`
                     }
                 },

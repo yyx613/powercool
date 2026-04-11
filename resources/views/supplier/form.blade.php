@@ -177,7 +177,7 @@
                     <x-app.input.select name="currency" id="currency" :hasError="$errors->has('currency')">
                         <option value="">{{ __('Select a currency') }}</option>
                         @foreach ($currencies as $curr)
-                            <option value="{{ $curr->id }}" @selected(old('currency', isset($supplier) ? $supplier->currency_id : null) == $curr->id)>{{ $curr->name }}</option>
+                            <option value="{{ $curr->id }}" @selected(old('currency', isset($supplier) ? $supplier->currency_id : null) == $curr->id)>{{ $curr->name }}{{ $curr->currency_name ? ' - ' . $curr->currency_name : '' }}</option>
                         @endforeach
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('currency')" class="mt-2" />

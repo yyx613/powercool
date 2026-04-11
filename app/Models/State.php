@@ -28,4 +28,14 @@ class State extends Model
     {
         return $this->belongsTo(Country::class);
     }
+
+    public function areas()
+    {
+        return $this->hasMany(Area::class);
+    }
+
+    public function activeAreas()
+    {
+        return $this->hasMany(Area::class)->where('is_active', true);
+    }
 }

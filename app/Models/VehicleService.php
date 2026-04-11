@@ -53,6 +53,11 @@ class VehicleService extends Model
         return $this->hasMany(VehicleServiceItem::class);
     }
 
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'object');
+    }
+
     public function getDateAttribute($val)
     {
         return $val == null ? null : Carbon::parse($val)->format('Y-m-d');

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Branch;
 use App\Models\InventoryCategory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class InventoryCategorySeeder extends Seeder
@@ -14,22 +13,203 @@ class InventoryCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        if (config('app.env') == 'local') {
-            $now = now();
+        $branches = [Branch::LOCATION_KL, Branch::LOCATION_PENANG];
 
-            for ($i=0; $i < 5; $i++) { 
-                $ic = InventoryCategory::create([
-                    'name' => 'Cat ' . fake()->randomNumber(),
-                    'is_active' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now
-                ]);
+        $categories = [
+            // Power Cool (company_group = 1)
+            ['name' => 'ACCESS VALVE', 'company_group' => 1],
+            ['name' => 'ACCESSORIES', 'company_group' => 1],
+            ['name' => 'ADJ LEG', 'company_group' => 1],
+            ['name' => 'ALU', 'company_group' => 1],
+            ['name' => 'ALU PIN', 'company_group' => 1],
+            ['name' => 'AS', 'company_group' => 1],
+            ['name' => 'BACKWATERPLATE', 'company_group' => 1],
+            ['name' => 'BASE COVER', 'company_group' => 1],
+            ['name' => 'BASE WPLATE', 'company_group' => 1],
+            ['name' => 'BLOWER WPLATE', 'company_group' => 1],
+            ['name' => 'BRACKET', 'company_group' => 1],
+            ['name' => 'BULLET FEET', 'company_group' => 1],
+            ['name' => 'C.BOND', 'company_group' => 1],
+            ['name' => 'CAM LOCK', 'company_group' => 1],
+            ['name' => 'CAPILLARY', 'company_group' => 1],
+            ['name' => 'CASING', 'company_group' => 1],
+            ['name' => 'CASTOR', 'company_group' => 1],
+            ['name' => 'CHE PLATE', 'company_group' => 1],
+            ['name' => 'CHEMICAL', 'company_group' => 1],
+            ['name' => 'CLIP', 'company_group' => 1],
+            ['name' => 'COIL', 'company_group' => 1],
+            ['name' => 'COMPRESSOR', 'company_group' => 1],
+            ['name' => 'COND UNIT', 'company_group' => 1],
+            ['name' => 'CONDENSER', 'company_group' => 1],
+            ['name' => 'CONNECTOR', 'company_group' => 1],
+            ['name' => 'CONTROL BOX', 'company_group' => 1],
+            ['name' => 'COPPER', 'company_group' => 1],
+            ['name' => 'COPPER TUBE', 'company_group' => 1],
+            ['name' => 'CR ACCESSORIES', 'company_group' => 1],
+            ['name' => 'CR BLOWER', 'company_group' => 1],
+            ['name' => 'CR CURTAIN', 'company_group' => 1],
+            ['name' => 'CR GASKET', 'company_group' => 1],
+            ['name' => 'CR HANDLE', 'company_group' => 1],
+            ['name' => 'CR HINGES', 'company_group' => 1],
+            ['name' => 'CR PILASTER', 'company_group' => 1],
+            ['name' => 'DATA STRIP', 'company_group' => 1],
+            ['name' => 'DIG.CONTROLLER', 'company_group' => 1],
+            ['name' => 'DIMMER', 'company_group' => 1],
+            ['name' => 'DIVIDER SK', 'company_group' => 1],
+            ['name' => 'DOOR BUSH', 'company_group' => 1],
+            ['name' => 'DR SPRING', 'company_group' => 1],
+            ['name' => 'DR SWITCH', 'company_group' => 1],
+            ['name' => 'DRI BIT', 'company_group' => 1],
+            ['name' => 'FAN BLADE', 'company_group' => 1],
+            ['name' => 'FAN MOTOR', 'company_group' => 1],
+            ['name' => 'FAN NET', 'company_group' => 1],
+            ['name' => 'FAN STAND', 'company_group' => 1],
+            ['name' => 'FILTER', 'company_group' => 1],
+            ['name' => 'FNS CAP', 'company_group' => 1],
+            ['name' => 'FOAM', 'company_group' => 1],
+            ['name' => 'FRAME', 'company_group' => 1],
+            ['name' => 'GAS', 'company_group' => 1],
+            ['name' => 'GASKET', 'company_group' => 1],
+            ['name' => 'GD PLAS', 'company_group' => 1],
+            ['name' => 'GI', 'company_group' => 1],
+            ['name' => 'GLASS DR', 'company_group' => 1],
+            ['name' => 'GLS', 'company_group' => 1],
+            ['name' => 'GLUE', 'company_group' => 1],
+            ['name' => 'HANDLE', 'company_group' => 1],
+            ['name' => 'HEATER', 'company_group' => 1],
+            ['name' => 'HINGES', 'company_group' => 1],
+            ['name' => 'HOLDER', 'company_group' => 1],
+            ['name' => 'INSULATION', 'company_group' => 1],
+            ['name' => 'LED', 'company_group' => 1],
+            ['name' => 'LOCK', 'company_group' => 1],
+            ['name' => 'MS PLATE', 'company_group' => 1],
+            ['name' => 'OTHER', 'company_group' => 1],
+            ['name' => 'OTHERS', 'company_group' => 1],
+            ['name' => 'PACKING', 'company_group' => 1],
+            ['name' => 'PILASTER', 'company_group' => 1],
+            ['name' => 'PLAS', 'company_group' => 1],
+            ['name' => 'PLUG TOP', 'company_group' => 1],
+            ['name' => 'PLYW', 'company_group' => 1],
+            ['name' => 'PRICE TAG', 'company_group' => 1],
+            ['name' => 'PRO.TAPE', 'company_group' => 1],
+            ['name' => 'RIVET', 'company_group' => 1],
+            ['name' => 'ROD', 'company_group' => 1],
+            ['name' => 'ROUND PIPE', 'company_group' => 1],
+            ['name' => 'S/S', 'company_group' => 1],
+            ['name' => 'SBOARD', 'company_group' => 1],
+            ['name' => 'SCREW', 'company_group' => 1],
+            ['name' => 'SENSOR', 'company_group' => 1],
+            ['name' => 'SENSOR DIGITAL', 'company_group' => 1],
+            ['name' => 'SHELVING', 'company_group' => 1],
+            ['name' => 'SIG.SHEET', 'company_group' => 1],
+            ['name' => 'SIL GUN', 'company_group' => 1],
+            ['name' => 'SILICA GEL', 'company_group' => 1],
+            ['name' => 'SILICONE', 'company_group' => 1],
+            ['name' => 'SOL.VALVE', 'company_group' => 1],
+            ['name' => 'SOLID DOOR', 'company_group' => 1],
+            ['name' => 'SOLVENT', 'company_group' => 1],
+            ['name' => 'SPONGE', 'company_group' => 1],
+            ['name' => 'STICKER', 'company_group' => 1],
+            ['name' => 'SWITCH', 'company_group' => 1],
+            ['name' => 'T BAR', 'company_group' => 1],
+            ['name' => 'TAPE', 'company_group' => 1],
+            ['name' => 'THEMOMETER', 'company_group' => 1],
+            ['name' => 'THERMOSTAT', 'company_group' => 1],
+            ['name' => 'TIANG', 'company_group' => 1],
+            ['name' => 'TOOLS', 'company_group' => 1],
+            ['name' => 'TUBE', 'company_group' => 1],
+            ['name' => 'U CHAN', 'company_group' => 1],
+            ['name' => 'VENTILATOR', 'company_group' => 1],
+            ['name' => 'VIDEO FAN', 'company_group' => 1],
+            ['name' => 'WASHER', 'company_group' => 1],
+            ['name' => 'WIR ACC', 'company_group' => 1],
+            ['name' => 'WIRE', 'company_group' => 1],
+            ['name' => 'WPIPE', 'company_group' => 1],
+            ['name' => 'ZIP BAG', 'company_group' => 1],
+            // Hi-Ten (company_group = 2)
+            ['name' => '2IN1', 'company_group' => 2],
+            ['name' => '99 ECO INVERTER', 'company_group' => 2],
+            ['name' => 'ADJUSTABLE LEG', 'company_group' => 2],
+            ['name' => 'BASE COVER', 'company_group' => 2],
+            ['name' => 'BASKET', 'company_group' => 2],
+            ['name' => 'BIG BODY', 'company_group' => 2],
+            ['name' => 'BLAST FREEZER', 'company_group' => 2],
+            ['name' => 'BLOWER', 'company_group' => 2],
+            ['name' => 'CAKE', 'company_group' => 2],
+            ['name' => 'CASTOR', 'company_group' => 2],
+            ['name' => 'CGS', 'company_group' => 2],
+            ['name' => 'CHEST FREEZ', 'company_group' => 2],
+            ['name' => 'CLIP', 'company_group' => 2],
+            ['name' => 'COIL', 'company_group' => 2],
+            ['name' => 'COLD ROOM', 'company_group' => 2],
+            ['name' => 'COMBINE FREEZER', 'company_group' => 2],
+            ['name' => 'COMPRESSOR', 'company_group' => 2],
+            ['name' => 'CONDENSER', 'company_group' => 2],
+            ['name' => 'COUNTER', 'company_group' => 2],
+            ['name' => 'CURTAIN', 'company_group' => 2],
+            ['name' => 'CUSTOMISE', 'company_group' => 2],
+            ['name' => 'DC', 'company_group' => 2],
+            ['name' => 'DELI COUNTER', 'company_group' => 2],
+            ['name' => 'DIGITAL', 'company_group' => 2],
+            ['name' => 'ECO INVERTER', 'company_group' => 2],
+            ['name' => 'FILTER', 'company_group' => 2],
+            ['name' => 'GASKET', 'company_group' => 2],
+            ['name' => 'GLASS DOOR', 'company_group' => 2],
+            ['name' => 'HANDLE', 'company_group' => 2],
+            ['name' => 'HEATER', 'company_group' => 2],
+            ['name' => 'HITEN', 'company_group' => 2],
+            ['name' => 'HS', 'company_group' => 2],
+            ['name' => 'HSB', 'company_group' => 2],
+            ['name' => 'ICE MAKER', 'company_group' => 2],
+            ['name' => 'IMAX', 'company_group' => 2],
+            ['name' => 'ISLAND FREEZER', 'company_group' => 2],
+            ['name' => 'KITCHEN', 'company_group' => 2],
+            ['name' => 'LED', 'company_group' => 2],
+            ['name' => 'LOCK', 'company_group' => 2],
+            ['name' => 'MEAT CHILLER', 'company_group' => 2],
+            ['name' => 'MEE CAB', 'company_group' => 2],
+            ['name' => 'MEE STL', 'company_group' => 2],
+            ['name' => 'NCF', 'company_group' => 2],
+            ['name' => 'OPEN CHILLER', 'company_group' => 2],
+            ['name' => 'OTHERS', 'company_group' => 2],
+            ['name' => 'RACK', 'company_group' => 2],
+            ['name' => 'RECON', 'company_group' => 2],
+            ['name' => 'SENSOR', 'company_group' => 2],
+            ['name' => 'SHELVING', 'company_group' => 2],
+            ['name' => 'SOLID DOOR', 'company_group' => 2],
+            ['name' => 'THEMOSTAT', 'company_group' => 2],
+            ['name' => 'TINNY INVERTER', 'company_group' => 2],
+            ['name' => 'TINNY NON HEATER', 'company_group' => 2],
+            ['name' => 'TINNY TEMPERED', 'company_group' => 2],
+            ['name' => 'TRANSFORMER', 'company_group' => 2],
+            ['name' => 'UPRIGHT', 'company_group' => 2],
+            ['name' => 'UPRIGHT INVERTER', 'company_group' => 2],
+            ['name' => 'WATERPLATE', 'company_group' => 2],
+            ['name' => 'WORK TABLE', 'company_group' => 2],
+        ];
 
-                Branch::create([
-                    'object_type' => InventoryCategory::class,
-                    'object_id' => $ic->id,
-                    'location' => fake()->randomElement([Branch::LOCATION_KL, Branch::LOCATION_PENANG]),
-                ]);
+        foreach ($categories as $categoryData) {
+            $cat = InventoryCategory::updateOrCreate(
+                [
+                    'name' => $categoryData['name'],
+                    'company_group' => $categoryData['company_group'],
+                ],
+                ['is_active' => true]
+            );
+
+            foreach ($branches as $branch) {
+                $existingBranch = Branch::where('object_type', InventoryCategory::class)
+                    ->where('object_id', $cat->id)
+                    ->where('location', $branch)
+                    ->first();
+
+                if (!$existingBranch) {
+                    Branch::create([
+                        'object_type' => InventoryCategory::class,
+                        'object_id' => $cat->id,
+                        'location' => $branch,
+                    ]);
+                }
             }
         }
     }

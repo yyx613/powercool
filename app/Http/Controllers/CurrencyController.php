@@ -28,14 +28,22 @@ class CurrencyController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('country', 'like', '%' . $keyword . '%')
+                    ->orWhere('currency_name', 'like', '%' . $keyword . '%')
+                    ->orWhere('code', 'like', '%' . $keyword . '%')
+                    ->orWhere('symbol', 'like', '%' . $keyword . '%');
             });
         }
         // Order
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
-                1 => 'is_active',
+                1 => 'country',
+                2 => 'currency_name',
+                3 => 'code',
+                4 => 'symbol',
+                5 => 'is_active',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -58,6 +66,10 @@ class CurrencyController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'name' => $record->name,
+                'country' => $record->country,
+                'currency_name' => $record->currency_name,
+                'code' => $record->code,
+                'symbol' => $record->symbol,
                 'status' => $record->is_active,
             ];
         }
@@ -73,6 +85,10 @@ class CurrencyController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'country' => 'nullable|max:250',
+            'currency_name' => 'nullable|max:250',
+            'code' => 'nullable|max:250',
+            'symbol' => 'nullable|max:250',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -84,6 +100,10 @@ class CurrencyController extends Controller
 
             $currency = $this->curr::create([
                 'name' => $req->name,
+                'country' => $req->country,
+                'currency_name' => $req->currency_name,
+                'code' => $req->code,
+                'symbol' => $req->symbol,
                 'is_active' => $req->status,
             ]);
             (new Branch)->assign(Currency::class, $currency->id);
@@ -112,6 +132,10 @@ class CurrencyController extends Controller
         // Validate request
         $validator = Validator::make($req->all(), [
             'name' => 'required|max:250',
+            'country' => 'nullable|max:250',
+            'currency_name' => 'nullable|max:250',
+            'code' => 'nullable|max:250',
+            'symbol' => 'nullable|max:250',
             'status' => 'required',
         ]);
         if ($validator->fails()) {
@@ -123,6 +147,10 @@ class CurrencyController extends Controller
 
             $currency->update([
                 'name' => $req->name,
+                'country' => $req->country,
+                'currency_name' => $req->currency_name,
+                'code' => $req->code,
+                'symbol' => $req->symbol,
                 'is_active' => $req->status,
             ]);
 

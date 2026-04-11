@@ -16,6 +16,26 @@
                     <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">
+                    <x-app.input.label id="country" class="mb-1">{{ __('Country') }}</x-app.input.label>
+                    <x-app.input.input name="country" id="country" value="{{ old('country') ?? (isset($curr) ? $curr->country : null) }}" />
+                    <x-input-error :messages="$errors->get('country')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="currency_name" class="mb-1">{{ __('Currency Name') }}</x-app.input.label>
+                    <x-app.input.input name="currency_name" id="currency_name" value="{{ old('currency_name') ?? (isset($curr) ? $curr->currency_name : null) }}" />
+                    <x-input-error :messages="$errors->get('currency_name')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="code" class="mb-1">{{ __('Code') }}</x-app.input.label>
+                    <x-app.input.input name="code" id="code" value="{{ old('code') ?? (isset($curr) ? $curr->code : null) }}" />
+                    <x-input-error :messages="$errors->get('code')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
+                    <x-app.input.label id="symbol" class="mb-1">{{ __('Symbol') }}</x-app.input.label>
+                    <x-app.input.input name="symbol" id="symbol" value="{{ old('symbol') ?? (isset($curr) ? $curr->symbol : null) }}" />
+                    <x-input-error :messages="$errors->get('symbol')" class="mt-1" />
+                </div>
+                <div class="flex flex-col">
                     <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
@@ -23,7 +43,7 @@
                         <option value="0" @selected(old('status', isset($curr) ? $curr->is_active : null) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
-                </div>    
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-x-4">
                 @if (!isset($curr))

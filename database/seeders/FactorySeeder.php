@@ -3,10 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Branch;
-use App\Models\DebtorType;
+use App\Models\Factory;
 use Illuminate\Database\Seeder;
 
-class DebtorTypeSeeder extends Seeder
+class FactorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -15,34 +15,27 @@ class DebtorTypeSeeder extends Seeder
     {
         $branches = [Branch::LOCATION_KL, Branch::LOCATION_PENANG];
         $types = [
-            'WEBSITE',
-            'TIKTOK',
-            'SHOPEE',
-            'DEALER',
-            'CUSTOMER',
-            'AGENT',
-            'XHS',
-            'FACEBOOK',
-            'LAZADA',
-            'TAOBAO',
+            'FACTORY 12',
+            'FACTORY 17',
+            'FACTORY 22',
+            'VALDOR',
         ];
 
         foreach ($types as $type) {
-            $dt = DebtorType::updateOrCreate(
+            $factory = Factory::updateOrCreate(
                 ['name' => $type],
-                ['is_active' => true]
             );
 
             foreach ($branches as $branch) {
-                $existingBranch = Branch::where('object_type', DebtorType::class)
-                    ->where('object_id', $dt->id)
+                $existingBranch = Branch::where('object_type', Factory::class)
+                    ->where('object_id', $factory->id)
                     ->where('location', $branch)
                     ->first();
 
                 if (!$existingBranch) {
                     Branch::create([
-                        'object_type' => DebtorType::class,
-                        'object_id' => $dt->id,
+                        'object_type' => Factory::class,
+                        'object_id' => $factory->id,
                         'location' => $branch,
                     ]);
                 }

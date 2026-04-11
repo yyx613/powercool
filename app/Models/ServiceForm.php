@@ -136,6 +136,36 @@ class ServiceForm extends Model
         return generateSku('SF', $existing_skus, $is_hi_ten);
     }
 
+    public function generateDocumentSku(string $prefix, string $column, ?bool $is_hi_ten = null): string
+    {
+        $existing_skus = self::withoutGlobalScope(BranchScope::class)
+            ->whereNotNull($column)
+            ->pluck($column)
+            ->toArray();
+
+        return generateSku($prefix, $existing_skus, $is_hi_ten);
+    }
+
+    public function getGeneratedServiceFormAttribute(): bool
+    {
+        return ! is_null($this->sr_sku);
+    }
+
+    public function getGeneratedQuotationAttribute(): bool
+    {
+        return ! is_null($this->srq_sku);
+    }
+
+    public function getGeneratedCashSaleAttribute(): bool
+    {
+        return ! is_null($this->srcs_sku);
+    }
+
+    public function getGeneratedInvoiceAttribute(): bool
+    {
+        return ! is_null($this->sri_sku);
+    }
+
     public static function getWarrantyStatuses(): array
     {
         return [

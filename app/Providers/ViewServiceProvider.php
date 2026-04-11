@@ -183,6 +183,8 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['task.technician'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'task_sale')) {
                     array_push($permissions_group['task.sale'], $permissions[$i]);
+                } elseif (str_contains($permissions[$i], 'report')) {
+                    array_push($permissions_group['report'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production_request')) {
                     array_push($permissions_group['production_request'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'production_material')) {
@@ -203,8 +205,6 @@ class ViewServiceProvider extends ServiceProvider
                     array_push($permissions_group['vehicle'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'e_order')) {
                     array_push($permissions_group['e_order'], $permissions[$i]);
-                } elseif (str_contains($permissions[$i], 'report')) {
-                    array_push($permissions_group['report'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'user_role_management')) {
                     array_push($permissions_group['user_role_management'], $permissions[$i]);
                 } elseif (str_contains($permissions[$i], 'setting')) {

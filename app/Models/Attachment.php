@@ -20,6 +20,7 @@ class Attachment extends Model
     const PRODUCT_PATH = 'public/attachments/product';
     const PRODUCTION_MILESTONE_REJECT_PATH = 'public/attachments/production_milestone_reject';
     const TASK_SIGNATURE_PATH = 'public/attachments/task_signature';
+    const VEHICLE_SERVICE_PATH = 'public/attachments/vehicle_service';
 
     protected $guarded = [];
     protected $hidden = ['deleted_at', 'created_at', 'updated_at'];
@@ -50,6 +51,8 @@ class Attachment extends Model
                 return config('app.url') . str_replace('public', $path, self::PRODUCT_PATH) . '/' . $this->src;
             case ProductionMilestoneReject::class:
                 return config('app.url') . str_replace('public', $path, self::PRODUCTION_MILESTONE_REJECT_PATH) . '/' . $this->src;
+            case VehicleService::class:
+                return config('app.url') . str_replace('public', $path, self::VEHICLE_SERVICE_PATH) . '/' . $this->src;
         }
     }
 }

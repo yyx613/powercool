@@ -42,6 +42,10 @@
             <thead>
                 <tr>
                     <th>{{ __('Name') }}</th>
+                    <th>{{ __('Country') }}</th>
+                    <th>{{ __('Currency Name') }}</th>
+                    <th>{{ __('Code') }}</th>
+                    <th>{{ __('Symbol') }}</th>
                     <th>{{ __('Status') }}</th>
                     <th></th>
                 </tr>
@@ -70,11 +74,15 @@
             displayStart: DEFAULT_PAGE != null ? (DEFAULT_PAGE - 1) * 10 : 0,
             columns: [
                 { data: 'name' },
+                { data: 'country' },
+                { data: 'currency_name' },
+                { data: 'code' },
+                { data: 'symbol' },
                 { data: 'status' },
                 { data: 'action' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
@@ -82,8 +90,36 @@
                     }
                 },
                 {
-                    "width": '10%',
+                    "width": "15%",
                     "targets": 1,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "15%",
+                    "targets": 2,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 3,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": "8%",
+                    "targets": 4,
+                    render: function(data, type, row) {
+                        return data ?? '-'
+                    }
+                },
+                {
+                    "width": '10%',
+                    "targets": 5,
                     render: function(data, type, row) {
                         switch (data) {
                             case 0:
@@ -93,9 +129,9 @@
                         }
                     }
                 },
-                { 
+                {
                     "width": "5%",
-                    "targets": 2,
+                    "targets": 6,
                     "orderable": false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

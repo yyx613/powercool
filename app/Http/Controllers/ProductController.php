@@ -132,7 +132,7 @@ class ProductController extends Controller
 
         $records = $this->prod->with(['category' => function ($q) {
             $q->withTrashed();
-        }]);
+        }, 'images']);
 
         $filter_type = Session::get('type');
         if ($filter_type == 'waiting') {
@@ -279,7 +279,7 @@ class ProductController extends Controller
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
-                'image' => $record->image ?? null,
+                'image' => $record->images->first(),
                 'model_desc' => $record->model_desc,
                 'category' => $record->category->name,
                 'qty' => $qty,

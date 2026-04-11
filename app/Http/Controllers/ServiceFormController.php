@@ -52,6 +52,10 @@ class ServiceFormController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('sr_sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('srq_sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('srcs_sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('sri_sku', 'like', '%'.$keyword.'%')
                     ->orWhereHas('serviceItems', function ($q) use ($keyword) {
                         $q->where('model_no', 'like', '%'.$keyword.'%')
                             ->orWhere('serial_no', 'like', '%'.$keyword.'%');
@@ -84,10 +88,10 @@ class ServiceFormController extends Controller
                 'date' => $record->date ? $record->date->format('d M Y') : '-',
                 'customer_name' => $record->customer ? ($record->customer->company_name ?? $record->customer->name) : '-',
                 'technician' => $record->technician ? $record->technician->name : '-',
-                'generated_service_form' => (bool) $record->generated_service_form,
-                'generated_quotation' => (bool) $record->generated_quotation,
-                'generated_cash_sale' => (bool) $record->generated_cash_sale,
-                'generated_invoice' => (bool) $record->generated_invoice,
+                'generated_service_form' => $record->sr_sku,
+                'generated_quotation' => $record->srq_sku,
+                'generated_cash_sale' => $record->srcs_sku,
+                'generated_invoice' => $record->sri_sku,
                 'einvoice_status' => $record->einvoice ? $record->einvoice->status : null,
                 'created_at' => $record->created_at->format('d M Y'),
             ];
@@ -455,9 +459,10 @@ class ServiceFormController extends Controller
         $id = Crypt::decrypt($id);
         $serviceForm = $this->serviceForm::with(['customer', 'customerLocation', 'product', 'serviceItems.product', 'invoice', 'dealer', 'technician'])->findOrFail($id);
 
-        // Mark as generated
-        if (! $serviceForm->generated_service_form) {
-            $serviceForm->update(['generated_service_form' => true]);
+        // Assign SR running number on first generation
+        if (is_null($serviceForm->sr_sku)) {
+            $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
+            $serviceForm->update(['sr_sku' => $serviceForm->generateDocumentSku('SR', 'sr_sku', $isHiTen)]);
         }
 
         // Prepare customer name
@@ -503,7 +508,7 @@ class ServiceFormController extends Controller
 
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->stream($serviceForm->sku.'.pdf');
+        return $pdf->stream($serviceForm->sr_sku.'.pdf');
     }
 
     public function quotationPdf($id)
@@ -518,13 +523,14 @@ class ServiceFormController extends Controller
             'technician',
         ])->findOrFail($id);
 
-        // Mark as generated
-        if (! $serviceForm->generated_quotation) {
-            $serviceForm->update(['generated_quotation' => true]);
-        }
-
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
+
+        // Assign SRQ running number on first generation
+        if (is_null($serviceForm->srq_sku)) {
+            $serviceForm->update(['srq_sku' => $serviceForm->generateDocumentSku('SRQ', 'srq_sku', $isHiTen)]);
+        }
+
         $template = $isHiTen
             ? 'service_form.pdf.quotation_hi_ten'
             : 'service_form.pdf.quotation_powercool';
@@ -562,7 +568,7 @@ class ServiceFormController extends Controller
 
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->stream($serviceForm->sku.'-quotation.pdf');
+        return $pdf->stream($serviceForm->srq_sku.'.pdf');
     }
 
     public function cashSalePdf($id)
@@ -577,13 +583,14 @@ class ServiceFormController extends Controller
             'technician',
         ])->findOrFail($id);
 
-        // Mark as generated
-        if (! $serviceForm->generated_cash_sale) {
-            $serviceForm->update(['generated_cash_sale' => true]);
-        }
-
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
+
+        // Assign SRCS running number on first generation
+        if (is_null($serviceForm->srcs_sku)) {
+            $serviceForm->update(['srcs_sku' => $serviceForm->generateDocumentSku('SRCS', 'srcs_sku', $isHiTen)]);
+        }
+
         $template = $isHiTen
             ? 'service_form.pdf.cash_sale_hi_ten'
             : 'service_form.pdf.cash_sale_powercool';
@@ -621,7 +628,7 @@ class ServiceFormController extends Controller
 
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->stream($serviceForm->sku.'-cash-sale.pdf');
+        return $pdf->stream($serviceForm->srcs_sku.'.pdf');
     }
 
     public function invoicePdf($id)
@@ -636,13 +643,14 @@ class ServiceFormController extends Controller
             'technician',
         ])->findOrFail($id);
 
-        // Mark as generated
-        if (! $serviceForm->generated_invoice) {
-            $serviceForm->update(['generated_invoice' => true]);
-        }
-
         // Determine template based on customer's company group
         $isHiTen = $serviceForm->customer && isHiTen($serviceForm->customer->company_group);
+
+        // Assign SRI running number on first generation
+        if (is_null($serviceForm->sri_sku)) {
+            $serviceForm->update(['sri_sku' => $serviceForm->generateDocumentSku('SRI', 'sri_sku', $isHiTen)]);
+        }
+
         $template = $isHiTen
             ? 'service_form.pdf.invoice_hi_ten'
             : 'service_form.pdf.invoice_powercool';
@@ -680,6 +688,6 @@ class ServiceFormController extends Controller
 
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->stream($serviceForm->sku.'-invoice.pdf');
+        return $pdf->stream($serviceForm->sri_sku.'.pdf');
     }
 }
