@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             PlatformSeeder::class,
             PrioritySeeder::class,
             StateCitySeeder::class,
+            UOMSeeder::class,
         ]);
     }
 }
