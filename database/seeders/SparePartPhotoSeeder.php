@@ -43,6 +43,18 @@ class SparePartPhotoSeeder extends Seeder
             File::makeDirectory($destDir, 0755, true);
         }
 
+        // Auto-reset: wipe previous product attachments + copied files so re-runs start clean.
+        if (!$dryRun) {
+            $deleted = Attachment::where('object_type', Product::class)->delete();
+            foreach (File::files($destDir) as $existing) {
+                File::delete($existing->getPathname());
+            }
+            $this->command->info("  Reset: deleted {$deleted} existing product attachments and cleared {$destDir}");
+        } else {
+            $existingCount = Attachment::where('object_type', Product::class)->count();
+            $this->command->line("  [DRY RUN] Would delete {$existingCount} existing product attachments and clear {$destDir}");
+        }
+
         $totalCopied = 0;
         $totalAttachments = 0;
         $skipped = 0;
@@ -70,7 +82,7 @@ class SparePartPhotoSeeder extends Seeder
                 // Map characters: ! -> /, ' -> "
                 $normalized = str_replace(['!', "'"], ['/', '"'], $baseName);
                 // Strip trailing -N suffix (multi-photo indicator)
-                $skuName = preg_replace('/-(\d+)$/', '', $normalized);
+                $skuName = preg_replace('/[-_ ](\d+)$/', '', $normalized);
                 $skuKey = mb_strtolower(trim($skuName));
 
                 if (!isset($skuMap[$skuKey])) {
@@ -167,7 +179,7 @@ class SparePartPhotoSeeder extends Seeder
 
             $baseName = trim(pathinfo($filename, PATHINFO_FILENAME));
             // Strip trailing -N suffix (multi-photo indicator)
-            $skuName = preg_replace('/-(\d+)$/', '', $baseName);
+            $skuName = preg_replace('/[-_ ](\d+)$/', '', $baseName);
             $skuKey = mb_strtolower(trim($skuName));
 
             if (!isset($mfgSkuMap[$skuKey])) {
