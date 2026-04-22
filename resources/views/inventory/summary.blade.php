@@ -74,7 +74,9 @@
                                 <div class="h-8 w-8">
                                     @if ($pro->images != null && count($pro->images) > 0)
                                         <img src="{{ $pro->images[0]->url }}" alt=""
-                                            class="h-full w-full object-contain">
+                                            class="h-full w-full object-contain cursor-pointer product-photo-thumb"
+                                            data-url="{{ $pro->images[0]->url }}"
+                                            data-download-url="{{ route('inventory_summary.download_photo', $pro->images[0]->id) }}">
                                     @else
                                         <x-app.no-image-icon class="p-1" />
                                     @endif
@@ -192,6 +194,24 @@
             </div>
         </div>
     </div>
+
+    <x-app.modal.base-modal id="product-photo-modal">
+        <div class="p-4">
+            <div class="flex justify-end mb-2">
+                <button type="button" id="product-photo-modal-close"
+                    class="text-slate-500 hover:text-slate-800 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="flex items-center justify-center bg-slate-100 rounded mb-4" style="min-height: 300px;">
+                <img id="product-photo-modal-img" src="" alt="" class="max-h-[60vh] max-w-full object-contain">
+            </div>
+            <div class="flex justify-end">
+                <a id="product-photo-modal-download" href="#"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    {{ __('Download') }}
+                </a>
+            </div>
+        </div>
+    </x-app.modal.base-modal>
 @endsection
 
 @push('scripts')
@@ -251,14 +271,20 @@
                     "targets": 0,
                     orderable: false,
                     render: function(data, type, row) {
+                        const isFinishedGood = row.category === 'Product';
+                        let thumbHtml;
+                        if (row.image != null) {
+                            const clickable = isFinishedGood ? 'cursor-pointer product-photo-thumb' : '';
+                            const dataAttrs = isFinishedGood
+                                ? `data-url="${row.image.url}" data-download-url="/inventory-summary/download-photo/${row.image.id}"`
+                                : '';
+                            thumbHtml = `<img src="${row.image.url}" class="h-full w-full object-contain ${clickable}" ${dataAttrs} />`;
+                        } else {
+                            thumbHtml = `<x-app.no-image-icon class="p-1"/>`;
+                        }
                         return `
                             <div class="flex items-center gap-x-2">
-                                <div class="h-8 w-8">
-                                    ${
-                                        row.image != null ? `<img src="${ row.image.url }" class="h-full w-full object-contain" />` :
-                                            `<x-app.no-image-icon class="p-1"/>`
-                                    }
-                                </div>
+                                <div class="h-8 w-8">${thumbHtml}</div>
                                 <div class="flex-1">
                                     <span>${row.name} (${row.sku})</span>
                                 </div>
@@ -322,5 +348,18 @@
                 },
             });
         }
+
+        // Delegated so it catches thumbnails re-rendered by DataTable
+        $(document).on('click', '.product-photo-thumb', function() {
+            $('#product-photo-modal-img').attr('src', $(this).data('url'));
+            $('#product-photo-modal-download').attr('href', $(this).data('download-url'));
+            $('#product-photo-modal').addClass('show-modal');
+        });
+        $('#product-photo-modal-close').on('click', function() {
+            $('#product-photo-modal').removeClass('show-modal');
+        });
+        $('#product-photo-modal').on('click', function(e) {
+            if (e.target === this) $(this).removeClass('show-modal');
+        });
     </script>
 @endpush
