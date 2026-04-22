@@ -207,6 +207,7 @@
                                 <th>{{ __('Assigned Order ID') }}</th>
                                 <th>{{ __('Status') }}</th>
                                 <th>{{ __('Done By') }}</th>
+                                <th>{{ __('Created By') }}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -462,6 +463,9 @@
                             data: 'done_by'
                         },
                         {
+                            data: 'created_by'
+                        },
+                        {
                             data: 'action'
                         },
                     ],
@@ -536,6 +540,16 @@
                         {
                             "width": "5%",
                             "targets": 6,
+                            orderable: false,
+                            render: function(data, type, row) {
+                                if (data != null)
+                                    return `<span class="text-sm font-semibold">${data.name}</span><br><span class="text-xs">${row.created_at ?? ''}</span>`
+                                return row.created_at ?? '-'
+                            }
+                        },
+                        {
+                            "width": "5%",
+                            "targets": 7,
                             orderable: false,
                             render: function(data, type, row) {
                                 console.log(row)

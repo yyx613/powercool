@@ -57,6 +57,32 @@ class ProductChild extends Model
         return $date;
     }
 
+    protected static function booted(): void
+    {
+        // Enforce SKU uniqueness on active (non-soft-deleted) originals.
+        // Branch-transfer replicas (transferred_from != null) are exempt —
+        // they intentionally mirror the source row's SKU across branches.
+        static::creating(function (self $child) {
+            if ($child->sku === null || $child->sku === '') {
+                return;
+            }
+            if ($child->transferred_from !== null) {
+                return;
+            }
+
+            $exists = static::withoutGlobalScope(BranchScope::class)
+                ->where('sku', $child->sku)
+                ->whereNull('transferred_from')
+                ->exists();
+
+            if ($exists) {
+                throw new \RuntimeException(
+                    "Duplicate product_children.sku: {$child->sku}"
+                );
+            }
+        });
+    }
+
     public function parent()
     {
         return $this->belongsTo(Product::class, 'product_id');
@@ -80,6 +106,11 @@ class ProductChild extends Model
     public function stockOutBy()
     {
         return $this->belongsTo(User::class, 'stock_out_by')->withoutGlobalScope(BranchScope::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by')->withoutGlobalScope(BranchScope::class);
     }
 
     public function transferredBy()
@@ -150,7 +181,6 @@ class ProductChild extends Model
         $init_idx = 1;
         $sku = null;
         $min_char = 6;
-        $existing_skus = self::pluck('sku')->toArray();
 
         while (true) {
             $str_init_idx = (string) $init_idx;
@@ -159,7 +189,12 @@ class ProductChild extends Model
             }
             $sku = $parent_prefix.'-'.now()->format('ymd').'-'.$str_init_idx;
 
-            if (! in_array($sku, $existing_skus)) {
+            // Re-query per candidate (the previous version cached results once
+            // before the loop, which let concurrent callers collide).
+            $taken = self::withoutGlobalScope(BranchScope::class)
+                ->where('sku', $sku)
+                ->exists();
+            if (! $taken) {
                 break;
             }
 

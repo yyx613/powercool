@@ -234,6 +234,44 @@ class GRNController extends Controller
 
     public function stockIn(Request $req)
     {
+        // Collect all submitted serial numbers up-front so we can reject
+        // duplicates (within this submission and against existing rows)
+        // before we start inserting anything.
+        $serialsByProduct = [];
+        $allSerials = [];
+        for ($i = 0; $i < count($req->product); $i++) {
+            $raw = $req->{'serial_no_'.$req->product[$i]};
+            if ($raw == null) {
+                continue;
+            }
+            $serials = array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($s) => $s !== ''));
+            if (count($serials) === 0) {
+                continue;
+            }
+            $serialsByProduct[$i] = $serials;
+            foreach ($serials as $s) {
+                $allSerials[] = $s;
+            }
+        }
+
+        $withinSubmissionDups = array_keys(array_filter(array_count_values($allSerials), fn ($n) => $n > 1));
+        $alreadyExisting = count($allSerials) > 0
+            ? ProductChild::withoutGlobalScope(BranchScope::class)
+                ->whereIn('sku', $allSerials)
+                ->whereNull('transferred_from')
+                ->pluck('sku')
+                ->unique()
+                ->values()
+                ->toArray()
+            : [];
+
+        $offenders = array_values(array_unique(array_merge($withinSubmissionDups, $alreadyExisting)));
+        if (count($offenders) > 0) {
+            return back()
+                ->with('error', 'Duplicate serial number(s): '.implode(', ', $offenders))
+                ->withInput();
+        }
+
         try {
             DB::beginTransaction();
 
@@ -243,7 +281,7 @@ class GRNController extends Controller
                 if ($req->{'serial_no_'.$req->product[$i]} != null) {
                     $grn = $this->grn::where('sku', $req->sku)->where('product_id', $req->product[$i])->first();
 
-                    $serial_no = explode(',', $req->{'serial_no_'.$req->product[$i]});
+                    $serial_no = $serialsByProduct[$i] ?? [];
 
                     for ($j = 0; $j < count($serial_no); $j++) {
                         $data[] = [
@@ -259,6 +297,7 @@ class GRNController extends Controller
                             'product_id' => $req->product[$i],
                             'sku' => $serial_no[$j],
                             'location' => $this->prodChild::LOCATION_WAREHOUSE,
+                            'created_by' => Auth::user()->id,
                         ]);
                     }
                 } elseif ($req->{'qty_'.$req->product[$i]} != null && $req->{'qty_'.$req->product[$i]} != 0) {

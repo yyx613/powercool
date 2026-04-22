@@ -1095,6 +1095,7 @@ class ProductionController extends Controller
                     'product_id' => $prod->id,
                     'sku' => ($this->productChild)->generateSku($prod->initial_for_production ?? $prod->sku),
                     'location' => $this->productChild::LOCATION_FACTORY,
+                    'created_by' => Auth::user()->id,
                 ]);
 
                 $productions[$i]->product_child_id = $prodChild->id;
