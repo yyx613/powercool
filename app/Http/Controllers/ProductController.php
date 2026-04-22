@@ -508,6 +508,7 @@ class ProductController extends Controller
             'data' => [],
             'records_ids' => $records_ids,
         ];
+        $records_paginator->load('createdBy');
         foreach ($records_paginator as $key => $record) {
             $production = null;
             if ($record->location == 'factory') {
@@ -533,6 +534,8 @@ class ProductController extends Controller
                 'stock_out_factory' => $record->stock_out_to_type == Production::class ? ($record->stock_out_to_id == InventoryCategory::FACTORY_17 ? '17' : '22') : null,
                 'done_by' => in_array($record->status, [ProductChild::STATUS_STOCK_OUT, ProductChild::STATUS_PRODUCTION_STOCK_OUT]) ? $record->stockOutBy : ($record->status == ProductChild::STATUS_IN_TRANSIT ? $record->transferredBy : null),
                 'done_at' => in_array($record->status, [ProductChild::STATUS_STOCK_OUT, ProductChild::STATUS_PRODUCTION_STOCK_OUT]) ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : ($record->status == ProductChild::STATUS_IN_TRANSIT ? Carbon::parse($record->stock_out_at)->format('d M Y, h:i A') : null),
+                'created_by' => $record->createdBy,
+                'created_at' => $record->created_at != null ? Carbon::parse($record->created_at)->format('d M Y, h:i A') : null,
                 'progress' => $record->location != 'factory' || $production == null ? null : $production->getProgress($production),
                 'remark' => $record->reject_reason ?? null,
             ];
@@ -1023,6 +1026,7 @@ class ProductController extends Controller
                             'product_id' => $prod->id,
                             'sku' => $req->serial_no[$i],
                             'location' => $this->prodChild::LOCATION_WAREHOUSE,
+                            'created_by' => Auth::user()->id,
                             'created_at' => $now,
                             'updated_at' => $now,
                         ];
