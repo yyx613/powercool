@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\FactoryRawMaterial;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class InventoryController extends Controller
@@ -261,6 +263,16 @@ class InventoryController extends Controller
             'inactive_product_count' => $inactive_product_count,
             'categories' => $category,
         ]);
+    }
+
+    public function downloadProductPhoto(Attachment $attachment)
+    {
+        abort_unless($attachment->object_type === Product::class, 404);
+
+        $path = Attachment::PRODUCT_PATH.'/'.$attachment->src;
+        abort_unless(Storage::exists($path), 404);
+
+        return Storage::download($path);
     }
 
     public function getDataSummary()
