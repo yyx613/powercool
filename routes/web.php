@@ -285,10 +285,10 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{cat}', 'delete')->name('delete')->middleware(['can:inventory.category.delete']);
 
-        Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in');
-        Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out');
-        Route::get('/transfer/{product_child}', 'transfer')->name('transfer');
-        Route::get('/to-warehouse/{product_child}', 'toWarehouse')->name('to_warehouse');
+        Route::get('/stock-in/{product_child}', 'stockIn')->name('stock_in')->middleware(['can:inventory.view_action']);
+        Route::get('/stock-out/{product_child}', 'stockOut')->name('stock_out')->middleware(['can:inventory.view_action']);
+        Route::get('/transfer/{product_child}', 'transfer')->name('transfer')->middleware(['can:inventory.view_action']);
+        Route::get('/to-warehouse/{product_child}', 'toWarehouse')->name('to_warehouse')->middleware(['can:inventory.view_action']);
         Route::get('/accept-production-stock-out/{product_child}', 'acceptProductionStockOut');
         Route::get('/reject-production-stock-out/{product_child}', 'rejectProductionStockOut');
         Route::get('/accept-production-stock-out-rm/{frm}', 'acceptProductionStockOutRM');
@@ -363,7 +363,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{sku}', 'edit')->name('edit')->middleware(['can:grn.create', 'branch.selected'])->where('sku', '.*');
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/pdf/{sku}', 'pdf')->name('pdf')->where('sku', '.*');
-        Route::post('/stock-in', 'stockIn')->name('stock_in');
+        Route::post('/stock-in', 'stockIn')->name('stock_in')->middleware(['can:grn.stock_in']);
         Route::post('/sync', 'sync')->name('sync');
         Route::post('/cancel/{sku}', 'cancel')->name('cancel')->middleware(['can:grn.cancel'])->where('sku', '.*');
         Route::post('/delete/{sku}', 'delete')->name('delete')->middleware(['can:grn.delete'])->where('sku', '.*');

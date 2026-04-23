@@ -56,6 +56,7 @@ return [
     'grn.edit' => 'Update goods received note details',
     'grn.cancel' => 'Show the Cancel button on GRN rows to void a goods received note',
     'grn.delete' => 'Show the Delete button on GRN rows to soft-delete a goods received note',
+    'grn.stock_in' => 'Allow performing the Stock In action on a GRN to receive goods into the warehouse',
 
     // Service Reminder
     'service_reminder.view' => 'Show the Service Reminder menu under After Service and access the service reminder listing page',
