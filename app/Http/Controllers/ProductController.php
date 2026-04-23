@@ -281,7 +281,7 @@ class ProductController extends Controller
                 'sku' => $record->sku,
                 'image' => $record->images->first(),
                 'model_desc' => $record->model_desc,
-                'category' => $record->category->name,
+                'category' => $record->category?->name,
                 'qty' => $qty,
                 'has_factory_child' => $record->orWhereHas('children', function ($qq) {
                     $qq->where('location', ProductChild::LOCATION_FACTORY);
