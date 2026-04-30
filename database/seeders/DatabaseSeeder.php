@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             PrioritySeeder::class,
             StateCitySeeder::class,
             UOMSeeder::class,
+            VehicleSeeder::class,
         ]);
     }
 }

@@ -646,105 +646,122 @@ class ProductionController extends Controller
         }
     }
 
-    public function quickDuplicate(Production $production)
+    public function quickDuplicate(Request $req, Production $production)
     {
+        $req->validate([
+            'qty' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+        $qty = (int) ($req->qty ?? 1);
+
         try {
             DB::beginTransaction();
 
             $production->load(['users', 'milestones']);
 
-            // Create new production
-            $newProduction = Production::create([
-                'sku' => $this->prod->generateSku(),
-                'product_id' => $production->product_id,
-                'sale_id' => $production->sale_id,
-                'name' => $production->name,
-                'desc' => $production->desc,
-                'remark' => $production->remark,
-                'start_date' => now()->format('Y-m-d'),
-                'due_date' => $production->due_date != null && $production->start_date != null
-                    ? now()->addDays(Carbon::parse($production->start_date)->diffInDays(Carbon::parse($production->due_date)))->format('Y-m-d')
-                    : null,
-                'status' => Production::STATUS_TO_DO,
-                'type' => $production->type,
-                'priority_id' => $production->priority_id,
-                'factory_id' => $production->factory_id,
-            ]);
-            (new Branch)->assign(Production::class, $newProduction->id);
-
-            // Copy user assignments
-            foreach ($production->users as $user) {
-                UserProduction::create([
-                    'user_id' => $user->id,
-                    'production_id' => $newProduction->id,
-                ]);
-            }
-
-            // Copy milestones and material previews
-            foreach ($production->milestones as $milestone) {
-                $newProdMs = ProductionMilestone::create([
-                    'production_id' => $newProduction->id,
-                    'milestone_id' => $milestone->id,
-                    'sequence' => $milestone->pivot->sequence ?? 1,
-                ]);
-
-                // Copy material preview records
-                $oldProdMsId = ProductionMilestone::where('production_id', $production->id)
-                    ->where('milestone_id', $milestone->id)
-                    ->value('id');
-
-                if ($oldProdMsId) {
-                    $previews = ProductionMilestoneMaterialPreview::where('production_milestone_id', $oldProdMsId)->get();
-                    foreach ($previews as $preview) {
-                        ProductionMilestoneMaterialPreview::create([
-                            'production_milestone_id' => $newProdMs->id,
-                            'product_id' => $preview->product_id,
-                            'qty' => $preview->qty,
-                        ]);
-                    }
-                }
-            }
-
-            // Create Raw Material Request
-            if ($production->type != Production::TYPE_RND) {
-                $materialUse = MaterialUse::with('materials')->where('product_id', $production->product_id)->first();
-                if ($materialUse != null) {
-                    $rmq = RawMaterialRequest::create([
-                        'production_id' => $newProduction->id,
-                        'material_use_id' => $materialUse->id,
-                        'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
-                        'requested_by' => Auth::user()->id,
-                    ]);
-                    (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
-
-                    $data = [];
-                    foreach ($materialUse->materials as $material) {
-                        $data[] = [
-                            'raw_material_request_id' => $rmq->id,
-                            'product_id' => $material->product_id,
-                            'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
-                            'qty' => $material->material->is_sparepart ? 1 : $material->qty,
-                            'created_at' => now(),
-                        ];
-                    }
-                    RawMaterialRequestMaterial::insert($data);
-                }
-
-                // Set product in_production flag
-                Product::where('id', $production->product_id)->update([
-                    'in_production' => true,
-                ]);
+            for ($i = 0; $i < $qty; $i++) {
+                $this->cloneProductionOnce($production);
             }
 
             DB::commit();
 
-            return redirect(route('production.index'))->with('success', 'Production duplicated successfully');
+            return redirect(route('production.index'))->with(
+                'success',
+                $qty === 1 ? 'Production duplicated successfully' : "$qty productions duplicated successfully"
+            );
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
             return back()->with('error', 'Something went wrong. Please contact administrator');
         }
+    }
+
+    private function cloneProductionOnce(Production $production): Production
+    {
+        // Create new production
+        $newProduction = Production::create([
+            'sku' => $this->prod->generateSku(),
+            'product_id' => $production->product_id,
+            'sale_id' => $production->sale_id,
+            'name' => $production->name,
+            'desc' => $production->desc,
+            'remark' => $production->remark,
+            'start_date' => now()->format('Y-m-d'),
+            'due_date' => $production->due_date != null && $production->start_date != null
+                ? now()->addDays(Carbon::parse($production->start_date)->diffInDays(Carbon::parse($production->due_date)))->format('Y-m-d')
+                : null,
+            'status' => Production::STATUS_TO_DO,
+            'type' => $production->type,
+            'priority_id' => $production->priority_id,
+            'factory_id' => $production->factory_id,
+        ]);
+        (new Branch)->assign(Production::class, $newProduction->id);
+
+        // Copy user assignments
+        foreach ($production->users as $user) {
+            UserProduction::create([
+                'user_id' => $user->id,
+                'production_id' => $newProduction->id,
+            ]);
+        }
+
+        // Copy milestones and material previews
+        foreach ($production->milestones as $milestone) {
+            $newProdMs = ProductionMilestone::create([
+                'production_id' => $newProduction->id,
+                'milestone_id' => $milestone->id,
+                'sequence' => $milestone->pivot->sequence ?? 1,
+            ]);
+
+            // Copy material preview records
+            $oldProdMsId = ProductionMilestone::where('production_id', $production->id)
+                ->where('milestone_id', $milestone->id)
+                ->value('id');
+
+            if ($oldProdMsId) {
+                $previews = ProductionMilestoneMaterialPreview::where('production_milestone_id', $oldProdMsId)->get();
+                foreach ($previews as $preview) {
+                    ProductionMilestoneMaterialPreview::create([
+                        'production_milestone_id' => $newProdMs->id,
+                        'product_id' => $preview->product_id,
+                        'qty' => $preview->qty,
+                    ]);
+                }
+            }
+        }
+
+        // Create Raw Material Request
+        if ($production->type != Production::TYPE_RND) {
+            $materialUse = MaterialUse::with('materials')->where('product_id', $production->product_id)->first();
+            if ($materialUse != null) {
+                $rmq = RawMaterialRequest::create([
+                    'production_id' => $newProduction->id,
+                    'material_use_id' => $materialUse->id,
+                    'status' => RawMaterialRequest::STATUS_IN_PROGRESS,
+                    'requested_by' => Auth::user()->id,
+                ]);
+                (new Branch)->assign(RawMaterialRequest::class, $rmq->id);
+
+                $data = [];
+                foreach ($materialUse->materials as $material) {
+                    $data[] = [
+                        'raw_material_request_id' => $rmq->id,
+                        'product_id' => $material->product_id,
+                        'status' => RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS,
+                        'qty' => $material->material->is_sparepart ? 1 : $material->qty,
+                        'created_at' => now(),
+                    ];
+                }
+                RawMaterialRequestMaterial::insert($data);
+            }
+
+            // Set product in_production flag
+            Product::where('id', $production->product_id)->update([
+                'in_production' => true,
+            ]);
+        }
+
+        return $newProduction;
     }
 
     public function checkInMilestone(Request $req)
