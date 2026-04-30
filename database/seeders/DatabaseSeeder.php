@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             StateCitySeeder::class,
             UOMSeeder::class,
             VehicleSeeder::class,
+            VehicleRoadTaxSeeder::class,
         ]);
     }
 }

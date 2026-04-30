@@ -711,6 +711,8 @@ class ProductionController extends Controller
                 'production_id' => $newProduction->id,
                 'milestone_id' => $milestone->id,
                 'sequence' => $milestone->pivot->sequence ?? 1,
+                'submitted_at' => null,
+                'submitted_by' => null,
             ]);
 
             // Copy material preview records
@@ -1010,7 +1012,7 @@ class ProductionController extends Controller
         // Only allow rejection when production is in progress
         $pms = $this->prodMs::where('id', $req->production_milestone_id)->first();
         $production = Production::where('id', $pms->production_id)->first();
-        if (strtolower($production->status) != 'in progress') {
+        if ($production->status != Production::STATUS_DOING) {
             return Response::json([
                 'errors' => [
                     'general' => 'Rejection is not allowed when production is not in progress',

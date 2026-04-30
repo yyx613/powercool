@@ -190,7 +190,7 @@ class Production extends Model
         $milestone_completed_count = ProductionMilestone::where('production_id', $production->id)->whereNotNull('submitted_at')->count();
 
         if ($milestone_all_count == 0) {
-            $progress = number_format(1 * 100, 2);
+            $progress = number_format(0, 2);
         } else {
             $progress = number_format(($milestone_completed_count / $milestone_all_count) * 100, 2);
         }
