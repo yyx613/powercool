@@ -3028,7 +3028,7 @@ class SaleController extends Controller
                         ]);
                     }
                     // Warranty Period
-                    if ($req->warranty_period != null && count($req->warranty_period) >= ($i + 1) && $req->warranty_period[$i] != null) {
+                    if (is_array($req->warranty_period) && isset($req->warranty_period[$i]) && is_array($req->warranty_period[$i])) {
                         $spwp_data = [];
                         for ($j = 0; $j < count($req->warranty_period[$i]); $j++) {
                             if ($req->warranty_period[$i][$j] == null) {
