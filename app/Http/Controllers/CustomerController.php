@@ -325,7 +325,7 @@ class CustomerController extends Controller
             'prev_gst_reg_no' => 'nullable|max:250',
             'registered_name' => 'nullable|max:250',
             'trade_name' => 'nullable|max:250',
-            'identity_type' => 'nullable|max:250',
+            'identity_type' => 'nullable|in:MyKAD,MyPR,MyKAS,ARMY,PASSPORT',
             'identity_no' => 'nullable|max:250',
             'address' => 'nullable|max:250',
             'city' => 'nullable|max:250',

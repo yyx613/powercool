@@ -34,6 +34,16 @@
                     <p class="text-xs text-blue-700 border border-blue-700 p-1.5 rounded shadow">
                         {{ __('Default Billing & Delivery Address') }}</p>
                 </div>
+                <div class="col-span-2 md:col-span-4 flex justify-end">
+                    <button type="button"
+                        class="set-identical-btn bg-yellow-400 rounded-md py-1 px-2 text-sm flex items-center gap-x-1 transition duration-300 hover:bg-yellow-300 hover:shadow"
+                        title="{{ __('Copy main address into this location') }}">
+                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                        <span>{{ __('Set Identical') }}</span>
+                    </button>
+                </div>
                 <div class="flex flex-col">
                     <x-app.input.label id="address1" class="mb-1">{{ __('Address 1') }}</x-app.input.label>
                     <x-app.input.input name="address1" id="address1" :hasError="$errors->has('address1')" />
@@ -160,6 +170,26 @@
             $(clone).removeAttr('id')
 
             $('#items-container').append(clone)
+        })
+        $('body').on('click', '.set-identical-btn', function() {
+            let $item = $(this).closest('.items')
+            let $info = $('#info-form')
+
+            let mainAddress = $info.find('input[name="address"]').val() ?? ''
+            let mainCity = $info.find('input[name="city"]').val() ?? ''
+            let mainZip = $info.find('input[name="zip_code"]').val() ?? ''
+
+            let $stateSel = $info.find('select[name="state"]')
+            let $countrySel = $info.find('select[name="country"]')
+            let mainStateText = ($stateSel.val() ?? '') === '' ? '' : $stateSel.find('option:selected').text().trim()
+            let mainCountryText = ($countrySel.val() ?? '') === '' ? '' : $countrySel.find('option:selected').text().trim()
+
+            let cityZip = [mainCity, mainZip].filter(s => s && s.length > 0).join(' ')
+
+            $item.find('input[name="address1"]').val(mainAddress)
+            $item.find('input[name="address2"]').val(cityZip)
+            $item.find('input[name="address3"]').val(mainStateText)
+            $item.find('input[name="address4"]').val(mainCountryText)
         })
         $('body').on('click', '.delete-item-btns', function() {
             let id = $(this).data('id')

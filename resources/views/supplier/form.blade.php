@@ -73,9 +73,17 @@
                     <x-app.input.input name="prev_gst_reg_no" id="prev_gst_reg_no" class="uppercase-input" :hasError="$errors->has('prev_gst_reg_no')" value="{{ old('prev_gst_reg_no', isset($supplier) ? $supplier->prev_gst_reg_no : null) }}"/>
                     <x-input-error :messages="$errors->get('prev_gst_reg_no')" class="mt-2" />
                 </div>
-                <div class="flex flex-col hidden individual-fields-container"">
+                <div class="flex flex-col hidden individual-fields-container">
                     <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.input name="identity_type" id="identity_type" class="uppercase-input" :hasError="$errors->has('identity_type')" value="{{ old('identity_type', isset($supplier) ? $supplier->identity_type : null) }}"/>
+                    @php
+                        $selectedIdentityType = old('identity_type', isset($supplier) ? $supplier->identity_type : null);
+                    @endphp
+                    <x-app.input.select name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')">
+                        <option value="">{{ __('Select identity type') }}</option>
+                        @foreach (['MyKAD', 'MyPR', 'MyKAS', 'ARMY', 'PASSPORT'] as $opt)
+                            <option value="{{ $opt }}" @selected($selectedIdentityType === $opt)>{{ $opt }}</option>
+                        @endforeach
+                    </x-app.input.select>
                     <x-input-error :messages="$errors->get('identity_type')" class="mt-2" />
                 </div>
                 <div class="flex flex-col hidden individual-fields-container"">

@@ -172,7 +172,7 @@ class SupplierController extends Controller
             'prev_gst_reg_no' => 'nullable|max:250',
             'registered_name' => 'required|max:250',
             'trade_name' => 'nullable|max:250',
-            'identity_type' => 'required_if:category,==,2|max:250',
+            'identity_type' => 'required_if:category,==,2|in:MyKAD,MyPR,MyKAS,ARMY,PASSPORT',
             'identity_no' => 'nullable|max:250',
         ], [
             'required_if' => 'The :attribute is required',
