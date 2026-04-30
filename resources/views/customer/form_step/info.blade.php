@@ -98,8 +98,15 @@
                 <x-app.input.label id="identity_type" class="mb-1">{{ __('Identity Type') }}
                     <span class="text-sm text-red-500 hidden for_einvoice-required">*</span>
                 </x-app.input.label>
-                <x-app.input.input name="identity_type" id="identity_type" class="uppercase-input" :hasError="$errors->has('identity_type')"
-                    value="{{ old('identity_type', isset($duplicate) ? $duplicate->identity_type : (isset($customer) ? $customer->identity_type : null)) }}" />
+                @php
+                    $selectedIdentityType = old('identity_type', isset($duplicate) ? $duplicate->identity_type : (isset($customer) ? $customer->identity_type : null));
+                @endphp
+                <x-app.input.select name="identity_type" id="identity_type" :hasError="$errors->has('identity_type')">
+                    <option value="">{{ __('Select identity type') }}</option>
+                    @foreach (['MyKAD', 'MyPR', 'MyKAS', 'ARMY', 'PASSPORT'] as $opt)
+                        <option value="{{ $opt }}" @selected($selectedIdentityType === $opt)>{{ $opt }}</option>
+                    @endforeach
+                </x-app.input.select>
                 <x-app.message.error id="identity_type_err" />
             </div>
             <div class="flex flex-col hidden individual-fields-container">
