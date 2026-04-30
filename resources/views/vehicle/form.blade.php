@@ -72,6 +72,8 @@
                         <option value="">{{ __('Select a type') }}</option>
                         <option value="1" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 1)>{{ __('Car') }}</option>
                         <option value="2" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 2)>{{ __('Lorry') }}</option>
+                        <option value="3" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 3)>{{ __('Van') }}</option>
+                        <option value="4" @selected(old('type', isset($vehicle) ? $vehicle->type : null) == 4)>{{ __('Motor') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('type')" class="mt-2" />
                 </div>

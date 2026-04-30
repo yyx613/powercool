@@ -124,13 +124,20 @@
 
     {{-- Duplicate Modal --}}
     <x-app.modal.base-modal id="duplicate-modal">
-        <div class="aspect-[2/1] flex flex-col">
+        <div class="flex flex-col">
             <div class="py-2 px-4 bg-gray-100">
                 <h6 class="text-lg font-black">{{ __('Duplicate Production') }}</h6>
             </div>
             <div class="flex-1 flex flex-col p-4">
-                <div class="flex-1">
-                    <p class="text-slate-500 leading-snug">{{ __('Would you like to edit the duplicated production before creating, or confirm to duplicate immediately?') }}</p>
+                <div class="flex-1 mb-4">
+                    <p class="text-slate-600 leading-snug text-sm">{{ __('Would you like to edit the duplicated production before creating, or confirm to duplicate immediately?') }}</p>
+                </div>
+                <div class="mb-4">
+                    <label for="duplicate-qty" class="block text-sm font-medium text-slate-700 mb-1">{{ __('How many copies?') }}</label>
+                    <input type="number" min="1" max="20" value="1" id="duplicate-qty" name="duplicate-qty"
+                        class="w-full bg-white rounded-md border border-gray-300 p-2 text-sm focus:ring-0" />
+                    <p class="mt-1 text-xs text-slate-500">{{ __('Enter 1 to 20. Edit always opens one copy.') }}</p>
+                    <p class="mt-2 text-sm text-red-600 hidden" id="duplicate-qty-error">&nbsp;</p>
                 </div>
                 <div class="flex gap-x-6">
                     <div class="flex-1">
@@ -485,12 +492,26 @@
 
             $('#duplicate-modal #duplicate-edit-btn').attr('href', `{{ config('app.url') }}/production/create?id=${id}`)
             $('#duplicate-modal #duplicate-confirm-btn').attr('href', `{{ config('app.url') }}/production/quick-duplicate/${id}`)
+            $('#duplicate-qty').val(1)
+            $('#duplicate-qty-error').addClass('hidden').text('')
             $('#duplicate-modal').addClass('show-modal')
         })
         $('#duplicate-modal').on('click', function(e) {
             if ($(e.target).is('#duplicate-modal')) {
                 $('#duplicate-modal').removeClass('show-modal')
             }
+        })
+        $('#duplicate-modal #duplicate-confirm-btn').on('click', function(e) {
+            e.preventDefault()
+            let qty = parseInt($('#duplicate-qty').val(), 10)
+            let $err = $('#duplicate-qty-error')
+            if (!Number.isInteger(qty) || qty < 1 || qty > 20) {
+                $err.removeClass('hidden').text('{{ __('Enter a number between 1 and 20.') }}')
+                return
+            }
+            $err.addClass('hidden').text('')
+            let baseHref = $(this).attr('href')
+            window.location.href = `${baseHref}?qty=${qty}`
         })
 
         $('#data-table').on('click', '.delete-btns', function() {

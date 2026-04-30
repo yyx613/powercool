@@ -18,6 +18,8 @@ class Vehicle extends Model
     const STATUS_SOLD = 2;
     const TYPE_CAR = 1;
     const TYPE_LORRY = 2;
+    const TYPE_VAN = 3;
+    const TYPE_MOTOR = 4;
 
     protected $guarded = [];
 

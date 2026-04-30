@@ -91,7 +91,13 @@ class VehicleController extends Controller
                 'area_control' => $record->area_control,
                 'status' => $record->status,
                 'sold_date' => $record->sold_date,
-                'type' => $record->type == Vehicle::TYPE_CAR ? 'Car' : 'Lorry',
+                'type' => match ($record->type) {
+                    Vehicle::TYPE_CAR => 'Car',
+                    Vehicle::TYPE_LORRY => 'Lorry',
+                    Vehicle::TYPE_VAN => 'Van',
+                    Vehicle::TYPE_MOTOR => 'Motor',
+                    default => null,
+                },
             ];
         }
 
