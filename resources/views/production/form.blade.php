@@ -1,5 +1,6 @@
 @inject('prodMs', 'App\Models\ProductionMilestone')
 @inject('prodMsMaterialPreview', 'App\Models\ProductionMilestoneMaterialPreview')
+@inject('prodModel', 'App\Models\Production')
 
 @extends('layouts.app')
 @section('title', 'Production')
@@ -198,7 +199,7 @@
                     <input type="hidden" name="material_use_product">
                 </div>
             </div>
-            @if (!isset($production) || (isset($production) && $production->type == 2) || (isset($is_duplicate) && $is_duplicate == true))
+            @if (!isset($production) || (isset($production) && $production->type == 2) || (isset($is_duplicate) && $is_duplicate == true) || (isset($production) && !isset($is_duplicate) && $production->status == $prodModel::STATUS_TO_DO))
                 <div class="mt-8 flex justify-end">
                     <x-app.button.submit type="button" id="submit-btn">{{ __('Save and Update') }}</x-app.button.submit>
                 </div>
