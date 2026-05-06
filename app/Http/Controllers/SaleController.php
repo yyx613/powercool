@@ -3004,7 +3004,6 @@ class SaleController extends Controller
                                 'discount_type' => $req->discount_type[$i] ?? 'fixed',
                                 'remark' => $req->product_remark[$i],
                             ]);
-                            SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->delete();
                         }
                     } else {
                         $sp = SaleProduct::create([
@@ -3027,6 +3026,7 @@ class SaleController extends Controller
                             'sequence' => $req->sequence[$i] ?? null,
                         ]);
                     }
+                    SaleProductWarrantyPeriod::where('sale_product_id', $sp->id)->forceDelete();
                     // Warranty Period
                     if (is_array($req->warranty_period) && isset($req->warranty_period[$i]) && is_array($req->warranty_period[$i])) {
                         $spwp_data = [];
