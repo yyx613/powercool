@@ -267,11 +267,11 @@
                             <td colspan="2"></td>
                             <td style="font-size: 10px; text-align: left;">- {{ $accessory->product->model_desc ?? 'N/A' }}</td>
                             <td style="font-size: 10px; text-align: right;">{{ $acc_qty }}</td>
-                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? 'FOC' : ($accessory->product->uomUnit->name ?? '') }}</td>
-                            <td style="font-size: 10px; text-align: right;">{{ number_format($unit_price, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->product->uomUnit->name ?? '' }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? 'FOC' : number_format($unit_price, 2) }}</td>
                             <td style="font-size: 10px; text-align: right;">{{ number_format(0, 2) }}</td>
                             <td style="font-size: 10px; text-align: right;">{{ number_format(0, 2) }}</td>
-                            <td style="font-size: 10px; text-align: right;">{{ number_format($total_price, 2) }}</td>
+                            <td style="font-size: 10px; text-align: right;">{{ $accessory->is_foc ? 'FOC' : number_format($total_price, 2) }}</td>
                         </tr>
                     @endforeach
                 @endif
