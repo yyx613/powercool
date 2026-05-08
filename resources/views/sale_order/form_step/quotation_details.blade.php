@@ -262,6 +262,33 @@
 
         $('select[name="customer"]').on('change', function() {
             var customer_id = $(this).val()
+
+            // Auto-select Type from customer's debtor type
+            if (customer_id) {
+                let skipTypeAutoFill = (typeof SALE !== 'undefined' && SALE != null && INIT_EDIT == true)
+                if (!skipTypeAutoFill) {
+                    $.ajax({
+                        url: '{{ route('customer.get_location') }}',
+                        type: 'GET',
+                        data: { customer_id: customer_id },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success: function(r) {
+                            if (!r.debtor_type_name) return
+                            let typeName = r.debtor_type_name.toString().trim().toLowerCase()
+                            let $select = $('select[name="report_type"]')
+                            $select.find('option').each(function() {
+                                if ($(this).val() && $(this).text().toString().trim().toLowerCase() === typeName) {
+                                    $select.find('option').prop('selected', false)
+                                    $(this).prop('selected', true)
+                                    $select.val($(this).val()).trigger('change')
+                                    return false
+                                }
+                            })
+                        }
+                    })
+                }
+            }
+
             var element = CUSTOMERS[customer_id]
             $('input[name="attention_to"]').val(element.name)
             // Show the first mobile number or '-' if not available
@@ -295,6 +322,7 @@
                 type: 'GET',
                 async: false,
                 success: function(res) {
+
                     $('select[name="billing_address"] option').remove()
 
                     // Default option
@@ -401,6 +429,32 @@
             $('input[name="customer_label"]').val(customer_label)
             $('input[name="customer"]').val(customer_id)
 
+            // Auto-select Type from customer's debtor type
+            if (customer_id) {
+                let skipTypeAutoFill = (typeof SALE !== 'undefined' && SALE != null && INIT_EDIT == true)
+                if (!skipTypeAutoFill) {
+                    $.ajax({
+                        url: '{{ route('customer.get_location') }}',
+                        type: 'GET',
+                        data: { customer_id: customer_id },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        success: function(r) {
+                            if (!r.debtor_type_name) return
+                            let typeName = r.debtor_type_name.toString().trim().toLowerCase()
+                            let $select = $('select[name="report_type"]')
+                            $select.find('option').each(function() {
+                                if ($(this).val() && $(this).text().toString().trim().toLowerCase() === typeName) {
+                                    $select.find('option').prop('selected', false)
+                                    $(this).prop('selected', true)
+                                    $select.val($(this).val()).trigger('change')
+                                    return false
+                                }
+                            })
+                        }
+                    })
+                }
+            }
+
             var element = CUSTOMERS[customer_id]
 
             $('input[name="attention_to"]').val(element.name)
@@ -423,6 +477,7 @@
                 type: 'GET',
                 async: false,
                 success: function(res) {
+
                     // Billing Address
                     $('select[name="billing_address"] option').remove()
 

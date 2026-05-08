@@ -730,12 +730,14 @@ class ViewServiceProvider extends ServiceProvider
             $payment_methods = PaymentMethod::orderBy('name', 'asc')->get();
             $credit_terms = CreditTerm::orderBy('id', 'desc')->get();
             $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
+            $optional_due_date_payment_method_ids = getPaymentMethodOptionalDueDateIds();
 
             $view->with([
                 'can_payment_amount' => hasPermission('sale.sale_order.payment'),
                 'payment_statuses' => $payment_statuses,
                 'payment_methods' => $payment_methods,
                 'credit_payment_method_ids' => $credit_term_payment_method_ids,
+                'optional_due_date_payment_method_ids' => $optional_due_date_payment_method_ids,
                 'credit_terms' => $credit_terms,
             ]);
         });

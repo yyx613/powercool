@@ -233,7 +233,7 @@
                                 <x-app.message.error id="payment_term_err" />
                             </div>
                             <div class="flex flex-col">
-                                <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                                <x-app.input.label id="payment_due_date" class="mb-1">{{ __('Payment Due Date') }} <span class="text-sm text-red-500" id="payment_due_date_required">*</span></x-app.input.label>
                                 <x-app.input.input name="payment_due_date" id="payment_due_date" :hasError="false" />
                                 <x-app.message.error id="payment_due_date_err" />
                             </div>
@@ -273,6 +273,7 @@
         SALESPERSONS = @json($salespersons ?? null);
         QUOTATIONS = @json($quotations ?? null);
         CREDIT_PAYMENT_METHOD_IDS = @json($credit_payment_method_ids ?? []);
+        OPTIONAL_DUE_DATE_PAYMENT_METHOD_IDS = @json($optional_due_date_payment_method_ids ?? []);
         SELECTED_QUOS = [];
         CURRENT_SUBSTEP = 3;
 
@@ -419,6 +420,11 @@
                 $('#convert-payment-term-container').addClass('hidden')
                 $('select[name="payment_term"]').val('').trigger('change')
             }
+            if (OPTIONAL_DUE_DATE_PAYMENT_METHOD_IDS.includes(parseInt(val))) {
+                $('#payment_due_date_required').addClass('hidden')
+            } else {
+                $('#payment_due_date_required').removeClass('hidden')
+            }
             if (CURRENT_SUBSTEP == 4) updateStep4Url()
         })
         $('select[name="payment_term"]').on('change', function() {
@@ -460,11 +466,13 @@
                 }
             }
 
-            let paymentDueDate = $('input[name="payment_due_date"]').val()
-            if (!paymentDueDate || paymentDueDate == '') {
-                errors.push('Payment due date is required')
-                $('#payment_due_date_err').find('p').text('Payment due date is required')
-                $('#payment_due_date_err').removeClass('hidden')
+            if (!OPTIONAL_DUE_DATE_PAYMENT_METHOD_IDS.includes(parseInt(paymentMethod))) {
+                let paymentDueDate = $('input[name="payment_due_date"]').val()
+                if (!paymentDueDate || paymentDueDate == '') {
+                    errors.push('Payment due date is required')
+                    $('#payment_due_date_err').find('p').text('Payment due date is required')
+                    $('#payment_due_date_err').removeClass('hidden')
+                }
             }
 
             if (errors.length > 0) {

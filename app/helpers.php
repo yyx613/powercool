@@ -498,3 +498,12 @@ if (! function_exists('getPaymentMethodCreditTermIds')) {
         return PaymentMethod::where('name', 'like', '%credit term%')->pluck('id')->toArray();
     }
 }
+
+if (! function_exists('getPaymentMethodOptionalDueDateIds')) {
+    function getPaymentMethodOptionalDueDateIds()
+    {
+        return PaymentMethod::where('name', 'like', '%credit term%')
+            ->orWhere('name', 'like', '%installment%')
+            ->pluck('id')->toArray();
+    }
+}
