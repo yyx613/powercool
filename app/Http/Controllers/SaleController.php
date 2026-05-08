@@ -307,7 +307,7 @@ class SaleController extends Controller
             $replicate = Sale::where('id', $req->quo)->first();
             $data['replicate'] = $replicate->load('products.product.children', 'products.children', 'products.warrantyPeriods', 'products.accessories.product', 'products.accessories.sellingPrice');
 
-            $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+            $customers = Customer::with('creditTerms.creditTerm', 'salesAgents', 'debtorType')
                 ->where('id', $replicate->customer_id)
                 ->orderBy('id', 'desc')->get();
             $customers = $customers->keyBy('id')->all();
@@ -343,7 +343,7 @@ class SaleController extends Controller
             abort(403);
         }
 
-        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents', 'debtorType')
             ->where('id', $sale->customer_id)
             ->orderBy('id', 'desc')->get();
         $customers = $customers->keyBy('id')->all();
@@ -590,10 +590,12 @@ class SaleController extends Controller
     {
         $rules = [
             'payment_method' => 'required',
-            'payment_due_date' => 'required',
         ];
         if (in_array($req->payment_method, getPaymentMethodCreditTermIds())) {
             $rules['payment_term'] = 'required';
+        }
+        if (! in_array($req->payment_method, getPaymentMethodOptionalDueDateIds())) {
+            $rules['payment_due_date'] = 'required';
         }
         $req->validate($rules);
 
@@ -1175,7 +1177,7 @@ class SaleController extends Controller
 
         $has_pending_approval = Approval::where('object_type', Sale::class)->where('object_id', $sale->id)->where('status', Approval::STATUS_PENDING_APPROVAL)->exists();
 
-        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+        $customers = Customer::with('creditTerms.creditTerm', 'salesAgents', 'debtorType')
             ->where('id', $sale->customer_id)
             ->orderBy('id', 'desc')->get();
         $customers = $customers->keyBy('id')->all();
@@ -2046,10 +2048,12 @@ class SaleController extends Controller
             }
 
             // Update payment due date for SOs if payment method is credit term and payment due date is null
-            $credit_term_payment_term_ids = getPaymentMethodCreditTermIds();
+            $credit_term_payment_method_ids = getPaymentMethodCreditTermIds();
             for ($i = 0; $i < count($sales); $i++) {
-                if (in_array($sales[$i]->payment_term, $credit_term_payment_term_ids) && $sales[$i]->payment_due_date == null) {
-                    $daysToAdd = str_replace(' Days', '', $sales[$i]->paymentTerm->name);
+                if (in_array($sales[$i]->payment_method, $credit_term_payment_method_ids)
+                    && $sales[$i]->payment_due_date == null
+                    && $sales[$i]->paymentTerm != null) {
+                    $daysToAdd = (int) str_replace(' Days', '', $sales[$i]->paymentTerm->name);
                     $sales[$i]->payment_due_date = now()->addDays($daysToAdd)->format('Y-m-d');
                     $sales[$i]->save();
                 }

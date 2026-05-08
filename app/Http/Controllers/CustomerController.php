@@ -726,9 +726,13 @@ class CustomerController extends Controller
                 $locations = CustomerLocation::where('customer_id', $req->customer_id)->get();
             }
 
+            $customer = Customer::with('debtorType')->find($req->customer_id);
+            $debtor_type_name = $customer && $customer->debtorType ? $customer->debtorType->name : null;
+
             return Response::json([
                 'result' => true,
                 'locations' => $locations,
+                'debtor_type_name' => $debtor_type_name,
             ], HttpFoundationResponse::HTTP_OK);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -822,11 +826,11 @@ class CustomerController extends Controller
             $is_edit = $req->boolean('is_edit');
 
             if ($is_edit) {
-                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents', 'debtorType')
                     ->where('company_name', 'like', '%' . $keyword . '%')
                     ->orderBy('id', 'desc')->get();
             } else {
-                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents')
+                $customers = Customer::with('creditTerms.creditTerm', 'salesAgents', 'debtorType')
                     ->where('company_name', 'like', '%' . $keyword . '%')
                     ->whereIn('status', [Customer::STATUS_ACTIVE, Customer::STATUS_APPROVAL_APPROVED])
                     ->orderBy('id', 'desc')
