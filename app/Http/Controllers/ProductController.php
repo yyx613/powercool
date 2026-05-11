@@ -799,6 +799,9 @@ class ProductController extends Controller
 
             'classification_code' => 'required|array',
             'classification_code.*' => 'exists:classification_codes,id',
+
+            'display_qty' => 'nullable|numeric|min:0',
+            'display_uom' => 'nullable|exists:uom,id',
         ];
         if ($req->product_id != null) {
             $rules['image'] = 'nullable';
@@ -891,6 +894,8 @@ class ProductController extends Controller
                     'woo_commerce_sku' => $req->woo_commerce_sku,
                     'hi_ten_stock_code' => $req->hi_ten_stock_code,
                     'sst' => $req->sst == null ? false : true,
+                    'display_qty' => $req->display_qty,
+                    'display_uom' => $req->display_uom,
                     'created_by' => Auth::user()->id,
                 ]);
 
@@ -931,6 +936,8 @@ class ProductController extends Controller
                     'woo_commerce_sku' => $req->woo_commerce_sku,
                     'hi_ten_stock_code' => $req->hi_ten_stock_code,
                     'sst' => $req->sst == null ? false : true,
+                    'display_qty' => $req->display_qty,
+                    'display_uom' => $req->display_uom,
                 ]);
             }
 
@@ -1283,6 +1290,7 @@ class ProductController extends Controller
                 $q->whereNull('status')->whereNotIn('id', $involved_pc_ids);
             }])
                 ->with('sellingPrices')
+                ->with('displayUomUnit')
                 ->where('is_active', true)
                 ->where(function ($q) use ($keyword) {
                     $q->where('model_desc', 'like', '%'.$keyword.'%')

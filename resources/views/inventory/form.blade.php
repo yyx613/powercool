@@ -125,6 +125,22 @@
                             value="{{ old('qty', isset($prod) ? $prod->qty : ($dup_prod != null ? $dup_prod->qty : null)) }}" />
                         <x-input-error :messages="$errors->get('qty')" class="mt-1" />
                     </div>
+                    <div class="flex flex-col" id="display-qty-container">
+                        <x-app.input.label id="display_qty" class="mb-1">{{ __('Display Qty') }}</x-app.input.label>
+                        <x-app.input.input name="display_qty" id="display_qty" class="decimal-input"
+                            value="{{ old('display_qty', isset($prod) ? $prod->display_qty : ($dup_prod != null ? $dup_prod->display_qty : null)) }}" />
+                        <x-input-error :messages="$errors->get('display_qty')" class="mt-1" />
+                    </div>
+                    <div class="flex flex-col" id="display-uom-container">
+                        <x-app.input.label id="display_uom" class="mb-1">{{ __('Display UOM') }}</x-app.input.label>
+                        <x-app.input.select name="display_uom" id="display_uom">
+                            <option value="">{{ __('Select a UOM') }}</option>
+                            @foreach ($uoms as $uom)
+                                <option value="{{ $uom->id }}" @selected(old('display_uom', isset($prod) ? $prod->display_uom : ($dup_prod != null ? $dup_prod->display_uom : null)) == $uom->id)>{{ $uom->name }}</option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('display_uom')" class="mt-1" />
+                    </div>
                 @endif
                 <div class="flex flex-col">
                     <x-app.input.label id="low_stock_threshold"

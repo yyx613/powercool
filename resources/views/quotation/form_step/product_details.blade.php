@@ -68,8 +68,21 @@
             <x-app.message.error id="customize_product_err" />
         </div>
         <div class="flex flex-col">
-            <x-app.input.label id="qty" class="mb-1">{{ __('Quantity') }} <span
-                    class="text-sm text-red-500">*</span></x-app.input.label>
+            <x-app.input.label id="qty" class="mb-1 flex items-center gap-1">
+                {{ __('Quantity') }} <span class="text-sm text-red-500">*</span>
+                <span class="display-info-wrapper relative hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="display-info-icon h-4 w-4 text-blue-500 hover:text-blue-700 cursor-pointer"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="display-info-tooltip hidden absolute left-6 top-0 z-50 w-56 bg-white rounded-lg shadow-lg border border-gray-200 p-3 text-xs font-normal text-gray-700">
+                        <div><span class="font-semibold">{{ __('Display Qty') }}:</span> <span class="display-qty-value">-</span></div>
+                        <div class="mt-1"><span class="font-semibold">{{ __('Display UOM') }}:</span> <span class="display-uom-value">-</span></div>
+                    </div>
+                </span>
+            </x-app.input.label>
             <div class="flex border border-gray-300 rounded-md overflow-hidden">
                 <x-app.input.input name="qty" id="qty" :hasError="$errors->has('qty')"
                     class="int-input border-none flex-1" />
@@ -516,6 +529,12 @@
             hideDeleteBtnWhenOnlyOneItem()
             calSummary()
         })
+        $('body').on('mouseenter', '.display-info-wrapper', function() {
+            $(this).find('.display-info-tooltip').removeClass('hidden')
+        })
+        $('body').on('mouseleave', '.display-info-wrapper', function() {
+            $(this).find('.display-info-tooltip').addClass('hidden')
+        })
         $('body').on('change', 'select[name="selling_price[]"]', function() {
             let idx = $(this).parent().parent().data('id')
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
@@ -581,6 +600,19 @@
                     }
                 }
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(product.model_desc)
+
+                // Display qty/uom tooltip (RM only)
+                let $displayWrap = $(`.items[data-id="${id}"] .display-info-wrapper`)
+                let isRM = product.type == 2
+                let displayUomName = product.display_uom_unit ? product.display_uom_unit.name : null
+                if (isRM && (product.display_qty != null || displayUomName != null)) {
+                    $(`.items[data-id="${id}"] .display-qty-value`).text(product.display_qty != null ? product.display_qty : '-')
+                    $(`.items[data-id="${id}"] .display-uom-value`).text(displayUomName != null ? displayUomName : '-')
+                    $displayWrap.removeClass('hidden')
+                } else {
+                    $displayWrap.addClass('hidden')
+                }
+
                 // Append selling prices
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).empty()
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).append('<option value="">{{ __('Select price') }}</option>')
