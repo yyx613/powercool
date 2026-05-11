@@ -57,6 +57,11 @@ class Product extends Model
         return $this->belongsTo(UOM::class, 'uom');
     }
 
+    public function displayUomUnit()
+    {
+        return $this->belongsTo(UOM::class, 'display_uom');
+    }
+
     public function branch()
     {
         return $this->morphOne(Branch::class, 'object');
