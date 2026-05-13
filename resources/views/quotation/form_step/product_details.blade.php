@@ -566,6 +566,10 @@
                 let idx = $(this).closest('.items').data('id')
 
                 calItemTotal(idx)
+
+                if ($(this).attr('name') === 'qty') {
+                    updateDisplayQty(idx)
+                }
             })
         $('body').on('click', '.discount-type-btns', function() {
             let current = $(this).attr('data-discount-type')
@@ -601,17 +605,8 @@
                 }
                 $(`.items[data-id="${id}"] input[name="product_desc"]`).val(product.model_desc)
 
-                // Display qty/uom tooltip (RM only)
-                let $displayWrap = $(`.items[data-id="${id}"] .display-info-wrapper`)
-                let isRM = product.type == 2
-                let displayUomName = product.display_uom_unit ? product.display_uom_unit.name : null
-                if (isRM && (product.display_qty != null || displayUomName != null)) {
-                    $(`.items[data-id="${id}"] .display-qty-value`).text(product.display_qty != null ? product.display_qty : '-')
-                    $(`.items[data-id="${id}"] .display-uom-value`).text(displayUomName != null ? displayUomName : '-')
-                    $displayWrap.removeClass('hidden')
-                } else {
-                    $displayWrap.addClass('hidden')
-                }
+                // Display qty/uom tooltip (raw material only, not sparepart)
+                updateDisplayQty(id)
 
                 // Append selling prices
                 $(`.items[data-id="${id}"] select[name="selling_price[]"]`).empty()
@@ -737,6 +732,29 @@
             $(`.items[data-sequence=${itemSequence}]`).insertBefore($(`.items[data-sequence=${itemSequence-1}]`))
             sortProduct()
         })
+
+        function updateDisplayQty(idx) {
+            let $displayWrap = $(`.items[data-id="${idx}"] .display-info-wrapper`)
+            let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()
+            let product = PRODUCTS[productId]
+
+            let isRM = product != undefined && product.type == 2
+
+            if (!isRM || product.display_qty == null) {
+                $displayWrap.addClass('hidden')
+                return
+            }
+
+            let qty = parseFloat($(`.items[data-id="${idx}"] input[name="qty"]`).val())
+            if (isNaN(qty)) qty = 0
+
+            let total = qty * Number(product.display_qty)
+            let displayUomName = product.display_uom_unit ? product.display_uom_unit.name : '-'
+
+            $(`.items[data-id="${idx}"] .display-qty-value`).text(total.toFixed(2))
+            $(`.items[data-id="${idx}"] .display-uom-value`).text(displayUomName)
+            $displayWrap.removeClass('hidden')
+        }
 
         function calItemTotal(idx) {
             let productId = $(`.items[data-id="${idx}"] select[name="product_id[]"]`).val()

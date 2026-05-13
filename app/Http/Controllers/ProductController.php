@@ -1107,8 +1107,15 @@ class ProductController extends Controller
         if ($req->qty <= 0) {
             return back()->with('warning', 'The quantity must not greater than 0')->withInput();
         }
-        if ($product->qty < $req->qty) {
-            return back()->with('warning', 'The quantity must not greater than '.$product->qty)->withInput();
+
+        $multiplier = ($product->isRawMaterial() && $product->display_qty !== null)
+            ? (float) $product->display_qty
+            : 1.0;
+        $finalQty = $req->qty * $multiplier;
+
+        if ($product->qty < $finalQty) {
+            $maxEntered = $multiplier > 0 ? floor($product->qty / $multiplier) : 0;
+            return back()->with('warning', 'The quantity must not greater than '.$maxEntered)->withInput();
         }
 
         try {
@@ -1117,13 +1124,13 @@ class ProductController extends Controller
             // Transfer
             $frm = FactoryRawMaterial::create([
                 'product_id' => $product->id,
-                'qty' => $req->qty,
+                'qty' => $finalQty,
                 'status' => FactoryRawMaterial::STATUS_IN_TRANSIT,
                 'factory_id' => $req->factory,
             ]);
             (new Branch)->assign(FactoryRawMaterial::class, $frm->id);
 
-            $product->qty -= $req->qty;
+            $product->qty -= $finalQty;
             $product->save();
 
             DB::commit();
