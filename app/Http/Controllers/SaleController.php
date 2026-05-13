@@ -319,6 +319,7 @@ class SaleController extends Controller
                 ->with(['children' => function ($q) {
                     $q->withTrashed();
                 }])
+                ->with('displayUomUnit')
                 ->whereIn('id', $replicate->products->pluck('product_id'))
                 ->get()
                 ->keyBy('id');
@@ -354,7 +355,7 @@ class SaleController extends Controller
             $transfer_to = implode(', ', Sale::whereIn('id', explode(',', $sale->convert_to))->pluck('sku')->toArray());
         }
 
-        $products = Product::with('children', 'sellingPrices')->whereIn('id', $sale->products->pluck('product_id')->toArray())->get();
+        $products = Product::with('children', 'sellingPrices', 'displayUomUnit')->whereIn('id', $sale->products->pluck('product_id')->toArray())->get();
         $products = $products->keyBy('id')->all();
 
         return view('quotation.form', [
@@ -600,7 +601,7 @@ class SaleController extends Controller
         $req->validate($rules);
 
         $quo_ids = explode(',', $req->quo);
-        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with(['products.accessories', 'adhocServices'])->get();
+        $quos = Sale::where('type', Sale::TYPE_QUO)->whereIn('id', $quo_ids)->with(['products.product', 'products.accessories', 'adhocServices'])->get();
 
         try {
             $references = collect();
@@ -737,6 +738,19 @@ class SaleController extends Controller
             $res = $this->upsertProDetails($request, true, false, false, true)->getData();
             if ($res->result != true) {
                 throw new Exception('Failed to create product');
+            }
+
+            // Deduct raw-material stock by qty x display_qty (defaults to 1 when display_qty is null)
+            foreach ($products as $sp) {
+                $product = $sp->product;
+                if ($product === null || ! $product->isRawMaterial()) {
+                    continue;
+                }
+                $multiplier = $product->display_qty !== null ? (float) $product->display_qty : 1.0;
+                $deduction = $sp->qty * $multiplier;
+                if ($deduction > 0) {
+                    Product::where('id', $product->id)->decrement('qty', $deduction);
+                }
             }
 
             // Create remark details
