@@ -26,12 +26,25 @@ class StockCardService
         2 => 'Hi-Ten',
     ];
 
+    const BRAND_LABELS = [
+        1 => 'IMAX',
+        2 => 'Hi-Ten',
+    ];
+
     public static function companyLabelFor($companyGroup): string
     {
         if ($companyGroup === null || $companyGroup === '') {
             return 'Unassigned';
         }
         return self::COMPANY_LABELS[(int) $companyGroup] ?? 'Unassigned';
+    }
+
+    public static function brandLabelFor($brand): string
+    {
+        if ($brand === null || $brand === '') {
+            return 'Unassigned';
+        }
+        return self::BRAND_LABELS[(int) $brand] ?? 'Unassigned';
     }
 
     /** @var array<int, float> Cached map of product_id => current cost */
@@ -61,7 +74,7 @@ class StockCardService
      *   ],
      * ]
      */
-    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null, ?int $companyGroup = null): array
+    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null, ?int $companyGroup = null, ?int $brand = null): array
     {
         $this->productCostMap = [];
 
@@ -95,6 +108,10 @@ class StockCardService
 
         if ($companyGroup !== null) {
             $productsQuery->where('company_group', $companyGroup);
+        }
+
+        if ($brand !== null) {
+            $productsQuery->where('brand', $brand);
         }
 
         $products = $productsQuery->orderBy('sku')->get()->keyBy('id');
@@ -169,6 +186,8 @@ class StockCardService
                 'product' => $product,
                 'company_group' => $product->company_group,
                 'company_label' => self::companyLabelFor($product->company_group),
+                'brand' => $product->brand,
+                'brand_label' => self::brandLabelFor($product->brand),
                 'locations' => [
                     [
                         'location_code' => $locationCode,
