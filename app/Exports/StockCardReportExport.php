@@ -23,6 +23,7 @@ class StockCardReportExport implements FromArray, WithHeadings, WithStyles, With
             'Item Code',
             'Item Description',
             'Company',
+            'Brand',
             'Location',
             'UOM',
             'Date',
@@ -44,12 +45,14 @@ class StockCardReportExport implements FromArray, WithHeadings, WithStyles, With
         foreach ($this->items as $item) {
             $product = $item['product'];
             $companyLabel = $item['company_label'] ?? 'Unassigned';
+            $brandLabel = $item['brand_label'] ?? 'Unassigned';
             foreach ($item['locations'] as $loc) {
                 // B/F row
                 $rows[] = [
                     $product->sku,
                     $product->model_desc,
                     $companyLabel,
+                    $brandLabel,
                     $loc['location_label'],
                     $loc['uom'],
                     '',
@@ -68,6 +71,7 @@ class StockCardReportExport implements FromArray, WithHeadings, WithStyles, With
                         $product->sku,
                         $product->model_desc,
                         $companyLabel,
+                        $brandLabel,
                         $loc['location_label'],
                         $loc['uom'],
                         $mv['date'],

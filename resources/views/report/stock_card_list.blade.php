@@ -31,7 +31,7 @@
     @include('components.app.alert.parent')
     <div>
         <!-- Filters -->
-        <div class="flex flex-wrap gap-x-4 max-w-screen-md w-full mb-4">
+        <div class="flex flex-wrap gap-x-4 w-full mb-4">
             <div class="flex-1">
                 <x-app.input.input name="filter_search" id="filter_search" class="flex items-center" placeholder="{{ __('Search by item code or name') }}">
                     <div class="rounded-md border border-transparent p-1 ml-1">
@@ -54,6 +54,14 @@
                     @endforeach
                 </x-app.input.select>
             </div>
+            <div class="flex-1">
+                <x-app.input.select name="filter_brand" id="filter_brand" class="w-full">
+                    <option value="">{{ __('All Brands') }}</option>
+                    @foreach ($brands as $key => $val)
+                        <option value="{{ $key }}">{{ $val }}</option>
+                    @endforeach
+                </x-app.input.select>
+            </div>
         </div>
 
         <!-- Table -->
@@ -63,6 +71,7 @@
                     <th>{{ __('Item Code') }}</th>
                     <th>{{ __('Item Description') }}</th>
                     <th>{{ __('Company') }}</th>
+                    <th>{{ __('Brand') }}</th>
                     <th>{{ __('Location') }}</th>
                     <th>{{ __('B/F Qty') }}</th>
                     <th>{{ __('In Qty') }}</th>
@@ -85,6 +94,7 @@
             start_date: null,
             end_date: null,
             company_group: '',
+            brand: '',
         }
 
         var dt = new DataTable('#data-table', {
@@ -99,6 +109,7 @@
                 { data: 'product_code' },
                 { data: 'product_name' },
                 { data: 'company' },
+                { data: 'brand' },
                 { data: 'location' },
                 { data: 'bf_qty' },
                 { data: 'in_qty' },
@@ -116,7 +127,7 @@
                 data: function () {
                     var info = $('#data-table').DataTable().page.info();
                     var url = "{{ route('report.stock_card_report.get_data') }}";
-                    url = `${url}?page=${ info.page + 1 }&start_date=${ TABLE_FILTER['start_date'] }&end_date=${ TABLE_FILTER['end_date'] }&company_group=${ TABLE_FILTER['company_group'] }`;
+                    url = `${url}?page=${ info.page + 1 }&start_date=${ TABLE_FILTER['start_date'] }&end_date=${ TABLE_FILTER['end_date'] }&company_group=${ TABLE_FILTER['company_group'] }&brand=${ TABLE_FILTER['brand'] }`;
                     $('#data-table').DataTable().ajax.url(url);
                 },
             },
@@ -128,6 +139,11 @@
 
         $('#filter_company_group').on('change', function () {
             TABLE_FILTER['company_group'] = $(this).val();
+            dt.draw();
+        });
+
+        $('#filter_brand').on('change', function () {
+            TABLE_FILTER['brand'] = $(this).val();
             dt.draw();
         });
 

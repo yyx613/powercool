@@ -689,6 +689,10 @@ class ViewServiceProvider extends ServiceProvider
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',
             ]);
+            $view->with('brands', [
+                1 => 'IMAX',
+                2 => 'Hi-Ten',
+            ]);
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $countries = Country::where('is_active', true)->orderBy('name')->get();
