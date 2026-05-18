@@ -682,6 +682,7 @@ class ReportController extends Controller
         Session::forget('report_start_date');
         Session::forget('report_end_date');
         Session::forget('report_keyword');
+        Session::forget('report_company_group');
     }
 
     public function indexStockCard()
@@ -700,12 +701,16 @@ class ReportController extends Controller
 
         $start = $req->start_date != null && $req->start_date !== 'null' ? $req->start_date : null;
         $end = $req->end_date != null && $req->end_date !== 'null' ? $req->end_date : null;
+        $companyGroup = $req->company_group != null && $req->company_group !== 'null' && $req->company_group !== ''
+            ? (int) $req->company_group
+            : null;
 
         Session::put('report_start_date', $start);
         Session::put('report_end_date', $end);
         Session::put('report_keyword', $keyword);
+        Session::put('report_company_group', $companyGroup);
 
-        $items = (new StockCardService)->getMovements($start, $end, $keyword);
+        $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup);
 
         $total = count($items);
         $page = max(1, (int) $req->input('page', 1));
@@ -742,6 +747,7 @@ class ReportController extends Controller
             $data['data'][] = [
                 'product_name' => $product->model_desc,
                 'product_code' => $product->sku,
+                'company' => $item['company_label'] ?? 'Unassigned',
                 'location' => $location['location_label'] ?? '-',
                 'bf_qty' => $location['bf_qty'] ?? 0,
                 'in_qty' => $inQty,
@@ -759,16 +765,19 @@ class ReportController extends Controller
 
     public function exportInPdfStockCard()
     {
+        $companyGroup = Session::get('report_company_group');
         $items = (new StockCardService)->getMovements(
             Session::get('report_start_date'),
             Session::get('report_end_date'),
             Session::get('report_keyword'),
+            $companyGroup,
         );
 
         $pdf = Pdf::loadView('report.stock_card_list_pdf', [
             'items' => $items,
             'start_date' => Session::get('report_start_date'),
             'end_date' => Session::get('report_end_date'),
+            'company_group_label' => $companyGroup ? StockCardService::companyLabelFor($companyGroup) : 'All',
         ]);
         $pdf->setPaper('A4', 'landscape');
 
@@ -781,6 +790,7 @@ class ReportController extends Controller
             Session::get('report_start_date'),
             Session::get('report_end_date'),
             Session::get('report_keyword'),
+            Session::get('report_company_group'),
         );
 
         return Excel::download(new StockCardReportExport($items), 'stock-card-report.xlsx');

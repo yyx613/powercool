@@ -187,10 +187,19 @@
                             <a href="" target="_blank" class="text-blue-700 text-xs"></a>
                         </div>
                         @if (isset($prod) && $prod->images != null)
+                            @php $deletePhotoRoute = $is_product ? 'product.delete_photo' : 'raw_material.delete_photo'; @endphp
                             @foreach ($prod->images as $img)
-                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview">
+                                <div class="p-y.5 px-1.5 rounded bg-blue-50 mt-2 old-preview flex items-center justify-between gap-2">
                                     <a href="{{ $img->url }}" target="_blank"
                                         class="text-blue-700 text-xs">{{ $img->src }}</a>
+                                    <button type="button"
+                                        class="remove-old-photo-btn text-red-600 hover:text-red-700 flex-shrink-0"
+                                        title="{{ __('Remove') }}"
+                                        data-url="{{ route($deletePhotoRoute, $img->id) }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
                                 </div>
                             @endforeach
                         @endif
@@ -598,10 +607,28 @@
 
             $('#form').attr('action', url)
         })
+        $(document).on('click', '.remove-old-photo-btn', function() {
+            if (!confirm('{{ __("Remove this photo?") }}')) return;
+
+            let $btn = $(this);
+            let url = $btn.data('url');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function() {
+                    $btn.closest('.old-preview').remove();
+                },
+                error: function() {
+                    alert('{{ __("Failed to remove photo. Please try again.") }}');
+                }
+            });
+        })
         $('input[name="image[]"]').on('change', function() {
             let files = $(this).prop('files');
-
-            $('.uploaded-file-preview-container[data-id="image"]').find('.old-preview').remove()
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];

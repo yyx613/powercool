@@ -681,6 +681,12 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('company_group', $company_group);
         });
+        View::composer(['report.stock_card_list'], function (ViewView $view) {
+            $view->with('company_group', [
+                1 => 'Power Cool',
+                2 => 'Hi-Ten',
+            ]);
+        });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
             $countries = Country::where('is_active', true)->orderBy('name')->get();
             $view->with('countries', $countries);
