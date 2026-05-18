@@ -620,7 +620,10 @@ class ViewServiceProvider extends ServiceProvider
                 Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
                 Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
             ];
-            unset($branches[isSuperAdmin() ? Session::get('as_branch') : Auth::user()->branch->location]);
+            $current_branch = getCurrentUserBranch();
+            if ($current_branch !== null) {
+                unset($branches[$current_branch]);
+            }
 
             $view->with('branches', $branches);
         });

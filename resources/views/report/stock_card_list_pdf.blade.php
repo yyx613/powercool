@@ -115,7 +115,7 @@
     Report Criteria:<br>
     Filter Options: From Date: {{ $start_date ?? '—' }} To Date: {{ $end_date ?? '—' }}<br>
     Company: {{ $company_group_label ?? 'All' }}<br>
-    Movement Types: GR (Goods Receipt), AS (Stock Assembly), ST (Stock Transfer)<br>
+    Movement Types: GR (Goods Receipt), DO (Delivery Order), AS (Stock Assembly), ST (Stock Transfer)<br>
     Include Zero Balance: No<br>
     <em>Note: AS/ST cost columns reflect current Product.cost (not historical at time of movement).</em>
 </div>
