@@ -835,7 +835,8 @@ class SaleController extends Controller
         $serial_no_qty_query = DB::table('sales')
             ->select('sales.id AS sale_id', DB::raw('COUNT(sale_product_children.id) AS serial_no_qty'))
             ->where('branches.object_type', Sale::class)
-            ->where('branches.location', getCurrentUserBranch())
+            ->when(getCurrentUserBranch() != Branch::LOCATION_EVERY,
+                fn ($q) => $q->where('branches.location', getCurrentUserBranch()))
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('sale_product_children', 'sale_product_children.sale_product_id', '=', 'sale_products.id')
             ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
@@ -853,7 +854,8 @@ class SaleController extends Controller
         $paid_amount_query = DB::table('sales')
             ->select('sales.id AS sale_id', DB::raw('SUM(sale_payment_amounts.amount) AS paid_amount'))
             ->where('branches.object_type', Sale::class)
-            ->where('branches.location', getCurrentUserBranch())
+            ->when(getCurrentUserBranch() != Branch::LOCATION_EVERY,
+                fn ($q) => $q->where('branches.location', getCurrentUserBranch()))
             ->leftJoin('sale_payment_amounts', 'sale_payment_amounts.sale_id', '=', 'sales.id')
             ->whereNull('sale_payment_amounts.deleted_at')
             ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
@@ -943,7 +945,8 @@ class SaleController extends Controller
                     });
             })
             ->where('branches.object_type', Sale::class)
-            ->where('branches.location', getCurrentUserBranch())
+            ->when(getCurrentUserBranch() != Branch::LOCATION_EVERY,
+                fn ($q) => $q->where('branches.location', getCurrentUserBranch()))
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
             ->leftJoin('customers', 'customers.id', '=', 'sales.customer_id')
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
@@ -4137,6 +4140,12 @@ class SaleController extends Controller
             ->leftJoin('currencies', 'customers.currency_id', '=', 'currencies.id')
             ->leftJoin('sales_agents', 'sales_agents.id', '=', 'sales.sale_id')
             ->leftJoin('users AS created_by', 'created_by.id', '=', 'delivery_orders.created_by')
+            ->leftJoin('branches', function ($join) {
+                $join->on('branches.object_id', '=', 'invoices.id')
+                    ->where('branches.object_type', Invoice::class);
+            })
+            ->when(getCurrentUserBranch() != Branch::LOCATION_EVERY,
+                fn ($q) => $q->where('branches.location', getCurrentUserBranch()))
             ->groupBy('invoices.id');
 
         if ($req->has('is_return')) {

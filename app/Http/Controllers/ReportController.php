@@ -6,8 +6,10 @@ use App\Exports\EarningReportExport;
 use App\Exports\ProductionReportExport;
 use App\Exports\SalesReportExport;
 use App\Exports\ServiceReportExport;
+use App\Exports\StockCardReportExport;
 use App\Exports\StockReportExport;
 use App\Exports\TechnicianStockReportExport;
+use App\Services\StockCardService;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\Production;
@@ -680,5 +682,107 @@ class ReportController extends Controller
         Session::forget('report_start_date');
         Session::forget('report_end_date');
         Session::forget('report_keyword');
+    }
+
+    public function indexStockCard()
+    {
+        $this->clearSession();
+
+        return view('report.stock_card_list');
+    }
+
+    public function getDataStockCard(Request $req)
+    {
+        $keyword = null;
+        if ($req->has('search') && $req->search['value'] != null) {
+            $keyword = $req->search['value'];
+        }
+
+        $start = $req->start_date != null && $req->start_date !== 'null' ? $req->start_date : null;
+        $end = $req->end_date != null && $req->end_date !== 'null' ? $req->end_date : null;
+
+        Session::put('report_start_date', $start);
+        Session::put('report_end_date', $end);
+        Session::put('report_keyword', $keyword);
+
+        $items = (new StockCardService)->getMovements($start, $end, $keyword);
+
+        $total = count($items);
+        $page = max(1, (int) $req->input('page', 1));
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $slice = array_slice($items, $offset, $perPage);
+
+        $data = [
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+            'data' => [],
+        ];
+
+        foreach ($slice as $item) {
+            $product = $item['product'];
+            $location = $item['locations'][0] ?? null;
+            $inQty = 0;
+            $outQty = 0;
+            $inCost = 0.0;
+            $outCost = 0.0;
+            foreach (($location['movements'] ?? []) as $mv) {
+                if ($mv['in_out_qty'] >= 0) {
+                    $inQty += $mv['in_out_qty'];
+                } else {
+                    $outQty += abs($mv['in_out_qty']);
+                }
+                if (($mv['total_cost'] ?? 0) >= 0) {
+                    $inCost += $mv['total_cost'] ?? 0;
+                } else {
+                    $outCost += abs($mv['total_cost'] ?? 0);
+                }
+            }
+
+            $data['data'][] = [
+                'product_name' => $product->model_desc,
+                'product_code' => $product->sku,
+                'location' => $location['location_label'] ?? '-',
+                'bf_qty' => $location['bf_qty'] ?? 0,
+                'in_qty' => $inQty,
+                'out_qty' => $outQty,
+                'closing_qty' => $location['closing_qty'] ?? 0,
+                'bf_cost' => number_format($location['bf_cost'] ?? 0, 2),
+                'in_cost' => number_format($inCost, 2),
+                'out_cost' => number_format($outCost, 2),
+                'closing_cost' => number_format($location['closing_cost'] ?? 0, 2),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    public function exportInPdfStockCard()
+    {
+        $items = (new StockCardService)->getMovements(
+            Session::get('report_start_date'),
+            Session::get('report_end_date'),
+            Session::get('report_keyword'),
+        );
+
+        $pdf = Pdf::loadView('report.stock_card_list_pdf', [
+            'items' => $items,
+            'start_date' => Session::get('report_start_date'),
+            'end_date' => Session::get('report_end_date'),
+        ]);
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('stock-card-report.pdf');
+    }
+
+    public function exportInExcelStockCard()
+    {
+        $items = (new StockCardService)->getMovements(
+            Session::get('report_start_date'),
+            Session::get('report_end_date'),
+            Session::get('report_keyword'),
+        );
+
+        return Excel::download(new StockCardReportExport($items), 'stock-card-report.xlsx');
     }
 }

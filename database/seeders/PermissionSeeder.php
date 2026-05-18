@@ -200,6 +200,7 @@ class PermissionSeeder extends Seeder
             'report.production',
             'report.sales',
             'report.stock',
+            'report.stock_card',
             'report.earning',
             'report.service',
             'report.technician_stock',

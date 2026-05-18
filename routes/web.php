@@ -737,6 +737,12 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/export-in-excel', 'exportInExcelTechnicianStock')->name('export_in_excel');
             Route::get('/export-in-pdf', 'exportInPdfTechnicianStock')->name('export_in_pdf');
         });
+        Route::prefix('stock-card-report')->name('stock_card_report.')->middleware(['can:report.stock_card'])->group(function () {
+            Route::get('/', 'indexStockCard')->name('index');
+            Route::get('/get-data', 'getDataStockCard')->name('get_data');
+            Route::get('/export-in-excel', 'exportInExcelStockCard')->name('export_in_excel');
+            Route::get('/export-in-pdf', 'exportInPdfStockCard')->name('export_in_pdf');
+        });
     });
     // Customer
     Route::controller(CustomerController::class)->prefix('customer')->name('customer.')->middleware(['can:customer.view'])->group(function () {
