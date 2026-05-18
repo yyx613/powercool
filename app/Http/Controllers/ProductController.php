@@ -439,6 +439,28 @@ class ProductController extends Controller
         ]);
     }
 
+    public function deletePhoto(Attachment $attachment)
+    {
+        if ($attachment->object_type !== Product::class) {
+            abort(404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            Storage::delete(Attachment::PRODUCT_PATH . '/' . $attachment->src);
+            $attachment->delete();
+
+            DB::commit();
+
+            return response()->json(['status' => 'success']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            report($e);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function viewGetData(Request $req)
     {
         $records = $this->prodChild::where('product_id', $req->product_id);
@@ -967,13 +989,6 @@ class ProductController extends Controller
 
             // Images
             if ($req->hasFile('image')) {
-                if ($req->product_id != null) {
-                    Attachment::where([
-                        'object_type' => Product::class,
-                        'object_id' => $prod->id,
-                    ])->delete();
-                }
-
                 foreach ($req->file('image') as $key => $file) {
                     $path = Storage::putFile(Attachment::PRODUCT_PATH, $file);
                     Attachment::create([

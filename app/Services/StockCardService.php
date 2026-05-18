@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Branch;
-use App\Models\DeliveryOrder;
-use App\Models\DeliveryOrderProductChild;
 use App\Models\GRN;
 use App\Models\Product;
 use App\Models\ProductChild;
@@ -17,9 +15,21 @@ use Illuminate\Support\Facades\DB;
 class StockCardService
 {
     const TYPE_GR = 'GR';
-    const TYPE_DO = 'DO';
     const TYPE_AS = 'AS';
     const TYPE_ST = 'ST';
+
+    const COMPANY_LABELS = [
+        1 => 'Power Cool',
+        2 => 'Hi-Ten',
+    ];
+
+    public static function companyLabelFor($companyGroup): string
+    {
+        if ($companyGroup === null || $companyGroup === '') {
+            return 'Unassigned';
+        }
+        return self::COMPANY_LABELS[(int) $companyGroup] ?? 'Unassigned';
+    }
 
     /** @var array<int, float> Cached map of product_id => current cost */
     private array $productCostMap = [];
@@ -48,7 +58,7 @@ class StockCardService
      *   ],
      * ]
      */
-    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null): array
+    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null, ?int $companyGroup = null): array
     {
         $this->productCostMap = [];
 
@@ -61,7 +71,6 @@ class StockCardService
 
         $allMovements = collect()
             ->merge($this->collectGrn($start, $end))
-            ->merge($this->collectDeliveryOrders($start, $end))
             ->merge($this->collectAssemblies($start, $end))
             ->merge($this->collectTransfers($start, $end));
 
@@ -78,6 +87,10 @@ class StockCardService
                 $q->where('sku', 'like', '%'.$keyword.'%')
                     ->orWhere('model_desc', 'like', '%'.$keyword.'%');
             });
+        }
+
+        if ($companyGroup !== null) {
+            $productsQuery->where('company_group', $companyGroup);
         }
 
         $products = $productsQuery->orderBy('sku')->get()->keyBy('id');
@@ -150,6 +163,8 @@ class StockCardService
 
             $result[] = [
                 'product' => $product,
+                'company_group' => $product->company_group,
+                'company_label' => self::companyLabelFor($product->company_group),
                 'locations' => [
                     [
                         'location_code' => $locationCode,
@@ -254,25 +269,6 @@ class StockCardService
         $qty += (int) ($grRow->sum_qty ?? 0);
         $cost += (float) ($grRow->sum_cost ?? 0);
 
-        // DO outbound — one row per ProductChild (qty 1 each); cost from sale_products.cost
-        $doRows = DB::table('delivery_order_product_children as dopc')
-            ->join('product_children as pc', 'pc.id', '=', 'dopc.product_children_id')
-            ->join('delivery_order_products as dop', 'dop.id', '=', 'dopc.delivery_order_product_id')
-            ->leftJoin('sale_products as sp', 'sp.id', '=', 'dop.sale_product_id')
-            ->where('pc.product_id', $productId)
-            ->where('dopc.created_at', '<', $start)
-            ->whereNull('dopc.deleted_at')
-            ->selectRaw('COUNT(*) AS cnt, COALESCE(SUM(sp.cost), 0) AS sum_cost')
-            ->first();
-        $doCount = (int) ($doRows->cnt ?? 0);
-        $doCost = (float) ($doRows->sum_cost ?? 0);
-        // If sale_products.cost is null/zero, fall back to product.cost per unit
-        if ($doCount > 0 && $doCost == 0.0) {
-            $doCost = $doCount * $this->productCostFor($productId);
-        }
-        $qty -= $doCount;
-        $cost -= $doCost;
-
         // AS material consumption — qty * Product.cost
         $asQty = (int) ProductionMilestoneMaterial::withoutGlobalScope(BranchScope::class)
             ->where('product_id', $productId)
@@ -343,57 +339,6 @@ class StockCardService
                 'total_cost' => $totalCost,
             ];
         })->all();
-    }
-
-    private function collectDeliveryOrders(?Carbon $start, ?Carbon $end): array
-    {
-        $q = DeliveryOrderProductChild::withoutGlobalScope(BranchScope::class)
-            ->with([
-                'productChild' => function ($q) {
-                    $q->withoutGlobalScope(BranchScope::class);
-                },
-                'doProduct' => function ($q) {
-                    $q->with(['saleProduct']);
-                },
-                'doProduct.do' => function ($q) {
-                    $q->withoutGlobalScope(BranchScope::class);
-                },
-                'doProduct.do.customer',
-            ]);
-
-        if ($start) $q->where('created_at', '>=', $start);
-        if ($end) $q->where('created_at', '<=', $end);
-
-        return $q->get()->map(function ($dopc) {
-            $do = optional(optional($dopc->doProduct)->do);
-            if ($do === null || ! $do->exists) {
-                return null;
-            }
-            $productId = optional($dopc->productChild)->product_id;
-            if (! $productId) {
-                return null;
-            }
-
-            $sp = optional($dopc->doProduct)->saleProduct;
-            $unitCost = $sp && $sp->cost !== null ? (float) $sp->cost : 0.0;
-            if ($unitCost == 0.0) {
-                $unitCost = $this->productCostFor((int) $productId);
-            }
-
-            return [
-                'id' => 'DO'.$dopc->id,
-                'product_id' => $productId,
-                'date' => $dopc->created_at,
-                'type' => self::TYPE_DO,
-                'doc_no' => $do->sku,
-                'description' => optional($do->customer)->company_name
-                    ?? optional($do->customer)->name
-                    ?? '',
-                'in_out_qty' => -1,
-                'unit_cost' => $unitCost,
-                'total_cost' => -1 * $unitCost,
-            ];
-        })->filter()->values()->all();
     }
 
     private function collectAssemblies(?Carbon $start, ?Carbon $end): array

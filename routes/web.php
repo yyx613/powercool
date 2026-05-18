@@ -376,6 +376,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.product.edit', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.product.delete']);
+        Route::post('/delete-photo/{attachment}', 'deletePhoto')->name('delete_photo')->middleware(['can:inventory.product.edit']);
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
@@ -392,6 +393,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/edit/{product}', 'edit')->name('edit')->middleware(['can:inventory.raw_material.edit', 'branch.selected']);
         Route::post('/upsert', 'upsert')->name('upsert');
         Route::get('/delete/{product}', 'delete')->name('delete')->middleware(['can:inventory.raw_material.delete']);
+        Route::post('/delete-photo/{attachment}', 'deletePhoto')->name('delete_photo')->middleware(['can:inventory.raw_material.edit']);
         Route::get('/view/{product}', 'view')->name('view');
         Route::get('/view-get-data', 'viewGetData')->name('view_get_data');
         Route::get('/view-get-data-raw-material', 'viewGetDataRawMaterial')->name('view_get_data_raw_material');
@@ -795,8 +797,8 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/export', 'export')->name('export');
     });
 
-    // Setting - Vehicle Service
-    Route::middleware(['can:setting.service.view'])->group(function () {
+    // Vehicle - Vehicle Service (sidebar groups this under Vehicle, so guard with vehicle.view)
+    Route::middleware(['can:vehicle.view'])->group(function () {
         Route::controller(VehicleServiceController::class)->prefix('vehicle-service')->name('vehicle_service.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/get-data', 'getData')->name('get_data');
