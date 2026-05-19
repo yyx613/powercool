@@ -26,6 +26,11 @@ class StockCardService
         2 => 'Hi-Ten',
     ];
 
+    const COMPANY_HEADERS = [
+        1 => 'POWER COOL EQUIPMENTS (M) SDN BHD',
+        2 => 'HI-TEN TRADING SDN BHD',
+    ];
+
     const BRAND_LABELS = [
         1 => 'IMAX',
         2 => 'Hi-Ten',
@@ -38,6 +43,14 @@ class StockCardService
             return 'Unassigned';
         }
         return self::COMPANY_LABELS[(int) $companyGroup] ?? 'Unassigned';
+    }
+
+    public static function companyHeaderFor($companyGroup): string
+    {
+        if ($companyGroup === null || $companyGroup === '') {
+            return self::COMPANY_HEADERS[1];
+        }
+        return self::COMPANY_HEADERS[(int) $companyGroup] ?? self::COMPANY_HEADERS[1];
     }
 
     public static function brandLabelFor($brand): string

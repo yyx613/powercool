@@ -786,7 +786,9 @@ class ReportController extends Controller
             'start_date' => Session::get('report_start_date'),
             'end_date' => Session::get('report_end_date'),
             'company_group_label' => $companyGroup ? StockCardService::companyLabelFor($companyGroup) : 'All',
+            'company_header' => StockCardService::companyHeaderFor($companyGroup),
             'brand_label' => $brand ? StockCardService::brandLabelFor($brand) : 'All',
+            'brand_header' => $brand ? StockCardService::brandLabelFor($brand) : null,
         ]);
         $pdf->setPaper('A4', 'landscape');
 
@@ -795,14 +797,23 @@ class ReportController extends Controller
 
     public function exportInExcelStockCard()
     {
+        $companyGroup = Session::get('report_company_group');
+        $brand = Session::get('report_brand');
         $items = (new StockCardService)->getMovements(
             Session::get('report_start_date'),
             Session::get('report_end_date'),
             Session::get('report_keyword'),
-            Session::get('report_company_group'),
-            Session::get('report_brand'),
+            $companyGroup,
+            $brand,
         );
 
-        return Excel::download(new StockCardReportExport($items), 'stock-card-report.xlsx');
+        return Excel::download(
+            new StockCardReportExport(
+                $items,
+                StockCardService::companyHeaderFor($companyGroup),
+                $brand ? StockCardService::brandLabelFor($brand) : null,
+            ),
+            'stock-card-report.xlsx'
+        );
     }
 }
