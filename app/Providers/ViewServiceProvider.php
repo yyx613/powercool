@@ -692,6 +692,7 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('brands', [
                 1 => 'IMAX',
                 2 => 'Hi-Ten',
+                3 => 'PC-IMAX',
             ]);
         });
         View::composer(['customer.form_step.info'], function (ViewView $view) {
@@ -786,6 +787,7 @@ class ViewServiceProvider extends ServiceProvider
             $brands = [
                 1 => 'IMAX',
                 2 => 'Hi-Ten',
+                3 => 'PC-IMAX',
             ];
             $company_group = [
                 1 => 'Power Cool',
