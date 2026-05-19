@@ -88,7 +88,7 @@ class StockCardService
      *   ],
      * ]
      */
-    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null, ?int $companyGroup = null, ?int $brand = null): array
+    public function getMovements(?string $startDate, ?string $endDate, ?string $keyword = null, ?int $companyGroup = null, ?int $brand = null, ?int $productType = null): array
     {
         $this->productCostMap = [];
 
@@ -126,6 +126,10 @@ class StockCardService
 
         if ($brand !== null) {
             $productsQuery->where('brand', $brand);
+        }
+
+        if ($productType !== null) {
+            $productsQuery->where('type', $productType);
         }
 
         $products = $productsQuery->orderBy('sku')->get()->keyBy('id');

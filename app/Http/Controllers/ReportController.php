@@ -276,6 +276,8 @@ class ReportController extends Controller
 
     public function indexStock()
     {
+        $this->clearSession();
+
         return view('report.stock_list');
     }
 
@@ -285,81 +287,129 @@ class ReportController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
         }
-        Session::put('report_start_date', $req->start_date);
-        Session::put('report_end_date', $req->end_date);
+
+        $start = $req->start_date != null && $req->start_date !== 'null' ? $req->start_date : null;
+        $end = $req->end_date != null && $req->end_date !== 'null' ? $req->end_date : null;
+        $companyGroup = $req->company_group != null && $req->company_group !== 'null' && $req->company_group !== ''
+            ? (int) $req->company_group
+            : null;
+        $brand = $req->brand != null && $req->brand !== 'null' && $req->brand !== ''
+            ? (int) $req->brand
+            : null;
+
+        Session::put('report_start_date', $start);
+        Session::put('report_end_date', $end);
         Session::put('report_keyword', $keyword);
+        Session::put('report_company_group', $companyGroup);
+        Session::put('report_brand', $brand);
 
-        $records = $this->queryStock($req->start_date, $req->end_date, $keyword);
+        $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup, $brand, Product::TYPE_RAW_MATERIAL);
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
-        $records_paginator = $records->simplePaginate(10);
+        $total = count($items);
+        $page = max(1, (int) $req->input('page', 1));
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $slice = array_slice($items, $offset, $perPage);
 
         $data = [
-            "recordsTotal" => $records_count,
-            "recordsFiltered" => $records_count,
-            "data" => [],
-            'records_ids' => $records_ids,
+            'recordsTotal' => $total,
+            'recordsFiltered' => $total,
+            'data' => [],
         ];
-        foreach ($records_paginator as $key => $record) {
+
+        foreach ($slice as $item) {
+            $product = $item['product'];
+            $location = $item['locations'][0] ?? null;
+            $inQty = 0;
+            $outQty = 0;
+            $inCost = 0.0;
+            $outCost = 0.0;
+            foreach (($location['movements'] ?? []) as $mv) {
+                if ($mv['in_out_qty'] >= 0) {
+                    $inQty += $mv['in_out_qty'];
+                } else {
+                    $outQty += abs($mv['in_out_qty']);
+                }
+                if (($mv['total_cost'] ?? 0) >= 0) {
+                    $inCost += $mv['total_cost'] ?? 0;
+                } else {
+                    $outCost += abs($mv['total_cost'] ?? 0);
+                }
+            }
+
             $data['data'][] = [
-                'id' => $record->id,
-                'product_name' => $record->model_desc,
-                'product_code' => $record->sku,
-                'warehouse_available_stock' => $record->warehouseAvailableStock(),
-                'warehouse_reserved_stock' => $record->warehouseReservedStock(),
-                'warehouse_on_hold_stock' => $record->warehouseOnHoldStock(),
+                'product_name' => $product->model_desc,
+                'product_code' => $product->sku,
+                'company' => $item['company_label'] ?? 'Unassigned',
+                'brand' => $item['brand_label'] ?? 'Unassigned',
+                'location' => $location['location_label'] ?? '-',
+                'bf_qty' => $location['bf_qty'] ?? 0,
+                'in_qty' => $inQty,
+                'out_qty' => $outQty,
+                'closing_qty' => $location['closing_qty'] ?? 0,
+                'bf_cost' => number_format($location['bf_cost'] ?? 0, 2),
+                'in_cost' => number_format($inCost, 2),
+                'out_cost' => number_format($outCost, 2),
+                'closing_cost' => number_format($location['closing_cost'] ?? 0, 2),
             ];
         }
 
         return response()->json($data);
     }
 
-    public function exportInExcelStock()
-    {
-        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
-        $records = $records->get();
-
-        return Excel::download(new StockReportExport($records), 'stock-report.xlsx');
-    }
-
     public function exportInPdfStock()
     {
-        $records = $this->queryStock(Session::get('report_start_date'), Session::get('report_end_date'), Session::get('report_keyword'));
-        $records = $records->get();
+        $companyGroup = Session::get('report_company_group');
+        $brand = Session::get('report_brand');
+        $items = (new StockCardService)->getMovements(
+            Session::get('report_start_date'),
+            Session::get('report_end_date'),
+            Session::get('report_keyword'),
+            $companyGroup,
+            $brand,
+            Product::TYPE_RAW_MATERIAL,
+        );
 
         $pdf = Pdf::loadView('report.stock_list_pdf', [
-            'records' => $records
+            'items' => $items,
+            'start_date' => Session::get('report_start_date'),
+            'end_date' => Session::get('report_end_date'),
+            'company_group_label' => $companyGroup ? StockCardService::companyLabelFor($companyGroup) : 'All',
+            'company_header' => StockCardService::companyHeaderFor($companyGroup),
+            'brand_label' => $brand ? StockCardService::brandLabelFor($brand) : 'All',
+            'brand_header' => $brand ? StockCardService::brandLabelFor($brand) : null,
         ]);
-        $pdf->setPaper('A4', 'letter');
+        $pdf->setPaper('A4', 'landscape');
 
         return $pdf->download('stock-report.pdf');
     }
 
-    private function queryStock(?string $start_date = 'null', ?string $end_date = 'null', ?string $keyword)
+    public function exportInExcelStock()
     {
-        $records = $this->product;
+        $companyGroup = Session::get('report_company_group');
+        $brand = Session::get('report_brand');
+        $items = (new StockCardService)->getMovements(
+            Session::get('report_start_date'),
+            Session::get('report_end_date'),
+            Session::get('report_keyword'),
+            $companyGroup,
+            $brand,
+            Product::TYPE_RAW_MATERIAL,
+        );
 
-        // Daterange
-        if ($start_date != 'null' && $end_date != 'null') {
-            if ($start_date == $end_date) {
-                $records = $records->where('created_at', 'like', '%' . $start_date . '%');
-            } else {
-                $end_date_next_day = Carbon::parse($end_date)->addDay()->format('Y-m-d');
-
-                $records = $records->where('created_at', '>=', $start_date)->where('created_at', '<=', $end_date_next_day);
-            }
-        }
-        // Search
-        if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('model_desc', 'like', '%' . $keyword . '%');
-            });
-        }
-        $records = $records->orderBy('id', 'desc');
-
-        return $records;
+        return Excel::download(
+            new StockReportExport(
+                $items,
+                StockCardService::companyHeaderFor($companyGroup),
+                $brand ? StockCardService::brandLabelFor($brand) : null,
+                Session::get('report_start_date'),
+                Session::get('report_end_date'),
+                $companyGroup ? StockCardService::companyLabelFor($companyGroup) : 'All',
+                $brand ? StockCardService::brandLabelFor($brand) : 'All',
+                optional(auth()->user())->name ?? '',
+            ),
+            'stock-report.xlsx'
+        );
     }
 
     public function indexEarning()
@@ -715,7 +765,7 @@ class ReportController extends Controller
         Session::put('report_company_group', $companyGroup);
         Session::put('report_brand', $brand);
 
-        $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup, $brand);
+        $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup, $brand, Product::TYPE_PRODUCT);
 
         $total = count($items);
         $page = max(1, (int) $req->input('page', 1));
@@ -779,6 +829,7 @@ class ReportController extends Controller
             Session::get('report_keyword'),
             $companyGroup,
             $brand,
+            Product::TYPE_PRODUCT,
         );
 
         $pdf = Pdf::loadView('report.stock_card_list_pdf', [
@@ -805,6 +856,7 @@ class ReportController extends Controller
             Session::get('report_keyword'),
             $companyGroup,
             $brand,
+            Product::TYPE_PRODUCT,
         );
 
         return Excel::download(

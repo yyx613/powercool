@@ -684,7 +684,7 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('company_group', $company_group);
         });
-        View::composer(['report.stock_card_list'], function (ViewView $view) {
+        View::composer(['report.stock_card_list', 'report.stock_list'], function (ViewView $view) {
             $view->with('company_group', [
                 1 => 'Power Cool',
                 2 => 'Hi-Ten',
