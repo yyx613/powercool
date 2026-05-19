@@ -29,6 +29,7 @@ class StockCardService
     const BRAND_LABELS = [
         1 => 'IMAX',
         2 => 'Hi-Ten',
+        3 => 'PC-IMAX',
     ];
 
     public static function companyLabelFor($companyGroup): string
