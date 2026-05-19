@@ -41,9 +41,15 @@
 
 <table class="meta">
     <tr>
-        <td class="company-line">POWER COOL EQUIPMENTS (M) SDN BHD</td>
+        <td class="company-line"><strong>Company:</strong> {{ $company_header }}</td>
         <td class="right">&nbsp;</td>
     </tr>
+    @if(!empty($brand_header))
+        <tr>
+            <td class="company-line"><strong>Brand:</strong> {{ $brand_header }}</td>
+            <td class="right">&nbsp;</td>
+        </tr>
+    @endif
 </table>
 
 <table class="body">

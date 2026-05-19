@@ -58,6 +58,18 @@ class StockCardCompanyGroupFilterTest extends TestCase
         $this->assertSame('Unassigned', StockCardService::companyLabelFor(99));
     }
 
+    public function test_company_header_for_returns_legal_names_with_power_cool_fallback(): void
+    {
+        $powerCool = 'POWER COOL EQUIPMENTS (M) SDN BHD';
+        $hiTen = 'HI-TEN TRADING SDN BHD';
+
+        $this->assertSame($powerCool, StockCardService::companyHeaderFor(1));
+        $this->assertSame($hiTen, StockCardService::companyHeaderFor(2));
+        $this->assertSame($powerCool, StockCardService::companyHeaderFor(null));
+        $this->assertSame($powerCool, StockCardService::companyHeaderFor(''));
+        $this->assertSame($powerCool, StockCardService::companyHeaderFor(99));
+    }
+
     public function test_get_movements_filters_by_company_group_power_cool(): void
     {
         $powerCool = $this->makeProduct(1);
