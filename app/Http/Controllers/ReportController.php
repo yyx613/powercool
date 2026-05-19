@@ -812,6 +812,11 @@ class ReportController extends Controller
                 $items,
                 StockCardService::companyHeaderFor($companyGroup),
                 $brand ? StockCardService::brandLabelFor($brand) : null,
+                Session::get('report_start_date'),
+                Session::get('report_end_date'),
+                $companyGroup ? StockCardService::companyLabelFor($companyGroup) : 'All',
+                $brand ? StockCardService::brandLabelFor($brand) : 'All',
+                optional(auth()->user())->name ?? '',
             ),
             'stock-card-report.xlsx'
         );
