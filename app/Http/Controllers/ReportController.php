@@ -10,6 +10,7 @@ use App\Exports\StockCardReportExport;
 use App\Exports\StockReportExport;
 use App\Exports\TechnicianStockReportExport;
 use App\Services\StockCardService;
+use App\Models\Branch;
 use App\Models\Milestone;
 use App\Models\Product;
 use App\Models\Production;
@@ -24,6 +25,7 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -252,6 +254,32 @@ class ReportController extends Controller
             ->joinSub($payment_amount, 'payment_amount', function ($join) {
                 $join->on('sales.id', '=', 'payment_amount.sale_id');
             });
+
+        // Mirror App\Models\Scopes\BranchScope for the Sale model — raw DB::table()
+        // bypasses Eloquent global scopes, so the navbar branch toggle is otherwise ignored.
+        // Marketing Manager is granted toggle parity with Super Admin on Sales Report only;
+        // BranchScope still gates other modules to their assigned branch.
+        if (Auth::hasUser()) {
+            $user_branch       = Auth::user()->branch;
+            $is_super_admin    = isSuperAdmin();
+            $can_toggle_branch = $is_super_admin || isMarketingManager();
+            $as_branch         = Session::get('as_branch');
+
+            if (
+                ($can_toggle_branch && $as_branch != Branch::LOCATION_EVERY) ||
+                (!$can_toggle_branch && $user_branch != null)
+            ) {
+                $target_location = $can_toggle_branch ? $as_branch : $user_branch->location;
+
+                $records = $records
+                    ->join('branches', function ($join) {
+                        $join->on('branches.object_id', '=', 'sales.id')
+                            ->where('branches.object_type', '=', Sale::class)
+                            ->whereNull('branches.deleted_at');
+                    })
+                    ->where('branches.location', $target_location);
+            }
+        }
 
         // Daterange
         if ($start_date != 'null' && $end_date != 'null') {

@@ -104,6 +104,16 @@ if (! function_exists('isSalesCoordinator')) {
     }
 }
 
+if (! function_exists('isMarketingManager')) {
+    function isMarketingManager(): bool
+    {
+        if (Auth::user() == null) {
+            return false;
+        }
+        return Auth::user()->hasRole('Marketing Manager');
+    }
+}
+
 if (! function_exists('isFinanceOnly')) {
     function isFinanceOnly(): bool
     {
