@@ -1054,7 +1054,6 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{user}', 'update')->name('update')->middleware(['can:user_role_management.edit']);
             Route::get('/delete/{user}', 'delete')->name('delete')->middleware(['can:user_role_management.delete']);
 
-            Route::get('as-branch', 'asBranch')->name('as_branch');
             Route::post('/get/{user_id}', 'get')->name('get_user');
         });
         // Role Management
@@ -1067,6 +1066,11 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::post('/update/{role}', 'update')->name('update')->middleware(['can:user_role_management.edit']);
         });
     });
+
+    // Session-only branch toggle — visibility is gated in the navbar partial, the
+    // endpoint itself only needs auth so non-admin roles (e.g. Marketing Manager on
+    // Sales Report) can use the dropdown without the user_role_management.view perm.
+    Route::get('user-management/as-branch', [UserController::class, 'asBranch'])->name('user_management.as_branch');
 });
 
 // Lazada
