@@ -60,7 +60,7 @@
                 </button>
                 <div class="flex flex-col">
                     <x-app.input.label id="account_amount" class="mb-1">{{ __('Amount') }}</x-app.input.label>
-                    <x-app.input.input name="account_amount" id="account_amount" :hasError="$errors->has('account_amount')" class="int-input" />
+                    <x-app.input.input name="account_amount" id="account_amount" :hasError="$errors->has('account_amount')" class="decimal-input" />
                     <x-app.message.error id="account_amount_err" />
                 </div>
                 <div class="flex flex-col">

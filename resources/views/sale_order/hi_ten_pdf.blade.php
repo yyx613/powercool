@@ -514,7 +514,7 @@
             </tr>
         </table>
 
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; page-break-inside: avoid; page-break-before: avoid;">
             <tr>
                 <td style="font-size: 12px; padding: 0 0 47px 0; text-align: center; width: 33%; font-weight: 700;">
                     HI-TEN TRADING SDN BHD</td>

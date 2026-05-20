@@ -365,10 +365,6 @@
                 <td style="width: 10px;"></td>
                 <td
                     style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
-                    Goods Prepared Signature</td>
-                <td style="width: 10px;"></td>
-                <td
-                    style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
                     Recipient's Chop & Signature<br>Name:<br>IC:</td>
                 <td style="width: 10px;"></td>
                 <td
