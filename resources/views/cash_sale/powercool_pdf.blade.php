@@ -412,36 +412,20 @@
             </tr>
         </table>
 
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; page-break-inside: avoid; page-break-before: avoid;">
             <tr>
-                <td style="font-size: 12px; padding: 0 0 47px 0; text-align: center; width: 33%; font-weight: 700;">
-                    POWER COOL EQUIPMENTS
-                    (M) SDN BHD</td>
-                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;"></td>
-                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%; font-weight: 700;">
-                    KNOWLEDGED BY:
+                <td style="font-size: 12px; font-weight: 700; white-space: nowrap; padding: 30px 8px 0 0; vertical-align: bottom;">
+                    Authorised signature :
                 </td>
+                <td style="border-bottom: solid 1px black; width: 250px; padding: 30px 0 0 0;"></td>
+                <td style="width: 100%;"></td>
             </tr>
             <tr>
-                <td style="font-size: 12px; text-align: center; width: 33%;">
-                    {{ $sale->saleperson->name ?? '' }}</td>
-                <td style="font-size: 12px; text-align: center; width: 33%;"></td>
-                <td style="font-size: 12px; text-align: center; width: 33%;">
+                <td style="font-size: 12px; font-weight: 700; white-space: nowrap; padding: 30px 8px 0 0; vertical-align: bottom;">
+                    Recipient's Chop &amp; Signature :
                 </td>
-            </tr>
-            <tr>
-                <td
-                    style="font-weight: 700; font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 0px 0 0 0;">
-                    Authorised Signature</td>
-                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;"></td>
-                <td
-                    style="font-weight: 700; font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 0px 0 0 0;">
-                    {{ $sale->customer->company_name ?? '' }}
-                </td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="3">This is a computer generated
-                    documents no signature required except for the acknowledgement signature by customer.</td>
+                <td style="border-bottom: solid 1px black; width: 250px; padding: 30px 0 0 0;"></td>
+                <td style="width: 100%;"></td>
             </tr>
         </table>
     </main>

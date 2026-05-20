@@ -176,7 +176,7 @@
         </tr>
     </table>
     <!-- Footer -->
-    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+    <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; page-break-inside: avoid; page-break-before: avoid;">
         <tr>
             <td style="font-size: 14px; padding: 25px 0 0 0; border-top: solid 1px black;" colspan="3">Notes:</td>
         </tr>
