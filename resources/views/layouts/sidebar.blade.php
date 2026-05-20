@@ -722,7 +722,7 @@
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
                                         </a>
                                     </li>
                                     @endcan
@@ -731,7 +731,7 @@
                                         <a href="{{ route('report.stock_card_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_card_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Finished Good Report') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight text-white">{{ __('Stock Card Finished Good Report') }}</span>
                                         </a>
                                     </li>
                                     @endcan
@@ -1823,7 +1823,7 @@
                         <a href="{{ route('report.stock_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                             <span
-                                class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
+                                class="block text-sm flex-1 leading-tight text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
                         </a>
                     </li>
                     @endcan
@@ -1832,7 +1832,7 @@
                         <a href="{{ route('report.stock_card_report.index') }}"
                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_card_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                             <span
-                                class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Finished Good Report') }}</span>
+                                class="block text-sm flex-1 leading-tight text-white">{{ __('Stock Card Finished Good Report') }}</span>
                         </a>
                     </li>
                     @endcan
@@ -2834,7 +2834,7 @@
                                         <a href="{{ route('report.stock_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight text-white">{{ __('Stock Card Spare Part & Raw Materials Report') }}</span>
                                         </a>
                                     </li>
                                     @endcan
@@ -2843,7 +2843,7 @@
                                         <a href="{{ route('report.stock_card_report.index') }}"
                                             class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'report.stock_card_report.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
-                                                class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Stock Card Finished Good Report') }}</span>
+                                                class="block text-sm ml-9 flex-1 leading-tight text-white">{{ __('Stock Card Finished Good Report') }}</span>
                                         </a>
                                     </li>
                                     @endcan
