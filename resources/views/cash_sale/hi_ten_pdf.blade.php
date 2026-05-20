@@ -375,18 +375,51 @@
 
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; page-break-inside: avoid; page-break-before: avoid;">
             <tr>
-                <td style="font-size: 12px; font-weight: 700; white-space: nowrap; padding: 30px 8px 0 0; vertical-align: bottom;">
-                    Authorised signature :
+                <td style="width: 33%; vertical-align: top; padding: 30px 10px 0 0;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 0 0 60px 0; text-align: center;">
+                                HI-TEN TRADING SDN BHD
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="border-bottom: solid 1px black; padding: 0;"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 4px 0 0 0; text-align: center;">
+                                Authorised signature
+                            </td>
+                        </tr>
+                    </table>
                 </td>
-                <td style="border-bottom: solid 1px black; width: 250px; padding: 30px 0 0 0;"></td>
-                <td style="width: 100%;"></td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; font-weight: 700; white-space: nowrap; padding: 30px 8px 0 0; vertical-align: bottom;">
-                    Recipient's Chop &amp; Signature :
+                <td style="width: 33%;"></td>
+                <td style="width: 33%; vertical-align: top; padding: 30px 0 0 10px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 0 0 60px 0; text-align: center; visibility: hidden;">
+                                HI-TEN TRADING SDN BHD
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="border-bottom: solid 1px black; padding: 0;"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 4px 0 0 0; text-align: center;">
+                                Recipient's Chop &amp; Signature
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; padding: 15px 0 0 0;">
+                                <span style="font-weight: 700;">Name :</span> {{ $sale->custom_customer }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="font-size: 12px; padding: 5px 0 0 0;">
+                                <span style="font-weight: 700;">Passport No. / IC :</span>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
-                <td style="border-bottom: solid 1px black; width: 250px; padding: 30px 0 0 0;"></td>
-                <td style="width: 100%;"></td>
             </tr>
         </table>
     </main>
