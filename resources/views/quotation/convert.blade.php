@@ -5,6 +5,7 @@
     <div class="mb-6">
         <x-app.page-title url="{{ route('quotation.index') }}">Convert Quotation to Sale Order</x-app.page-title>
     </div>
+    @include('components.app.alert.parent')
     @if ($step > 1)
         <div class="flex gap-x-4 mb-3">
             @if ($step > 1 && isset($selected_customer) && $selected_customer != null)

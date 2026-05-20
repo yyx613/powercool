@@ -589,6 +589,10 @@ class SaleController extends Controller
 
     public function converToSaleOrder(Request $req)
     {
+        if ((int) getCurrentUserBranch() === Branch::LOCATION_EVERY) {
+            return back()->with('error', 'Please switch to a specific branch (KL or Penang) before converting. Conversion is not allowed while viewing "Every Branch".');
+        }
+
         $rules = [
             'payment_method' => 'required',
         ];
