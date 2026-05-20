@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Card Finished Good Report</title>
+    <title>Stock Card Finished Good</title>
     <style>
         body { font-family: sans-serif; font-size: 9px; }
         .meta { width: 100%; }
@@ -37,7 +37,7 @@
     </tr>
 </table>
 
-<h1 class="title">Stock Card Finished Good Report</h1>
+<h1 class="title">Stock Card Finished Good</h1>
 
 <table class="meta">
     <tr>
