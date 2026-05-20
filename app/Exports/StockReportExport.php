@@ -101,7 +101,7 @@ class StockReportExport implements WithEvents
     private function writeTitleBlock(Worksheet $sheet, int $row): int
     {
         $sheet->mergeCells("A{$row}:H{$row}");
-        $sheet->setCellValue("A{$row}", 'Stock Card Spare Part & Raw Materials Report');
+        $sheet->setCellValue("A{$row}", 'Stock Card Materials');
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(18);
         $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getRowDimension($row)->setRowHeight(26);

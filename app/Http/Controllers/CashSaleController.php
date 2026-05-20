@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\Branch;
 use App\Models\CashSaleLocation;
 use App\Models\Customer;
 use App\Models\DeliveryOrder;
@@ -71,6 +72,7 @@ class CashSaleController extends Controller
                 DB::raw('SUM(sale_products.qty * sale_products.unit_price - CASE WHEN sale_products.discount_type = \'percentage\' THEN sale_products.unit_price * sale_products.qty * COALESCE(sale_products.discount, 0) / 100 ELSE COALESCE(sale_products.discount, 0) END + COALESCE(sale_products.sst_amount, 0)) AS total_amount'),
             )
             ->where('sales.type', Sale::TYPE_CASH_SALE)
+            ->where('branches.object_type', Sale::class)
             ->whereNull('sales.deleted_at')
             ->whereNull('sale_products.deleted_at')
             ->leftJoin('sale_products', 'sale_products.sale_id', '=', 'sales.id')
@@ -78,6 +80,7 @@ class CashSaleController extends Controller
             ->leftJoin('payment_methods', 'payment_methods.id', '=', 'sales.payment_method')
             ->leftJoin('users as createdBy', 'createdBy.id', '=', 'sales.created_by')
             ->leftJoin('users as updatedBy', 'updatedBy.id', '=', 'sales.updated_by')
+            ->leftJoin('branches', 'branches.object_id', '=', 'sales.id')
             ->joinSub($serial_no_qty_query, 'serial_no_qty_query', function ($join) {
                 $join->on('serial_no_qty_query.sale_id', '=', 'sales.id');
             })
@@ -86,6 +89,9 @@ class CashSaleController extends Controller
             })
             ->groupBy('sales.id');
 
+        if (getCurrentUserBranch() != Branch::LOCATION_EVERY) {
+            $records = $records->where('branches.location', getCurrentUserBranch());
+        }
         if ($req->has('sku')) {
             $records = $records->where('sales.sku', $req->sku);
         }
@@ -216,7 +222,7 @@ class CashSaleController extends Controller
             $sps[$i]->serial_no = ProductChild::whereIn('id', $pc_ids)->pluck('sku')->toArray();
         }
 
-        $pdf = Pdf::loadView('cash_sale.' . (isHiTen($sale->company_group) ? 'hi_ten' : 'powercool') . '_pdf', [
+        $pdf = Pdf::loadView('cash_sale.' . (isHiTen($sale->company_group ?? 0) ? 'hi_ten' : 'powercool') . '_pdf', [
             'date' => now()->format('d/m/Y'),
             'sale' => $sale,
             'products' => $sps,

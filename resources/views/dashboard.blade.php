@@ -62,7 +62,7 @@
             </div>
             @endif
             <!-- Production Summary -->
-            @if($production_summary->count() > 0)
+            @if($production_summary->count() > 0 || $selected_production_status != null)
             <div class="bg-white rounded-lg p-3 border">
                 <div class="mb-4 flex items-center justify-between">
                     <h6 class="text-lg font-semibold">{{ __('Production Summary') }}</h6>
@@ -85,7 +85,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($production_summary as $ps)
+                            @forelse ($production_summary as $ps)
                                 <tr>
                                     <td class="px-1 py-2 text-sm">{{ $ps->name }}</td>
                                     <td class="px-1 py-2 text-sm text-center">
@@ -120,7 +120,11 @@
                                         <x-app.circular-progress perc="{{ $ps->getProgress($ps) }}" />
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-1 py-4 text-sm text-center text-slate-500">{{ __('No records') }}</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
