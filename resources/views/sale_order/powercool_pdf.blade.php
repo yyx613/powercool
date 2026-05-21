@@ -560,8 +560,8 @@
                     POWER COOL EQUIPMENTS
                     (M) SDN BHD</td>
                 <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;"></td>
-                <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%; font-weight: 700;">
-                    KNOWLEDGED BY:
+                <td style="font-size: 12px; padding: 0 0 47px 0; text-align: center; width: 33%; font-weight: 700;">
+                    {{ $sale->customer->company_name ?? '' }}
                 </td>
             </tr>
             <tr>
@@ -578,7 +578,7 @@
                 <td style="font-size: 12px; padding: 0 0 40px 0; text-align: center; width: 33%;"></td>
                 <td
                     style="font-weight: 700; font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 0px 0 0 0;">
-                    {{ $sale->customer->company_name ?? '' }}
+                    Acknowledged by
                 </td>
             </tr>
             <tr>
