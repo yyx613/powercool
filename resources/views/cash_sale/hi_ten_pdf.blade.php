@@ -396,8 +396,8 @@
                 <td style="width: 33%; vertical-align: top; padding: 30px 0 0 10px;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 0 0 60px 0; text-align: center; visibility: hidden;">
-                                HI-TEN TRADING SDN BHD
+                            <td colspan="2" style="font-size: 12px; font-weight: 700; padding: 0 0 60px 0; text-align: center;">
+                                {{ $sale->custom_customer }}
                             </td>
                         </tr>
                         <tr>
@@ -410,7 +410,7 @@
                         </tr>
                         <tr>
                             <td colspan="2" style="font-size: 12px; padding: 15px 0 0 0;">
-                                <span style="font-weight: 700;">Name :</span> {{ $sale->custom_customer }}
+                                <span style="font-weight: 700;">Name :</span>
                             </td>
                         </tr>
                         <tr>
