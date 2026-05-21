@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sale Order | {{ $sale->sku }}</title>
+    <title>{{ $is_proforma_invoice ? 'Proforma Invoice' : 'Sale Order' }} | {{ $sale->sku }}</title>
 </head>
 
 <style>
