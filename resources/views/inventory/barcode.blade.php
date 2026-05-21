@@ -113,41 +113,43 @@
                     </table>
                 </td>
             </tr>
-            <tr>
-                <td style="text-align: center;">
-                    @if ($product_brand[$i] == 1)
-                        <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
-                            style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                        <p style="margin: 0 0 0 0; font-size: 10px;">Warranty Policy</p>
-                    @elseif ($product_brand[$i] == 2)
-                        <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
-                            style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                        <p style="margin: 0 0 0 0; font-size: 10px;">User Manual</p>
-                    @endif
-                </td>
-                <td style="text-align: center;">
-                    @if ($product_brand[$i] == 1)
-                        <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
-                            style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                        <p style="margin: 0 0 0 0; font-size: 10px;">User Manual</p>
-                    @elseif ($product_brand[$i] == 2)
-                        <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
-                            style="height: 75px; width: 75px; margin: 0 0 0 0;">
-                        <p style="margin: 0 0 0 0; font-size: 10px;">Warranty Policy</p>
-                    @endif
-                </td>
-            </tr>
+            @if (!str_starts_with($product_code[$i] ?? '', 'H.'))
+                <tr>
+                    <td style="text-align: center;">
+                        @if ($product_brand[$i] == 1)
+                            <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
+                                style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                            <p style="margin: 0 0 0 0; font-size: 10px;">Warranty Policy</p>
+                        @elseif ($product_brand[$i] == 2)
+                            <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
+                                style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                            <p style="margin: 0 0 0 0; font-size: 10px;">User Manual</p>
+                        @endif
+                    </td>
+                    <td style="text-align: center;">
+                        @if ($product_brand[$i] == 1)
+                            <img src="{{ public_path('images/Manual Book QR.jpeg') }}" alt=""
+                                style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                            <p style="margin: 0 0 0 0; font-size: 10px;">User Manual</p>
+                        @elseif ($product_brand[$i] == 2)
+                            <img src="{{ public_path('images/Imax Website Warranty Page QR.jpeg') }}" alt=""
+                                style="height: 75px; width: 75px; margin: 0 0 0 0;">
+                            <p style="margin: 0 0 0 0; font-size: 10px;">Warranty Policy</p>
+                        @endif
+                    </td>
+                </tr>
+            @endif
             <tr>
                 <td colspan="2">
                     <p style="margin: 10px 0 5px 0; font-size: 10px; text-align: left;">
                         <img src="{{ public_path('images/whatsapp.jpg') }}" alt=""
                             style="height: 10px; width: 10px; margin: 0 5px 0 0;">
-                        Hotline: 6012-3868250
+                        Hotline: {{ str_starts_with($product_code[$i] ?? '', 'H.') ? '012-263 3222' : '6012-3868250' }}
                     </p>
                     <p style="margin: 0; font-size: 10px; text-align: left;">
                         <img src="{{ public_path('images/wrench-alt.jpg') }}" alt=""
                             style="height: 10px; width: 10px; margin: 0 5px 0 0;">
-                        Careline: 6012-3868743
+                        Careline: {{ str_starts_with($product_code[$i] ?? '', 'H.') ? '012-263 3222' : '6012-3868743' }}
                     </p>
                     @if ($product_brand[$i] == 1)
                         <p style="margin: 20px 0 0 0; font-size: 10px; text-align: center;">Made In Malaysia</p>
