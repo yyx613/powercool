@@ -9,6 +9,17 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 
 class SupplierExport implements FromView, WithStyles
 {
+    /**
+     * Pre-filtered supplier query, built from the same filters as the list view
+     * so the export only contains the records the user is currently viewing.
+     */
+    protected $query;
+
+    public function __construct($query = null)
+    {
+        $this->query = $query ?? Supplier::query();
+    }
+
     public function styles($sheet)
     {
         return [
@@ -20,7 +31,7 @@ class SupplierExport implements FromView, WithStyles
 
     public function view(): View
     {
-        $suppliers = Supplier::get();
+        $suppliers = $this->query->get();
 
         return view('export.supplier', [
             'suppliers' => $suppliers,

@@ -9,6 +9,17 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 
 class DealerExport implements FromView, WithStyles
 {
+    /**
+     * Pre-filtered dealer query, built from the same filters as the list view
+     * so the export only contains the records the user is currently viewing.
+     */
+    protected $query;
+
+    public function __construct($query = null)
+    {
+        $this->query = $query ?? Dealer::query();
+    }
+
     public function styles($sheet)
     {
         return [
@@ -20,7 +31,7 @@ class DealerExport implements FromView, WithStyles
 
     public function view(): View
     {
-        $dealers = Dealer::get();
+        $dealers = $this->query->get();
 
         return view('export.dealer', [
             'dealers' => $dealers,

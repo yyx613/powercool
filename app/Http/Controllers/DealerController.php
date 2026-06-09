@@ -31,10 +31,46 @@ class DealerController extends Controller
 
     public function getData(Request $req)
     {
-        $records = new Dealer;
-
         Session::put('dealer-page', $req->page);
 
+        $records = $this->applyFilters(new Dealer, $req);
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+        foreach ($records_paginator as $record) {
+            $data['data'][] = [
+                'id' => $record->id,
+                'code' => $record->sku,
+                'name' => $record->name,
+                'company_name' => $record->company_name,
+                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
+                'can_edit' => hasPermission('dealer.edit'),
+                'can_delete' => hasPermission('dealer.delete'),
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * Apply the dealer list filters (search, company group and ordering) to the
+     * given query.
+     *
+     * Shared by the list (getData) and the Excel export so both honour the same
+     * filter state. When a filter is absent from the request it falls back to
+     * the value persisted in the session — which is what the export relies on,
+     * since it carries no query parameters of its own.
+     */
+    protected function applyFilters($records, Request $req)
+    {
         // Search with session persistence
         $keyword = null;
         if ($req->has('search')) {
@@ -80,29 +116,7 @@ class DealerController extends Controller
             $records = $records->orderBy('id', 'desc');
         }
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
-        $records_paginator = $records->simplePaginate(10);
-
-        $data = [
-            'recordsTotal' => $records_count,
-            'recordsFiltered' => $records_count,
-            'data' => [],
-            'records_ids' => $records_ids,
-        ];
-        foreach ($records_paginator as $record) {
-            $data['data'][] = [
-                'id' => $record->id,
-                'code' => $record->sku,
-                'name' => $record->name,
-                'company_name' => $record->company_name,
-                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
-                'can_edit' => hasPermission('dealer.edit'),
-                'can_delete' => hasPermission('dealer.delete'),
-            ];
-        }
-
-        return response()->json($data);
+        return $records;
     }
 
     public function create()
@@ -170,7 +184,7 @@ class DealerController extends Controller
         }
     }
 
-    public function export()
+    public function export(Request $req)
     {
         // Exporting all dealers across branches builds a large in-memory
         // spreadsheet, which can overrun the default memory limit and return a
@@ -184,6 +198,10 @@ class DealerController extends Controller
         ];
         $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
 
-        return Excel::download(new DealerExport, "Dealer {$branchLabel}.xlsx");
+        // Mirror the list view's filters so the export only contains the records
+        // the user is currently looking at.
+        $query = $this->applyFilters(new Dealer, $req);
+
+        return Excel::download(new DealerExport($query), "Dealer {$branchLabel}.xlsx");
     }
 }

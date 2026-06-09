@@ -22,4 +22,9 @@ class CustomerSaleAgent extends Model
     {
         return $date;
     }
+
+    public function salesAgent()
+    {
+        return $this->belongsTo(SalesAgent::class, 'sales_agent_id');
+    }
 }
