@@ -20,7 +20,15 @@ class CustomerExport implements FromView, WithStyles
 
     public function view(): View
     {
-        $customers = Customer::with('locations')->get();
+        $customers = Customer::with([
+            'locations',
+            'currency',
+            'area',
+            'debtorType',
+            'platform',
+            'msicCode',
+            'creditTerms.creditTerm',
+        ])->get();
 
         return view('export.customer', [
             'customers' => $customers,

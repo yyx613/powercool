@@ -68,7 +68,7 @@
             <td>{{ $cus->prefix }}</td>
             <td>{{ $cus->name }}</td>
             <td>{{ $cus->company_name }}</td>
-            <td>{{ $cus->mobile_number }}</td>
+            <td>{{ is_array($cus->mobile_number) ? implode(', ', $cus->mobile_number) : $cus->mobile_number }}</td>
             <td>{{ $cus->website }}</td>
             <td>{{ $cus->currency->name ?? null }}</td>
             <td>{{ $cus->area->name ?? null }}</td>
