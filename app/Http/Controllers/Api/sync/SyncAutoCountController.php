@@ -27,6 +27,10 @@ class SyncAutoCountController extends Controller
     {
         try {
             $data = $request->json()->all();// Retrieve all UOM records from the request
+            // AutoCount free-text occasionally carries control chars (e.g. 0x1F) that
+            // are invalid in XML/HTML and later break FromView Excel exports. Strip
+            // them at ingestion so they never reach the database.
+            $data = cleanControlChars($data);
             $companyGroup = (int) $request->query('company_group');
 
             if (in_array($companyGroup, [1, 2])) {
@@ -189,6 +193,10 @@ class SyncAutoCountController extends Controller
     {
         try {
             $data = $request->json()->all(); // Retrieve all UOM records from the request
+            // AutoCount free-text occasionally carries control chars (e.g. 0x1F) that
+            // are invalid in XML/HTML and later break FromView Excel exports. Strip
+            // them at ingestion so they never reach the database.
+            $data = cleanControlChars($data);
             $companyGroup = (int) $request->query('company_group');
 
             if (in_array($companyGroup, [1, 2])) {
