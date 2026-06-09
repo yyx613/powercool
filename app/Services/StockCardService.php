@@ -31,6 +31,11 @@ class StockCardService
         2 => 'HI-TEN TRADING SDN BHD',
     ];
 
+    const COMPANY_REGISTRATIONS = [
+        1 => '383045-D',
+        2 => '709676-X',
+    ];
+
     const BRAND_LABELS = [
         1 => 'IMAX',
         2 => 'Hi-Ten',
@@ -51,6 +56,28 @@ class StockCardService
             return self::COMPANY_HEADERS[1];
         }
         return self::COMPANY_HEADERS[(int) $companyGroup] ?? self::COMPANY_HEADERS[1];
+    }
+
+    /**
+     * Full company title for a report header, including the registration number
+     * (e.g. "POWER COOL EQUIPMENTS (M) SDN BHD (383045-D)").
+     *
+     * Returns null when no company group is given — the listing then spans both
+     * companies, so no single company title applies.
+     */
+    public static function companyTitleFor($companyGroup): ?string
+    {
+        if ($companyGroup === null || $companyGroup === '') {
+            return null;
+        }
+        $group = (int) $companyGroup;
+        $name = self::COMPANY_HEADERS[$group] ?? null;
+        if ($name === null) {
+            return null;
+        }
+        $registration = self::COMPANY_REGISTRATIONS[$group] ?? null;
+
+        return $registration ? "{$name} ({$registration})" : $name;
     }
 
     public static function brandLabelFor($brand): string

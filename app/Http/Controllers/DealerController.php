@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\DealerExport;
+use App\Exports\DealerListingExport;
 use App\Models\Branch;
 use App\Models\Dealer;
+use App\Services\StockCardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Maatwebsite\Excel\Facades\Excel;
 
 class DealerController extends Controller
 {
@@ -202,6 +202,12 @@ class DealerController extends Controller
         // the user is currently looking at.
         $query = $this->applyFilters(new Dealer, $req);
 
-        return Excel::download(new DealerExport($query), "Dealer {$branchLabel}.xlsx");
+        // Stamp the report's company title to match the active company-group
+        // filter. The export button carries no query params, so the filter lives
+        // in the session (set when the list was last filtered).
+        $companyGroup = $req->has('company_group') ? $req->company_group : Session::get('dealer-company_group');
+        $companyName = StockCardService::companyTitleFor($companyGroup);
+
+        return (new DealerListingExport($query, $companyName))->download("Dealer {$branchLabel}.xlsx");
     }
 }

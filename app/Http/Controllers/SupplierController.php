@@ -9,6 +9,7 @@ use App\Models\GRN;
 use App\Models\ObjectCreditTerm;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Services\StockCardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -390,6 +391,12 @@ class SupplierController extends Controller
         // the user is currently looking at.
         $query = $this->applyFilters(new Supplier, $req);
 
-        return (new CreditorListingExport($query))->download("Supplier {$branchLabel}.xlsx");
+        // Stamp the report's company title to match the active company-group
+        // filter. The export button carries no query params, so the filter lives
+        // in the session (set when the list was last filtered).
+        $companyGroup = $req->has('company_group') ? $req->company_group : Session::get('supplier-company_group');
+        $companyName = StockCardService::companyTitleFor($companyGroup);
+
+        return (new CreditorListingExport($query, $companyName))->download("Supplier {$branchLabel}.xlsx");
     }
 }

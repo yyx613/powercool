@@ -17,6 +17,7 @@ use App\Models\ObjectCreditTerm;
 use App\Models\Sale;
 use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
+use App\Services\StockCardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -847,7 +848,13 @@ class CustomerController extends Controller
         // the user is currently looking at.
         $query = $this->applyFilters(new Customer, $req);
 
-        return (new DebtorListingExport($query))->download("Debtor {$branchLabel}.xlsx");
+        // Stamp the report's company title to match the active company-group
+        // filter. The export button carries no query params, so the filter lives
+        // in the session (set when the list was last filtered).
+        $companyGroup = $req->has('company_group') ? $req->company_group : Session::get('debtor-company_group');
+        $companyName = StockCardService::companyTitleFor($companyGroup);
+
+        return (new DebtorListingExport($query, $companyName))->download("Debtor {$branchLabel}.xlsx");
     }
 
     public function getByKeyword(Request $req)

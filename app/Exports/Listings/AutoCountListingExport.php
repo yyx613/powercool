@@ -29,6 +29,8 @@ class AutoCountListingExport
         array $records,
         protected ?string $dateText = null,
         protected ?string $userId = null,
+        protected ?string $companyName = null,
+        protected ?string $title = null,
     ) {
         $this->records = array_values($records);
     }
@@ -135,7 +137,7 @@ class AutoCountListingExport
         }
     }
 
-    /** Stamp the report date and the exporting user into the template header. */
+    /** Stamp the report date, exporting user and company into the template header. */
     protected function fillHeader(Worksheet $sheet): void
     {
         if ($this->dateText !== null && $this->layout->dateCell) {
@@ -143,6 +145,17 @@ class AutoCountListingExport
         }
         if ($this->userId !== null && $this->layout->userCell) {
             $sheet->setCellValue($this->layout->userCell, $this->userId);
+        }
+        // Always overwrite the company title: the template ships with one company
+        // hardcoded, so an unset company must clear it rather than mislead.
+        if ($this->layout->companyCell) {
+            $sheet->setCellValue($this->layout->companyCell, (string) $this->companyName);
+        }
+        // Override the report heading only when a caller asks (the dealer export
+        // reuses the debtor template under the "Dealer Listing" title); otherwise
+        // the template's own heading is kept.
+        if ($this->title !== null && $this->layout->titleCell) {
+            $sheet->setCellValue($this->layout->titleCell, $this->title);
         }
     }
 

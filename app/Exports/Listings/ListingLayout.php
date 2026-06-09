@@ -22,6 +22,14 @@ class ListingLayout
         public array $anchors,
         public ?string $dateCell = null,
         public ?string $userCell = null,
+        // The company title cell (merged) at the top of the report. The template
+        // ships with one company hardcoded; the export overwrites it with the
+        // company matching the active filter.
+        public ?string $companyCell = null,
+        // The report title cell (e.g. "Debtor Listing"). Lets a caller reuse a
+        // template under a different heading (the dealer export reuses the
+        // debtor template titled "Dealer Listing").
+        public ?string $titleCell = null,
         // The horizontal rule under the column-header band. AutoCount draws it
         // as a shape that PhpSpreadsheet's .xls reader drops, so we redraw it as
         // a cell border spanning columns A..$ruleLastColumn on row $ruleRow.
@@ -47,6 +55,8 @@ class ListingLayout
             ],
             dateCell: 'V1',
             userCell: 'V3',
+            companyCell: 'A7',
+            titleCell: 'E4',
             ruleRow: 17,
         );
     }
@@ -69,6 +79,8 @@ class ListingLayout
             ],
             dateCell: 'V1',
             userCell: 'V2',
+            companyCell: 'A6',
+            titleCell: 'E3',
             ruleRow: 17,
         );
     }
