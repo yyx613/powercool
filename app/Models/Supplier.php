@@ -56,6 +56,11 @@ class Supplier extends Model
         return $this->morphMany(ObjectCreditTerm::class, 'object')->orderBy('id', 'desc');
     }
 
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
+    }
+
     public function generateSku(string $company_first_alphabet): string
     {
         $sku = null;

@@ -11,6 +11,17 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 
 class CustomerExport implements FromView, WithStyles
 {
+    /**
+     * Pre-filtered debtor query, built from the same filters as the list view
+     * so the export only contains the records the user is currently viewing.
+     */
+    protected $query;
+
+    public function __construct($query = null)
+    {
+        $this->query = $query ?? Customer::query();
+    }
+
     public function styles($sheet)
     {
         return [
@@ -22,7 +33,7 @@ class CustomerExport implements FromView, WithStyles
 
     public function view(): View
     {
-        $customers = Customer::with([
+        $customers = $this->query->with([
             'locations',
             'currency',
             'area',

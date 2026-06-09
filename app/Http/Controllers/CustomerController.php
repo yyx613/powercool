@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\CustomerExport;
+use App\Exports\DebtorListingExport;
 use App\Models\Approval;
 use App\Models\Attachment;
 use App\Models\Branch;
@@ -26,7 +26,6 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 class CustomerController extends Controller
@@ -62,8 +61,77 @@ class CustomerController extends Controller
 
     public function getData(Request $req)
     {
-        $records = new Customer;
+        Session::put('debtor-page', $req->page);
 
+        $records = $this->applyFilters(new Customer, $req);
+
+        $records_count = $records->count();
+        $records_ids = $records->pluck('id');
+        $records_paginator = $records->simplePaginate(10);
+
+        $data = [
+            'recordsTotal' => $records_count,
+            'recordsFiltered' => $records_count,
+            'data' => [],
+            'records_ids' => $records_ids,
+        ];
+
+        // Get rejection remarks for rejected customers
+        $rejectedCustomerIds = $records_paginator->where('status', Customer::STATUS_APPROVAL_REJECTED)->pluck('id')->toArray();
+        $rejectRemarks = [];
+        if (!empty($rejectedCustomerIds)) {
+            $rejectRemarks = Approval::where('object_type', Customer::class)
+                ->whereIn('object_id', $rejectedCustomerIds)
+                ->where('status', Approval::STATUS_REJECTED)
+                ->whereNotNull('reject_remark')
+                ->get()
+                ->groupBy('object_id')
+                ->map(fn($approvals) => $approvals->sortByDesc('updated_at')->first()->reject_remark)
+                ->toArray();
+        }
+
+        foreach ($records_paginator as $key => $record) {
+            $sales_agents = SalesAgent::whereIn('id', $record->salesAgents->pluck('sales_agent_id')->toArray())->pluck('name')->toArray();
+
+            $data['data'][] = [
+                'id' => $record->id,
+                'code' => $record->sku,
+                'name' => $record->name,
+                'category' => $record->category == null ? null : Customer::BUSINESS_TYPES[$record->category],
+                'phone_number' => $record->phone,
+                'company_name' => $record->company_name,
+                'debt_type' => $record->debtorType->name ?? '-',
+                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
+                'platform' => $record->platform->name ?? '-',
+                'sales_agents' => join(', ', $sales_agents),
+                'status' => $record->statusToLabel($record->status),
+                'reject_remark' => $rejectRemarks[$record->id] ?? null,
+                'can_edit' => hasPermission('customer.edit')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING
+                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
+                'can_delete' => hasPermission('customer.delete')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING,
+                'can_duplicate' => hasPermission('customer.create')
+                    && $record->status != Customer::STATUS_APPROVAL_PENDING
+                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
+            ];
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * Apply the debtor list filters (branch / sales-role scope, search, debt
+     * type, company group, category, sales agent and ordering) to the given
+     * query.
+     *
+     * Shared by the list (getData) and the Excel export so both honour the same
+     * filter state. When a filter is absent from the request it falls back to
+     * the value persisted in the session — which is what the export relies on,
+     * since it carries no query parameters of its own.
+     */
+    protected function applyFilters($records, Request $req)
+    {
         // Get customer IDs that have pending delete approvals
         $pendingDeleteCustomerIds = Approval::where('object_type', Customer::class)
             ->where('status', Approval::STATUS_PENDING_APPROVAL)
@@ -120,7 +188,6 @@ class CustomerController extends Controller
             }
         }
 
-        Session::put('debtor-page', $req->page);
         if ($req->has('debt_type')) {
             if ($req->debt_type == null) {
                 Session::remove('debtor-debt_type');
@@ -186,59 +253,7 @@ class CustomerController extends Controller
             $records = $records->orderBy('company_name', 'asc');
         }
 
-        $records_count = $records->count();
-        $records_ids = $records->pluck('id');
-        $records_paginator = $records->simplePaginate(10);
-
-        $data = [
-            'recordsTotal' => $records_count,
-            'recordsFiltered' => $records_count,
-            'data' => [],
-            'records_ids' => $records_ids,
-        ];
-
-        // Get rejection remarks for rejected customers
-        $rejectedCustomerIds = $records_paginator->where('status', Customer::STATUS_APPROVAL_REJECTED)->pluck('id')->toArray();
-        $rejectRemarks = [];
-        if (!empty($rejectedCustomerIds)) {
-            $rejectRemarks = Approval::where('object_type', Customer::class)
-                ->whereIn('object_id', $rejectedCustomerIds)
-                ->where('status', Approval::STATUS_REJECTED)
-                ->whereNotNull('reject_remark')
-                ->get()
-                ->groupBy('object_id')
-                ->map(fn($approvals) => $approvals->sortByDesc('updated_at')->first()->reject_remark)
-                ->toArray();
-        }
-
-        foreach ($records_paginator as $key => $record) {
-            $sales_agents = SalesAgent::whereIn('id', $record->salesAgents->pluck('sales_agent_id')->toArray())->pluck('name')->toArray();
-
-            $data['data'][] = [
-                'id' => $record->id,
-                'code' => $record->sku,
-                'name' => $record->name,
-                'category' => $record->category == null ? null : Customer::BUSINESS_TYPES[$record->category],
-                'phone_number' => $record->phone,
-                'company_name' => $record->company_name,
-                'debt_type' => $record->debtorType->name ?? '-',
-                'company_group' => $record->company_group == 1 ? 'Power Cool' : ($record->company_group == 2 ? 'Hi-Ten' : null),
-                'platform' => $record->platform->name ?? '-',
-                'sales_agents' => join(', ', $sales_agents),
-                'status' => $record->statusToLabel($record->status),
-                'reject_remark' => $rejectRemarks[$record->id] ?? null,
-                'can_edit' => hasPermission('customer.edit')
-                    && $record->status != Customer::STATUS_APPROVAL_PENDING
-                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
-                'can_delete' => hasPermission('customer.delete')
-                    && $record->status != Customer::STATUS_APPROVAL_PENDING,
-                'can_duplicate' => hasPermission('customer.create')
-                    && $record->status != Customer::STATUS_APPROVAL_PENDING
-                    && $record->status != Customer::STATUS_APPROVAL_REJECTED,
-            ];
-        }
-
-        return response()->json($data);
+        return $records;
     }
 
     public function create(Request $req)
@@ -814,7 +829,7 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function export()
+    public function export(Request $req)
     {
         // Exporting all debtors (e.g. KL / Every Branch with thousands of records)
         // builds a large in-memory spreadsheet, which overruns the default memory
@@ -828,7 +843,11 @@ class CustomerController extends Controller
         ];
         $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
 
-        return Excel::download(new CustomerExport, "Debtor {$branchLabel}.xlsx");
+        // Mirror the list view's filters so the export only contains the records
+        // the user is currently looking at.
+        $query = $this->applyFilters(new Customer, $req);
+
+        return (new DebtorListingExport($query))->download("Debtor {$branchLabel}.xlsx");
     }
 
     public function getByKeyword(Request $req)

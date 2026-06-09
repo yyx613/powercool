@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\SupplierExport;
+use App\Exports\CreditorListingExport;
 use App\Models\Attachment;
 use App\Models\Branch;
 use App\Models\GRN;
@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 
 class SupplierController extends Controller
 {
@@ -37,55 +36,9 @@ class SupplierController extends Controller
 
     public function getData(Request $req)
     {
-        $records = new Supplier;
-
-        // Search with session persistence
-        $keyword = null;
-        if ($req->has('search')) {
-            if ($req->search['value'] != null) {
-                $keyword = $req->search['value'];
-                Session::put('supplier-search', $keyword);
-            } else {
-                Session::remove('supplier-search');
-            }
-        } else if (Session::get('supplier-search') != null) {
-            $keyword = Session::get('supplier-search');
-        }
-
-        if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
-            });
-        }
-
         Session::put('supplier-page', $req->page);
-        if ($req->has('company_group')) {
-            if ($req->company_group == null) {
-                Session::remove('supplier-company_group');
-            } else {
-                $records = $records->where('company_group', $req->company_group);
-                Session::put('supplier-company_group', $req->company_group);
-            }
-        } else if (Session::get('dealer-company_group') != null) {
-            $records = $records->where('company_group', Session::get('supplier-company_group'));
-        }
-        // Order
-        if ($req->has('order')) {
-            $map = [
-                1 => 'sku',
-                2 => 'name',
-                3 => 'phone',
-                4 => 'company_name',
-            ];
-            foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
-            }
-        } else {
-            $records = $records->orderBy('id', 'desc');
-        }
+
+        $records = $this->applyFilters(new Supplier, $req);
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -111,6 +64,67 @@ class SupplierController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    /**
+     * Apply the supplier list filters (search, company group and ordering) to
+     * the given query.
+     *
+     * Shared by the list (getData) and the Excel export so both honour the same
+     * filter state. When a filter is absent from the request it falls back to
+     * the value persisted in the session — which is what the export relies on,
+     * since it carries no query parameters of its own.
+     */
+    protected function applyFilters($records, Request $req)
+    {
+        // Search with session persistence
+        $keyword = null;
+        if ($req->has('search')) {
+            if ($req->search['value'] != null) {
+                $keyword = $req->search['value'];
+                Session::put('supplier-search', $keyword);
+            } else {
+                Session::remove('supplier-search');
+            }
+        } else if (Session::get('supplier-search') != null) {
+            $keyword = Session::get('supplier-search');
+        }
+
+        if ($keyword != null) {
+            $records = $records->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($req->has('company_group')) {
+            if ($req->company_group == null) {
+                Session::remove('supplier-company_group');
+            } else {
+                $records = $records->where('company_group', $req->company_group);
+                Session::put('supplier-company_group', $req->company_group);
+            }
+        } else if (Session::get('supplier-company_group') != null) {
+            $records = $records->where('company_group', Session::get('supplier-company_group'));
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'sku',
+                2 => 'name',
+                3 => 'phone',
+                4 => 'company_name',
+            ];
+            foreach ($req->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
+
+        return $records;
     }
 
     public function create()
@@ -363,7 +377,7 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function export()
+    public function export(Request $req)
     {
         $branchLabels = [
             Branch::LOCATION_EVERY => 'Every Branch',
@@ -372,6 +386,10 @@ class SupplierController extends Controller
         ];
         $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
 
-        return Excel::download(new SupplierExport, "Supplier {$branchLabel}.xlsx");
+        // Mirror the list view's filters so the export only contains the records
+        // the user is currently looking at.
+        $query = $this->applyFilters(new Supplier, $req);
+
+        return (new CreditorListingExport($query))->download("Supplier {$branchLabel}.xlsx");
     }
 }
