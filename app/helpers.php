@@ -517,3 +517,32 @@ if (! function_exists('getPaymentMethodOptionalDueDateIds')) {
             ->pluck('id')->toArray();
     }
 }
+
+if (! function_exists('cleanControlChars')) {
+    /**
+     * Strip control characters that are invalid in XML/HTML (e.g. 0x1F).
+     *
+     * FromView Excel exports render the data to HTML and then re-parse it with
+     * DOMDocument::loadHTML(), which aborts on any C0 control character. Synced
+     * free-text fields occasionally contain these (e.g. 0x1F Unit Separator),
+     * so values are scrubbed before rendering. Tab/LF/CR are preserved.
+     *
+     * Matches single ASCII control bytes only, which never appear inside a valid
+     * UTF-8 multibyte sequence, so multibyte characters are left intact.
+     *
+     * @param  mixed  $value
+     * @return mixed
+     */
+    function cleanControlChars($value)
+    {
+        if (is_array($value)) {
+            return array_map('cleanControlChars', $value);
+        }
+
+        if (is_string($value)) {
+            return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+        }
+
+        return $value;
+    }
+}
