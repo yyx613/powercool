@@ -816,7 +816,19 @@ class CustomerController extends Controller
 
     public function export()
     {
-        return Excel::download(new CustomerExport, 'user.xlsx');
+        // Exporting all debtors (e.g. KL / Every Branch with thousands of records)
+        // builds a large in-memory spreadsheet, which overruns the default memory
+        // limit and returns a system error. Give the export enough headroom.
+        ini_set('memory_limit', '512M');
+
+        $branchLabels = [
+            Branch::LOCATION_EVERY => 'Every Branch',
+            Branch::LOCATION_KL => 'KL Branch',
+            Branch::LOCATION_PENANG => 'Penang Branch',
+        ];
+        $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
+
+        return Excel::download(new CustomerExport, "Debtor {$branchLabel}.xlsx");
     }
 
     public function getByKeyword(Request $req)

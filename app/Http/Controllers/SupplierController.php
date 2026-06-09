@@ -365,6 +365,13 @@ class SupplierController extends Controller
 
     public function export()
     {
-        return Excel::download(new SupplierExport, 'supplier.xlsx');
+        $branchLabels = [
+            Branch::LOCATION_EVERY => 'Every Branch',
+            Branch::LOCATION_KL => 'KL Branch',
+            Branch::LOCATION_PENANG => 'Penang Branch',
+        ];
+        $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
+
+        return Excel::download(new SupplierExport, "Supplier {$branchLabel}.xlsx");
     }
 }

@@ -172,6 +172,18 @@ class DealerController extends Controller
 
     public function export()
     {
-        return Excel::download(new DealerExport, 'dealer.xlsx');
+        // Exporting all dealers across branches builds a large in-memory
+        // spreadsheet, which can overrun the default memory limit and return a
+        // system error. Give the export enough headroom.
+        ini_set('memory_limit', '512M');
+
+        $branchLabels = [
+            Branch::LOCATION_EVERY => 'Every Branch',
+            Branch::LOCATION_KL => 'KL Branch',
+            Branch::LOCATION_PENANG => 'Penang Branch',
+        ];
+        $branchLabel = $branchLabels[getCurrentUserBranch()] ?? 'Every Branch';
+
+        return Excel::download(new DealerExport, "Dealer {$branchLabel}.xlsx");
     }
 }
