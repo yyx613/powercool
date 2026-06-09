@@ -17,7 +17,7 @@ class DebtorListingExport
 {
     protected $query;
 
-    public function __construct($query = null)
+    public function __construct($query = null, protected ?string $companyName = null)
     {
         $this->query = $query ?? Customer::query();
     }
@@ -47,6 +47,7 @@ class DebtorListingExport
             records: $this->records(),
             dateText: now()->format('d-m-Y H:i:s'),
             userId: strtoupper((string) (Auth::user()->name ?? '')),
+            companyName: $this->companyName,
         );
 
         return $this->stream($export, $filename);
@@ -78,7 +79,7 @@ class DebtorListingExport
 
         return new ListingRecord(
             code: (string) $customer->sku,
-            name: (string) $customer->name,
+            name: (string) ($customer->company_name ?: $customer->name),
             addressLines: array_map('strval', $addressLines),
             area: (string) ($customer->area->name ?? ''),
             agent: implode(' / ', $agents),

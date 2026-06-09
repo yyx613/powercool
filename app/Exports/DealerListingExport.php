@@ -5,73 +5,62 @@ namespace App\Exports;
 use App\Exports\Listings\AutoCountListingExport;
 use App\Exports\Listings\ListingLayout;
 use App\Exports\Listings\ListingRecord;
-use App\Models\Supplier;
+use App\Models\Dealer;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * "Creditor Listing" export — clones the AutoCount creditor template, one block
- * per supplier, honouring whatever filter the caller has already applied.
+ * "Dealer Listing" export — reuses the AutoCount debtor template, one block per
+ * dealer, retitled "Dealer Listing", honouring whatever filter the caller has
+ * already applied.
  */
-class CreditorListingExport
+class DealerListingExport
 {
     protected $query;
 
     public function __construct($query = null, protected ?string $companyName = null)
     {
-        $this->query = $query ?? Supplier::query();
+        $this->query = $query ?? Dealer::query();
     }
 
     /**
-     * The filtered suppliers flattened into listing records, in report order.
+     * The filtered dealers flattened into listing records, in report order.
      *
      * @return ListingRecord[]
      */
     public function records(): array
     {
         return $this->query
-            ->with(['area', 'creditTerms.creditTerm'])
             ->orderBy('sku')
             ->get()
-            ->map(fn (Supplier $supplier) => $this->toRecord($supplier))
+            ->map(fn (Dealer $dealer) => $this->toRecord($dealer))
             ->all();
     }
 
     public function download(string $filename): BinaryFileResponse
     {
-        $template = resource_path('exports/templates/creditor_listing.xls');
+        $template = resource_path('exports/templates/debtor_listing.xls');
 
         $export = new AutoCountListingExport(
             templatePath: $template,
-            layout: ListingLayout::creditor(),
+            layout: ListingLayout::debtor(),
             records: $this->records(),
             dateText: now()->format('d-m-Y H:i:s'),
             userId: strtoupper((string) (Auth::user()->name ?? '')),
             companyName: $this->companyName,
+            title: 'Dealer Listing',
         );
 
         return $this->stream($export, $filename);
     }
 
-    protected function toRecord(Supplier $supplier): ListingRecord
+    protected function toRecord(Dealer $dealer): ListingRecord
     {
-        $terms = $supplier->creditTerms
-            ->map(fn ($t) => $t->creditTerm->name ?? null)
-            ->filter()
-            ->all();
-
-        $mobiles = is_array($supplier->mobile_number) ? $supplier->mobile_number : [$supplier->mobile_number];
-
+        // Dealers carry only a code, name and company name; the remaining columns
+        // of the debtor template have no dealer equivalent and stay blank.
         return new ListingRecord(
-            code: (string) $supplier->sku,
-            name: (string) ($supplier->company_name ?: $supplier->name),
-            // Supplier address is a single free-text column; split on newlines.
-            addressLines: preg_split('/\r\n|\r|\n/', (string) $supplier->location) ?: [],
-            area: (string) ($supplier->area->name ?? ''),
-            agent: (string) $supplier->sale_agent,
-            terms: implode(' / ', $terms),
-            contact: '',
-            phones: array_filter([$supplier->phone, ...$mobiles], fn ($v) => $v !== null && $v !== ''),
+            code: (string) $dealer->sku,
+            name: (string) ($dealer->company_name ?: $dealer->name),
         );
     }
 

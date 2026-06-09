@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Exports\CreditorListingExport;
+use App\Exports\DealerListingExport;
 use App\Exports\DebtorListingExport;
 use App\Exports\Listings\AutoCountListingExport;
 use App\Exports\Listings\ListingLayout;
 use App\Exports\Listings\ListingRecord;
 use App\Models\Customer;
+use App\Models\Dealer;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -91,6 +93,7 @@ class ListingExportTest extends TestCase
             records: $records,
             dateText: '09-06-2026 10:00:00',
             userId: 'TESTUSER',
+            companyName: 'POWER COOL EQUIPMENTS (M) SDN BHD (383045-D)',
         );
 
         $path = tempnam(sys_get_temp_dir(), 'listing_test') . '.xlsx';
@@ -102,6 +105,9 @@ class ListingExportTest extends TestCase
         $this->assertSame('Debtor Listing', $sheet->getCell('E4')->getValue());
         $this->assertSame('09-06-2026 10:00:00', $sheet->getCell('V1')->getValue());
         $this->assertSame('TESTUSER', $sheet->getCell('V3')->getValue());
+        // The company title reflects the company passed in, not the template's
+        // hardcoded value.
+        $this->assertSame('POWER COOL EQUIPMENTS (M) SDN BHD (383045-D)', $sheet->getCell('A7')->getValue());
 
         // The header rule under the column band is redrawn (the template's shape
         // line is dropped by the .xls reader) and spans the full width.
@@ -122,6 +128,55 @@ class ListingExportTest extends TestCase
         // Sample data (and its pre-formatted tail to row ~3499) is gone: with a
         // single record the sheet must end just past the first block.
         $this->assertLessThan(40, $sheet->getHighestRow());
+
+        @unlink($path);
+    }
+
+    public function test_dealer_listing_reuses_the_debtor_template_retitled(): void
+    {
+        $tag = 'DEAL' . uniqid();
+        $dealer = Dealer::create([
+            'name' => 'Test Dealer',
+            'company_name' => 'TEST DEALER SDN BHD',
+            'company_group' => 1,
+            'sku' => $tag,
+        ]);
+
+        $query = Dealer::whereIn('sku', [$dealer->sku]);
+        $export = new DealerListingExport($query, 'POWER COOL EQUIPMENTS (M) SDN BHD (383045-D)');
+
+        // download() writes the workbook to a temp file and wraps it in a
+        // response; read that file straight back to inspect the contents.
+        $response = $export->download('dealer.xlsx');
+        $sheet = IOFactory::load($response->getFile()->getPathname())->getActiveSheet();
+
+        // Debtor template, retitled.
+        $this->assertSame('Dealer Listing', $sheet->getCell('E4')->getValue());
+        $this->assertSame('POWER COOL EQUIPMENTS (M) SDN BHD (383045-D)', $sheet->getCell('A7')->getValue());
+        // The dealer maps into the first record block (company name, name fallback).
+        $this->assertSame($tag, $sheet->getCell('A19')->getValue());
+        $this->assertSame('TEST DEALER SDN BHD', $sheet->getCell('B19')->getValue());
+
+        @unlink($response->getFile()->getPathname());
+    }
+
+    public function test_company_title_is_cleared_when_no_company_is_given(): void
+    {
+        // With no company filter the listing spans both companies, so the
+        // template's hardcoded company title must be cleared rather than left
+        // showing the wrong company.
+        $export = new AutoCountListingExport(
+            templatePath: resource_path('exports/templates/creditor_listing.xls'),
+            layout: ListingLayout::creditor(),
+            records: [new ListingRecord(code: '400-T001', name: 'TEST CREDITOR')],
+            companyName: null,
+        );
+
+        $path = tempnam(sys_get_temp_dir(), 'listing_test') . '.xlsx';
+        $export->save($path);
+
+        $sheet = IOFactory::load($path)->getActiveSheet();
+        $this->assertSame('', (string) $sheet->getCell('A6')->getValue());
 
         @unlink($path);
     }
