@@ -245,6 +245,6 @@ class CashSaleController extends Controller
         $sale->status = Sale::STATUS_CANCELLED;
         $sale->save();
 
-        return redirect(route('cash_sale.index'))->with('success', 'Cash Sale cancelled');
+        return redirect(route('cash_sale.index'))->with('success', __('Cash Sale cancelled'));
     }
 }

@@ -100,7 +100,7 @@
                         <div class="mt-2 border rounded-md p-3 bg-slate-50">
                             @if ($task->signature_url)
                                 <div class="mb-2">
-                                    <img src="{{ $task->signature_url }}" alt="Customer Signature" class="max-h-24 border rounded bg-white p-1">
+                                    <img src="{{ $task->signature_url }}" alt="{{ __('Customer Signature') }}" class="max-h-24 border rounded bg-white p-1">
                                 </div>
                             @endif
                             <span class="text-sm text-slate-600">{{ $task->signed_off_by }} &middot; {{ \Carbon\Carbon::parse($task->signed_off_at)->format('d M Y H:i') }}</span>
@@ -123,7 +123,7 @@
                                     @if (count($u->pictures) > 0)
                                         <img src="{{ $u->latest_picture->url }}" alt="" class="h-full w-full object-cover">
                                     @else
-                                        <img src="{{ asset('images/avatar.jpg') }}" alt="Avatar image" class="h-full w-full object-cover">
+                                        <img src="{{ asset('images/avatar.jpg') }}" alt="{{ __('Avatar image') }}" class="h-full w-full object-cover">
                                     @endif
                                 </div>
                             </span>
@@ -145,7 +145,7 @@
                             <div class="mb-1">
                                 <p class="text-sm leading-none">{{ $log->desc }}</p>
                             </div>
-                            <span class="text-sm text-slate-400 leading-none">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }} &#x2022; {{ $log->doneBy == null && isSuperAdmin() ? 'Admin' : $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">View Data</a></span>
+                            <span class="text-sm text-slate-400 leading-none">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y H:i') }} &#x2022; {{ $log->doneBy == null && isSuperAdmin() ? 'Admin' : $log->doneBy->name }} &#x2022; <a href="{{ route('view_log', ['log' => $log]) }}" class="text-blue-500">{{ __('View Data') }}</a></span>
                         </li>
                     @endforeach
                 </ul>

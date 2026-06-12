@@ -45,6 +45,21 @@ class TransportAcknowledgement extends Model
         return $this->hasMany(TransportAcknowledgementProduct::class, 'transport_acknowledgement_id');
     }
 
+    public function typeName(): ?string
+    {
+        if ($this->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY) {
+            return 'Delivery';
+        } else if ($this->type == DeliveryOrder::TRANSPORT_ACK_TYPE_COLLECTION) {
+            return 'Collection';
+        } else if (str_starts_with((string) $this->sku, 'DL')) {
+            return 'Delivery';
+        } else if (str_starts_with((string) $this->sku, 'CL')) {
+            return 'Collection';
+        } else {
+            return null;
+        }
+    }
+
     public function dealerName(): ?string
     {
         if ($this->dealer_id == '-1') {

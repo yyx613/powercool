@@ -220,10 +220,10 @@ class InventoryController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('inventory_category.create'))->with('success', 'Inventory Category created');
+                return redirect(route('inventory_category.create'))->with('success', __('Inventory Category created'));
             }
 
-            return redirect(route('inventory_category.index'))->with('success', 'Inventory Category '.($req->category_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_category.index'))->with('success', $req->category_id == null ? __('Inventory Category created') : __('Inventory Category updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
@@ -238,7 +238,7 @@ class InventoryController extends Controller
     {
         $cat->delete();
 
-        return back()->with('success', 'Product Category deleted');
+        return back()->with('success', __('Product Category deleted'));
     }
 
     public function indexSummary()
@@ -499,12 +499,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Stocked In');
+            return back()->with('success', __('Stocked In'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -550,12 +550,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Stocked Out');
+            return back()->with('success', __('Stocked Out'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -637,12 +637,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Product is in transit');
+            return back()->with('success', __('Product is in transit'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -667,12 +667,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Transfer Request is created');
+            return back()->with('success', __('Transfer Request is created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -692,12 +692,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Accepted');
+            return back()->with('success', __('Accepted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -716,12 +716,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Rejected');
+            return back()->with('success', __('Rejected'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -735,12 +735,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Accepted');
+            return back()->with('success', __('Accepted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -758,12 +758,12 @@ class InventoryController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Rejected');
+            return back()->with('success', __('Rejected'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -877,15 +877,15 @@ class InventoryController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('inventory_type.create'))->with('success', 'Inventory Type created');
+                return redirect(route('inventory_type.create'))->with('success', __('Inventory Type created'));
             }
 
-            return redirect(route('inventory_type.index'))->with('success', 'Inventory Type '.($req->type_id == null ? 'created' : 'updated'));
+            return redirect(route('inventory_type.index'))->with('success', $req->type_id == null ? __('Inventory Type created') : __('Inventory Type updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return redirect(route('inventory_type.create'))->with('error', 'Something went wrong');
+            return redirect(route('inventory_type.create'))->with('error', __('Something went wrong'));
         }
     }
 
@@ -893,6 +893,6 @@ class InventoryController extends Controller
     {
         $type->delete();
 
-        return back()->with('success', 'Product Type deleted');
+        return back()->with('success', __('Product Type deleted'));
     }
 }

@@ -182,7 +182,7 @@
                             </div>
                             <div class="flex items-center second-half">
                                 <button type="button" class="mr-3 view-material-use-selection-btns hidden"
-                                    title="View Material Use Selection">
+                                    title="{{ __('View Material Use Selection') }}">
                                     <svg class="h-4 w-4 fill-slate-400 hover:fill-black"
                                         xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                                         viewBox="0 0 24 24">

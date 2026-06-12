@@ -159,13 +159,13 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect(route('ticket.index'))->with('success', 'Ticket created');
+            return redirect(route('ticket.index'))->with('success', __('Ticket created'));
         } catch (\Throwable $th) {
             dd($th);
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -219,12 +219,12 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect(route('ticket.index'))->with('success', 'Ticket updated');
+            return redirect(route('ticket.index'))->with('success', __('Ticket updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -232,7 +232,7 @@ class TicketController extends Controller
     {
         $ticket->delete();
 
-        return back()->with('success', 'Ticket deleted');
+        return back()->with('success', __('Ticket deleted'));
     }
 
     public function getProducts(Request $req)

@@ -360,16 +360,16 @@
             </tr>
             <tr>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
+                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
                     Authorised Signature</td>
                 <td style="width: 10px;"></td>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
-                    Recipient's Chop & Signature<br>Name:<br>IC:</td>
+                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
+                    Recipient's Chop & Signature</td>
                 <td style="width: 10px;"></td>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
-                    Driver Signature</td>
+                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
+                    Driver Chop & Signature</td>
             </tr>
         </table>
         {{-- Good Receives --}}

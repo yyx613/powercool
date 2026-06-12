@@ -46,7 +46,7 @@
                         id="milestone-template">
                         <span class="text-sm value"></span>
                         <button type="button"
-                            class="text-sm font-semibold text-red-500 px-1.5 rounded hidden group-hover:block remove-btns">Remove</button>
+                            class="text-sm font-semibold text-red-500 px-1.5 rounded hidden group-hover:block remove-btns">{{ __('Remove') }}</button>
                     </div>
                 </div>
                 <input name="milestones" type="hidden" />

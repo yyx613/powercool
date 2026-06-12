@@ -207,7 +207,7 @@ class SaleEnquiryController extends Controller
             'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
             'quality' => 'required|in:1,2,3',
-            'promotion_id' => 'required|exists:promotions,id',
+            'promotion_id' => 'nullable|exists:promotions,id',
         ], [], [
             'name' => 'Customer Name',
         ]);
@@ -247,7 +247,7 @@ class SaleEnquiryController extends Controller
             DB::commit();
 
             return redirect()->route('sale_enquiry.index')
-                ->with('success', 'Sale enquiry created successfully');
+                ->with('success', __('Sale enquiry created successfully'));
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -280,7 +280,7 @@ class SaleEnquiryController extends Controller
             'priority' => 'required|in:1,2,3',
             'status' => 'required|in:1,2,3,4',
             'quality' => 'required|in:1,2,3',
-            'promotion_id' => 'required|exists:promotions,id',
+            'promotion_id' => 'nullable|exists:promotions,id',
         ], [], [
             'name' => 'Customer Name',
         ]);
@@ -314,7 +314,7 @@ class SaleEnquiryController extends Controller
             DB::commit();
 
             return redirect()->route('sale_enquiry.index')
-                ->with('success', 'Sale enquiry updated successfully');
+                ->with('success', __('Sale enquiry updated successfully'));
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -328,7 +328,7 @@ class SaleEnquiryController extends Controller
             $enquiry->delete();
 
             return redirect()->route('sale_enquiry.index')
-                ->with('success', 'Sale enquiry deleted successfully');
+                ->with('success', __('Sale enquiry deleted successfully'));
 
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

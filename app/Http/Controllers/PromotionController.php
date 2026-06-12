@@ -132,14 +132,14 @@ class PromotionController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('promotion.create'))->with('success', 'Promotion created');
+                return redirect(route('promotion.create'))->with('success', __('Promotion created'));
             }
-            return redirect(route('promotion.index'))->with('success', 'Promotion created');
+            return redirect(route('promotion.index'))->with('success', __('Promotion created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -182,18 +182,18 @@ class PromotionController extends Controller
 
             DB::commit();
 
-            return redirect(route('promotion.index'))->with('success', 'Promotion updated');
+            return redirect(route('promotion.index'))->with('success', __('Promotion updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
     public function delete(Promotion $promotion) {
         $promotion->delete();
 
-        return back()->with('success', 'Promotion deleted');
+        return back()->with('success', __('Promotion deleted'));
     }
 }

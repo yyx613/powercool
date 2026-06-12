@@ -111,14 +111,14 @@ class CurrencyController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('currency.create'))->with('success', 'Currency created');
+                return redirect(route('currency.create'))->with('success', __('Currency created'));
             }
-            return redirect(route('currency.index'))->with('success', 'Currency created');
+            return redirect(route('currency.index'))->with('success', __('Currency created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -156,12 +156,12 @@ class CurrencyController extends Controller
 
             DB::commit();
 
-            return redirect(route('currency.index'))->with('success', 'Currency updated');
+            return redirect(route('currency.index'))->with('success', __('Currency updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

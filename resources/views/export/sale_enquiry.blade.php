@@ -2,19 +2,19 @@
 
 <table>
     <tr>
-        <td>Enquiry ID</td>
-        <td>Enquiry Date</td>
-        <td>Customer Name</td>
-        <td>Phone Number</td>
-        <td>Email</td>
-        <td>Source</td>
-        <td>Product</td>
-        <td>Assigned Staff</td>
-        <td>Priority</td>
-        <td>Quality</td>
-        <td>Promotion</td>
-        <td>Created By</td>
-        <td>Status</td>
+        <td>{{ __('Enquiry ID') }}</td>
+        <td>{{ __('Enquiry Date') }}</td>
+        <td>{{ __('Customer Name') }}</td>
+        <td>{{ __('Phone Number') }}</td>
+        <td>{{ __('Email') }}</td>
+        <td>{{ __('Source') }}</td>
+        <td>{{ __('Product') }}</td>
+        <td>{{ __('Assigned Staff') }}</td>
+        <td>{{ __('Priority') }}</td>
+        <td>{{ __('Quality') }}</td>
+        <td>{{ __('Promotion') }}</td>
+        <td>{{ __('Created By') }}</td>
+        <td>{{ __('Status') }}</td>
     </tr>
     @foreach ($enquiries as $enquiry)
         @php

@@ -111,15 +111,15 @@ class PaymentMethodController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('payment_method.create'))->with('success', 'Payment Method created');
+                return redirect(route('payment_method.create'))->with('success', __('Payment Method created'));
             }
 
-            return redirect(route('payment_method.index'))->with('success', 'Payment Method created');
+            return redirect(route('payment_method.index'))->with('success', __('Payment Method created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -155,12 +155,12 @@ class PaymentMethodController extends Controller
 
             DB::commit();
 
-            return redirect(route('payment_method.index'))->with('success', 'Payment Method updated');
+            return redirect(route('payment_method.index'))->with('success', __('Payment Method updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

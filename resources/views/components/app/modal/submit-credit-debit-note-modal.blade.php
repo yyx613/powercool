@@ -31,7 +31,7 @@
                                     1
                                 </td>
                                 <td class="text-center">
-                                    Item A
+                                    {{ __('Item A') }}
                                 </td>
                                 <td style="text-align: center;">
                                     <div class="bg-white rounded-md border border-gray-300 overflow-hidden p-1 text-center" style="width: 50%; display: inline-block;">
@@ -54,7 +54,7 @@
                                     
                                 </td>
                                 <td style="text-align: center;" class="font-black pt-2">
-                                    Total
+                                    {{ __('Total') }}
                                 </td>
                                 <td style="text-align: center;" class="font-black pt-2">
                                     RM 180.00

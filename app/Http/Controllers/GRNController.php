@@ -268,7 +268,7 @@ class GRNController extends Controller
         $offenders = array_values(array_unique(array_merge($withinSubmissionDups, $alreadyExisting)));
         if (count($offenders) > 0) {
             return back()
-                ->with('error', 'Duplicate serial number(s): '.implode(', ', $offenders))
+                ->with('error', __('Duplicate serial number(s): ').implode(', ', $offenders))
                 ->withInput();
         }
 
@@ -319,12 +319,12 @@ class GRNController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Item stocked in');
+            return back()->with('success', __('Item stocked in'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -336,7 +336,7 @@ class GRNController extends Controller
             $grn = $this->grn::where('sku', $sku)->first();
 
             if ($grn == null) {
-                return redirect(route('grn.index'))->with('error', 'GRN not found');
+                return redirect(route('grn.index'))->with('error', __('GRN not found'));
             }
 
             $approval = Approval::create([
@@ -357,12 +357,12 @@ class GRNController extends Controller
 
             DB::commit();
 
-            return redirect(route('grn.index'))->with('success', 'GRN cancel request is submitted');
+            return redirect(route('grn.index'))->with('success', __('GRN cancel request is submitted'));
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
 
-            return redirect(route('grn.index'))->with('error', 'Something went wrong. Please contact administrator');
+            return redirect(route('grn.index'))->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -374,7 +374,7 @@ class GRNController extends Controller
             $grn = $this->grn::where('sku', $sku)->first();
 
             if ($grn == null) {
-                return redirect(route('grn.index'))->with('error', 'GRN not found');
+                return redirect(route('grn.index'))->with('error', __('GRN not found'));
             }
 
             $approval = Approval::create([
@@ -396,12 +396,12 @@ class GRNController extends Controller
 
             DB::commit();
 
-            return redirect(route('grn.index'))->with('success', 'GRN delete request is submitted');
+            return redirect(route('grn.index'))->with('success', __('GRN delete request is submitted'));
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
 
-            return redirect(route('grn.index'))->with('error', 'Something went wrong. Please contact administrator');
+            return redirect(route('grn.index'))->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 

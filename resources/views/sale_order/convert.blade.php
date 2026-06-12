@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="mb-6">
-        <x-app.page-title url="{{ route('sale_order.index') }}">Convert Sale Order to Delivery Order</x-app.page-title>
+        <x-app.page-title url="{{ route('sale_order.index') }}">{{ __('Convert Sale Order to Delivery Order') }}</x-app.page-title>
     </div>
     @if ($step > 1)
         <div class="flex gap-x-4 mb-3">
@@ -79,7 +79,7 @@
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm1,15V7c0-.404-.244-.77-.617-.924-.375-.157-.805-.069-1.09,.217l-2.444,2.444c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l.737-.737v7.586c0,.553,.448,1,1,1s1-.447,1-1Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Customer Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Customer Selection') }}</h6>
             </div>
             <!-- Step 2 -->
             <div
@@ -91,7 +91,7 @@
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm4,15c0-.553-.448-1-1-1h-4.781c.426-.37,1.069-.72,1.742-1.086,1.754-.956,4.156-2.265,4.035-5.131-.089-2.121-1.844-3.783-3.995-3.783-2.206,0-4,1.794-4,4,0,.553,.448,1,1,1s1-.447,1-1c0-1.103,.897-2,2-2,1.058,0,1.954,.838,1.997,1.867,.064,1.513-1.088,2.253-2.994,3.29-.99,.54-1.925,1.049-2.559,1.797-.475,.56-.58,1.319-.272,1.983,.304,.655,.942,1.062,1.666,1.062h5.162c.552,0,1-.447,1-1Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Salesperson Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Salesperson Selection') }}</h6>
             </div>
             <!-- Step 3 -->
             <div
@@ -103,7 +103,7 @@
                             d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-8c0,2.206-1.794,4-4,4h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.103,0,2-.897,2-2s-.897-2-2-2h-2c-.552,0-1-.447-1-1s.448-1,1-1h2c.551,0,1-.448,1-1s-.449-1-1-1h-3c-.552,0-1-.447-1-1s.448-1,1-1h3c1.654,0,3,1.346,3,3,0,.68-.236,1.301-.619,1.805,.977,.73,1.619,1.885,1.619,3.195Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Sale Order Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Sale Order Selection') }}</h6>
             </div>
             <!-- Step 4 -->
             <div
@@ -115,7 +115,7 @@
                             d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm4-15v10c0,.553-.447,1-1,1s-1-.447-1-1v-3h-3c-1.654,0-3-1.346-3-3V7c0-.553,.447-1,1-1s1,.447,1,1v4c0,.552,.448,1,1,1h3V7c0-.553,.447-1,1-1s1,.447,1,1Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Term Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Term Selection') }}</h6>
             </div>
             <!-- Step 5 -->
             <div
@@ -127,7 +127,7 @@
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm2.901,14.754c.763-.804,1.151-1.857,1.094-2.968-.111-2.123-1.941-3.786-4.165-3.786h-1.83v-2h4c.553,0,1-.447,1-1s-.447-1-1-1h-4c-1.103,0-2,.897-2,2v3c0,.553,.447,1,1,1h2.83c1.141,0,2.112,.849,2.167,1.891,.029,.557-.165,1.084-.547,1.486-.382,.401-.896,.623-1.45,.623h-3c-.553,0-1,.447-1,1s.447,1,1,1h3c1.092,0,2.149-.454,2.901-1.246Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Product Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Product Selection') }}</h6>
             </div>
             <!-- Step 6 -->
             <div
@@ -139,7 +139,7 @@
                             d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm0-12c-.639,0-1.235,.164-1.771,.432,.478-1.629,1.721-2.432,3.771-2.432,.552,0,1-.447,1-1s-.448-1-1-1c-3.813,0-6,2.26-6,6.2v1.8c0,2.206,1.794,4,4,4s4-1.794,4-4-1.794-4-4-4Zm0,6c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Accessory Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Accessory Selection') }}</h6>
             </div>
             <!-- Step 7 -->
             <div
@@ -151,7 +151,7 @@
                             d="M12,24C5.383,24,0,18.617,0,12S5.383,0,12,0s12,5.383,12,12-5.383,12-12,12Zm0-22C6.486,2,2,6.486,2,12s4.486,10,10,10,10-4.486,10-10S17.514,2,12,2Zm-1.132,15.497l4.921-8.603c.312-.625,.279-1.352-.088-1.946-.367-.594-1.003-.948-1.701-.948h-5c-.552,0-1,.447-1,1s.448,1,1,1l5.026-.05-4.895,8.553c-.274,.479-.108,1.091,.372,1.365,.157,.09,.327,.132,.496,.132,.347,0,.684-.181,.869-.503Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Delivery Address Selection</h6>
+                <h6 class="font-semibold mx-4">{{ __('Delivery Address Selection') }}</h6>
             </div>
             <!-- Step 8 -->
             <div
@@ -163,7 +163,7 @@
                             d="M12,0C5.383,0,0,5.383,0,12s5.383,12,12,12,12-5.383,12-12S18.617,0,12,0Zm0,22c-5.514,0-10-4.486-10-10S6.486,2,12,2s10,4.486,10,10-4.486,10-10,10Zm2.95-8.406c.647-.742,1.05-1.706,1.05-2.594,0-2.206-1.794-4-4-4s-4,1.794-4,4c0,.888,.403,1.852,1.05,2.594-.647,.742-1.05,1.706-1.05,2.406,0,2.206,1.794,4,4,4s4-1.794,4-4c0-.7-.403-1.664-1.05-2.406Zm-2.95-4.594c1.103,0,2,.897,2,2s-.897,2-2,2-2-.897-2-2,.897-2,2-2Zm0,10c-1.103,0-2-.897-2-2s.897-2,2-2,2,.897,2,2-.897,2-2,2Z" />
                     </svg>
                 </div>
-                <h6 class="font-semibold mx-4">Sale Enquiry Selection (Optional)</h6>
+                <h6 class="font-semibold mx-4">{{ __('Sale Enquiry Selection (Optional)') }}</h6>
             </div>
         </div>
         <!-- Steps Content -->
@@ -172,10 +172,10 @@
             @if ($step == 1)
                 <div>
                     <div class="mb-2">
-                        <h5 class="text-md font-semibold">Select a customer to proceed</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select a customer to proceed') }}</h5>
                     </div>
                     <div class="mb-4">
-                        <x-app.input.input name="search_customer" placeholder="Search customer" />
+                        <x-app.input.input name="search_customer" placeholder="{{ __('Search customer') }}" />
                     </div>
                     @if (count($customers) > 0)
                         <ul>
@@ -206,10 +206,10 @@
             @if ($step == 2)
                 <div>
                     <div class="mb-2">
-                        <h5 class="text-md font-semibold">Select a salesperson to proceed</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select a salesperson to proceed') }}</h5>
                     </div>
                     <div class="mb-4">
-                        <x-app.input.input name="search_salesperson" placeholder="Search salesperson" />
+                        <x-app.input.input name="search_salesperson" placeholder="{{ __('Search salesperson') }}" />
                     </div>
                     @if (count($salespersons) > 0)
                         <ul>
@@ -239,7 +239,7 @@
             @if ($step == 3)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select sale order to proceed</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select sale order to proceed') }}</h5>
                     </div>
                     @if (count($sale_orders) > 0)
                         <ul class="flex items-start flex-wrap gap-4 flex-1">
@@ -257,7 +257,7 @@
                                     <path
                                         d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
                                 </svg>
-                                <span class="text-sm font-semibold">Confirm</span>
+                                <span class="text-sm font-semibold">{{ __('Confirm') }}</span>
                             </a>
                         </div>
                     @else
@@ -269,7 +269,7 @@
             @if ($step == 4)
                 <div>
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select term to proceed</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select term to proceed') }}</h5>
                     </div>
                     @if (count($terms) > 0)
                         <ul>
@@ -299,7 +299,7 @@
             @if ($step == 5)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select product to proceed</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select product to proceed') }}</h5>
                     </div>
                     @if (count($products) > 0)
                         <div class="flex flex-col gap-4 flex-1">
@@ -388,7 +388,7 @@
                                     <path
                                         d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
                                 </svg>
-                                <span class="text-sm font-semibold">Confirm</span>
+                                <span class="text-sm font-semibold">{{ __('Confirm') }}</span>
                             </a>
                         </div>
                     @else
@@ -400,8 +400,8 @@
             @if ($step == 6)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select accessories to include in Delivery Order</h5>
-                        <p class="text-xs text-gray-600 mt-1">You can adjust quantities up to the original SO quantity</p>
+                        <h5 class="text-md font-semibold">{{ __('Select accessories to include in Delivery Order') }}</h5>
+                        <p class="text-xs text-gray-600 mt-1">{{ __('You can adjust quantities up to the original SO quantity') }}</p>
                     </div>
 
                     @php
@@ -424,7 +424,7 @@
                                             <p class="text-xs text-slate-500">SKU: {{ $sp->product->sku }}</p>
                                         </div>
                                         <div class="border-t pt-3">
-                                            <p class="text-sm font-medium mb-2">Accessories:</p>
+                                            <p class="text-sm font-medium mb-2">{{ __('Accessories:') }}</p>
                                             @foreach ($sp->accessories as $acc)
                                                 <div class="flex items-center gap-4 mb-2 accessory-item"
                                                     data-spa-id="{{ $acc->id }}"
@@ -438,7 +438,7 @@
                                                         <span class="text-sm">{{ $acc->product->sku ?? '' }} - {{ $acc->product->model_desc ?? 'N/A' }}</span>
                                                     </label>
                                                     <div class="flex items-center gap-2">
-                                                        <span class="text-xs text-slate-500">Qty:</span>
+                                                        <span class="text-xs text-slate-500">{{ __('Qty:') }}</span>
                                                         <input type="number"
                                                             class="w-16 text-sm border rounded px-2 py-1 accessory-qty"
                                                             min="0"
@@ -447,7 +447,7 @@
                                                         <span class="text-xs text-slate-500">/ {{ $acc->qty }}</span>
                                                     </div>
                                                     @if ($acc->is_foc)
-                                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">FOC</span>
+                                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{{ __('FOC') }}</span>
                                                     @endif
                                                 </div>
                                             @endforeach
@@ -465,16 +465,16 @@
                                     <path
                                         d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
                                 </svg>
-                                <span class="text-sm font-semibold">Confirm</span>
+                                <span class="text-sm font-semibold">{{ __('Confirm') }}</span>
                             </a>
                         </div>
                     @else
                         <div class="flex flex-col items-center justify-center flex-1">
-                            <p class="text-sm text-gray-600 mb-4">No accessories found for selected products</p>
+                            <p class="text-sm text-gray-600 mb-4">{{ __('No accessories found for selected products') }}</p>
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-gray-200 rounded-md py-2 px-4"
                                 id="step-6-skip-btn">
-                                <span class="text-sm font-semibold">Skip & Continue</span>
+                                <span class="text-sm font-semibold">{{ __('Skip & Continue') }}</span>
                             </a>
                         </div>
                     @endif
@@ -484,7 +484,7 @@
             @if ($step == 7)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select a delivery adddress to convert</h5>
+                        <h5 class="text-md font-semibold">{{ __('Select a delivery adddress to convert') }}</h5>
                     </div>
                     @if (count($delivery_addresses) > 0)
                         <div class="flex flex-col gap-4 flex-1">
@@ -504,7 +504,7 @@
                                     <path
                                         d="m16.298,8.288l1.404,1.425-5.793,5.707c-.387.387-.896.58-1.407.58s-1.025-.195-1.416-.585l-2.782-2.696,1.393-1.437,2.793,2.707,5.809-5.701Zm7.702,3.712c0,6.617-5.383,12-12,12S0,18.617,0,12,5.383,0,12,0s12,5.383,12,12Zm-2,0c0-5.514-4.486-10-10-10S2,6.486,2,12s4.486,10,10,10,10-4.486,10-10Z" />
                                 </svg>
-                                <span class="text-sm font-semibold">Confirm</span>
+                                <span class="text-sm font-semibold">{{ __('Confirm') }}</span>
                             </a>
                         </div>
                     @else
@@ -516,9 +516,9 @@
             @if ($step == 8)
                 <div class="flex flex-col h-full">
                     <div class="mb-4">
-                        <h5 class="text-md font-semibold">Select a sale enquiry to link (Optional)</h5>
-                        <p class="text-xs text-gray-600 mt-1">You can skip this step if you don't want to link a sale
-                            enquiry</p>
+                        <h5 class="text-md font-semibold">{{ __('Select a sale enquiry to link (Optional)') }}</h5>
+                        <p class="text-xs text-gray-600 mt-1">{{ __("You can skip this step if you don't want to link a sale
+                            enquiry") }}</p>
                     </div>
                     @if (count($sale_enquiries) > 0)
                         <div class="flex flex-col gap-4 flex-1 overflow-y-auto">
@@ -548,7 +548,7 @@
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
                                 id="step-8-skip-btn">
-                                <span class="text-sm font-semibold">Skip</span>
+                                <span class="text-sm font-semibold">{{ __('Skip') }}</span>
                             </a>
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
@@ -562,16 +562,16 @@
                                             d="M1,8H21.255l-2.194,2.233a1,1,0,1,0,1.426,1.4l2.239-2.279c.163-.163.391-.413.624-.675a2.588,2.588,0,0,0,0-3.429c-.233-.263-.461-.513-.618-.67L20.487,2.3a1,1,0,0,0-1.426,1.4l2.251,2.29L21.32,6H1A1,1,0,0,0,1,8Z" />
                                     </g>
                                 </svg>
-                                <span class="text-sm font-semibold">Convert</span>
+                                <span class="text-sm font-semibold">{{ __('Convert') }}</span>
                             </a>
                         </div>
                     @else
                         <div class="flex flex-col items-center justify-center flex-1">
-                            <p class="text-sm text-gray-600 mb-4">No matching sale enquiries found</p>
+                            <p class="text-sm text-gray-600 mb-4">{{ __('No matching sale enquiries found') }}</p>
                             <a href="{{ route('sale_order.to_delivery_order') }}"
                                 class="bg-gray-200 rounded-md py-2 px-4 flex justify-center items-center gap-x-2"
                                 id="step-8-skip-btn-no-data">
-                                <span class="text-sm font-semibold">Skip & Continue</span>
+                                <span class="text-sm font-semibold">{{ __('Skip & Continue') }}</span>
                             </a>
                         </div>
                     @endif

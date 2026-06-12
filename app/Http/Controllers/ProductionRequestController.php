@@ -250,12 +250,12 @@ class ProductionRequestController extends Controller
 
             DB::commit();
 
-            return redirect(route('production_request.index'))->with('success', 'Request created');
+            return redirect(route('production_request.index'))->with('success', __('Request created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -303,19 +303,19 @@ class ProductionRequestController extends Controller
         $pq->status = ProductionRequest::STATUS_COMPLETED;
         $pq->save();
 
-        return back()->with('success', 'Request completed');
+        return back()->with('success', __('Request completed'));
     }
 
     public function materialComplete(Request $req, ProductionRequestMaterial $pqm)
     {
         if ($req->production_id == 'undefined') {
-            return back()->with('warning', 'Please select a production');
+            return back()->with('warning', __('Please select a production'));
         }
         $pqm->status = ProductionRequestMaterial::STATUS_COMPLETED;
         $pqm->production_id = $req->production_id ?? null;
         $pqm->save();
 
-        return back()->with('success', 'Request completed');
+        return back()->with('success', __('Request completed'));
     }
 
     public function materialIncomplete(ProductionRequestMaterial $pqm)
@@ -323,7 +323,7 @@ class ProductionRequestController extends Controller
         $pqm->status = ProductionRequestMaterial::STATUS_IN_PROGRESS;
         $pqm->save();
 
-        return back()->with('success', 'Request incompleted');
+        return back()->with('success', __('Request incompleted'));
     }
 
     public function toProduction(Sale $sale, Product $product)

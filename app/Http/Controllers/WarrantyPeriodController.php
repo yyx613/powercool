@@ -110,14 +110,14 @@ class WarrantyPeriodController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('warranty_period.create'))->with('success', 'Warranty created');
+                return redirect(route('warranty_period.create'))->with('success', __('Warranty created'));
             }
-            return redirect(route('warranty_period.index'))->with('success', 'Warranty created');
+            return redirect(route('warranty_period.index'))->with('success', __('Warranty created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -146,18 +146,18 @@ class WarrantyPeriodController extends Controller
 
             DB::commit();
 
-            return redirect(route('warranty_period.index'))->with('success', 'Warranty updated');
+            return redirect(route('warranty_period.index'))->with('success', __('Warranty updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
     public function delete(WarrantyPeriod $warranty) {
         $warranty->delete();
 
-        return back()->with('success', 'Warranty deleted');
+        return back()->with('success', __('Warranty deleted'));
     }
 }

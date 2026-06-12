@@ -47,7 +47,7 @@
                             <option value="-1" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-1')>Powercool</option>
                             <option value="-2" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == '-2')>Hi Ten Trading</option>
                             @foreach ($dealers as $dealer)
-                                <option value="{{ $dealer->id }}" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == $dealer->id)>{{ $dealer->name }} - {{ $dealer->company_name }}
+                                <option value="{{ $dealer->id }}" @selected(old('dealer', isset($ack) ? $ack->dealer_id : null) == $dealer->id)>{{ $dealer->name }} - {{ $dealer->company_name }} ({{ $dealer->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})
                                 </option>
                             @endforeach
                         </x-app.input.select2>
@@ -106,7 +106,7 @@
                     id="item-template">
                     <button type="button"
                         class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block remove-item-btns"
-                        title="Delete Product">
+                        title="{{ __('Delete Product') }}">
                         <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
                             data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
                             <path
@@ -150,7 +150,7 @@
                     @if (old('product') != null)
                         @foreach (old('product') as $key => $val)
                             <div class="grid grid-cols-3 items-start gap-6 w-full mb-4 p-4 relative group transition durtion-300 hover:bg-slate-50 items" data-id="{{ $key + 1 }}">
-                                <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block remove-item-btns" title="Delete Product" data-id="{{ $key + 1 }}">
+                                <button type="button" class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block remove-item-btns" title="{{ __('Delete Product') }}" data-id="{{ $key + 1 }}">
                                     <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
                                         <path d="M13.93,12L21.666,2.443c.521-.644,.422-1.588-.223-2.109-.645-.522-1.588-.421-2.109,.223l-7.334,9.06L4.666,.557c-1.241-1.519-3.56,.357-2.332,1.887l7.736,9.557L2.334,21.557c-.521,.644-.422,1.588,.223,2.109,.64,.519,1.586,.424,2.109-.223l7.334-9.06,7.334,9.06c.524,.647,1.47,.742,2.109,.223,.645-.521,.744-1.466,.223-2.109l-7.736-9.557Z" />
                                     </svg>

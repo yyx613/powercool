@@ -360,12 +360,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.driver.index'))->with('success', 'Task created');
+            return redirect(route('task.driver.index'))->with('success', __('Task created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -504,18 +504,18 @@ class TaskController extends Controller
                 if ($ticket != null && $ticket->so_inv != null) {
                     $so_inv_count = count(explode(',', $ticket->so_inv));
                     if (($req->so_inv_idx + 1) != $so_inv_count) {
-                        return redirect(route('task.technician.create', ['tic_id' => $req->ticket, 'so_inv_idx' => $req->so_inv_idx + 1]))->with('success', 'Task created');
+                        return redirect(route('task.technician.create', ['tic_id' => $req->ticket, 'so_inv_idx' => $req->so_inv_idx + 1]))->with('success', __('Task created'));
                     }
                 }
                 Ticket::where('id', $req->ticket)->delete();
             }
 
-            return redirect(route('task.technician.index'))->with('success', 'Task created');
+            return redirect(route('task.technician.index'))->with('success', __('Task created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -626,12 +626,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.sale.index'))->with('success', 'Task created');
+            return redirect(route('task.sale.index'))->with('success', __('Task created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -769,12 +769,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.driver.index'))->with('success', 'Task updated');
+            return redirect(route('task.driver.index'))->with('success', __('Task updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -879,12 +879,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.technician.index'))->with('success', 'Task updated');
+            return redirect(route('task.technician.index'))->with('success', __('Task updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -968,12 +968,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return redirect(route('task.sale.index'))->with('success', 'Task updated');
+            return redirect(route('task.sale.index'))->with('success', __('Task updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -999,12 +999,12 @@ class TaskController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Task deleted');
+            return back()->with('success', __('Task deleted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 

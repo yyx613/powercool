@@ -143,7 +143,7 @@ class DealerController extends Controller
     {
         $dealer->delete();
 
-        return back()->with('success', 'Dealer deleted');
+        return back()->with('success', __('Dealer deleted'));
     }
 
     public function upsert(Request $req, Dealer $dealer)
@@ -175,12 +175,12 @@ class DealerController extends Controller
 
             DB::commit();
 
-            return redirect(route('dealer.index'))->with('success', 'Dealer ' . (isset($new_dealer) && $new_dealer != null ? 'created' : 'updated'));
+            return redirect(route('dealer.index'))->with('success', (isset($new_dealer) && $new_dealer != null ? __('Dealer created') : __('Dealer updated')));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong, Please contact administrator');
+            return back()->with('error', __('Something went wrong, Please contact administrator'));
         }
     }
 

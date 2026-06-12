@@ -207,17 +207,17 @@ class VehicleController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('vehicle.create'))->with('success', 'Vehicle created');
+                return redirect(route('vehicle.create'))->with('success', __('Vehicle created'));
             } elseif (isset($new_vehicle)) {
-                return redirect(route('vehicle.index'))->with('success', 'Vehicle created');
+                return redirect(route('vehicle.index'))->with('success', __('Vehicle created'));
             }
 
-            return redirect(route('vehicle.index'))->with('success', 'Vehicle updated');
+            return redirect(route('vehicle.index'))->with('success', __('Vehicle updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

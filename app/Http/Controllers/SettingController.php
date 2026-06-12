@@ -92,12 +92,12 @@ class SettingController extends Controller
 
             DB::commit();
 
-            return redirect(route('setting.index'))->with('success', 'Tax Rate updated');
+            return redirect(route('setting.index'))->with('success', __('Tax Rate updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

@@ -51,7 +51,7 @@
                 </div>
                 <div class="flex-1 flex">
                     <x-app.input.select name='filter_status' id='filter_status' class="w-full capitalize">
-                        <option value="">Select a status</option>
+                        <option value="">{{ __('Select a status') }}</option>
                         @foreach ($statuses as $key => $status)
                             <option value="{{ $key }}" @selected(isset($default_status) && $default_status == $key)>{{ $status }}</option>
                         @endforeach
@@ -59,7 +59,7 @@
                 </div>
                 <div class="flex-1 flex">
                     <x-app.input.select name='filter_type' id='filter_type' class="w-full capitalize">
-                        <option value="">Select a type</option>
+                        <option value="">{{ __('Select a type') }}</option>
                         @foreach ($types as $key => $val)
                             <option value="{{ $key }}" @selected(isset($default_type) && $default_type == $key)>{{ $val }}</option>
                         @endforeach

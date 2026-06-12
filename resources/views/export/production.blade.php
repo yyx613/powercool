@@ -2,18 +2,18 @@
 
 <table>
     <tr>
-        <td>Code</td>
-        <td>Name</td>
-        <td>Description</td>
-        <td>State Date</td>
-        <td>Due Date</td>
-        <td>Product</td>
-        <td>Status</td>
-        <td>Assigned Order ID</td>
-        <td>Priority</td>
-        <td>Assigned Staff</td>
-        <td>Milestones</td>
-        <td>Remark</td>
+        <td>{{ __('Code') }}</td>
+        <td>{{ __('Name') }}</td>
+        <td>{{ __('Description') }}</td>
+        <td>{{ __('State Date') }}</td>
+        <td>{{ __('Due Date') }}</td>
+        <td>{{ __('Product') }}</td>
+        <td>{{ __('Status') }}</td>
+        <td>{{ __('Assigned Order ID') }}</td>
+        <td>{{ __('Priority') }}</td>
+        <td>{{ __('Assigned Staff') }}</td>
+        <td>{{ __('Milestones') }}</td>
+        <td>{{ __('Remark') }}</td>
     </tr>
     @foreach ($productions as $p)
         @php

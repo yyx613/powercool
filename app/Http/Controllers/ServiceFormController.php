@@ -399,7 +399,7 @@ class ServiceFormController extends Controller
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -408,7 +408,7 @@ class ServiceFormController extends Controller
         $id = Crypt::decrypt($id);
         $this->serviceForm::where('id', $id)->delete();
 
-        return back()->with('success', 'Service Form deleted');
+        return back()->with('success', __('Service Form deleted'));
     }
 
     public function getInvoiceByKeyword(Request $req)

@@ -623,12 +623,12 @@ class ApprovalController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Stocked In');
+            return back()->with('success', __('Stocked In'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 

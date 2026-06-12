@@ -107,15 +107,15 @@ class UOMController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('uom.create'))->with('success', 'UOM created');
+                return redirect(route('uom.create'))->with('success', __('UOM created'));
             }
 
-            return redirect(route('uom.index'))->with('success', 'UOM created');
+            return redirect(route('uom.index'))->with('success', __('UOM created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -149,12 +149,12 @@ class UOMController extends Controller
 
             DB::commit();
 
-            return redirect(route('uom.index'))->with('success', 'UOM updated');
+            return redirect(route('uom.index'))->with('success', __('UOM updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

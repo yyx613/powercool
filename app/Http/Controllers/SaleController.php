@@ -391,12 +391,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Quotation cancel request is submitted');
+            return back()->with('success', __('Quotation cancel request is submitted'));
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -426,12 +426,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Quotation reuse request is now waiting for approval');
+            return back()->with('success', __('Quotation reuse request is now waiting for approval'));
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -449,12 +449,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Quotation deleted');
+            return back()->with('success', __('Quotation deleted'));
         } catch (\Throwable $th) {
             report($th);
             DB::rollBack();
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -590,7 +590,7 @@ class SaleController extends Controller
     public function converToSaleOrder(Request $req)
     {
         if ((int) getCurrentUserBranch() === Branch::LOCATION_EVERY) {
-            return back()->with('error', 'Please switch to a specific branch (KL or Penang) before converting. Conversion is not allowed while viewing "Every Branch".');
+            return back()->with('error', __('Please switch to a specific branch (KL or Penang) before converting. Conversion is not allowed while viewing "Every Branch".'));
         }
 
         $rules = [
@@ -793,12 +793,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('sale_order.index'))->with('success', 'Quotation has converted');
+            return redirect(route('sale_order.index'))->with('success', __('Quotation has converted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -814,6 +814,7 @@ class SaleController extends Controller
                 Sale::TRANSFER_TYPE_NORMAL => 'Normal',
                 Sale::TRANSFER_TYPE_TRANSFER_TO => 'Transfer To',
                 Sale::TRANSFER_TYPE_TRANSFER_FROM => 'Transfer From',
+                Sale::TRANSFER_TYPE_ANY => 'Any',
             ],
             'default_page' => $page ?? null,
             'default_so_type' => $transfer_type ?? Sale::TRANSFER_TYPE_NORMAL,
@@ -825,9 +826,10 @@ class SaleController extends Controller
     {
         Session::put('sale-order-page', $req->page);
 
-        if (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_TO])) {
+        if (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_TO, Sale::TRANSFER_TYPE_ANY])) {
             $quo_ids = Sale::where('type', Sale::TYPE_QUO)->pluck('id')->toArray();
-        } elseif (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_FROM])) {
+        }
+        if (in_array($req->transfer_type, [Sale::TRANSFER_TYPE_TRANSFER_FROM])) {
             $so_ids_from_other_branch = Sale::withoutGlobalScope(BranchScope::class)
                 ->where('type', Sale::TYPE_SO)
                 ->whereHas('branch', function ($q) {
@@ -899,6 +901,7 @@ class SaleController extends Controller
                 'customers.company_name AS debtor_name',
                 'customers.company_group AS company_group',
                 'sales.convert_to AS transfer_to',
+                'sales.transfer_from AS transfer_from_id',
                 'sales_agents.name AS agent',
                 'currencies.name AS curr_code',
                 'sales.status AS status',
@@ -1044,6 +1047,20 @@ class SaleController extends Controller
             $dop_ids = DeliveryOrderProduct::whereIn('sale_product_id', $sp_ids)->pluck('id');
             $dopc_count = DeliveryOrderProductChild::whereIn('delivery_order_product_id', $dop_ids)->count();
 
+            // For the "Any" filter each row may be of a different transfer type, so resolve
+            // the effective type per record to keep the action permissions consistent with
+            // what the row would have under its dedicated filter.
+            $effective_transfer_type = $req->transfer_type;
+            if ($req->transfer_type == Sale::TRANSFER_TYPE_ANY) {
+                if ($record->transfer_from_id == null) {
+                    $effective_transfer_type = Sale::TRANSFER_TYPE_NORMAL;
+                } elseif (in_array($record->transfer_from_id, $quo_ids)) {
+                    $effective_transfer_type = Sale::TRANSFER_TYPE_TRANSFER_TO;
+                } else {
+                    $effective_transfer_type = Sale::TRANSFER_TYPE_TRANSFER_FROM;
+                }
+            }
+
             if ($req->transfer_type == Sale::TRANSFER_TYPE_TRANSFER_TO) {
                 $transferred_so = Sale::withoutGlobalScope(BranchScope::class)
                     ->where('type', Sale::TYPE_SO)
@@ -1114,17 +1131,17 @@ class SaleController extends Controller
                 'not_converted_serial_no_qty' => $dopc_count ?? 0,
                 'created_by' => $record->created_by_name,
                 'updated_by' => $record->updated_by_name,
-                'can_edit' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
+                'can_edit' => in_array($effective_transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.edit'),
                 'can_edit_payment' => hasPermission('sale.sale_order.payment') && (
-                    in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM])
+                    in_array($effective_transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM])
                     || ($record->status == Sale::STATUS_CANCELLED && $record->cancellation_charge != null)
                 ),
                 'can_view' => hasPermission('sale.sale_order.view_record'),
-                'can_cancel' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
+                'can_cancel' => in_array($effective_transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && hasPermission('sale.sale_order.cancel') && $record->status == Sale::STATUS_ACTIVE,
                 'can_delete' => false, // SO no need delete btn
                 'can_view_pdf' => $record->is_draft == false && $record->status != Sale::STATUS_APPROVAL_PENDING && $record->status != Sale::STATUS_APPROVAL_REJECTED,
-                'can_to_sale_production_request' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && (isSuperAdmin() || isSalesCoordinator()),
-                'can_transfer' => in_array($req->transfer_type, [Sale::TRANSFER_TYPE_NORMAL]),
+                'can_to_sale_production_request' => in_array($effective_transfer_type, [Sale::TRANSFER_TYPE_NORMAL, Sale::TRANSFER_TYPE_TRANSFER_FROM]) && (isSuperAdmin() || isSalesCoordinator()),
+                'can_transfer' => in_array($effective_transfer_type, [Sale::TRANSFER_TYPE_NORMAL]),
                 'conditions_to_convert' => [
                     'is_draft' => $record->is_draft,
                     'payment_method_filled' => $record->payment_method != null,
@@ -1315,12 +1332,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Sale Order cancelled');
+            return back()->with('success', __('Sale Order cancelled'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -1410,15 +1427,15 @@ class SaleController extends Controller
             DB::commit();
 
             if ($transfer_from_so != null) {
-                return back()->with('success', 'Sale Order transferred back. The quotation '.$quo->sku.' is re-activated from another branch.');
+                return back()->with('success', __('Sale Order transferred back. The quotation ').$quo->sku.__(' is re-activated from another branch.'));
             }
 
-            return back()->with('success', 'Sale Order transferred back.');
+            return back()->with('success', __('Sale Order transferred back.'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -2082,12 +2099,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('delivery_order.index'))->with('success', 'Sale Order has converted');
+            return redirect(route('delivery_order.index'))->with('success', __('Sale Order has converted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -3594,12 +3611,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Sale Production Request is created');
+            return back()->with('success', __('Sale Production Request is created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -4015,12 +4032,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Delivery Order cancelled');
+            return back()->with('success', __('Delivery Order cancelled'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -4225,8 +4242,16 @@ class SaleController extends Controller
             for ($i = 0; $i < count($dos); $i++) {
                 $do_skus[] = $dos[$i]->sku;
             }
-            // Prepare pdf url
-            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
+            // Prepare pdf url (append file modified time to bust browser cache when the PDF is regenerated, e.g. after a serial-no swap)
+            $pdf_url = null;
+            if ($record->filename != null) {
+                $pdf_url = config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
+                try {
+                    $pdf_url .= '?v='.Storage::lastModified(self::INVOICE_PATH.$record->filename);
+                } catch (\Throwable $e) {
+                    // File may be missing; serve the un-versioned url
+                }
+            }
             // Total amount
             $total_amount = 0;
             if (count($dos) > 0) {
@@ -4359,7 +4384,15 @@ class SaleController extends Controller
                     $total_amount += $sos[$j]->getTotalAmount();
                 }
             }
-            $pdf_url = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
+            $pdf_url = null;
+            if ($record->filename != null) {
+                $pdf_url = config('app.url').str_replace('/public', $path, self::INVOICE_PATH).$record->filename;
+                try {
+                    $pdf_url .= '?v='.Storage::lastModified(self::INVOICE_PATH.$record->filename);
+                } catch (\Throwable $e) {
+                    // File may be missing; serve the un-versioned url
+                }
+            }
 
             $data['data'][] = [
                 'id' => $record->id,
@@ -4775,7 +4808,7 @@ class SaleController extends Controller
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -5040,7 +5073,7 @@ class SaleController extends Controller
 
         $exists = Target::where('sale_id', $req->sale)->where('date', Carbon::parse($req->date)->format('Y-m-d'))->exists();
         if ($exists) {
-            return back()->with('warning', 'Target has set for salesperson and date')->withInput();
+            return back()->with('warning', __('Target has set for salesperson and date'))->withInput();
         }
 
         try {
@@ -5055,12 +5088,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('target.index'))->with('success', 'Target created');
+            return redirect(route('target.index'))->with('success', __('Target created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -5088,7 +5121,7 @@ class SaleController extends Controller
 
         $exists = Target::whereNot('id', $target->id)->where('sale_id', $req->sale)->where('date', Carbon::parse($req->date)->format('Y-m-d'))->exists();
         if ($exists) {
-            return back()->with('warning', 'Target has set for salesperson and date')->withInput();
+            return back()->with('warning', __('Target has set for salesperson and date'))->withInput();
         }
 
         try {
@@ -5102,12 +5135,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('target.index'))->with('success', 'Target updated');
+            return redirect(route('target.index'))->with('success', __('Target updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -5581,7 +5614,7 @@ class SaleController extends Controller
 
             DB::commit();
 
-            Session::flash('success', 'Billing converted');
+            Session::flash('success', __('Billing converted'));
 
             return response()->json([
                 'msg' => 'Billing converted',
@@ -5873,12 +5906,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('delivery_order.index'))->with('success', 'Transport Acknowledgement generated');
+            return redirect(route('delivery_order.index'))->with('success', __('Transport Acknowledgement generated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong, Please contact administrator');
+            return back()->with('error', __('Something went wrong, Please contact administrator'));
         }
     }
 
@@ -5924,8 +5957,8 @@ class SaleController extends Controller
             $map = [
                 1 => 'transport_acknowledgements.sku',
                 2 => 'transport_acknowledgements.date',
-                4 => 'users.name',
-                5 => 'generator.name',
+                6 => 'users.name',
+                7 => 'generator.name',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -5949,15 +5982,17 @@ class SaleController extends Controller
             $path = '/storage';
         }
         foreach ($records_paginator as $key => $record) {
-            $transport_ack_filename = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).'/'.$record->filename;
+            $transport_ack_filename = $record->filename == null ? null : config('app.url').str_replace('/public', $path, self::TRANSPORT_ACKNOWLEDGEMENT_PATH).$record->filename;
 
             $data['data'][] = [
                 'no' => $key + 1,
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'date' => Carbon::parse($record->date)->format('d M Y'),
+                'delivery_order_id' => $record->delivery_order_id,
                 'dealer' => $record->dealerName(),
-                'customer' => $record->customerName,
+                'type' => $record->typeName(),
+                'customer' => $record->customerName ?? $record->company_name,
                 'created_by' => $record->generatedBy,
                 'filename' => $transport_ack_filename,
             ];
@@ -6050,6 +6085,8 @@ class SaleController extends Controller
                 'date' => Carbon::createFromFormat('Y-m-d', $req->date)->format('d/m/Y'),
                 'is_delivery' => $req->type == DeliveryOrder::TRANSPORT_ACK_TYPE_DELIVERY,
                 'do_sku' => $req->do_id ?? null,
+                'company_name' => $req->company_name,
+                'phone' => $req->phone,
                 'address' => $req->delivery_to,
                 'dealer_name' => $dealer_name,
                 'items' => $items,
@@ -6110,12 +6147,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('transport_ack.index'))->with('success', 'Transport Acknowledgement generated');
+            return redirect(route('transport_ack.index'))->with('success', __('Transport Acknowledgement generated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong, Please contact administrator');
+            return back()->with('error', __('Something went wrong, Please contact administrator'));
         }
     }
 
@@ -6339,12 +6376,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('invoice.index'))->with('success', 'Serial No Swapped');
+            return redirect(route('invoice.index'))->with('success', __('Serial No Swapped'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong');
+            return back()->with('error', __('Something went wrong'));
         }
     }
 
@@ -6479,12 +6516,12 @@ class SaleController extends Controller
 
             DB::commit();
 
-            return redirect(route('sale_order.index'))->with('success', 'Sale Order Transferred');
+            return redirect(route('sale_order.index'))->with('success', __('Sale Order Transferred'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong, Please contact administrator');
+            return back()->with('error', __('Something went wrong, Please contact administrator'));
         }
     }
 

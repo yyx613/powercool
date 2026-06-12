@@ -98,14 +98,14 @@ class DebtorTypeController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('debtor_type.create'))->with('success', 'Debtor Type created');
+                return redirect(route('debtor_type.create'))->with('success', __('Debtor Type created'));
             }
-            return redirect(route('debtor_type.index'))->with('success', 'Debtor Type created');
+            return redirect(route('debtor_type.index'))->with('success', __('Debtor Type created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -135,12 +135,12 @@ class DebtorTypeController extends Controller
 
             DB::commit();
 
-            return redirect(route('debtor_type.index'))->with('success', 'Debtor Type updated');
+            return redirect(route('debtor_type.index'))->with('success', __('Debtor Type updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

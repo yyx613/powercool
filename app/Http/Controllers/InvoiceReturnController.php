@@ -142,13 +142,13 @@ class InvoiceReturnController extends Controller
 
             DB::commit();
 
-            return redirect(route('invoice_return.index'))->with('success', 'Products returned');
+            return redirect(route('invoice_return.index'))->with('success', __('Products returned'));
         } catch (\Throwable $th) {
             DB::rollback();
             dd($th);
             report($th);
 
-            return back()->with('error', 'Something went wrong');
+            return back()->with('error', __('Something went wrong'));
         }
     }
 

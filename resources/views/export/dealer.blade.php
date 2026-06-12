@@ -1,9 +1,9 @@
 <table>
     <tr>
-        <td>Code</td>
-        <td>Name</td>
-        <td>Company Name</td>
-        <td>Company Group</td>
+        <td>{{ __('Code') }}</td>
+        <td>{{ __('Name') }}</td>
+        <td>{{ __('Company Name') }}</td>
+        <td>{{ __('Company Group') }}</td>
     </tr>
     @foreach ($dealers as $d)
         <tr>

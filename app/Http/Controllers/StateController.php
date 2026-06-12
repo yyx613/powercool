@@ -118,14 +118,14 @@ class StateController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('state.create'))->with('success', 'State created');
+                return redirect(route('state.create'))->with('success', __('State created'));
             }
-            return redirect(route('state.index'))->with('success', 'State created');
+            return redirect(route('state.index'))->with('success', __('State created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -164,12 +164,12 @@ class StateController extends Controller
 
             DB::commit();
 
-            return redirect(route('state.index'))->with('success', 'State updated');
+            return redirect(route('state.index'))->with('success', __('State updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -182,12 +182,12 @@ class StateController extends Controller
 
             DB::commit();
 
-            return redirect(route('state.index'))->with('success', 'State deleted');
+            return redirect(route('state.index'))->with('success', __('State deleted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 }

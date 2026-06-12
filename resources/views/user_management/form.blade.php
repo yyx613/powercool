@@ -162,7 +162,7 @@
                             <option value="{{ $key }}" @selected(old('branch', isset($user) && isset($user->branch) ? $user->branch->location : null) === $key)>{{ $val }}</option>
                         @endforeach
                     </x-app.input.select>
-                    <p class="mt-1 text-sm text-slate-500">Not Required if Super Admin Role is selected</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('Not Required if Super Admin Role is selected') }}</p>
                     <x-input-error :messages="$errors->get('branch')" class="mt-1" />
                 </div>
                 <div class="flex flex-col">

@@ -187,7 +187,7 @@
 
                 <!-- Promotion Type -->
                 <div class="flex flex-col">
-                    <x-app.input.label id="promotion_id" class="mb-1">{{ __('Promotion Type') }} <span class="text-sm text-red-500">*</span></x-app.input.label>
+                    <x-app.input.label id="promotion_id" class="mb-1">{{ __('Promotion') }}</x-app.input.label>
                     <x-app.input.select2 name="promotion_id" id="promotion_id"
                         :hasError="$errors->has('promotion_id')"
                         placeholder="{{ __('Select promotion') }}">

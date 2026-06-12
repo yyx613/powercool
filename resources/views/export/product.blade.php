@@ -2,38 +2,38 @@
 
 <table>
     <tr>
-        <td>Company Group</td>
-        <td>Initial for Production</td>
-        <td>Model Code / Supplier Barcode Info</td>
-        <td>Model Description</td>
-        <td>UOM</td>
-        <td>Category</td>
-        <td>Item Type</td>
-        <td>Low Stock Threshold</td>
-        <td>Selling Price (Min)</td>
-        <td>Selling Price (Max)</td>
-        <td>Cost</td>
-        <td>Status</td>
-        <td>Hi-Ten Stock Code</td>
+        <td>{{ __('Company Group') }}</td>
+        <td>{{ __('Initial for Production') }}</td>
+        <td>{{ __('Model Code / Supplier Barcode Info') }}</td>
+        <td>{{ __('Model Description') }}</td>
+        <td>{{ __('UOM') }}</td>
+        <td>{{ __('Category') }}</td>
+        <td>{{ __('Item Type') }}</td>
+        <td>{{ __('Low Stock Threshold') }}</td>
+        <td>{{ __('Selling Price (Min)') }}</td>
+        <td>{{ __('Selling Price (Max)') }}</td>
+        <td>{{ __('Cost') }}</td>
+        <td>{{ __('Status') }}</td>
+        <td>{{ __('Hi-Ten Stock Code') }}</td>
 
-        <td>Selling Prices</td>
+        <td>{{ __('Selling Prices') }}</td>
 
-        <td>Dimension (L x W x H)(In MM)</td>
-        <td>Capacity</td>
-        <td>Weight (In KG)</td>
-        <td>Refrigerant</td>
-        <td>Power Input</td>
-        <td>Voltage / Frequency</td>
-        <td>Standard Features</td>
+        <td>{{ __('Dimension (L x W x H)(In MM)') }}</td>
+        <td>{{ __('Capacity') }}</td>
+        <td>{{ __('Weight (In KG)') }}</td>
+        <td>{{ __('Refrigerant') }}</td>
+        <td>{{ __('Power Input') }}</td>
+        <td>{{ __('Voltage / Frequency') }}</td>
+        <td>{{ __('Standard Features') }}</td>
 
-        <td>Classification Code</td>
+        <td>{{ __('Classification Code') }}</td>
 
-        <td>Lazada Sku</td>
-        <td>Shopee Sku</td>
-        <td>Tiktok Sku</td>
-        <td>Woo Commerce Sku</td>
+        <td>{{ __('Lazada Sku') }}</td>
+        <td>{{ __('Shopee Sku') }}</td>
+        <td>{{ __('Tiktok Sku') }}</td>
+        <td>{{ __('Woo Commerce Sku') }}</td>
 
-        <td>Serial No</td>
+        <td>{{ __('Serial No') }}</td>
     </tr>
     @foreach ($products as $p)
         @php

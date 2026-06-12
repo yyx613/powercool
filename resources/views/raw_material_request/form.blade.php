@@ -54,7 +54,7 @@
                             </div>
                             <button type="button"
                                 class="bg-rose-400 p-2 rounded-full h-8 w-8 flex items-center justify-center delete-item-btns"
-                                title="Delete Product">
+                                title="{{ __('Delete Product') }}">
                                 <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
                                     data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
                                     <path

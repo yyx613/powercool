@@ -51,7 +51,7 @@
                 id="payment-amount-template">
                 <button type="button"
                     class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-payment-amount-btns"
-                    title="Delete Payment Amount">
+                    title="{{ __('Delete Payment Amount') }}">
                     <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1"
                         data-name="Layer 1" viewBox="0 0 24 24" width="512" height="512">
                         <path

@@ -12,7 +12,7 @@
                 </svg>
             </button>
             <div class="flex items-center gap-x-2">
-                <img src="{{ asset('/images/image_1.png') }}" alt="Power Cool Logo" class="h-6 ml-4">
+                <img src="{{ asset('/images/image_1.png') }}" alt="{{ __('Power Cool Logo') }}" class="h-6 ml-4">
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>
@@ -1041,7 +1041,7 @@
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
                 <button type="button" onclick="this.closest('form').submit()" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
-                    title="Logout">
+                    title="{{ __('Logout') }}">
                     <svg class="h-4 w-4 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path
                             d="M22.763,10.232l-4.95-4.95L16.4,6.7,20.7,11H6.617v2H20.7l-4.3,4.3,1.414,1.414,4.95-4.95a2.5,2.5,0,0,0,0-3.536Z" />
@@ -2115,7 +2115,7 @@
                 </svg>
             </button>
             <div class="flex items-center gap-x-2">
-                <img src="{{ asset('/images/image_1.png') }}" alt="Power Cool Logo" class="h-8 ml-4">
+                <img src="{{ asset('/images/image_1.png') }}" alt="{{ __('Power Cool Logo') }}" class="h-8 ml-4">
                 <h1 class="text-white font-semibold text-xl whitespace-nowrap">Power Cool</h1>
             </div>
         </div>
@@ -3153,7 +3153,7 @@
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
                 <button type="button" onclick="this.closest('form').submit()" class="rounded-full bg-white p-2.5 transition duration-300 hover:bg-red-100"
-                    title="Logout">
+                    title="{{ __('Logout') }}">
                     <svg class="h-4 w-4 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path
                             d="M22.763,10.232l-4.95-4.95L16.4,6.7,20.7,11H6.617v2H20.7l-4.3,4.3,1.414,1.414,4.95-4.95a2.5,2.5,0,0,0,0-3.536Z" />
