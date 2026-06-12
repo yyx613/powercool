@@ -132,7 +132,7 @@ class MaterialUseController extends Controller
     {
         $material->delete();
 
-        return back()->with('success', 'Material deleted');
+        return back()->with('success', __('Material deleted'));
     }
 
     public function upsert(Request $req)

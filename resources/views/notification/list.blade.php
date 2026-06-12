@@ -40,7 +40,7 @@
             <div class="flex gap-x-2 w-full max-w-xs">
                 <div class="flex-1 flex">
                     <x-app.input.select name='filter_status' id='filter_status' class="w-full capitalize">
-                        <option value="">Select a status</option>
+                        <option value="">{{ __('Select a status') }}</option>
                         @foreach ($statuses as $key => $status)
                             <option value="{{ $key }}" @selected(isset($default_status) && $default_status == $key)>{{ $status }}</option>
                         @endforeach
@@ -53,10 +53,10 @@
         <table id="data-table" class="text-sm rounded-lg overflow-hidden" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>No.</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Date</th>
+                    <th>{{ __('No.') }}</th>
+                    <th>{{ __('Type') }}</th>
+                    <th>{{ __('Description') }}</th>
+                    <th>{{ __('Date') }}</th>
                     <th></th>
                 </tr>
             </thead>

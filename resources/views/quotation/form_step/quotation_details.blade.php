@@ -181,7 +181,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 w-full hidden p-4 rounded-md relative group transition duration-300 hover:bg-slate-50" id="third-party-address-template">
             <button type="button"
                 class="bg-rose-400 p-2 rounded-full absolute top-[-5px] right-[-5px] hidden group-hover:block delete-third-party-address-btn"
-                title="Delete Address">
+                title="{{ __('Delete Address') }}">
                 <svg class="h-3 w-3 fill-white" xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                     viewBox="0 0 24 24" width="512" height="512">
                     <path

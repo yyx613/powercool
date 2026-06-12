@@ -47,7 +47,7 @@
             </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_company_group' id='filter_company_group' class="w-full capitalize">
-                    <option value="">Select a company group</option>
+                    <option value="">{{ __('Select a company group') }}</option>
                     @foreach ($company_group as $key => $val)
                         <option value="{{ $key }}" @selected(isset($default_company_group) && $default_company_group == $key)>{{ $val }}</option>
                     @endforeach

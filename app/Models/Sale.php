@@ -33,6 +33,7 @@ class Sale extends Model
     const TRANSFER_TYPE_NORMAL = 1;
     const TRANSFER_TYPE_TRANSFER_TO = 2;
     const TRANSFER_TYPE_TRANSFER_FROM = 3;
+    const TRANSFER_TYPE_ANY = 4;
 
     protected $guarded = [];
 
@@ -235,6 +236,8 @@ class Sale extends Model
                 return self::TRANSFER_TYPE_TRANSFER_TO;
             case 'transfer from':
                 return self::TRANSFER_TYPE_TRANSFER_FROM;
+            case 'any':
+                return self::TRANSFER_TYPE_ANY;
             default:
                 return null;
         }

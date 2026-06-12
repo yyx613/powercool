@@ -303,7 +303,7 @@ class CustomerController extends Controller
         ]);
         (new Branch)->assign(Approval::class, $approval->id);
 
-        return back()->with('success', 'Delete debtor request is submitted');
+        return back()->with('success', __('Delete debtor request is submitted'));
     }
 
     public function upsertInfo(Request $req)

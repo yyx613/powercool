@@ -1,8 +1,8 @@
 <table>
     <tr>
-        <td>Serial No</td>
-        <td>Task ID</td>
-        <td>Technician</td>
+        <td>{{ __('Serial No') }}</td>
+        <td>{{ __('Task ID') }}</td>
+        <td>{{ __('Technician') }}</td>
     </tr>
     @foreach ($pcs as $pc)
         <tr>

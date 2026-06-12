@@ -101,14 +101,14 @@ class PlatformController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('platform.create'))->with('success', 'Platform created');
+                return redirect(route('platform.create'))->with('success', __('Platform created'));
             }
-            return redirect(route('platform.index'))->with('success', 'Platform created');
+            return redirect(route('platform.index'))->with('success', __('Platform created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -139,12 +139,12 @@ class PlatformController extends Controller
 
             DB::commit();
 
-            return redirect(route('platform.index'))->with('success', 'Platform updated');
+            return redirect(route('platform.index'))->with('success', __('Platform updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

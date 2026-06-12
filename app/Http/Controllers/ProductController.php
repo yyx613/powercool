@@ -1065,21 +1065,21 @@ class ProductController extends Controller
 
             if ($req->boolean('is_product') == true) {
                 if ($req->create_again == true) {
-                    return redirect(route('product.create'))->with('success', 'Product created');
+                    return redirect(route('product.create'))->with('success', __('Product created'));
                 }
 
-                return redirect(route('product.index'))->with('success', 'Product '.($req->product_id == null ? 'created' : 'updated'));
+                return redirect(route('product.index'))->with('success', ($req->product_id == null ? __('Product created') : __('Product updated')));
             }
             if ($req->create_again == true) {
-                return redirect(route('raw_material.create'))->with('success', 'Raw Material created');
+                return redirect(route('raw_material.create'))->with('success', __('Raw Material created'));
             }
 
-            return redirect(route('raw_material.index'))->with('success', 'Raw Material '.($req->product_id == null ? 'created' : 'updated'));
+            return redirect(route('raw_material.index'))->with('success', ($req->product_id == null ? __('Raw Material created') : __('Raw Material updated')));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1087,7 +1087,7 @@ class ProductController extends Controller
     {
         $product->delete();
 
-        return back()->with('success', 'Product deleted');
+        return back()->with('success', __('Product deleted'));
     }
 
     public function export()
@@ -1120,7 +1120,7 @@ class ProductController extends Controller
     {
         $product = Product::where('id', $req->product_id)->first();
         if ($req->qty <= 0) {
-            return back()->with('warning', 'The quantity must not greater than 0')->withInput();
+            return back()->with('warning', __('The quantity must not greater than 0'))->withInput();
         }
 
         $multiplier = ($product->isRawMaterial() && $product->display_qty !== null)
@@ -1130,7 +1130,7 @@ class ProductController extends Controller
 
         if ($product->qty < $finalQty) {
             $maxEntered = $multiplier > 0 ? floor($product->qty / $multiplier) : 0;
-            return back()->with('warning', 'The quantity must not greater than '.$maxEntered)->withInput();
+            return back()->with('warning', __('The quantity must not greater than ').$maxEntered)->withInput();
         }
 
         try {
@@ -1150,12 +1150,12 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Product transferred');
+            return back()->with('success', __('Product transferred'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1164,10 +1164,10 @@ class ProductController extends Controller
         $product = Product::where('id', $req->product_id)->first();
         $frm = FactoryRawMaterial::where('id', $req->frm_id)->first();
         if ($req->qty <= 0) {
-            return back()->with('warning', 'The quantity must not greater than 0')->withInput();
+            return back()->with('warning', __('The quantity must not greater than 0'))->withInput();
         }
         if ($frm->remainingQty() < $req->qty) {
-            return back()->with('warning', 'The quantity must not greater than '.$frm->remainingQty())->withInput();
+            return back()->with('warning', __('The quantity must not greater than ').$frm->remainingQty())->withInput();
         }
 
         try {
@@ -1190,12 +1190,12 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Transfer request is created');
+            return back()->with('success', __('Transfer request is created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1246,12 +1246,12 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return redirect(route('production_material.index'))->with('success', 'Record created');
+            return redirect(route('production_material.index'))->with('success', __('Record created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 

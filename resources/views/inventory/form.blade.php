@@ -57,8 +57,8 @@
                                 class="text-sm text-red-500">*</span></x-app.input.label>
                         <x-app.input.select name="is_sparepart" id="is_sparepart">
                             <option value="">{{ __('Select a Yes/No') }}</option>
-                            <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>Yes</option>
-                            <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>No</option>
+                            <option value="1" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '1')>{{ __('Yes') }}</option>
+                            <option value="0" @selected(old('is_sparepart', isset($prod) ? $prod->is_sparepart : null) == '0')>{{ __('No') }}</option>
                         </x-app.input.select>
                         <x-input-error :messages="$errors->get('is_sparepart')" class="mt-1" />
                     </div>
@@ -154,9 +154,9 @@
                             class="text-sm text-red-500 required-star">*</span></x-app.input.label>
                     <div class="flex gap-4">
                         <x-app.input.input name="min_price" id="min_price" class="flex-1 decimal-input"
-                            placeholder="Min Price" value="{{ old('min_price', $prod->min_price ?? null) }}" />
+                            placeholder="{{ __('Min Price') }}" value="{{ old('min_price', $prod->min_price ?? null) }}" />
                         <x-app.input.input name="max_price" id="max_price" class="flex-1 decimal-input"
-                            placeholder="Max Price" value="{{ old('max_price', $prod->max_price ?? null) }}" />
+                            placeholder="{{ __('Max Price') }}" value="{{ old('max_price', $prod->max_price ?? null) }}" />
                     </div>
                     <x-input-error :messages="$errors->get('min_price')" class="mt-1" />
                     <x-input-error :messages="$errors->get('max_price')" class="mt-1" />
@@ -173,8 +173,8 @@
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.select name="status" id="status">
                         <option value="">{{ __('Select a Active/Inactive') }}</option>
-                        <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) == 1)>Active</option>
-                        <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) === 0)>Inactive</option>
+                        <option value="1" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) == 1)>{{ __('Active') }}</option>
+                        <option value="0" @selected(old('status', isset($prod) ? $prod->is_active : ($dup_prod != null ? $dup_prod->is_active : null)) === 0)>{{ __('Inactive') }}</option>
                     </x-app.input.select>
                     <x-input-error :messages="$errors->get('status')" class="mt-1" />
                 </div>
@@ -493,7 +493,7 @@
                         </div>
                         <div class="flex items-center second-half">
                             <button type="button" class="mr-3 view-material-use-selection-btns hidden"
-                                title="View Material Use Selection">
+                                title="{{ __('View Material Use Selection') }}">
                                 <svg class="h-4 w-4 fill-slate-400 hover:fill-black" xmlns="http://www.w3.org/2000/svg"
                                     id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24">
                                     <path
@@ -529,8 +529,8 @@
                         </div>
                         <button type="button"
                             class="text-red-500 p-1.5 rounded text-xs font-semibold opacity-0 group-hover:opacity-100 delete-serial-no-btns"
-                            title="Remove">
-                            Remove
+                            title="{{ __('Remove') }}">
+                            {{ __('Remove') }}
                         </button>
                     </div>
                 </li>

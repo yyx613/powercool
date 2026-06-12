@@ -107,14 +107,14 @@ class SalesAgentController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('sales_agent.create'))->with('success', 'Sales Agent created');
+                return redirect(route('sales_agent.create'))->with('success', __('Sales Agent created'));
             }
-            return redirect(route('sales_agent.index'))->with('success', 'Sales Agent created');
+            return redirect(route('sales_agent.index'))->with('success', __('Sales Agent created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -146,12 +146,12 @@ class SalesAgentController extends Controller
 
             DB::commit();
 
-            return redirect(route('sales_agent.index'))->with('success', 'Sales Agent updated');
+            return redirect(route('sales_agent.index'))->with('success', __('Sales Agent updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

@@ -6,14 +6,14 @@
                 <h6 class="text-lg font-black ml-3">{{ __('Account Created') }}</h6>
             </div>
             <div>
-                <button class="rounded-full p-1.5 bg-white" id="close-btn" title="Close">
+                <button class="rounded-full p-1.5 bg-white" id="close-btn" title="{{ __('Close') }}">
                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M18,6h0a1,1,0,0,0-1.414,0L12,10.586,7.414,6A1,1,0,0,0,6,6H6A1,1,0,0,0,6,7.414L10.586,12,6,16.586A1,1,0,0,0,6,18H6a1,1,0,0,0,1.414,0L12,13.414,16.586,18A1,1,0,0,0,18,18h0a1,1,0,0,0,0-1.414L13.414,12,18,7.414A1,1,0,0,0,18,6Z"/></svg>
                 </button>
             </div>
         </div>
         <div class="flex-1 flex flex-col p-4">
-            <span class="font-semibold">Congratulations!!!</span>
-            <p class="text-slate-600">Your account is successfully created. You may proceed to update your locations, however it's not mandatory.</p>
+            <span class="font-semibold">{{ __('Congratulations!!!') }}</span>
+            <p class="text-slate-600">{{ __("Your account is successfully created. You may proceed to update your locations, however it's not mandatory.") }}</p>
         </div>
     </div>
 </x-app.modal.base-modal>

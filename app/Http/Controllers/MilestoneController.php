@@ -129,12 +129,12 @@ class MilestoneController extends Controller
 
             DB::commit();
 
-            return redirect(route('milestone.index'))->with('success', 'Milestone created');
+            return redirect(route('milestone.index'))->with('success', __('Milestone created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -192,12 +192,12 @@ class MilestoneController extends Controller
 
             DB::commit();
 
-            return redirect(route('milestone.index'))->with('success', 'Milestone updated');
+            return redirect(route('milestone.index'))->with('success', __('Milestone updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 

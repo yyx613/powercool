@@ -113,14 +113,14 @@ class PriorityController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('priority.create'))->with('success', 'Priority created');
+                return redirect(route('priority.create'))->with('success', __('Priority created'));
             }
-            return redirect(route('priority.index'))->with('success', 'Priority created');
+            return redirect(route('priority.index'))->with('success', __('Priority created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -156,12 +156,12 @@ class PriorityController extends Controller
 
             DB::commit();
 
-            return redirect(route('priority.index'))->with('success', 'Priority updated');
+            return redirect(route('priority.index'))->with('success', __('Priority updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

@@ -211,12 +211,12 @@ class UserController extends Controller
 
             DB::commit();
 
-            return redirect()->route('user_management.index')->with('success', 'User created');
+            return redirect()->route('user_management.index')->with('success', __('User created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -316,12 +316,12 @@ class UserController extends Controller
 
             DB::commit();
 
-            return redirect()->route('user_management.index')->with('success', 'User updated');
+            return redirect()->route('user_management.index')->with('success', __('User updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -335,12 +335,12 @@ class UserController extends Controller
 
             DB::commit();
 
-            return redirect()->route('user_management.index')->with('success', 'User deleted');
+            return redirect()->route('user_management.index')->with('success', __('User deleted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 

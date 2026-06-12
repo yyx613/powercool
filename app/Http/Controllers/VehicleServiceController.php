@@ -260,15 +260,15 @@ class VehicleServiceController extends Controller
             DB::commit();
 
             if ($req->create_again == true || isset($new_service)) {
-                return redirect(route('vehicle_service.create'))->with('success', 'Vehicle Service created');
+                return redirect(route('vehicle_service.create'))->with('success', __('Vehicle Service created'));
             }
 
-            return redirect(route('vehicle_service.index'))->with('success', 'Vehicle Service updated');
+            return redirect(route('vehicle_service.index'))->with('success', __('Vehicle Service updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

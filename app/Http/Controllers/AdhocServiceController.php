@@ -129,7 +129,7 @@ class AdhocServiceController extends Controller
 
                 DB::commit();
 
-                return redirect(route('adhoc_service.index'))->with('success', 'Ad-hoc Service updated');
+                return redirect(route('adhoc_service.index'))->with('success', __('Ad-hoc Service updated'));
             } else {
                 // Create
                 $is_hi_ten = Session::get('is_hi_ten') ?? false;
@@ -145,16 +145,16 @@ class AdhocServiceController extends Controller
                 DB::commit();
 
                 if ($req->create_again == true) {
-                    return redirect(route('adhoc_service.create'))->with('success', 'Ad-hoc Service created');
+                    return redirect(route('adhoc_service.create'))->with('success', __('Ad-hoc Service created'));
                 }
 
-                return redirect(route('adhoc_service.index'))->with('success', 'Ad-hoc Service created');
+                return redirect(route('adhoc_service.index'))->with('success', __('Ad-hoc Service created'));
             }
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -162,7 +162,7 @@ class AdhocServiceController extends Controller
     {
         $service->delete();
 
-        return back()->with('success', 'Ad-hoc Service deleted');
+        return back()->with('success', __('Ad-hoc Service deleted'));
     }
 
     public function search(Request $req)

@@ -260,7 +260,7 @@ class ProductionController extends Controller
     public function edit(Production $production)
     {
         if ($production->status == $this->prod::STATUS_TRANSFERRED) {
-            return redirect(route('production.index'))->with('warning', 'Not allow to edit.');
+            return redirect(route('production.index'))->with('warning', __('Not allow to edit.'));
         }
 
         $production->load('users');
@@ -349,7 +349,7 @@ class ProductionController extends Controller
     public function delete(Production $production)
     {
         if ($production->status == $this->prod::STATUS_TRANSFERRED) {
-            return redirect(route('production.index'))->with('warning', 'Not allow to delete.');
+            return redirect(route('production.index'))->with('warning', __('Not allow to delete.'));
         }
 
         try {
@@ -366,12 +366,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Production deleted');
+            return back()->with('success', __('Production deleted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -637,12 +637,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return redirect(route('production.index'))->with('success', isset($prod) ? 'Production created' : 'Production updated');
+            return redirect(route('production.index'))->with('success', isset($prod) ? __('Production created') : __('Production updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -666,13 +666,13 @@ class ProductionController extends Controller
 
             return redirect(route('production.index'))->with(
                 'success',
-                $qty === 1 ? 'Production duplicated successfully' : "$qty productions duplicated successfully"
+                $qty === 1 ? __('Production duplicated successfully') : $qty.__(' productions duplicated successfully')
             );
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
@@ -1133,12 +1133,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Production is now in progress');
+            return back()->with('success', __('Production is now in progress'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1223,7 +1223,7 @@ class ProductionController extends Controller
     public function extendDueDate(Request $req, Production $production)
     {
         if ($req->new_due_date == null) {
-            return back()->with('warning', 'Please enter the new due date');
+            return back()->with('warning', __('Please enter the new due date'));
         }
 
         try {
@@ -1242,12 +1242,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Due date is extended');
+            return back()->with('success', __('Due date is extended'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1277,12 +1277,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return redirect(route('production.view', ['production' => $production->id]))->with('success', 'Complete Task request is created');
+            return redirect(route('production.view', ['production' => $production->id]))->with('success', __('Complete Task request is created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1313,12 +1313,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return redirect(route('production.view', ['production' => $production->id]))->with('success', 'Cancel Production request is created');
+            return redirect(route('production.view', ['production' => $production->id]))->with('success', __('Cancel Production request is created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -1355,12 +1355,12 @@ class ProductionController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Milestone added');
+            return back()->with('success', __('Milestone added'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 

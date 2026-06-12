@@ -189,12 +189,12 @@ class RawMaterialRequestController extends Controller
 
             DB::commit();
 
-            return redirect(route('raw_material_request.index'))->with('success', 'Request created');
+            return redirect(route('raw_material_request.index'))->with('success', __('Request created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -249,23 +249,23 @@ class RawMaterialRequestController extends Controller
     public function complete(RawMaterialRequest $rmq)
     {
         if ($rmq->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
-            return back()->with('warning', 'Only in-progress requests can be completed');
+            return back()->with('warning', __('Only in-progress requests can be completed'));
         }
 
         $rmq->status = RawMaterialRequest::STATUS_COMPLETED;
         $rmq->save();
 
-        return back()->with('success', 'Request completed');
+        return back()->with('success', __('Request completed'));
     }
 
     public function cancel(Request $req, RawMaterialRequest $rmq)
     {
         if (!hasPermission('inventory.raw_material_request.complete')) {
-            return back()->with('error', 'You do not have permission to cancel this request');
+            return back()->with('error', __('You do not have permission to cancel this request'));
         }
 
         if ($rmq->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
-            return back()->with('warning', 'Only in-progress requests can be cancelled');
+            return back()->with('warning', __('Only in-progress requests can be cancelled'));
         }
 
         try {
@@ -291,19 +291,19 @@ class RawMaterialRequestController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Cancellation request submitted for approval');
+            return back()->with('success', __('Cancellation request submitted for approval'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 
     public function materialComplete(Request $req, RawMaterialRequestMaterial $rmqm)
     {
         if ($rmqm->materialRequest->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
-            return back()->with('warning', 'Only in-progress requests can be modified');
+            return back()->with('warning', __('Only in-progress requests can be modified'));
         }
 
         if ($req->has('qty')) {
@@ -311,9 +311,9 @@ class RawMaterialRequestController extends Controller
             $remaining_qty = ($rmqm->qty - $collected_qty ?? 0);
 
             if ($req->qty <= 0) {
-                return back()->with('warning', 'The quantity must be greater than 0');
+                return back()->with('warning', __('The quantity must be greater than 0'));
             } else if ($req->qty > $remaining_qty) {
-                return back()->with('warning', 'The quantity must be greater than ' . $remaining_qty);
+                return back()->with('warning', __('The quantity must be greater than ') . $remaining_qty);
             }
 
             RawMaterialRequestMaterialCollected::create([
@@ -329,28 +329,28 @@ class RawMaterialRequestController extends Controller
             $rmqm->save();
 
             if ($rmqm->qty <= 0) {
-                return back()->with('success', 'Request completed');
+                return back()->with('success', __('Request completed'));
             } else {
-                return back()->with('success', 'Request updated');
+                return back()->with('success', __('Request updated'));
             }
         } else {
             $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_COMPLETED;
             $rmqm->save();
 
-            return back()->with('success', 'Request completed');
+            return back()->with('success', __('Request completed'));
         }
     }
 
     public function materialIncomplete(RawMaterialRequestMaterial $rmqm)
     {
         if ($rmqm->materialRequest->status != RawMaterialRequest::STATUS_IN_PROGRESS) {
-            return back()->with('warning', 'Only in-progress requests can be modified');
+            return back()->with('warning', __('Only in-progress requests can be modified'));
         }
 
         $rmqm->status = RawMaterialRequestMaterial::MATERIAL_STATUS_IN_PROGRESS;
         $rmqm->save();
 
-        return back()->with('success', 'Request incompleted');
+        return back()->with('success', __('Request incompleted'));
     }
 
     public function viewLogs(RawMaterialRequestMaterial $rmqm)

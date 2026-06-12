@@ -3,41 +3,41 @@
 
 <table>
     <tr>
-        <td>Code</td>
-        <td>Company Group</td>
-        <td>Prefix</td>
-        <td>Customer Name</td>
-        <td>Company Name</td>
-        <td>Mobile Number</td>
-        <td>Website</td>
-        <td>Currency</td>
-        <td>City</td>
-        <td>Debtor Type</td>
-        <td>Platform</td>
-        <td>Credit Term</td>
-        <td>Status</td>
-        <td>Category</td>
-        <td>Type</td>
-        <td>TIN</td>
-        <td>Business Reg No.</td>
-        <td>MSIC Code</td>
-        <td>Business Activity Desc.</td>
-        <td>SST Reg No.</td>
-        <td>Tourism Tax Reg No.</td>
-        <td>Prev. GST Reg No.</td>
-        <td>Registered Name</td>
-        <td>Trade Name</td>
-        <td>Phone Number</td>
-        <td>Email Address</td>
+        <td>{{ __('Code') }}</td>
+        <td>{{ __('Company Group') }}</td>
+        <td>{{ __('Prefix') }}</td>
+        <td>{{ __('Customer Name') }}</td>
+        <td>{{ __('Company Name') }}</td>
+        <td>{{ __('Mobile Number') }}</td>
+        <td>{{ __('Website') }}</td>
+        <td>{{ __('Currency') }}</td>
+        <td>{{ __('City') }}</td>
+        <td>{{ __('Debtor Type') }}</td>
+        <td>{{ __('Platform') }}</td>
+        <td>{{ __('Credit Term') }}</td>
+        <td>{{ __('Status') }}</td>
+        <td>{{ __('Category') }}</td>
+        <td>{{ __('Type') }}</td>
+        <td>{{ __('TIN') }}</td>
+        <td>{{ __('Business Reg No.') }}</td>
+        <td>{{ __('MSIC Code') }}</td>
+        <td>{{ __('Business Activity Desc.') }}</td>
+        <td>{{ __('SST Reg No.') }}</td>
+        <td>{{ __('Tourism Tax Reg No.') }}</td>
+        <td>{{ __('Prev. GST Reg No.') }}</td>
+        <td>{{ __('Registered Name') }}</td>
+        <td>{{ __('Trade Name') }}</td>
+        <td>{{ __('Phone Number') }}</td>
+        <td>{{ __('Email Address') }}</td>
 
-        <td>Address</td>
-        <td>City</td>
-        <td>State</td>
-        <td>Zip Code</td>
-        <td>Type</td>
-        <td>Is Default</td>
+        <td>{{ __('Address') }}</td>
+        <td>{{ __('City') }}</td>
+        <td>{{ __('State') }}</td>
+        <td>{{ __('Zip Code') }}</td>
+        <td>{{ __('Type') }}</td>
+        <td>{{ __('Is Default') }}</td>
 
-        <td>Remark</td>
+        <td>{{ __('Remark') }}</td>
     </tr>
     @php
         $customer_ids = [];

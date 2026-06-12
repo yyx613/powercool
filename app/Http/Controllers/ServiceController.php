@@ -109,14 +109,14 @@ class ServiceController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('service.create'))->with('success', 'Service created');
+                return redirect(route('service.create'))->with('success', __('Service created'));
             }
-            return redirect(route('service.index'))->with('success', 'Service created');
+            return redirect(route('service.index'))->with('success', __('Service created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -149,12 +149,12 @@ class ServiceController extends Controller
 
             DB::commit();
 
-            return redirect(route('service.index'))->with('success', 'Service updated');
+            return redirect(route('service.index'))->with('success', __('Service updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -162,6 +162,6 @@ class ServiceController extends Controller
     {
         $service->delete();
 
-        return back()->with('success', 'Service deleted');
+        return back()->with('success', __('Service deleted'));
     }
 }

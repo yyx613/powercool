@@ -98,14 +98,14 @@ class ProjectTypeController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('project_type.create'))->with('success', 'Project Type created');
+                return redirect(route('project_type.create'))->with('success', __('Project Type created'));
             }
-            return redirect(route('project_type.index'))->with('success', 'Project Type created');
+            return redirect(route('project_type.index'))->with('success', __('Project Type created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -135,18 +135,18 @@ class ProjectTypeController extends Controller
 
             DB::commit();
 
-            return redirect(route('project_type.index'))->with('success', 'Project Type updated');
+            return redirect(route('project_type.index'))->with('success', __('Project Type updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
     public function delete(ProjectType $type) {
         $type->delete();
 
-        return back()->with('success', 'Project Type deleted');
+        return back()->with('success', __('Project Type deleted'));
     }
 }

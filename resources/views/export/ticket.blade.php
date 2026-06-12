@@ -1,13 +1,13 @@
 <table>
     <tr>
-        <td>Code</td>
-        <td>Subject</td>
-        <td>Body</td>
-        <td>Customer</td>
-        <td>Status</td>
-        <td>Sale Order / Invoice</td>
-        <td>Product</td>
-        <td>Product Child</td>
+        <td>{{ __('Code') }}</td>
+        <td>{{ __('Subject') }}</td>
+        <td>{{ __('Body') }}</td>
+        <td>{{ __('Customer') }}</td>
+        <td>{{ __('Status') }}</td>
+        <td>{{ __('Sale Order / Invoice') }}</td>
+        <td>{{ __('Product') }}</td>
+        <td>{{ __('Product Child') }}</td>
     </tr>
     @foreach ($tickets as $t)
         <tr>

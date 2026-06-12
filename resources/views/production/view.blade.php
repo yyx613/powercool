@@ -181,7 +181,7 @@
                                     <img src="{{ $u->latest_picture->url }}" alt=""
                                         class="h-full w-full object-cover">
                                 @else
-                                    <img src="{{ asset('images/avatar.jpg') }}" alt="Avatar image"
+                                    <img src="{{ asset('images/avatar.jpg') }}" alt="{{ __('Avatar image') }}"
                                         class="h-full w-full object-cover">
                                 @endif
                             </div>
@@ -206,7 +206,7 @@
                 <p class="text-sm text-slate-500">{{ $production->product->model_desc }}</p>
                 @if ($production->productChild != null)
                     <div class="flex items-center mt-2">
-                        <span class="text-sm font-semibold mr-1">Serial No: </span>
+                        <span class="text-sm font-semibold mr-1">{{ __('Serial No') }}: </span>
                         <span class="text-sm text-slate-500">{{ $production->productChild->sku ?? null }}</span>
                     </div>
                 @endif

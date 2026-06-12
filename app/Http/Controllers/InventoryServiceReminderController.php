@@ -148,14 +148,14 @@ class InventoryServiceReminderController extends Controller
 
 
             if ($req->create_again == true) {
-                return redirect(route('service_reminder.create'))->with('success', 'Service Date created');
+                return redirect(route('service_reminder.create'))->with('success', __('Service Date created'));
             }
-            return redirect(route('service_reminder.index'))->with('success', 'Service Date created');
+            return redirect(route('service_reminder.index'))->with('success', __('Service Date created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

@@ -98,14 +98,14 @@ class AreaController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('area.create'))->with('success', 'City created');
+                return redirect(route('area.create'))->with('success', __('City created'));
             }
-            return redirect(route('area.index'))->with('success', 'City created');
+            return redirect(route('area.index'))->with('success', __('City created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -135,12 +135,12 @@ class AreaController extends Controller
 
             DB::commit();
 
-            return redirect(route('area.index'))->with('success', 'City updated');
+            return redirect(route('area.index'))->with('success', __('City updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

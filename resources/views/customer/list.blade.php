@@ -90,7 +90,7 @@
             </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_debt_type' id='filter_debt_type' class="w-full capitalize">
-                    <option value="">Select a debt type</option>
+                    <option value="">{{ __('Select a debt type') }}</option>
                     @foreach ($debtor_types as $key => $type)
                         <option value="{{ $type->id }}" @selected(isset($default_debt_type) && $default_debt_type == $type->id)>{{ $type->name }}</option>
                     @endforeach
@@ -98,7 +98,7 @@
             </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_company_group' id='filter_company_group' class="w-full capitalize">
-                    <option value="">Select a company group</option>
+                    <option value="">{{ __('Select a company group') }}</option>
                     @foreach ($company_group as $key => $val)
                         <option value="{{ $key }}" @selected(isset($default_company_group) && $default_company_group == $key)>{{ $val }}</option>
                     @endforeach
@@ -106,7 +106,7 @@
             </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_category' id='filter_category' class="w-full capitalize">
-                    <option value="">Select a category</option>
+                    <option value="">{{ __('Select a category') }}</option>
                     @foreach ($business_types as $key => $val)
                         <option value="{{ $key }}" @selected(isset($default_category) && $default_category == $key)>{{ $val }}</option>
                     @endforeach
@@ -114,7 +114,7 @@
             </div>
             <div class="flex-1 flex">
                 <x-app.input.select name='filter_sales_agent' id='filter_sales_agent' class="w-full capitalize">
-                    <option value="">Select a sales agent</option>
+                    <option value="">{{ __('Select a sales agent') }}</option>
                     <option value="without_agent" @selected(isset($default_sales_agent) && $default_sales_agent == 'without_agent')>{{ __('Without Agent') }}</option>
                     @foreach ($sales_agents as $sa)
                         <option value="{{ $sa->id }}" @selected(isset($default_sales_agent) && $default_sales_agent == $sa->id)>{{ $sa->name }} ({{ $sa->company_group == 2 ? 'Hi-Ten' : 'Power Cool' }})</option>

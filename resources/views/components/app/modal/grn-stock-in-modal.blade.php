@@ -19,9 +19,9 @@
                             <div>
                                 <x-app.input.input name="product[]" id="product[]" value="{{ $grn->product_id }}" class="hidden" />
                                 @if ($grn->product->type == 1 || $grn->product->is_sparepart == true)
-                                    <x-app.input.multi-input name="serial_no_{{ $grn->product_id }}" id="serial_no_{{ $grn->product_id }}" placeholder="Enter serial no" />
+                                    <x-app.input.multi-input name="serial_no_{{ $grn->product_id }}" id="serial_no_{{ $grn->product_id }}" placeholder="{{ __('Enter serial no') }}" />
                                 @else
-                                    <x-app.input.input name="qty_{{ $grn->product_id }}" id="qty_{{ $grn->product_id }}" class="text-sm int-input" placeholder="Enter quantity to stock in"/>
+                                    <x-app.input.input name="qty_{{ $grn->product_id }}" id="qty_{{ $grn->product_id }}" class="text-sm int-input" placeholder="{{ __('Enter quantity to stock in') }}"/>
                                 @endif
                             </div>
                         </div>

@@ -268,6 +268,6 @@ class WarrantyController extends Controller
         return redirect(route('warranty.view', [
             'sale' => Session::get('warranty-create-sale-id'),
             'pc' => Session::get('warranty-create-pc-id'),
-        ]))->with('success', 'Material used created');
+        ]))->with('success', __('Material used created'));
     }
 }

@@ -108,14 +108,14 @@ class CountryController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('country.create'))->with('success', 'Country created');
+                return redirect(route('country.create'))->with('success', __('Country created'));
             }
-            return redirect(route('country.index'))->with('success', 'Country created');
+            return redirect(route('country.index'))->with('success', __('Country created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -149,12 +149,12 @@ class CountryController extends Controller
 
             DB::commit();
 
-            return redirect(route('country.index'))->with('success', 'Country updated');
+            return redirect(route('country.index'))->with('success', __('Country updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -162,7 +162,7 @@ class CountryController extends Controller
     {
         // Check if country has states
         if ($country->states()->count() > 0) {
-            return back()->with('warning', 'Cannot delete country with existing states. Please delete states first.');
+            return back()->with('warning', __('Cannot delete country with existing states. Please delete states first.'));
         }
 
         try {
@@ -172,12 +172,12 @@ class CountryController extends Controller
 
             DB::commit();
 
-            return redirect(route('country.index'))->with('success', 'Country deleted');
+            return redirect(route('country.index'))->with('success', __('Country deleted'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator');
+            return back()->with('error', __('Something went wrong. Please contact administrator'));
         }
     }
 

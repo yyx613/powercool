@@ -103,15 +103,15 @@ class CreditTermController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('credit_term.create'))->with('success', 'Credit Term created');
+                return redirect(route('credit_term.create'))->with('success', __('Credit Term created'));
             }
 
-            return redirect(route('credit_term.index'))->with('success', 'Credit Term created');
+            return redirect(route('credit_term.index'))->with('success', __('Credit Term created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -143,12 +143,12 @@ class CreditTermController extends Controller
 
             DB::commit();
 
-            return redirect(route('credit_term.index'))->with('success', 'Credit Term updated');
+            return redirect(route('credit_term.index'))->with('success', __('Credit Term updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }

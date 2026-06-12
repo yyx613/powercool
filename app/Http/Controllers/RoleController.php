@@ -76,12 +76,12 @@ class RoleController extends Controller
 
             DB::commit();
 
-            return redirect()->route('role_management.index')->with('success', 'Role created.');
+            return redirect()->route('role_management.index')->with('success', __('Role created.'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Failed to create the role.');
+            return back()->with('error', __('Failed to create the role.'));
         }
     }
 
@@ -116,12 +116,12 @@ class RoleController extends Controller
 
             DB::commit();
 
-            return redirect()->route('role_management.index')->with('success', 'Role updated');
+            return redirect()->route('role_management.index')->with('success', __('Role updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Failed to update the role.');
+            return back()->with('error', __('Failed to update the role.'));
         }
     }
 }

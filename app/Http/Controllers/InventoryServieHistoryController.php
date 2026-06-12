@@ -147,12 +147,12 @@ class InventoryServieHistoryController extends Controller
 
             DB::commit();
 
-            return redirect(route('service_history.index'))->with('success', 'Service history created');
+            return redirect(route('service_history.index'))->with('success', __('Service history created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong');
+            return back()->with('error', __('Something went wrong'));
         }
     }
 }

@@ -146,7 +146,7 @@ class SupplierController extends Controller
     {
         $supplier->delete();
 
-        return back()->with('success', 'Supplier deleted');
+        return back()->with('success', __('Supplier deleted'));
     }
 
     public function upsert(Request $req, Supplier $supplier)
@@ -321,12 +321,12 @@ class SupplierController extends Controller
 
             DB::commit();
 
-            return redirect(route('supplier.index'))->with('success', 'Supplier ' . ($is_create ? 'created' : 'updated'));
+            return redirect(route('supplier.index'))->with('success', ($is_create ? __('Supplier created') : __('Supplier updated')));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 

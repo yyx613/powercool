@@ -85,14 +85,14 @@ class FactoryController extends Controller
             DB::commit();
 
             if ($req->create_again == true) {
-                return redirect(route('factory.create'))->with('success', 'Factory created');
+                return redirect(route('factory.create'))->with('success', __('Factory created'));
             }
-            return redirect(route('factory.index'))->with('success', 'Factory created');
+            return redirect(route('factory.index'))->with('success', __('Factory created'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 
@@ -122,12 +122,12 @@ class FactoryController extends Controller
 
             DB::commit();
 
-            return redirect(route('factory.index'))->with('success', 'Area updated');
+            return redirect(route('factory.index'))->with('success', __('Area updated'));
         } catch (\Throwable $th) {
             DB::rollBack();
             report($th);
 
-            return back()->with('error', 'Something went wrong. Please contact administrator')->withInput();
+            return back()->with('error', __('Something went wrong. Please contact administrator'))->withInput();
         }
     }
 }
