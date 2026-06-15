@@ -363,7 +363,10 @@
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 100px 0;" colspan="4">For : HI-TEN TRADING SDN BHD</td>
+                <td style="font-size: 12px; padding: 25px 0 100px 0; vertical-align: text-top;" colspan="2">For : HI-TEN
+                    TRADING SDN BHD</td>
+                <td style="font-size: 12px; text-align: center; font-weight: bold; font-style: italic; padding: 25px 0 100px 0; vertical-align: text-top;"
+                    colspan="3">GOODS RECEIVED IN GOOD ORDER & CONDITION</td>
             </tr>
             <tr>
                 <td
@@ -372,18 +375,16 @@
                 <td style="width: 10px;"></td>
                 <td
                     style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
-                    Recipient's Chop & Signature</td>
+                    Recipient's Chop & Signature
+                    <div style="text-align: left; font-weight: 400; padding-top: 10px;">
+                        Name :<br>
+                        IC :
+                    </div>
+                </td>
                 <td style="width: 10px;"></td>
                 <td
                     style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
                     Driver Chop & Signature</td>
-            </tr>
-        </table>
-        {{-- Good Receives --}}
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;" id="good-receives">
-            <tr>
-                <td style="font-size: 12px; text-align: center; font-weight: bold; font-style: italic;">GOODS RECEIVED
-                    IN GOOD ORDER & CONDITION</td>
             </tr>
         </table>
     </main>
