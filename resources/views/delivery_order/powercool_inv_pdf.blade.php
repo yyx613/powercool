@@ -436,10 +436,6 @@
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 35px 0;">
         @include('partials.tnc', ['company' => 'powercool', 'colspan' => 2])
         @include('partials.duitnow_qr', ['company' => 'powercool', 'colspan' => 2])
-        <tr>
-            <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="2">This is a computer generated
-                documents no signature required except for the acknowledgement signature by customer.</td>
-        </tr>
     </table>
 
     {{-- <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">

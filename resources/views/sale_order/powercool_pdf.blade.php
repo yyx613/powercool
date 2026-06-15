@@ -505,10 +505,6 @@
                     Acknowledged by
                 </td>
             </tr>
-            <tr>
-                <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="3">This is a computer generated
-                    documents no signature required except for the acknowledgement signature by customer.</td>
-            </tr>
         </table>
     </main>
 

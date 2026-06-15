@@ -509,10 +509,6 @@
                     {{ $sale->saleperson->name }}</td>
                 <td></td>
             </tr>
-            <tr>
-                <td style="font-size: 12px; padding: 30px 0 0 0;" colspan="2">This is a computer generated
-                    documents no signature required.</td>
-            </tr>
         </table>
     </main>
 

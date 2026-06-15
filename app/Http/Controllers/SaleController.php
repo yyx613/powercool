@@ -5472,7 +5472,7 @@ class SaleController extends Controller
         foreach ($records_paginator as $key => $record) {
             $invoices = $record->invoices;
             $firstInvoice = $invoices->first();
-            $customer = optional(optional($firstInvoice)->deliveryOrders->first())->customer;
+            $customer = optional(optional(optional($firstInvoice)->deliveryOrders)->first())->customer;
 
             $invoiceNos = $invoices->pluck('sku')->filter()->implode(', ');
             $total = BillingProduct::where('billing_id', $record->id)
