@@ -357,6 +357,8 @@
                     style="font-size: 12px; font-weight: 700; text-align: right; padding: 10px 0 0 0; border-top: solid 1px black; vertical-align: text-top;">
                     Total {{ $total }}</td>
             </tr>
+            @include('partials.tnc', ['company' => 'hiten', 'colspan' => 2])
+            @include('partials.duitnow_qr', ['company' => 'hiten', 'colspan' => 2])
         </table>
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">

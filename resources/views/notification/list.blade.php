@@ -121,6 +121,9 @@
                     "targets": 2,
                     'orderable': false,
                     render: function(data, type, row) {
+                        if (row.data && row.data.url) {
+                            return `<a href="${row.data.url}" class="text-blue-600 hover:underline">${data}</a>`
+                        }
                         return data
                     }
                 },

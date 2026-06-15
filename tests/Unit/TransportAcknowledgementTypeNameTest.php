@@ -50,4 +50,29 @@ class TransportAcknowledgementTypeNameTest extends TestCase
 
         $this->assertNull($ack->typeName());
     }
+
+    public function test_dealer_label_powercool_special_id(): void
+    {
+        $this->assertSame('Powercool', TransportAcknowledgement::dealerLabel('-1', null, null));
+    }
+
+    public function test_dealer_label_hi_ten_special_id(): void
+    {
+        $this->assertSame('Hi-Ten', TransportAcknowledgement::dealerLabel('-2', null, null));
+    }
+
+    public function test_dealer_label_real_dealer_in_hi_ten_group(): void
+    {
+        $this->assertSame('Ahmad (Hi-Ten)', TransportAcknowledgement::dealerLabel(5, 'Ahmad', 2));
+    }
+
+    public function test_dealer_label_real_dealer_in_powercool_group(): void
+    {
+        $this->assertSame('Ahmad (Powercool)', TransportAcknowledgement::dealerLabel(5, 'Ahmad', 1));
+    }
+
+    public function test_dealer_label_real_dealer_defaults_to_powercool_when_group_missing(): void
+    {
+        $this->assertSame('Ahmad (Powercool)', TransportAcknowledgement::dealerLabel(5, 'Ahmad', null));
+    }
 }

@@ -120,7 +120,7 @@
             <td style="border-left: solid 1px black;"></td>
             <td
                 style="font-family: sans-serif; font-size: 12px; border-top: solid 1px black; border-right: solid 1px black; border-left: solid 1px black; padding: 0 5px 15px 5px; text-align: center;">
-                Signature / Comp Stamp</td>
+                Signature / Company Stamp</td>
         </tr>
         <tr>
             <td style="border-left: solid 1px black;"></td>

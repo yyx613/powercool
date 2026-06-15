@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice | {{ $sku }}</title>
+    <title>{{ $is_do ? 'Delivery Order' : 'Invoice' }} | {{ $sku }}</title>
 </head>
 <body>
     <!-- Header -->
@@ -119,20 +119,29 @@
     </table>
     <!-- Footer -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-        <tr>
-            <td style="font-size: 14px; padding: 25px 0 0 0;" colspan="3">Notes:</td>
-        </tr>
-        <tr>
-            <td style="font-size: 12px; padding: 0 0 75px 0;" colspan="3">
-                1. All cheques should be crossed and made payable to POWER COOL EQUIPMENTS (M) SDN BHD<br>
-                2.  Goods sold are neither returnable nor refundable. Otherwise a cancellation fee of 20% on purchase price will be imposed.
-            </td>
-        </tr>
-        <tr>
-            <td style="font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">Authorised Signature</td>
-            <td></td>
-            <td></td>
-        </tr>
+        @include('partials.tnc', ['company' => 'powercool', 'colspan' => 7])
+        @include('partials.duitnow_qr', ['company' => 'powercool', 'colspan' => 7])
+        @if ($is_do)
+            <tr>
+                <td style="font-size: 12px; padding: 0 0 60px 0; vertical-align: text-top;" colspan="3">For :POWER COOL EQUIPMENTS (M) SDN BHD</td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: center; padding: 0 0 60px 0; vertical-align: text-top;" colspan="3">GOODS RECEIVED IN GOOD<br>ORDER &amp; CONDITION.</td>
+            </tr>
+            <tr>
+                <td style="font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">Authorised Signature</td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">Goods Prepared Signature</td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">Recipient's Chop &amp; Signature<br><span style="font-weight: 400;">NAME:</span><br><span style="font-weight: 400;">IC:</span></td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: left; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">Driver Signature</td>
+            </tr>
+        @else
+            <tr>
+                <td style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 33%;">Authorised Signature</td>
+                <td colspan="6"></td>
+            </tr>
+        @endif
     </table>
 
 </body>
