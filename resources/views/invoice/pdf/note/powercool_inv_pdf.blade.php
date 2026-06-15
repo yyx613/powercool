@@ -177,19 +177,8 @@
     </table>
     <!-- Footer -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-        <tr>
-            <td style="font-size: 14px; padding: 25px 0 0 0; border-top: solid 1px black;" colspan="3">Notes:</td>
-        </tr>
-        <tr>
-            <td style="font-size: 12px; padding: 0 0 75px 0;" colspan="3">
-                1. All cheques should be crossed and made payable to POWER COOL EQUIPMENTS (M) SDN BHD<br>
-                2. Please remit your payment to : <span style="font-weight: 700;">Public Bank Ac No.: 314 1967 510</span><br>
-                3. The Company reserves the right to charge interest 1.5% per month on overdue accounts.<br>
-                4. Goods sold are not returnable & refundable. A cancellation fee of 20% on purchase price will be imposed.<br>
-                5. Any queries or complaints regarding this invoice must be made within 7 days from date hereof,
-                otherwise any discrepancy will not be entertained.
-            </td>
-        </tr>
+        @include('partials.tnc', ['company' => 'powercool', 'colspan' => 3])
+        @include('partials.duitnow_qr', ['company' => 'powercool', 'colspan' => 3])
         <tr>
             <td style="font-size: 11px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</td>
             <td></td>

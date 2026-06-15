@@ -250,17 +250,21 @@
                     "targets": 12,
                     orderable: false,
                     render: function(data, type, row) {
+                        let badge = ''
+                        if (row.no_deal_pending) {
+                            badge = `<br><span class="text-xs text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded font-semibold">{!! __('No Deal pending approval') !!}</span>`
+                        }
                         switch (data) {
                             case 1:
-                                return `<span class="text-red-500 font-semibold">{!! __('New') !!}</span>`
+                                return `<span class="text-red-500 font-semibold">{!! __('New') !!}</span>` + badge
                             case 2:
-                                return `<span class="text-yellow-500 font-semibold">{!! __('In Progress') !!}</span>`
+                                return `<span class="text-yellow-500 font-semibold">{!! __('In Progress') !!}</span>` + badge
                             case 3:
-                                return `<span class="text-green-500 font-semibold">{!! __('Closed Deal (Converted)') !!}</span>`
+                                return `<span class="text-green-500 font-semibold">{!! __('Closed Deal (Converted)') !!}</span>` + badge
                             case 4:
-                                return `<span class="text-gray-500 font-semibold">{!! __('No Deal') !!}</span>`
+                                return `<span class="text-gray-500 font-semibold">{!! __('No Deal') !!}</span>` + badge
                             default:
-                                return '-'
+                                return '-' + badge
                         }
                     }
                 },
@@ -269,6 +273,16 @@
                     "targets": 13,
                     "orderable": false,
                     render: function (data, type, row) {
+                       if (row.is_assignee && row.is_pending) {
+                            return `<div class="flex items-center justify-end gap-x-2 px-2">
+                                <button class="rounded-full p-2 bg-green-200 inline-block accept-btns" data-id="${row.id}" title="{!! __('Accept') !!}">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512"><path d="M9,21.035l-9-8.638,2.791-2.87,6.156,5.874L21.121,3.965l2.879,2.787L9,21.035Z"/></svg>
+                                </button>
+                                <button class="rounded-full p-2 bg-red-200 inline-block reject-btns" data-id="${row.id}" title="{!! __('Reject') !!}">
+                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512"><path d="M24,3.752,20.248,0,12,8.248,3.752,0,0,3.752l8.248,8.248L0,20.248,3.752,24,12,15.752,20.248,24,24,20.248l-8.248-8.248L24,3.752Z"/></svg>
+                                </button>
+                           </div>`
+                       }
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">
                             ${
                                 row.can_view ? `
@@ -318,6 +332,33 @@
 
             $('#delete-modal #yes-btn').attr('href', `{{ config('app.url') }}/sale-enquiry/delete/${id}`)
             $('#delete-modal').addClass('show-modal')
+        })
+
+        // Submit a POST request (with CSRF) by building and submitting a form.
+        function postAction(url) {
+            let form = $('<form>', { method: 'POST', action: url });
+            form.append($('<input>', {
+                type: 'hidden',
+                name: '_token',
+                value: $('meta[name="csrf-token"]').attr('content')
+            }));
+            form.appendTo('body').submit();
+        }
+
+        // Accept an assigned enquiry, then the salesperson can view its details.
+        $('#data-table').on('click', '.accept-btns', function() {
+            let id = $(this).data('id')
+            if (confirm("{!! __('Accept this enquiry?') !!}")) {
+                postAction(`{{ config('app.url') }}/sale-enquiry/accept/${id}`)
+            }
+        })
+
+        // Reject an assigned enquiry; the creator is notified.
+        $('#data-table').on('click', '.reject-btns', function() {
+            let id = $(this).data('id')
+            if (confirm("{!! __('Reject this enquiry?') !!}")) {
+                postAction(`{{ config('app.url') }}/sale-enquiry/reject/${id}`)
+            }
         })
 
         $('#export-btn').on('click', function() {

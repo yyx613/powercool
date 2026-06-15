@@ -161,6 +161,8 @@
                                 return 'Delivery Order';
                             } else if (data.includes('RawMaterialRequest')) {
                                 return 'Raw Material Request';
+                            } else if (data.includes('SaleEnquiry')) {
+                                return 'Sale Enquiry';
                             } else if (row.data != null && row.data.is_quo == true) {
                                 return 'Quotation';
                             } else {

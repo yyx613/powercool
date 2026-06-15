@@ -496,7 +496,7 @@ if (! function_exists('getCurrentUserWarehouse')) {
 }
 
 if (! function_exists('isHiTen')) {
-    function isHiTen(int $company_group): bool
+    function isHiTen(?int $company_group): bool
     {
         return $company_group == 2;
     }

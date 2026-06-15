@@ -20,13 +20,17 @@ use App\Models\ProductChild;
 use App\Models\Production;
 use App\Models\RawMaterialRequest;
 use App\Models\Sale;
+use App\Models\SaleEnquiry;
 use App\Models\SalePaymentAmount;
 use App\Models\SaleProduct;
 use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
+use App\Models\User;
+use App\Notifications\SaleEnquiryNoDealNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -47,6 +51,7 @@ class ApprovalController extends Controller
         5 => 'Raw Material Request',
         6 => 'Complete Production Request',
         7 => 'GRN',
+        8 => 'Sale Enquiry',
     ];
 
     public function index()
@@ -83,6 +88,9 @@ class ApprovalController extends Controller
         }
         if (!hasPermission('approval.type_grn')) {
             unset($types[7]);
+        }
+        if (!hasPermission('approval.type_sale_enquiry')) {
+            unset($types[8]);
         }
 
         return view('approval.list', [
@@ -168,6 +176,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_grn')) {
             $records = $records->whereNot('object_type', GRN::class);
         }
+        if (!hasPermission('approval.type_sale_enquiry')) {
+            $records = $records->whereNot('object_type', SaleEnquiry::class);
+        }
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');
@@ -195,6 +206,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 7) {
                 $records = $records->where('object_type', GRN::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 8) {
+                $records = $records->where('object_type', SaleEnquiry::class);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -213,6 +227,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', Production::class);
             } elseif (Session::get('approval-type') == 7) {
                 $records = $records->where('object_type', GRN::class);
+            } elseif (Session::get('approval-type') == 8) {
+                $records = $records->where('object_type', SaleEnquiry::class);
             }
         }
 
@@ -252,6 +268,8 @@ class ApprovalController extends Controller
                     $view_url = route('production.view', ['production' => $obj->id]);
                 } elseif (get_class($obj) == GRN::class) {
                     $view_url = route('grn.index');
+                } elseif (get_class($obj) == SaleEnquiry::class) {
+                    $view_url = route('sale_enquiry.view', ['enquiry' => $obj->id]);
                 }
             }
 
@@ -273,7 +291,9 @@ class ApprovalController extends Controller
             if (get_class($obj) == Sale::class) {
                 $sale_agents[] = $obj->saleperson->name;
             } else if (get_class($obj) == Customer::class && $payload != null && isset($payload->sale_agent_ids)) {
-                $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray(); 
+                $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray();
+            } else if (get_class($obj) == SaleEnquiry::class && $obj->assignedUser) {
+                $sale_agents[] = $obj->assignedUser->name;
             }
 
             // Determine object_sku
@@ -446,6 +466,18 @@ class ApprovalController extends Controller
                     $obj->save();
                 }
             }
+            // Sale Enquiry - "No Deal" request approved
+            if (get_class($obj) == SaleEnquiry::class) {
+                $data = json_decode($approval->data);
+
+                if (isset($data->is_no_deal)) {
+                    $obj->status = SaleEnquiry::STATUS_CLOSED_DROPPED;
+                    $obj->no_deal_reason = $data->reason ?? null;
+                    $obj->save();
+
+                    $this->notifySaleEnquiryNoDealDecision($obj, true, null);
+                }
+            }
             // Payment Record (SalePaymentAmount)
             if (get_class($obj) == SalePaymentAmount::class) {
                 $data = json_decode($approval->data);
@@ -591,6 +623,15 @@ class ApprovalController extends Controller
                 $obj->approval_status = SalePaymentAmount::STATUS_ACTIVE;
                 $obj->save();
             }
+            // Sale Enquiry - "No Deal" request rejected; enquiry stays in progress
+            // so the salesperson can keep working it (or revise the request).
+            if (get_class($obj) == SaleEnquiry::class) {
+                $data = json_decode($approval->data);
+
+                if (isset($data->is_no_deal)) {
+                    $this->notifySaleEnquiryNoDealDecision($obj, false, $req->remark);
+                }
+            }
 
             DB::commit();
 
@@ -605,6 +646,34 @@ class ApprovalController extends Controller
                 'result' => false,
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Notify the assigned salesperson of management's decision on their No-Deal
+     * request. On approval the enquiry is now closed as No Deal; on rejection it
+     * stays in progress and the rejection remark is included.
+     */
+    private function notifySaleEnquiryNoDealDecision(SaleEnquiry $enquiry, bool $approved, ?string $remark): void
+    {
+        $salesperson = User::withoutGlobalScope(BranchScope::class)->find($enquiry->assigned_user_id);
+
+        if (!$salesperson) {
+            return;
+        }
+
+        $desc = $approved
+            ? __('Your No Deal request for enquiry (:sku) has been approved.', ['sku' => $enquiry->sku])
+            : __('Your No Deal request for enquiry (:sku) was rejected. Reason: :reason', [
+                'sku' => $enquiry->sku,
+                'reason' => $remark ?: '-',
+            ]);
+
+        Notification::send($salesperson, new SaleEnquiryNoDealNotification([
+            'enquiry_id' => $enquiry->id,
+            'sku' => $enquiry->sku,
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'desc' => $desc,
+        ]));
     }
 
     public function stockIn(Approval $approval)

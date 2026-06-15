@@ -44,6 +44,13 @@ class NotificationController extends Controller
             }
         }
 
+        // Directed/personal notifications are addressed to a specific recipient
+        // (the assigned salesperson or the enquiry creator), so they are always
+        // visible to whoever received them without a separate view permission.
+        $allowedTypes[] = 'sale-enquiry-assigned';
+        $allowedTypes[] = 'sale-enquiry-accepted';
+        $allowedTypes[] = 'sale-enquiry-rejected';
+
         return $allowedTypes;
     }
 

@@ -384,7 +384,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/generate-barcode', 'generateBarcode')->name('generate_barcode');
         Route::get('/export', 'export')->name('export');
         Route::get('/get/{product}', 'get')->name('get')->withoutMiddleware(['can:inventory.product.view']);
-        Route::get('/get-by-keyword', 'getByKeyword')->name('get_by_keyword');
+        Route::get('/get-by-keyword', 'getByKeyword')->name('get_by_keyword')->withoutMiddleware(['can:inventory.product.view']);
     });
     Route::controller(ProductController::class)->prefix('raw-material')->name('raw_material.')->middleware(['can:inventory.raw_material.view'])->group(function () { // Raw Material
         Route::get('/', 'index')->name('index');
@@ -430,6 +430,9 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/', 'index')->name('index');
         Route::get('/get-data', 'getData')->name('get_data');
         Route::get('/view/{enquiry}', 'view')->name('view')->middleware(['can:sale_enquiry.view']);
+        Route::post('/accept/{enquiry}', 'accept')->name('accept')->middleware(['can:sale_enquiry.view']);
+        Route::post('/reject/{enquiry}', 'reject')->name('reject')->middleware(['can:sale_enquiry.view']);
+        Route::post('/update-status/{enquiry}', 'updateStatus')->name('update_status')->middleware(['can:sale_enquiry.view']);
         Route::get('/view-get-data', 'getViewData')->name('view_get_data')->middleware(['can:sale_enquiry.view']);
         Route::get('/create', 'create')->name('create')->middleware(['can:sale_enquiry.create']);
         Route::post('/store', 'store')->name('store')->middleware(['can:sale_enquiry.create']);

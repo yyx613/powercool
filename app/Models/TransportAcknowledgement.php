@@ -62,12 +62,38 @@ class TransportAcknowledgement extends Model
 
     public function dealerName(): ?string
     {
-        if ($this->dealer_id == '-1') {
-            return 'Power Cool';
-        } else if ($this->dealer_id == '-2') {
-            return 'Hi Ten Trading';
-        } else {
-            return $this->belongsTo(Dealer::class, 'dealer_id')->value('name');
+        if ($this->dealer_id == '-1' || $this->dealer_id == '-2') {
+            return self::dealerLabel($this->dealer_id, null, null);
         }
+
+        $dealer = $this->belongsTo(Dealer::class, 'dealer_id')->first(['name', 'company_group']);
+
+        if ($dealer == null) {
+            return null;
+        }
+
+        return self::dealerLabel($this->dealer_id, $dealer->name, $dealer->company_group);
+    }
+
+    /**
+     * Resolve the dealer display label for a transport acknowledgement.
+     *
+     * The dealer_id may be one of the hardcoded company groups (-1 = Powercool,
+     * -2 = Hi-Ten) or a real dealer record, in which case the label is the
+     * dealer's name suffixed with its company group, e.g. "Ahmad (Hi-Ten)".
+     */
+    public static function dealerLabel($dealer_id, ?string $name, ?int $company_group): string
+    {
+        if ((string) $dealer_id === '-1') {
+            return 'Powercool';
+        }
+
+        if ((string) $dealer_id === '-2') {
+            return 'Hi-Ten';
+        }
+
+        $group = isHiTen((int) $company_group) ? 'Hi-Ten' : 'Powercool';
+
+        return trim((string) $name).' ('.$group.')';
     }
 }

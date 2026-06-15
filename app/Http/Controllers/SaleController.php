@@ -5424,14 +5424,26 @@ class SaleController extends Controller
     public function getDataBilling(Request $req)
     {
         Session::put('billing-page', $req->page);
-        $records = new Billing;
+        $records = Billing::with([
+            'invoices.deliveryOrders.customer',
+            'invoices.createdBy',
+            'einvoice',
+        ]);
 
         // Search
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%');
+                $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('our_do_no', 'like', '%'.$keyword.'%')
+                    ->orWhereHas('invoices', function ($iq) use ($keyword) {
+                        $iq->where('sku', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('invoices.deliveryOrders.customer', function ($cq) use ($keyword) {
+                        $cq->where('sku', 'like', '%'.$keyword.'%')
+                            ->orWhere('name', 'like', '%'.$keyword.'%');
+                    });
             });
         }
         // Order
@@ -5458,10 +5470,25 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            $invoices = $record->invoices;
+            $firstInvoice = $invoices->first();
+            $customer = optional(optional($firstInvoice)->deliveryOrders->first())->customer;
+
+            $invoiceNos = $invoices->pluck('sku')->filter()->implode(', ');
+            $total = BillingProduct::where('billing_id', $record->id)
+                ->sum(DB::raw('qty * price'));
+
             $data['data'][] = [
                 'id' => $record->id,
                 'sku' => $record->sku,
                 'billing_date' => $record->date,
+                'do_no' => $record->our_do_no ?: '-',
+                'invoice_no' => $invoiceNos !== '' ? $invoiceNos : '-',
+                'debtor_code' => optional($customer)->sku ?: '-',
+                'debtor_name' => optional($customer)->name ?: '-',
+                'total_amount' => number_format($total, 2),
+                'status' => optional($record->einvoice)->status ?: '-',
+                'created_user' => optional(optional($firstInvoice)->createdBy)->name ?: '-',
                 'do_filename' => $record->do_filename,
                 'inv_filename' => $record->inv_filename,
             ];
@@ -5850,15 +5877,10 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->dealer != '-1' && $req->dealer != '-2') {
-                $dealer = Dealer::where('id', $req->dealer)->first();
-
-                $dealer_name = $dealer->name;
-            } elseif ($req->dealer == '-1') {
-                $dealer_name = 'Power Cool';
-            } elseif ($req->dealer == '-2') {
-                $dealer_name = 'Hi Ten Trading';
-            }
+            $dealer = ($req->dealer != '-1' && $req->dealer != '-2')
+                ? Dealer::where('id', $req->dealer)->first()
+                : null;
+            $dealer_name = TransportAcknowledgement::dealerLabel($req->dealer, $dealer?->name, $dealer?->company_group);
 
             $do = DeliveryOrder::where('id', $req->delivery_order)->first();
             $pcs = ProductChild::whereIn('id', $req->serial_no)->get();
@@ -6045,15 +6067,10 @@ class SaleController extends Controller
         try {
             DB::beginTransaction();
 
-            if ($req->dealer != '-1' && $req->dealer != '-2') {
-                $dealer = Dealer::where('id', $req->dealer)->first();
-
-                $dealer_name = $dealer->name;
-            } elseif ($req->dealer == '-1') {
-                $dealer_name = 'Power Cool';
-            } elseif ($req->dealer == '-2') {
-                $dealer_name = 'Hi Ten Trading';
-            }
+            $dealer = ($req->dealer != '-1' && $req->dealer != '-2')
+                ? Dealer::where('id', $req->dealer)->first()
+                : null;
+            $dealer_name = TransportAcknowledgement::dealerLabel($req->dealer, $dealer?->name, $dealer?->company_group);
 
             $items = [];
             $product_data = [];

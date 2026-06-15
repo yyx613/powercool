@@ -34,10 +34,10 @@
                             placeholder="{{ __('Select a dealer') }}">
                             <option value="">{{ __('Select a dealer') }}</option>
                             <option value="-1" @selected(old('dealer') == '-1')>Powercool</option>
-                            <option value="-2" @selected(old('dealer') == '-2')>Hi Ten Trading</option>
+                            <option value="-2" @selected(old('dealer') == '-2')>Hi-Ten</option>
                             @foreach ($dealers as $dealer)
                                 <option value="{{ $dealer->id }}" @selected(old('dealer') == $dealer->id)>
-                                    {{ $dealer->company_name }} - {{ $dealer->name }}</option>
+                                    {{ $dealer->company_name }} - {{ $dealer->name }} ({{ $dealer->company_group == 2 ? 'Hi-Ten' : 'Powercool' }})</option>
                             @endforeach
                         </x-app.input.select2>
                         <x-input-error :messages="$errors->get('dealer')" class="mt-1" />

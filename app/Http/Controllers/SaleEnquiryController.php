@@ -3,13 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SaleEnquiryExport;
+use App\Models\Approval;
 use App\Models\Branch;
 
 use App\Models\SaleEnquiry;
 use App\Models\Scopes\BranchScope;
+use App\Models\User;
+use App\Notifications\SaleEnquiryAcceptedNotification;
+use App\Notifications\SaleEnquiryAssignedNotification;
+use App\Notifications\SaleEnquiryNoDealNotification;
+use App\Notifications\SaleEnquiryRejectedNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -111,6 +119,11 @@ class SaleEnquiryController extends Controller
                 'can_view' => hasPermission('sale_enquiry.view'),
                 'can_edit' => hasPermission('sale_enquiry.edit'),
                 'can_delete' => hasPermission('sale_enquiry.delete'),
+                // The assigned salesperson must accept or reject before viewing.
+                'is_assignee' => (int) $record->assigned_user_id === (int) Auth::id(),
+                'is_pending' => $record->accepted_at === null && $record->rejected_at === null,
+                // Whether a "No Deal" request is awaiting management approval.
+                'no_deal_pending' => $record->hasPendingNoDealApproval(),
             ];
         }
 
@@ -119,13 +132,44 @@ class SaleEnquiryController extends Controller
 
     public function view(SaleEnquiry $enquiry)
     {
+        // The assigned salesperson must accept or reject the enquiry before they
+        // are allowed to view its details. Everyone else may view freely.
+        if ($enquiry->isPendingActionBy(Auth::id())) {
+            return redirect()->route('sale_enquiry.index')
+                ->with('error', __('Please accept or reject this enquiry before viewing its details.'));
+        }
+
+        $enquiry->load(['assignedUser', 'acceptedByUser', 'rejectedByUser', 'createdByUser', 'countryModel', 'stateModel', 'promotion']);
+
+        // Most recent management rejection of a No-Deal request, surfaced to the
+        // salesperson (mirrors the quotation rejected-reason display).
+        $noDealRejectedRemark = Approval::withoutGlobalScope(BranchScope::class)
+            ->where('object_type', SaleEnquiry::class)
+            ->where('object_id', $enquiry->id)
+            ->where('status', Approval::STATUS_REJECTED)
+            ->where('data', 'like', '%is_no_deal%')
+            ->orderBy('id', 'desc')
+            ->first();
+
         return view('sale_enquiry.view', [
-            'enquiry' => $enquiry
+            'enquiry' => $enquiry,
+            'progress' => $enquiry->progress(),
+            'noDealPending' => $enquiry->hasPendingNoDealApproval(),
+            'noDealRejectedRemark' => $noDealRejectedRemark,
         ]);
     }
 
     public function getViewData(Request $req)
     {
+        // Salespeople only see the enquiry details, not the related sales (with amounts).
+        if (isSalesOnly()) {
+            return response()->json([
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+            ]);
+        }
+
         $enquiry = SaleEnquiry::find($req->enquiry_id);
 
         if (!$enquiry) {
@@ -174,9 +218,13 @@ class SaleEnquiryController extends Controller
         ];
 
         foreach ($records_paginator as $sale) {
+            $date = $sale->custom_date ?? $sale->created_at;
+
             $data['data'][] = [
                 'sku' => $sale->sku,
+                'date' => $date ? Carbon::parse($date)->format('d M Y') : null,
                 'customer' => $sale->customer ? $sale->customer->company_name : null,
+                'amount' => number_format($sale->getTotalAmount(), 2),
                 'payment_status' => $sale->payment_status,
             ];
         }
@@ -246,6 +294,8 @@ class SaleEnquiryController extends Controller
 
             DB::commit();
 
+            $this->notifyAssignedUser($enquiry);
+
             return redirect()->route('sale_enquiry.index')
                 ->with('success', __('Sale enquiry created successfully'));
 
@@ -292,7 +342,9 @@ class SaleEnquiryController extends Controller
         try {
             DB::beginTransaction();
 
-            $enquiry->update([
+            $reassigned = (int) $enquiry->assigned_user_id !== (int) $req->assigned_user_id;
+
+            $data = [
                 'enquiry_date' => $req->enquiry_date,
                 'enquiry_source' => $req->enquiry_source,
                 'name' => $req->name,
@@ -309,9 +361,22 @@ class SaleEnquiryController extends Controller
                 'status' => $req->status,
                 'quality' => $req->quality,
                 'promotion_id' => $req->promotion_id,
-            ]);
+            ];
+
+            // Reassigning to a different salesperson clears the previous
+            // acceptance so the new owner must accept the job themselves.
+            if ($reassigned) {
+                $data['accepted_at'] = null;
+                $data['accepted_by'] = null;
+            }
+
+            $enquiry->update($data);
 
             DB::commit();
+
+            if ($reassigned) {
+                $this->notifyAssignedUser($enquiry);
+            }
 
             return redirect()->route('sale_enquiry.index')
                 ->with('success', __('Sale enquiry updated successfully'));
@@ -320,6 +385,276 @@ class SaleEnquiryController extends Controller
             DB::rollBack();
             return back()->with('error', $e->getMessage())->withInput();
         }
+    }
+
+    public function accept(SaleEnquiry $enquiry)
+    {
+        // Only the salesperson the enquiry is assigned to may accept it.
+        if ((int) $enquiry->assigned_user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        if ($enquiry->accepted_at !== null) {
+            return redirect()->route('sale_enquiry.view', ['enquiry' => $enquiry])
+                ->with('info', __('You have already accepted this enquiry'));
+        }
+
+        if ($enquiry->rejected_at !== null) {
+            return redirect()->route('sale_enquiry.view', ['enquiry' => $enquiry])
+                ->with('info', __('You have already rejected this enquiry'));
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $enquiry->accepted_at = now();
+            $enquiry->accepted_by = Auth::id();
+            if ((int) $enquiry->status === SaleEnquiry::STATUS_NEW) {
+                $enquiry->status = SaleEnquiry::STATUS_IN_PROGRESS;
+            }
+            $enquiry->save();
+
+            DB::commit();
+
+            $this->notifyEnquiryAccepted($enquiry);
+
+            return redirect()->route('sale_enquiry.view', ['enquiry' => $enquiry])
+                ->with('success', __('Enquiry accepted successfully'));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function reject(SaleEnquiry $enquiry)
+    {
+        // Only the salesperson the enquiry is assigned to may reject it.
+        if ((int) $enquiry->assigned_user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        if ($enquiry->rejected_at !== null) {
+            return redirect()->route('sale_enquiry.view', ['enquiry' => $enquiry])
+                ->with('info', __('You have already rejected this enquiry'));
+        }
+
+        if ($enquiry->accepted_at !== null) {
+            return redirect()->route('sale_enquiry.view', ['enquiry' => $enquiry])
+                ->with('info', __('You have already accepted this enquiry'));
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $enquiry->rejected_at = now();
+            $enquiry->rejected_by = Auth::id();
+            $enquiry->save();
+
+            DB::commit();
+
+            $this->notifyEnquiryRejected($enquiry);
+
+            return redirect()->route('sale_enquiry.index')
+                ->with('success', __('Enquiry rejected successfully'));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * The assigned salesperson changes the Current Status from the view page.
+     * They may move it to New / In Progress / Closed Deal directly; selecting
+     * "No Deal" instead raises a request that management must approve.
+     */
+    public function updateStatus(Request $req, SaleEnquiry $enquiry)
+    {
+        // Only the salesperson the enquiry is assigned to may change its status.
+        if ((int) $enquiry->assigned_user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        // They must have accepted the job before progressing it.
+        if ($enquiry->accepted_at === null) {
+            return back()->with('error', __('Please accept this enquiry before updating its status.'));
+        }
+
+        $validator = Validator::make($req->all(), [
+            'status' => 'required|in:1,2,3,4',
+            'reason' => 'required_if:status,4|max:1000',
+        ], [], [
+            'reason' => 'No Deal Reason',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $status = (int) $req->status;
+
+        // "No Deal" does not take effect immediately — it needs management approval.
+        if ($status === SaleEnquiry::STATUS_CLOSED_DROPPED) {
+            if ($enquiry->hasPendingNoDealApproval()) {
+                return back()->with('info', __('A No Deal request is already pending approval.'));
+            }
+
+            try {
+                DB::beginTransaction();
+
+                $approval = Approval::create([
+                    'object_type' => SaleEnquiry::class,
+                    'object_id' => $enquiry->id,
+                    'status' => Approval::STATUS_PENDING_APPROVAL,
+                    'data' => json_encode([
+                        'is_no_deal' => true,
+                        'reason' => $req->reason,
+                        'description' => __(':name marked enquiry :sku as No Deal.', [
+                            'name' => Auth::user()->name,
+                            'sku' => $enquiry->sku,
+                        ]),
+                    ]),
+                ]);
+
+                (new Branch)->assign(Approval::class, $approval->id);
+
+                DB::commit();
+
+                $this->notifyNoDealRequested($enquiry, $req->reason);
+
+                return back()->with('success', __('No Deal request submitted for approval.'));
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $enquiry->status = $status;
+            // Moving back to an active state clears any prior No-Deal reason.
+            $enquiry->no_deal_reason = null;
+            $enquiry->save();
+
+            DB::commit();
+
+            return back()->with('success', __('Enquiry status updated successfully'));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify the enquiry creator (management) that the salesperson wants to mark
+     * the enquiry as No Deal and is awaiting approval.
+     */
+    private function notifyNoDealRequested(SaleEnquiry $enquiry, ?string $reason): void
+    {
+        if (!$enquiry->created_by || (int) $enquiry->created_by === (int) Auth::id()) {
+            return;
+        }
+
+        $creator = User::withoutGlobalScope(BranchScope::class)->find($enquiry->created_by);
+
+        if (!$creator) {
+            return;
+        }
+
+        $salesperson = User::withoutGlobalScope(BranchScope::class)->find($enquiry->assigned_user_id);
+
+        Notification::send($creator, new SaleEnquiryNoDealNotification([
+            'enquiry_id' => $enquiry->id,
+            'sku' => $enquiry->sku,
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'desc' => __(':name requested to mark enquiry (:sku) as No Deal. Reason: :reason', [
+                'name' => $salesperson ? $salesperson->name : __('The salesperson'),
+                'sku' => $enquiry->sku,
+                'reason' => $reason,
+            ]),
+        ]));
+    }
+
+    /**
+     * Notify the assigned salesperson that an enquiry has been assigned to them.
+     */
+    private function notifyAssignedUser(SaleEnquiry $enquiry): void
+    {
+        $user = User::withoutGlobalScope(BranchScope::class)->find($enquiry->assigned_user_id);
+
+        if (!$user) {
+            return;
+        }
+
+        Notification::send($user, new SaleEnquiryAssignedNotification([
+            'enquiry_id' => $enquiry->id,
+            'sku' => $enquiry->sku,
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'desc' => __('You have been assigned a new sale enquiry (:sku) from :name.', [
+                'sku' => $enquiry->sku,
+                'name' => $enquiry->name,
+            ]),
+        ]));
+    }
+
+    /**
+     * Notify the enquiry creator (management) that the salesperson accepted the job.
+     */
+    private function notifyEnquiryAccepted(SaleEnquiry $enquiry): void
+    {
+        if (!$enquiry->created_by || (int) $enquiry->created_by === (int) Auth::id()) {
+            return;
+        }
+
+        $creator = User::withoutGlobalScope(BranchScope::class)->find($enquiry->created_by);
+
+        if (!$creator) {
+            return;
+        }
+
+        $salesperson = User::withoutGlobalScope(BranchScope::class)->find($enquiry->assigned_user_id);
+
+        Notification::send($creator, new SaleEnquiryAcceptedNotification([
+            'enquiry_id' => $enquiry->id,
+            'sku' => $enquiry->sku,
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'desc' => __(':name has accepted the sale enquiry (:sku).', [
+                'name' => $salesperson ? $salesperson->name : __('The salesperson'),
+                'sku' => $enquiry->sku,
+            ]),
+        ]));
+    }
+
+    /**
+     * Notify the enquiry creator (management) that the salesperson rejected the job.
+     */
+    private function notifyEnquiryRejected(SaleEnquiry $enquiry): void
+    {
+        if (!$enquiry->created_by || (int) $enquiry->created_by === (int) Auth::id()) {
+            return;
+        }
+
+        $creator = User::withoutGlobalScope(BranchScope::class)->find($enquiry->created_by);
+
+        if (!$creator) {
+            return;
+        }
+
+        $salesperson = User::withoutGlobalScope(BranchScope::class)->find($enquiry->assigned_user_id);
+
+        Notification::send($creator, new SaleEnquiryRejectedNotification([
+            'enquiry_id' => $enquiry->id,
+            'sku' => $enquiry->sku,
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'desc' => __(':name has rejected the sale enquiry (:sku).', [
+                'name' => $salesperson ? $salesperson->name : __('The salesperson'),
+                'sku' => $enquiry->sku,
+            ]),
+        ]));
     }
 
     public function delete(SaleEnquiry $enquiry)

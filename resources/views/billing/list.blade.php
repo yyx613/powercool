@@ -44,6 +44,13 @@
                     </th>
                     <th>{{ __('SKU') }}</th>
                     <th>{{ __('Billing Date') }}</th>
+                    <th>{{ __('Billing D/O No') }}</th>
+                    <th>{{ __('Billing Invoice No') }}</th>
+                    <th>{{ __('Debtor Code') }}</th>
+                    <th>{{ __('Debtor Name') }}</th>
+                    <th>{{ __('Total Amount (RM)') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Created User') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -75,6 +82,13 @@
                 { data: 'id' },
                 { data: 'sku' },
                 { data: 'billing_date' },
+                { data: 'do_no' },
+                { data: 'invoice_no' },
+                { data: 'debtor_code' },
+                { data: 'debtor_name' },
+                { data: 'total_amount' },
+                { data: 'status' },
+                { data: 'created_user' },
                 { data: 'action' },
             ],
             columnDefs: [
@@ -89,22 +103,34 @@
                     }
                 },
                 {
-                    "width": "10%",
-                    "targets": 1,
+                    "targets": [3, 4, 5, 6, 9],
+                    orderable: false,
                     render: function(data, type, row) {
-                        return data
+                        return data != null ? data : '-'
                     }
                 },
                 {
-                    "width": "10%",
-                    "targets": 2,
+                    "targets": 7,
+                    orderable: false,
+                    className: 'text-right',
                     render: function(data, type, row) {
-                        return data
+                        return data != null ? data : '-'
+                    }
+                },
+                {
+                    "targets": 8,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        if (!data || data === '-') {
+                            return `<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">-</span>`
+                        }
+                        var badgeClass = data === 'Valid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        return `<span class="text-xs px-2 py-1 rounded-full ${badgeClass}">${data}</span>`
                     }
                 },
                 {
                     "width": "5%",
-                    "targets": 3,
+                    "targets": 10,
                     orderable: false,
                     render: function (data, type, row) {
                        return  `<div class="flex items-center justify-end gap-x-2 px-2">

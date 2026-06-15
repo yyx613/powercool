@@ -421,81 +421,8 @@
 
     <footer>
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 25px 0;">
-            <tr>
-                <td style="font-size: 12px; padding: 25px 0 0 0;" colspan="2">E.& O.E.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; padding: 0px 0 0 0;" colspan="2">Note:</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">1.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Cheque should make payable to <span
-                        style="font-weight: 700;">HI-TEN TRADING SDN BHD</span></td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">2.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Please remit your payment to : <span
-                        style="font-weight: 700;">PUBLIC BANK Account No.: 3983 23 3530 CIMB Account No.: 8603 16
-                        3872</span></td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">3.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">The Company reserves the right to charge
-                    interest 1.5% per month on overdue accounts.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">4.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Goods sold and deposit are not returnable &
-                    refundable. A cancellation fee of 20% on purchase
-                    price will be imposed. If cancel order with credit card payment, will have 10% credit card
-                    charges.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">5.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Any queries or complaints regarding this
-                    invoice must be made within 7 days from date hereof,
-                    otherwise any discrepancy will not be entertained.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">6.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">For more information about our policies,
-                    please visit our website at:
-                    <a href="https://imaxrefrigerator.com.my/warranty-policy"
-                        style="font-weight: 700;">https://imaxrefrigerator.com.my/warranty-policy</a><br>
-                    · 3 /5 Years Compressor Warranty with T&C apply.</span><br>
-                    . 6 months General Service conduct by IMAX</span><br>
-                    · Limited to 1 time change only</span><br>
-                </td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">7.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Customer collect\ unloading\ handling by
-                    own, Warranty will be bear by customer.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">8.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Wear and tear not included in Warranty
-                    Claim.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">9.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">
-                    The warranty will be considered void if the refrigerator has been modified or its original
-                    specifications
-                    altered without prior authorization from the manufacturer.
-                </td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">10.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Request E-invoice after 72hrs which
-                    original invoice have validated by IRB will be charge 5% of
-                    the total invoice amount.</td>
-            </tr>
-            <tr>
-                <td style="font-size: 12px; vertical-align: start;">11.</td>
-                <td style="font-size: 12px; width: 100%; text-align: left;">Company will not obligation on those
-                    customers are not require to issue E-invoice.</td>
-            </tr>
+            @include('partials.tnc', ['company' => 'hiten', 'colspan' => 2])
+            @include('partials.duitnow_qr', ['company' => 'hiten', 'colspan' => 2])
             <tr>
                 <td style="font-size: 12px; padding: 20px 0 0 0;" colspan="2">This is a computer generated
                     documents no signature required except for the acknowledgement signature by customer.</td>
