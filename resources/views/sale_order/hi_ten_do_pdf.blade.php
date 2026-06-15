@@ -363,28 +363,30 @@
         <!-- Footer -->
         <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 25px 0 100px 0; vertical-align: text-top;" colspan="2">For : HI-TEN
+                <td style="font-size: 12px; padding: 0 0 60px 0; vertical-align: text-top;" colspan="3">For : HI-TEN
                     TRADING SDN BHD</td>
-                <td style="font-size: 12px; text-align: center; font-weight: bold; font-style: italic; padding: 25px 0 100px 0; vertical-align: text-top;"
-                    colspan="3">GOODS RECEIVED IN GOOD ORDER & CONDITION</td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: center; padding: 0 0 60px 0; vertical-align: text-top;"
+                    colspan="3">GOODS RECEIVED IN GOOD<br>ORDER & CONDITION.</td>
             </tr>
             <tr>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
                     Authorised Signature</td>
-                <td style="width: 10px;"></td>
+                <td style="width: 1.3%;"></td>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
+                    Goods Prepared Signature</td>
+                <td style="width: 1.3%;"></td>
+                <td
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
                     Recipient's Chop & Signature
-                    <div style="text-align: left; font-weight: 400; padding-top: 10px;">
-                        Name :<br>
-                        IC :
-                    </div>
+                    <div style="text-align: left; font-weight: 400; padding-top: 5px;">NAME:<br>IC:</div>
                 </td>
-                <td style="width: 10px;"></td>
+                <td style="width: 1.3%;"></td>
                 <td
-                    style="width: 20%; font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; vertical-align: text-top;">
-                    Driver Chop & Signature</td>
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
+                    Driver Signature</td>
             </tr>
         </table>
     </main>
