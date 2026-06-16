@@ -103,9 +103,3 @@
         shortages.
     </td>
 </tr>
-<tr>
-    <td colspan="{{ $tncColspan }}" style="font-size: 11px; line-height: 1.4; font-weight: 700; padding: 5px 0 0 0;">
-        This is a computer-generated document and no signature is required. Customer acknowledgment may be required where
-        applicable.
-    </td>
-</tr>

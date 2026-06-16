@@ -943,8 +943,14 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
             Route::get('/edit/{country}', 'edit')->name('edit');
             Route::post('/update/{country}', 'update')->name('update');
             Route::get('/delete/{country}', 'delete')->name('delete');
-            Route::get('/{country}/states', 'getStates')->name('get_states');
         });
+    });
+    // Country -> State cascading lookup. Used by the Customer & Sale Enquiry
+    // forms, which any authenticated user can reach without setting.country.view
+    // (the Country dropdown is injected globally by a view composer). Kept out of
+    // the settings gate so the "State" dropdown loads for non-admin users.
+    Route::controller(CountryController::class)->prefix('country')->name('country.')->group(function () {
+        Route::get('/{country}/states', 'getStates')->name('get_states');
     });
     // Setting - State
     Route::middleware(['can:setting.state.view'])->group(function () {

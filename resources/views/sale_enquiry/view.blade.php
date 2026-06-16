@@ -167,6 +167,13 @@
                 </div>
             </div>
 
+            @if ($enquiry->rejected_at && $enquiry->reject_reason)
+                <div class="md:col-span-3">
+                    <div class="text-gray-500">{{ __('Reject Reason') }}</div>
+                    <div class="text-gray-900 whitespace-pre-line">{{ $enquiry->reject_reason }}</div>
+                </div>
+            @endif
+
             <div class="md:col-span-3">
                 <div class="text-gray-500">{{ __('Customer Message/ Remark') }}</div>
                 <div class="text-gray-900 whitespace-pre-line">{{ $enquiry->description ?: '-' }}</div>

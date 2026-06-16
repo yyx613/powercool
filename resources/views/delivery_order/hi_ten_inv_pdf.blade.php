@@ -424,22 +424,35 @@
             @include('partials.tnc', ['company' => 'hiten', 'colspan' => 2])
             @include('partials.duitnow_qr', ['company' => 'hiten', 'colspan' => 2])
         </table>
-        {{-- <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
+        <!-- Signature -->
+        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
             <tr>
-                <td style="font-size: 12px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">HI-TEN TRADING
-                    SDN
-                    BHD</td>
-                <td></td>
-                <td></td>
+                <td style="font-size: 12px; padding: 0 0 60px 0; vertical-align: text-top;" colspan="3">For : HI-TEN
+                    TRADING SDN BHD</td>
+                <td style="width: 1.3%;"></td>
+                <td style="font-size: 12px; text-align: center; padding: 0 0 60px 0; vertical-align: text-top;"
+                    colspan="3">GOODS RECEIVED IN GOOD<br>ORDER & CONDITION.</td>
             </tr>
             <tr>
                 <td
-                    style="font-size: 12px; text-align: center; width: 33%; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700;">
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
                     Authorised Signature</td>
-                <td></td>
-                <td></td>
+                <td style="width: 1.3%;"></td>
+                <td
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
+                    Goods Prepared Signature</td>
+                <td style="width: 1.3%;"></td>
+                <td
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
+                    Recipient's Chop & Signature
+                    <div style="text-align: left; font-weight: 400; padding-top: 5px;">NAME:<br>IC:</div>
+                </td>
+                <td style="width: 1.3%;"></td>
+                <td
+                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
+                    Driver Signature</td>
             </tr>
-        </table> --}}
+        </table>
     </footer>
 
 </body>

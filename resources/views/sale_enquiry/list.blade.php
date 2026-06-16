@@ -76,6 +76,27 @@
     </div>
 
     <x-app.modal.delete-modal/>
+
+    {{-- Reject enquiry modal: the salesperson must enter a reason before rejecting. --}}
+    <div id="reject-modal" class="hidden fixed inset-0 z-50 items-center justify-center">
+        <div id="reject-modal-overlay" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="relative bg-white rounded-md shadow-lg w-full max-w-md mx-4 p-5">
+            <h2 class="text-base font-semibold text-gray-800 mb-3">{{ __('Reject Enquiry') }}</h2>
+            <label for="reject-reason" class="block text-sm text-gray-700 mb-1">
+                {{ __('Reason') }} <span class="text-red-500">*</span>
+            </label>
+            <textarea id="reject-reason" rows="4"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="{{ __('Enter the reason for rejecting this enquiry') }}"></textarea>
+            <p id="reject-reason-error" class="hidden text-sm text-red-500 mt-1"></p>
+            <div class="mt-4 flex justify-end gap-x-2">
+                <button id="reject-cancel-btn" type="button"
+                    class="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700">{{ __('Cancel') }}</button>
+                <button id="reject-confirm-btn" type="button"
+                    class="rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white">{{ __('Reject') }}</button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -335,13 +356,17 @@
         })
 
         // Submit a POST request (with CSRF) by building and submitting a form.
-        function postAction(url) {
+        // Pass `fields` to include extra form inputs (e.g. a reject reason).
+        function postAction(url, fields = {}) {
             let form = $('<form>', { method: 'POST', action: url });
             form.append($('<input>', {
                 type: 'hidden',
                 name: '_token',
                 value: $('meta[name="csrf-token"]').attr('content')
             }));
+            $.each(fields, function (name, value) {
+                form.append($('<input>', { type: 'hidden', name: name, value: value }));
+            });
             form.appendTo('body').submit();
         }
 
@@ -353,12 +378,29 @@
             }
         })
 
-        // Reject an assigned enquiry; the creator is notified.
+        // Reject an assigned enquiry; a reason is required and the creator is notified.
         $('#data-table').on('click', '.reject-btns', function() {
             let id = $(this).data('id')
-            if (confirm("{!! __('Reject this enquiry?') !!}")) {
-                postAction(`{{ config('app.url') }}/sale-enquiry/reject/${id}`)
+            $('#reject-modal').data('id', id)
+            $('#reject-reason').val('')
+            $('#reject-reason-error').addClass('hidden').text('')
+            $('#reject-modal').removeClass('hidden').addClass('flex')
+        })
+
+        // Close the reject modal without submitting.
+        $('#reject-cancel-btn, #reject-modal-overlay').on('click', function() {
+            $('#reject-modal').addClass('hidden').removeClass('flex')
+        })
+
+        // Confirm rejection: require a reason, then POST it.
+        $('#reject-confirm-btn').on('click', function() {
+            let id = $('#reject-modal').data('id')
+            let reason = $.trim($('#reject-reason').val())
+            if (reason === '') {
+                $('#reject-reason-error').removeClass('hidden').text("{!! __('Please enter a reason for rejecting.') !!}")
+                return
             }
+            postAction(`{{ config('app.url') }}/sale-enquiry/reject/${id}`, { reason: reason })
         })
 
         $('#export-btn').on('click', function() {

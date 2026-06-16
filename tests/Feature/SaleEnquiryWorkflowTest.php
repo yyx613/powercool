@@ -222,16 +222,45 @@ class SaleEnquiryWorkflowTest extends TestCase
 
         $this->actingAs($salesperson);
 
-        $response = $this->post(route('sale_enquiry.reject', ['enquiry' => $enquiry]));
+        $response = $this->post(route('sale_enquiry.reject', ['enquiry' => $enquiry]), [
+            'reason' => 'Out of my coverage area',
+        ]);
 
         $response->assertRedirect(route('sale_enquiry.index'));
 
         $enquiry->refresh();
         $this->assertNotNull($enquiry->rejected_at);
         $this->assertEquals($salesperson->id, $enquiry->rejected_by);
+        $this->assertEquals('Out of my coverage area', $enquiry->reject_reason);
         $this->assertNull($enquiry->accepted_at);
 
         Notification::assertSentTo($manager, SaleEnquiryRejectedNotification::class);
+    }
+
+    public function test_reject_requires_a_reason(): void
+    {
+        Notification::fake();
+
+        $salesperson = $this->userWith(['sale_enquiry.view']);
+
+        $enquiry = SaleEnquiry::factory()->create([
+            'assigned_user_id' => $salesperson->id,
+            'created_by' => User::factory()->create()->id,
+            'status' => SaleEnquiry::STATUS_NEW,
+            'accepted_at' => null,
+            'rejected_at' => null,
+        ]);
+
+        $this->actingAs($salesperson);
+
+        $this->post(route('sale_enquiry.reject', ['enquiry' => $enquiry]), [
+            'reason' => '',
+        ])->assertSessionHasErrors('reason');
+
+        $enquiry->refresh();
+        $this->assertNull($enquiry->rejected_at);
+        $this->assertNull($enquiry->reject_reason);
+        Notification::assertNothingSent();
     }
 
     public function test_non_assigned_user_cannot_reject(): void
