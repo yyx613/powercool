@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 385px 25px 50px 25px;
+        margin: 390px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -360px;
+        top: -365px;
         left: 0px;
         right: 0px;
     }
@@ -128,7 +128,7 @@
             </tr>
         </table>
         <table
-            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0;">
+            style="width: 100%; font-family: sans-serif; border-collapse: collapse; padding: 0 0 0 0; border-bottom: solid 1px black;">
             <tr>
                 <td colspan="2"
                     style="font-size: 16px; font-weight: 700; width: 65%; padding: 15px 35px 10px 0; text-align: center;">
@@ -187,19 +187,19 @@
             <thead>
                 <tr>
                     <td
-                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 15px 4px 5px 4px; text-align: left;">
                         Item</td>
                     <td
-                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 15px 4px 5px 4px; text-align: left;">
                         Stock Code</td>
                     <td
-                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 100%;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 15px 4px 5px 4px; text-align: left; width: 100%;">
                         Description</td>
                     <td
-                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: right; white-space: nowrap;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 15px 4px 5px 4px; text-align: right; white-space: nowrap;">
                         Qty</td>
                     <td
-                        style="font-size: 12px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: right; white-space: nowrap;">
+                        style="font-size: 12px; border-bottom: solid 1px black; padding: 15px 4px 5px 4px; text-align: right; white-space: nowrap;">
                         UOM</td>
                 </tr>
             </thead>

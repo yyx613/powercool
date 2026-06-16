@@ -116,6 +116,9 @@ class SaleEnquiryController extends Controller
                 'promotion' => $record->promotion ? $record->promotion->sku . ' - ' . ($record->promotion->type == 'perc' ? number_format($record->promotion->amount, 2) . '%' : 'RM' . number_format($record->promotion->amount, 2)) : null,
                 'created_by_user' => $record->createdByUser ? $record->createdByUser->name : null,
                 'status' => $record->status,
+                // Surface the rejection on the list so the reason shows in a tooltip on the Status cell.
+                'is_rejected' => $record->rejected_at !== null,
+                'reject_reason' => $record->reject_reason,
                 'can_view' => hasPermission('sale_enquiry.view'),
                 'can_edit' => hasPermission('sale_enquiry.edit'),
                 'can_delete' => hasPermission('sale_enquiry.delete'),
@@ -369,11 +372,20 @@ class SaleEnquiryController extends Controller
                 'promotion_id' => $req->promotion_id,
             ];
 
-            // Reassigning to a different salesperson clears the previous
-            // acceptance so the new owner must accept the job themselves.
+            // Reassigning to a different salesperson resets the acceptance state
+            // so the new owner starts pending and must accept (or reject) the job
+            // themselves. The prior rejection must be cleared too, otherwise the
+            // stale rejected_at keeps the enquiry out of the pending state and the
+            // new owner never sees the Accept/Reject buttons.
             if ($reassigned) {
                 $data['accepted_at'] = null;
                 $data['accepted_by'] = null;
+                $data['rejected_at'] = null;
+                $data['rejected_by'] = null;
+                $data['reject_reason'] = null;
+                // A previously rejected enquiry was closed as No Deal; handing it to
+                // a new owner reopens it as New so they start from a clean state.
+                $data['status'] = SaleEnquiry::STATUS_NEW;
             }
 
             $enquiry->update($data);
@@ -467,6 +479,9 @@ class SaleEnquiryController extends Controller
             $enquiry->rejected_at = now();
             $enquiry->rejected_by = Auth::id();
             $enquiry->reject_reason = $req->reason;
+            // Rejecting the enquiry up front means there is no deal to pursue, so
+            // close it out as No Deal instead of leaving it sitting as New.
+            $enquiry->status = SaleEnquiry::STATUS_CLOSED_DROPPED;
             $enquiry->save();
 
             DB::commit();
