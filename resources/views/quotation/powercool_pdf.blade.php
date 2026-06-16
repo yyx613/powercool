@@ -510,6 +510,8 @@
                 <td></td>
             </tr>
         </table>
+
+        @include('partials.computer_generated')
     </main>
 
 </body>

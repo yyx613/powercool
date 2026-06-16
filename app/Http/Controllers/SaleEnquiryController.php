@@ -427,7 +427,7 @@ class SaleEnquiryController extends Controller
         }
     }
 
-    public function reject(SaleEnquiry $enquiry)
+    public function reject(Request $req, SaleEnquiry $enquiry)
     {
         // Only the salesperson the enquiry is assigned to may reject it.
         if ((int) $enquiry->assigned_user_id !== (int) Auth::id()) {
@@ -444,11 +444,23 @@ class SaleEnquiryController extends Controller
                 ->with('info', __('You have already accepted this enquiry'));
         }
 
+        // The salesperson must give a reason when rejecting.
+        $validator = Validator::make($req->all(), [
+            'reason' => 'required|max:1000',
+        ], [], [
+            'reason' => 'Reject Reason',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
         try {
             DB::beginTransaction();
 
             $enquiry->rejected_at = now();
             $enquiry->rejected_by = Auth::id();
+            $enquiry->reject_reason = $req->reason;
             $enquiry->save();
 
             DB::commit();
@@ -650,9 +662,10 @@ class SaleEnquiryController extends Controller
             'enquiry_id' => $enquiry->id,
             'sku' => $enquiry->sku,
             'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
-            'desc' => __(':name has rejected the sale enquiry (:sku).', [
+            'desc' => __(':name has rejected the sale enquiry (:sku). Reason: :reason', [
                 'name' => $salesperson ? $salesperson->name : __('The salesperson'),
                 'sku' => $enquiry->sku,
+                'reason' => $enquiry->reject_reason,
             ]),
         ]));
     }

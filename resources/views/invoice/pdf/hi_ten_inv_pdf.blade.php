@@ -175,5 +175,7 @@
         </tr>
     </table>
 
+    @include('partials.computer_generated')
+
 </body>
 </html>
