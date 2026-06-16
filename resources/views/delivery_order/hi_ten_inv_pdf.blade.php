@@ -429,30 +429,16 @@
             <tr>
                 <td style="font-size: 12px; padding: 0 0 60px 0; vertical-align: text-top;" colspan="3">For : HI-TEN
                     TRADING SDN BHD</td>
-                <td style="width: 1.3%;"></td>
-                <td style="font-size: 12px; text-align: center; padding: 0 0 60px 0; vertical-align: text-top;"
-                    colspan="3">GOODS RECEIVED IN GOOD<br>ORDER & CONDITION.</td>
+                <td colspan="4"></td>
             </tr>
             <tr>
                 <td
                     style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
                     Authorised Signature</td>
-                <td style="width: 1.3%;"></td>
-                <td
-                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
-                    Goods Prepared Signature</td>
-                <td style="width: 1.3%;"></td>
-                <td
-                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
-                    Recipient's Chop & Signature
-                    <div style="text-align: left; font-weight: 400; padding-top: 5px;">NAME:<br>IC:</div>
-                </td>
-                <td style="width: 1.3%;"></td>
-                <td
-                    style="font-size: 12px; text-align: center; border-top: solid 1px black; padding: 10px 0 0 0; font-weight: 700; width: 24%; vertical-align: top;">
-                    Driver Signature</td>
+                <td colspan="6"></td>
             </tr>
         </table>
+        @include('partials.computer_generated')
     </footer>
 
 </body>

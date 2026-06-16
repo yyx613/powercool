@@ -105,6 +105,16 @@
         DEFAULT_PAGE = @json($default_page ?? null);
         DEFAULT_SEARCH = @json($default_search ?? null);
 
+        // Escape text for safe use inside an HTML attribute (e.g. a tooltip title).
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // Datatable
         var dt = new DataTable('#data-table', {
             dom: 'rtip',
@@ -139,6 +149,11 @@
                     "width": "10%",
                     "targets": 0,
                     render: function(data, type, row) {
+                        // Rejected enquiries: show a red badge under the ID whose tooltip reveals the reason.
+                        if (row.is_rejected) {
+                            let reason = escapeHtml(row.reject_reason || '{!! __('No reason provided') !!}')
+                            return data + `<br><span class="text-xs text-red-700 font-semibold cursor-help" title="${reason}">{!! __('Rejected') !!} &#9432;</span>`
+                        }
                         return data
                     }
                 },

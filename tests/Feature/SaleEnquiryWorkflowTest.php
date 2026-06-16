@@ -167,6 +167,49 @@ class SaleEnquiryWorkflowTest extends TestCase
         Notification::assertNotSentTo($original, SaleEnquiryAssignedNotification::class);
     }
 
+    public function test_reassigning_clears_a_prior_rejection_so_new_owner_can_act(): void
+    {
+        // A rejected enquiry that is handed to a different salesperson must come
+        // back to a clean "pending" state, otherwise the stale rejected_at keeps
+        // is_pending false and the new owner never sees the Accept/Reject buttons.
+        Notification::fake();
+
+        $manager = $this->userWith(['sale_enquiry.edit']);
+        $original = User::factory()->create();
+        $replacement = User::factory()->create();
+
+        $enquiry = SaleEnquiry::factory()->create([
+            'assigned_user_id' => $original->id,
+            'created_by' => $manager->id,
+            'accepted_at' => null,
+            'accepted_by' => null,
+            'rejected_at' => now(),
+            'rejected_by' => $original->id,
+            'reject_reason' => 'Out of coverage area',
+            // A rejected enquiry is closed as No Deal; reassigning must reopen it.
+            'status' => SaleEnquiry::STATUS_CLOSED_DROPPED,
+        ]);
+
+        $this->actingAs($manager);
+
+        $this->post(
+            route('sale_enquiry.update', ['enquiry' => $enquiry]),
+            $this->validPayload($replacement->id, ['status' => SaleEnquiry::STATUS_CLOSED_DROPPED])
+        )->assertRedirect(route('sale_enquiry.index'));
+
+        $enquiry->refresh();
+        $this->assertEquals($replacement->id, $enquiry->assigned_user_id);
+        $this->assertNull($enquiry->rejected_at);
+        $this->assertNull($enquiry->rejected_by);
+        $this->assertNull($enquiry->reject_reason);
+        // Reopened for the new owner: back to New regardless of the submitted status.
+        $this->assertEquals(SaleEnquiry::STATUS_NEW, $enquiry->status);
+        // The new owner is now pending action -> buttons will render for them.
+        $this->assertTrue($enquiry->isPendingActionBy($replacement->id));
+
+        Notification::assertSentTo($replacement, SaleEnquiryAssignedNotification::class);
+    }
+
     public function test_updating_without_reassignment_does_not_notify(): void
     {
         Notification::fake();
@@ -267,6 +310,9 @@ class SaleEnquiryWorkflowTest extends TestCase
         $this->assertEquals($salesperson->id, $enquiry->rejected_by);
         $this->assertEquals('Out of my coverage area', $enquiry->reject_reason);
         $this->assertNull($enquiry->accepted_at);
+        // Rejecting an enquiry up front means there is no deal to pursue, so the
+        // status closes out as No Deal rather than lingering as New.
+        $this->assertEquals(SaleEnquiry::STATUS_CLOSED_DROPPED, $enquiry->status);
 
         Notification::assertSentTo($manager, SaleEnquiryRejectedNotification::class);
     }
