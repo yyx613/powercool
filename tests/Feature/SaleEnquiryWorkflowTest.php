@@ -99,6 +99,40 @@ class SaleEnquiryWorkflowTest extends TestCase
         Notification::assertSentTo($salesperson, SaleEnquiryAssignedNotification::class);
     }
 
+    public function test_creating_skips_skus_held_by_soft_deleted_enquiries(): void
+    {
+        // A soft-deleted enquiry still occupies its SKU in the unique index.
+        // Generation must skip that number instead of colliding with it.
+        Notification::fake();
+
+        $manager = $this->userWith(['sale_enquiry.create'], withBranch: true);
+        $salesperson = User::factory()->create();
+
+        $this->actingAs($manager);
+        Session::put('as_branch', Branch::LOCATION_KL);
+
+        // First creation -> WENQ-26/000001 (W prefix for KL Powercool).
+        $this->post(route('sale_enquiry.store'), $this->validPayload($salesperson->id))
+            ->assertRedirect(route('sale_enquiry.index'));
+
+        $first = SaleEnquiry::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->latest('id')->first();
+        $firstSku = $first->sku;
+
+        // Soft-delete it (the user "deleted all records" scenario).
+        $first->delete();
+
+        // Second creation must NOT reuse the trashed SKU -> no duplicate-key error.
+        $this->post(route('sale_enquiry.store'), $this->validPayload($salesperson->id))
+            ->assertRedirect(route('sale_enquiry.index'))
+            ->assertSessionHasNoErrors();
+
+        $second = SaleEnquiry::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->latest('id')->first();
+
+        $this->assertNotEquals($firstSku, $second->sku);
+        // The trashed row is still physically present under its original SKU.
+        $this->assertDatabaseHas('sale_enquiries', ['sku' => $firstSku]);
+    }
+
     public function test_reassigning_notifies_new_salesperson_and_clears_acceptance(): void
     {
         Notification::fake();
