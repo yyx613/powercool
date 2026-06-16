@@ -267,7 +267,13 @@ class SaleEnquiryController extends Controller
         try {
             DB::beginTransaction();
 
-            $existing_skus = SaleEnquiry::withoutGlobalScope(BranchScope::class)->pluck('sku')->toArray();
+            // Include trashed rows: the `sku` unique index still covers
+            // soft-deleted enquiries, so their numbers must be skipped or the
+            // insert collides on a SKU that generateSku thinks is free.
+            // Include trashed rows: the `sku` unique index still covers
+            // soft-deleted enquiries, so their numbers must be skipped or the
+            // insert collides on a SKU that generateSku thinks is free.
+            $existing_skus = SaleEnquiry::withoutGlobalScope(BranchScope::class)->withTrashed()->pluck('sku')->toArray();
 
             $enquiry = SaleEnquiry::create([
                 'sku' => generateSku('ENQ', $existing_skus, false),
