@@ -9,12 +9,12 @@
 
 <style>
     @page {
-        margin: 485px 25px 50px 25px;
+        margin: 500px 25px 50px 25px;
     }
 
     header {
         position: fixed;
-        top: -480px;
+        top: -495px;
         left: 0px;
         right: 0px;
     }
