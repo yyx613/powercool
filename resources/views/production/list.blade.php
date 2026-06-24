@@ -360,7 +360,6 @@
                 },
                 {
                     "targets": 13,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:

@@ -6,43 +6,20 @@
     <title>Invoice | {{ $sku }}</title>
     <style>
         @page {
-            margin: 55px 25px 50px 25px;
-        }
-        .table-header-fixed {
-            position: fixed;
-            top: -25px;
-            left: 0;
-            right: 0;
+            margin: 25px 25px 50px 25px;
         }
     </style>
 </head>
 <body>
-    <div class="table-header-fixed">
-        <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-            <tr>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 5%;">Item</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Tax Code</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 30%;">Description</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">Qty</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">UOM</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">U/Price<br>(RM)</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Discount<br>(RM)</td>
-                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Total<br>(RM)</td>
-            </tr>
-        </table>
-    </div>
     @php
         $svgQrCode = QrCode::size(100)->generate($validationLink);
         $base64QrCode = base64_encode($svgQrCode);
     @endphp
 
     <!-- Header -->
-    <div style="display: flex; justify-content: flex-end; padding: 10px;">
-        <img src="data:image/svg+xml;base64,{{ $base64QrCode }}" alt="QR Code">
-    </div>
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
         <tr>
-            
+
             <td style="width: 70%; border-bottom: solid 1px black; padding: 0 0 10px 0;">
                 <span style="font-size: 18px; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD <span style="font-size: 14px; font-weight: 100;">(383045-D)</span></span><br>
                 <span style="font-size: 14px;">NO:12,RCI PARK,JALAN KESIDANG 2,</span><br>
@@ -140,10 +117,18 @@
 
     <!-- Item -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-        {{-- @php
-            $total = 0;
-        @endphp --}}
-        
+        <thead>
+            <tr>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 5px 4px; text-align: left; width: 5%;">Item</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 10%;">Tax Code</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: left; width: 45%;">Description</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">Qty</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 5%;">UOM</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">U/Price<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Discount<br>(RM)</td>
+                <td style="font-size: 14px; border-top: solid 1px black; border-bottom: solid 1px black; padding: 0 4px; text-align: right; width: 10%;">Total<br>(RM)</td>
+            </tr>
+        </thead>
         @foreach ($productDetails as $prod)
             <tr>
                 <td style="font-size: 14px; padding: 5px 4px; text-align: left;">{{ $prod['index'] }}</td>
@@ -158,8 +143,8 @@
             </tr>
         @endforeach
         <tr>
-            <td colspan="8" style="text-align: right; font-weight: bold;">Total:</td>
-            <td style="text-align: right; font-weight: bold;">{{ number_format($total, 2) }}</td>
+            <td colspan="7" style="text-align: right; font-weight: bold; padding: 0 4px;">Total:</td>
+            <td style="text-align: right; font-weight: bold; padding: 0 4px;">{{ number_format($total, 2) }}</td>
         </tr>
     </table>
     <!-- Item Summary -->
@@ -177,8 +162,11 @@
     </table>
     <!-- Footer -->
     <table style="width: 100%; font-family: sans-serif; border-collapse: collapse;">
-        @include('partials.tnc', ['company' => 'powercool', 'colspan' => 3])
-        @include('partials.duitnow_qr', ['company' => 'powercool', 'colspan' => 3])
+        @if ($type == 'CREDIT NOTE')
+            @include('partials.return_reasons', ['colspan' => 3])
+        @endif
+        @include('partials.tnc', ['company' => 'powercool', 'colspan' => 3, 'topBorder' => $type != 'CREDIT NOTE'])
+        @include('partials.duitnow_qr', ['company' => 'powercool', 'colspan' => 3, 'validationQr' => $base64QrCode])
         <tr>
             <td style="font-size: 11px; padding: 0 0 50px 0; text-align: center; font-weight: 700;">POWER COOL EQUIPMENTS (M) SDN BHD</td>
             <td></td>

@@ -15,6 +15,7 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Ticket;
+use App\Support\TableSearch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,11 +69,13 @@ class TicketController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('subject', 'like', '%'.$keyword.'%')
-                    ->orWhere('body', 'like', '%'.$keyword.'%');
-            });
+            $records = TableSearch::apply($records, $keyword, [
+                'sku',
+                'subject',
+                'body',
+            ], [
+                'is_active' => [0 => 'Inactive', 1 => 'Active'],
+            ]);
         }
         // Order
         if ($req->has('order')) {

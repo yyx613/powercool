@@ -9,6 +9,7 @@ use App\Models\MaterialUse;
 use App\Models\MaterialUseProduct;
 use App\Models\Product;
 use App\Models\SaleProductionRequest;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,14 +47,12 @@ class MaterialUseController extends Controller
         Session::put('material-use-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('products.model_desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('products.sku', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'products.model_desc',
+            'products.sku',
+            'customize_products.sku',
+        ]);
         // Order
         if ($req->has('order')) {
             foreach ($req->order as $order) {

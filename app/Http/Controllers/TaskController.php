@@ -17,6 +17,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\UserTask;
 use App\Notifications\MobileAppNotification;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -133,13 +134,22 @@ class TaskController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('desc', 'like', '%' . $keyword . '%')
-                    ->orWhere('remark', 'like', '%' . $keyword . '%')
-                    ->orWhere('amount_to_collect', 'like', '%' . $keyword . '%');
-            });
+            $records = TableSearch::apply($records, $keyword, [
+                'sku',
+                'name',
+                'desc',
+                'remark',
+                'amount_to_collect',
+                'due_date',
+                'whatsapp_click_count',
+            ], [
+                'status' => [
+                    1 => 'To Do',
+                    2 => 'Doing',
+                    3 => 'In Review',
+                    4 => 'Completed',
+                ],
+            ]);
         }
         // Order
         if ($req->has('order')) {

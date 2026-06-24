@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -26,9 +27,10 @@ class RoleController extends Controller
 
         Session::put('role-management-page', $request->page);
 
-        if ($request->has('keyword') && $request->input('keyword') != '') {
-            $records = $records->where('name', 'like', '%'.$request->input('keyword').'%');
-        }
+        $keyword = $request->input('keyword');
+        $records = TableSearch::apply($records, $keyword, [
+            'name',
+        ]);
 
         $records = $records->get();
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use App\Support\TableSearch;
 
 class VehicleController extends Controller
 {
@@ -48,22 +49,58 @@ class VehicleController extends Controller
             $keyword = Session::get('vehicle-search');
         }
 
-        if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('plate_number', 'like', '%'.$keyword.'%')
-                    ->orWhere('chasis', 'like', '%'.$keyword.'%')
-                    ->orWhere('buatan_nama_model', 'like', '%'.$keyword.'%')
-                    ->orWhere('keupayaan_enjin', 'like', '%'.$keyword.'%')
-                    ->orWhere('bahan_bakar', 'like', '%'.$keyword.'%')
-                    ->orWhere('status_asal', 'like', '%'.$keyword.'%')
-                    ->orWhere('kelas_kegunaan', 'like', '%'.$keyword.'%')
-                    ->orWhere('jenis_badan', 'like', '%'.$keyword.'%')
-                    ->orWhere('tarikh_pendaftaran', 'like', '%'.$keyword.'%')
-                    ->orWhere('department', 'like', '%'.$keyword.'%')
-                    ->orWhere('area_control', 'like', '%'.$keyword.'%');
-            });
+        $records = TableSearch::apply($records, $keyword, [
+            'plate_number',
+            'chasis',
+            'buatan_nama_model',
+            'keupayaan_enjin',
+            'bahan_bakar',
+            'status_asal',
+            'kelas_kegunaan',
+            'jenis_badan',
+            'tarikh_pendaftaran',
+            'department',
+            'area_control',
+            'sold_date',
+        ], [
+            'status' => [
+                Vehicle::STATUS_ACTIVE => 'Active',
+                Vehicle::STATUS_SOLD => 'Sold',
+            ],
+            'type' => [
+                Vehicle::TYPE_CAR => 'Car',
+                Vehicle::TYPE_LORRY => 'Lorry',
+                Vehicle::TYPE_VAN => 'Van',
+                Vehicle::TYPE_MOTOR => 'Motor',
+            ],
+        ]);
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'plate_number',
+                1 => 'chasis',
+                2 => 'buatan_nama_model',
+                3 => 'keupayaan_enjin',
+                4 => 'bahan_bakar',
+                5 => 'status_asal',
+                6 => 'kelas_kegunaan',
+                7 => 'jenis_badan',
+                8 => 'tarikh_pendaftaran',
+                9 => 'department',
+                10 => 'area_control',
+                11 => 'status',
+                12 => 'sold_date',
+                13 => 'type',
+            ];
+            foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
         }
-        $records = $records->orderBy('id', 'desc');
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

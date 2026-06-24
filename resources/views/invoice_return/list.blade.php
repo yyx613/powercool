@@ -146,7 +146,6 @@
                 {
                     "width": "10%",
                     "targets": 6,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -162,7 +161,6 @@
                 {
                     "width": "10%",
                     "targets": 8,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }

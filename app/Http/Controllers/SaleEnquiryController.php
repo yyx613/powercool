@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\SaleEnquiry;
 use App\Models\Scopes\BranchScope;
 use App\Models\User;
+use App\Support\TableSearch;
 use App\Notifications\SaleEnquiryAcceptedNotification;
 use App\Notifications\SaleEnquiryAssignedNotification;
 use App\Notifications\SaleEnquiryNoDealNotification;
@@ -43,18 +44,42 @@ class SaleEnquiryController extends Controller
         $records = SaleEnquiry::query();
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone_number', 'like', '%' . $keyword . '%')
-                    ->orWhere('email', 'like', '%' . $keyword . '%')
-                    ->orWhere('description', 'like', '%' . $keyword . '%')
-                    ->orWhere('category', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sku',
+            'enquiry_date',
+            'name',
+            'phone_number',
+            'email',
+            'product_service_interested',
+        ], [
+            'enquiry_source' => [
+                1 => 'Website',
+                2 => 'Facebook',
+                3 => 'Shopee',
+                4 => 'Lazada',
+                5 => 'Walk In',
+                6 => 'Referral',
+                7 => 'Instagram',
+                8 => 'Tiktok',
+                9 => 'XHS',
+                10 => 'Phone Call',
+                11 => 'WhatsApp (Not from Platform)',
+                12 => 'Google',
+            ],
+            'priority' => [1 => 'Low', 2 => 'Medium', 3 => 'High'],
+            'quality' => [
+                1 => 'Seen and Reply',
+                2 => 'Seen No Reply',
+                3 => 'No Seen No Reply',
+            ],
+            'status' => [
+                1 => 'New',
+                2 => 'In Progress',
+                3 => 'Closed Deal (Converted)',
+                4 => 'No Deal',
+            ],
+        ]);
 
         // Order
         if ($req->has('order')) {
@@ -65,6 +90,10 @@ class SaleEnquiryController extends Controller
                 3 => 'phone_number',
                 4 => 'email',
                 5 => 'enquiry_source',
+                6 => 'product_service_interested',
+                8 => 'priority',
+                9 => 'quality',
+                12 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records->orderBy($map[$order['column']], $order['dir']);
@@ -201,6 +230,7 @@ class SaleEnquiryController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
+                4 => 'payment_status',
             ];
             foreach ($req->order as $order) {
                 if (isset($map[$order['column']])) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\SalesAgent;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -34,17 +35,20 @@ class SalesAgentController extends Controller
         Session::put('sales-agent-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'name',
+        ], [
+            'company_group' => [
+                1 => 'Power Cool',
+                2 => 'Hi-Ten',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
                 0 => 'name',
+                1 => 'company_group',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

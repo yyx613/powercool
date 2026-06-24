@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Priority;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -31,16 +32,14 @@ class PriorityController extends Controller
         Session::put('priority-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('priority', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('description', 'like', '%' . $keyword . '%')
-                    ->orWhere('response_time', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'priority',
+            'name',
+            'description',
+            'response_time',
+            'order',
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

@@ -38,6 +38,8 @@ class InventoryServieHistoryController extends Controller
 
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
+                    ->orWhere('qty', 'like', '%'.$keyword.'%')
+                    ->orWhere('service_date', 'like', '%'.$keyword.'%')
                     ->orWhereHas('taskMilestoneInventory.taskMilestone.task', function ($q) use ($keyword) {
                         $q->where('sku', 'like', '%'.$keyword.'%');
                     })
@@ -54,8 +56,13 @@ class InventoryServieHistoryController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'sku',
+                3 => 'qty',
+                4 => 'service_date',
             ];
             foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
             }
         } else {

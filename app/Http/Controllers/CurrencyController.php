@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Currency;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -24,17 +25,16 @@ class CurrencyController extends Controller
         $records = $this->curr;
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('country', 'like', '%' . $keyword . '%')
-                    ->orWhere('currency_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('code', 'like', '%' . $keyword . '%')
-                    ->orWhere('symbol', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'name',
+            'country',
+            'currency_name',
+            'code',
+            'symbol',
+        ], [
+            'is_active' => [0 => 'Inactive', 1 => 'Active'],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

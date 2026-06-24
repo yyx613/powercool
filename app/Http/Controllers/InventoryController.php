@@ -20,6 +20,7 @@ use App\Models\SaleProductChild;
 use App\Models\Supplier;
 use App\Models\TaskMilestoneInventory;
 use App\Models\User;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -65,12 +66,19 @@ class InventoryController extends Controller
         Session::put('inventory-category-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        if ($keyword != null && trim($keyword) !== '') {
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('factory', 'like', '%'.$keyword.'%');
+                TableSearch::apply($q, $keyword, [
+                    'name',
+                ], [
+                    'company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
+                    'is_active' => [0 => 'Inactive', 1 => 'Active'],
+                ]);
+                // Factory column is the related factory name.
+                $q->orWhereHas('fromFactory', function ($qq) use ($keyword) {
+                    $qq->where('name', 'like', '%'.$keyword.'%');
+                });
             });
         }
         // Order
@@ -783,13 +791,14 @@ class InventoryController extends Controller
         Session::put('inventory-type-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%'.$keyword.'%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'name',
+        ], [
+            'company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
+            'type' => [1 => 'Product', 2 => 'Raw Material / Sparepart'],
+            'is_active' => [0 => 'Inactive', 1 => 'Active'],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

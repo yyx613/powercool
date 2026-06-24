@@ -14,6 +14,7 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use App\Models\Setting;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -100,18 +101,34 @@ class CashSaleController extends Controller
         }
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $do_ids = DeliveryOrder::where('sku', 'like', '%' . $keyword . '%')->pluck('id')->toArray();
-
-            $records = $records->where(function ($q) use ($keyword, $do_ids) {
-                $q->where('sales.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('sales.created_at', 'like', '%' . $keyword . '%')
-                    ->orWhere('sales.custom_customer', 'like', '%' . $keyword . '%')
-                    ->orWhere('sales_agents.name', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sales.sku',
+            'sales.created_at',
+            'sales.custom_date',
+            'sales.custom_customer',
+            'sales_agents.name',
+            'payment_methods.name',
+            'createdBy.name',
+            'updatedBy.name',
+            'paid_amount_query.paid_amount',
+        ], [
+            'sales.payment_status' => [
+                1 => 'Unpaid',
+                2 => 'Partially Paid',
+                3 => 'Paid',
+            ],
+            'sales.status' => [
+                0 => 'Inactive',
+                1 => 'Active',
+                2 => 'Converted',
+                3 => 'Cancelled',
+                4 => 'Pending Approval',
+                5 => 'Approved',
+                6 => 'Rejected',
+                7 => 'Rejected',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
@@ -119,10 +136,12 @@ class CashSaleController extends Controller
                 1 => 'sales.created_at',
                 2 => 'sales.custom_customer',
                 3 => 'sales_agents.name',
-                6 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
-                7 => 'paid_amount_query.paid_amount',
+                6 => 'paid_amount_query.paid_amount',
+                7 => DB::raw('total_amount'),
                 8 => 'payment_methods.name',
                 9 => 'sales.payment_status',
+                10 => 'createdBy.name',
+                11 => 'updatedBy.name',
                 12 => 'sales.status',
             ];
             foreach ($req->order as $order) {

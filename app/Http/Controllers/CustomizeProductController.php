@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomizeProduct;
 use App\Models\Production;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Com\Tecnick\Barcode\Type\Linear\CodeOneTwoEight\TypeCode128;
 use Com\Tecnick\Barcode\Type\Square\QrCode\TypeQrcode;
@@ -48,10 +49,30 @@ class CustomizeProductController extends Controller
 
         if ($keyword != null) {
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('production', function ($qq) use ($keyword) {
-                        $qq->where('sku', 'like', '%' . $keyword . '%');
-                    });
+                // Plain text columns shown in the list. Weight/dimension displays
+                // carry units/formatting in the UI, but the raw numeric columns are
+                // still matched so a bare number search works.
+                TableSearch::apply($q, $keyword, [
+                    'sku',
+                    'name',
+                    'length',
+                    'width',
+                    'height',
+                    'weight',
+                    'capacity',
+                    'refrigerant',
+                    'power_input',
+                    'power_consumption',
+                    'voltage_frequency',
+                    'standard_features',
+                ]);
+                // SO / Production SKU come from the related production record.
+                $q->orWhereHas('production', function ($qq) use ($keyword) {
+                    $qq->where('sku', 'like', '%' . $keyword . '%')
+                        ->orWhereHas('sale', function ($qqq) use ($keyword) {
+                            $qqq->where('sku', 'like', '%' . $keyword . '%');
+                        });
+                });
             });
         }
 
@@ -61,8 +82,15 @@ class CustomizeProductController extends Controller
         // Order
         if ($req->has('order')) {
             $map = [
-                1 => 'sku',
-                6 => 'weight',
+                0 => 'sku',
+                1 => 'name',
+                5 => 'weight',
+                6 => 'capacity',
+                7 => 'refrigerant',
+                8 => 'power_input',
+                9 => 'power_consumption',
+                10 => 'voltage_frequency',
+                11 => 'standard_features',
             ];
             foreach ($req->order as $order) {
                 if (isset($map[$order['column']])) {

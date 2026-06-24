@@ -59,10 +59,23 @@ class NotificationController extends Controller
         Session::put('notification-page', $request->page);
 
         $user = $request->user();
-        $records = $user->notifications()->orderBy('created_at', 'desc');
+        $records = $user->notifications();
 
         $allowedTypes = self::getAllowedNotificationTypes();
         $records = $records->whereIn('type', $allowedTypes);
+
+        // Order
+        if ($request->has('order')) {
+            $map = [
+                1 => 'type',
+                3 => 'created_at',
+            ];
+            foreach ($request->order as $order) {
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('created_at', 'desc');
+        }
 
         if ($request->has('status')) {
             if ($request->status == null) {

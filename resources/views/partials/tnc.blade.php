@@ -2,16 +2,19 @@
      Rendered as one <tr> per clause so the list can flow / break across pages
      instead of jumping as one un-splittable cell (which leaves a big gap).
      Params:
-       $company : 'powercool' (default) | 'hiten'
-       $colspan : number of columns to span in the parent footer table (default 2) --}}
+       $company   : 'powercool' (default) | 'hiten'
+       $colspan   : number of columns to span in the parent footer table (default 2)
+       $topBorder : draw the divider line above the heading (default true); pass false
+                    when a preceding section already carries the line --}}
 @php
     $isHiten = ($company ?? 'powercool') === 'hiten';
     $companyName = $isHiten ? 'HI-TEN TRADING SDN. BHD.' : 'POWER COOL EQUIPMENTS (M) SDN. BHD.';
     $tncColspan = $colspan ?? 2;
+    $tncTopBorder = $topBorder ?? true;
     $rowStyle = 'font-size: 11px; line-height: 1.4; text-align: justify; padding: 0 0 3px 0;';
 @endphp
 <tr>
-    <td colspan="{{ $tncColspan }}" style="font-size: 12px; font-weight: 700; padding: 18px 0 5px 0; border-top: solid 1px black;">
+    <td colspan="{{ $tncColspan }}" style="font-size: 12px; font-weight: 700; padding: 18px 0 5px 0;{{ $tncTopBorder ? ' border-top: solid 1px black;' : '' }}">
         Terms &amp; Conditions (E. &amp; O.E.)
     </td>
 </tr>

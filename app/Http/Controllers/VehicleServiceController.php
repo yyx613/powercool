@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Support\TableSearch;
 
 class VehicleServiceController extends Controller
 {
@@ -63,12 +64,15 @@ class VehicleServiceController extends Controller
             $keyword = Session::get('vehicle-service-search');
         }
 
-        if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('vehicles.plate_number', 'like', '%'.$keyword.'%')
-                    ->orWhere('vehicle_services.amount', 'like', '%'.$keyword.'%');
-            });
-        }
+        $records = TableSearch::apply($records, $keyword, [
+            'vehicles.plate_number',
+            'vehicle_services.date',
+            'vehicle_services.to_date',
+            'vehicle_services.remind_at',
+            'vehicle_services.amount',
+        ], [
+            'vehicle_services.type' => VehicleService::types,
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

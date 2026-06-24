@@ -52,6 +52,7 @@ use App\Models\TransportAcknowledgement;
 use App\Models\TransportAcknowledgementProduct;
 use App\Models\UOM;
 use App\Models\User;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -176,19 +177,29 @@ class SaleController extends Controller
         }
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sales.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('sales.created_at', 'like', '%'.$keyword.'%')
-                    ->orWhere('sales.open_until', 'like', '%'.$keyword.'%')
-                    ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('customers.company_name', 'like', '%'.$keyword.'%')
-                    ->orWhere('sales_agents.name', 'like', '%'.$keyword.'%')
-                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sales.sku',
+            'sales.created_at',
+            'sales.open_until',
+            'customers.sku',
+            'customers.company_name',
+            'sales_agents.name',
+            'sales.store',
+            'currencies.name',
+        ], [
+            'sales.self_collect' => [0 => 'No', 1 => 'Yes'],
+            'sales.status' => [
+                Sale::STATUS_INACTIVE => 'Inactive',
+                Sale::STATUS_ACTIVE => 'Active',
+                Sale::STATUS_CONVERTED => 'Converted',
+                Sale::STATUS_CANCELLED => 'Cancelled',
+                Sale::STATUS_APPROVAL_PENDING => 'Pending Approval',
+                Sale::STATUS_APPROVAL_APPROVED => 'Approved',
+                Sale::STATUS_TRANSFERRED_BACK => 'Rejected',
+                Sale::STATUS_APPROVAL_REJECTED => 'Rejected',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
@@ -198,8 +209,11 @@ class SaleController extends Controller
                 4 => 'customers.sku',
                 5 => 'customers.company_name',
                 6 => 'sales_agents.name',
-                9 => DB::raw('SUM(sale_products.unit_price * sale_products.qty)'),
-                10 => 'sales.status',
+                7 => 'sales.store',
+                8 => 'sales.self_collect',
+                9 => 'currencies.name',
+                10 => DB::raw('total_amount'),
+                11 => 'sales.status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -1014,12 +1028,16 @@ class SaleController extends Controller
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
                 4 => 'customers.sku',
-                5 => 'customers.name',
+                5 => 'customers.company_name',
                 6 => 'sales_agents.name',
-                11 => DB::raw('SUM(sale_products.qty * sale_products.unit_price)'),
-                12 => DB::raw('SUM(sale_payment_amounts.amount)'),
+                7 => 'sales.store',
+                8 => 'currencies.name',
+                11 => DB::raw('paid_amount'),
+                12 => DB::raw('total_amount'),
                 13 => 'payment_methods.name',
                 14 => 'sales.payment_status',
+                15 => 'createdBy.name',
+                16 => 'updatedBy.name',
                 17 => 'sales.status',
             ];
             foreach ($req->order as $order) {
@@ -3698,9 +3716,11 @@ class SaleController extends Controller
             $map = [
                 0 => 'delivery_orders.sku',
                 1 => 'delivery_orders.created_at',
+                3 => 'invoices.sku',
                 4 => 'customers.sku',
                 5 => 'customers.company_name',
                 6 => 'sales_agents.name',
+                7 => 'currencies.name',
                 9 => 'created_by.name',
                 10 => 'delivery_orders.status',
             ];
@@ -4202,6 +4222,8 @@ class SaleController extends Controller
                     3 => 'customers.sku',
                     4 => 'customers.company_name',
                     5 => 'sales_agents.name',
+                    6 => 'currencies.name',
+                    8 => 'created_by.name',
                     9 => 'invoices.status',
                 ];
             } else {
@@ -4211,6 +4233,8 @@ class SaleController extends Controller
                     4 => 'customers.sku',
                     5 => 'customers.company_name',
                     6 => 'sales_agents.name',
+                    7 => 'currencies.name',
+                    9 => 'created_by.name',
                     10 => 'invoices.status',
                 ];
             }
@@ -4348,9 +4372,12 @@ class SaleController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'invoices.date',
+                2 => 'invoices.sku',
                 3 => 'customers.sku',
                 4 => 'customers.company_name',
                 5 => 'sales_agents.name',
+                6 => 'currencies.name',
+                8 => 'created_by.name',
                 9 => 'invoices.status',
             ];
             foreach ($req->order as $order) {
@@ -5182,6 +5209,22 @@ class SaleController extends Controller
             Session::put('target-progress-page', $req->page);
         }
 
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'invoices.sku',
+                1 => 'invoices.created_at',
+                2 => 'customers.name',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('invoices.id', 'desc');
+        }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
@@ -5979,6 +6022,7 @@ class SaleController extends Controller
             $map = [
                 1 => 'transport_acknowledgements.sku',
                 2 => 'transport_acknowledgements.date',
+                3 => 'transport_acknowledgements.delivery_order_id',
                 6 => 'users.name',
                 7 => 'generator.name',
             ];

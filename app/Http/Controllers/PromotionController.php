@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Promotion;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -34,15 +35,18 @@ class PromotionController extends Controller
         Session::put('promotion-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('promotions.sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('promotions.amount', 'like', '%' . $keyword . '%')
-                    ->orWhere('products.model_desc', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'promotions.sku',
+            'promotions.amount',
+            'promotions.valid_till',
+            'products.model_desc',
+        ], [
+            'promotions.status' => [
+                0 => 'Inactive',
+                1 => 'Active',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

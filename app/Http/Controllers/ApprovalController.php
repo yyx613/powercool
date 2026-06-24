@@ -26,6 +26,7 @@ use App\Models\SaleProduct;
 use App\Models\SalesAgent;
 use App\Models\Scopes\ApprovedScope;
 use App\Models\User;
+use App\Support\TableSearch;
 use App\Notifications\SaleEnquiryNoDealNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -112,10 +113,20 @@ class ApprovalController extends Controller
         if ($request->has('search') && $request->search['value'] != null) {
             $keyword = $request->search['value'];
 
-            $records = $records->where(function ($q) use ($keyword) {
+            $status_codes = TableSearch::matchingCodes([
+                0 => 'Pending Approval',
+                1 => 'Approved',
+                2 => 'Rejected',
+                3 => 'Approved',
+            ], $keyword);
+
+            $records = $records->where(function ($q) use ($keyword, $status_codes) {
                 $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class], function ($query) use ($keyword) {
                     $query->where('sku', 'like', '%' . $keyword . '%');
                 });
+                if (! empty($status_codes)) {
+                    $q->orWhereIn('status', $status_codes);
+                }
             });
         }
         // Filter status
@@ -235,6 +246,24 @@ class ApprovalController extends Controller
         $has = hasPermission('approval.production_material_transfer_request');
         if (!$has) {
             $records = $records->whereNot('object_type', FactoryRawMaterial::class)->whereNot('object_type', ProductChild::class);
+        }
+        // Order
+        if ($request->has('order')) {
+            $map = [
+                3 => 'created_at',
+                5 => 'status',
+            ];
+            $ordered = false;
+            foreach ($request->order as $order) {
+                if (isset($map[$order['column']])) {
+                    // reorder() drops the default latest() ordering so the
+                    // user-selected column actually takes effect.
+                    $records = $ordered
+                        ? $records->orderBy($map[$order['column']], $order['dir'])
+                        : $records->reorder($map[$order['column']], $order['dir']);
+                    $ordered = true;
+                }
+            }
         }
 
         $records_count = $records->count();

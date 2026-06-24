@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Country;
 use App\Models\State;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -38,11 +39,15 @@ class StateController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('code', 'like', '%' . $keyword . '%')
-                    ->orWhereHas('country', function ($q2) use ($keyword) {
-                        $q2->where('name', 'like', '%' . $keyword . '%');
-                    });
+                TableSearch::apply($q, $keyword, [
+                    'name',
+                    'code',
+                ], [
+                    'is_active' => [0 => 'Inactive', 1 => 'Active'],
+                ]);
+                $q->orWhereHas('country', function ($q2) use ($keyword) {
+                    $q2->where('name', 'like', '%' . $keyword . '%');
+                });
             });
         }
         // Order

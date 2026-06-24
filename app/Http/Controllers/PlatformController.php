@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Platform;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -31,13 +32,13 @@ class PlatformController extends Controller
         Session::put('platform-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'name',
+        ], [
+            'can_submit_einvoice' => [0 => 'No', 1 => 'Yes'],
+            'is_active' => [0 => 'Inactive', 1 => 'Active'],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

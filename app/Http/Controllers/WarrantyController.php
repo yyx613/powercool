@@ -11,6 +11,7 @@ use App\Models\SaleProductChild;
 use App\Models\Task;
 use App\Models\TaskMilestone;
 use App\Models\TaskMilestoneInventory;
+use App\Support\TableSearch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,13 +128,13 @@ class WarrantyController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('product_children.sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('dopcs.inv_sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('dopcs.customer_name', 'like', '%'.$keyword.'%')
-                    ->orWhere('dopcs.warranty', 'like', '%'.$keyword.'%')
-                    ->orWhere('prods.model_desc', 'like', '%'.$keyword.'%');
-            });
+            $records = TableSearch::apply($records, $keyword, [
+                'product_children.sku',
+                'dopcs.inv_sku',
+                'dopcs.customer_name',
+                'dopcs.warranty',
+                'prods.model_desc',
+            ]);
         }
         // Order
         if ($req->has('order')) {
@@ -214,7 +215,19 @@ class WarrantyController extends Controller
             );
         }
         // Order
-        $records = $records->orderBy('id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                1 => 'qty',
+            ];
+            foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
