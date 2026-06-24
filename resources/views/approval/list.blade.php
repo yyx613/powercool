@@ -183,7 +183,6 @@
                 {
                     "width": "10%",
                     "targets": 3,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return `${ moment(data).format('DD MMM, YYYY')}<br>${moment(data).format('HH:mm') }`
                     }
@@ -215,7 +214,6 @@
                 {
                     "width": "10%",
                     "targets": 5,
-                    'orderable': false,
                     render: function(data, type, row) {
                         let label = data
                         if (data == 0) {

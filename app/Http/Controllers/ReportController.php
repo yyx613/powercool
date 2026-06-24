@@ -159,6 +159,26 @@ class ReportController extends Controller
 
         $records = $this->querySales($req->start_date, $req->end_date, $keyword);
 
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'saleperson',
+                1 => 'sum_qty',
+                2 => 'sum_promo_amount',
+            ];
+            $ordered = false;
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    // reorder() drops the default orderBy from querySales() so the
+                    // user-selected column actually takes effect.
+                    $records = $ordered
+                        ? $records->orderBy($map[$order['column']], $order['dir'])
+                        : $records->reorder($map[$order['column']], $order['dir']);
+                    $ordered = true;
+                }
+            }
+        }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('sales.id');
         $records_paginator = $records->simplePaginate(10);
@@ -457,6 +477,26 @@ class ReportController extends Controller
 
         $records = $this->queryEarning($req->start_date, $req->end_date, $keyword);
 
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'model_desc',
+                1 => 'sku',
+                3 => 'sum_cost',
+            ];
+            $ordered = false;
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    // reorder() drops the default orderBy from queryEarning() so the
+                    // user-selected column actually takes effect.
+                    $records = $ordered
+                        ? $records->orderBy($map[$order['column']], $order['dir'])
+                        : $records->reorder($map[$order['column']], $order['dir']);
+                    $ordered = true;
+                }
+            }
+        }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('sale_products.product_id');
         $records_paginator = $records->simplePaginate(10);
@@ -564,6 +604,20 @@ class ReportController extends Controller
 
         $records = $this->queryService($req->start_date, $req->end_date, $keyword);
 
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'product',
+                1 => 'service_count',
+                2 => 'income_generated',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('tasks.id');
         $records_paginator = $records->simplePaginate(10);
@@ -664,6 +718,21 @@ class ReportController extends Controller
         Session::put('report_keyword', $keyword);
 
         $records = $this->queryTechnicianStock($req->start_date, $req->end_date, $keyword);
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                0 => 'technician',
+                1 => 'sku',
+                2 => 'product_for_replacement',
+                3 => 'material_used_qty',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('tasks.id');

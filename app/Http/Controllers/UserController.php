@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Role as ModelsRole;
 use App\Models\Scopes\BranchScope;
 use App\Models\User;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -69,11 +70,11 @@ class UserController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('email', 'like', '%' . $keyword . '%');
-            });
+            $records = TableSearch::apply($records, $keyword, [
+                'sku',
+                'name',
+                'email',
+            ]);
         }
         // Order
         if ($req->has('order')) {

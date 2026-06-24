@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AdhocService;
 use App\Models\Branch;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
@@ -36,14 +37,15 @@ class AdhocServiceController extends Controller
         Session::put('adhoc-service-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('name', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sku',
+            'name',
+            'min_amount',
+            'max_amount',
+        ], [
+            'is_active' => [0 => 'Inactive', 1 => 'Active'],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [

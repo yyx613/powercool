@@ -10,6 +10,7 @@ use App\Models\ProductionRequestMaterial;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\SaleProductionRequest;
+use App\Support\TableSearch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,14 +81,17 @@ class ProductionRequestController extends Controller
             });
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'production_requests.created_at',
+            'production_requests.remark',
+            'users.name',
+        ], [
+            'production_requests.status' => [
+                ProductionRequest::STATUS_IN_PROGRESS => 'In Progress',
+                ProductionRequest::STATUS_COMPLETED => 'Completed',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
@@ -97,6 +101,7 @@ class ProductionRequestController extends Controller
                 4 => 'qty.fulfilledQty',
                 5 => 'users.name',
                 6 => 'production_requests.status',
+                7 => 'production_requests.remark',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);
@@ -146,22 +151,18 @@ class ProductionRequestController extends Controller
             ->leftJoin('productions', 'productions.id', '=', 'sale_production_requests.production_id')
             ->leftJoin('sales', 'sales.id', '=', 'sale_production_requests.sale_id');
 
-        // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-        }
-
         Session::put('sale-production-request-page', $req->page);
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sale_production_requests.created_at',
+            'sale_production_requests.remark',
+            'sale_production_requests.status',
+            'sales.sku',
+            'products.sku',
+            'productions.sku',
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
@@ -267,9 +268,21 @@ class ProductionRequestController extends Controller
 
     public function viewGetData(Request $req)
     {
-        $records = ProductionRequestMaterial::orderBy('id', 'desc');
+        $records = ProductionRequestMaterial::where('production_request_id', Session::get('pq_id'));
 
-        $records = $records->where('production_request_id', Session::get('pq_id'));
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                6 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

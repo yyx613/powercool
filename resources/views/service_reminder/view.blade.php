@@ -60,10 +60,9 @@
                 { data: 'service_date' },
             ],
             columnDefs: [
-                { 
+                {
                     "width": "10%",
                     "targets": 0,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }

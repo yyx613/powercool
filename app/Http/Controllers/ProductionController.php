@@ -28,6 +28,7 @@ use App\Models\SaleProductChild;
 use App\Models\Scopes\BranchScope;
 use App\Models\User;
 use App\Models\UserProduction;
+use App\Support\TableSearch;
 use App\Notifications\ProductionCompleteNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -145,17 +146,33 @@ class ProductionController extends Controller
         }
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        if ($keyword !== null && trim($keyword) !== '') {
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('name', 'like', '%'.$keyword.'%')
-                    ->orWhere('start_date', 'like', '%'.$keyword.'%')
-                    ->orWhere('due_date', 'like', '%'.$keyword.'%')
-                    ->orWhereHas('priority', function ($q) use ($keyword) {
-                        $q->where('name', 'like', '%'.$keyword.'%');
-                    })
+                TableSearch::apply($q, $keyword, [
+                    'sku',
+                    'name',
+                    'start_date',
+                    'due_date',
+                ], [
+                    'type' => [
+                        Production::TYPE_NORMAL => 'Normal',
+                        Production::TYPE_RND => 'R&D',
+                    ],
+                    'status' => [
+                        Production::STATUS_TO_DO => 'New',
+                        Production::STATUS_DOING => 'In Progress',
+                        Production::STATUS_COMPLETED => 'Completed',
+                        Production::STATUS_TRANSFERRED => 'Transferred',
+                        Production::STATUS_MODIFIED => 'Modified',
+                        Production::STATUS_PENDING_APPROVAL => 'Pending Approval',
+                        Production::STATUS_REJECTED => 'Rejected',
+                        Production::STATUS_APPROVED => 'Approved',
+                    ],
+                ]);
+                $q->orWhereHas('priority', function ($q) use ($keyword) {
+                    $q->where('name', 'like', '%'.$keyword.'%');
+                })
                     ->orWhereHas('productChild', function ($q) use ($keyword) {
                         $q->where('sku', 'like', '%'.$keyword.'%');
                     })
@@ -171,6 +188,7 @@ class ProductionController extends Controller
                 7 => 'created_at',
                 8 => 'start_date',
                 9 => 'due_date',
+                13 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

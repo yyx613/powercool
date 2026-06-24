@@ -16,6 +16,7 @@ use App\Models\Setting;
 use App\Models\UOM;
 use App\Models\User;
 use App\Models\WarrantyPeriod;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -51,24 +52,43 @@ class ServiceFormController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('sr_sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('srq_sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('srcs_sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('sri_sku', 'like', '%'.$keyword.'%')
-                    ->orWhereHas('serviceItems', function ($q) use ($keyword) {
-                        $q->where('model_no', 'like', '%'.$keyword.'%')
-                            ->orWhere('serial_no', 'like', '%'.$keyword.'%');
-                    })
+                TableSearch::apply($q, $keyword, [
+                    'sku',
+                    'sr_sku',
+                    'srq_sku',
+                    'srcs_sku',
+                    'sri_sku',
+                ]);
+                $q->orWhereHas('serviceItems', function ($q) use ($keyword) {
+                    $q->where('model_no', 'like', '%'.$keyword.'%')
+                        ->orWhere('serial_no', 'like', '%'.$keyword.'%');
+                })
                     ->orWhereHas('customer', function ($q) use ($keyword) {
                         $q->where('name', 'like', '%'.$keyword.'%')
                             ->orWhere('company_name', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('einvoice', function ($q) use ($keyword) {
+                        $q->where('status', 'like', '%'.$keyword.'%');
                     });
             });
         }
 
         // Order
-        $records = $records->orderBy('id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                0 => 'sku',
+                1 => 'date',
+                8 => 'created_at',
+            ];
+            foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

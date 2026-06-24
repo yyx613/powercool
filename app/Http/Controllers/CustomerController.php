@@ -18,6 +18,7 @@ use App\Models\Sale;
 use App\Models\SalesAgent;
 use App\Models\Scopes\BranchScope;
 use App\Services\StockCardService;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -178,13 +179,30 @@ class CustomerController extends Controller
 
             if ($keyword != null) {
                 $records = $records->where(function ($q) use ($keyword) {
-                    $q->where('name', 'like', '%' . $keyword . '%')
-                        ->orWhere('sku', 'like', '%' . $keyword . '%')
-                        ->orWhere('phone', 'like', '%' . $keyword . '%')
-                        ->orWhere('company_name', 'like', '%' . $keyword . '%')
-                        ->orWhereHas('platform', function ($q) use ($keyword) {
-                            $q->where('name', 'like', '%' . $keyword . '%');
-                        });
+                    // Text + coded (label) columns shown in the debtor list.
+                    TableSearch::apply($q, $keyword, [
+                        'sku',
+                        'name',
+                        'phone',
+                        'company_name',
+                    ], [
+                        'category' => Customer::BUSINESS_TYPES,
+                        'company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
+                        'status' => [
+                            Customer::STATUS_INACTIVE => 'Inactive',
+                            Customer::STATUS_ACTIVE => 'Active',
+                            Customer::STATUS_PENDING_FILL_UP_INFO => 'Pending Fill Up Info',
+                            Customer::STATUS_APPROVAL_PENDING => 'Pending Approval',
+                            Customer::STATUS_APPROVAL_APPROVED => 'Approved',
+                            Customer::STATUS_APPROVAL_REJECTED => 'Rejected',
+                        ],
+                    ]);
+                    // Related platform / debtor-type names shown in the list.
+                    $q->orWhereHas('platform', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
+                    })->orWhereHas('debtorType', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
+                    });
                 });
             }
         }
@@ -243,8 +261,10 @@ class CustomerController extends Controller
             $map = [
                 1 => 'sku',
                 2 => 'name',
+                3 => 'category',
                 4 => 'phone',
                 5 => 'company_name',
+                7 => 'company_group',
                 10 => 'status',
             ];
             foreach ($req->order as $order) {

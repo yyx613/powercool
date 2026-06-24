@@ -100,7 +100,19 @@ class InventoryServiceReminderController extends Controller
             ['object_id', $record->object_id],
         ]);
         // Order
-        $records = $records->orderBy('id', 'desc');
+        if ($req->has('order')) {
+            $map = [
+                0 => 'next_service_date',
+            ];
+            foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

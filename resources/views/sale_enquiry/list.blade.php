@@ -160,7 +160,6 @@
                 {
                     "width": "10%",
                     "targets": 1,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -168,7 +167,6 @@
                 {
                     "width": "10%",
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -176,7 +174,6 @@
                 {
                     "width": "10%",
                     "targets": 3,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -184,7 +181,6 @@
                 {
                     "width": "10%",
                     "targets": 4,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -192,7 +188,6 @@
                 {
                     "width": "10%",
                     "targets": 5,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
@@ -227,7 +222,6 @@
                 {
                     "width": "10%",
                     "targets": 6,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -243,7 +237,6 @@
                 {
                     "width": "10%",
                     "targets": 8,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -251,7 +244,6 @@
                 {
                     "width": "8%",
                     "targets": 9,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
@@ -284,7 +276,6 @@
                 {
                     "width": "10%",
                     "targets": 12,
-                    orderable: false,
                     render: function(data, type, row) {
                         let badge = ''
                         if (row.no_deal_pending) {

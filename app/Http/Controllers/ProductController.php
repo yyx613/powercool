@@ -27,6 +27,7 @@ use App\Models\SaleProductChild;
 use App\Models\TaskMilestoneInventory;
 use App\Models\UOM;
 use App\Models\User;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -205,7 +206,10 @@ class ProductController extends Controller
         }
 
         if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
+            $is_active_codes = TableSearch::matchingCodes([0 => 'Inactive', 1 => 'Active'], $keyword);
+            $is_sparepart_codes = TableSearch::matchingCodes([0 => 'No', 1 => 'Yes'], $keyword);
+
+            $records = $records->where(function ($q) use ($keyword, $is_active_codes, $is_sparepart_codes) {
                 $q->where('sku', 'like', '%'.$keyword.'%')
                     ->orWhere('model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('min_price', 'like', '%'.$keyword.'%')
@@ -213,6 +217,12 @@ class ProductController extends Controller
                     ->orWhereHas('category', function ($qq) use ($keyword) {
                         $qq->where('name', 'like', '%'.$keyword.'%');
                     });
+                if (! empty($is_active_codes)) {
+                    $q->orWhereIn('is_active', $is_active_codes);
+                }
+                if (! empty($is_sparepart_codes)) {
+                    $q->orWhereIn('is_sparepart', $is_sparepart_codes);
+                }
             });
         }
         // Order
@@ -1266,6 +1276,21 @@ class ProductController extends Controller
             $records = $records->where(function ($q) use ($keyword) {
                 $q->where('qty', 'like', '%'.$keyword.'%');
             });
+        }
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'qty',
+                4 => 'remark',
+                6 => 'created_at',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
         }
         $records_count = $records->count();
         $records_ids = $records->pluck('id');

@@ -59,21 +59,18 @@
             columnDefs: [
                 {
                     "targets": 0,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "targets": 1,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgentDebtor;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -24,16 +25,13 @@ class AgentDebtorController extends Controller
         $records = new AgentDebtor;
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('company_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('address', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sku',
+            'company_name',
+            'phone',
+            'address',
+        ]);
 
         // Order
         if ($req->has('order')) {
@@ -41,6 +39,7 @@ class AgentDebtorController extends Controller
                 0 => 'sku',
                 1 => 'company_name',
                 2 => 'phone',
+                3 => 'address',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

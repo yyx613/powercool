@@ -269,7 +269,6 @@
             columnDefs: [{
                     "width": "10%",
                     "targets": 0,
-                    orderable: false,
                     render: function(data, type, row) {
                         const isFinishedGood = row.category === 'Product';
                         let thumbHtml;

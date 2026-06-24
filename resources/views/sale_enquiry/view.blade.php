@@ -350,7 +350,6 @@
                 {
                     "width": "20%",
                     "targets": 4,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:

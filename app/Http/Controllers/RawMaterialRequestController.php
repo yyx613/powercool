@@ -9,6 +9,7 @@ use App\Models\Production;
 use App\Models\RawMaterialRequest;
 use App\Models\RawMaterialRequestMaterial;
 use App\Models\RawMaterialRequestMaterialCollected;
+use App\Support\TableSearch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -79,15 +80,19 @@ class RawMaterialRequestController extends Controller
             });
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->whereHas('production', function ($q) use ($keyword) {
-                    $q->where('sku', 'like', '%' . $keyword . '%');
-                });
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'raw_material_requests.created_at',
+            'productions.sku',
+            'users.name',
+        ], [
+            'raw_material_requests.status' => [
+                RawMaterialRequest::STATUS_IN_PROGRESS => 'In Progress',
+                RawMaterialRequest::STATUS_COMPLETED => 'Completed',
+                RawMaterialRequest::STATUS_PENDING_CANCELLATION => 'Pending Approval',
+                RawMaterialRequest::STATUS_CANCELLED => 'Cancelled',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
@@ -206,9 +211,22 @@ class RawMaterialRequestController extends Controller
 
     public function viewGetData(Request $req)
     {
-        $records = RawMaterialRequestMaterial::orderBy('id', 'desc');
+        $records = RawMaterialRequestMaterial::where('raw_material_request_id', Session::get('rmq_id'));
 
-        $records = $records->where('raw_material_request_id', Session::get('rmq_id'));
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                2 => 'qty',
+                5 => 'status',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
 
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
@@ -364,11 +382,26 @@ class RawMaterialRequestController extends Controller
 
     public function viewLogsGetData(Request $req)
     {
-        $records = RawMaterialRequestMaterialCollected::orderBy('id', 'desc');
+        $records = new RawMaterialRequestMaterialCollected;
 
         $id = Session::get('rmq-log-rmqm-id');
         if ($id != null) {
             $records = $records->where('raw_material_request_material_id', $id);
+        }
+
+        // Order
+        if ($req->has('order')) {
+            $map = [
+                1 => 'qty',
+                3 => 'created_at',
+            ];
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
         }
 
         $records_count = $records->count();

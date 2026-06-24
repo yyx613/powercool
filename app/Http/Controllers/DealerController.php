@@ -6,6 +6,7 @@ use App\Exports\DealerListingExport;
 use App\Models\Branch;
 use App\Models\Dealer;
 use App\Services\StockCardService;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -84,13 +85,13 @@ class DealerController extends Controller
             $keyword = Session::get('dealer-search');
         }
 
-        if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%');
-            });
-        }
+        $records = TableSearch::apply($records, $keyword, [
+            'sku',
+            'name',
+            'company_name',
+        ], [
+            'company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
+        ]);
 
         if ($req->has('company_group')) {
             if ($req->company_group == null) {
@@ -108,6 +109,7 @@ class DealerController extends Controller
                 0 => 'sku',
                 1 => 'name',
                 2 => 'company_name',
+                3 => 'company_group',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

@@ -11,6 +11,7 @@ use App\Models\ProductChild;
 use App\Models\ProductCost;
 use App\Models\Scopes\BranchScope;
 use App\Models\Supplier;
+use App\Support\TableSearch;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -54,17 +55,21 @@ class GRNController extends Controller
         $records = $this->grn;
 
         // Search
-        if ($req->has('search') && $req->search['value'] != null) {
-            $keyword = $req->search['value'];
-
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%');
-            });
-        }
+        $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
+        $records = TableSearch::apply($records, $keyword, [
+            'sku',
+        ], [
+            'status' => [
+                GRN::STATUS_ACTIVE => 'Active',
+                GRN::STATUS_CANCELLED => 'Cancelled',
+                GRN::STATUS_APPROVAL_PENDING => 'Pending Approval',
+            ],
+        ]);
         // Order
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
+                2 => 'status',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

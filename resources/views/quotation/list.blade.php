@@ -257,7 +257,6 @@
             {
                 "width": "10%",
                 "targets": 7,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }
@@ -265,7 +264,6 @@
             {
                 "width": "10%",
                 "targets": 8,
-                orderable: false,
                 render: function(data, type, row) {
                     return data == 1 || data == true ? "{!! __('Yes') !!}" : "{!! __('No') !!}"
                 }
@@ -273,7 +271,6 @@
             {
                 "width": "10%",
                 "targets": 9,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }

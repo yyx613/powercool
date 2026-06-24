@@ -10,6 +10,7 @@ use App\Models\ObjectCreditTerm;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\StockCardService;
+use App\Support\TableSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -92,12 +93,14 @@ class SupplierController extends Controller
         }
 
         if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('sku', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
-                    ->orWhere('company_name', 'like', '%' . $keyword . '%');
-            });
+            $records = TableSearch::apply($records, $keyword, [
+                'sku',
+                'name',
+                'phone',
+                'company_name',
+            ], [
+                'company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
+            ]);
         }
 
         if ($req->has('company_group')) {
@@ -117,6 +120,7 @@ class SupplierController extends Controller
                 2 => 'name',
                 3 => 'phone',
                 4 => 'company_name',
+                5 => 'company_group',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

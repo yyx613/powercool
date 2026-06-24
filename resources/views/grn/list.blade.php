@@ -118,7 +118,6 @@
                 {
                     "width": "15%",
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         let status = ''
                         switch (row.status) {

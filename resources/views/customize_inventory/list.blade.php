@@ -127,7 +127,6 @@
                 },
                 {
                     "targets": 1,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
@@ -162,42 +161,36 @@
                 },
                 {
                     "targets": 6,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 7,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 8,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 9,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 10,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 11,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
