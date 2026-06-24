@@ -19,6 +19,8 @@ return [
     'approval.type_raw_material_request' => 'Show raw material request cancellation requests in the approval listing page and the Raw Material Request option in the type filter dropdown',
     'approval.type_complete_production_request' => 'Show complete production requests in the approval listing page and the Complete Production Request option in the type filter dropdown',
     'approval.type_grn' => 'Show GRN approval requests in the approval listing page and the GRN option in the type filter dropdown',
+    'approval.type_sale_enquiry' => 'Show sale enquiry No Deal requests in the approval listing page and the Sale Enquiry option in the type filter dropdown',
+    'approval.type_credit_debit_note' => 'Show credit note and debit note issuance requests in the approval listing page and the Credit/Debit Note option in the type filter dropdown',
 
     // Dashboard
     'dashboard.view' => 'Show the Dashboard menu in the sidebar and access the dashboard page with sales, production, and task overview charts',
