@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Approval;
+use App\Models\CreditNote;
 use App\Models\Customer;
+use App\Models\DebitNote;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProduct;
 use App\Models\DeliveryOrderProductChild;
@@ -53,6 +55,7 @@ class ApprovalController extends Controller
         6 => 'Complete Production Request',
         7 => 'GRN',
         8 => 'Sale Enquiry',
+        9 => 'Credit/Debit Note',
     ];
 
     public function index()
@@ -93,6 +96,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_sale_enquiry')) {
             unset($types[8]);
         }
+        if (!hasPermission('approval.type_credit_debit_note')) {
+            unset($types[9]);
+        }
 
         return view('approval.list', [
             'statuses' => self::STATUSES,
@@ -121,7 +127,7 @@ class ApprovalController extends Controller
             ], $keyword);
 
             $records = $records->where(function ($q) use ($keyword, $status_codes) {
-                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class], function ($query) use ($keyword) {
+                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class, CreditNote::class, DebitNote::class], function ($query) use ($keyword) {
                     $query->where('sku', 'like', '%' . $keyword . '%');
                 });
                 if (! empty($status_codes)) {
@@ -190,6 +196,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_sale_enquiry')) {
             $records = $records->whereNot('object_type', SaleEnquiry::class);
         }
+        if (!hasPermission('approval.type_credit_debit_note')) {
+            $records = $records->whereNotIn('object_type', [CreditNote::class, DebitNote::class]);
+        }
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');
@@ -220,6 +229,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 8) {
                 $records = $records->where('object_type', SaleEnquiry::class);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 9) {
+                $records = $records->whereIn('object_type', [CreditNote::class, DebitNote::class]);
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -240,6 +252,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', GRN::class);
             } elseif (Session::get('approval-type') == 8) {
                 $records = $records->where('object_type', SaleEnquiry::class);
+            } elseif (Session::get('approval-type') == 9) {
+                $records = $records->whereIn('object_type', [CreditNote::class, DebitNote::class]);
             }
         }
 
@@ -299,6 +313,10 @@ class ApprovalController extends Controller
                     $view_url = route('grn.index');
                 } elseif (get_class($obj) == SaleEnquiry::class) {
                     $view_url = route('sale_enquiry.view', ['enquiry' => $obj->id]);
+                } elseif (get_class($obj) == CreditNote::class) {
+                    $view_url = route('invoice.credit-note.index');
+                } elseif (get_class($obj) == DebitNote::class) {
+                    $view_url = route('invoice.debit-note.index');
                 }
             }
 
@@ -529,6 +547,12 @@ class ApprovalController extends Controller
                 // Recalculate sale payment status
                 $this->recalculateSalePaymentStatus($data->sale_id);
             }
+            // Credit / Debit Note - apply line-item edits and submit to MyInvois
+            // now that the request is approved. Throws on a government rejection,
+            // which rolls back this transaction and leaves the note PENDING.
+            if (get_class($obj) == CreditNote::class || get_class($obj) == DebitNote::class) {
+                (new EInvoiceController)->submitApprovedNote($approval);
+            }
 
             DB::commit();
 
@@ -660,6 +684,12 @@ class ApprovalController extends Controller
                 if (isset($data->is_no_deal)) {
                     $this->notifySaleEnquiryNoDealDecision($obj, false, $req->remark);
                 }
+            }
+            // Credit / Debit Note - rejected. No line items were applied and
+            // nothing was submitted to MyInvois, so just mark the note rejected.
+            if (get_class($obj) == CreditNote::class || get_class($obj) == DebitNote::class) {
+                $obj->status = $obj::STATUS_REJECTED;
+                $obj->save();
             }
 
             DB::commit();

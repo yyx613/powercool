@@ -12,6 +12,11 @@ class CreditNote extends Model
     use HasFactory;
     protected $guarded = [];
 
+    // Status values (stored as strings on the `status` column).
+    const STATUS_PENDING = 'pending';   // created, awaiting admin approval (not yet submitted to MyInvois)
+    const STATUS_VALID = 'valid';       // approved + successfully submitted to MyInvois
+    const STATUS_REJECTED = 'rejected'; // admin rejected; never submitted
+
     public function einvoices()
     {
         return $this->belongsToMany(EInvoice::class, 'credit_note_e_invoice', 'credit_note_id', 'einvoice_id');

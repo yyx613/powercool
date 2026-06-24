@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\EInvoiceEmail;
+use App\Models\Approval;
 use App\Models\Billing;
 use App\Models\BillingProduct;
 use App\Models\Branch;
@@ -22,6 +23,7 @@ use App\Models\MsicCode;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleProduct;
+use App\Models\Scopes\BranchScope;
 use App\Models\User;
 use App\Models\ServiceForm;
 use App\Services\EInvoiceXmlGenerator;
@@ -30,6 +32,7 @@ use Carbon\Carbon;
 use DOMDocument;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -964,6 +967,13 @@ class EInvoiceController extends Controller
         }
     }
 
+    /**
+     * Step 1 of credit/debit note creation: the user submits the requested
+     * line-item changes. Instead of creating the note and submitting it to
+     * MyInvois immediately, we create the note in a PENDING state and raise an
+     * Approval request. No invoice line items are mutated and nothing is sent
+     * to the government API until an admin approves (see submitApprovedNote()).
+     */
     public function submitNote(Request $request)
     {
         $noteType = Session::get('note_type');
@@ -971,114 +981,222 @@ class EInvoiceController extends Controller
         $invoices = $request->input('invoices');
         $fromBilling = Session::get('fromBilling');
         $company = $fromBilling ? 'powercool' : Session::get('company');
-        $totals = [];
-        $qtyDifferences = [];
-        $eInvoiceIds = [];
-        $totalsModified = 0;
 
         DB::beginTransaction();
 
         try {
-            foreach ($invoices as $invoice) {
-                $invoiceUuid = $invoice['invoice_uuid'];
+            // Compute the changes WITHOUT applying them, so we can validate the
+            // request and capture which e-invoices are involved.
+            $changes = $this->buildNoteChanges($invoices, $type, $fromBilling, false);
 
-                if ($type == 'eInvoice') {
-                    $eInvoice = EInvoice::where('uuid', $invoiceUuid)->first();
-                } else {
-                    $eInvoice = ConsolidatedEInvoice::where('uuid', $invoiceUuid)->first();
-                }
+            if (empty($changes['qtyDifferences'])) {
+                DB::rollBack();
 
-                if ($eInvoice && ! in_array($eInvoice->id, $eInvoiceIds)) {
-                    $eInvoiceIds[] = $eInvoice->id;
-                }
-                if ($fromBilling) {
-                    $billing = $eInvoice->einvoiceable;
-                }
-                foreach ($invoice['items'] as $item) {
-                    if ($fromBilling) {
-                        $billingProducts = BillingProduct::where('billing_id', $billing->id)->get();
-                        //this saleProduct is not saleProduct, it is billingProducts
-                        $saleProduct = $billingProducts->where('product_id', $item['product_id'])->first();
-                    } else {
-                        $saleProduct = SaleProduct::find($item['product_id']);
-                    }
-
-                    if (! $saleProduct) {
-                        continue;
-                    }
-
-                    if (!$fromBilling) {
-                        $saleId = $saleProduct->sale->id;
-                        $amount = (int) $item['qty'] * (float) $item['price'];
-
-                        if (! isset($totals[$saleId])) {
-                            $totals[$saleId] = 0;
-                        }
-                        $totals[$saleId] += $amount;
-                    }
-
-                    $qtyDifference = abs($saleProduct->qty - $item['qty']);
-                    $priceDifference = abs(($fromBilling ? $saleProduct->price : $saleProduct->unit_price) - $item['price']);
-
-                    if ($qtyDifference != 0 || $priceDifference != 0) {
-                        $totalsModified += $qtyDifference * $item['price'];
-                        $qtyDifferences[] = [
-                            'id' => $item['product_id'],
-                            'diff' => $qtyDifference == 0 ? $saleProduct->qty : $qtyDifference,
-                            'price' => $item['price'],
-                        ];
-                    }
-
-                    $saleProduct->update([
-                        'qty' => $item['qty'],
-                        'price' => $item['price']
-                    ]);
-
-                    $customer = $fromBilling ? null : $saleProduct->sale->customer;
-                }
-            }
-            if (empty($qtyDifferences)) {
                 return response()->json([
                     'message' => 'Nothing to Change!',
                 ]);
             }
 
-            if (! $fromBilling) {
-                foreach ($totals as $saleId => $totalAmount) {
-                    Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
-                }
-            }
-
             if ($noteType == 'credit') {
                 $sku = (new CreditNote)->generateSku();
-                $note = CreditNote::create(['sku' => $sku]);
+                $note = CreditNote::create(['sku' => $sku, 'status' => CreditNote::STATUS_PENDING]);
             } else {
                 $sku = (new DebitNote)->generateSku();
-                $note = DebitNote::create(['sku' => $sku]);
+                $note = DebitNote::create(['sku' => $sku, 'status' => DebitNote::STATUS_PENDING]);
             }
 
             if ($type == 'eInvoice') {
-                $note->eInvoices()->attach($eInvoiceIds);
+                $note->eInvoices()->attach($changes['eInvoiceIds']);
             } else {
-                $note->consolidatedEInvoices()->attach($eInvoiceIds);
+                $note->consolidatedEInvoices()->attach($changes['eInvoiceIds']);
             }
 
-            $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
+            $description = ($noteType == 'credit' ? 'Credit Note' : 'Debit Note') . ' ' . $note->sku
+                . ' requested by ' . (optional(Auth::user())->name ?? 'a user') . '.';
 
-            $document = $this->xmlGenerator->generateNoteXml($eInvoiceIds, $qtyDifferences, $note, $totalsModified, $type, $tin, $customer, $fromBilling);
+            $approval = Approval::create([
+                'object_type' => get_class($note),
+                'object_id' => $note->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_note' => true,
+                    'note_kind' => $noteType,
+                    'invoice_type' => $type,
+                    'company' => $company,
+                    'fromBilling' => $fromBilling,
+                    'invoices' => $invoices,
+                    'submitted_by' => Auth::id(),
+                    'description' => $description,
+                ]),
+            ]);
 
-            $result = $this->syncNote($document, $note, $qtyDifferences, $company, $type, $fromBilling);
-            if (! empty($result->original['errorDetails']) || !empty($result->original['error'])) {
-                DB::rollBack();
-            } else {
-                DB::commit();
-            }
+            (new Branch)->assign(Approval::class, $approval->id);
 
-            return $result;
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Submitted for approval',
+                'pending_approval' => true,
+            ]);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
+            report($th);
+
+            return response()->json([
+                'error' => 'Failed to submit note for approval',
+                'message' => $th->getMessage(),
+            ], 500);
         }
+    }
+
+    /**
+     * Step 2: an admin approved the note request. Now we actually apply the
+     * line-item edits and submit the document to MyInvois. Called from
+     * ApprovalController::approve() inside its DB transaction; throws on a
+     * government rejection so that transaction rolls back and the note stays
+     * PENDING for a retry.
+     */
+    public function submitApprovedNote(Approval $approval)
+    {
+        $data = json_decode($approval->data, true);
+
+        $noteType = $data['note_kind'];
+        $type = $data['invoice_type'];
+        $company = $data['company'];
+        $fromBilling = $data['fromBilling'];
+        $invoices = $data['invoices'];
+
+        $note = $noteType == 'credit'
+            ? CreditNote::withoutGlobalScope(BranchScope::class)->find($approval->object_id)
+            : DebitNote::withoutGlobalScope(BranchScope::class)->find($approval->object_id);
+
+        // Apply the line-item edits now that the request has been approved.
+        $changes = $this->buildNoteChanges($invoices, $type, $fromBilling, true);
+
+        // Guard against an empty/stale request (e.g. a referenced sale product was
+        // removed after submission). Throwing here keeps the note PENDING and rolls
+        // back the surrounding approval transaction with a clear message, rather
+        // than failing deep inside the XML generator with a null-property error.
+        if (empty($changes['qtyDifferences'])) {
+            throw new \RuntimeException('Note ' . ($note->sku ?? '') . ' has no line-item changes to submit.');
+        }
+        if (! $fromBilling && $changes['customer'] === null) {
+            throw new \RuntimeException('Cannot resolve the customer for note ' . ($note->sku ?? '') . '; the referenced sale product may have been removed.');
+        }
+
+        if (! $fromBilling) {
+            foreach ($changes['totals'] as $saleId => $totalAmount) {
+                Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
+            }
+        }
+
+        $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
+
+        $document = $this->xmlGenerator->generateNoteXml(
+            $changes['eInvoiceIds'],
+            $changes['qtyDifferences'],
+            $note,
+            $changes['totalsModified'],
+            $type,
+            $tin,
+            $changes['customer'],
+            $fromBilling
+        );
+
+        $result = $this->syncNote($document, $note, $changes['qtyDifferences'], $company, $type, $fromBilling);
+
+        if (! empty($result->original['errorDetails']) || ! empty($result->original['error'])) {
+            // Government rejected the document. Throw so the surrounding approval
+            // transaction rolls back; the note remains PENDING for a retry.
+            throw new \RuntimeException('MyInvois submission failed for note ' . ($note->sku ?? '') . '.');
+        }
+
+        return $result;
+    }
+
+    /**
+     * Shared between submitNote() (validation/preview, $apply = false) and
+     * submitApprovedNote() (commit, $apply = true). Walks the requested invoice
+     * items, computes the qty/price differences, per-sale totals, involved
+     * e-invoice ids and the customer. When $apply is true it also writes the
+     * new qty/price back onto the SaleProduct/BillingProduct rows.
+     */
+    private function buildNoteChanges(array $invoices, $type, $fromBilling, bool $apply): array
+    {
+        $totals = [];
+        $qtyDifferences = [];
+        $eInvoiceIds = [];
+        $totalsModified = 0;
+        $customer = null;
+
+        foreach ($invoices as $invoice) {
+            $invoiceUuid = $invoice['invoice_uuid'];
+
+            if ($type == 'eInvoice') {
+                $eInvoice = EInvoice::where('uuid', $invoiceUuid)->first();
+            } else {
+                $eInvoice = ConsolidatedEInvoice::where('uuid', $invoiceUuid)->first();
+            }
+
+            if ($eInvoice && ! in_array($eInvoice->id, $eInvoiceIds)) {
+                $eInvoiceIds[] = $eInvoice->id;
+            }
+            if ($fromBilling) {
+                $billing = $eInvoice->einvoiceable;
+            }
+            foreach ($invoice['items'] as $item) {
+                if ($fromBilling) {
+                    $billingProducts = BillingProduct::where('billing_id', $billing->id)->get();
+                    //this saleProduct is not saleProduct, it is billingProducts
+                    $saleProduct = $billingProducts->where('product_id', $item['product_id'])->first();
+                } else {
+                    $saleProduct = SaleProduct::find($item['product_id']);
+                }
+
+                if (! $saleProduct) {
+                    continue;
+                }
+
+                if (! $fromBilling) {
+                    $saleId = $saleProduct->sale->id;
+                    $amount = (int) $item['qty'] * (float) $item['price'];
+
+                    if (! isset($totals[$saleId])) {
+                        $totals[$saleId] = 0;
+                    }
+                    $totals[$saleId] += $amount;
+                }
+
+                $qtyDifference = abs($saleProduct->qty - $item['qty']);
+                $priceDifference = abs(($fromBilling ? $saleProduct->price : $saleProduct->unit_price) - $item['price']);
+
+                if ($qtyDifference != 0 || $priceDifference != 0) {
+                    $totalsModified += $qtyDifference * $item['price'];
+                    $qtyDifferences[] = [
+                        'id' => $item['product_id'],
+                        'diff' => $qtyDifference == 0 ? $saleProduct->qty : $qtyDifference,
+                        'price' => $item['price'],
+                    ];
+                }
+
+                if ($apply) {
+                    $saleProduct->update([
+                        'qty' => $item['qty'],
+                        'price' => $item['price'],
+                    ]);
+                }
+
+                $customer = $fromBilling ? null : $saleProduct->sale->customer;
+            }
+        }
+
+        return [
+            'totals' => $totals,
+            'qtyDifferences' => $qtyDifferences,
+            'eInvoiceIds' => $eInvoiceIds,
+            'totalsModified' => $totalsModified,
+            'customer' => $customer,
+        ];
     }
 
     public function syncNote($document, $note, $qtyDifferences, $company, $type, $fromBilling)
@@ -1128,19 +1246,19 @@ class EInvoiceController extends Controller
                     }
 
                     if ($note instanceof CreditNote) {
-                        $note = CreditNote::where('sku', $invoiceCodeNumber)->first();
+                        $note = CreditNote::withoutGlobalScope(BranchScope::class)->where('sku', $invoiceCodeNumber)->first();
                         if ($note) {
                             $note->update([
                                 'uuid' => $uuid,
-                                'status' => 'valid',
+                                'status' => CreditNote::STATUS_VALID,
                             ]);
                         }
                     } else {
-                        $note = DebitNote::where('sku', $invoiceCodeNumber)->first();
+                        $note = DebitNote::withoutGlobalScope(BranchScope::class)->where('sku', $invoiceCodeNumber)->first();
                         if ($note) {
                             $note->update([
                                 'uuid' => $uuid,
-                                'status' => 'valid',
+                                'status' => DebitNote::STATUS_VALID,
                             ]);
                         }
                     }

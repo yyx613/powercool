@@ -435,13 +435,17 @@
                 loadingIndicator.style.display = 'none';
                 const responseData = await response.json();
 
-                if (responseData.errorDetails && responseData.errorDetails.length > 0) {
-                    const errorMessages = responseData.errorDetails.map(error => 
+                if (responseData.error) {
+                    alert('提交失败: ' + (responseData.message || responseData.error));
+                } else if (responseData.errorDetails && responseData.errorDetails.length > 0) {
+                    const errorMessages = responseData.errorDetails.map(error =>
                         `Invoice Code: ${error.invoiceCodeNumber}, Error: ${error.error}`
                     ).join('\n');
                     alert('提交失败:\n' + errorMessages);
+                } else if (responseData.pending_approval) {
+                    alert('Submitted for admin approval. The note will be issued once approved.');
                 } else {
-                    alert('Submit Succesfully!');
+                    alert(responseData.message || 'Submit Succesfully!');
                 }
             } else {
                 console.log('2');
