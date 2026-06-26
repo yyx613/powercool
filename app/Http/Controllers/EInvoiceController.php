@@ -979,8 +979,16 @@ class EInvoiceController extends Controller
         $noteType = Session::get('note_type');
         $type = Session::get('invoice_type');
         $invoices = $request->input('invoices');
+        $reason = trim((string) $request->input('reason'));
         $fromBilling = Session::get('fromBilling');
         $company = $fromBilling ? 'powercool' : Session::get('company');
+
+        if ($reason === '') {
+            return response()->json([
+                'error' => 'Reason required',
+                'message' => 'Please enter a reason for this note.',
+            ], 422);
+        }
 
         DB::beginTransaction();
 
@@ -1027,6 +1035,7 @@ class EInvoiceController extends Controller
                     'invoices' => $invoices,
                     'submitted_by' => Auth::id(),
                     'description' => $description,
+                    'reason' => $reason,
                 ]),
             ]);
 
@@ -1034,9 +1043,17 @@ class EInvoiceController extends Controller
 
             DB::commit();
 
+            $listRoute = $noteType == 'credit'
+                ? route('invoice.credit-note.index')
+                : route('invoice.debit-note.index');
+
+            Session::flash('success', ($noteType == 'credit' ? 'Credit' : 'Debit') . ' note '
+                . $note->sku . ' submitted for admin approval.');
+
             return response()->json([
                 'message' => 'Submitted for approval',
                 'pending_approval' => true,
+                'redirect' => $listRoute,
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -1084,11 +1101,10 @@ class EInvoiceController extends Controller
             throw new \RuntimeException('Cannot resolve the customer for note ' . ($note->sku ?? '') . '; the referenced sale product may have been removed.');
         }
 
-        if (! $fromBilling) {
-            foreach ($changes['totals'] as $saleId => $totalAmount) {
-                Sale::find($saleId)->update(['payment_amount' => $totalAmount]);
-            }
-        }
+        // No need to persist a sale total here: the legacy sales.payment_amount
+        // column was dropped (2025_06_23 sale_payment_amounts refactor) and the
+        // order total is now derived from the SaleProduct rows, which were just
+        // updated above by buildNoteChanges().
 
         $tin = $company == 'powercool' ? $this->powerCoolTin : $this->hitenTin;
 
@@ -1107,23 +1123,128 @@ class EInvoiceController extends Controller
 
         if (! empty($result->original['errorDetails']) || ! empty($result->original['error'])) {
             // Government rejected the document. Throw so the surrounding approval
-            // transaction rolls back; the note remains PENDING for a retry.
-            throw new \RuntimeException('MyInvois submission failed for note ' . ($note->sku ?? '') . '.');
+            // transaction rolls back; the note remains PENDING for a retry. Include
+            // the actual MyInvois reason so the log/admin can see WHY it failed
+            // instead of an opaque "submission failed".
+            $reason = $this->describeNoteSubmissionError($result->original);
+
+            throw new \RuntimeException(
+                'MyInvois submission failed for note ' . ($note->sku ?? '') . '.'
+                . ($reason !== '' ? ' ' . $reason : '')
+            );
         }
 
         return $result;
     }
 
     /**
+     * Build a short, human-readable reason from the syncNote() result payload so
+     * a MyInvois rejection is logged with its actual cause rather than a generic
+     * message. Handles both the HTTP-failure shape (error/message) and the
+     * rejected-document shape (errorDetails[]).
+     */
+    private function describeNoteSubmissionError($payload): string
+    {
+        if (! is_array($payload)) {
+            return '';
+        }
+
+        if (! empty($payload['errorDetails'])) {
+            $messages = [];
+            foreach ($payload['errorDetails'] as $detail) {
+                // getDocumentDetails() failure has a flat 'error'; a rejected
+                // document carries error_code/error_message (+ nested details).
+                if (isset($detail['error'])) {
+                    $messages[] = $this->flattenMyInvoisError($detail['error']);
+
+                    continue;
+                }
+
+                $parts = array_filter([
+                    $detail['error_code'] ?? null,
+                    $detail['error_message'] ?? null,
+                ]);
+                foreach ($detail['details'] ?? [] as $sub) {
+                    if (! empty($sub['message'])) {
+                        $parts[] = $sub['message'];
+                    }
+                }
+                if (! empty($parts)) {
+                    $messages[] = implode(' - ', $parts);
+                }
+            }
+
+            $messages = array_filter($messages);
+            if (! empty($messages)) {
+                return 'Reason: ' . implode(' | ', $messages);
+            }
+        }
+
+        // The HTTP-failure branch stuffs the raw MyInvois response body (often a
+        // JSON error envelope) into 'message'; 'error' may hold the envelope too.
+        foreach (['message', 'error'] as $key) {
+            if (! empty($payload[$key])) {
+                $flat = $this->flattenMyInvoisError($payload[$key]);
+                if ($flat !== '') {
+                    return 'Reason: ' . $flat;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Reduce a MyInvois error value to a short human message. Accepts a plain
+     * string, a JSON string of an {error:{code,message,details:[{message}]}}
+     * envelope, or that envelope already decoded into an array.
+     */
+    private function flattenMyInvoisError($value): string
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                return trim($value);
+            }
+            $value = $decoded;
+        }
+
+        if (! is_array($value)) {
+            return '';
+        }
+
+        // Unwrap a top-level {"error": {...}} envelope.
+        $error = $value['error'] ?? $value;
+
+        $messages = [];
+        foreach ($error['details'] ?? [] as $detail) {
+            if (! empty($detail['message'])) {
+                $messages[] = trim($detail['message']);
+            }
+        }
+        if (! empty($messages)) {
+            return implode(' | ', array_unique($messages));
+        }
+
+        if (! empty($error['message'])) {
+            return trim($error['message']);
+        }
+        if (! empty($error['code'])) {
+            return trim($error['code']);
+        }
+
+        return '';
+    }
+
+    /**
      * Shared between submitNote() (validation/preview, $apply = false) and
      * submitApprovedNote() (commit, $apply = true). Walks the requested invoice
-     * items, computes the qty/price differences, per-sale totals, involved
-     * e-invoice ids and the customer. When $apply is true it also writes the
-     * new qty/price back onto the SaleProduct/BillingProduct rows.
+     * items, computes the qty/price differences, involved e-invoice ids and the
+     * customer. When $apply is true it also writes the new qty/price back onto
+     * the SaleProduct/BillingProduct rows.
      */
     private function buildNoteChanges(array $invoices, $type, $fromBilling, bool $apply): array
     {
-        $totals = [];
         $qtyDifferences = [];
         $eInvoiceIds = [];
         $totalsModified = 0;
@@ -1157,16 +1278,6 @@ class EInvoiceController extends Controller
                     continue;
                 }
 
-                if (! $fromBilling) {
-                    $saleId = $saleProduct->sale->id;
-                    $amount = (int) $item['qty'] * (float) $item['price'];
-
-                    if (! isset($totals[$saleId])) {
-                        $totals[$saleId] = 0;
-                    }
-                    $totals[$saleId] += $amount;
-                }
-
                 $qtyDifference = abs($saleProduct->qty - $item['qty']);
                 $priceDifference = abs(($fromBilling ? $saleProduct->price : $saleProduct->unit_price) - $item['price']);
 
@@ -1180,9 +1291,11 @@ class EInvoiceController extends Controller
                 }
 
                 if ($apply) {
+                    // SaleProduct stores its price in `unit_price`; BillingProduct
+                    // in `price` (mirrors the read on the priceDifference line above).
                     $saleProduct->update([
                         'qty' => $item['qty'],
-                        'price' => $item['price'],
+                        ($fromBilling ? 'price' : 'unit_price') => $item['price'],
                     ]);
                 }
 
@@ -1191,7 +1304,6 @@ class EInvoiceController extends Controller
         }
 
         return [
-            'totals' => $totals,
             'qtyDifferences' => $qtyDifferences,
             'eInvoiceIds' => $eInvoiceIds,
             'totalsModified' => $totalsModified,

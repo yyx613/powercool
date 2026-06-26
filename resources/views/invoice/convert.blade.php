@@ -233,7 +233,14 @@
                                     </li>
                                 @endforeach
                             </ul>
-                        
+
+                            <div class="mt-4">
+                                <label for="note-reason" class="block text-sm font-semibold mb-1">{{ __('Reason') }} <span class="text-red-600">*</span></label>
+                                <textarea name="reason" id="note-reason" rows="3" required
+                                    placeholder="{{ __('Enter the reason for this note (the admin will review this before approving)') }}"
+                                    class="w-full text-sm rounded-md border border-gray-300 p-2 focus:ring-0 focus:border-black"></textarea>
+                            </div>
+
                             <div class="flex justify-end mt-8">
                                 <button type="submit" class="bg-slate-100 rounded-md py-2 px-4 flex justify-center items-center gap-x-2">
                                     <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" width="512" height="512">
@@ -443,7 +450,13 @@
                     ).join('\n');
                     alert('提交失败:\n' + errorMessages);
                 } else if (responseData.pending_approval) {
-                    alert('Submitted for admin approval. The note will be issued once approved.');
+                    // Redirect back to the note listing; the success message is
+                    // flashed server-side and rendered there.
+                    if (responseData.redirect) {
+                        window.location.href = responseData.redirect;
+                    } else {
+                        alert('Submitted for admin approval. The note will be issued once approved.');
+                    }
                 } else {
                     alert(responseData.message || 'Submit Succesfully!');
                 }

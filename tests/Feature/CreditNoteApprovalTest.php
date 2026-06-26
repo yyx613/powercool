@@ -86,9 +86,10 @@ class CreditNoteApprovalTest extends TestCase
         return [$customer, $sale, $saleProduct, $eInvoice];
     }
 
-    private function notePayload(EInvoice $eInvoice, SaleProduct $saleProduct, int $newQty = 5): array
+    private function notePayload(EInvoice $eInvoice, SaleProduct $saleProduct, int $newQty = 5, string $reason = 'Customer returned goods'): array
     {
         return [
+            'reason' => $reason,
             'invoices' => [
                 [
                     'invoice_uuid' => $eInvoice->uuid,
@@ -122,7 +123,12 @@ class CreditNoteApprovalTest extends TestCase
         ])->post(route('submit.note'), $this->notePayload($eInvoice, $saleProduct));
 
         $response->assertOk();
-        $response->assertJson(['pending_approval' => true]);
+        $response->assertJson([
+            'pending_approval' => true,
+            'redirect' => route('invoice.credit-note.index'),
+        ]);
+        // The user is sent back to the listing with a success flash message.
+        $response->assertSessionHas('success');
 
         // A pending note exists, but it was NOT submitted to MyInvois.
         // (Tests run against the shared dev DB, so identify THIS test's note via
@@ -146,6 +152,10 @@ class CreditNoteApprovalTest extends TestCase
         $this->assertNotNull($approval);
         $this->assertEquals(Approval::STATUS_PENDING_APPROVAL, $approval->status);
         $this->assertStringContainsString('is_note', $approval->data);
+
+        // The submitter's reason is stored on the approval so the admin can see
+        // it when deciding whether to approve.
+        $this->assertEquals('Customer returned goods', json_decode($approval->data)->reason);
 
         // Line items must NOT be mutated until approved.
         $saleProduct->refresh();
@@ -172,7 +182,10 @@ class CreditNoteApprovalTest extends TestCase
             'as_branch' => Branch::LOCATION_KL,
         ])->post(route('submit.note'), $this->notePayload($eInvoice, $saleProduct))
             ->assertOk()
-            ->assertJson(['pending_approval' => true]);
+            ->assertJson([
+                'pending_approval' => true,
+                'redirect' => route('invoice.debit-note.index'),
+            ]);
 
         $note = $eInvoice->debitNotes()->first();
         $this->assertNotNull($note);
@@ -183,6 +196,111 @@ class CreditNoteApprovalTest extends TestCase
             'object_id' => $note->id,
             'status' => Approval::STATUS_PENDING_APPROVAL,
         ]);
+    }
+
+    public function test_applying_note_changes_writes_sale_product_unit_price(): void
+    {
+        // Regression: the apply (approval) path wrote to a non-existent
+        // `price` column on sale_products instead of `unit_price`, so approving
+        // a credit/debit note blew up with "Unknown column 'price'".
+        $this->fakeMyInvois();
+
+        [$customer, $sale, $saleProduct, $eInvoice] = $this->seedInvoiceAndProduct();
+
+        $controller = app(\App\Http\Controllers\EInvoiceController::class);
+        $method = new \ReflectionMethod($controller, 'buildNoteChanges');
+        $method->setAccessible(true);
+
+        $invoices = $this->notePayload($eInvoice, $saleProduct, 4)['invoices'];
+        // The new qty/price gets written back to the SaleProduct.
+        $invoices[0]['items'][0]['price'] = 120;
+
+        $changes = $method->invoke($controller, $invoices, 'eInvoice', false, true);
+
+        $this->assertNotEmpty($changes['qtyDifferences']);
+
+        $saleProduct->refresh();
+        $this->assertEquals(4, $saleProduct->qty);
+        $this->assertEquals(120, $saleProduct->unit_price);
+    }
+
+    public function test_myinvois_rejection_reason_is_surfaced_in_message(): void
+    {
+        // A MyInvois rejection should be logged/thrown with its actual cause
+        // instead of an opaque "submission failed".
+        $this->fakeMyInvois();
+
+        $controller = app(\App\Http\Controllers\EInvoiceController::class);
+        $method = new \ReflectionMethod($controller, 'describeNoteSubmissionError');
+        $method->setAccessible(true);
+
+        // Rejected-document shape.
+        $rejected = [
+            'errorDetails' => [
+                [
+                    'invoiceCodeNumber' => 'CN123',
+                    'error_code' => 'CF321',
+                    'error_message' => 'Invalid TIN',
+                    'details' => [
+                        ['message' => 'TIN does not match registration'],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertEquals(
+            'Reason: CF321 - Invalid TIN - TIN does not match registration',
+            $method->invoke($controller, $rejected)
+        );
+
+        // getDocumentDetails flat-error shape.
+        $flat = ['errorDetails' => [['invoiceCodeNumber' => 'CN123', 'error' => 'Document not found']]];
+        $this->assertEquals('Reason: Document not found', $method->invoke($controller, $flat));
+
+        // HTTP-failure shape with a plain string body.
+        $http = ['error' => 'Document submission failed', 'message' => 'Service unavailable'];
+        $this->assertEquals('Reason: Service unavailable', $method->invoke($controller, $http));
+
+        // HTTP-failure shape where the body is a MyInvois JSON error envelope:
+        // the clean detail message is extracted, not the raw JSON.
+        $envelope = ['error' => 'Document submission failed', 'message' => json_encode([
+            'error' => [
+                'code' => 'ValidationError',
+                'message' => null,
+                'details' => [
+                    ['code' => 'submission', 'message' => 'The authenticated TIN and documents TIN is not matching '],
+                ],
+            ],
+        ])];
+        $this->assertEquals(
+            'Reason: The authenticated TIN and documents TIN is not matching',
+            $method->invoke($controller, $envelope)
+        );
+
+        // Nothing useful -> empty string (caller omits it).
+        $this->assertEquals('', $method->invoke($controller, []));
+    }
+
+    public function test_submitting_a_note_without_a_reason_is_rejected(): void
+    {
+        $this->fakeMyInvois();
+
+        [$customer, $sale, $saleProduct, $eInvoice] = $this->seedInvoiceAndProduct();
+
+        $user = $this->userWith([]);
+        $this->actingAs($user);
+
+        $this->withSession([
+            'note_type' => 'credit',
+            'invoice_type' => 'eInvoice',
+            'fromBilling' => false,
+            'company' => 'powercool',
+            'as_branch' => Branch::LOCATION_KL,
+        ])->post(route('submit.note'), $this->notePayload($eInvoice, $saleProduct, 5, '   '))
+            ->assertStatus(422)
+            ->assertJson(['error' => 'Reason required']);
+
+        // No note or approval was created when the reason is missing.
+        $this->assertEquals(0, $eInvoice->creditNotes()->count());
     }
 
     public function test_submitting_with_no_changes_does_not_create_a_note(): void
@@ -207,6 +325,44 @@ class CreditNoteApprovalTest extends TestCase
 
         // No note was created/attached for this test's e-invoice.
         $this->assertEquals(0, $eInvoice->creditNotes()->count());
+    }
+
+    public function test_failed_approval_returns_the_reason_message(): void
+    {
+        // When approval fails the endpoint must return the reason so the UI can
+        // show it instead of silently hanging.
+        $this->fakeMyInvois();
+
+        $note = CreditNote::create(['sku' => 'CN-FAIL' . uniqid(), 'status' => CreditNote::STATUS_PENDING]);
+
+        // Empty invoices -> buildNoteChanges finds no line-item changes ->
+        // submitApprovedNote throws before ever reaching MyInvois.
+        $approval = Approval::create([
+            'object_type' => CreditNote::class,
+            'object_id' => $note->id,
+            'status' => Approval::STATUS_PENDING_APPROVAL,
+            'data' => json_encode([
+                'is_note' => true,
+                'note_kind' => 'credit',
+                'invoice_type' => 'eInvoice',
+                'company' => 'powercool',
+                'fromBilling' => false,
+                'invoices' => [],
+            ]),
+        ]);
+
+        $manager = $this->userWith(['approval.view']);
+        $this->actingAs($manager);
+
+        $response = $this->get(route('approval.approve', ['approval' => $approval]));
+
+        $response->assertStatus(500);
+        $response->assertJson(['result' => false]);
+        $this->assertStringContainsString('no line-item changes', $response->json('message'));
+
+        // The note stays pending (transaction rolled back) so it can be retried.
+        $note->refresh();
+        $this->assertEquals(CreditNote::STATUS_PENDING, $note->status);
     }
 
     public function test_rejecting_a_credit_note_marks_it_rejected(): void
@@ -267,6 +423,7 @@ class CreditNoteApprovalTest extends TestCase
             'approval.type_customer', 'approval.type_payment_record', 'approval.type_raw_material_request',
             'approval.type_complete_production_request', 'approval.type_grn', 'approval.type_sale_enquiry',
             'approval.production_material_transfer_request', 'approval.type_credit_debit_note',
+            'approval.type_invoice_return',
         ] as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }

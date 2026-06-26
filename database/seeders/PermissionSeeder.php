@@ -30,6 +30,7 @@ class PermissionSeeder extends Seeder
             'approval.type_complete_production_request',
             'approval.type_grn',
             'approval.type_sale_enquiry',
+            'approval.type_invoice_return',
 
             'dashboard.view',
 

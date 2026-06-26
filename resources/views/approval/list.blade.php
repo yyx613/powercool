@@ -163,6 +163,8 @@
                                 return 'Raw Material Request';
                             } else if (data.includes('SaleEnquiry')) {
                                 return 'Sale Enquiry';
+                            } else if (data.includes('Invoice')) {
+                                return 'Invoice Return';
                             } else if (row.data != null && row.data.is_quo == true) {
                                 return 'Quotation';
                             } else {
@@ -294,6 +296,9 @@
             let url = '{{ config('app.url') }}'
             url = `${url}/approval/approve/${id}`
 
+            let $btn = $(this)
+            $btn.prop('disabled', true)
+
             $.ajax({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -301,10 +306,24 @@
                 url: url,
                 type: 'GET',
                 success: function(res) {
+                    if (!res || res.result !== true) {
+                        $btn.prop('disabled', false)
+                        alert(res && res.message ? res.message : '{{ __('Approval failed. Please try again.') }}')
+                        return
+                    }
                     $(`.reject-btns[data-id="${id}"]`).remove()
                     $(`.approve-btns[data-id="${id}"]`).remove()
                     $(`tr[data-noti-id="${id}"]`).attr('data-unread', false)
                     $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).html('Approved<br><span class="text-xs text-gray-500">by: {{ auth()->user()->name }}</span>')
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false)
+                    let msg = '{{ __('Approval failed. Please try again.') }}'
+                    try {
+                        const r = JSON.parse(xhr.responseText)
+                        if (r && r.message) msg = r.message
+                    } catch (e) {}
+                    alert(msg)
                 },
             });
         })
@@ -332,12 +351,24 @@
                 },
                 type: 'POST',
                 success: function(res) {
-                    $('#approval-reject-modal').removeClass('show-modal') 
+                    if (!res || res.result !== true) {
+                        alert(res && res.message ? res.message : '{{ __('Reject failed. Please try again.') }}')
+                        return
+                    }
+                    $('#approval-reject-modal').removeClass('show-modal')
 
                     $(`.reject-btns[data-id="${id}"]`).remove()
                     $(`.approve-btns[data-id="${id}"]`).remove()
                     $(`tr[data-noti-id="${id}"]`).attr('data-unread', false)
                     $(`tr[data-noti-id="${id}"] td:nth-of-type(6)`).html('Rejected<br><span class="text-xs text-gray-500">by: {{ auth()->user()->name }}</span>')
+                },
+                error: function(xhr) {
+                    let msg = '{{ __('Reject failed. Please try again.') }}'
+                    try {
+                        const r = JSON.parse(xhr.responseText)
+                        if (r && r.message) msg = r.message
+                    } catch (e) {}
+                    alert(msg)
                 },
             });
         })
