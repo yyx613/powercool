@@ -18,7 +18,7 @@
 
 @section('content')
     <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track orders, convert from quotations, and generate delivery orders') }}">{{ __('Sale Order') }}</x-app.page-title>
+        <x-app.page-title class="mb-2 md:mb-0" :url="request('from') === 'approval' ? route('approval.index') : null" description="{{ __('Track orders, convert from quotations, and generate delivery orders') }}">{{ __('Sale Order') }}</x-app.page-title>
         <div class="flex flex-wrap gap-2">
             @can('sale.sale_order.convert_from')
                 <a href="{{ route('quotation.to_sale_order') }}"

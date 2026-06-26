@@ -344,12 +344,12 @@ class ApprovalController extends Controller
             $view_url = null;
             if ($obj != null) {
                 if (get_class($obj) == DeliveryOrder::class) {
-                    $view_url = route('delivery_order.index', ['sku' => $obj->sku]);
+                    $view_url = route('delivery_order.index', ['sku' => $obj->sku, 'from' => 'approval']);
                 } elseif (get_class($obj) == Sale::class) {
                     if ($obj->type == Sale::TYPE_QUO) {
-                        $view_url = route('quotation.index', ['sku' => $obj->sku]);
+                        $view_url = route('quotation.index', ['sku' => $obj->sku, 'from' => 'approval']);
                     } else {
-                        $view_url = route('sale_order.index', ['sku' => $obj->sku]);
+                        $view_url = route('sale_order.index', ['sku' => $obj->sku, 'from' => 'approval']);
                     }
                 } elseif (get_class($obj) == SalePaymentAmount::class) {
                     $view_url = route('sale_order.edit_payment', ['sale' => $obj->sale_id]);
@@ -358,15 +358,15 @@ class ApprovalController extends Controller
                 } elseif (get_class($obj) == Production::class) {
                     $view_url = route('production.view', ['production' => $obj->id]);
                 } elseif (get_class($obj) == GRN::class) {
-                    $view_url = route('grn.index');
+                    $view_url = route('grn.index', ['from' => 'approval']);
                 } elseif (get_class($obj) == SaleEnquiry::class) {
                     $view_url = route('sale_enquiry.view', ['enquiry' => $obj->id]);
                 } elseif (get_class($obj) == CreditNote::class) {
-                    $view_url = route('invoice.credit-note.index');
+                    $view_url = route('invoice.credit-note.index', ['from' => 'approval']);
                 } elseif (get_class($obj) == DebitNote::class) {
-                    $view_url = route('invoice.debit-note.index');
+                    $view_url = route('invoice.debit-note.index', ['from' => 'approval']);
                 } elseif (get_class($obj) == Invoice::class) {
-                    $view_url = route('invoice_return.view_product_selection', ['inv' => $obj->id]);
+                    $view_url = route('invoice_return.view_product_selection', ['inv' => $obj->id, 'from' => 'approval']);
                 }
             }
 

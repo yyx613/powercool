@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0">{{ __('Product Selection') }}</x-app.page-title>
+        <x-app.page-title class="mb-4 lg:mb-0" :url="request('from') === 'approval' ? route('approval.index') : null">{{ __('Product Selection') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow" id="content-container">

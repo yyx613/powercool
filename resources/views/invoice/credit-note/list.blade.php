@@ -16,7 +16,7 @@
 
 @section('content')
     <div class="mb-3 flex justify-between items-center">
-        <x-app.page-title description="{{ __('Track issued credit notes and send documents to customers') }}">{{ __('Credit Note') }}</x-app.page-title>
+        <x-app.page-title :url="request('from') === 'approval' ? route('approval.index') : null" description="{{ __('Track issued credit notes and send documents to customers') }}">{{ __('Credit Note') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div>

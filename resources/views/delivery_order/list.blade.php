@@ -18,7 +18,7 @@
 
 @section('content')
     <div class="mb-3 flex justify-between items-start md:items-center flex-col md:flex-row">
-        <x-app.page-title class="mb-2 md:mb-0" description="{{ __('Track deliveries, generate transport documents, and manage transfers') }}">{{ __('Delivery Order') }}</x-app.page-title>
+        <x-app.page-title class="mb-2 md:mb-0" :url="request('from') === 'approval' ? route('approval.index') : null" description="{{ __('Track deliveries, generate transport documents, and manage transfers') }}">{{ __('Delivery Order') }}</x-app.page-title>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('sale_order.to_delivery_order') }}"
                 class="bg-green-200 shadow rounded-md py-2 px-4 flex items-center gap-x-2" id="convert-to-inv-btn">
