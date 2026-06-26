@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\ServiceHistoryExport;
 use App\Models\Attachment;
-use App\Models\Customer;
 use App\Models\ProductChild;
 use App\Models\Role;
 use App\Models\TaskMilestoneInventory;
@@ -37,19 +36,30 @@ class InventoryServieHistoryController extends Controller
             $keyword = $req->search['value'];
 
             $records = $records->where(function ($q) use ($keyword) {
-                $q->where('sku', 'like', '%'.$keyword.'%')
-                    ->orWhere('qty', 'like', '%'.$keyword.'%')
+                // Qty and Service Date (real columns on task_milestone_inventories)
+                $q->where('qty', 'like', '%'.$keyword.'%')
                     ->orWhere('service_date', 'like', '%'.$keyword.'%')
-                    ->orWhereHas('taskMilestoneInventory.taskMilestone.task', function ($q) use ($keyword) {
-                        $q->where('sku', 'like', '%'.$keyword.'%');
-                    })
+                    // Serial No: morphed inventory (ProductChild) sku
                     ->orWhereHasMorph(
-                        'stockOutTo',
-                        [Customer::class, User::class],
+                        'inventory',
+                        [ProductChild::class],
                         function ($q) use ($keyword) {
                             $q->where('sku', 'like', '%'.$keyword.'%');
                         }
-                    );
+                    )
+                    // Task ID: taskMilestone -> task sku
+                    ->orWhereHas('taskMilestone.task', function ($q) use ($keyword) {
+                        $q->where('sku', 'like', '%'.$keyword.'%');
+                    })
+                    // Technician: resolved from service_by FK -> users (name / sku)
+                    ->orWhereIn('service_by', function ($sub) use ($keyword) {
+                        $sub->select('id')
+                            ->from('users')
+                            ->where(function ($u) use ($keyword) {
+                                $u->where('name', 'like', '%'.$keyword.'%')
+                                    ->orWhere('sku', 'like', '%'.$keyword.'%');
+                            });
+                    });
             });
         }
         // Order

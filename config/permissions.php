@@ -21,6 +21,7 @@ return [
     'approval.type_grn' => 'Show GRN approval requests in the approval listing page and the GRN option in the type filter dropdown',
     'approval.type_sale_enquiry' => 'Show sale enquiry No Deal requests in the approval listing page and the Sale Enquiry option in the type filter dropdown',
     'approval.type_credit_debit_note' => 'Show credit note and debit note issuance requests in the approval listing page and the Credit/Debit Note option in the type filter dropdown',
+    'approval.type_invoice_return' => 'Show invoice return requests in the approval listing page and the Invoice Return option in the type filter dropdown',
 
     // Dashboard
     'dashboard.view' => 'Show the Dashboard menu in the sidebar and access the dashboard page with sales, production, and task overview charts',

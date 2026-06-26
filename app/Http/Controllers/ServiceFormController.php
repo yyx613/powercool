@@ -69,6 +69,9 @@ class ServiceFormController extends Controller
                     })
                     ->orWhereHas('einvoice', function ($q) use ($keyword) {
                         $q->where('status', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('technician', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%'.$keyword.'%');
                     });
             });
         }

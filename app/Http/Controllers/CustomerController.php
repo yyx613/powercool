@@ -202,6 +202,8 @@ class CustomerController extends Controller
                         $q->where('name', 'like', '%' . $keyword . '%');
                     })->orWhereHas('debtorType', function ($q) use ($keyword) {
                         $q->where('name', 'like', '%' . $keyword . '%');
+                    })->orWhereHas('salesAgents.salesAgent', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%');
                     });
                 });
             }

@@ -178,7 +178,27 @@ class ProductionController extends Controller
                     })
                     ->orWhereHas('sale', function ($q) use ($keyword) {
                         $q->where('sku', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('factory', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('customizeProduct', function ($q) use ($keyword) {
+                        $q->where('sku', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('oldProduction', function ($q) use ($keyword) {
+                        $q->where('sku', 'like', '%'.$keyword.'%');
                     });
+
+                // Material Status (raw material request status: 1 => In Progress, 2 => Completed)
+                $request_status_codes = TableSearch::matchingCodes([
+                    RawMaterialRequest::STATUS_IN_PROGRESS => 'In Progress',
+                    RawMaterialRequest::STATUS_COMPLETED => 'Completed',
+                ], $keyword);
+                if (! empty($request_status_codes)) {
+                    $q->orWhereHas('rawMaterialRequest', function ($q) use ($request_status_codes) {
+                        $q->whereIn('status', $request_status_codes);
+                    });
+                }
             });
         }
         // Order

@@ -216,6 +216,9 @@ class ProductController extends Controller
                     ->orWhere('max_price', 'like', '%'.$keyword.'%')
                     ->orWhereHas('category', function ($qq) use ($keyword) {
                         $qq->where('name', 'like', '%'.$keyword.'%');
+                    })
+                    ->orWhereHas('createdBy', function ($qq) use ($keyword) {
+                        $qq->where('name', 'like', '%'.$keyword.'%');
                     });
                 if (! empty($is_active_codes)) {
                     $q->orWhereIn('is_active', $is_active_codes);
@@ -327,10 +330,11 @@ class ProductController extends Controller
     private function getFactoryRawMaterial($keyword = null, $orders = null, $product_ids_only = null, $show_usage = false)
     {
         $records = DB::table('factory_raw_materials as frm')
-            ->select('frm.*', 'products.sku', 'products.model_desc', 'products.min_price', 'products.max_price', 'products.is_sparepart', 'products.created_by', 'inventory_categories.name as category_name', 'factories.name as factory')
+            ->select('frm.*', 'products.sku', 'products.model_desc', 'products.min_price', 'products.max_price', 'products.is_sparepart', 'products.is_active', 'products.created_by', 'inventory_categories.name as category_name', 'factories.name as factory', 'users.name as created_by_name')
             ->join('products', 'frm.product_id', '=', 'products.id')
             ->join('inventory_categories', 'products.inventory_category_id', '=', 'inventory_categories.id')
             ->join('factories', 'frm.factory_id', '=', 'factories.id')
+            ->leftJoin('users', 'products.created_by', '=', 'users.id')
             ->whereNot('frm.status', FactoryRawMaterial::STATUS_REJECTED);
 
         if ($product_ids_only != null) {
@@ -338,12 +342,22 @@ class ProductController extends Controller
         }
         // Search
         if ($keyword != null) {
-            $records = $records->where(function ($q) use ($keyword) {
+            $is_active_codes = TableSearch::matchingCodes([0 => 'Inactive', 1 => 'Active'], $keyword);
+            $is_sparepart_codes = TableSearch::matchingCodes([0 => 'No', 1 => 'Yes'], $keyword);
+
+            $records = $records->where(function ($q) use ($keyword, $is_active_codes, $is_sparepart_codes) {
                 $q->where('products.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('products.model_desc', 'like', '%'.$keyword.'%')
                     ->orWhere('products.min_price', 'like', '%'.$keyword.'%')
                     ->orWhere('products.max_price', 'like', '%'.$keyword.'%')
-                    ->orWhere('inventory_categories.name', 'like', '%'.$keyword.'%');
+                    ->orWhere('inventory_categories.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('users.name', 'like', '%'.$keyword.'%');
+                if (! empty($is_active_codes)) {
+                    $q->orWhereIn('products.is_active', $is_active_codes);
+                }
+                if (! empty($is_sparepart_codes)) {
+                    $q->orWhereIn('products.is_sparepart', $is_sparepart_codes);
+                }
             });
         }
         // Order

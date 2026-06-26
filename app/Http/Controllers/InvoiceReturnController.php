@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
+use App\Models\Branch;
 use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderProductChild;
 use App\Models\Invoice;
@@ -11,8 +13,10 @@ use App\Models\ReturnProduct;
 use App\Models\SaleProduct;
 use App\Models\SaleProductChild;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class InvoiceReturnController extends Controller
 {
@@ -77,27 +81,16 @@ class InvoiceReturnController extends Controller
             }
         }
 
-        // Returned
+        // Already returned (approved) - subtract these from what's still returnable.
         $selected = ReturnProduct::where('invoice_id', $inv->id)->get();
+        foreach ($selected as $row) {
+            $this->deductReturned($products, $row->object_type == Product::class, $row->object_id, $row->qty);
+        }
 
-        for ($i = 0; $i < count($selected); $i++) {
-            $is_raw_material = $selected[$i]->object_type == Product::class;
-
-            for ($j = 0; $j < count($products); $j++) {
-                if ($is_raw_material) {
-                    if ($products[$j]->product->id == $selected[$i]->object_id) {
-                        $products[$j]->qty -= $selected[$i]->qty;
-                        break;
-                    }
-                } elseif ($products[$j]->is_raw_material == false) {
-                    for ($k = 0; $k < count($products[$j]->children); $k++) {
-                        if ($products[$j]->children[$k]->id == $selected[$i]->object_id) {
-                            $products[$j]->children[$k]->selected = true;
-                            break;
-                        }
-                    }
-                }
-            }
+        // Pending approval (not created yet) - lock these too so the same unit
+        // can't be submitted twice before an admin approves the return.
+        foreach ($this->pendingReturnItems($inv->id) as $item) {
+            $this->deductReturned($products, (bool) ($item['is_raw_material'] ?? false), $item['id'] ?? null, $item['qty'] ?? 0);
         }
 
         return view('invoice_return.select', [
@@ -108,44 +101,53 @@ class InvoiceReturnController extends Controller
 
     public function productSelectionSubmit(Request $req, Invoice $inv)
     {
+        // A reason is required; the return is held for admin approval and only
+        // created once approved (mirrors the credit/debit note flow).
+        $validator = Validator::make($req->all(), [
+            'reason' => 'required|max:1000',
+        ], [], [
+            'reason' => 'Reason',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
         try {
             DB::beginTransaction();
 
-            $selected_products = json_decode($req->products);
+            $selected_products = json_decode($req->products, true);
 
-            $now = now();
-            $data = [];
-            $pc_ids_to_delete = [];
-            for ($i = 0; $i < count($selected_products); $i++) {
-                $data[] = [
+            if (empty($selected_products)) {
+                DB::rollback();
+
+                return back()->with('error', __('No products selected'));
+            }
+
+            $description = 'Invoice Return for ' . ($inv->sku ?? ('INV #' . $inv->id))
+                . ' requested by ' . (optional(Auth::user())->name ?? 'a user') . '.';
+
+            $approval = Approval::create([
+                'object_type' => Invoice::class,
+                'object_id' => $inv->id,
+                'status' => Approval::STATUS_PENDING_APPROVAL,
+                'data' => json_encode([
+                    'is_invoice_return' => true,
                     'invoice_id' => $inv->id,
-                    'object_type' => $selected_products[$i]->is_raw_material ? Product::class : ProductChild::class,
-                    'object_id' => $selected_products[$i]->id,
-                    'qty' => $selected_products[$i]->is_raw_material ? $selected_products[$i]->qty : null,
-                    'returned_at' => $now,
-                    'created_at' => $now,
-                ];
-                if (! $selected_products[$i]->is_raw_material) {
-                    $pc_ids_to_delete[] = $selected_products[$i]->id;
-                }
-            }
+                    'products' => $selected_products,
+                    'reason' => trim((string) $req->reason),
+                    'submitted_by' => Auth::id(),
+                    'description' => $description,
+                ]),
+            ]);
 
-            if (count($data) > 0) {
-                ReturnProduct::insert($data);
-            }
-
-            // Delete pc from DO & SO
-            if (count($pc_ids_to_delete) > 0) {
-                DeliveryOrderProductChild::whereIn('product_children_id', $pc_ids_to_delete)->forceDelete();
-                SaleProductChild::whereIn('product_children_id', $pc_ids_to_delete)->forceDelete();
-            }
+            (new Branch)->assign(Approval::class, $approval->id);
 
             DB::commit();
 
-            return redirect(route('invoice_return.index'))->with('success', __('Products returned'));
+            return redirect(route('invoice_return.index'))->with('success', __('Invoice return submitted for admin approval'));
         } catch (\Throwable $th) {
             DB::rollback();
-            dd($th);
             report($th);
 
             return back()->with('error', __('Something went wrong'));
@@ -208,5 +210,84 @@ class InvoiceReturnController extends Controller
             'products' => $products,
             'is_view' => true,
         ]);
+    }
+
+    /**
+     * Create the actual return records for an invoice from a stored payload.
+     * Called once an admin approves the return request. Writes return_products
+     * rows and force-deletes returned product children from the DO/SO.
+     */
+    public function createReturnFromPayload(int $invoiceId, array $products): void
+    {
+        $now = now();
+        $data = [];
+        $pc_ids_to_delete = [];
+
+        foreach ($products as $product) {
+            $is_raw_material = (bool) ($product['is_raw_material'] ?? false);
+
+            $data[] = [
+                'invoice_id' => $invoiceId,
+                'object_type' => $is_raw_material ? Product::class : ProductChild::class,
+                'object_id' => $product['id'],
+                'qty' => $is_raw_material ? $product['qty'] : null,
+                'returned_at' => $now,
+                'created_at' => $now,
+            ];
+            if (! $is_raw_material) {
+                $pc_ids_to_delete[] = $product['id'];
+            }
+        }
+
+        if (count($data) > 0) {
+            ReturnProduct::insert($data);
+        }
+
+        // Delete pc from DO & SO
+        if (count($pc_ids_to_delete) > 0) {
+            DeliveryOrderProductChild::whereIn('product_children_id', $pc_ids_to_delete)->forceDelete();
+            SaleProductChild::whereIn('product_children_id', $pc_ids_to_delete)->forceDelete();
+        }
+    }
+
+    /**
+     * Selected items sitting in still-pending invoice-return approvals for an
+     * invoice, flattened into a single list of payload items.
+     */
+    private function pendingReturnItems(int $invoiceId): array
+    {
+        return Approval::where('object_type', Invoice::class)
+            ->where('object_id', $invoiceId)
+            ->where('status', Approval::STATUS_PENDING_APPROVAL)
+            ->get()
+            ->flatMap(function ($approval) {
+                $payload = json_decode($approval->data, true);
+
+                return ($payload['is_invoice_return'] ?? false) ? ($payload['products'] ?? []) : [];
+            })
+            ->all();
+    }
+
+    /**
+     * Subtract one already-returned (or pending) item from the returnable list:
+     * raw materials reduce the quantity left, product children get marked selected.
+     */
+    private function deductReturned(array &$products, bool $is_raw_material, $object_id, $qty): void
+    {
+        for ($j = 0; $j < count($products); $j++) {
+            if ($is_raw_material) {
+                if ($products[$j]->product->id == $object_id) {
+                    $products[$j]->qty -= $qty;
+                    break;
+                }
+            } elseif ($products[$j]->is_raw_material == false) {
+                foreach ($products[$j]->children as $child) {
+                    if ($child->id == $object_id) {
+                        $child->selected = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

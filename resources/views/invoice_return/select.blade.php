@@ -44,14 +44,49 @@
             </div>
         @endif
     </div>
+
+    {{-- Return reason modal: a reason is required, then the return is sent for admin approval. --}}
+    <div id="reason-modal" class="hidden fixed inset-0 z-50 items-center justify-center">
+        <div id="reason-modal-overlay" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="relative bg-white rounded-md shadow-lg w-full max-w-md mx-4 p-5">
+            <h2 class="text-base font-semibold text-gray-800 mb-3">{{ __('Return Items') }}</h2>
+            <label for="reason" class="block text-sm text-gray-700 mb-1">
+                {{ __('Reason') }} <span class="text-red-500">*</span>
+            </label>
+            <textarea id="reason" rows="4"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder="{{ __('Enter the reason for this return') }}"></textarea>
+            <p id="reason-error" class="hidden text-sm text-red-500 mt-1"></p>
+            <div class="mt-4 flex justify-end gap-x-2">
+                <button id="reason-cancel-btn" type="button"
+                    class="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700">{{ __('Cancel') }}</button>
+                <button id="reason-confirm-btn" type="button"
+                    class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">{{ __('Submit for Approval') }}</button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
 <script>
     INVOICE_ID = @json($invoice_id);
 
-    $('#return-btn').on('click', function() {
-        selected_products = []
+    // Build a hidden form and POST it (carries the CSRF token).
+    function postAction(url, fields = {}) {
+        let form = $('<form>', { method: 'POST', action: url });
+        form.append($('<input>', {
+            type: 'hidden',
+            name: '_token',
+            value: $('meta[name="csrf-token"]').attr('content')
+        }));
+        $.each(fields, function (name, value) {
+            form.append($('<input>', { type: 'hidden', name: name, value: value }));
+        });
+        form.appendTo('body').submit();
+    }
+
+    function collectSelectedProducts() {
+        let selected_products = []
 
         $('.products').each(function(i, obj) {
             if ($(this).data('is-raw-material') && $(this).find('input[type="text"]').val() != '') {
@@ -72,12 +107,36 @@
             }
         })
 
+        return selected_products
+    }
+
+    // Pick items, then ask for a reason before submitting for approval.
+    $('#return-btn').on('click', function() {
+        if (collectSelectedProducts().length <= 0) return;
+
+        $('#reason').val('')
+        $('#reason-error').addClass('hidden').text('')
+        $('#reason-modal').removeClass('hidden').addClass('flex')
+    })
+
+    $('#reason-cancel-btn, #reason-modal-overlay').on('click', function() {
+        $('#reason-modal').addClass('hidden').removeClass('flex')
+    })
+
+    $('#reason-confirm-btn').on('click', function() {
+        let selected_products = collectSelectedProducts()
         if (selected_products.length <= 0) return;
 
-        let url = `{{ config('app.url') }}/invoice-return/product-selection-submit/${INVOICE_ID}`
-        url = `${url}?products=${ JSON.stringify(selected_products)}`
+        let reason = $.trim($('#reason').val())
+        if (reason === '') {
+            $('#reason-error').removeClass('hidden').text("{!! __('Please enter a reason for this return.') !!}")
+            return
+        }
 
-        window.location.href = url
+        postAction(`{{ config('app.url') }}/invoice-return/product-selection-submit/${INVOICE_ID}`, {
+            products: JSON.stringify(selected_products),
+            reason: reason,
+        })
     })
 </script>
 @endpush

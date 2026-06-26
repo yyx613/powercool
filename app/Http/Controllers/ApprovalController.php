@@ -56,6 +56,7 @@ class ApprovalController extends Controller
         7 => 'GRN',
         8 => 'Sale Enquiry',
         9 => 'Credit/Debit Note',
+        10 => 'Invoice Return',
     ];
 
     public function index()
@@ -99,6 +100,9 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_credit_debit_note')) {
             unset($types[9]);
         }
+        if (!hasPermission('approval.type_invoice_return')) {
+            unset($types[10]);
+        }
 
         return view('approval.list', [
             'statuses' => self::STATUSES,
@@ -126,12 +130,43 @@ class ApprovalController extends Controller
                 3 => 'Approved',
             ], $keyword);
 
-            $records = $records->where(function ($q) use ($keyword, $status_codes) {
-                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class, CreditNote::class, DebitNote::class], function ($query) use ($keyword) {
+            // Each entry maps a human-readable Type label (exactly as rendered
+            // in the list's Type column) to the object_type it represents.
+            // Those labels are produced client-side and never stored on the row,
+            // so without this a search like "sale" can never match a Sale Order /
+            // Sale Enquiry row.
+            $type_matchers = [
+                ['Quotation', fn ($q) => $q->where('object_type', Sale::class)->where('data', 'like', '%is_quo%')],
+                ['Sale Order', fn ($q) => $q->where('object_type', Sale::class)->whereNot('data', 'like', '%is_quo%')],
+                ['Delivery Order', fn ($q) => $q->where('object_type', DeliveryOrder::class)],
+                ['Customer', fn ($q) => $q->where('object_type', Customer::class)],
+                ['Payment Record', fn ($q) => $q->where('object_type', SalePaymentAmount::class)],
+                ['Raw Material Request', fn ($q) => $q->where('object_type', RawMaterialRequest::class)],
+                ['Complete Production Request', fn ($q) => $q->where('object_type', Production::class)],
+                ['GRN', fn ($q) => $q->where('object_type', GRN::class)],
+                ['Sale Enquiry', fn ($q) => $q->where('object_type', SaleEnquiry::class)],
+                ['Credit Note', fn ($q) => $q->where('object_type', CreditNote::class)],
+                ['Debit Note', fn ($q) => $q->where('object_type', DebitNote::class)],
+                ['B.O.M Request', fn ($q) => $q->where('object_type', MaterialUse::class)],
+                ['Production Material Transfer Request', fn ($q) => $q->where('object_type', FactoryRawMaterial::class)],
+                ['Transfer To Warehouse Request', fn ($q) => $q->where('object_type', ProductChild::class)],
+                ['Invoice Return', fn ($q) => $q->where('object_type', Invoice::class)->where('data', 'like', '%is_invoice_return%')],
+            ];
+
+            $records = $records->where(function ($q) use ($keyword, $status_codes, $type_matchers) {
+                $q->whereHasMorph('object', [Sale::class, DeliveryOrder::class, GRN::class, CreditNote::class, DebitNote::class, Invoice::class], function ($query) use ($keyword) {
                     $query->where('sku', 'like', '%' . $keyword . '%');
                 });
+                // Description / reason / remark shown in the Description column all
+                // live inside the JSON `data` blob, so match against it too.
+                $q->orWhere('data', 'like', '%' . $keyword . '%');
                 if (! empty($status_codes)) {
                     $q->orWhereIn('status', $status_codes);
+                }
+                foreach ($type_matchers as [$label, $matcher]) {
+                    if (stripos($label, trim($keyword)) !== false) {
+                        $q->orWhere($matcher);
+                    }
                 }
             });
         }
@@ -199,6 +234,14 @@ class ApprovalController extends Controller
         if (!hasPermission('approval.type_credit_debit_note')) {
             $records = $records->whereNotIn('object_type', [CreditNote::class, DebitNote::class]);
         }
+        if (!hasPermission('approval.type_invoice_return')) {
+            $records = $records->where(function ($q) {
+                $q->whereNot('object_type', Invoice::class)
+                  ->orWhere(function ($q) {
+                      $q->where('object_type', Invoice::class)->whereNot('data', 'like', '%is_invoice_return%');
+                  });
+            });
+        }
         if ($request->has('type')) {
             if ($request->type == null) {
                 Session::remove('approval-type');
@@ -232,6 +275,9 @@ class ApprovalController extends Controller
             } elseif ($request->type == 9) {
                 $records = $records->whereIn('object_type', [CreditNote::class, DebitNote::class]);
                 Session::put('approval-type', $request->type);
+            } elseif ($request->type == 10) {
+                $records = $records->where('object_type', Invoice::class)->where('data', 'like', '%is_invoice_return%');
+                Session::put('approval-type', $request->type);
             }
         } else if (Session::get('approval-type') != null) {
             if (Session::get('approval-type') == 0) {
@@ -254,6 +300,8 @@ class ApprovalController extends Controller
                 $records = $records->where('object_type', SaleEnquiry::class);
             } elseif (Session::get('approval-type') == 9) {
                 $records = $records->whereIn('object_type', [CreditNote::class, DebitNote::class]);
+            } elseif (Session::get('approval-type') == 10) {
+                $records = $records->where('object_type', Invoice::class)->where('data', 'like', '%is_invoice_return%');
             }
         }
 
@@ -317,6 +365,8 @@ class ApprovalController extends Controller
                     $view_url = route('invoice.credit-note.index');
                 } elseif (get_class($obj) == DebitNote::class) {
                     $view_url = route('invoice.debit-note.index');
+                } elseif (get_class($obj) == Invoice::class) {
+                    $view_url = route('invoice_return.view_product_selection', ['inv' => $obj->id]);
                 }
             }
 
@@ -553,6 +603,12 @@ class ApprovalController extends Controller
             if (get_class($obj) == CreditNote::class || get_class($obj) == DebitNote::class) {
                 (new EInvoiceController)->submitApprovedNote($approval);
             }
+            // Invoice Return - create the actual return now that it's approved.
+            // Nothing was written on submit; the payload carries the selected items.
+            $approvalData = $approval->data ? json_decode($approval->data, true) : [];
+            if ($approval->object_type == Invoice::class && ($approvalData['is_invoice_return'] ?? false)) {
+                (new InvoiceReturnController)->createReturnFromPayload($approvalData['invoice_id'], $approvalData['products'] ?? []);
+            }
 
             DB::commit();
 
@@ -565,6 +621,7 @@ class ApprovalController extends Controller
 
             return Response::json([
                 'result' => false,
+                'message' => $th->getMessage(),
             ], HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

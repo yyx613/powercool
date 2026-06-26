@@ -45,14 +45,15 @@ class SaleEnquiryController extends Controller
 
         // Search
         $keyword = $req->has('search') ? ($req->search['value'] ?? null) : null;
-        $records = TableSearch::apply($records, $keyword, [
+        $textColumns = [
             'sku',
             'enquiry_date',
             'name',
             'phone_number',
             'email',
             'product_service_interested',
-        ], [
+        ];
+        $codedColumns = [
             'enquiry_source' => [
                 1 => 'Website',
                 2 => 'Facebook',
@@ -79,7 +80,22 @@ class SaleEnquiryController extends Controller
                 3 => 'Closed Deal (Converted)',
                 4 => 'No Deal',
             ],
-        ]);
+        ];
+
+        // Group the flat/coded column search together with the related-column
+        // searches so they all OR within a single outer where(). TableSearch::apply
+        // adds its own nested where() group, which still ORs correctly here. The
+        // relation searches (Assigned Staff, Created By, Promotion) are only added
+        // when a keyword is present.
+        $records = $records->where(function ($q) use ($keyword, $textColumns, $codedColumns) {
+            TableSearch::apply($q, $keyword, $textColumns, $codedColumns);
+
+            if ($keyword !== null && trim($keyword) !== '') {
+                $q->orWhereHas('assignedUser', fn ($sub) => $sub->where('name', 'like', '%' . $keyword . '%'))
+                    ->orWhereHas('createdByUser', fn ($sub) => $sub->where('name', 'like', '%' . $keyword . '%'))
+                    ->orWhereHas('promotion', fn ($sub) => $sub->where('sku', 'like', '%' . $keyword . '%'));
+            }
+        });
 
         // Order
         if ($req->has('order')) {

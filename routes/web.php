@@ -600,7 +600,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
     Route::controller(InvoiceReturnController::class)->prefix('invoice-return')->name('invoice_return.')->middleware(['can:sale.invoice_return.view'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/product-selection/{inv}', 'productSelection')->name('product_selection');
-        Route::get('/product-selection-submit/{inv}', 'productSelectionSubmit')->name('product_selection_submit');
+        Route::post('/product-selection-submit/{inv}', 'productSelectionSubmit')->name('product_selection_submit');
         Route::get('/view-product-selection/{inv}', 'productSelectionView')->name('view_product_selection');
     });
     // Task

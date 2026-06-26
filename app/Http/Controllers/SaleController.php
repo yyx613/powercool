@@ -189,6 +189,7 @@ class SaleController extends Controller
             'currencies.name',
         ], [
             'sales.self_collect' => [0 => 'No', 1 => 'Yes'],
+            'customers.company_group' => [1 => 'Power Cool', 2 => 'Hi-Ten'],
             'sales.status' => [
                 Sale::STATUS_INACTIVE => 'Inactive',
                 Sale::STATUS_ACTIVE => 'Active',
@@ -1009,13 +1010,45 @@ class SaleController extends Controller
 
             $do_ids = DeliveryOrder::where('sku', 'like', '%'.$keyword.'%')->pluck('id')->toArray();
 
-            $records = $records->where(function ($q) use ($keyword, $do_ids) {
+            $payment_status_codes = TableSearch::matchingCodes([
+                Sale::PAYMENT_STATUS_UNPAID => 'Unpaid',
+                Sale::PAYMENT_STATUS_PARTIALLY_PAID => 'Partially Paid',
+                Sale::PAYMENT_STATUS_PAID => 'Paid',
+            ], $keyword);
+            $status_codes = TableSearch::matchingCodes([
+                Sale::STATUS_INACTIVE => 'Inactive',
+                Sale::STATUS_ACTIVE => 'Active',
+                Sale::STATUS_CONVERTED => 'Converted',
+                Sale::STATUS_CANCELLED => 'Voided',
+                Sale::STATUS_APPROVAL_PENDING => 'Pending Approval',
+                Sale::STATUS_APPROVAL_APPROVED => 'Approved',
+                Sale::STATUS_TRANSFERRED_BACK => 'Rejected',
+                Sale::STATUS_APPROVAL_REJECTED => 'Rejected',
+                Sale::STATUS_PARTIALLY_CONVERTED => 'Partially Converted',
+            ], $keyword);
+            $company_group_codes = TableSearch::matchingCodes([1 => 'Power Cool', 2 => 'Hi-Ten'], $keyword);
+
+            $records = $records->where(function ($q) use ($keyword, $do_ids, $payment_status_codes, $status_codes, $company_group_codes) {
                 $q->where('sales.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('sales.created_at', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.sku', 'like', '%'.$keyword.'%')
                     ->orWhere('customers.company_name', 'like', '%'.$keyword.'%')
                     ->orWhere('sales_agents.name', 'like', '%'.$keyword.'%')
-                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%');
+                    ->orWhere('currencies.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('sales.store', 'like', '%'.$keyword.'%')
+                    ->orWhere('payment_methods.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('createdBy.name', 'like', '%'.$keyword.'%')
+                    ->orWhere('updatedBy.name', 'like', '%'.$keyword.'%');
+
+                if (! empty($payment_status_codes)) {
+                    $q->orWhereIn('sales.payment_status', $payment_status_codes);
+                }
+                if (! empty($status_codes)) {
+                    $q->orWhereIn('sales.status', $status_codes);
+                }
+                if (! empty($company_group_codes)) {
+                    $q->orWhereIn('customers.company_group', $company_group_codes);
+                }
 
                 for ($i = 0; $i < count($do_ids); $i++) {
                     $q->orWhereRaw("find_in_set('".$do_ids[$i]."', convert_to)");

@@ -70,11 +70,29 @@ class UserController extends Controller
         if ($req->has('search') && $req->search['value'] != null) {
             $keyword = $req->search['value'];
 
-            $records = TableSearch::apply($records, $keyword, [
-                'sku',
-                'name',
-                'email',
-            ]);
+            // Resolve which branch location codes have a label matching the keyword.
+            $branchLabels = [
+                Branch::LOCATION_EVERY => (new Branch)->keyToLabel(Branch::LOCATION_EVERY),
+                Branch::LOCATION_KL => (new Branch)->keyToLabel(Branch::LOCATION_KL),
+                Branch::LOCATION_PENANG => (new Branch)->keyToLabel(Branch::LOCATION_PENANG),
+            ];
+            $matchedBranchCodes = TableSearch::matchingCodes($branchLabels, $keyword);
+
+            // Keep text columns, role and branch in the SAME where-group so they OR together.
+            $records = $records->where(function ($q) use ($keyword, $matchedBranchCodes) {
+                foreach (['sku', 'name', 'email'] as $col) {
+                    $q->orWhere($col, 'like', '%' . $keyword . '%');
+                }
+
+                // Role: Spatie roles relation, matched by role name.
+                $q->orWhereHas('roles', fn ($r) => $r->where('name', 'like', '%' . $keyword . '%'));
+
+                // Branch: polymorphic relation; relation definition handles the morph
+                // constraints, so only the location code needs filtering here.
+                if (! empty($matchedBranchCodes)) {
+                    $q->orWhereHas('branch', fn ($b) => $b->whereIn('location', $matchedBranchCodes));
+                }
+            });
         }
         // Order
         if ($req->has('order')) {
