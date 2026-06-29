@@ -649,7 +649,7 @@ class SaleEnquiryController extends Controller
         Notification::send($creator, new SaleEnquiryNoDealNotification([
             'enquiry_id' => $enquiry->id,
             'sku' => $enquiry->sku,
-            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry, 'from' => 'notification']),
             'desc' => __(':name requested to mark enquiry (:sku) as No Deal. Reason: :reason', [
                 'name' => $salesperson ? $salesperson->name : __('The salesperson'),
                 'sku' => $enquiry->sku,
@@ -672,7 +672,7 @@ class SaleEnquiryController extends Controller
         Notification::send($user, new SaleEnquiryAssignedNotification([
             'enquiry_id' => $enquiry->id,
             'sku' => $enquiry->sku,
-            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry, 'from' => 'notification']),
             'desc' => __('You have been assigned a new sale enquiry (:sku) from :name.', [
                 'sku' => $enquiry->sku,
                 'name' => $enquiry->name,
@@ -700,7 +700,7 @@ class SaleEnquiryController extends Controller
         Notification::send($creator, new SaleEnquiryAcceptedNotification([
             'enquiry_id' => $enquiry->id,
             'sku' => $enquiry->sku,
-            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry, 'from' => 'notification']),
             'desc' => __(':name has accepted the sale enquiry (:sku).', [
                 'name' => $salesperson ? $salesperson->name : __('The salesperson'),
                 'sku' => $enquiry->sku,
@@ -728,7 +728,7 @@ class SaleEnquiryController extends Controller
         Notification::send($creator, new SaleEnquiryRejectedNotification([
             'enquiry_id' => $enquiry->id,
             'sku' => $enquiry->sku,
-            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry]),
+            'url' => route('sale_enquiry.view', ['enquiry' => $enquiry, 'from' => 'notification']),
             'desc' => __(':name has rejected the sale enquiry (:sku). Reason: :reason', [
                 'name' => $salesperson ? $salesperson->name : __('The salesperson'),
                 'sku' => $enquiry->sku,
