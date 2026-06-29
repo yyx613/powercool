@@ -41,7 +41,7 @@
     @endphp
 
     <div class="mb-6 flex justify-between items-center">
-        <x-app.page-title url="{{ route('sale_enquiry.index') }}">{{ __('Sale Enquiry') }}: {{ $enquiry->sku }}</x-app.page-title>
+        <x-app.page-title url="{{ request('from') === 'notification' ? route('notification.index') : route('sale_enquiry.index') }}">{{ __('Sale Enquiry') }}: {{ $enquiry->sku }}</x-app.page-title>
 
         @if ($isAssignee)
             @if ($enquiry->accepted_at !== null)
