@@ -21,4 +21,11 @@ class ReturnProduct extends Model
     {
         return $date;
     }
+
+    public function deliveryOrder()
+    {
+        // No global scopes: the DO may be branch-scoped/voided but we still want
+        // its number for display on the returned-products screen.
+        return $this->belongsTo(DeliveryOrder::class, 'delivery_order_id')->withoutGlobalScopes();
+    }
 }

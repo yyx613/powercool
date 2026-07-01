@@ -254,7 +254,6 @@
                 },
                 {
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (!data) return '-'
                         return `<a href="{{ config('app.url') }}/sale/sale-order/view/${row.sale_id}" class="text-blue-500 underline">${data}</a>`
@@ -262,21 +261,18 @@
                 },
                 {
                     "targets": 3,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "targets": 4,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "targets": 5,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (data == null) return null
 
@@ -307,7 +303,6 @@
                 },
                 {
                     "targets": 6,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -332,21 +327,18 @@
                 },
                 {
                     "targets": 10,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
                 },
                 {
                     "targets": 11,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data == null ? '-' : data.name
                     }
                 },
                 {
                     "targets": 12,
-                    orderable: false,
                     render: function(data, type, row) {
                         switch (data) {
                             case 1:
@@ -383,7 +375,6 @@
                 },
                 {
                     "targets": 14,
-                    orderable: false,
                     render: function(data, type, row) {
                         return `<span class="text-lg font-semibold">${data}%</span>`
                     }

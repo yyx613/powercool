@@ -105,7 +105,9 @@ class RawMaterialRequestController extends Controller
                 7 => 'raw_material_requests.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('raw_material_requests.id', 'desc');

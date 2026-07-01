@@ -298,7 +298,7 @@ class ViewServiceProvider extends ServiceProvider
                     $milestones->where('is_custom', false);
                 }
             }
-            $milestones = $milestones->get();
+            $milestones = $milestones->orderBy('sort')->orderBy('id')->get();
 
             $tickets = Ticket::orderBy('id', 'desc')->get();
 

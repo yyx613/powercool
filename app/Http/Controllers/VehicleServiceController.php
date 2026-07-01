@@ -77,9 +77,11 @@ class VehicleServiceController extends Controller
         if ($req->has('order')) {
             $map = [
                 0 => 'vehicles.plate_number',
+                1 => 'vehicle_services.type',
                 2 => 'vehicle_services.date',
-                3 => 'vehicle_services.remind_at',
-                4 => 'vehicle_services.amount',
+                3 => 'vehicle_services.to_date',
+                4 => 'vehicle_services.remind_at',
+                5 => 'vehicle_services.amount',
             ];
             foreach ($req->order as $order) {
                 $records = $records->orderBy($map[$order['column']], $order['dir']);

@@ -104,14 +104,12 @@
                 },
                 {
                     "targets": [3, 4, 5, 6, 9],
-                    orderable: false,
                     render: function(data, type, row) {
                         return data != null ? data : '-'
                     }
                 },
                 {
                     "targets": 7,
-                    orderable: false,
                     className: 'text-right',
                     render: function(data, type, row) {
                         return data != null ? data : '-'
@@ -119,7 +117,6 @@
                 },
                 {
                     "targets": 8,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (!data || data === '-') {
                             return `<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">-</span>`

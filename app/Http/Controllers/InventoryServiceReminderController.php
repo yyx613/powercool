@@ -46,7 +46,31 @@ class InventoryServiceReminderController extends Controller
             });
         }
         // Order
-        $records = $records->orderBy('id', 'desc');
+        // Each list row is one (object_type, object_id) group. The displayed values resolve
+        // per group, so the sort keys are correlated subqueries on those grouped columns:
+        //  - SKU: morphed objectable (Product or ProductChild) sku, withTrashed (no soft-delete filter, matching the display)
+        //  - Next Service Date: latest reminder (max id) in the group
+        //  - Last Service Date: second-latest reminder (skip 1) in the group
+        if ($req->has('order')) {
+            $pcType = DB::getPdo()->quote(ProductChild::class);
+            $productType = DB::getPdo()->quote(Product::class);
+            $map = [
+                0 => DB::raw('(CASE
+                        WHEN inventory_service_reminders.object_type = '.$pcType.' THEN (SELECT pc.sku FROM product_children pc WHERE pc.id = inventory_service_reminders.object_id)
+                        WHEN inventory_service_reminders.object_type = '.$productType.' THEN (SELECT p.sku FROM products p WHERE p.id = inventory_service_reminders.object_id)
+                        ELSE NULL END)'),
+                1 => DB::raw('(SELECT r.next_service_date FROM inventory_service_reminders r WHERE r.object_type = inventory_service_reminders.object_type AND r.object_id = inventory_service_reminders.object_id ORDER BY r.id DESC LIMIT 1)'),
+                2 => DB::raw('(SELECT r.next_service_date FROM inventory_service_reminders r WHERE r.object_type = inventory_service_reminders.object_type AND r.object_id = inventory_service_reminders.object_id ORDER BY r.id DESC LIMIT 1 OFFSET 1)'),
+            ];
+            foreach ($req->order as $order) {
+                if (! isset($map[$order['column']])) {
+                    continue;
+                }
+                $records = $records->orderBy($map[$order['column']], $order['dir']);
+            }
+        } else {
+            $records = $records->orderBy('id', 'desc');
+        }
         $records = $records->groupBy('object_type')->groupBy('object_id');
 
         $records_count = $records->count();

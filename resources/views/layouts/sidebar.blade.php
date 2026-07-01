@@ -982,7 +982,7 @@
                                     @can('setting.service.view')
                                     <li>
                                         <a href="{{ route('service.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_starts_with(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
@@ -2054,7 +2054,7 @@
                 @can('setting.service.view')
                 <li>
                     <a href="{{ route('service.index') }}"
-                        class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                        class="rounded-md p-2 flex items-center {{ str_starts_with(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                         <span
                             class="block text-sm flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                     </a>
@@ -3094,7 +3094,7 @@
                                     @can('setting.service.view')
                                     <li>
                                         <a href="{{ route('service.index') }}"
-                                            class="rounded-md p-2 flex items-center {{ str_contains(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
+                                            class="rounded-md p-2 flex items-center {{ str_starts_with(Route::currentRouteName(), 'service.') ? 'bg-blue-600' : 'hover:bg-blue-600' }}">
                                             <span
                                                 class="block text-sm ml-9 flex-1 leading-tight whitespace-nowrap text-white">{{ __('Vehicle Service') }}</span>
                                         </a>
@@ -3200,7 +3200,7 @@
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes(
                             'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
-                            'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.')) {
+                            'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.') || CURRENT_ROUTE_NAME.includes('adhoc_service.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
                         CURRENT_ROUTE_NAME.includes('task.driver.') ||
@@ -3226,7 +3226,7 @@
                         CURRENT_ROUTE_NAME.includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') ||
                         CURRENT_ROUTE_NAME.includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') ||
                         CURRENT_ROUTE_NAME.includes('sales_agent.') || CURRENT_ROUTE_NAME.includes('setting.') ||
-                        CURRENT_ROUTE_NAME.includes('service.') || CURRENT_ROUTE_NAME.includes('state.') || CURRENT_ROUTE_NAME.includes('sync.') ||
+                        CURRENT_ROUTE_NAME.startsWith('service.') || CURRENT_ROUTE_NAME.includes('state.') || CURRENT_ROUTE_NAME.includes('sync.') ||
                         CURRENT_ROUTE_NAME.includes('uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                         $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()
                     } else if (CURRENT_ROUTE_NAME.includes('production.') || CURRENT_ROUTE_NAME.includes(
@@ -3272,7 +3272,7 @@
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="3"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('inventory_summary.') || CURRENT_ROUTE_NAME.includes(
                         'grn.') || CURRENT_ROUTE_NAME.includes('product.') || CURRENT_ROUTE_NAME.includes(
-                        'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.')) {
+                        'raw_material.') || CURRENT_ROUTE_NAME.includes('raw_material_request.') || CURRENT_ROUTE_NAME.includes('customize.') || CURRENT_ROUTE_NAME.includes('adhoc_service.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="4"]').click()
                 } else if (CURRENT_ROUTE_NAME.includes('ticket.') ||
                     CURRENT_ROUTE_NAME.includes('task.driver.') ||
@@ -3298,7 +3298,7 @@
                     .includes('promotion.') || CURRENT_ROUTE_NAME.includes('project_type.') || CURRENT_ROUTE_NAME
                     .includes('platform.') || CURRENT_ROUTE_NAME.includes('priority.') || CURRENT_ROUTE_NAME
                     .includes('sales_agent.') || CURRENT_ROUTE_NAME
-                    .includes('service.') || CURRENT_ROUTE_NAME
+                    .startsWith('service.') || CURRENT_ROUTE_NAME
                     .includes('setting.') || CURRENT_ROUTE_NAME.includes('state.') || CURRENT_ROUTE_NAME.includes(
                         'uom.') || CURRENT_ROUTE_NAME.includes('warranty_period.')) {
                     $('#expanded-sidebar .sidebar-menu-trigger[data-accordionstriggerid="2"]').click()

@@ -144,9 +144,13 @@ class WarrantyController extends Controller
                 2 => 'prods.model_desc',
                 3 => 'product_children.sku',
                 4 => 'dopcs.warranty',
+                // Warranty Date is the invoice date plus the warranty period (mirrors the displayed value)
+                5 => DB::raw('DATE_ADD(dopcs.inv_created_at, INTERVAL dopcs.warranty_period MONTH)'),
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('inv_id', 'desc');
@@ -216,7 +220,15 @@ class WarrantyController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // idx0 Product: the morphed inventory (Product or ProductChild) sku shown in the cell.
+            $productSort = DB::raw('(CASE'
+                .' WHEN task_milestone_inventories.inventory_type = '.DB::getPdo()->quote(Product::class)
+                .' THEN (SELECT p.sku FROM products p WHERE p.id = task_milestone_inventories.inventory_id AND p.deleted_at IS NULL)'
+                .' WHEN task_milestone_inventories.inventory_type = '.DB::getPdo()->quote(ProductChild::class)
+                .' THEN (SELECT pc.sku FROM product_children pc WHERE pc.id = task_milestone_inventories.inventory_id AND pc.deleted_at IS NULL)'
+                .' ELSE NULL END)');
             $map = [
+                0 => $productSort,
                 1 => 'qty',
             ];
             foreach ($req->order as $order) {

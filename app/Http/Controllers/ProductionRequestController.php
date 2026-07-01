@@ -104,7 +104,9 @@ class ProductionRequestController extends Controller
                 7 => 'production_requests.remark',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('production_requests.id', 'desc');
@@ -170,10 +172,13 @@ class ProductionRequestController extends Controller
                 2 => 'sales.sku',
                 3 => 'products.sku',
                 4 => 'productions.sku',
+                5 => DB::raw('COALESCE(sale_production_requests.remark, (select sp.remark from sale_products sp where sp.sale_id = sale_production_requests.sale_id and sp.product_id = sale_production_requests.product_id and sp.deleted_at is null limit 1))'),
                 6 => 'status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sale_production_requests.id', 'desc');

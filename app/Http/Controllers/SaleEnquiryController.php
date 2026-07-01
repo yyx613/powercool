@@ -107,8 +107,11 @@ class SaleEnquiryController extends Controller
                 4 => 'email',
                 5 => 'enquiry_source',
                 6 => 'product_service_interested',
+                7 => DB::raw('(select u.name from users u where u.id = sale_enquiries.assigned_user_id)'),
                 8 => 'priority',
                 9 => 'quality',
+                10 => DB::raw('(select p.sku from promotions p where p.id = sale_enquiries.promotion_id)'),
+                11 => DB::raw('(select u.name from users u where u.id = sale_enquiries.created_by)'),
                 12 => 'status',
             ];
             foreach ($req->order as $order) {

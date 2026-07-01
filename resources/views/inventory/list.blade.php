@@ -258,7 +258,6 @@
             {
                 "width": "10%",
                 "targets": 4,
-                orderable: false,
                 render: function(data, type, row) {
                     return `${row.min_price} - ${row.max_price}`
                 }
@@ -266,7 +265,6 @@
             {
                 "width": "10%",
                 "targets": 5,
-                orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
                         case 0:
@@ -281,7 +279,6 @@
             {
                 "width": '5%',
                 "targets": 6,
-                orderable: false,
                 render: function(data, type, row) {
                     switch (data) {
                         case 0:
@@ -303,7 +300,6 @@
             {
                 "width": "5%",
                 "targets": 7,
-                orderable: false,
                 render: function(data, type, row) {
                     return data == null ? null : data.name
                 }
@@ -401,7 +397,7 @@
             columns.splice(4, 1)
             columnDefs.splice(4, 1)
 
-            columnDefs[3]['orderable'] = false
+            // Qty (idx 3) is sortable in production modes (handled server-side).
 
             if (!IS_PRODUCT) {
                 columnDefs[4]['targets'] = 4
@@ -409,10 +405,9 @@
                 columnDefs[6]['targets'] = 6
                 columnDefs[7]['targets'] = 7
             }
-        } else {
-            columnDefs[3]['orderable'] = false
-            columnDefs[4]['orderable'] = false
         }
+        // Non-production Qty (idx 3) is a real products.qty column and is sortable
+        // server-side (map[3] => 'qty'); is_sparepart (idx 5 raw material) is sortable too.
         if (IS_PRODUCT) {
             if (IS_PRODUCTION) {
                 columns.splice(4, 1)

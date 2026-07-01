@@ -86,11 +86,16 @@ class InventoryController extends Controller
             $map = [
                 0 => 'name',
                 1 => 'company_group',
-                2 => 'factory',
+                // Factory column shows the related factory name, so sort by that
+                // name (not the FK id) via a correlated subquery that mirrors the
+                // factories soft-delete scope.
+                2 => DB::raw('(select name from factories where factories.id = inventory_categories.factory and factories.deleted_at is null)'),
                 3 => 'is_active',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

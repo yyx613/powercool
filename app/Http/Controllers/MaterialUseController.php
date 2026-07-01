@@ -55,9 +55,26 @@ class MaterialUseController extends Controller
         ]);
         // Order
         if ($req->has('order')) {
+            // Avg Cost (idx 1) mirrors MaterialUse::avgCost(): sum over each active
+            // (non-disabled, non-soft-deleted) material of qty * AVG(product_costs.unit_price).
+            // A material with no costs yields NULL, which SUM ignores — matching the PHP
+            // loop where `$cost += null` leaves the running total unchanged.
+            $avgCostSub = DB::raw('(SELECT IFNULL(SUM(mup.qty * (SELECT AVG(pc.unit_price) FROM product_costs pc WHERE pc.product_id = mup.product_id)), 0)
+                FROM material_use_products mup
+                WHERE mup.material_use_id = material_uses.id AND mup.deleted_at IS NULL AND (mup.status IS NULL OR mup.status != '.((int) MaterialUseProduct::STATUS_DISABLED).'))');
+            // Product (idx 0) shows '(SKU) Model Desc' for a product row, or
+            // '(customizeSku) Customize Product' for a customize-product row. Sort by
+            // the SAME concatenated string so the key matches the displayed value.
+            $productLabel = DB::raw("(CASE WHEN material_uses.product_id IS NOT NULL
+                THEN CONCAT('(', products.sku, ') ', products.model_desc)
+                ELSE CONCAT('(', customize_products.sku, ') Customize Product') END)");
+            $map = [
+                0 => $productLabel,
+                1 => $avgCostSub,
+            ];
             foreach ($req->order as $order) {
-                if ($order['column'] == 0) {
-                    $records = $records->orderBy('products.model_desc', $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
                 }
             }
         } else {

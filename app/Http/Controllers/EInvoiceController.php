@@ -1299,7 +1299,10 @@ class EInvoiceController extends Controller
                     ]);
                 }
 
-                $customer = $fromBilling ? null : $saleProduct->sale->customer;
+                // optional(): the sale may be scoped out (branch) or deleted; leave
+                // customer null so submitApprovedNote()'s guard can fail cleanly
+                // instead of 500-ing on a null-property read here.
+                $customer = $fromBilling ? null : optional($saleProduct->sale)->customer;
             }
         }
 

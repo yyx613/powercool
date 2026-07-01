@@ -120,7 +120,6 @@
                 {
                     "width": "10%",
                     "targets": 1,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -128,6 +127,8 @@
                 {
                     "width": "10%",
                     "targets": 2,
+                    // Technician is a conditional value (service_by user vs. stockOutTo) that
+                    // can't be reproduced by a single faithful SQL sort key, so left non-sortable.
                     'orderable': false,
                     render: function(data, type, row) {
                         return data == null ? null : data.sku

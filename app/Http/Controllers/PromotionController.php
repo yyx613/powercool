@@ -58,7 +58,7 @@ class PromotionController extends Controller
             foreach ($req->order as $order) {
                 if ($order['column'] == 1) {
                     $records = $records->orderBy('products.model_desc', $order['dir']);
-                } else {
+                } else if (isset($map[$order['column']])) {
                     $records = $records->orderBy($map[$order['column']], $order['dir']);
                 }
             }

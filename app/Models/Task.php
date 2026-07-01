@@ -60,8 +60,11 @@ class Task extends Model
 
     public function milestones() {
         return $this->belongsToMany(Milestone::class, 'task_milestone', 'task_id', 'milestone_id')
-            ->withPivot('address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
-            ->using(TaskMilestone::class);
+            ->withPivot('id', 'address', 'datetime', 'amount_collected', 'remark', 'submitted_at')
+            ->using(TaskMilestone::class)
+            // Follow the milestone's defined sequence (e.g. the sale task flow).
+            ->orderBy('milestones.sort')
+            ->orderBy('milestones.id');
     }
 
     public function attachments() {

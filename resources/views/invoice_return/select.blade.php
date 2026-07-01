@@ -2,7 +2,8 @@
 
 @section('content')
     <div class="mb-6 flex justify-between items-start lg:items-center flex-col lg:flex-row">
-        <x-app.page-title class="mb-4 lg:mb-0" :url="request('from') === 'approval' ? route('approval.index') : null">{{ __('Product Selection') }}</x-app.page-title>
+        <x-app.page-title class="mb-4 lg:mb-0" :url="request('from') === 'approval' ? route('approval.index') : null"
+            :description="__('Invoice') . ': ' . ($invoice_sku ?? '-')">{{ __('Product Selection') }}</x-app.page-title>
     </div>
     @include('components.app.alert.parent')
     <div class="bg-white p-4 rounded-md shadow" id="content-container">
@@ -23,15 +24,29 @@
                                     @continue;
                                 @endif
 
-                                <label for="{{ $pc->id }}" class="w-full block">
-                                    <input type="checkbox" name="product_children" id="{{ $pc->id }}" value="{{ $pc->id }}" {{ $pc->selected == true ? 'checked' : '' }} class="rounded mr-1 border-gray-300">
-                                    <span>{{ $pc->sku }}</span>
-                                </label>
+                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 py-1">
+                                    <label for="{{ $pc->id }}" class="inline-flex items-center">
+                                        <input type="checkbox" name="product_children" id="{{ $pc->id }}" value="{{ $pc->id }}" {{ $pc->selected == true ? 'checked' : '' }} class="rounded mr-2 border-gray-300">
+                                        <span class="text-sm text-slate-700">{{ $pc->sku }}</span>
+                                    </label>
+                                    @if (!empty($pc->do_sku))
+                                        <span class="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ __('DO') }}: {{ $pc->do_sku }}</span>
+                                    @endif
+                                    @if (isset($is_view) && !empty($pc->reason))
+                                        <span class="text-xs text-slate-600">{{ __('Reason') }}: {{ $pc->reason }}</span>
+                                    @endif
+                                </div>
                             @endforeach
-                        @elseif ($pro->qty > 0)
+                        @elseif ($pro->qty > 0 || isset($is_view))
                             <x-app.input.input type="text" name="qty" class="int-input" value="{{ $pro->product->selected_qty ?? null }}" placeholder="{{ __('Enter quantity') }}" />
                             @if (!isset($is_view))
                                 <p class="text-xs text-slate-500 mt-1 ml-1">{{ __('Quantity Left: ') . $pro->qty }}</p>
+                            @endif
+                            @if (!empty($pro->do_skus))
+                                <p class="mt-2 text-xs text-slate-600">{{ __('DO') }}: {{ implode(', ', $pro->do_skus) }}</p>
+                            @endif
+                            @if (isset($is_view) && !empty($pro->reasons))
+                                <p class="mt-1 text-xs text-slate-600">{{ __('Reason') }}: {{ implode('; ', $pro->reasons) }}</p>
                             @endif
                         @endif
                     </div>
@@ -41,6 +56,14 @@
         @if (!isset($is_view))
             <div class="mt-8 flex justify-end">
                 <x-app.button.submit id="return-btn">{{ __('Return Items') }}</x-app.button.submit>
+            </div>
+        @elseif (!empty($can_credit_note))
+            {{-- Turn these approved returns into a pre-filled credit note for admin approval. --}}
+            <div class="mt-8 flex justify-end">
+                <a href="{{ route('invoice_return.to_credit_note', ['inv' => $invoice_id]) }}"
+                    class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    {{ __('Create Credit Note') }}
+                </a>
             </div>
         @endif
     </div>

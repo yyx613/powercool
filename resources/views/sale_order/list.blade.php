@@ -270,7 +270,6 @@
             {
                 "width": '10%',
                 "targets": 2,
-                orderable: false,
                 render: function(data, type, row) {
                     return data;
                 }
@@ -278,7 +277,6 @@
             {
                 "width": '10%',
                 "targets": 3,
-                orderable: false,
                 render: function(data, type, row) {
                     return data;
                 }
@@ -321,7 +319,6 @@
             {
                 "width": '10%',
                 "targets": 9,
-                orderable: false,
                 render: function(data, type, row) {
                     return `${row.serial_no_qty}/${row.qty ?? 0}`;
                 }
@@ -329,7 +326,6 @@
             {
                 "width": '10%',
                 "targets": 10,
-                orderable: false,
                 render: function(data, type, row) {
                     return `${row.not_converted_serial_no_qty}/${row.serial_no_qty ?? 0}`;
                 }

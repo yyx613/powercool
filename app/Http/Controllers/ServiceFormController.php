@@ -81,6 +81,12 @@ class ServiceFormController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'date',
+                2 => DB::raw('(select coalesce(c.company_name, c.name) from customers c where c.id = service_forms.customer_id)'),
+                3 => DB::raw('(select u.name from users u where u.id = service_forms.technician_id)'),
+                4 => 'sr_sku',
+                5 => 'srq_sku',
+                6 => 'srcs_sku',
+                7 => 'sri_sku',
                 8 => 'created_at',
             ];
             foreach ($req->order as $order) {

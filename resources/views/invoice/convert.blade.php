@@ -238,7 +238,7 @@
                                 <label for="note-reason" class="block text-sm font-semibold mb-1">{{ __('Reason') }} <span class="text-red-600">*</span></label>
                                 <textarea name="reason" id="note-reason" rows="3" required
                                     placeholder="{{ __('Enter the reason for this note (the admin will review this before approving)') }}"
-                                    class="w-full text-sm rounded-md border border-gray-300 p-2 focus:ring-0 focus:border-black"></textarea>
+                                    class="w-full text-sm rounded-md border border-gray-300 p-2 focus:ring-0 focus:border-black">{{ $note_reason_default ?? '' }}</textarea>
                             </div>
 
                             <div class="flex justify-end mt-8">

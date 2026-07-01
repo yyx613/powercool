@@ -205,13 +205,24 @@ class ProductionController extends Controller
         if ($req->has('order')) {
             $map = [
                 1 => 'sku',
+                2 => DB::raw('(select s.sku from sales s where s.id = productions.sale_id and s.deleted_at is null)'), // SO ($record->sale->sku)
+                3 => 'type',
+                4 => DB::raw('(select op.sku from productions op where op.id = productions.old_production and op.deleted_at is null)'),
+                5 => DB::raw('(select f.name from factories f where f.id = productions.factory_id and f.deleted_at is null)'),
+                6 => DB::raw('(CASE WHEN productions.type = '.Production::TYPE_RND.' THEN (select cp.sku from customize_products cp where cp.production_id = productions.id and cp.deleted_at is null limit 1) ELSE (select pc.sku from product_children pc where pc.id = productions.product_child_id and pc.deleted_at is null) END)'),
                 7 => 'created_at',
                 8 => 'start_date',
                 9 => 'due_date',
+                10 => 'due_date', // Days Left is computed from due_date, so sort by due_date as proxy
+                11 => DB::raw('(select p.name from priorities p where p.id = productions.priority_id)'), // Priority ($record->priority->name)
+                12 => DB::raw('(select rmr.status from raw_material_requests rmr where rmr.production_id = productions.id order by rmr.id desc limit 1)'),
                 13 => 'status',
+                14 => DB::raw('(CASE WHEN (SELECT COUNT(*) FROM production_milestone pm WHERE pm.production_id = productions.id) = 0 THEN 0 ELSE (SELECT COUNT(*) FROM production_milestone pm2 WHERE pm2.production_id = productions.id AND pm2.submitted_at IS NOT NULL) * 100.0 / (SELECT COUNT(*) FROM production_milestone pm3 WHERE pm3.production_id = productions.id) END)'),
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

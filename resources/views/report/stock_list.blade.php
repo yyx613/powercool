@@ -121,7 +121,7 @@
                 { data: 'closing_cost' },
             ],
             columnDefs: [
-                { targets: '_all', orderable: false },
+                { targets: '_all', orderable: true },
             ],
             ajax: {
                 data: function () {
