@@ -99,9 +99,17 @@ class UserController extends Controller
             $map = [
                 0 => 'name',
                 1 => 'email',
+                // Role: Spatie roles relation, joined name list. Sort by the
+                // concatenated role names so the key matches the displayed value.
+                2 => DB::raw('(select group_concat(r.name order by r.id) from model_has_roles mr join roles r on r.id = mr.role_id where mr.model_id = users.id and mr.model_type = ' . DB::getPdo()->quote(User::class) . ')'),
+                // Branch: polymorphic morphOne; the displayed label order
+                // (Every < Kuala Lumpur < Penang) follows the numeric location code.
+                3 => DB::raw('(select b.location from branches b where b.object_id = users.id and b.object_type = ' . DB::getPdo()->quote(User::class) . ' and b.deleted_at is null limit 1)'),
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

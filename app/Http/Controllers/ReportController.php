@@ -72,6 +72,29 @@ class ReportController extends Controller
 
         $records = $this->queryProduction($req->start_date, $req->end_date, $keyword);
 
+        // Order
+        if ($req->has('order')) {
+            // product_name / product_code come from the related products row; sort by a
+            // correlated subquery that reproduces the exact displayed value.
+            $map = [
+                0 => 'products.model_desc',
+                1 => 'products.sku',
+            ];
+            $ordered = false;
+            foreach ($req->order as $order) {
+                if (isset($map[$order['column']])) {
+                    $sub = DB::table('products')
+                        ->select($map[$order['column']])
+                        ->whereColumn('products.id', 'productions.product_id')
+                        ->limit(1);
+                    $records = $ordered
+                        ? $records->orderBy($sub, $order['dir'])
+                        : $records->reorder($sub, $order['dir']);
+                    $ordered = true;
+                }
+            }
+        }
+
         $records_count = $records->count();
         $records_ids = $records->pluck('id');
         $records_paginator = $records->simplePaginate(10);
@@ -161,10 +184,17 @@ class ReportController extends Controller
 
         // Order
         if ($req->has('order')) {
+            // Plain aliases for 0-2; cols 3-4 are computed exactly as displayed:
+            //   amount      = sum_amount - sum_promo_amount
+            //   outstanding = sum_amount - sum_promo_amount - paymentAmount
             $map = [
-                0 => 'saleperson',
+                // Reference the underlying column (not the SELECT alias) so the order
+                // survives DataTables' count(*) query, which drops the main SELECT list.
+                0 => 'sales_agents.name',
                 1 => 'sum_qty',
                 2 => 'sum_promo_amount',
+                3 => DB::raw('(SUM(sum_amount) - COALESCE(SUM(sum_promo_amount), 0))'),
+                4 => DB::raw('(SUM(sum_amount) - COALESCE(SUM(sum_promo_amount), 0) - COALESCE(payment_amount.paymentAmount, 0))'),
             ];
             $ordered = false;
             foreach ($req->order as $order) {
@@ -353,6 +383,8 @@ class ReportController extends Controller
 
         $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup, $brand, Product::TYPE_RAW_MATERIAL);
 
+        $items = $this->sortStockCardItems($items, $req);
+
         $total = count($items);
         $page = max(1, (int) $req->input('page', 1));
         $perPage = 10;
@@ -479,10 +511,15 @@ class ReportController extends Controller
 
         // Order
         if ($req->has('order')) {
+            // Cols 2 (sales) and 4 (earning) are computed exactly as displayed:
+            //   sales   = sum_amount - sum_promo_amount
+            //   earning = sum_amount - sum_promo_amount - sum_cost
             $map = [
-                0 => 'model_desc',
-                1 => 'sku',
-                3 => 'sum_cost',
+                0 => 'products.model_desc',
+                1 => 'products.sku',
+                2 => DB::raw('(SUM(sale_products.qty * sale_products.unit_price - sale_products.cost) - COALESCE(SUM(promo.amount), 0))'),
+                3 => DB::raw('SUM(sale_products.cost)'),
+                4 => DB::raw('(SUM(sale_products.qty * sale_products.unit_price - sale_products.cost) - COALESCE(SUM(promo.amount), 0) - SUM(sale_products.cost))'),
             ];
             $ordered = false;
             foreach ($req->order as $order) {
@@ -824,6 +861,89 @@ class ReportController extends Controller
         return $records;
     }
 
+    /**
+     * Sort the StockCardService item array (used by both Stock Report / materials and
+     * Stock Card / finished good) so each column sorts by the exact value shown in the
+     * cell. The service returns a PHP array (a unionised, in-memory aggregation), so
+     * faithful sorting is done here in PHP rather than via SQL orderBy.
+     *
+     * Column index -> displayed value (matches the row-building loop):
+     *   0 product_code, 1 product_name, 2 company, 3 brand, 4 location,
+     *   5 bf_qty, 6 in_qty, 7 out_qty, 8 closing_qty,
+     *   9 bf_cost, 10 in_cost, 11 out_cost, 12 closing_cost
+     */
+    private function sortStockCardItems(array $items, Request $req): array
+    {
+        if (! $req->has('order') || count($items) === 0) {
+            return $items;
+        }
+
+        $order = $req->order[0] ?? null;
+        if ($order === null || ! isset($order['column'])) {
+            return $items;
+        }
+        $col = (int) $order['column'];
+        $dir = (($order['dir'] ?? 'asc') === 'desc') ? -1 : 1;
+
+        // String columns compared case-insensitively; the rest numerically.
+        $stringCols = [0, 1, 2, 3, 4];
+
+        $valueFor = function (array $item) use ($col) {
+            $product = $item['product'];
+            $location = $item['locations'][0] ?? null;
+            $inQty = 0;
+            $outQty = 0;
+            $inCost = 0.0;
+            $outCost = 0.0;
+            foreach (($location['movements'] ?? []) as $mv) {
+                if ($mv['in_out_qty'] >= 0) {
+                    $inQty += $mv['in_out_qty'];
+                } else {
+                    $outQty += abs($mv['in_out_qty']);
+                }
+                if (($mv['total_cost'] ?? 0) >= 0) {
+                    $inCost += $mv['total_cost'] ?? 0;
+                } else {
+                    $outCost += abs($mv['total_cost'] ?? 0);
+                }
+            }
+
+            switch ($col) {
+                case 0: return (string) $product->sku;
+                case 1: return (string) $product->model_desc;
+                case 2: return (string) ($item['company_label'] ?? 'Unassigned');
+                case 3: return (string) ($item['brand_label'] ?? 'Unassigned');
+                case 4: return (string) ($location['location_label'] ?? '-');
+                case 5: return (float) ($location['bf_qty'] ?? 0);
+                case 6: return (float) $inQty;
+                case 7: return (float) $outQty;
+                case 8: return (float) ($location['closing_qty'] ?? 0);
+                case 9: return (float) ($location['bf_cost'] ?? 0);
+                case 10: return (float) $inCost;
+                case 11: return (float) $outCost;
+                case 12: return (float) ($location['closing_cost'] ?? 0);
+                default: return null;
+            }
+        };
+
+        $isString = in_array($col, $stringCols, true);
+
+        usort($items, function ($a, $b) use ($valueFor, $dir, $isString) {
+            $va = $valueFor($a);
+            $vb = $valueFor($b);
+            if ($va === null && $vb === null) {
+                return 0;
+            }
+            $cmp = $isString
+                ? strcasecmp((string) $va, (string) $vb)
+                : ($va <=> $vb);
+
+            return $cmp * $dir;
+        });
+
+        return $items;
+    }
+
     private function clearSession()
     {
         Session::forget('report_start_date');
@@ -863,6 +983,8 @@ class ReportController extends Controller
         Session::put('report_brand', $brand);
 
         $items = (new StockCardService)->getMovements($start, $end, $keyword, $companyGroup, $brand, Product::TYPE_PRODUCT);
+
+        $items = $this->sortStockCardItems($items, $req);
 
         $total = count($items);
         $page = max(1, (int) $req->input('page', 1));

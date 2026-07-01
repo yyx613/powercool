@@ -602,6 +602,7 @@ Route::middleware('auth', 'select_lang', 'notification', 'approval')->group(func
         Route::get('/product-selection/{inv}', 'productSelection')->name('product_selection');
         Route::post('/product-selection-submit/{inv}', 'productSelectionSubmit')->name('product_selection_submit');
         Route::get('/view-product-selection/{inv}', 'productSelectionView')->name('view_product_selection');
+        Route::get('/to-credit-note/{inv}', 'toCreditNote')->name('to_credit_note');
     });
     // Task
     Route::controller(TaskController::class)->prefix('task')->name('task.')->group(function () {

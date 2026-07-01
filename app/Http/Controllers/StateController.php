@@ -55,11 +55,15 @@ class StateController extends Controller
             $map = [
                 0 => 'name',
                 1 => 'code',
-                2 => 'country_id',
+                // Country column shows the related country name, so sort by that
+                // name (not the FK id) via a correlated subquery.
+                2 => DB::raw('(select name from countries where countries.id = states.country_id)'),
                 3 => 'is_active',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

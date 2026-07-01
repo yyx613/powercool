@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -67,11 +68,21 @@ class NotificationController extends Controller
         // Order
         if ($request->has('order')) {
             $map = [
+                0 => 'created_at',
                 1 => 'type',
+                2 => DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.desc'))"),
                 3 => 'created_at',
             ];
+            $ordered = false;
             foreach ($request->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    // reorder() drops the relation's default latest() ordering so
+                    // the user-selected column actually takes effect.
+                    $records = $ordered
+                        ? $records->orderBy($map[$order['column']], $order['dir'])
+                        : $records->reorder($map[$order['column']], $order['dir']);
+                    $ordered = true;
+                }
             }
         } else {
             $records = $records->orderBy('created_at', 'desc');

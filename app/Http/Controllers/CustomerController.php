@@ -269,8 +269,30 @@ class CustomerController extends Controller
                 7 => 'company_group',
                 10 => 'status',
             ];
+            // Related / many-to-many columns sorted via correlated subqueries so
+            // the main query keeps a single row per customer (no join fan-out).
+            // The Sales Agents key must reproduce the DISPLAYED string exactly:
+            // SalesAgent::whereIn(ids)->pluck('name') joined by ', ' — i.e. active agents
+            // (soft-delete + branch scope) in sales_agent.id order, ', ' separated.
+            $agentBranch = '';
+            $branch = getCurrentUserBranch();
+            if ($branch !== null && $branch != Branch::LOCATION_EVERY) {
+                $agentBranch = ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(SalesAgent::class)
+                    .' AND ob.object_id = sa.id AND ob.location = '.((int) $branch).')';
+            }
+            $sub = [
+                6 => '(select name from debtor_types where debtor_types.id = customers.debtor_type_id)',
+                8 => '(select name from platforms where platforms.id = customers.platform_id)',
+                9 => '(select group_concat(sa.name order by sa.id separator \', \') from customer_sales_agents p join sales_agents sa on sa.id = p.sales_agent_id and sa.deleted_at is null'.$agentBranch.' where p.customer_id = customers.id and p.deleted_at is null)',
+            ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                $dir = $order['dir'] === 'desc' ? 'desc' : 'asc';
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $dir);
+                } elseif (isset($sub[$order['column']])) {
+                    $records = $records->orderBy(DB::raw($sub[$order['column']]), $dir);
+                }
             }
         } else {
             $records = $records->orderBy('company_name', 'asc');

@@ -54,7 +54,9 @@ class ServiceController extends Controller
                 2 => 'is_active',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

@@ -109,7 +109,6 @@
                 {
                     "width": "18%",
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -117,7 +116,6 @@
                 {
                     "width": "12%",
                     "targets": 3,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -126,7 +124,6 @@
                 {
                     "width": "8%",
                     "targets": 4,
-                    orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_service_form
@@ -138,7 +135,6 @@
                 {
                     "width": "8%",
                     "targets": 5,
-                    orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_quotation
@@ -150,7 +146,6 @@
                 {
                     "width": "8%",
                     "targets": 6,
-                    orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_cash_sale
@@ -162,7 +157,6 @@
                 {
                     "width": "8%",
                     "targets": 7,
-                    orderable: false,
                     className: 'text-center',
                     render: function(data, type, row) {
                         return row.generated_invoice

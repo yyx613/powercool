@@ -162,18 +162,20 @@
                         <x-input-error :messages="$errors->get('estimated_time')" class="mt-1" />
                     </div>
                 @endif
-                <div class="flex flex-col">
-                    <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
-                        <option value="">{{ __('Select a status') }}</option>
-                        <option value="1" @selected(old('status', isset($task) ? $task->status : null) == 1)>{{ __('To Do') }}</option>
-                        <option value="2" @selected(old('status', isset($task) ? $task->status : null) == 2)>{{ __('Doing') }}</option>
-                        <option value="3" @selected(old('status', isset($task) ? $task->status : null) == 3)>{{ __('In Review') }}</option>
-                        <option value="4" @selected(old('status', isset($task) ? $task->status : null) == 4)>{{ __('Completed') }}</option>
-                    </x-app.input.select>
-                    <x-input-error :messages="$errors->get('status')" class="mt-1" />
-                </div>
+                @if (!($for_role == 'sale' && (isSalesOnly() || isMarketingManager())))
+                    <div class="flex flex-col">
+                        <x-app.input.label id="status" class="mb-1">{{ __('Status') }} <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select name="status" id="status" :hasError="$errors->has('status')">
+                            <option value="">{{ __('Select a status') }}</option>
+                            <option value="1" @selected(old('status', isset($task) ? $task->status : null) == 1)>{{ __('To Do') }}</option>
+                            <option value="2" @selected(old('status', isset($task) ? $task->status : null) == 2)>{{ __('Doing') }}</option>
+                            <option value="3" @selected(old('status', isset($task) ? $task->status : null) == 3)>{{ __('In Review') }}</option>
+                            <option value="4" @selected(old('status', isset($task) ? $task->status : null) == 4)>{{ __('Completed') }}</option>
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('status')" class="mt-1" />
+                    </div>
+                @endif
                 @if ($for_role != 'sale')
                     <div class="flex flex-col">
                         <x-app.input.label id="amount_to_collect"
@@ -224,28 +226,41 @@
                         <x-input-error :messages="$errors->get('services')" class="mt-1" />
                     </div>
                 @endif
-                <div class="flex flex-col col-span-2 lg:col-span-3">
-                    <x-app.input.label id="assign" class="mb-1">{{ __('Assigned') }} <span
-                            class="text-sm text-red-500">*</span></x-app.input.label>
-                    <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
-                        @foreach ($users as $user)
-                            <option value="{{ $user->id }}" @selected(in_array($user->id, old('assign', isset($task) ? $task->users()->pluck('user_id')->toArray() : [])))>{{ $user->name }}
-                            </option>
-                        @endforeach
-                    </x-app.input.select>
-                    <x-input-error :messages="$errors->get('assign')" class="mt-1" />
-                </div>
+                @if (!($for_role == 'sale' && isSalesOnly()))
+                    <div class="flex flex-col col-span-2 lg:col-span-3">
+                        <x-app.input.label id="assign" class="mb-1">{{ __('Assigned') }} <span
+                                class="text-sm text-red-500">*</span></x-app.input.label>
+                        <x-app.input.select name="assign[]" id="assign" :hasError="$errors->has('assign')" multiple>
+                            @foreach ($users as $user)
+                                <option value="{{ $user->id }}" @selected(in_array($user->id, old('assign', isset($task) ? $task->users()->pluck('user_id')->toArray() : [])))>{{ $user->name }}
+                                </option>
+                            @endforeach
+                        </x-app.input.select>
+                        <x-input-error :messages="$errors->get('assign')" class="mt-1" />
+                    </div>
+                @endif
                 <div class="flex flex-col col-span-2 lg:col-span-3">
                     <x-app.input.label class="mb-2">{{ __('Service Task Milestones') }} <span
                             class="text-sm text-red-500">*</span></x-app.input.label>
                     <x-app.input.input name="custom_milestone" class="mb-2"
                         placeholder="{{ __('Enter custom milestone here') }}" />
+                    @php
+                        $milestone_datetimes = isset($task)
+                            ? $task->milestones->mapWithKeys(fn($m) => [$m->id => $m->pivot->datetime])->toArray()
+                            : [];
+                    @endphp
                     @foreach ($milestones as $stone)
                         <div class="flex items-center gap-x-2 mb-2 {{ $for_role == 'technician' ? 'hidden' : '' }} milestone-selection"
                             data-type="{{ $stone->type }}">
                             <input type="checkbox" name="milestone[]" id="{{ $stone->id }}"
                                 value="{{ $stone->id }}" class="rounded-sm" @checked(in_array($stone->id, old('milestone', isset($task) ? $task->milestones()->pluck('milestone_id')->toArray() : [])))>
-                            <label for="{{ $stone->id }}" class="text-sm">{{ $stone->name }}</label>
+                            <label for="{{ $stone->id }}" class="text-sm {{ $for_role == 'sale' ? 'w-44' : '' }}">{{ $stone->name }}</label>
+                            @if ($for_role == 'sale')
+                                <input type="text" name="milestone_datetime[{{ $stone->id }}]" autocomplete="off"
+                                    class="milestone-datetime text-sm text-center border-0 border-b border-gray-300 rounded-none px-1 py-0.5 w-48 ml-auto focus:ring-0 focus:border-gray-500"
+                                    placeholder="{{ __('Select date & time') }}"
+                                    value="{{ old('milestone_datetime.' . $stone->id, isset($milestone_datetimes[$stone->id]) && $milestone_datetimes[$stone->id] ? \Carbon\Carbon::parse($milestone_datetimes[$stone->id])->format('Y-m-d H:i') : '') }}">
+                            @endif
                         </div>
                     @endforeach
                     <div id="custom-milestones-container">
@@ -329,6 +344,26 @@
         $('input[name="due_date"]').daterangepicker(param)
         $('input[name="due_date"]').on('apply.daterangepicker', function(ev, picker) {
             $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
+
+        // Date & time picker for each Service Task Milestone (sale task)
+        var milestoneDatetimeParam = {
+            singleDatePicker: true,
+            showDropdowns: true,
+            timePicker: true,
+            timePicker24Hour: true,
+            autoUpdateInput: false,
+            locale: {
+                format: 'YYYY-MM-DD HH:mm',
+                cancelLabel: 'Clear'
+            }
+        }
+        $('.milestone-datetime').daterangepicker(milestoneDatetimeParam)
+        $('.milestone-datetime').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
+        });
+        $('.milestone-datetime').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
         });
 
 

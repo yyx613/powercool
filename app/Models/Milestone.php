@@ -63,9 +63,11 @@ class Milestone extends Model
         ],
         self::TYPE_SITE_VISIT => [
             'Check In',
-            'Measurement Remark (Attach Photo)',
-            'Survey Feedback',
+            'Purpose / Business Nature',
+            'Photo (Customer, Shop)',
+            'Payment Collection',
             'Check Out',
+            'Result (Potential / No Potential)',
         ],
     ];
 

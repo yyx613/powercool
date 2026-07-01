@@ -103,7 +103,6 @@
             columnDefs: [{
                     "width": "10%",
                     "targets": 0,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -118,7 +117,6 @@
                 {
                     "width": "10%",
                     "targets": 2,
-                    'orderable': false,
                     render: function(data, type, row) {
                         if (row.data && row.data.url) {
                             const sep = row.data.url.includes('?') ? '&' : '?'

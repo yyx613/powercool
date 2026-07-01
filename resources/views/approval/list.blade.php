@@ -134,7 +134,6 @@
             columnDefs: [{
                     "width": "0%",
                     "targets": 0,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -142,7 +141,6 @@
                 {
                     "width": "10%",
                     "targets": 1,
-                    'orderable': false,
                     render: function(data, type, row) {
                         if (data != null) {
                             if (data.includes('Customer')) {
@@ -177,7 +175,6 @@
                 {
                     "width": "10%",
                     "targets": 2,
-                    'orderable': false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -192,7 +189,6 @@
                 {
                     "width": "20%",
                     "targets": 4,
-                    'orderable': false,
                     render: function(data, type, row) {
                         let display = data
                         display = `${display}<br>`

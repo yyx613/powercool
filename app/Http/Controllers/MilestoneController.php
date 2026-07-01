@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\InventoryCategory;
+use App\Models\InventoryType;
 use App\Models\Milestone;
 use App\Models\ProductMilestone;
 use Illuminate\Http\Request;
@@ -54,11 +55,25 @@ class MilestoneController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Inventory Category shows InventoryCategory::whereIn(ids)->pluck('name') joined by
+            // ', ' — active (soft-delete) + current-branch categories in id order. Reproduce it
+            // so the sort key equals the displayed string.
+            $branch = getCurrentUserBranch();
+            $catBranch = '';
+            if ($branch !== null && $branch != Branch::LOCATION_EVERY) {
+                $catBranch = ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(InventoryCategory::class)
+                    .' AND ob.object_id = ic.id AND ob.location = '.((int) $branch).')';
+            }
             $map = [
-                1 => 'type',
+                0 => DB::raw('(select group_concat(ic.name order by ic.id separator \', \') from inventory_categories ic where find_in_set(ic.id, milestones.inventory_category_id) and ic.deleted_at is null'.$catBranch.')'),
+                // Inventory Type column shows inventoryType->name, so sort by that name
+                1 => InventoryType::select('name')->whereColumn('inventory_types.id', 'milestones.inventory_type_id'),
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

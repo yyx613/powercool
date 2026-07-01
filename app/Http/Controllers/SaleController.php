@@ -203,10 +203,24 @@ class SaleController extends Controller
         ]);
         // Order
         if ($req->has('order')) {
+            // idx3 Transfer To: SO skus listed in sales.convert_to (Sale::whereIn('id', convert_to)).
+            // Mirror the Sale branch scope so the sorted string matches the displayed implode.
+            $orderBranch = getCurrentUserBranch();
+            $branchExists = '';
+            if ($orderBranch !== null && $orderBranch != Branch::LOCATION_EVERY) {
+                $branchExists = ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(Sale::class)
+                    .' AND ob.object_id = ts.id AND ob.location = '.((int) $orderBranch).')';
+            }
+            $transferToSort = DB::raw('(SELECT GROUP_CONCAT(ts.sku ORDER BY ts.id SEPARATOR \', \') FROM sales ts'
+                .' WHERE FIND_IN_SET(ts.id, sales.convert_to) AND ts.deleted_at IS NULL'
+                .$branchExists.')');
+
             $map = [
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
                 2 => 'sales.open_until',
+                3 => $transferToSort,
                 4 => 'customers.sku',
                 5 => 'customers.company_name',
                 6 => 'sales_agents.name',
@@ -217,7 +231,9 @@ class SaleController extends Controller
                 11 => 'sales.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sales.id', 'desc');
@@ -1057,14 +1073,54 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Reproduce the per-row computed columns as correlated subqueries so the
+            // sort agrees with the displayed value. Branch scope (applied by Sale /
+            // DeliveryOrder models) is mirrored via an EXISTS on the polymorphic
+            // branches table whenever the current view is branch-restricted.
+            $orderBranch = getCurrentUserBranch();
+            $branchExists = function (string $model, string $alias) use ($orderBranch) {
+                if ($orderBranch === null || $orderBranch == Branch::LOCATION_EVERY) {
+                    return '';
+                }
+
+                return " AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = "
+                    .DB::getPdo()->quote($model)
+                    ." AND ob.object_id = {$alias}.id AND ob.location = ".((int) $orderBranch).")";
+            };
+
+            // idx2 Transfer From: QUO skus whose convert_to equals this SO (Sale::where('convert_to', id)).
+            $transferFromSort = DB::raw('(SELECT GROUP_CONCAT(qs.sku ORDER BY qs.id SEPARATOR \', \') FROM sales qs WHERE qs.convert_to = sales.id AND qs.deleted_at IS NULL'
+                .$branchExists(Sale::class, 'qs').')');
+
+            // idx3 Transfer To: non-voided, approved DO skus listed in sales.convert_to.
+            $voidedDoIds = DeliveryOrder::withoutGlobalScopes()->where('status', DeliveryOrder::STATUS_VOIDED)->pluck('id')->toArray();
+            $voidedFilter = empty($voidedDoIds) ? '' : ' AND ds.id NOT IN ('.implode(',', array_map('intval', $voidedDoIds)).')';
+            $transferToSort = DB::raw('(SELECT GROUP_CONCAT(ds.sku ORDER BY ds.id SEPARATOR \', \') FROM delivery_orders ds'
+                .' WHERE FIND_IN_SET(ds.id, sales.convert_to) AND ds.deleted_at IS NULL'
+                .$voidedFilter
+                .' AND (EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = ds.id AND ap.status = '.((int) Approval::STATUS_APPROVED).')'
+                .' OR NOT EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = ds.id))'
+                .$branchExists(DeliveryOrder::class, 'ds')
+                .')');
+
+            // idx10 Converted Qty: count of delivery_order_product_children for this SO's products.
+            $convertedQtySort = DB::raw('(SELECT COUNT(*) FROM delivery_order_product_children dopc'
+                .' JOIN delivery_order_products dop ON dop.id = dopc.delivery_order_product_id AND dop.deleted_at IS NULL'
+                .' JOIN sale_products sp ON sp.id = dop.sale_product_id AND sp.deleted_at IS NULL'
+                .' WHERE sp.sale_id = sales.id AND dopc.deleted_at IS NULL)');
+
             $map = [
                 0 => 'sales.sku',
                 1 => 'sales.created_at',
+                2 => $transferFromSort,
+                3 => $transferToSort,
                 4 => 'customers.sku',
                 5 => 'customers.company_name',
                 6 => 'sales_agents.name',
                 7 => 'sales.store',
                 8 => 'currencies.name',
+                9 => DB::raw('serial_no_qty'),
+                10 => $convertedQtySort,
                 11 => DB::raw('paid_amount'),
                 12 => DB::raw('total_amount'),
                 13 => 'payment_methods.name',
@@ -1074,7 +1130,9 @@ class SaleController extends Controller
                 17 => 'sales.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sales.id', 'desc');
@@ -3746,19 +3804,50 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // idx2 Transfer From: SO skus whose convert_to lists this DO (Sale::find_in_set).
+            // Mirror the Sale branch scope so the sorted string matches the displayed implode.
+            $orderBranch = getCurrentUserBranch();
+            $branchExists = '';
+            if ($orderBranch !== null) {
+                $branchExists = ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(Sale::class)
+                    .' AND ob.object_id = ss.id AND ob.location = '.((int) $orderBranch).')';
+            }
+            $transferFromSort = DB::raw('(SELECT GROUP_CONCAT(ss.sku ORDER BY ss.id SEPARATOR \', \') FROM sales ss'
+                .' WHERE ss.type = '.((int) Sale::TYPE_SO).' AND FIND_IN_SET(delivery_orders.id, ss.convert_to) AND ss.deleted_at IS NULL'
+                .$branchExists.')');
+
+            // idx8 Total: SUM over delivery_order_product_children of per-item
+            // (override_selling_price ?? unit_price) - manualDiscountAmount/qty.
+            // DOP is read withTrashed; SaleProduct is read without trashed (deleted_at IS NULL).
+            $price = 'COALESCE(tsp.override_selling_price, tsp.unit_price)';
+            $discountAmount = '(CASE'
+                .' WHEN tsp.discount IS NULL OR tsp.discount = 0 THEN 0'
+                ." WHEN tsp.discount_type = 'percentage' THEN tsp.qty * ".$price.' * tsp.discount / 100'
+                .' ELSE tsp.discount END)';
+            $totalSort = DB::raw('(SELECT COALESCE(SUM('.$price.' - '.$discountAmount.' / tsp.qty), 0)'
+                .' FROM delivery_order_product_children tdopc'
+                .' JOIN delivery_order_products tdop ON tdop.id = tdopc.delivery_order_product_id'
+                .' JOIN sale_products tsp ON tsp.id = tdop.sale_product_id AND tsp.deleted_at IS NULL'
+                .' WHERE tdop.delivery_order_id = delivery_orders.id)');
+
             $map = [
                 0 => 'delivery_orders.sku',
                 1 => 'delivery_orders.created_at',
+                2 => $transferFromSort,
                 3 => 'invoices.sku',
                 4 => 'customers.sku',
                 5 => 'customers.company_name',
                 6 => 'sales_agents.name',
                 7 => 'currencies.name',
+                8 => $totalSort,
                 9 => 'created_by.name',
                 10 => 'delivery_orders.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('delivery_orders.id', 'desc');
@@ -4247,15 +4336,48 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Reproduce the per-row computed columns as correlated subqueries so the
+            // sort agrees with the displayed value.
+            $doScope = ' AND ido.deleted_at IS NULL'
+                .' AND (EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = ido.id AND ap.status = '.((int) Approval::STATUS_APPROVED).')'
+                .' OR NOT EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = ido.id))';
+            $orderBranch = getCurrentUserBranch();
+            if ($orderBranch !== null && $orderBranch != Branch::LOCATION_EVERY) {
+                $doScope .= ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(DeliveryOrder::class)
+                    .' AND ob.object_id = ido.id AND ob.location = '.((int) $orderBranch).')';
+            }
+
+            // Transfer From: DO skus for this invoice (DeliveryOrder::where('invoice_id', id)).
+            $transferFromSort = DB::raw('(SELECT GROUP_CONCAT(ido.sku ORDER BY ido.id SEPARATOR \', \') FROM delivery_orders ido'
+                .' WHERE ido.invoice_id = invoices.id'.$doScope.')');
+
+            // Total: computed only from the FIRST scoped DO of the invoice ($dos[0]),
+            // summing per delivery_order_product_child:
+            //   (override_selling_price ?? unit_price) - manualDiscountAmount/qty.
+            // DOP/DOPC read withTrashed; SaleProduct read without trashed.
+            $firstDo = '(SELECT ido.id FROM delivery_orders ido WHERE ido.invoice_id = invoices.id'.$doScope.' ORDER BY ido.id ASC LIMIT 1)';
+            $price = 'COALESCE(tsp.override_selling_price, tsp.unit_price)';
+            $discountAmount = '(CASE'
+                .' WHEN tsp.discount IS NULL OR tsp.discount = 0 THEN 0'
+                ." WHEN tsp.discount_type = 'percentage' THEN tsp.qty * ".$price.' * tsp.discount / 100'
+                .' ELSE tsp.discount END)';
+            $totalSort = DB::raw('(SELECT COALESCE(SUM('.$price.' - '.$discountAmount.' / tsp.qty), 0)'
+                .' FROM delivery_order_product_children tdopc'
+                .' JOIN delivery_order_products tdop ON tdop.id = tdopc.delivery_order_product_id'
+                .' JOIN sale_products tsp ON tsp.id = tdop.sale_product_id AND tsp.deleted_at IS NULL'
+                .' WHERE tdop.delivery_order_id = '.$firstDo.')');
 
             if ($req->has('is_return')) {
                 $map = [
                     0 => 'invoices.sku',
                     1 => 'invoices.date',
+                    2 => $transferFromSort,
                     3 => 'customers.sku',
                     4 => 'customers.company_name',
                     5 => 'sales_agents.name',
                     6 => 'currencies.name',
+                    7 => $totalSort,
                     8 => 'created_by.name',
                     9 => 'invoices.status',
                 ];
@@ -4263,16 +4385,20 @@ class SaleController extends Controller
                 $map = [
                     1 => 'invoices.sku',
                     2 => 'invoices.date',
+                    3 => $transferFromSort,
                     4 => 'customers.sku',
                     5 => 'customers.company_name',
                     6 => 'sales_agents.name',
                     7 => 'currencies.name',
+                    8 => $totalSort,
                     9 => 'created_by.name',
                     10 => 'invoices.status',
                 ];
             }
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('invoices.id', 'desc');
@@ -4403,6 +4529,26 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // idx7 Total: sum Sale::getTotalAmount() over every SO of every DO of the invoice,
+            // reproducing the PHP double-count for SOs that span multiple DOs via the DO->SO join.
+            // Per-SO total = products (qty*unit_price - manual discount + sst) + non-FOC accessories
+            // (override or selling price) + ad-hoc services (incl. SST) — same expression the
+            // Quotation/Sale Order listings use for their Total column.
+            $totalSort = DB::raw('(SELECT COALESCE(SUM('
+                .'(SELECT COALESCE(SUM(sp.unit_price * sp.qty'
+                ." - CASE WHEN sp.discount_type = 'percentage' THEN sp.unit_price * sp.qty * COALESCE(sp.discount, 0) / 100 ELSE COALESCE(sp.discount, 0) END"
+                .' + COALESCE(sp.sst_amount, 0)), 0) FROM sale_products sp WHERE sp.sale_id = s.id)'
+                .' + COALESCE((SELECT SUM(spa.qty * COALESCE(spa.override_selling_price, psp.price))'
+                .' FROM sale_product_accessories spa LEFT JOIN product_selling_prices psp ON spa.selling_price_id = psp.id'
+                .' WHERE spa.sale_product_id IN (SELECT sp2.id FROM sale_products sp2 WHERE sp2.sale_id = s.id AND sp2.deleted_at IS NULL)'
+                .' AND (spa.is_foc IS NULL OR spa.is_foc = 0) AND spa.deleted_at IS NULL), 0)'
+                .' + COALESCE((SELECT SUM(COALESCE(sas.override_amount, sas.amount)'
+                .' + CASE WHEN sas.is_sst = 1 THEN COALESCE(sas.override_amount, sas.amount) * COALESCE(sas.sst_value, 0) / 100 ELSE 0 END)'
+                .' FROM sale_adhoc_services sas WHERE sas.sale_id = s.id AND sas.deleted_at IS NULL), 0)'
+                .'), 0) FROM delivery_orders ddo'
+                .' JOIN sales s ON s.type = '.((int) Sale::TYPE_SO).' AND FIND_IN_SET(ddo.id, s.convert_to) AND s.deleted_at IS NULL'
+                .' WHERE ddo.invoice_id = draft_e_invoices.invoice_id)');
+
             $map = [
                 1 => 'invoices.date',
                 2 => 'invoices.sku',
@@ -4410,11 +4556,14 @@ class SaleController extends Controller
                 4 => 'customers.company_name',
                 5 => 'sales_agents.name',
                 6 => 'currencies.name',
+                7 => $totalSort,
                 8 => 'created_by.name',
                 9 => 'invoices.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('draft_e_invoices.id', 'desc');
@@ -4609,14 +4758,23 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Column order in the view: 0 UUID, 1 Debtor Name, 2 Total, 3 Invoice Date,
+            // 4 Status, 5 From, 6 Submission Date. (The previous map was misaligned and
+            // unguarded.) Debtor Name and Total resolve through a deep polymorphic chain
+            // (einvoiceable -> Invoice/Billing -> DO -> SO -> customer / getTotalAmount) that
+            // can't be reproduced faithfully here, so they are left non-sortable in the view.
+            $invoiceType = DB::getPdo()->quote(Invoice::class);
             $map = [
                 0 => 'uuid',
-                1 => 'status',
-                2 => 'submission_date',
-                3 => 'from',
+                3 => DB::raw('(SELECT i.date FROM invoices i WHERE i.id = e_invoices.einvoiceable_id AND e_invoices.einvoiceable_type = '.$invoiceType.')'),
+                4 => 'status',
+                5 => DB::raw('(CASE WHEN e_invoices.einvoiceable_type = '.$invoiceType." THEN 'Customer' ELSE 'Billing' END)"),
+                6 => 'submission_date',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');
@@ -4633,6 +4791,10 @@ class SaleController extends Controller
             'records_ids' => $records_ids,
         ];
         foreach ($records_paginator as $key => $record) {
+            // Reset per row so a non-Invoice einvoiceable (e.g. Billing) doesn't crash or
+            // leak the previous row's invoice/customer.
+            $invoice = null;
+            $customer = null;
             if ($record->einvoiceable instanceof Invoice) {
                 $invoice = $record->einvoiceable;
                 $delivery = DeliveryOrder::where('invoice_id', $invoice->id)->first();
@@ -4642,7 +4804,7 @@ class SaleController extends Controller
                 $customer = $sale?->customer;
             }
 
-            $dos = DeliveryOrder::where('invoice_id', $invoice->id)->get();
+            $dos = $invoice !== null ? DeliveryOrder::where('invoice_id', $invoice->id)->get() : collect();
             $total_amount = 0;
 
             for ($i = 0; $i < count($dos); $i++) {
@@ -4661,7 +4823,7 @@ class SaleController extends Controller
                 'from' => $record->einvoiceable instanceof Invoice ? 'Customer' : 'Billing',
                 'debtor_name' => $customer?->company_name,
                 'total' => $total_amount,
-                'invoice_date' => $invoice->date,
+                'invoice_date' => $invoice?->date,
             ];
         }
 
@@ -5073,7 +5235,7 @@ class SaleController extends Controller
             foreach ($req->order as $order) {
                 if ($order['column'] == 0) {
                     $records = $records->orderBy(User::select('name')->whereColumn('users.id', 'targets.sale_id'), $order['dir']);
-                } else {
+                } else if (isset($map[$order['column']])) {
                     $records = $records->orderBy($map[$order['column']], $order['dir']);
                 }
             }
@@ -5353,7 +5515,9 @@ class SaleController extends Controller
                 5 => DB::raw('(COALESCE(qty_to_sell.qty, 0) - COALESCE(qty_to_on_hold.qty, 0))'),
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sale_order_cancellation.id', 'desc');
@@ -5524,12 +5688,68 @@ class SaleController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Branch-scoped invoices for this billing (Invoice has BranchScope; pivot billing_invoice).
+            $invoiceBranch = '';
+            $orderBranch = getCurrentUserBranch();
+            if ($orderBranch !== null) {
+                $invoiceBranch = ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(Invoice::class)
+                    .' AND ob.object_id = bi.invoice_id AND ob.location = '.((int) $orderBranch).')';
+            }
+            $scopedInvoiceJoin = 'JOIN invoices bv ON bv.id = bi.invoice_id AND bv.deleted_at IS NULL'
+                .' WHERE bi.billing_id = billings.id'.$invoiceBranch;
+
+            // idx4 Billing Invoice No: GROUP_CONCAT of related invoice skus (implode ', ').
+            $invoiceNoSort = DB::raw('(SELECT GROUP_CONCAT(bv.sku ORDER BY bv.id SEPARATOR \', \')'
+                .' FROM billing_invoice bi '.$scopedInvoiceJoin.')');
+
+            // First invoice of the billing (Billing->invoices->first()): smallest scoped invoice id.
+            $firstInvoice = '(SELECT bv.id FROM billing_invoice bi '.$scopedInvoiceJoin.' ORDER BY bv.id ASC LIMIT 1)';
+
+            // idx9 Created User: firstInvoice->createdBy->name.
+            $createdUserSort = DB::raw('(SELECT u.name FROM invoices fi'
+                .' LEFT JOIN users u ON u.id = fi.created_by WHERE fi.id = '.$firstInvoice.')');
+
+            // idx6 Debtor Name: firstInvoice->deliveryOrders->first()->customer->name.
+            // deliveryOrders has BranchScope + ApprovedScope; take the smallest scoped DO id.
+            $doScope = ' AND fdo.deleted_at IS NULL'
+                .' AND (EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = fdo.id AND ap.status = '.((int) Approval::STATUS_APPROVED).')'
+                .' OR NOT EXISTS (SELECT 1 FROM approvals ap WHERE ap.object_type = '.DB::getPdo()->quote(DeliveryOrder::class).' AND ap.object_id = fdo.id))';
+            if ($orderBranch !== null && $orderBranch != Branch::LOCATION_EVERY) {
+                $doScope .= ' AND EXISTS (SELECT 1 FROM branches ob WHERE ob.object_type = '
+                    .DB::getPdo()->quote(DeliveryOrder::class)
+                    .' AND ob.object_id = fdo.id AND ob.location = '.((int) $orderBranch).')';
+            }
+            $firstDo = '(SELECT fdo.id FROM delivery_orders fdo WHERE fdo.invoice_id = '.$firstInvoice.$doScope.' ORDER BY fdo.id ASC LIMIT 1)';
+            $debtorNameSort = DB::raw('(SELECT c.name FROM delivery_orders d'
+                .' LEFT JOIN customers c ON c.id = d.customer_id WHERE d.id = '.$firstDo.')');
+
+            // idx5 Debtor Code: same first-invoice -> first-DO -> customer path, returning the sku.
+            $debtorCodeSort = DB::raw('(SELECT c.sku FROM delivery_orders d'
+                .' LEFT JOIN customers c ON c.id = d.customer_id WHERE d.id = '.$firstDo.')');
+
+            // idx7 Total Amount: BillingProduct sum(qty * price).
+            $totalSort = DB::raw('(SELECT COALESCE(SUM(bp.qty * bp.price), 0) FROM billing_products bp WHERE bp.billing_id = billings.id)');
+
+            // idx8 Status: optional(einvoice)->status (morphOne EInvoice on Billing).
+            $statusSort = DB::raw('(SELECT ei.status FROM e_invoices ei WHERE ei.einvoiceable_type = '
+                .DB::getPdo()->quote(Billing::class).' AND ei.einvoiceable_id = billings.id ORDER BY ei.id ASC LIMIT 1)');
+
             $map = [
                 1 => 'sku',
                 2 => 'date',
+                3 => 'our_do_no',
+                4 => $invoiceNoSort,
+                5 => $debtorCodeSort,
+                6 => $debtorNameSort,
+                7 => $totalSort,
+                8 => $statusSort,
+                9 => $createdUserSort,
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');
@@ -5817,7 +6037,9 @@ class SaleController extends Controller
                 4 => 'sales.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sales.id', 'desc');
@@ -6052,15 +6274,32 @@ class SaleController extends Controller
 
         // Order
         if ($req->has('order')) {
+            // idx4 Dealer: reproduce TransportAcknowledgement::dealerName()/dealerLabel() so the
+            // sort key matches the displayed label (-1 = Powercool, -2 = Hi-Ten, else
+            // "<dealer name> (<group>)" where group 2 = Hi-Ten, otherwise Powercool).
+            $dealerSort = DB::raw("(CASE"
+                .' WHEN transport_acknowledgements.dealer_id = -1 THEN \'Powercool\''
+                .' WHEN transport_acknowledgements.dealer_id = -2 THEN \'Hi-Ten\''
+                .' ELSE CONCAT('
+                ."TRIM(COALESCE((SELECT d.name FROM dealers d WHERE d.id = transport_acknowledgements.dealer_id), '')), ' (', "
+                .'CASE WHEN (SELECT d2.company_group FROM dealers d2 WHERE d2.id = transport_acknowledgements.dealer_id) = 2 '
+                ."THEN 'Hi-Ten' ELSE 'Powercool' END, ')')"
+                .' END)');
+
             $map = [
+                0 => 'transport_acknowledgements.id',
                 1 => 'transport_acknowledgements.sku',
                 2 => 'transport_acknowledgements.date',
                 3 => 'transport_acknowledgements.delivery_order_id',
+                4 => $dealerSort,
+                5 => 'transport_acknowledgements.type',
                 6 => 'users.name',
                 7 => 'generator.name',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('transport_acknowledgements.id', 'desc');

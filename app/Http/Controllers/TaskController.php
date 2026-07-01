@@ -153,14 +153,39 @@ class TaskController extends Controller
         }
         // Order
         if ($req->has('order')) {
-            $map = [
-                0 => 'sku',
-                1 => 'name',
-                2 => 'due_date',
-                3 => 'amount_to_collect',
-            ];
+            // Column indices differ per role layout (technician has a leading
+            // checkbox; driver has an extra Whatsapp Click Count column).
+            if ($role == Task::TYPE_DRIVER) {
+                $map = [
+                    0 => 'sku',
+                    1 => 'name',
+                    2 => 'due_date',
+                    3 => 'amount_to_collect',
+                    4 => 'whatsapp_click_count',
+                    5 => 'status',
+                ];
+            } elseif ($role == Task::TYPE_TECHNICIAN) {
+                // Leading checkbox at index 0, so data columns shift by one.
+                $map = [
+                    1 => 'sku',
+                    2 => 'name',
+                    3 => 'due_date',
+                    4 => 'amount_to_collect',
+                    5 => 'status',
+                ];
+            } else {
+                $map = [
+                    0 => 'sku',
+                    1 => 'name',
+                    2 => 'due_date',
+                    3 => 'amount_to_collect',
+                    4 => 'status',
+                ];
+            }
             foreach ($req->order as $order) {
-                $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records->orderBy('id', 'desc');
@@ -529,13 +554,32 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Resolve a milestone's planned date & time from the sale task form.
+     * Returns a normalised datetime string, or null when left blank.
+     */
+    private function milestoneDatetime(Request $req, $milestone_id): ?string
+    {
+        $datetime = $req->input("milestone_datetime.$milestone_id");
+
+        return $datetime ? Carbon::parse($datetime)->format('Y-m-d H:i:s') : null;
+    }
+
     public function saleStore(Request $req)
     {
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
-        // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
+        // A sales person creates tasks for themselves, so auto-assign to self.
+        if (isSalesOnly()) {
+            $req->merge(['assign' => [Auth::id()]]);
+        }
+        // Validate request. Status is hidden for sales person & marketing manager,
+        // and estimated_time has no field on the sale form.
+        $rules = self::DRIVER_SALE_FORM_RULES;
+        $rules['status'] = 'nullable';
+        $rules['estimated_time'] = 'nullable';
+        $validator = Validator::make($req->all(), $rules);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -553,7 +597,7 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'status' => $req->status,
+                'status' => $req->status ?? Task::STATUS_TO_DO,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
             (new Branch)->assign(Task::class, $task->id);
@@ -569,10 +613,11 @@ class TaskController extends Controller
                 ]);
             }
 
-            foreach ($req->milestone as $ms_id) {
+            foreach ($req->milestone ?? [] as $ms_id) {
                 TaskMilestone::create([
                     'task_id' => $task->id,
                     'milestone_id' => $ms_id,
+                    'datetime' => $this->milestoneDatetime($req, $ms_id),
                 ]);
             }
             // Create custom milestones
@@ -582,6 +627,8 @@ class TaskController extends Controller
                         'type' => Milestone::TYPE_SITE_VISIT,
                         'name' => $ms,
                         'is_custom' => true,
+                        // Custom steps follow the default sale flow.
+                        'sort' => 999,
                     ]);
                     (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([
@@ -648,6 +695,11 @@ class TaskController extends Controller
     public function view(Task $task)
     {
         $task->load('users', 'milestones', 'attachments', 'logs.doneBy');
+
+        // Preload each milestone's captured photos (submitted from the mobile app).
+        $task->milestones->each(function ($ms) {
+            $ms->pivot->setRelation('attachments', $ms->pivot->attachments()->get());
+        });
 
         $task->formatted_created_at = Carbon::parse($task->created_at)->format('d M Y');
         $task->start_date = Carbon::parse($task->start_date)->format('d M Y');
@@ -903,8 +955,17 @@ class TaskController extends Controller
         if ($req->amount_to_collect == null) {
             $req->merge(['amount_to_collect' => 0]);
         }
-        // Validate request
-        $validator = Validator::make($req->all(), self::DRIVER_SALE_FORM_RULES);
+        // Assigned field is hidden for a sales person, so keep the existing assignees.
+        if (isSalesOnly()) {
+            $existing = $task->users()->pluck('user_id')->toArray();
+            $req->merge(['assign' => ! empty($existing) ? $existing : [Auth::id()]]);
+        }
+        // Validate request. Status is hidden for sales person & marketing manager,
+        // and estimated_time has no field on the sale form.
+        $rules = self::DRIVER_SALE_FORM_RULES;
+        $rules['status'] = 'nullable';
+        $rules['estimated_time'] = 'nullable';
+        $validator = Validator::make($req->all(), $rules);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -920,7 +981,7 @@ class TaskController extends Controller
                 'start_date' => $req->start_date,
                 'due_date' => $req->due_date,
                 'remark' => $req->remark,
-                'status' => $req->status,
+                'status' => $req->status ?? $task->status,
                 'amount_to_collect' => $req->amount_to_collect,
             ]);
 
@@ -932,14 +993,18 @@ class TaskController extends Controller
                 ]);
             }
 
-            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone)->delete();
-            foreach ($req->milestone as $ms_id) {
+            TaskMilestone::where('task_id', $task->id)->whereNotIn('milestone_id', $req->milestone ?? [])->delete();
+            foreach ($req->milestone ?? [] as $ms_id) {
+                $datetime = $this->milestoneDatetime($req, $ms_id);
                 $ms = TaskMilestone::where('task_id', $task->id)->where('milestone_id', $ms_id)->first();
                 if ($ms == null) {
                     TaskMilestone::create([
                         'task_id' => $task->id,
                         'milestone_id' => $ms_id,
+                        'datetime' => $datetime,
                     ]);
+                } else {
+                    $ms->update(['datetime' => $datetime]);
                 }
             }
             // Create custom milestones
@@ -949,6 +1014,8 @@ class TaskController extends Controller
                         'type' => Milestone::TYPE_SITE_VISIT,
                         'name' => $ms,
                         'is_custom' => true,
+                        // Custom steps follow the default sale flow.
+                        'sort' => 999,
                     ]);
                     (new Branch)->assign(Milestone::class, $custom_ms->id);
                     TaskMilestone::create([

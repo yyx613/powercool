@@ -136,6 +136,27 @@ class InvoiceReturnApprovalTest extends TestCase
         ]);
     }
 
+    public function test_approving_stores_the_reason_on_the_return(): void
+    {
+        // The reason entered at submission is carried onto the return row so the
+        // "view returned products" screen can show why each item came back.
+        $invoice = $this->makeInvoice();
+        $approval = $this->invoiceReturnApproval($invoice->id, [
+            ['is_raw_material' => true, 'id' => 77, 'qty' => 2],
+        ], 'Wrong model shipped');
+
+        $this->actingAs($this->userWith(['approval.view']));
+
+        $this->get(route('approval.approve', ['approval' => $approval]))
+            ->assertOk()->assertJson(['result' => true]);
+
+        $this->assertDatabaseHas('return_products', [
+            'invoice_id' => $invoice->id,
+            'object_id' => 77,
+            'reason' => 'Wrong model shipped',
+        ]);
+    }
+
     public function test_rejecting_does_not_create_the_return(): void
     {
         $invoice = $this->makeInvoice();

@@ -112,7 +112,6 @@
             {
                 "width": "20%",
                 "targets": 5,
-                orderable: false,
                 render: function(data, type, row) {
                     return data
                 }

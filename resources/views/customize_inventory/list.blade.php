@@ -133,7 +133,6 @@
                 },
                 {
                     "targets": 2,
-                    orderable: false,
                     render: function(data, type, row) {
                         if (!data) return '-'
                         return `<a href="{{ config('app.url') }}/sale/sale-order/view/${row.sale_id}" class="text-blue-500 underline">${data}</a>`
@@ -141,14 +140,12 @@
                 },
                 {
                     "targets": 3,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }
                 },
                 {
                     "targets": 4,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data ?? '-'
                     }

@@ -85,7 +85,6 @@
                 {
                     "width": "10%",
                     "targets": 0,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }
@@ -93,7 +92,6 @@
                 {
                     "width": "10%",
                     "targets": 1,
-                    orderable: false,
                     render: function(data, type, row) {
                         return data
                     }

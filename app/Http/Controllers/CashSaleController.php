@@ -136,6 +136,16 @@ class CashSaleController extends Controller
                 1 => 'sales.created_at',
                 2 => 'sales.custom_customer',
                 3 => 'sales_agents.name',
+                // Serial No Qty: the displayed numerator is the joined-sub count of
+                // sale_product_children, so order by that exact aggregate column.
+                4 => 'serial_no_qty_query.serial_no_qty',
+                // Remaining Qty: displayed numerator is the converted serial-no count
+                // (delivery_order_product_children) reached via the sale's products.
+                // Mirror the per-row PHP soft-delete filtering at every level.
+                5 => DB::raw('(select count(*) from delivery_order_product_children dopc'
+                    . ' join delivery_order_products dop on dop.id = dopc.delivery_order_product_id and dop.deleted_at is null'
+                    . ' join sale_products sp on sp.id = dop.sale_product_id and sp.deleted_at is null'
+                    . ' where dopc.deleted_at is null and sp.sale_id = sales.id)'),
                 6 => 'paid_amount_query.paid_amount',
                 7 => DB::raw('total_amount'),
                 8 => 'payment_methods.name',
@@ -145,7 +155,9 @@ class CashSaleController extends Controller
                 12 => 'sales.status',
             ];
             foreach ($req->order as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('sales.id', 'desc');

@@ -230,17 +230,69 @@ class ProductController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Status (is_active), Created By and Price sit at different column indices per
+            // list (finish good / raw material / production) because the view splices columns
+            // per mode, so the order map is built to match the rendered layout.
+            $is_product = $req->boolean('is_product');
+            $is_production = $req->boolean('is_production');
+
             $map = [
                 0 => 'sku',
                 1 => 'model_desc',
-                2 => 'category',
                 3 => 'qty',
             ];
+            if ($is_product && $is_production) {
+                $map[4] = 'is_active';   // Status
+                $map[5] = 'created_by';  // Created By (relation -> users.name)
+                // Production Finish Good qty: number of completed productions for the product.
+                // Mirrors the PHP qty computation below exactly.
+                $map[3] = DB::raw('(SELECT COUNT(*) FROM productions p WHERE p.product_id = products.id AND p.status = '.((int) Production::STATUS_COMPLETED).' AND p.deleted_at IS NULL)');
+            } elseif (! $is_product && $is_production) {
+                $map[4] = 'is_sparepart'; // Is Spare part
+                $map[5] = 'is_active';
+                $map[6] = 'created_by';
+                // Production Raw Material qty: BEST-EFFORT count of factory children that look
+                // "unassigned" (no link in any of the 4 child-link tables). This APPROXIMATES the
+                // displayed count, which uses ProductChild::assignedTo() — a deep traversal that
+                // also considers sale state (TYPE_SO + convert_to, STATUS_CONVERTED, etc.). In rare
+                // sale-state edge cases the sorted order may differ slightly from the shown count.
+                // Note: LOCATION_FACTORY is a string; task link is a morph (inventory_type/inventory_id);
+                // production link table is production_milestone_materials.product_child_id.
+                $map[3] = DB::raw('(SELECT COUNT(*) FROM product_children pc WHERE pc.product_id = products.id AND pc.location = '.DB::getPdo()->quote(ProductChild::LOCATION_FACTORY).' AND pc.deleted_at IS NULL
+                    AND NOT EXISTS (SELECT 1 FROM delivery_order_product_children dopc WHERE dopc.product_children_id = pc.id AND dopc.deleted_at IS NULL)
+                    AND NOT EXISTS (SELECT 1 FROM sale_product_children spc WHERE spc.product_children_id = pc.id AND spc.deleted_at IS NULL)
+                    AND NOT EXISTS (SELECT 1 FROM production_milestone_materials pmm WHERE pmm.product_child_id = pc.id AND pmm.deleted_at IS NULL)
+                    AND NOT EXISTS (SELECT 1 FROM task_milestone_inventories tmi WHERE tmi.inventory_id = pc.id AND tmi.inventory_type = '.DB::getPdo()->quote(ProductChild::class).'))');
+            } elseif ($is_product && ! $is_production) {
+                $map[4] = 'min_price';   // Price range, sorted by min_price
+                $map[5] = 'is_active';
+                $map[6] = 'created_by';
+                // Finish Good Qty: the Product::getQtyAttribute accessor returns the
+                // product_children count (not the raw products.qty column) for finish
+                // goods, so the sort key mirrors that count to match the display.
+                $map[3] = DB::raw('(SELECT COUNT(*) FROM product_children pc WHERE pc.product_id = products.id AND pc.deleted_at IS NULL)');
+            } else {
+                $map[4] = 'min_price';
+                $map[5] = 'is_sparepart'; // Is Spare part
+                $map[6] = 'is_active';
+                $map[7] = 'created_by';
+                // Raw Material Qty: the accessor returns the product_children count for
+                // spare parts (is_sparepart = 1) and the raw products.qty column otherwise,
+                // so the sort key branches the same way to match the display.
+                $map[3] = DB::raw('(CASE WHEN products.is_sparepart = 1
+                    THEN (SELECT COUNT(*) FROM product_children pc WHERE pc.product_id = products.id AND pc.deleted_at IS NULL)
+                    ELSE products.qty END)');
+            }
+
             foreach ($req->order as $order) {
-                if ($order['column'] == 2) {
-                    $records = $records->orderBy($this->invCat::select('name')->whereColumn('inventory_categories.id', 'products.inventory_category_id'), $order['dir']);
-                } else {
-                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                $col = $order['column'];
+                $dir = $order['dir'] === 'desc' ? 'desc' : 'asc';
+                if ($col == 2) {
+                    $records = $records->orderBy($this->invCat::select('name')->whereColumn('inventory_categories.id', 'products.inventory_category_id'), $dir);
+                } elseif (isset($map[$col]) && $map[$col] === 'created_by') {
+                    $records = $records->orderBy(User::select('name')->whereColumn('users.id', 'products.created_by'), $dir);
+                } elseif (isset($map[$col])) {
+                    $records = $records->orderBy($map[$col], $dir);
                 }
             }
         } else {
@@ -366,9 +418,15 @@ class ProductController extends Controller
                 0 => 'products.sku',
                 1 => 'products.model_desc',
                 2 => 'inventory_categories.name',
+                4 => 'products.is_sparepart', // Is Spare part (Production Raw Material idx 4)
             ];
             foreach ($orders as $order) {
-                $records = $records->orderBy($map[$order['column']], $order['dir']);
+                // Skip columns this source can't sort by (e.g. Qty idx 3, which is a
+                // computed remainingQty() with no SQL-sortable column here). Guarding
+                // avoids an undefined-key error when the listing sorts on such columns.
+                if (isset($map[$order['column']])) {
+                    $records = $records->orderBy($map[$order['column']], $order['dir']);
+                }
             }
         } else {
             $records = $records->orderBy('id', 'desc');

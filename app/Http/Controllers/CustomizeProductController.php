@@ -84,6 +84,12 @@ class CustomizeProductController extends Controller
             $map = [
                 0 => 'sku',
                 1 => 'name',
+                // SO (sale sku) and Production SKU come from the related production
+                // (and its sale). Correlated subqueries mirror the soft-delete scope so
+                // the sort key matches the displayed value.
+                2 => \DB::raw('(SELECT s.sku FROM sales s INNER JOIN productions p ON p.sale_id = s.id WHERE p.id = customize_products.production_id AND p.deleted_at IS NULL AND s.deleted_at IS NULL)'),
+                3 => \DB::raw('(SELECT p.sku FROM productions p WHERE p.id = customize_products.production_id AND p.deleted_at IS NULL)'),
+                4 => 'length',
                 5 => 'weight',
                 6 => 'capacity',
                 7 => 'refrigerant',

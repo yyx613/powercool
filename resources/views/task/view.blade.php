@@ -49,7 +49,8 @@
                     @if (count($task->milestones) > 0)
                         <ul class="mt-2">
                             @foreach ($task->milestones as $ms)
-                                <li class="w-full flex items-center gap-x-2 py-1 transition duration-300 hover:bg-slate-50">
+                                <li class="w-full py-1 transition duration-300 hover:bg-slate-50">
+                                    <div class="flex items-center gap-x-2">
                                     <svg class="h-5 w-5 fill-blue-500 {{ $ms->pivot->submitted_at != null ? 'hidden' : '' }}"
                                         xmlns="http://www.w3.org/2000/svg" id="Layer_1" data-name="Layer 1"
                                         viewBox="0 0 24 24" width="512" height="512">
@@ -60,14 +61,41 @@
                                         viewBox="0 0 24 24">
                                         <path d="m23.195,14.085l-2.159,2.157v1.722c0,1.654-1.346,3-3,3h-1.721l-2.158,2.157c-.565.566-1.319.879-2.121.879s-1.555-.312-2.121-.879l-2.157-2.157h-1.722c-1.654,0-3-1.346-3-3v-1.722l-2.157-2.157c-1.17-1.169-1.17-3.073,0-4.243l2.157-2.157v-1.721c0-1.654,1.346-3,3-3h1.722l2.157-2.158c1.134-1.135,3.111-1.132,4.243,0l2.157,2.157h1.721c.553,0,1,.448,1,1s-.447,1-1,1h-2.135c-.266,0-.52-.105-.707-.293l-2.451-2.451c-.377-.376-1.034-.378-1.414,0l-2.45,2.451c-.188.188-.441.293-.707.293h-2.136c-.552,0-1,.449-1,1v2.135c0,.265-.105.52-.293.707l-2.45,2.45c-.39.39-.39,1.024,0,1.415l2.45,2.45c.188.188.293.441.293.707v2.136c0,.552.448,1,1,1h2.136c.266,0,.52.105.707.293l2.45,2.45c.379.378,1.037.378,1.413,0l2.452-2.45c.188-.188.441-.293.707-.293h2.135c.552,0,1-.448,1-1v-2.136c0-.266.105-.52.293-.707l2.451-2.45c.39-.39.39-1.025,0-1.415-.39-.391-.39-1.024,0-1.414.391-.39,1.024-.391,1.415,0,1.168,1.169,1.168,3.072,0,4.242Zm-12.474-.423l-3.018-2.988c-.394-.39-1.025-.385-1.415.007-.389.392-.385,1.025.007,1.414l3.019,2.989c.614.608,1.422.913,2.229.913s1.617-.307,2.232-.918l8.93-8.871c.392-.389.394-1.022.004-1.414-.39-.392-1.022-.395-1.414-.005l-8.93,8.872c-.453.451-1.19.45-1.644,0Z"/>
                                     </svg>
-                                    <div class="flex items-center justify-between w-full">
-                                        <span class="flex-1 text-md">{{ $ms->name }}</span>
-                                        @if ($ms->pivot->submitted_at != null)
-                                            <div class="flex flex-col items-end">
-                                                <span class="text-xs text-slate-600">{{ \Carbon\Carbon::parse($ms->pivot->submitted_at)->format('d M Y H:i') }}</span>
-                                            </div>
-                                        @endif
+                                        <div class="flex items-center justify-between w-full">
+                                            <span class="flex-1 text-md">{{ $ms->name }}</span>
+                                            @if ($ms->pivot->submitted_at != null)
+                                                <div class="flex flex-col items-end">
+                                                    <span class="text-xs text-slate-600">{{ \Carbon\Carbon::parse($ms->pivot->submitted_at)->format('d M Y H:i') }}</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
+                                    @if ($ms->pivot->submitted_at != null)
+                                        <div class="ml-7 mt-1 space-y-1">
+                                            @if ($ms->pivot->datetime)
+                                                <p class="text-xs text-slate-600"><span class="font-medium">{{ __('Date & Time') }}:</span> {{ \Carbon\Carbon::parse($ms->pivot->datetime)->format('d M Y H:i') }}</p>
+                                            @endif
+                                            @if ($ms->pivot->address)
+                                                <p class="text-xs text-slate-600"><span class="font-medium">{{ __('Location') }}:</span> {{ $ms->pivot->address }}</p>
+                                            @endif
+                                            @if ($ms->pivot->amount_collected > 0)
+                                                <p class="text-xs text-slate-600"><span class="font-medium">{{ __('Amount Collected') }}:</span> {{ number_format($ms->pivot->amount_collected, 2) }}</p>
+                                            @endif
+                                            @if ($ms->pivot->remark)
+                                                <p class="text-xs text-slate-600"><span class="font-medium">{{ __('Remark') }}:</span> {{ $ms->pivot->remark }}</p>
+                                            @endif
+                                            @if (count($ms->pivot->attachments) > 0)
+                                                <div class="flex flex-wrap gap-2 mt-1">
+                                                    @foreach ($ms->pivot->attachments as $photo)
+                                                        <a href="{{ $photo->url }}" target="_blank" title="{{ __('Open photo') }}"
+                                                            class="block h-20 w-20 rounded-lg overflow-hidden border border-slate-200 hover:opacity-90">
+                                                            <img src="{{ $photo->url }}" alt="{{ $ms->name }}" class="h-full w-full object-cover" loading="lazy">
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </li>
                             @endforeach
                         </ul>

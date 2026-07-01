@@ -64,8 +64,15 @@ class InventoryServieHistoryController extends Controller
         }
         // Order
         if ($req->has('order')) {
+            // Serial No (idx 0) is the morphed ProductChild sku, and Task ID (idx 1) is the
+            // taskMilestone -> task sku. Both resolve through relations, so correlated
+            // subqueries mirror the soft-delete scope to match the displayed value.
+            // (The old map used a bare 'sku' column, which does not exist on this table.)
+            $serialNoSub = DB::raw('(SELECT pc.sku FROM product_children pc WHERE pc.id = task_milestone_inventories.inventory_id AND task_milestone_inventories.inventory_type = '.DB::getPdo()->quote(ProductChild::class).' AND pc.deleted_at IS NULL)');
+            $taskSkuSub = DB::raw('(SELECT t.sku FROM tasks t INNER JOIN task_milestone tm ON tm.task_id = t.id WHERE tm.id = task_milestone_inventories.task_milestone_id AND t.deleted_at IS NULL)');
             $map = [
-                0 => 'sku',
+                0 => $serialNoSub,
+                1 => $taskSkuSub,
                 3 => 'qty',
                 4 => 'service_date',
             ];

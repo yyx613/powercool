@@ -311,8 +311,37 @@ class ApprovalController extends Controller
         }
         // Order
         if ($request->has('order')) {
+            // idx2 SKU: object_sku resolves the morphed object's sku (withTrashed). Every
+            // object type with a real `sku` column maps to its table; SalePaymentAmount has
+            // no sku column and shows the JSON data->sale_sku; the remaining types
+            // (RawMaterialRequest/GRN/MaterialUse/FactoryRawMaterial) have no sku and display
+            // null, so they fall through to NULL.
+            $skuTables = [
+                Sale::class => 'sales',
+                DeliveryOrder::class => 'delivery_orders',
+                Customer::class => 'customers',
+                Production::class => 'productions',
+                SaleEnquiry::class => 'sale_enquiries',
+                CreditNote::class => 'credit_notes',
+                DebitNote::class => 'debit_notes',
+                ProductChild::class => 'product_children',
+                Invoice::class => 'invoices',
+            ];
+            $skuCase = 'CASE';
+            foreach ($skuTables as $cls => $tbl) {
+                $skuCase .= ' WHEN approvals.object_type = '.DB::getPdo()->quote($cls)
+                    .' THEN (SELECT t.sku FROM '.$tbl.' t WHERE t.id = approvals.object_id)';
+            }
+            $skuCase .= ' WHEN approvals.object_type = '.DB::getPdo()->quote(SalePaymentAmount::class)
+                ." THEN JSON_UNQUOTE(JSON_EXTRACT(approvals.data, '$.sale_sku'))";
+            $skuCase .= ' ELSE NULL END';
+
             $map = [
+                0 => 'created_at',
+                1 => 'object_type',
+                2 => DB::raw('('.$skuCase.')'),
                 3 => 'created_at',
+                4 => DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.description'))"),
                 5 => 'status',
             ];
             $ordered = false;
@@ -385,12 +414,14 @@ class ApprovalController extends Controller
             }
             // Sale agent name
             $sale_agents = [];
-            if (get_class($obj) == Sale::class) {
-                $sale_agents[] = $obj->saleperson->name;
-            } else if (get_class($obj) == Customer::class && $payload != null && isset($payload->sale_agent_ids)) {
-                $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray();
-            } else if (get_class($obj) == SaleEnquiry::class && $obj->assignedUser) {
-                $sale_agents[] = $obj->assignedUser->name;
+            if ($obj != null) {
+                if (get_class($obj) == Sale::class) {
+                    $sale_agents[] = $obj->saleperson->name;
+                } else if (get_class($obj) == Customer::class && $payload != null && isset($payload->sale_agent_ids)) {
+                    $sale_agents = SalesAgent::whereIn('id', explode(',', $payload->sale_agent_ids))->pluck('name')->toArray();
+                } else if (get_class($obj) == SaleEnquiry::class && $obj->assignedUser) {
+                    $sale_agents[] = $obj->assignedUser->name;
+                }
             }
 
             // Determine object_sku
@@ -416,11 +447,11 @@ class ApprovalController extends Controller
                 'description' => $record->data == null ? null : (json_decode($record->data)->description ?? null),
                 'remark' => $remark,
                 'cancellation_charge' => $cancellation_charge,
-                'debtor_code' => get_class($obj) == Sale::class ? $obj->customer->sku : null,
-                'debtor_name' => get_class($obj) == Sale::class ? $obj->customer->company_name : null,
+                'debtor_code' => ($obj != null && get_class($obj) == Sale::class) ? $obj->customer->sku : null,
+                'debtor_name' => ($obj != null && get_class($obj) == Sale::class) ? $obj->customer->company_name : null,
                 'sales_agent_name' => count($sale_agents) > 0 ? join(', ', $sale_agents) : null,
                 'actioned_by_name' => $record->actionedBy ? $record->actionedBy->name : null,
-                'can_view' => in_array(get_class($obj), [FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class]) ? false : $record->status != Approval::STATUS_REJECTED
+                'can_view' => $obj != null && in_array(get_class($obj), [FactoryRawMaterial::class, ProductChild::class, MaterialUse::class, Customer::class, SalePaymentAmount::class]) ? false : $record->status != Approval::STATUS_REJECTED
             ];
         }
 
@@ -607,7 +638,7 @@ class ApprovalController extends Controller
             // Nothing was written on submit; the payload carries the selected items.
             $approvalData = $approval->data ? json_decode($approval->data, true) : [];
             if ($approval->object_type == Invoice::class && ($approvalData['is_invoice_return'] ?? false)) {
-                (new InvoiceReturnController)->createReturnFromPayload($approvalData['invoice_id'], $approvalData['products'] ?? []);
+                (new InvoiceReturnController)->createReturnFromPayload($approvalData['invoice_id'], $approvalData['products'] ?? [], $approvalData['reason'] ?? null);
             }
 
             DB::commit();
